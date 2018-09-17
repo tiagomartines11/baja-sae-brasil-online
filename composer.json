@@ -1,0 +1,12 @@
+{
+  "require": {
+    "propel/propel": "~2.0@dev",
+    "phpmailer/phpmailer": "^5.2",
+    "monolog/monolog": "^1.23"
+  },
+  "autoload": {
+    "psr-4": {
+      "Baja\\": "src/Baja/"
+    }
+  }
+}

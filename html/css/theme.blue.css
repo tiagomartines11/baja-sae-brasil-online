@@ -1,0 +1,522 @@
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+dl, dt, dd, ol, ul, li, nav,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-weight: inherit;
+    font-style: inherit;
+    font-size: 100%;
+    font-family: inherit;
+    vertical-align: baseline;
+}
+
+body {
+    min-width: 520px;
+}
+
+.nomeEscola {
+    font: 10px/10px "Trebuchet MS", Arial, Sans-serif;
+}
+
+.ouro {
+    background: url(../img/ouro.png);
+    background-size: 20px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.prata {
+    background: url(../img/prata.png);
+    background-size: 20px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.bronze {
+    background: url(../img/bronze.png);
+    background-size: 20px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.cone {
+    content: url(../img/cone.png);
+}
+
+.gate {
+    content: url(../img/gate.png);
+}
+
+.chicken {
+    content: url(../img/chicken.png);
+}
+
+.cone, .gate, .chicken {
+    width: 12px;
+    vertical-align: middle;
+    margin-left: 2px;
+}
+
+/********************/
+/*    Blue Theme    */
+/********************/
+/* overall */
+.body-blue {
+    text-align: center;
+    font: 14px "Trebuchet MS", Arial, Sans-serif;
+    width: 100%;
+    border: 0;
+    display: table;
+}
+
+.tablesorter-blue {
+    background-color: #fff;
+    text-align: center;
+    border-spacing: 0;
+    font: 14px "Trebuchet MS", Arial, Sans-serif;
+    width: 100%;
+    border-collapse: collapse;
+    border: 0;
+}
+
+.tablesorter-blue td {
+    border: #cdcdcd 1px solid;
+    border-width: 0 1px 1px 1px;
+    border-top: 0;
+    vertical-align: middle;
+}
+
+/* header */
+.tablesorter-blue th,
+.tablesorter-blue thead td {
+    font-weight: bold;
+    color: #000;
+    background-color: #004785;
+    border-collapse: collapse;
+    padding: 4px;
+    color: white;
+    font: 16px "Trebuchet MS", Arial, Sans-serif;
+    border: #cdcdcd 1px solid;
+    vertical-align: middle;
+}
+
+.tablesorter-blue th:first-of-type {
+    border-left-color: #004785;
+}
+
+.tablesorter-blue th:last-of-type {
+    border-right-color: #004785;
+}
+
+.tablesorter-blue tbody td,
+.tablesorter-blue tfoot th,
+.tablesorter-blue tfoot td {
+    padding: 4px;
+    vertical-align: middle;
+}
+
+.tablesorter-blue tfoot th {
+    border-bottom: 0;
+}
+
+.tablesorter-blue .header,
+.tablesorter-blue .tablesorter-header {
+    /* black (unsorted) double arrow */
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAJCAMAAAGd2qfSAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURQAAAPb29gIWp78AAAABdFJOUwBA5thmAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAK0lEQVQYV2PACRihNAjA2IyMCFFkNhIgRRQMsJkDFAMBKA8GsIsim8DAAAALEAAhSqahSwAAAABJRU5ErkJggg==);
+    /* white (unsorted) double arrow */
+    /* background-image: url(data:image/gif;base64,R0lGODlhFQAJAIAAAP///////yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==); */
+    /* image */
+    /* background-image: url(images/black-unsorted.gif); */
+    background-repeat: no-repeat;
+    background-position: center right;
+    padding: 4px 18px 4px 4px;
+    white-space: normal;
+    cursor: pointer;
+    background-size: 18px;
+}
+
+.tablesorter-blue .headerSortUp,
+.tablesorter-blue .tablesorter-headerSortUp,
+.tablesorter-blue .tablesorter-headerAsc {
+    background-color: #9fbfdf;
+    /* black asc arrow */
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAECAMAAAEhRLQMAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURQAAAP///6XZn90AAAABdFJOUwBA5thmAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAIUlEQVQYV2PAAhgZoQwgQDAZkYVBAEMACIBiIABiMjAAAAJgABHFOmQUAAAAAElFTkSuQmCC);
+    /* white asc arrow */
+    /* background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAAP///////yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7); */
+    /* image */
+    /* background-image: url(images/black-asc.gif); */
+}
+
+.tablesorter-blue .headerSortDown,
+.tablesorter-blue .tablesorter-headerSortDown,
+.tablesorter-blue .tablesorter-headerDesc {
+    background-color: #8cb3d9;
+    /* black desc arrow */
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAECAMAAAEhRLQMAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAGUExURQAAAP///6XZn90AAAABdFJOUwBA5thmAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAI0lEQVQYV2NgYGSAYAZGMInMADGR2FAaCoBSSJIIABNjYAAAA8sAEXjW2jYAAAAASUVORK5CYII=);
+    /* white desc arrow */
+    /* background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAAP///////yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7); */
+    /* image */
+    /* background-image: url(images/black-desc.gif); */
+}
+
+.tablesorter-blue thead .sorter-false {
+    background-image: none;
+    cursor: default;
+    padding: 4px;
+}
+
+/* tfoot */
+.tablesorter-blue tfoot .tablesorter-headerSortUp,
+.tablesorter-blue tfoot .tablesorter-headerSortDown,
+.tablesorter-blue tfoot .tablesorter-headerAsc,
+.tablesorter-blue tfoot .tablesorter-headerDesc {
+    /* remove sort arrows from footer */
+    background-image: none;
+}
+
+/* tbody */
+.tablesorter-blue td {
+    color: #3d3d3d;
+    background-color: #fff;
+    padding: 4px;
+    vertical-align: top;
+}
+
+/* hovered row colors
+ you'll need to add additional lines for
+ rows with more than 2 child rows
+ */
+.tablesorter-blue tbody > tr.hover > td,
+.tablesorter-blue tbody > tr:hover > td,
+.tablesorter-blue tbody > tr:hover + tr.tablesorter-childRow > td,
+.tablesorter-blue tbody > tr:hover + tr.tablesorter-childRow + tr.tablesorter-childRow > td,
+.tablesorter-blue tbody > tr.even.hover > td,
+.tablesorter-blue tbody > tr.even:hover > td,
+.tablesorter-blue tbody > tr.even:hover + tr.tablesorter-childRow > td,
+.tablesorter-blue tbody > tr.even:hover + tr.tablesorter-childRow + tr.tablesorter-childRow > td {
+    background-color: #d9d9d9;
+}
+
+.tablesorter-blue tbody > tr.odd.hover > td,
+.tablesorter-blue tbody > tr.odd:hover > td,
+.tablesorter-blue tbody > tr.odd:hover + tr.tablesorter-childRow > td,
+.tablesorter-blue tbody > tr.odd:hover + tr.tablesorter-childRow + tr.tablesorter-childRow > td {
+    background-color: #bfbfbf;
+}
+
+/* table processing indicator */
+.tablesorter-blue .tablesorter-processing {
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    /* background-image: url(images/loading.gif) !important; */
+    background-image: url('data:image/gif;base64,R0lGODlhFAAUAKEAAO7u7lpaWgAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQBCgACACwAAAAAFAAUAAACQZRvoIDtu1wLQUAlqKTVxqwhXIiBnDg6Y4eyx4lKW5XK7wrLeK3vbq8J2W4T4e1nMhpWrZCTt3xKZ8kgsggdJmUFACH5BAEKAAIALAcAAAALAAcAAAIUVB6ii7jajgCAuUmtovxtXnmdUAAAIfkEAQoAAgAsDQACAAcACwAAAhRUIpmHy/3gUVQAQO9NetuugCFWAAAh+QQBCgACACwNAAcABwALAAACE5QVcZjKbVo6ck2AF95m5/6BSwEAIfkEAQoAAgAsBwANAAsABwAAAhOUH3kr6QaAcSrGWe1VQl+mMUIBACH5BAEKAAIALAIADQALAAcAAAIUlICmh7ncTAgqijkruDiv7n2YUAAAIfkEAQoAAgAsAAAHAAcACwAAAhQUIGmHyedehIoqFXLKfPOAaZdWAAAh+QQFCgACACwAAAIABwALAAACFJQFcJiXb15zLYRl7cla8OtlGGgUADs=') !important;
+}
+
+/* Zebra Widget - row alternating colors */
+.tablesorter-blue tbody tr.odd > td {
+    background-color: #ebf2fa;
+}
+
+.tablesorter-blue tbody tr.even > td {
+    background-color: #fff;
+}
+
+/* Column Widget - column sort colors */
+.tablesorter-blue td.primary,
+.tablesorter-blue tr.odd td.primary {
+    background-color: #99b3e6;
+}
+
+.tablesorter-blue tr.even td.primary {
+    background-color: #c2d1f0;
+}
+
+.tablesorter-blue td.secondary,
+.tablesorter-blue tr.odd td.secondary {
+    background-color: #c2d1f0;
+}
+
+.tablesorter-blue tr.even td.secondary {
+    background-color: #d6e0f5;
+}
+
+.tablesorter-blue td.tertiary,
+.tablesorter-blue tr.odd td.tertiary {
+    background-color: #d6e0f5;
+}
+
+.tablesorter-blue tr.even td.tertiary {
+    background-color: #ebf0fa;
+}
+
+/* caption */
+caption {
+    background-color: #fff;
+}
+
+/* filter widget */
+.tablesorter-blue .tablesorter-filter-row {
+    background-color: #eee;
+}
+
+.tablesorter-blue .tablesorter-filter-row td {
+    background-color: #eee;
+    line-height: normal;
+    text-align: center; /* center the input */
+    -webkit-transition: line-height 0.1s ease;
+    -moz-transition: line-height 0.1s ease;
+    -o-transition: line-height 0.1s ease;
+    transition: line-height 0.1s ease;
+}
+
+/* optional disabled input styling */
+.tablesorter-blue .tablesorter-filter-row .disabled {
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+    cursor: not-allowed;
+}
+
+/* hidden filter row */
+.tablesorter-blue .tablesorter-filter-row.hideme td {
+    /*** *********************************************** ***/
+    /*** change this padding to modify the thickness     ***/
+    /*** of the closed filter row (height = padding x 2) ***/
+    padding: 2px;
+    /*** *********************************************** ***/
+    margin: 0;
+    line-height: 0;
+    cursor: pointer;
+}
+
+.tablesorter-blue .tablesorter-filter-row.hideme * {
+    height: 1px;
+    min-height: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    /* don't use visibility: hidden because it disables tabbing */
+    opacity: 0;
+    filter: alpha(opacity=0);
+}
+
+/* filters */
+.tablesorter-blue input.tablesorter-filter,
+.tablesorter-blue select.tablesorter-filter {
+    width: 98%;
+    height: auto;
+    margin: 0;
+    padding: 4px;
+    background-color: #fff;
+    border: 1px solid #bbb;
+    color: #333;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-transition: height 0.1s ease;
+    -moz-transition: height 0.1s ease;
+    -o-transition: height 0.1s ease;
+    transition: height 0.1s ease;
+}
+
+/* rows hidden by filtering (needed for child rows) */
+.tablesorter .filtered {
+    display: none;
+}
+
+/* ajax error row */
+.tablesorter .tablesorter-errorRow td {
+    text-align: left;
+    cursor: pointer;
+    background-color: #e6bf99;
+}
+
+/********************/
+/* Fim do blue theme*/
+/********************/
+
+.logo {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+}
+
+/********************/
+/*     Menu         */
+/********************/
+
+.top-header {
+    position: relative;
+    height: 70px;
+    background-color: #004785;
+    text-align: center;
+}
+
+a {
+    text-decoration: none;
+}
+
+.container {
+    width: 100%;
+    text-align: left;
+    background-color: #004785;
+    clear: both;
+}
+
+.toggleMenu {
+    display: none;
+    padding: 5px 15px 0 5px;
+    color: #fff;
+}
+
+.nav {
+    list-style: none;
+    *zoom: 1;
+    background: #004785;
+}
+
+.nav:before,
+.nav:after {
+    content: " ";
+    display: table;
+}
+
+.nav:after {
+    clear: both;
+}
+
+.nav ul {
+    list-style: none;
+    width: 100%;
+}
+
+.nav a {
+    padding: 10px 15px;
+    color: #fff;
+}
+
+.nav li {
+    position: relative;
+}
+
+.nav > li {
+    text-align: center;
+    float: left;
+    min-width: 9em;
+}
+
+.nav > li > .parent {
+    background-image: url("images/downArrow.png");
+    background-repeat: no-repeat;
+    background-position: 95%;
+}
+
+.nav > li > a {
+    display: block;
+}
+
+.nav li ul {
+    position: absolute;
+    left: -9999px;
+}
+
+.nav > li.hover > ul {
+    left: 0;
+}
+
+.nav li li.hover ul {
+    left: 100%;
+    top: 0;
+}
+
+.nav li li a {
+    display: block;
+    background: #8cb3d9;
+    position: relative;
+    z-index: 100;
+    border-top: 1px solid #175e4c;
+    font-size: 18px;
+    line-height: 18px;
+}
+
+.nav li li li a {
+    background: #249578;
+    z-index: 200;
+    border-top: 1px solid #1d7a62;
+}
+
+@media screen and (max-width: 1024px) {
+    .active {
+        display: block;
+    }
+
+    .nav > li {
+        float: none;
+    }
+
+    .nav li {
+        font-size: 24px;
+        width: 100%;
+    }
+
+    .nav > li > .parent {
+        background-position: 95% 50%;
+    }
+
+    .nav li li .parent {
+        background-image: url("images/downArrow.png");
+        background-repeat: no-repeat;
+        background-position: 95% 50%;
+    }
+
+    .nav ul {
+        display: block;
+        width: 100%;
+    }
+
+    .nav > li.hover > ul, .nav li li.hover ul {
+        position: static;
+    }
+
+    .nav li li a {
+        border-top: 1px solid #175e4c;
+    }
+
+    .nav > li {
+        border-top: 1px solid #104336;
+    }
+
+    .nav li li li a {
+        border-top: 1px solid #1d7a62;
+    }
+
+}
+
+.nav a.current {
+    color: #d2ff00;
+}
+
+.nav li.in-current {
+    background: #3d6f85
+}
+
+/********************/
+/*    Fim do Menu   */
+/********************/
+
+.nav > li > a:focus, .nav > li > a:hover {
+    text-decoration: none;
+    background-color: transparent;
+}
+
+.clock {
+    padding: 100px 0;
+    font-size: 60px;
+    line-height: 80px;
+}
