@@ -93,7 +93,6 @@
     <column name="nome" phpName="Nome" type="VARCHAR" size="45" required="true"/>
     <column name="inputs" phpName="Inputs" type="ARRAY" />
     <column name="colunas" phpName="Colunas" type="LONGVARCHAR" sqlType="json" />
-    <column name="dados" phpName="Dados" type="LONGVARCHAR" sqlType="json" />
     <foreign-key foreignTable="evento" name="resultado_evento_id" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="evento_id" foreign="evento_id"/>
     </foreign-key>

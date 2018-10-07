@@ -25,14 +25,12 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildResultadoQuery orderByNome($order = Criteria::ASC) Order by the nome column
  * @method     ChildResultadoQuery orderByInputs($order = Criteria::ASC) Order by the inputs column
  * @method     ChildResultadoQuery orderByColunas($order = Criteria::ASC) Order by the colunas column
- * @method     ChildResultadoQuery orderByDados($order = Criteria::ASC) Order by the dados column
  *
  * @method     ChildResultadoQuery groupByResultadoId() Group by the resultado_id column
  * @method     ChildResultadoQuery groupByEventoId() Group by the evento_id column
  * @method     ChildResultadoQuery groupByNome() Group by the nome column
  * @method     ChildResultadoQuery groupByInputs() Group by the inputs column
  * @method     ChildResultadoQuery groupByColunas() Group by the colunas column
- * @method     ChildResultadoQuery groupByDados() Group by the dados column
  *
  * @method     ChildResultadoQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildResultadoQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -61,8 +59,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildResultado findOneByEventoId(string $evento_id) Return the first ChildResultado filtered by the evento_id column
  * @method     ChildResultado findOneByNome(string $nome) Return the first ChildResultado filtered by the nome column
  * @method     ChildResultado findOneByInputs(array $inputs) Return the first ChildResultado filtered by the inputs column
- * @method     ChildResultado findOneByColunas(string $colunas) Return the first ChildResultado filtered by the colunas column
- * @method     ChildResultado findOneByDados(string $dados) Return the first ChildResultado filtered by the dados column *
+ * @method     ChildResultado findOneByColunas(string $colunas) Return the first ChildResultado filtered by the colunas column *
 
  * @method     ChildResultado requirePk($key, ConnectionInterface $con = null) Return the ChildResultado by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildResultado requireOne(ConnectionInterface $con = null) Return the first ChildResultado matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -72,7 +69,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildResultado requireOneByNome(string $nome) Return the first ChildResultado filtered by the nome column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildResultado requireOneByInputs(array $inputs) Return the first ChildResultado filtered by the inputs column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildResultado requireOneByColunas(string $colunas) Return the first ChildResultado filtered by the colunas column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildResultado requireOneByDados(string $dados) Return the first ChildResultado filtered by the dados column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildResultado[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildResultado objects based on current ModelCriteria
  * @method     ChildResultado[]|ObjectCollection findByResultadoId(string $resultado_id) Return ChildResultado objects filtered by the resultado_id column
@@ -80,7 +76,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildResultado[]|ObjectCollection findByNome(string $nome) Return ChildResultado objects filtered by the nome column
  * @method     ChildResultado[]|ObjectCollection findByInputs(array $inputs) Return ChildResultado objects filtered by the inputs column
  * @method     ChildResultado[]|ObjectCollection findByColunas(string $colunas) Return ChildResultado objects filtered by the colunas column
- * @method     ChildResultado[]|ObjectCollection findByDados(string $dados) Return ChildResultado objects filtered by the dados column
  * @method     ChildResultado[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
@@ -179,7 +174,7 @@ abstract class ResultadoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT resultado_id, evento_id, nome, inputs, colunas, dados FROM resultado WHERE resultado_id = :p0';
+        $sql = 'SELECT resultado_id, evento_id, nome, inputs, colunas FROM resultado WHERE resultado_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
@@ -448,31 +443,6 @@ abstract class ResultadoQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(ResultadoTableMap::COL_COLUNAS, $colunas, $comparison);
-    }
-
-    /**
-     * Filter the query on the dados column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByDados('fooValue');   // WHERE dados = 'fooValue'
-     * $query->filterByDados('%fooValue%', Criteria::LIKE); // WHERE dados LIKE '%fooValue%'
-     * </code>
-     *
-     * @param     string $dados The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this|ChildResultadoQuery The current query, for fluid interface
-     */
-    public function filterByDados($dados = null, $comparison = null)
-    {
-        if (null === $comparison) {
-            if (is_array($dados)) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        return $this->addUsingAlias(ResultadoTableMap::COL_DADOS, $dados, $comparison);
     }
 
     /**
