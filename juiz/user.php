@@ -1,8 +1,6 @@
 <?php
 namespace Baja\Juiz;
 
-
-
 use Baja\Model\EventoQuery;
 use Baja\Model\LogQuery;
 use Baja\Model\ProvaQuery;

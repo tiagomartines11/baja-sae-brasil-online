@@ -1,21 +1,31 @@
 <?php
+namespace Baja\Juiz;
 
-if (!isset($_REQUEST['id'])) header("Location: admin.php");
+use Baja\Model\EventoQuery;
+use Baja\Model\Log;
+use Baja\Model\LogQuery;
+use Baja\Model\ProvaQuery;
+use Baja\Site\OneSignalClient;
+use DateTimeZone;
 
-$_prova_id = $_REQUEST['id'];
+if (!isset($_REQUEST['id'])) header("Location: index.php");
+
+$_page = $_REQUEST['id'];
+
 Session::permissionCheck('admin');
 
-$prova = Prova::getProvaById($_prova_id);
-if (!$prova) header("Location: admn.php");
+$currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
+$prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
+if (!$prova) header("Location: index.php");
 
 if (@$_REQUEST['act'] == 'toggle') {
         $prova->setStatus($prova->getStatus() == "Parcial" ? "Final" : "Parcial");
-        Prova::insertUpdate($prova);
+        $prova->save();
         if ($prova->getStatus() == 'Final') OneSignalClient::sendMessage($prova->getNome(), "Prova finalizada! Confira os resultados!!", "index.php?pg=".$prova->getProvaId());
-        header("Location: prova.php?id=".$_prova_id);
+        header("Location: prova.php?id=".$_page);
 }
 
-$logs = Log::getAllForPage($prova->getProvaId());
+$logs = LogQuery::create()->filterByPagina($prova->getFullCode())->find();
 
 Template::printHeader("Detalhes de Prova", false);
 
@@ -66,7 +76,7 @@ Template::printHeader("Detalhes de Prova", false);
                 }
                 $dadosStr .= '</table>';
                 echo '<tr>
-            <td>'.$l->getData().'</td>
+            <td>'.$l->getData()->setTimezone(new DateTimeZone("America/Sao_Paulo"))->format('Y-m-d H:i:s').'</td>
             <td>'.$l->getUser().'</td>
             <td>'.$l->getEquipe().'</td>
             <td>'.$dadosStr.'</td>
