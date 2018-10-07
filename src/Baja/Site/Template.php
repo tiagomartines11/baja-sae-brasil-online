@@ -3,8 +3,6 @@ namespace Baja\Site;
 
 use Baja\Model\EventoQuery;
 use Baja\Model\ResultadoQuery;
-use Propel\Runtime\ActiveQuery\Criteria;
-use Symfony\Component\Finder\Comparator\Comparator;
 
 class Template
 {
