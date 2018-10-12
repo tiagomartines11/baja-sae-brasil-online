@@ -32,9 +32,4 @@ class Resultado extends BaseResultado
     {
         return parent::setColunas(json_encode($v));
     }
-
-    public function getIsTrophy()
-    {
-        return true;
-    }
 }

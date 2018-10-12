@@ -52,7 +52,7 @@ class Prova extends BaseProva
      */
     public function setTotals($v)
     {
-        return parent::setTotals(json_encode($v));
+        return parent::setTotals($v !== null ? json_encode($v) : null);
     }
 
     public function getParamsVars() {

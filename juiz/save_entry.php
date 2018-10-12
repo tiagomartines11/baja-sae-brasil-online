@@ -36,6 +36,19 @@ if (!$nota) {
     $nota->setEventoId($currentEventId);
 }
 
+if ($_POST['delete'] == 'Deletar Nota') {
+    $log = new Log();
+    $log->setUser(Session::getCurrentUser()->getUsername());
+    $log->setPagina($prova->getEventoId()."_".$prova->getProvaId());
+    $log->setEquipe($equipe->getEquipeId());
+    $log->setDados('{"DELETED": "---"}');
+    $log->save();
+
+    $nota->delete();
+    header("Location: dashboard.php?p=$_page");
+    exit();
+}
+
 foreach ($_POST as &$v) {
     if ($v === "") $v = null;
     if (is_array($v)) $v = implode(',', $v);

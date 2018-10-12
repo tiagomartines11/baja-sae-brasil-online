@@ -34,6 +34,9 @@ $serviceContainer->setDefaultDatasource('resultados');
 $_smtpPassword = '****';
 $_oneSignalAuth = '*****';
 
+$_remoteKey = '*******';
+$_remoteValidFor = '18BR';
+
 //use Baja\Model\Map\InputTableMap;
 //use Propel\Runtime\Propel;
 //

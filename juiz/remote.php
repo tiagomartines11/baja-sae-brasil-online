@@ -1,30 +1,54 @@
 <?php
+namespace Baja\Juiz;
+
+use Baja\Model\EventoQuery;
+use Baja\Model\Input;
+use Baja\Model\InputQuery;
+use Baja\Model\ProvaQuery;
+use Propel\Runtime\Exception\PropelException;
+
 $inputJSON = file_get_contents('php://input');
 $input = json_decode($inputJSON, TRUE);
 
-if (!isset($input) || !isset($input['key']) || $input['key'] != "DesativadoAté2018" || $_SERVER["REDIRECT_YEAR"] != 2018) {
+$currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
+
+if (!isset($input) || !isset($input['key']) || $input['key'] != $_remoteKey || $currentEventId != $_remoteValidFor) {
     header('HTTP/1.0 403 Forbidden');
     exit();
 }
 
+$prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId('END');
+if (!$prova) header("Location: index.php");
+
 if (array_key_exists("truncate", $input) && $input["truncate"] == "all") {
-    DB::query("TRUNCATE TABLE end");
+    $allInputs = InputQuery::create()->filterByProvaId('END')->filterByEventoId($currentEventId);
+    $allInputs->delete();
+    $prova->setTempo(null);
+    $prova->setTotals(null);
+    $prova->save();
     die("OK");
 }
 
 if (array_key_exists("raceTime", $input)) {
-    $p = Prova::getProvaById("end");
-    $p->setTempo($input["raceTime"]);
-    Prova::insertUpdate($p);
+    $prova->setTempo(time() - $input["raceTime"]);
+    $prova->save();
 }
 
 if (array_key_exists("cars", $input)) {
     foreach ((array)$input["cars"] as $carObj) {
-        $e = new Enduro();
-        $e->initWithRemoteData($carObj["number"], $carObj["laps"], $carObj["bestLapTime"]);
-        $e->setUser("system");
-        Enduro::insertUpdate($e);
+        if ($carObj["laps"] > 0) {
+            $input = InputQuery::create()->filterByEquipeId($carObj["number"])->filterByProvaId('END')->filterByEventoId($currentEventId)->findOne();
+            if (!$input) {
+                $input = new Input();
+                $input->setEquipeId($carObj["number"]);
+                $input->setEventoId($currentEventId);
+                $input->setProvaId('END');
+            }
+            $input->setDados(array("VOLTAS"=> intval($carObj["laps"]), "BEST"=> intval($carObj["bestLapTime"])));
+            try { $input->save(); } catch (PropelException $e) { continue; };
+        }
     }
+    $prova->refreshVarsAndPontos();
     die("OK");
 }
 
