@@ -92,8 +92,8 @@ class Prova extends BaseProva
             $i->updateVars();
             $i->save();
         }
-        $this->updateTotals();
         $this->setModificado(new DateTime("now"));
+        $this->updateTotals();
         foreach ($inputs as $i) {
             $i->updatePontos();
             $i->save();

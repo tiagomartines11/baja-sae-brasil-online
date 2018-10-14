@@ -90,10 +90,12 @@ class Input extends BaseInput
 
             $vars = array_merge((array)$dados, (array)$vars, (array)$varsMinMax);
 
-            $pontos = $prova->getParamsPontos();
+            $pontos = (array)$prova->getParamsPontos();
+            ksort($pontos);
             $pts = [];
-            foreach ((array)$pontos as $p => $formula) {
+            foreach ($pontos as $p => $formula) {
                 $pts[$p] = self::solveFormula($vars, $formula);
+                $vars[$p] = $pts[$p];
             }
             $this->setPontos($pts);
         } catch (PropelException $e) {
