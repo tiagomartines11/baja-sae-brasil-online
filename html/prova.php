@@ -86,6 +86,8 @@ Template::printHeader($resultado->getNome());
             if (split.length === 1) return parseFloat(s);
             var a = parseFloat(split[0]);
             var b = parseFloat(split[1]);
+            if (isNaN(a)) a = 0;
+            if (isNaN(b)) b = 0;
             return a < b ? b : a;
         },
         // set type, either numeric or text
@@ -102,6 +104,8 @@ Template::printHeader($resultado->getNome());
             if (split.length === 1) return parseFloat(s);
             var a = parseFloat(split[0]);
             var b = parseFloat(split[1]);
+            if (isNaN(a)) a = 999;
+            if (isNaN(b)) b = 999;
             return a > b ? b : a;
         },
         // set type, either numeric or text
