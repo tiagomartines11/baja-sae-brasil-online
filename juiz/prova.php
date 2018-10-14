@@ -17,11 +17,16 @@ $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
 if (!$prova) header("Location: index.php");
 
-if (@$_REQUEST['act'] == 'toggle') {
-        $prova->setStatus($prova->getStatus() == "Parcial" ? "Final" : "Parcial");
-        $prova->save();
-        if ($prova->getStatus() == 'Final') OneSignalClient::sendMessage($prova->getNome(), "Prova finalizada! Confira os resultados!!", "index.php?pg=".$prova->getProvaId());
-        header("Location: prova.php?id=".$_page);
+if (@$_REQUEST['act'] == 'Trocar Status') {
+    $prova->setStatus($prova->getStatus() == "Parcial" ? "Final" : "Parcial");
+    $prova->save();
+    if ($prova->getStatus() == 'Final') OneSignalClient::sendMessage($prova->getNome(), "Prova finalizada! Confira os resultados!!", "index.php?pg=".$prova->getProvaId());
+    header("Location: prova.php?id=".$_page);
+}
+
+if (@$_REQUEST['act'] == 'Refresh Pontos') {
+    $prova->refreshVarsAndPontos();
+    header("Location: prova.php?id=".$_page);
 }
 
 $logs = LogQuery::create()->filterByPagina($prova->getFullCode())->find();
@@ -30,7 +35,7 @@ Template::printHeader("Detalhes de Prova", false);
 
 ?>
     <div style="max-width: 600px; margin: 0 auto;">
-        <form action="prova.php?act=toggle&amp;id=<?php echo $prova->getProvaId(); ?>" method="POST">
+        <form action="prova.php?id=<?php echo $prova->getProvaId(); ?>" method="POST">
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
             <tr style="height: 50px">
@@ -47,7 +52,7 @@ Template::printHeader("Detalhes de Prova", false);
             </tbody>
             <tfoot>
             <tr>
-                <th style="height: 30px;" colspan="2"><input type="submit" value="Trocar Status" /></th>
+                <th style="height: 30px;" colspan="2"><input type="submit" name="act" value="Trocar Status" /> <input type="submit" name="act" value="Refresh Pontos" /></th>
             </tr>
             </tfoot>
         </table>
