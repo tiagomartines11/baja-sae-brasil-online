@@ -71,7 +71,7 @@ $diff = [];
 foreach ($provaInput as $k=>$v) {
     $hasOld = array_key_exists($k, $new_array);
     $hasNew = array_key_exists($k, $new_array);
-    if ((!$hasOld && $hasNew) || ($hasOld && $hasNew && $new_array[$k] != $old_array[$k])) {
+    if ((!$hasOld && $hasNew) || ($hasOld && $hasNew && $new_array[$k] !== $old_array[$k])) {
         $diff[$k] = $new_array[$k];
     } else if (!$hasNew && $hasOld) {
         $diff[$k] = 'removed';
