@@ -47,10 +47,12 @@ if ($pos) {
     $cmp = function($a, $b) use ($pos)
     {
         if (!array_key_exists($pos, $a)) return 0;
-        if ($a[$pos] == $b[$pos]) {
+        $va = floatval(strip_tags($a[$pos]));
+        $vb = floatval(strip_tags($b[$pos]));
+        if ($va == $vb) {
             return 0;
         }
-        return ($a[$pos] > $b[$pos]) ? -1 : 1;
+        return ($va > $vb) ? -1 : 1;
     };
 
     usort($vars, $cmp);
