@@ -7,6 +7,8 @@ use Baja\Juiz\Session;
 class OneSignalClient
 {
     public static function sendMessage($title, $message, $url = "", $carFilter = 0){
+        global $_oneSignalAuth;
+        
         $content = array(
             "en" => $message
         );
