@@ -108,12 +108,16 @@ class Template
                 foreach ((array)EventoQuery::getCurrentEvent()->getMenu() as $item) {
                     if (is_object($item)) {
                         foreach ($item as $name=>$subitem) {
-                            if (is_array($subitem)) {
+                            if (is_array($subitem) || is_object($subitem)) {
                                 echo '<li class="first-level"><a id="'.$name.'" href="#">'.$name.'</a><ul>';
                                 foreach ($subitem as $k=>$v) {
-                                    $resultado = ResultadoQuery::create()->findPk($v);
-                                    $nome = $resultado ? $resultado->getNome() : $v;
-                                    echo '<li><a id="'.$v.'" href="prova.php?id='.$v.'">'.$nome.'</a></li>';
+                                    if (strstr($v, "php") === false) {
+                                        $resultado = ResultadoQuery::create()->findPk($v);
+                                        $nome = $resultado ? $resultado->getNome() : $v;
+                                        echo '<li><a id="' . $v . '" href="prova.php?id=' . $v . '">' . $nome . '</a></li>';
+                                    } else {
+                                        echo '<li><a id="' . $k . '" href="' . $v . '">' . $k . '</a></li>';
+                                    }
                                 }
                                 echo '</ul></li>';
                             } else {
