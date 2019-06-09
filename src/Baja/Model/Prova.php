@@ -100,6 +100,10 @@ class Prova extends BaseProva
         }
     }
 
+    public function getType() {
+        return $this->getParams()->type ? $this->getParams()->type : 'normal';
+    }
+
     public function getFullCode() {
         return $this->getEventoId().'_'.$this->getProvaId();
     }
@@ -108,7 +112,11 @@ class Prova extends BaseProva
     {
         $varsQuery = [];
         foreach ((array)$this->getParamsMinMax() as $var => $formula) {
-            $varsQuery[] = "'{$var}max', MAX(IF(vars->>'$.$var'='null', NULL, vars->'$.$var')), '{$var}min', MIN(IF(vars->>'$.$var'='null', NULL, vars->'$.$var'))";
+            $varsQuery[] = "
+            '{$var}max', MAX(IF(vars->>'$.$var'='null' OR vars->>'$.$var'='9999', NULL, vars->'$.$var')), 
+            '{$var}min', MIN(IF(vars->>'$.$var'='null' OR vars->>'$.$var'='0', NULL, vars->'$.$var')),
+            '{$var}com', (0.5 * (1 - SUM(IF(vars->>'$.$var'='9999', NULL, 1))/SUM(IF(vars->>'$.$var'='null', NULL, 1))))
+            ";
         }
 
         $con = Propel::getWriteConnection("resultados");

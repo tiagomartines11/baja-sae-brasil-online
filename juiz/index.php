@@ -29,7 +29,10 @@ echo '<div style="max-width: 400px; margin: 0 auto"><table class="tablesorter">
 
 foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->getEventoId()) as $prova) {
     if (Session::hasPermission($prova->getProvaId()) && count($prova->getParamsInputs()) > 0) {
-        echo '<tr style="height: 40px"><td><a href="dashboard.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+        if ($prova->getType() == 'normal')
+            echo '<tr style="height: 40px"><td><a href="dashboard.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+        else
+            echo '<tr style="height: 40px"><td><a href="rolling_entry.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
     }
 }
 

@@ -17,31 +17,41 @@ $i = InputQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getE
     ->leftJoinEquipe()->withColumn('Equipe.Escola')->withColumn('Equipe.EquipeId')->withColumn('Equipe.Equipe')->withColumn('Equipe.Estado')
     ->find();
 
+$hasEntries = false;
+
 foreach ($i as $input) {
     if (!array_key_exists($input->getEquipeId(), $vars)) $vars[$input->getEquipeId()] = ["NUM" => $input->getEquipeEquipeId(), "EQUIPE" => $input->getEquipeEquipe(), "ESCOLA" => $input->getEquipeEscola(), "ESTADO" => $input->getEquipeEstado()];
-    $vars[$input->getEquipeId()] = array_merge($vars[$input->getEquipeId()], (array)$input->getDados(), (array)$input->getVars(), (array) $input->getPontos());
+    $hasEntries = true;
+    $dados = @$input->getDados()->entries ? (array)$input->getDados() : ["entries" => [$input->getDados()]];
+    $vars[$input->getEquipeId()] = array_merge($vars[$input->getEquipeId()], $dados, (array)$input->getVars(), (array) $input->getPontos());
     if ($filter && !$vars[$input->getEquipeId()][$filter]) {
         unset($vars[$input->getEquipeId()]);
     }
 }
 
-foreach ($vars as &$v) {
-    foreach ($colunas as $c) {
-        if (is_array($c->val)) {
-            $highlight = $c->highlight ? Input::solveFormula($v, $c->highlight) : null;
-            $func = function ($value) use ($v, $highlight) {
-                $res = Input::solveFormula($v, $value);
-                if ($res == $highlight) $res = "<b>$res</b>";
-                return $res;
-            };
-            $values = array_map($func, $c->val);
-            $v[$c->header] = implode("<br /> ", $values);
-        } else {
-            $v[$c->header] = Input::solveFormula($v, $c->val);
+$newVars = [];
+foreach ($vars as $v) {
+    foreach ($v["entries"] as $e) {
+        $auxVar = array_merge($v, (array)$e);
+        unset($auxVar["entries"]);
+        foreach ($colunas as $c) {
+            if (is_array($c->val)) {
+                $highlight = $c->highlight ? Input::solveFormula($auxVar, $c->highlight) : null;
+                $func = function ($value) use ($auxVar, $highlight) {
+                    $res = Input::solveFormula($auxVar, $value);
+                    if ($res == $highlight) $res = "<b>$res</b>";
+                    return $res;
+                };
+                $values = array_map($func, $c->val);
+                $auxVar[$c->header] = implode("<br /> ", $values);
+            } else {
+                $auxVar[$c->header] = Input::solveFormula($auxVar, $c->val);
+            }
         }
+        $newVars[] = $auxVar;
     }
 }
-unset($v);
+$vars = $newVars;
 
 if ($pos) {
     $cmp = function($a, $b) use ($pos)
@@ -66,7 +76,11 @@ if ($pos) {
     }
     unset($v);
 }
-usort($vars, function($a, $b) { return ($a["NUM"] > $b["NUM"]) ? 1 : -1;} );
+
+if ($hasEntries)
+    usort($vars, function($a, $b) { return ($a["ts"] > $b["ts"]) ? 1 : -1;} );
+else
+    usort($vars, function($a, $b) { return ($a["NUM"] > $b["NUM"]) ? 1 : -1;} );
 
 Template::printHeader($resultado->getNome());
 ?>
@@ -132,9 +146,10 @@ if (count($vars) && count($colunas)) {
         foreach ($vars as $v) {
             echo "<tr>";
             foreach ($colunas as $c) {
-                if ((($c->header == "Pontos" && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_END') ||
-                    (($c->header == "Enduro" || $c->header == "Total" || $c->val == "Pos") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_GER'))
-                    && !$_DEV_MODE && false) {
+                if ((
+                    (($c->header == "Pontos" || $c->header == "Voltas" || $c->val == "Pos") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_END') ||
+                    (($c->header == "Enduro" || $c->header == "Total" || $c->val == "Pos") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_GER')
+                    ) && !$_DEV_MODE && false) {
                     echo "<td>SPOILERS</td>";
                 } else if ($c->val == "EquipeNum") {
                     echo '<td>' . $v["NUM"] . '</td>';
