@@ -1,7 +1,7 @@
 {
   "require": {
     "propel/propel": "~2.0@dev",
-    "phpmailer/phpmailer": "^5.2",
+    "phpmailer/phpmailer": "^6.1",
     "monolog/monolog": "^1.23"
   },
   "autoload": {
