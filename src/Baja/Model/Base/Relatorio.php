@@ -4,12 +4,8 @@ namespace Baja\Model\Base;
 
 use \Exception;
 use \PDO;
-use Baja\Model\Equipe as ChildEquipe;
-use Baja\Model\EquipeQuery as ChildEquipeQuery;
-use Baja\Model\InputQuery as ChildInputQuery;
-use Baja\Model\Prova as ChildProva;
-use Baja\Model\ProvaQuery as ChildProvaQuery;
-use Baja\Model\Map\InputTableMap;
+use Baja\Model\RelatorioQuery as ChildRelatorioQuery;
+use Baja\Model\Map\RelatorioTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -23,18 +19,18 @@ use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Parser\AbstractParser;
 
 /**
- * Base class that represents a row from the 'input' table.
+ * Base class that represents a row from the 'relatorio' table.
  *
  *
  *
  * @package    propel.generator.Baja.Model.Base
  */
-abstract class Input implements ActiveRecordInterface
+abstract class Relatorio implements ActiveRecordInterface
 {
     /**
      * TableMap class name
      */
-    const TABLE_MAP = '\\Baja\\Model\\Map\\InputTableMap';
+    const TABLE_MAP = '\\Baja\\Model\\Map\\RelatorioTableMap';
 
 
     /**
@@ -64,56 +60,25 @@ abstract class Input implements ActiveRecordInterface
     protected $virtualColumns = array();
 
     /**
-     * The value for the evento_id field.
+     * The value for the user_id field.
      *
      * @var        string
      */
-    protected $evento_id;
+    protected $user_id;
 
     /**
-     * The value for the prova_id field.
+     * The value for the equipes field.
      *
      * @var        string
      */
-    protected $prova_id;
+    protected $equipes;
 
     /**
-     * The value for the equipe_id field.
-     *
-     * @var        int
-     */
-    protected $equipe_id;
-
-    /**
-     * The value for the dados field.
+     * The value for the notas field.
      *
      * @var        string
      */
-    protected $dados;
-
-    /**
-     * The value for the vars field.
-     *
-     * @var        string
-     */
-    protected $vars;
-
-    /**
-     * The value for the pontos field.
-     *
-     * @var        string
-     */
-    protected $pontos;
-
-    /**
-     * @var        ChildProva
-     */
-    protected $aProva;
-
-    /**
-     * @var        ChildEquipe
-     */
-    protected $aEquipe;
+    protected $notas;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -124,7 +89,7 @@ abstract class Input implements ActiveRecordInterface
     protected $alreadyInSave = false;
 
     /**
-     * Initializes internal state of Baja\Model\Base\Input object.
+     * Initializes internal state of Baja\Model\Base\Relatorio object.
      */
     public function __construct()
     {
@@ -219,9 +184,9 @@ abstract class Input implements ActiveRecordInterface
     }
 
     /**
-     * Compares this with another <code>Input</code> instance.  If
-     * <code>obj</code> is an instance of <code>Input</code>, delegates to
-     * <code>equals(Input)</code>.  Otherwise, returns <code>false</code>.
+     * Compares this with another <code>Relatorio</code> instance.  If
+     * <code>obj</code> is an instance of <code>Relatorio</code>, delegates to
+     * <code>equals(Relatorio)</code>.  Otherwise, returns <code>false</code>.
      *
      * @param  mixed   $obj The object to compare to.
      * @return boolean Whether equal to the object specified.
@@ -349,200 +314,94 @@ abstract class Input implements ActiveRecordInterface
     }
 
     /**
-     * Get the [evento_id] column value.
+     * Get the [user_id] column value.
      *
      * @return string
      */
-    public function getEventoId()
+    public function getUserId()
     {
-        return $this->evento_id;
+        return $this->user_id;
     }
 
     /**
-     * Get the [prova_id] column value.
+     * Get the [equipes] column value.
      *
      * @return string
      */
-    public function getProvaId()
+    public function getEquipes()
     {
-        return $this->prova_id;
+        return $this->equipes;
     }
 
     /**
-     * Get the [equipe_id] column value.
-     *
-     * @return int
-     */
-    public function getEquipeId()
-    {
-        return $this->equipe_id;
-    }
-
-    /**
-     * Get the [dados] column value.
+     * Get the [notas] column value.
      *
      * @return string
      */
-    public function getDados()
+    public function getNotas()
     {
-        return $this->dados;
+        return $this->notas;
     }
 
     /**
-     * Get the [vars] column value.
-     *
-     * @return string
-     */
-    public function getVars()
-    {
-        return $this->vars;
-    }
-
-    /**
-     * Get the [pontos] column value.
-     *
-     * @return string
-     */
-    public function getPontos()
-    {
-        return $this->pontos;
-    }
-
-    /**
-     * Set the value of [evento_id] column.
+     * Set the value of [user_id] column.
      *
      * @param string $v New value
-     * @return $this|\Baja\Model\Input The current object (for fluent API support)
+     * @return $this|\Baja\Model\Relatorio The current object (for fluent API support)
      */
-    public function setEventoId($v)
+    public function setUserId($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->evento_id !== $v) {
-            $this->evento_id = $v;
-            $this->modifiedColumns[InputTableMap::COL_EVENTO_ID] = true;
-        }
-
-        if ($this->aProva !== null && $this->aProva->getEventoId() !== $v) {
-            $this->aProva = null;
-        }
-
-        if ($this->aEquipe !== null && $this->aEquipe->getEventoId() !== $v) {
-            $this->aEquipe = null;
+        if ($this->user_id !== $v) {
+            $this->user_id = $v;
+            $this->modifiedColumns[RelatorioTableMap::COL_USER_ID] = true;
         }
 
         return $this;
-    } // setEventoId()
+    } // setUserId()
 
     /**
-     * Set the value of [prova_id] column.
-     *
-     * @param string $v New value
-     * @return $this|\Baja\Model\Input The current object (for fluent API support)
-     */
-    public function setProvaId($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->prova_id !== $v) {
-            $this->prova_id = $v;
-            $this->modifiedColumns[InputTableMap::COL_PROVA_ID] = true;
-        }
-
-        if ($this->aProva !== null && $this->aProva->getProvaId() !== $v) {
-            $this->aProva = null;
-        }
-
-        return $this;
-    } // setProvaId()
-
-    /**
-     * Set the value of [equipe_id] column.
-     *
-     * @param int $v New value
-     * @return $this|\Baja\Model\Input The current object (for fluent API support)
-     */
-    public function setEquipeId($v)
-    {
-        if ($v !== null) {
-            $v = (int) $v;
-        }
-
-        if ($this->equipe_id !== $v) {
-            $this->equipe_id = $v;
-            $this->modifiedColumns[InputTableMap::COL_EQUIPE_ID] = true;
-        }
-
-        if ($this->aEquipe !== null && $this->aEquipe->getEquipeId() !== $v) {
-            $this->aEquipe = null;
-        }
-
-        return $this;
-    } // setEquipeId()
-
-    /**
-     * Set the value of [dados] column.
+     * Set the value of [equipes] column.
      *
      * @param string|null $v New value
-     * @return $this|\Baja\Model\Input The current object (for fluent API support)
+     * @return $this|\Baja\Model\Relatorio The current object (for fluent API support)
      */
-    public function setDados($v)
+    public function setEquipes($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->dados !== $v) {
-            $this->dados = $v;
-            $this->modifiedColumns[InputTableMap::COL_DADOS] = true;
+        if ($this->equipes !== $v) {
+            $this->equipes = $v;
+            $this->modifiedColumns[RelatorioTableMap::COL_EQUIPES] = true;
         }
 
         return $this;
-    } // setDados()
+    } // setEquipes()
 
     /**
-     * Set the value of [vars] column.
+     * Set the value of [notas] column.
      *
      * @param string|null $v New value
-     * @return $this|\Baja\Model\Input The current object (for fluent API support)
+     * @return $this|\Baja\Model\Relatorio The current object (for fluent API support)
      */
-    public function setVars($v)
+    public function setNotas($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->vars !== $v) {
-            $this->vars = $v;
-            $this->modifiedColumns[InputTableMap::COL_VARS] = true;
+        if ($this->notas !== $v) {
+            $this->notas = $v;
+            $this->modifiedColumns[RelatorioTableMap::COL_NOTAS] = true;
         }
 
         return $this;
-    } // setVars()
-
-    /**
-     * Set the value of [pontos] column.
-     *
-     * @param string|null $v New value
-     * @return $this|\Baja\Model\Input The current object (for fluent API support)
-     */
-    public function setPontos($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->pontos !== $v) {
-            $this->pontos = $v;
-            $this->modifiedColumns[InputTableMap::COL_PONTOS] = true;
-        }
-
-        return $this;
-    } // setPontos()
+    } // setNotas()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -580,23 +439,14 @@ abstract class Input implements ActiveRecordInterface
     {
         try {
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : InputTableMap::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->evento_id = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : RelatorioTableMap::translateFieldName('UserId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->user_id = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : InputTableMap::translateFieldName('ProvaId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->prova_id = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : RelatorioTableMap::translateFieldName('Equipes', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->equipes = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : InputTableMap::translateFieldName('EquipeId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->equipe_id = (null !== $col) ? (int) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : InputTableMap::translateFieldName('Dados', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->dados = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : InputTableMap::translateFieldName('Vars', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->vars = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : InputTableMap::translateFieldName('Pontos', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->pontos = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : RelatorioTableMap::translateFieldName('Notas', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->notas = (null !== $col) ? (string) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -605,10 +455,10 @@ abstract class Input implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 6; // 6 = InputTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 3; // 3 = RelatorioTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
-            throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Input'), 0, $e);
+            throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Relatorio'), 0, $e);
         }
     }
 
@@ -627,18 +477,6 @@ abstract class Input implements ActiveRecordInterface
      */
     public function ensureConsistency()
     {
-        if ($this->aProva !== null && $this->evento_id !== $this->aProva->getEventoId()) {
-            $this->aProva = null;
-        }
-        if ($this->aEquipe !== null && $this->evento_id !== $this->aEquipe->getEventoId()) {
-            $this->aEquipe = null;
-        }
-        if ($this->aProva !== null && $this->prova_id !== $this->aProva->getProvaId()) {
-            $this->aProva = null;
-        }
-        if ($this->aEquipe !== null && $this->equipe_id !== $this->aEquipe->getEquipeId()) {
-            $this->aEquipe = null;
-        }
     } // ensureConsistency
 
     /**
@@ -662,13 +500,13 @@ abstract class Input implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getReadConnection(InputTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getReadConnection(RelatorioTableMap::DATABASE_NAME);
         }
 
         // We don't need to alter the object instance pool; we're just modifying this instance
         // already in the pool.
 
-        $dataFetcher = ChildInputQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
+        $dataFetcher = ChildRelatorioQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
         $row = $dataFetcher->fetch();
         $dataFetcher->close();
         if (!$row) {
@@ -678,8 +516,6 @@ abstract class Input implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
-            $this->aProva = null;
-            $this->aEquipe = null;
         } // if (deep)
     }
 
@@ -689,8 +525,8 @@ abstract class Input implements ActiveRecordInterface
      * @param      ConnectionInterface $con
      * @return void
      * @throws PropelException
-     * @see Input::setDeleted()
-     * @see Input::isDeleted()
+     * @see Relatorio::setDeleted()
+     * @see Relatorio::isDeleted()
      */
     public function delete(ConnectionInterface $con = null)
     {
@@ -699,11 +535,11 @@ abstract class Input implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(InputTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(RelatorioTableMap::DATABASE_NAME);
         }
 
         $con->transaction(function () use ($con) {
-            $deleteQuery = ChildInputQuery::create()
+            $deleteQuery = ChildRelatorioQuery::create()
                 ->filterByPrimaryKey($this->getPrimaryKey());
             $ret = $this->preDelete($con);
             if ($ret) {
@@ -738,7 +574,7 @@ abstract class Input implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(InputTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(RelatorioTableMap::DATABASE_NAME);
         }
 
         return $con->transaction(function () use ($con) {
@@ -757,7 +593,7 @@ abstract class Input implements ActiveRecordInterface
                     $this->postUpdate($con);
                 }
                 $this->postSave($con);
-                InputTableMap::addInstanceToPool($this);
+                RelatorioTableMap::addInstanceToPool($this);
             } else {
                 $affectedRows = 0;
             }
@@ -782,25 +618,6 @@ abstract class Input implements ActiveRecordInterface
         $affectedRows = 0; // initialize var to track total num of affected rows
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
-
-            // We call the save method on the following object(s) if they
-            // were passed to this object by their corresponding set
-            // method.  This object relates to these object(s) by a
-            // foreign key reference.
-
-            if ($this->aProva !== null) {
-                if ($this->aProva->isModified() || $this->aProva->isNew()) {
-                    $affectedRows += $this->aProva->save($con);
-                }
-                $this->setProva($this->aProva);
-            }
-
-            if ($this->aEquipe !== null) {
-                if ($this->aEquipe->isModified() || $this->aEquipe->isNew()) {
-                    $affectedRows += $this->aEquipe->save($con);
-                }
-                $this->setEquipe($this->aEquipe);
-            }
 
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
@@ -835,27 +652,18 @@ abstract class Input implements ActiveRecordInterface
 
 
          // check the columns in natural order for more readable SQL queries
-        if ($this->isColumnModified(InputTableMap::COL_EVENTO_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'evento_id';
+        if ($this->isColumnModified(RelatorioTableMap::COL_USER_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'user_id';
         }
-        if ($this->isColumnModified(InputTableMap::COL_PROVA_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'prova_id';
+        if ($this->isColumnModified(RelatorioTableMap::COL_EQUIPES)) {
+            $modifiedColumns[':p' . $index++]  = 'equipes';
         }
-        if ($this->isColumnModified(InputTableMap::COL_EQUIPE_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'equipe_id';
-        }
-        if ($this->isColumnModified(InputTableMap::COL_DADOS)) {
-            $modifiedColumns[':p' . $index++]  = 'dados';
-        }
-        if ($this->isColumnModified(InputTableMap::COL_VARS)) {
-            $modifiedColumns[':p' . $index++]  = 'vars';
-        }
-        if ($this->isColumnModified(InputTableMap::COL_PONTOS)) {
-            $modifiedColumns[':p' . $index++]  = 'pontos';
+        if ($this->isColumnModified(RelatorioTableMap::COL_NOTAS)) {
+            $modifiedColumns[':p' . $index++]  = 'notas';
         }
 
         $sql = sprintf(
-            'INSERT INTO input (%s) VALUES (%s)',
+            'INSERT INTO relatorio (%s) VALUES (%s)',
             implode(', ', $modifiedColumns),
             implode(', ', array_keys($modifiedColumns))
         );
@@ -864,23 +672,14 @@ abstract class Input implements ActiveRecordInterface
             $stmt = $con->prepare($sql);
             foreach ($modifiedColumns as $identifier => $columnName) {
                 switch ($columnName) {
-                    case 'evento_id':
-                        $stmt->bindValue($identifier, $this->evento_id, PDO::PARAM_STR);
+                    case 'user_id':
+                        $stmt->bindValue($identifier, $this->user_id, PDO::PARAM_STR);
                         break;
-                    case 'prova_id':
-                        $stmt->bindValue($identifier, $this->prova_id, PDO::PARAM_STR);
+                    case 'equipes':
+                        $stmt->bindValue($identifier, $this->equipes, PDO::PARAM_STR);
                         break;
-                    case 'equipe_id':
-                        $stmt->bindValue($identifier, $this->equipe_id, PDO::PARAM_INT);
-                        break;
-                    case 'dados':
-                        $stmt->bindValue($identifier, $this->dados, PDO::PARAM_STR);
-                        break;
-                    case 'vars':
-                        $stmt->bindValue($identifier, $this->vars, PDO::PARAM_STR);
-                        break;
-                    case 'pontos':
-                        $stmt->bindValue($identifier, $this->pontos, PDO::PARAM_STR);
+                    case 'notas':
+                        $stmt->bindValue($identifier, $this->notas, PDO::PARAM_STR);
                         break;
                 }
             }
@@ -921,7 +720,7 @@ abstract class Input implements ActiveRecordInterface
      */
     public function getByName($name, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = InputTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = RelatorioTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
         $field = $this->getByPosition($pos);
 
         return $field;
@@ -938,22 +737,13 @@ abstract class Input implements ActiveRecordInterface
     {
         switch ($pos) {
             case 0:
-                return $this->getEventoId();
+                return $this->getUserId();
                 break;
             case 1:
-                return $this->getProvaId();
+                return $this->getEquipes();
                 break;
             case 2:
-                return $this->getEquipeId();
-                break;
-            case 3:
-                return $this->getDados();
-                break;
-            case 4:
-                return $this->getVars();
-                break;
-            case 5:
-                return $this->getPontos();
+                return $this->getNotas();
                 break;
             default:
                 return null;
@@ -972,63 +762,27 @@ abstract class Input implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
-     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
+    public function toArray($keyType = TableMap::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
     {
 
-        if (isset($alreadyDumpedObjects['Input'][$this->hashCode()])) {
+        if (isset($alreadyDumpedObjects['Relatorio'][$this->hashCode()])) {
             return '*RECURSION*';
         }
-        $alreadyDumpedObjects['Input'][$this->hashCode()] = true;
-        $keys = InputTableMap::getFieldNames($keyType);
+        $alreadyDumpedObjects['Relatorio'][$this->hashCode()] = true;
+        $keys = RelatorioTableMap::getFieldNames($keyType);
         $result = array(
-            $keys[0] => $this->getEventoId(),
-            $keys[1] => $this->getProvaId(),
-            $keys[2] => $this->getEquipeId(),
-            $keys[3] => $this->getDados(),
-            $keys[4] => $this->getVars(),
-            $keys[5] => $this->getPontos(),
+            $keys[0] => $this->getUserId(),
+            $keys[1] => $this->getEquipes(),
+            $keys[2] => $this->getNotas(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
             $result[$key] = $virtualColumn;
         }
 
-        if ($includeForeignObjects) {
-            if (null !== $this->aProva) {
-
-                switch ($keyType) {
-                    case TableMap::TYPE_CAMELNAME:
-                        $key = 'prova';
-                        break;
-                    case TableMap::TYPE_FIELDNAME:
-                        $key = 'prova';
-                        break;
-                    default:
-                        $key = 'Prova';
-                }
-
-                $result[$key] = $this->aProva->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
-            }
-            if (null !== $this->aEquipe) {
-
-                switch ($keyType) {
-                    case TableMap::TYPE_CAMELNAME:
-                        $key = 'equipe';
-                        break;
-                    case TableMap::TYPE_FIELDNAME:
-                        $key = 'equipe';
-                        break;
-                    default:
-                        $key = 'Equipe';
-                }
-
-                $result[$key] = $this->aEquipe->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
-            }
-        }
 
         return $result;
     }
@@ -1042,11 +796,11 @@ abstract class Input implements ActiveRecordInterface
      *                one of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *                Defaults to TableMap::TYPE_PHPNAME.
-     * @return $this|\Baja\Model\Input
+     * @return $this|\Baja\Model\Relatorio
      */
     public function setByName($name, $value, $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = InputTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = RelatorioTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
 
         return $this->setByPosition($pos, $value);
     }
@@ -1057,28 +811,19 @@ abstract class Input implements ActiveRecordInterface
      *
      * @param  int $pos position in xml schema
      * @param  mixed $value field value
-     * @return $this|\Baja\Model\Input
+     * @return $this|\Baja\Model\Relatorio
      */
     public function setByPosition($pos, $value)
     {
         switch ($pos) {
             case 0:
-                $this->setEventoId($value);
+                $this->setUserId($value);
                 break;
             case 1:
-                $this->setProvaId($value);
+                $this->setEquipes($value);
                 break;
             case 2:
-                $this->setEquipeId($value);
-                break;
-            case 3:
-                $this->setDados($value);
-                break;
-            case 4:
-                $this->setVars($value);
-                break;
-            case 5:
-                $this->setPontos($value);
+                $this->setNotas($value);
                 break;
         } // switch()
 
@@ -1104,25 +849,16 @@ abstract class Input implements ActiveRecordInterface
      */
     public function fromArray($arr, $keyType = TableMap::TYPE_PHPNAME)
     {
-        $keys = InputTableMap::getFieldNames($keyType);
+        $keys = RelatorioTableMap::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
-            $this->setEventoId($arr[$keys[0]]);
+            $this->setUserId($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setProvaId($arr[$keys[1]]);
+            $this->setEquipes($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setEquipeId($arr[$keys[2]]);
-        }
-        if (array_key_exists($keys[3], $arr)) {
-            $this->setDados($arr[$keys[3]]);
-        }
-        if (array_key_exists($keys[4], $arr)) {
-            $this->setVars($arr[$keys[4]]);
-        }
-        if (array_key_exists($keys[5], $arr)) {
-            $this->setPontos($arr[$keys[5]]);
+            $this->setNotas($arr[$keys[2]]);
         }
     }
 
@@ -1143,7 +879,7 @@ abstract class Input implements ActiveRecordInterface
      * @param string $data The source data to import from
      * @param string $keyType The type of keys the array uses.
      *
-     * @return $this|\Baja\Model\Input The current object, for fluid interface
+     * @return $this|\Baja\Model\Relatorio The current object, for fluid interface
      */
     public function importFrom($parser, $data, $keyType = TableMap::TYPE_PHPNAME)
     {
@@ -1163,25 +899,16 @@ abstract class Input implements ActiveRecordInterface
      */
     public function buildCriteria()
     {
-        $criteria = new Criteria(InputTableMap::DATABASE_NAME);
+        $criteria = new Criteria(RelatorioTableMap::DATABASE_NAME);
 
-        if ($this->isColumnModified(InputTableMap::COL_EVENTO_ID)) {
-            $criteria->add(InputTableMap::COL_EVENTO_ID, $this->evento_id);
+        if ($this->isColumnModified(RelatorioTableMap::COL_USER_ID)) {
+            $criteria->add(RelatorioTableMap::COL_USER_ID, $this->user_id);
         }
-        if ($this->isColumnModified(InputTableMap::COL_PROVA_ID)) {
-            $criteria->add(InputTableMap::COL_PROVA_ID, $this->prova_id);
+        if ($this->isColumnModified(RelatorioTableMap::COL_EQUIPES)) {
+            $criteria->add(RelatorioTableMap::COL_EQUIPES, $this->equipes);
         }
-        if ($this->isColumnModified(InputTableMap::COL_EQUIPE_ID)) {
-            $criteria->add(InputTableMap::COL_EQUIPE_ID, $this->equipe_id);
-        }
-        if ($this->isColumnModified(InputTableMap::COL_DADOS)) {
-            $criteria->add(InputTableMap::COL_DADOS, $this->dados);
-        }
-        if ($this->isColumnModified(InputTableMap::COL_VARS)) {
-            $criteria->add(InputTableMap::COL_VARS, $this->vars);
-        }
-        if ($this->isColumnModified(InputTableMap::COL_PONTOS)) {
-            $criteria->add(InputTableMap::COL_PONTOS, $this->pontos);
+        if ($this->isColumnModified(RelatorioTableMap::COL_NOTAS)) {
+            $criteria->add(RelatorioTableMap::COL_NOTAS, $this->notas);
         }
 
         return $criteria;
@@ -1199,10 +926,8 @@ abstract class Input implements ActiveRecordInterface
      */
     public function buildPkeyCriteria()
     {
-        $criteria = ChildInputQuery::create();
-        $criteria->add(InputTableMap::COL_EVENTO_ID, $this->evento_id);
-        $criteria->add(InputTableMap::COL_PROVA_ID, $this->prova_id);
-        $criteria->add(InputTableMap::COL_EQUIPE_ID, $this->equipe_id);
+        $criteria = ChildRelatorioQuery::create();
+        $criteria->add(RelatorioTableMap::COL_USER_ID, $this->user_id);
 
         return $criteria;
     }
@@ -1215,26 +940,10 @@ abstract class Input implements ActiveRecordInterface
      */
     public function hashCode()
     {
-        $validPk = null !== $this->getEventoId() &&
-            null !== $this->getProvaId() &&
-            null !== $this->getEquipeId();
+        $validPk = null !== $this->getUserId();
 
-        $validPrimaryKeyFKs = 4;
+        $validPrimaryKeyFKs = 0;
         $primaryKeyFKs = [];
-
-        //relation input_evento_id_prova_id to table prova
-        if ($this->aProva && $hash = spl_object_hash($this->aProva)) {
-            $primaryKeyFKs[] = $hash;
-        } else {
-            $validPrimaryKeyFKs = false;
-        }
-
-        //relation input_evento_id_equipe_id to table equipe
-        if ($this->aEquipe && $hash = spl_object_hash($this->aEquipe)) {
-            $primaryKeyFKs[] = $hash;
-        } else {
-            $validPrimaryKeyFKs = false;
-        }
 
         if ($validPk) {
             return crc32(json_encode($this->getPrimaryKey(), JSON_UNESCAPED_UNICODE));
@@ -1246,31 +955,23 @@ abstract class Input implements ActiveRecordInterface
     }
 
     /**
-     * Returns the composite primary key for this object.
-     * The array elements will be in same order as specified in XML.
-     * @return array
+     * Returns the primary key for this object (row).
+     * @return string
      */
     public function getPrimaryKey()
     {
-        $pks = array();
-        $pks[0] = $this->getEventoId();
-        $pks[1] = $this->getProvaId();
-        $pks[2] = $this->getEquipeId();
-
-        return $pks;
+        return $this->getUserId();
     }
 
     /**
-     * Set the [composite] primary key.
+     * Generic method to set the primary key (user_id column).
      *
-     * @param      array $keys The elements of the composite key (order must match the order in XML file).
+     * @param       string $key Primary key.
      * @return void
      */
-    public function setPrimaryKey($keys)
+    public function setPrimaryKey($key)
     {
-        $this->setEventoId($keys[0]);
-        $this->setProvaId($keys[1]);
-        $this->setEquipeId($keys[2]);
+        $this->setUserId($key);
     }
 
     /**
@@ -1279,7 +980,7 @@ abstract class Input implements ActiveRecordInterface
      */
     public function isPrimaryKeyNull()
     {
-        return (null === $this->getEventoId()) && (null === $this->getProvaId()) && (null === $this->getEquipeId());
+        return null === $this->getUserId();
     }
 
     /**
@@ -1288,19 +989,16 @@ abstract class Input implements ActiveRecordInterface
      * If desired, this method can also make copies of all associated (fkey referrers)
      * objects.
      *
-     * @param      object $copyObj An object of \Baja\Model\Input (or compatible) type.
+     * @param      object $copyObj An object of \Baja\Model\Relatorio (or compatible) type.
      * @param      boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
      * @param      boolean $makeNew Whether to reset autoincrement PKs and make the object new.
      * @throws PropelException
      */
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
-        $copyObj->setEventoId($this->getEventoId());
-        $copyObj->setProvaId($this->getProvaId());
-        $copyObj->setEquipeId($this->getEquipeId());
-        $copyObj->setDados($this->getDados());
-        $copyObj->setVars($this->getVars());
-        $copyObj->setPontos($this->getPontos());
+        $copyObj->setUserId($this->getUserId());
+        $copyObj->setEquipes($this->getEquipes());
+        $copyObj->setNotas($this->getNotas());
         if ($makeNew) {
             $copyObj->setNew(true);
         }
@@ -1315,7 +1013,7 @@ abstract class Input implements ActiveRecordInterface
      * objects.
      *
      * @param  boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
-     * @return \Baja\Model\Input Clone of current object.
+     * @return \Baja\Model\Relatorio Clone of current object.
      * @throws PropelException
      */
     public function copy($deepCopy = false)
@@ -1329,138 +1027,15 @@ abstract class Input implements ActiveRecordInterface
     }
 
     /**
-     * Declares an association between this object and a ChildProva object.
-     *
-     * @param  ChildProva $v
-     * @return $this|\Baja\Model\Input The current object (for fluent API support)
-     * @throws PropelException
-     */
-    public function setProva(ChildProva $v = null)
-    {
-        if ($v === null) {
-            $this->setEventoId(NULL);
-        } else {
-            $this->setEventoId($v->getEventoId());
-        }
-
-        if ($v === null) {
-            $this->setProvaId(NULL);
-        } else {
-            $this->setProvaId($v->getProvaId());
-        }
-
-        $this->aProva = $v;
-
-        // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the ChildProva object, it will not be re-added.
-        if ($v !== null) {
-            $v->addInput($this);
-        }
-
-
-        return $this;
-    }
-
-
-    /**
-     * Get the associated ChildProva object
-     *
-     * @param  ConnectionInterface $con Optional Connection object.
-     * @return ChildProva The associated ChildProva object.
-     * @throws PropelException
-     */
-    public function getProva(ConnectionInterface $con = null)
-    {
-        if ($this->aProva === null && (($this->evento_id !== "" && $this->evento_id !== null) && ($this->prova_id !== "" && $this->prova_id !== null))) {
-            $this->aProva = ChildProvaQuery::create()->findPk(array($this->evento_id, $this->prova_id), $con);
-            /* The following can be used additionally to
-                guarantee the related object contains a reference
-                to this object.  This level of coupling may, however, be
-                undesirable since it could result in an only partially populated collection
-                in the referenced object.
-                $this->aProva->addInputs($this);
-             */
-        }
-
-        return $this->aProva;
-    }
-
-    /**
-     * Declares an association between this object and a ChildEquipe object.
-     *
-     * @param  ChildEquipe $v
-     * @return $this|\Baja\Model\Input The current object (for fluent API support)
-     * @throws PropelException
-     */
-    public function setEquipe(ChildEquipe $v = null)
-    {
-        if ($v === null) {
-            $this->setEventoId(NULL);
-        } else {
-            $this->setEventoId($v->getEventoId());
-        }
-
-        if ($v === null) {
-            $this->setEquipeId(NULL);
-        } else {
-            $this->setEquipeId($v->getEquipeId());
-        }
-
-        $this->aEquipe = $v;
-
-        // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the ChildEquipe object, it will not be re-added.
-        if ($v !== null) {
-            $v->addInput($this);
-        }
-
-
-        return $this;
-    }
-
-
-    /**
-     * Get the associated ChildEquipe object
-     *
-     * @param  ConnectionInterface $con Optional Connection object.
-     * @return ChildEquipe The associated ChildEquipe object.
-     * @throws PropelException
-     */
-    public function getEquipe(ConnectionInterface $con = null)
-    {
-        if ($this->aEquipe === null && (($this->evento_id !== "" && $this->evento_id !== null) && $this->equipe_id != 0)) {
-            $this->aEquipe = ChildEquipeQuery::create()->findPk(array($this->evento_id, $this->equipe_id), $con);
-            /* The following can be used additionally to
-                guarantee the related object contains a reference
-                to this object.  This level of coupling may, however, be
-                undesirable since it could result in an only partially populated collection
-                in the referenced object.
-                $this->aEquipe->addInputs($this);
-             */
-        }
-
-        return $this->aEquipe;
-    }
-
-    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
      */
     public function clear()
     {
-        if (null !== $this->aProva) {
-            $this->aProva->removeInput($this);
-        }
-        if (null !== $this->aEquipe) {
-            $this->aEquipe->removeInput($this);
-        }
-        $this->evento_id = null;
-        $this->prova_id = null;
-        $this->equipe_id = null;
-        $this->dados = null;
-        $this->vars = null;
-        $this->pontos = null;
+        $this->user_id = null;
+        $this->equipes = null;
+        $this->notas = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();
@@ -1481,8 +1056,6 @@ abstract class Input implements ActiveRecordInterface
         if ($deep) {
         } // if ($deep)
 
-        $this->aProva = null;
-        $this->aEquipe = null;
     }
 
     /**
@@ -1492,7 +1065,7 @@ abstract class Input implements ActiveRecordInterface
      */
     public function __toString()
     {
-        return (string) $this->exportTo(InputTableMap::DEFAULT_STRING_FORMAT);
+        return (string) $this->exportTo(RelatorioTableMap::DEFAULT_STRING_FORMAT);
     }
 
     /**

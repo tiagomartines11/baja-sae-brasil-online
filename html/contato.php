@@ -3,6 +3,7 @@
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Site\Template;
+use PHPMailer\PHPMailer\PHPMailer;
 
 if (!isset($_SESSION)) session_start();
 

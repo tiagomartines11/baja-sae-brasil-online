@@ -8,12 +8,15 @@ use Baja\Model\Equipe as ChildEquipe;
 use Baja\Model\EquipeQuery as ChildEquipeQuery;
 use Baja\Model\Evento as ChildEvento;
 use Baja\Model\EventoQuery as ChildEventoQuery;
+use Baja\Model\Participante as ChildParticipante;
+use Baja\Model\ParticipanteQuery as ChildParticipanteQuery;
 use Baja\Model\Prova as ChildProva;
 use Baja\Model\ProvaQuery as ChildProvaQuery;
 use Baja\Model\Resultado as ChildResultado;
 use Baja\Model\ResultadoQuery as ChildResultadoQuery;
 use Baja\Model\Map\EquipeTableMap;
 use Baja\Model\Map\EventoTableMap;
+use Baja\Model\Map\ParticipanteTableMap;
 use Baja\Model\Map\ProvaTableMap;
 use Baja\Model\Map\ResultadoTableMap;
 use Propel\Runtime\Propel;
@@ -137,10 +140,52 @@ abstract class Evento implements ActiveRecordInterface
     protected $spoilers;
 
     /**
+     * The value for the tem_certificado field.
+     *
+     * Note: this column has a database default value of: false
+     * @var        boolean
+     */
+    protected $tem_certificado;
+
+    /**
+     * The value for the presidente field.
+     *
+     * @var        string
+     */
+    protected $presidente;
+
+    /**
+     * The value for the data field.
+     *
+     * @var        string
+     */
+    protected $data;
+
+    /**
+     * The value for the mandato_presidente field.
+     *
+     * @var        string
+     */
+    protected $mandato_presidente;
+
+    /**
+     * The value for the local field.
+     *
+     * @var        string
+     */
+    protected $local;
+
+    /**
      * @var        ObjectCollection|ChildEquipe[] Collection to store aggregation of ChildEquipe objects.
      */
     protected $collEquipes;
     protected $collEquipesPartial;
+
+    /**
+     * @var        ObjectCollection|ChildParticipante[] Collection to store aggregation of ChildParticipante objects.
+     */
+    protected $collParticipantes;
+    protected $collParticipantesPartial;
 
     /**
      * @var        ObjectCollection|ChildProva[] Collection to store aggregation of ChildProva objects.
@@ -170,6 +215,12 @@ abstract class Evento implements ActiveRecordInterface
 
     /**
      * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildParticipante[]
+     */
+    protected $participantesScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
      * @var ObjectCollection|ChildProva[]
      */
     protected $provasScheduledForDeletion = null;
@@ -191,6 +242,7 @@ abstract class Evento implements ActiveRecordInterface
         $this->ativo = true;
         $this->finalizado = false;
         $this->spoilers = false;
+        $this->tem_certificado = false;
     }
 
     /**
@@ -359,7 +411,7 @@ abstract class Evento implements ActiveRecordInterface
      * @param string $name  The virtual column name
      * @param mixed  $value The value to give to the virtual column
      *
-     * @return $this|Evento The current object, for fluid interface
+     * @return $this The current object, for fluid interface
      */
     public function setVirtualColumn($name, $value)
     {
@@ -373,11 +425,11 @@ abstract class Evento implements ActiveRecordInterface
      *
      * @param  string  $msg
      * @param  int     $priority One of the Propel::LOG_* logging levels
-     * @return boolean
+     * @return void
      */
     protected function log($msg, $priority = Propel::LOG_INFO)
     {
-        return Propel::log(get_class($this) . ': ' . $msg, $priority);
+        Propel::log(get_class($this) . ': ' . $msg, $priority);
     }
 
     /**
@@ -550,9 +602,69 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Get the [tem_certificado] column value.
+     *
+     * @return boolean
+     */
+    public function getTemCertificado()
+    {
+        return $this->tem_certificado;
+    }
+
+    /**
+     * Get the [tem_certificado] column value.
+     *
+     * @return boolean
+     */
+    public function isTemCertificado()
+    {
+        return $this->getTemCertificado();
+    }
+
+    /**
+     * Get the [presidente] column value.
+     *
+     * @return string
+     */
+    public function getPresidente()
+    {
+        return $this->presidente;
+    }
+
+    /**
+     * Get the [data] column value.
+     *
+     * @return string
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * Get the [mandato_presidente] column value.
+     *
+     * @return string
+     */
+    public function getMandatoPresidente()
+    {
+        return $this->mandato_presidente;
+    }
+
+    /**
+     * Get the [local] column value.
+     *
+     * @return string
+     */
+    public function getLocal()
+    {
+        return $this->local;
+    }
+
+    /**
      * Set the value of [evento_id] column.
      *
-     * @param string $v new value
+     * @param string $v New value
      * @return $this|\Baja\Model\Evento The current object (for fluent API support)
      */
     public function setEventoId($v)
@@ -572,7 +684,7 @@ abstract class Evento implements ActiveRecordInterface
     /**
      * Set the value of [titulo] column.
      *
-     * @param string $v new value
+     * @param string|null $v New value
      * @return $this|\Baja\Model\Evento The current object (for fluent API support)
      */
     public function setTitulo($v)
@@ -592,7 +704,7 @@ abstract class Evento implements ActiveRecordInterface
     /**
      * Set the value of [nome] column.
      *
-     * @param string $v new value
+     * @param string|null $v New value
      * @return $this|\Baja\Model\Evento The current object (for fluent API support)
      */
     public function setNome($v)
@@ -637,7 +749,7 @@ abstract class Evento implements ActiveRecordInterface
     /**
      * Set the value of [ano] column.
      *
-     * @param int $v new value
+     * @param int|null $v New value
      * @return $this|\Baja\Model\Evento The current object (for fluent API support)
      */
     public function setAno($v)
@@ -657,7 +769,7 @@ abstract class Evento implements ActiveRecordInterface
     /**
      * Set the value of [menu] column.
      *
-     * @param string $v new value
+     * @param string|null $v New value
      * @return $this|\Baja\Model\Evento The current object (for fluent API support)
      */
     public function setMenu($v)
@@ -759,6 +871,114 @@ abstract class Evento implements ActiveRecordInterface
     } // setSpoilers()
 
     /**
+     * Sets the value of the [tem_certificado] column.
+     * Non-boolean arguments are converted using the following rules:
+     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     *
+     * @param  boolean|integer|string $v The new value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setTemCertificado($v)
+    {
+        if ($v !== null) {
+            if (is_string($v)) {
+                $v = in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            } else {
+                $v = (boolean) $v;
+            }
+        }
+
+        if ($this->tem_certificado !== $v) {
+            $this->tem_certificado = $v;
+            $this->modifiedColumns[EventoTableMap::COL_TEM_CERTIFICADO] = true;
+        }
+
+        return $this;
+    } // setTemCertificado()
+
+    /**
+     * Set the value of [presidente] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setPresidente($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->presidente !== $v) {
+            $this->presidente = $v;
+            $this->modifiedColumns[EventoTableMap::COL_PRESIDENTE] = true;
+        }
+
+        return $this;
+    } // setPresidente()
+
+    /**
+     * Set the value of [data] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setData($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->data !== $v) {
+            $this->data = $v;
+            $this->modifiedColumns[EventoTableMap::COL_DATA] = true;
+        }
+
+        return $this;
+    } // setData()
+
+    /**
+     * Set the value of [mandato_presidente] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setMandatoPresidente($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->mandato_presidente !== $v) {
+            $this->mandato_presidente = $v;
+            $this->modifiedColumns[EventoTableMap::COL_MANDATO_PRESIDENTE] = true;
+        }
+
+        return $this;
+    } // setMandatoPresidente()
+
+    /**
+     * Set the value of [local] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setLocal($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->local !== $v) {
+            $this->local = $v;
+            $this->modifiedColumns[EventoTableMap::COL_LOCAL] = true;
+        }
+
+        return $this;
+    } // setLocal()
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -777,6 +997,10 @@ abstract class Evento implements ActiveRecordInterface
             }
 
             if ($this->spoilers !== false) {
+                return false;
+            }
+
+            if ($this->tem_certificado !== false) {
                 return false;
             }
 
@@ -832,6 +1056,21 @@ abstract class Evento implements ActiveRecordInterface
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : EventoTableMap::translateFieldName('Spoilers', TableMap::TYPE_PHPNAME, $indexType)];
             $this->spoilers = (null !== $col) ? (boolean) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : EventoTableMap::translateFieldName('TemCertificado', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->tem_certificado = (null !== $col) ? (boolean) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : EventoTableMap::translateFieldName('Presidente', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->presidente = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : EventoTableMap::translateFieldName('Data', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->data = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : EventoTableMap::translateFieldName('MandatoPresidente', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->mandato_presidente = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : EventoTableMap::translateFieldName('Local', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->local = (null !== $col) ? (string) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -840,7 +1079,7 @@ abstract class Evento implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 9; // 9 = EventoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 14; // 14 = EventoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Evento'), 0, $e);
@@ -902,6 +1141,8 @@ abstract class Evento implements ActiveRecordInterface
         if ($deep) {  // also de-associate any related objects?
 
             $this->collEquipes = null;
+
+            $this->collParticipantes = null;
 
             $this->collProvas = null;
 
@@ -1038,6 +1279,23 @@ abstract class Evento implements ActiveRecordInterface
                 }
             }
 
+            if ($this->participantesScheduledForDeletion !== null) {
+                if (!$this->participantesScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\ParticipanteQuery::create()
+                        ->filterByPrimaryKeys($this->participantesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->participantesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collParticipantes !== null) {
+                foreach ($this->collParticipantes as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
             if ($this->provasScheduledForDeletion !== null) {
                 if (!$this->provasScheduledForDeletion->isEmpty()) {
                     \Baja\Model\ProvaQuery::create()
@@ -1121,6 +1379,21 @@ abstract class Evento implements ActiveRecordInterface
         if ($this->isColumnModified(EventoTableMap::COL_SPOILERS)) {
             $modifiedColumns[':p' . $index++]  = 'spoilers';
         }
+        if ($this->isColumnModified(EventoTableMap::COL_TEM_CERTIFICADO)) {
+            $modifiedColumns[':p' . $index++]  = 'tem_certificado';
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_PRESIDENTE)) {
+            $modifiedColumns[':p' . $index++]  = 'presidente';
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_DATA)) {
+            $modifiedColumns[':p' . $index++]  = 'data';
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_MANDATO_PRESIDENTE)) {
+            $modifiedColumns[':p' . $index++]  = 'mandato_presidente';
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_LOCAL)) {
+            $modifiedColumns[':p' . $index++]  = 'local';
+        }
 
         $sql = sprintf(
             'INSERT INTO evento (%s) VALUES (%s)',
@@ -1158,6 +1431,21 @@ abstract class Evento implements ActiveRecordInterface
                         break;
                     case 'spoilers':
                         $stmt->bindValue($identifier, (int) $this->spoilers, PDO::PARAM_INT);
+                        break;
+                    case 'tem_certificado':
+                        $stmt->bindValue($identifier, (int) $this->tem_certificado, PDO::PARAM_INT);
+                        break;
+                    case 'presidente':
+                        $stmt->bindValue($identifier, $this->presidente, PDO::PARAM_STR);
+                        break;
+                    case 'data':
+                        $stmt->bindValue($identifier, $this->data, PDO::PARAM_STR);
+                        break;
+                    case 'mandato_presidente':
+                        $stmt->bindValue($identifier, $this->mandato_presidente, PDO::PARAM_STR);
+                        break;
+                    case 'local':
+                        $stmt->bindValue($identifier, $this->local, PDO::PARAM_STR);
                         break;
                 }
             }
@@ -1241,6 +1529,21 @@ abstract class Evento implements ActiveRecordInterface
             case 8:
                 return $this->getSpoilers();
                 break;
+            case 9:
+                return $this->getTemCertificado();
+                break;
+            case 10:
+                return $this->getPresidente();
+                break;
+            case 11:
+                return $this->getData();
+                break;
+            case 12:
+                return $this->getMandatoPresidente();
+                break;
+            case 13:
+                return $this->getLocal();
+                break;
             default:
                 return null;
                 break;
@@ -1280,6 +1583,11 @@ abstract class Evento implements ActiveRecordInterface
             $keys[6] => $this->getAtivo(),
             $keys[7] => $this->getFinalizado(),
             $keys[8] => $this->getSpoilers(),
+            $keys[9] => $this->getTemCertificado(),
+            $keys[10] => $this->getPresidente(),
+            $keys[11] => $this->getData(),
+            $keys[12] => $this->getMandatoPresidente(),
+            $keys[13] => $this->getLocal(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1301,6 +1609,21 @@ abstract class Evento implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collEquipes->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collParticipantes) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'participantes';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'participantess';
+                        break;
+                    default:
+                        $key = 'Participantes';
+                }
+
+                $result[$key] = $this->collParticipantes->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
             if (null !== $this->collProvas) {
 
@@ -1397,6 +1720,21 @@ abstract class Evento implements ActiveRecordInterface
             case 8:
                 $this->setSpoilers($value);
                 break;
+            case 9:
+                $this->setTemCertificado($value);
+                break;
+            case 10:
+                $this->setPresidente($value);
+                break;
+            case 11:
+                $this->setData($value);
+                break;
+            case 12:
+                $this->setMandatoPresidente($value);
+                break;
+            case 13:
+                $this->setLocal($value);
+                break;
         } // switch()
 
         return $this;
@@ -1449,6 +1787,21 @@ abstract class Evento implements ActiveRecordInterface
         }
         if (array_key_exists($keys[8], $arr)) {
             $this->setSpoilers($arr[$keys[8]]);
+        }
+        if (array_key_exists($keys[9], $arr)) {
+            $this->setTemCertificado($arr[$keys[9]]);
+        }
+        if (array_key_exists($keys[10], $arr)) {
+            $this->setPresidente($arr[$keys[10]]);
+        }
+        if (array_key_exists($keys[11], $arr)) {
+            $this->setData($arr[$keys[11]]);
+        }
+        if (array_key_exists($keys[12], $arr)) {
+            $this->setMandatoPresidente($arr[$keys[12]]);
+        }
+        if (array_key_exists($keys[13], $arr)) {
+            $this->setLocal($arr[$keys[13]]);
         }
     }
 
@@ -1517,6 +1870,21 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(EventoTableMap::COL_SPOILERS)) {
             $criteria->add(EventoTableMap::COL_SPOILERS, $this->spoilers);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_TEM_CERTIFICADO)) {
+            $criteria->add(EventoTableMap::COL_TEM_CERTIFICADO, $this->tem_certificado);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_PRESIDENTE)) {
+            $criteria->add(EventoTableMap::COL_PRESIDENTE, $this->presidente);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_DATA)) {
+            $criteria->add(EventoTableMap::COL_DATA, $this->data);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_MANDATO_PRESIDENTE)) {
+            $criteria->add(EventoTableMap::COL_MANDATO_PRESIDENTE, $this->mandato_presidente);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_LOCAL)) {
+            $criteria->add(EventoTableMap::COL_LOCAL, $this->local);
         }
 
         return $criteria;
@@ -1613,6 +1981,11 @@ abstract class Evento implements ActiveRecordInterface
         $copyObj->setAtivo($this->getAtivo());
         $copyObj->setFinalizado($this->getFinalizado());
         $copyObj->setSpoilers($this->getSpoilers());
+        $copyObj->setTemCertificado($this->getTemCertificado());
+        $copyObj->setPresidente($this->getPresidente());
+        $copyObj->setData($this->getData());
+        $copyObj->setMandatoPresidente($this->getMandatoPresidente());
+        $copyObj->setLocal($this->getLocal());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -1622,6 +1995,12 @@ abstract class Evento implements ActiveRecordInterface
             foreach ($this->getEquipes() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addEquipe($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getParticipantes() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addParticipante($relObj->copy($deepCopy));
                 }
             }
 
@@ -1677,15 +2056,19 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function initRelation($relationName)
     {
-        if ('Equipe' == $relationName) {
+        if ('Equipe' === $relationName) {
             $this->initEquipes();
             return;
         }
-        if ('Prova' == $relationName) {
+        if ('Participante' === $relationName) {
+            $this->initParticipantes();
+            return;
+        }
+        if ('Prova' === $relationName) {
             $this->initProvas();
             return;
         }
-        if ('Resultado' == $relationName) {
+        if ('Resultado' === $relationName) {
             $this->initResultados();
             return;
         }
@@ -1754,10 +2137,19 @@ abstract class Evento implements ActiveRecordInterface
     public function getEquipes(Criteria $criteria = null, ConnectionInterface $con = null)
     {
         $partial = $this->collEquipesPartial && !$this->isNew();
-        if (null === $this->collEquipes || null !== $criteria  || $partial) {
-            if ($this->isNew() && null === $this->collEquipes) {
+        if (null === $this->collEquipes || null !== $criteria || $partial) {
+            if ($this->isNew()) {
                 // return empty collection
-                $this->initEquipes();
+                if (null === $this->collEquipes) {
+                    $this->initEquipes();
+                } else {
+                    $collectionClassName = EquipeTableMap::getTableMap()->getCollectionClassName();
+
+                    $collEquipes = new $collectionClassName;
+                    $collEquipes->setModel('\Baja\Model\Equipe');
+
+                    return $collEquipes;
+                }
             } else {
                 $collEquipes = ChildEquipeQuery::create(null, $criteria)
                     ->filterByEvento($this)
@@ -1920,6 +2312,243 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collParticipantes collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addParticipantes()
+     */
+    public function clearParticipantes()
+    {
+        $this->collParticipantes = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collParticipantes collection loaded partially.
+     */
+    public function resetPartialParticipantes($v = true)
+    {
+        $this->collParticipantesPartial = $v;
+    }
+
+    /**
+     * Initializes the collParticipantes collection.
+     *
+     * By default this just sets the collParticipantes collection to an empty array (like clearcollParticipantes());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initParticipantes($overrideExisting = true)
+    {
+        if (null !== $this->collParticipantes && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ParticipanteTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collParticipantes = new $collectionClassName;
+        $this->collParticipantes->setModel('\Baja\Model\Participante');
+    }
+
+    /**
+     * Gets an array of ChildParticipante objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildEvento is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildParticipante[] List of ChildParticipante objects
+     * @throws PropelException
+     */
+    public function getParticipantes(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collParticipantesPartial && !$this->isNew();
+        if (null === $this->collParticipantes || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collParticipantes) {
+                    $this->initParticipantes();
+                } else {
+                    $collectionClassName = ParticipanteTableMap::getTableMap()->getCollectionClassName();
+
+                    $collParticipantes = new $collectionClassName;
+                    $collParticipantes->setModel('\Baja\Model\Participante');
+
+                    return $collParticipantes;
+                }
+            } else {
+                $collParticipantes = ChildParticipanteQuery::create(null, $criteria)
+                    ->filterByEvento($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collParticipantesPartial && count($collParticipantes)) {
+                        $this->initParticipantes(false);
+
+                        foreach ($collParticipantes as $obj) {
+                            if (false == $this->collParticipantes->contains($obj)) {
+                                $this->collParticipantes->append($obj);
+                            }
+                        }
+
+                        $this->collParticipantesPartial = true;
+                    }
+
+                    return $collParticipantes;
+                }
+
+                if ($partial && $this->collParticipantes) {
+                    foreach ($this->collParticipantes as $obj) {
+                        if ($obj->isNew()) {
+                            $collParticipantes[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collParticipantes = $collParticipantes;
+                $this->collParticipantesPartial = false;
+            }
+        }
+
+        return $this->collParticipantes;
+    }
+
+    /**
+     * Sets a collection of ChildParticipante objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $participantes A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildEvento The current object (for fluent API support)
+     */
+    public function setParticipantes(Collection $participantes, ConnectionInterface $con = null)
+    {
+        /** @var ChildParticipante[] $participantesToDelete */
+        $participantesToDelete = $this->getParticipantes(new Criteria(), $con)->diff($participantes);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->participantesScheduledForDeletion = clone $participantesToDelete;
+
+        foreach ($participantesToDelete as $participanteRemoved) {
+            $participanteRemoved->setEvento(null);
+        }
+
+        $this->collParticipantes = null;
+        foreach ($participantes as $participante) {
+            $this->addParticipante($participante);
+        }
+
+        $this->collParticipantes = $participantes;
+        $this->collParticipantesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Participante objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Participante objects.
+     * @throws PropelException
+     */
+    public function countParticipantes(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collParticipantesPartial && !$this->isNew();
+        if (null === $this->collParticipantes || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collParticipantes) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getParticipantes());
+            }
+
+            $query = ChildParticipanteQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByEvento($this)
+                ->count($con);
+        }
+
+        return count($this->collParticipantes);
+    }
+
+    /**
+     * Method called to associate a ChildParticipante object to this object
+     * through the ChildParticipante foreign key attribute.
+     *
+     * @param  ChildParticipante $l ChildParticipante
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function addParticipante(ChildParticipante $l)
+    {
+        if ($this->collParticipantes === null) {
+            $this->initParticipantes();
+            $this->collParticipantesPartial = true;
+        }
+
+        if (!$this->collParticipantes->contains($l)) {
+            $this->doAddParticipante($l);
+
+            if ($this->participantesScheduledForDeletion and $this->participantesScheduledForDeletion->contains($l)) {
+                $this->participantesScheduledForDeletion->remove($this->participantesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildParticipante $participante The ChildParticipante object to add.
+     */
+    protected function doAddParticipante(ChildParticipante $participante)
+    {
+        $this->collParticipantes[]= $participante;
+        $participante->setEvento($this);
+    }
+
+    /**
+     * @param  ChildParticipante $participante The ChildParticipante object to remove.
+     * @return $this|ChildEvento The current object (for fluent API support)
+     */
+    public function removeParticipante(ChildParticipante $participante)
+    {
+        if ($this->getParticipantes()->contains($participante)) {
+            $pos = $this->collParticipantes->search($participante);
+            $this->collParticipantes->remove($pos);
+            if (null === $this->participantesScheduledForDeletion) {
+                $this->participantesScheduledForDeletion = clone $this->collParticipantes;
+                $this->participantesScheduledForDeletion->clear();
+            }
+            $this->participantesScheduledForDeletion[]= clone $participante;
+            $participante->setEvento(null);
+        }
+
+        return $this;
+    }
+
+    /**
      * Clears out the collProvas collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
@@ -1982,10 +2611,19 @@ abstract class Evento implements ActiveRecordInterface
     public function getProvas(Criteria $criteria = null, ConnectionInterface $con = null)
     {
         $partial = $this->collProvasPartial && !$this->isNew();
-        if (null === $this->collProvas || null !== $criteria  || $partial) {
-            if ($this->isNew() && null === $this->collProvas) {
+        if (null === $this->collProvas || null !== $criteria || $partial) {
+            if ($this->isNew()) {
                 // return empty collection
-                $this->initProvas();
+                if (null === $this->collProvas) {
+                    $this->initProvas();
+                } else {
+                    $collectionClassName = ProvaTableMap::getTableMap()->getCollectionClassName();
+
+                    $collProvas = new $collectionClassName;
+                    $collProvas->setModel('\Baja\Model\Prova');
+
+                    return $collProvas;
+                }
             } else {
                 $collProvas = ChildProvaQuery::create(null, $criteria)
                     ->filterByEvento($this)
@@ -2210,10 +2848,19 @@ abstract class Evento implements ActiveRecordInterface
     public function getResultados(Criteria $criteria = null, ConnectionInterface $con = null)
     {
         $partial = $this->collResultadosPartial && !$this->isNew();
-        if (null === $this->collResultados || null !== $criteria  || $partial) {
-            if ($this->isNew() && null === $this->collResultados) {
+        if (null === $this->collResultados || null !== $criteria || $partial) {
+            if ($this->isNew()) {
                 // return empty collection
-                $this->initResultados();
+                if (null === $this->collResultados) {
+                    $this->initResultados();
+                } else {
+                    $collectionClassName = ResultadoTableMap::getTableMap()->getCollectionClassName();
+
+                    $collResultados = new $collectionClassName;
+                    $collResultados->setModel('\Baja\Model\Resultado');
+
+                    return $collResultados;
+                }
             } else {
                 $collResultados = ChildResultadoQuery::create(null, $criteria)
                     ->filterByEvento($this)
@@ -2388,6 +3035,11 @@ abstract class Evento implements ActiveRecordInterface
         $this->ativo = null;
         $this->finalizado = null;
         $this->spoilers = null;
+        $this->tem_certificado = null;
+        $this->presidente = null;
+        $this->data = null;
+        $this->mandato_presidente = null;
+        $this->local = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();
@@ -2412,6 +3064,11 @@ abstract class Evento implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collParticipantes) {
+                foreach ($this->collParticipantes as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
             if ($this->collProvas) {
                 foreach ($this->collProvas as $o) {
                     $o->clearAllReferences($deep);
@@ -2425,6 +3082,7 @@ abstract class Evento implements ActiveRecordInterface
         } // if ($deep)
 
         $this->collEquipes = null;
+        $this->collParticipantes = null;
         $this->collProvas = null;
         $this->collResultados = null;
     }
@@ -2446,10 +3104,7 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function preSave(ConnectionInterface $con = null)
     {
-        if (is_callable('parent::preSave')) {
-            return parent::preSave($con);
-        }
-        return true;
+                return true;
     }
 
     /**
@@ -2458,10 +3113,7 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function postSave(ConnectionInterface $con = null)
     {
-        if (is_callable('parent::postSave')) {
-            parent::postSave($con);
-        }
-    }
+            }
 
     /**
      * Code to be run before inserting to database
@@ -2470,10 +3122,7 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function preInsert(ConnectionInterface $con = null)
     {
-        if (is_callable('parent::preInsert')) {
-            return parent::preInsert($con);
-        }
-        return true;
+                return true;
     }
 
     /**
@@ -2482,10 +3131,7 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function postInsert(ConnectionInterface $con = null)
     {
-        if (is_callable('parent::postInsert')) {
-            parent::postInsert($con);
-        }
-    }
+            }
 
     /**
      * Code to be run before updating the object in database
@@ -2494,10 +3140,7 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function preUpdate(ConnectionInterface $con = null)
     {
-        if (is_callable('parent::preUpdate')) {
-            return parent::preUpdate($con);
-        }
-        return true;
+                return true;
     }
 
     /**
@@ -2506,10 +3149,7 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function postUpdate(ConnectionInterface $con = null)
     {
-        if (is_callable('parent::postUpdate')) {
-            parent::postUpdate($con);
-        }
-    }
+            }
 
     /**
      * Code to be run before deleting the object in database
@@ -2518,10 +3158,7 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function preDelete(ConnectionInterface $con = null)
     {
-        if (is_callable('parent::preDelete')) {
-            return parent::preDelete($con);
-        }
-        return true;
+                return true;
     }
 
     /**
@@ -2530,10 +3167,7 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function postDelete(ConnectionInterface $con = null)
     {
-        if (is_callable('parent::postDelete')) {
-            parent::postDelete($con);
-        }
-    }
+            }
 
 
     /**
