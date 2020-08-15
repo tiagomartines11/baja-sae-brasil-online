@@ -1,6 +1,6 @@
 # This will automatically include our bootstrap on top of every .php file from this directory on
 # Make sure AllowOverride All is set in Apache config!!
-php_value   auto_prepend_file   "/var/www/juiz/bootstrap.php"
+php_value   auto_prepend_file   "/var/www/src/bootstrap.php"
 
 SetEnvIf REDIRECT_EVENT "^\s*$" REDIRECT_EVENT=20BR
 
