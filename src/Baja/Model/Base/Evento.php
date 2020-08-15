@@ -129,6 +129,14 @@ abstract class Evento implements ActiveRecordInterface
     protected $finalizado;
 
     /**
+     * The value for the spoilers field.
+     *
+     * Note: this column has a database default value of: false
+     * @var        boolean
+     */
+    protected $spoilers;
+
+    /**
      * @var        ObjectCollection|ChildEquipe[] Collection to store aggregation of ChildEquipe objects.
      */
     protected $collEquipes;
@@ -182,6 +190,7 @@ abstract class Evento implements ActiveRecordInterface
     {
         $this->ativo = true;
         $this->finalizado = false;
+        $this->spoilers = false;
     }
 
     /**
@@ -521,6 +530,26 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Get the [spoilers] column value.
+     *
+     * @return boolean
+     */
+    public function getSpoilers()
+    {
+        return $this->spoilers;
+    }
+
+    /**
+     * Get the [spoilers] column value.
+     *
+     * @return boolean
+     */
+    public function isSpoilers()
+    {
+        return $this->getSpoilers();
+    }
+
+    /**
      * Set the value of [evento_id] column.
      *
      * @param string $v new value
@@ -702,6 +731,34 @@ abstract class Evento implements ActiveRecordInterface
     } // setFinalizado()
 
     /**
+     * Sets the value of the [spoilers] column.
+     * Non-boolean arguments are converted using the following rules:
+     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     *
+     * @param  boolean|integer|string $v The new value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setSpoilers($v)
+    {
+        if ($v !== null) {
+            if (is_string($v)) {
+                $v = in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            } else {
+                $v = (boolean) $v;
+            }
+        }
+
+        if ($this->spoilers !== $v) {
+            $this->spoilers = $v;
+            $this->modifiedColumns[EventoTableMap::COL_SPOILERS] = true;
+        }
+
+        return $this;
+    } // setSpoilers()
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -716,6 +773,10 @@ abstract class Evento implements ActiveRecordInterface
             }
 
             if ($this->finalizado !== false) {
+                return false;
+            }
+
+            if ($this->spoilers !== false) {
                 return false;
             }
 
@@ -768,6 +829,9 @@ abstract class Evento implements ActiveRecordInterface
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : EventoTableMap::translateFieldName('Finalizado', TableMap::TYPE_PHPNAME, $indexType)];
             $this->finalizado = (null !== $col) ? (boolean) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : EventoTableMap::translateFieldName('Spoilers', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->spoilers = (null !== $col) ? (boolean) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -776,7 +840,7 @@ abstract class Evento implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 8; // 8 = EventoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 9; // 9 = EventoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Evento'), 0, $e);
@@ -1054,6 +1118,9 @@ abstract class Evento implements ActiveRecordInterface
         if ($this->isColumnModified(EventoTableMap::COL_FINALIZADO)) {
             $modifiedColumns[':p' . $index++]  = 'finalizado';
         }
+        if ($this->isColumnModified(EventoTableMap::COL_SPOILERS)) {
+            $modifiedColumns[':p' . $index++]  = 'spoilers';
+        }
 
         $sql = sprintf(
             'INSERT INTO evento (%s) VALUES (%s)',
@@ -1088,6 +1155,9 @@ abstract class Evento implements ActiveRecordInterface
                         break;
                     case 'finalizado':
                         $stmt->bindValue($identifier, (int) $this->finalizado, PDO::PARAM_INT);
+                        break;
+                    case 'spoilers':
+                        $stmt->bindValue($identifier, (int) $this->spoilers, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -1168,6 +1238,9 @@ abstract class Evento implements ActiveRecordInterface
             case 7:
                 return $this->getFinalizado();
                 break;
+            case 8:
+                return $this->getSpoilers();
+                break;
             default:
                 return null;
                 break;
@@ -1206,6 +1279,7 @@ abstract class Evento implements ActiveRecordInterface
             $keys[5] => $this->getMenu(),
             $keys[6] => $this->getAtivo(),
             $keys[7] => $this->getFinalizado(),
+            $keys[8] => $this->getSpoilers(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1320,6 +1394,9 @@ abstract class Evento implements ActiveRecordInterface
             case 7:
                 $this->setFinalizado($value);
                 break;
+            case 8:
+                $this->setSpoilers($value);
+                break;
         } // switch()
 
         return $this;
@@ -1369,6 +1446,9 @@ abstract class Evento implements ActiveRecordInterface
         }
         if (array_key_exists($keys[7], $arr)) {
             $this->setFinalizado($arr[$keys[7]]);
+        }
+        if (array_key_exists($keys[8], $arr)) {
+            $this->setSpoilers($arr[$keys[8]]);
         }
     }
 
@@ -1434,6 +1514,9 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(EventoTableMap::COL_FINALIZADO)) {
             $criteria->add(EventoTableMap::COL_FINALIZADO, $this->finalizado);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_SPOILERS)) {
+            $criteria->add(EventoTableMap::COL_SPOILERS, $this->spoilers);
         }
 
         return $criteria;
@@ -1529,6 +1612,7 @@ abstract class Evento implements ActiveRecordInterface
         $copyObj->setMenu($this->getMenu());
         $copyObj->setAtivo($this->getAtivo());
         $copyObj->setFinalizado($this->getFinalizado());
+        $copyObj->setSpoilers($this->getSpoilers());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -2303,6 +2387,7 @@ abstract class Evento implements ActiveRecordInterface
         $this->menu = null;
         $this->ativo = null;
         $this->finalizado = null;
+        $this->spoilers = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();

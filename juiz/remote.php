@@ -32,7 +32,7 @@ if (array_key_exists("truncate", $input) && $input["truncate"] == "all") {
 }
 
 if (array_key_exists("raceTime", $input)) {
-    $prova->setTempo(time() - $input["raceTime"] / 1000);
+    $prova->setTempo(time() - $input["raceTime"]);
     $prova->save();
 }
 

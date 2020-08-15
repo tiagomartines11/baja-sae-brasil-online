@@ -24,6 +24,13 @@ if (@$_REQUEST['act'] == 'create') {
     header("Location: admin.php");
 }
 
+if (@$_REQUEST['act'] == 'spoilers') {
+    $e = EventoQuery::getCurrentEvent();
+    $e->setSpoilers(!$e->getSpoilers());
+    $e->save();
+    header("Location: admin.php");
+}
+
 if (@$_REQUEST['act'] == 'push') {
     OneSignalClient::sendMessage(@$_POST['heading'], @$_POST['msg'], "/", @$_POST['filter']);
 }
@@ -71,7 +78,8 @@ echo '</tr>
 <tr><th colspan="'.(1 + count($provas)).'" style="height: 30px"> <input type="submit" id="userSubmit" value="Criar Novo Usuário" disabled /> </th></tr>
 </form>
 </tfoot>
-</table>';
+</table>
+<br /><br />';
 
 echo '<table id="myTable2" class="tablesorter">';
 echo '<thead>
@@ -94,7 +102,31 @@ foreach ($provas as $p) {
 }
 echo '</table>';
 ?>
-
+    <br /><br />
+    <form action="admin.php?act=spoilers" method="POST">
+        <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
+            <thead>
+            <tr style="height: 50px">
+                <th colspan="2" style="vertical-align: middle;" class="sorter-false">
+                    <span style="float:left"><a href="index.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
+                    <span style="font-size: 28px;">Spoilers</span> <br />
+                </th>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Proteção de Spoiler:</td>
+                <td><?php echo EventoQuery::getCurrentEvent()->getSpoilers() ? "Ligada" : "Desligada"; ?></td>
+            </tr>
+            <tfoot>
+            <tr>
+                <th colspan="2" style="height: 30px">
+                    <input type="submit" name="submit" id="pushSubmit" value="Toggle" />
+                </th>
+            </tr>
+            </tfoot>
+        </table>
+    </form>
+    <br /><br />
     <form action="admin.php?act=push" method="POST">
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>

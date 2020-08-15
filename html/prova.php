@@ -17,12 +17,17 @@ $i = InputQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getE
     ->leftJoinEquipe()->withColumn('Equipe.Escola')->withColumn('Equipe.EquipeId')->withColumn('Equipe.Equipe')->withColumn('Equipe.Estado')
     ->find();
 
-$hasEntries = false;
-
 foreach ($i as $input) {
     if (!array_key_exists($input->getEquipeId(), $vars)) $vars[$input->getEquipeId()] = ["NUM" => $input->getEquipeEquipeId(), "EQUIPE" => $input->getEquipeEquipe(), "ESCOLA" => $input->getEquipeEscola(), "ESTADO" => $input->getEquipeEstado()];
-    $hasEntries = true;
-    $dados = @$input->getDados()->entries ? (array)$input->getDados() : ["entries" => [$input->getDados()]];
+    $dados = (array)$input->getDados();
+    if (!@$input->getDados()->entries) {
+        if ($vars[$input->getEquipeId()]["entries"]) {
+            $current = $vars[$input->getEquipeId()]["entries"][0];
+            $dados = ["entries" => [array_merge((array)$current, (array)$input->getDados())]];
+        } else {
+            $dados = ["entries" => [$input->getDados()]];
+        }
+    }
     $vars[$input->getEquipeId()] = array_merge($vars[$input->getEquipeId()], $dados, (array)$input->getVars(), (array) $input->getPontos());
     if ($filter && !$vars[$input->getEquipeId()][$filter]) {
         unset($vars[$input->getEquipeId()]);
@@ -77,10 +82,10 @@ if ($pos) {
     unset($v);
 }
 
-if ($hasEntries)
-    usort($vars, function($a, $b) { return ($a["ts"] > $b["ts"]) ? 1 : -1;} );
-else
-    usort($vars, function($a, $b) { return ($a["NUM"] > $b["NUM"]) ? 1 : -1;} );
+usort($vars, function ($a, $b) {
+    if ($a["ts"] != $b["ts"]) return ($a["ts"] > $b["ts"]) ? 1 : -1;
+    return ($a["NUM"] > $b["NUM"]) ? 1 : -1;
+});
 
 Template::printHeader($resultado->getNome());
 ?>
@@ -147,9 +152,11 @@ if (count($vars) && count($colunas)) {
             echo "<tr>";
             foreach ($colunas as $c) {
                 if ((
-                    (($c->header == "Pontos" || $c->header == "Voltas" || $c->val == "Pos") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_END') ||
-                    (($c->header == "Enduro" || $c->header == "Total" || $c->val == "Pos") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_GER')
-                    ) && !$_DEV_MODE && false) {
+                    (($c->header == "Pontos" || $c->header == "Voltas" || $c->val == "Pos" || $c->header == "Points" || $c->header == "Laps") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_END') ||
+                    (($c->header == "Enduro" || $c->header == "Total" || $c->val == "Pos" || $c->header == "Endurance") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_GER') ||
+                    (($c->header == "Pontos" || $c->header == "Núcleo Técnico" || $c->header == "Total" || $c->val == "Pos") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_PRO') ||
+                    (($c->val != "EquipeNum" || $c->val == "Equipe") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_PRT')
+                    ) && EventoQuery::getCurrentEvent()->getSpoilers() && !EventoQuery::getCurrentEvent()->getFinalizado() && !$_DEV_MODE) {
                     echo "<td>SPOILERS</td>";
                 } else if ($c->val == "EquipeNum") {
                     echo '<td>' . $v["NUM"] . '</td>';
@@ -189,7 +196,7 @@ if (count($vars) && count($colunas)) {
                 } else if ($prova->getStatus() == "Final") {
                     echo "Prova Finalizada<br />";
                 }
-                echo "Última Atualização: " . $prova->getModificado()->setTimezone(new DateTimeZone("America/Sao_Paulo"))->format('Y-m-d H:i:s');
+                echo "Última Atualização: " . $prova->getModificado()->setTimezone(new DateTimeZone("Etc/GMT+3"))->format('Y-m-d H:i:s');
                 if (!EventoQuery::getCurrentEvent()->getFinalizado()) echo "<br /><span style='color: yellow'>Sujeito a Alterações sem Prévio Aviso</span>";
             }
             ?>

@@ -19,13 +19,14 @@
   </table>
   <table name="evento" idMethod="native" phpName="Evento">
     <column name="evento_id" phpName="EventoId" type="CHAR" size="4" primaryKey="true" required="true"/>
-    <column name="titulo" phpName="Titulo" type="VARCHAR" size="45"/>
-    <column name="nome" phpName="Nome" type="VARCHAR" size="60"/>
+    <column name="titulo" phpName="Titulo" type="VARCHAR" size="100"/>
+    <column name="nome" phpName="Nome" type="VARCHAR" size="120"/>
     <column name="tipo" phpName="Tipo" type="ENUM"  valueSet="Nacional,Sudeste,Nordeste,Sul" />
     <column name="ano" phpName="Ano" type="INTEGER" size="4"/>
     <column name="menu" phpName="Menu" type="LONGVARCHAR" sqlType="json" />
     <column name="ativo" phpName="Ativo" type="BOOLEAN" required="true" default="true"/>
     <column name="finalizado" phpName="Finalizado" type="BOOLEAN" required="true" default="false"/>
+    <column name="spoilers" phpName="Spoilers" type="BOOLEAN" required="true" default="false"/>
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>
     </vendor>
@@ -83,6 +84,14 @@
     <index name="prova_evento_id_idx">
       <index-column name="evento_id"/>
     </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+  <table name="relatorio" idMethod="native" phpName="Relatorio">
+    <column name="user_id" phpName="UserId" type="VARCHAR" size="45" primaryKey="true" required="true"/>
+    <column name="equipes" phpName="Equipes" type="LONGVARCHAR" sqlType="json" />
+    <column name="notas" phpName="Notas" type="LONGVARCHAR" sqlType="json" />
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>
     </vendor>

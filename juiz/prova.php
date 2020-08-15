@@ -80,7 +80,7 @@ Template::printHeader("Detalhes de Prova", false);
                 }
                 $dadosStr .= '</table>';
                 echo '<tr>
-            <td>'.$l->getData()->setTimezone(new DateTimeZone("America/Sao_Paulo"))->format('Y-m-d H:i:s').'</td>
+            <td>'.$l->getData()->setTimezone(new DateTimeZone("Etc/GMT+3"))->format('Y-m-d H:i:s').'</td>
             <td>'.$l->getUser().'</td>
             <td>'.$l->getEquipe().'</td>
             <td>'.$dadosStr.'</td>

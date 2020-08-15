@@ -6,8 +6,8 @@ use Baja\Model\EventoQuery;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\InputQuery;
 
-$_evento = '19BR';
-$_prova = '19BR_END';
+$_evento = '19SU';
+$_prova = '19SU_END';
 
 $resultado = ResultadoQuery::create()->filterByEventoId($_evento)->findPk($_prova);
 if (!$resultado) header("Location: index.php");

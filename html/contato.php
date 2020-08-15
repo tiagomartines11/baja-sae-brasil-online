@@ -7,7 +7,28 @@ use Baja\Site\Template;
 if (!isset($_SESSION)) session_start();
 
 if (@$_REQUEST['act'] == 'submit') {
-    if (!@$_POST['nome'] || !@$_POST['email'] || !@$_POST['equipe'] || !@$_POST['msg']) {
+
+$post_data = http_build_query(
+    array(
+        'secret' => '6LfEU7IUAAAAAARQ7hag6Y-5V7geGuw7N46WjyId',
+        'response' => $_POST['g-recaptcha-response'],
+        'remoteip' => $_SERVER['REMOTE_ADDR']
+    )
+);
+$opts = array('http' =>
+    array(
+        'method'  => 'POST',
+        'header'  => 'Content-type: application/x-www-form-urlencoded',
+        'content' => $post_data
+    )
+);
+$context  = stream_context_create($opts);
+$response = file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
+$result = json_decode($response);
+if (!$result->success) {
+ $msg = 'Captcha incorreto!';
+}
+else if (!@$_POST['nome'] || !@$_POST['email'] || !@$_POST['equipe'] || !@$_POST['msg']) {
         $msg = 'Por favor preencha todos os dados antes de enviar sua mensagem!';
     } else {
         $mail = new PHPMailer;
@@ -74,6 +95,9 @@ Template::printHeader("Contato");
         <br /><br />
         <label for="msg">Sua mensagem:</label><br />
         <textarea name="msg" id="msg" style="width: 250px; height: 200px;"><?php echo @$_POST['msg']; ?></textarea>
+        <br />
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>        
+        <div style="text-align: center;"><div style="display: inline-block;" class="g-recaptcha" data-sitekey="6LfEU7IUAAAAAFk6I1v54Bja8L_U0DCOzBVKcxFu"></div></div>
         <br /><br />
         <input type="submit" value="Enviar">
         </form>

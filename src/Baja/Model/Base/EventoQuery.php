@@ -28,6 +28,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery orderByMenu($order = Criteria::ASC) Order by the menu column
  * @method     ChildEventoQuery orderByAtivo($order = Criteria::ASC) Order by the ativo column
  * @method     ChildEventoQuery orderByFinalizado($order = Criteria::ASC) Order by the finalizado column
+ * @method     ChildEventoQuery orderBySpoilers($order = Criteria::ASC) Order by the spoilers column
  *
  * @method     ChildEventoQuery groupByEventoId() Group by the evento_id column
  * @method     ChildEventoQuery groupByTitulo() Group by the titulo column
@@ -37,6 +38,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery groupByMenu() Group by the menu column
  * @method     ChildEventoQuery groupByAtivo() Group by the ativo column
  * @method     ChildEventoQuery groupByFinalizado() Group by the finalizado column
+ * @method     ChildEventoQuery groupBySpoilers() Group by the spoilers column
  *
  * @method     ChildEventoQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildEventoQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -88,7 +90,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento findOneByAno(int $ano) Return the first ChildEvento filtered by the ano column
  * @method     ChildEvento findOneByMenu(string $menu) Return the first ChildEvento filtered by the menu column
  * @method     ChildEvento findOneByAtivo(boolean $ativo) Return the first ChildEvento filtered by the ativo column
- * @method     ChildEvento findOneByFinalizado(boolean $finalizado) Return the first ChildEvento filtered by the finalizado column *
+ * @method     ChildEvento findOneByFinalizado(boolean $finalizado) Return the first ChildEvento filtered by the finalizado column
+ * @method     ChildEvento findOneBySpoilers(boolean $spoilers) Return the first ChildEvento filtered by the spoilers column *
 
  * @method     ChildEvento requirePk($key, ConnectionInterface $con = null) Return the ChildEvento by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOne(ConnectionInterface $con = null) Return the first ChildEvento matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -101,6 +104,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento requireOneByMenu(string $menu) Return the first ChildEvento filtered by the menu column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByAtivo(boolean $ativo) Return the first ChildEvento filtered by the ativo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByFinalizado(boolean $finalizado) Return the first ChildEvento filtered by the finalizado column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEvento requireOneBySpoilers(boolean $spoilers) Return the first ChildEvento filtered by the spoilers column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildEvento[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildEvento objects based on current ModelCriteria
  * @method     ChildEvento[]|ObjectCollection findByEventoId(string $evento_id) Return ChildEvento objects filtered by the evento_id column
@@ -111,6 +115,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento[]|ObjectCollection findByMenu(string $menu) Return ChildEvento objects filtered by the menu column
  * @method     ChildEvento[]|ObjectCollection findByAtivo(boolean $ativo) Return ChildEvento objects filtered by the ativo column
  * @method     ChildEvento[]|ObjectCollection findByFinalizado(boolean $finalizado) Return ChildEvento objects filtered by the finalizado column
+ * @method     ChildEvento[]|ObjectCollection findBySpoilers(boolean $spoilers) Return ChildEvento objects filtered by the spoilers column
  * @method     ChildEvento[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
@@ -209,7 +214,7 @@ abstract class EventoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado FROM evento WHERE evento_id = :p0';
+        $sql = 'SELECT evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers FROM evento WHERE evento_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
@@ -525,6 +530,33 @@ abstract class EventoQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(EventoTableMap::COL_FINALIZADO, $finalizado, $comparison);
+    }
+
+    /**
+     * Filter the query on the spoilers column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterBySpoilers(true); // WHERE spoilers = true
+     * $query->filterBySpoilers('yes'); // WHERE spoilers = true
+     * </code>
+     *
+     * @param     boolean|string $spoilers The value to use as filter.
+     *              Non-boolean arguments are converted using the following rules:
+     *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildEventoQuery The current query, for fluid interface
+     */
+    public function filterBySpoilers($spoilers = null, $comparison = null)
+    {
+        if (is_string($spoilers)) {
+            $spoilers = in_array(strtolower($spoilers), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+        }
+
+        return $this->addUsingAlias(EventoTableMap::COL_SPOILERS, $spoilers, $comparison);
     }
 
     /**

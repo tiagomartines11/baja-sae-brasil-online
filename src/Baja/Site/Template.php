@@ -92,8 +92,7 @@ class Template
                 <a href='/'><img src='img/baja_grande.png' style='min-width: 100px'  class='logo'></a>
             </div>
             <div style='position:absolute; right:10px; top:10px'>
-                <img src='img/sae.png' style='max-width: 100px' class='logo'><br />
-                <img src='img/petrobras.png' style='max-width: 120px' class='logo'>
+                <img src='img/sae.png' style='max-width: 100px' class='logo'>
             </div>
         </div>
 

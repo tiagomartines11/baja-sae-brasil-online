@@ -59,7 +59,7 @@ class EventoTableMap extends TableMap
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 8;
+    const NUM_COLUMNS = 9;
 
     /**
      * The number of lazy-loaded columns
@@ -69,7 +69,7 @@ class EventoTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 8;
+    const NUM_HYDRATE_COLUMNS = 9;
 
     /**
      * the column name for the evento_id field
@@ -112,6 +112,11 @@ class EventoTableMap extends TableMap
     const COL_FINALIZADO = 'evento.finalizado';
 
     /**
+     * the column name for the spoilers field
+     */
+    const COL_SPOILERS = 'evento.spoilers';
+
+    /**
      * The default string format for model objects of the related table
      */
     const DEFAULT_STRING_FORMAT = 'YAML';
@@ -129,11 +134,11 @@ class EventoTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('EventoId', 'Titulo', 'Nome', 'Tipo', 'Ano', 'Menu', 'Ativo', 'Finalizado', ),
-        self::TYPE_CAMELNAME     => array('eventoId', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', ),
-        self::TYPE_COLNAME       => array(EventoTableMap::COL_EVENTO_ID, EventoTableMap::COL_TITULO, EventoTableMap::COL_NOME, EventoTableMap::COL_TIPO, EventoTableMap::COL_ANO, EventoTableMap::COL_MENU, EventoTableMap::COL_ATIVO, EventoTableMap::COL_FINALIZADO, ),
-        self::TYPE_FIELDNAME     => array('evento_id', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, )
+        self::TYPE_PHPNAME       => array('EventoId', 'Titulo', 'Nome', 'Tipo', 'Ano', 'Menu', 'Ativo', 'Finalizado', 'Spoilers', ),
+        self::TYPE_CAMELNAME     => array('eventoId', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', ),
+        self::TYPE_COLNAME       => array(EventoTableMap::COL_EVENTO_ID, EventoTableMap::COL_TITULO, EventoTableMap::COL_NOME, EventoTableMap::COL_TIPO, EventoTableMap::COL_ANO, EventoTableMap::COL_MENU, EventoTableMap::COL_ATIVO, EventoTableMap::COL_FINALIZADO, EventoTableMap::COL_SPOILERS, ),
+        self::TYPE_FIELDNAME     => array('evento_id', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
     );
 
     /**
@@ -143,11 +148,11 @@ class EventoTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('EventoId' => 0, 'Titulo' => 1, 'Nome' => 2, 'Tipo' => 3, 'Ano' => 4, 'Menu' => 5, 'Ativo' => 6, 'Finalizado' => 7, ),
-        self::TYPE_CAMELNAME     => array('eventoId' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, ),
-        self::TYPE_COLNAME       => array(EventoTableMap::COL_EVENTO_ID => 0, EventoTableMap::COL_TITULO => 1, EventoTableMap::COL_NOME => 2, EventoTableMap::COL_TIPO => 3, EventoTableMap::COL_ANO => 4, EventoTableMap::COL_MENU => 5, EventoTableMap::COL_ATIVO => 6, EventoTableMap::COL_FINALIZADO => 7, ),
-        self::TYPE_FIELDNAME     => array('evento_id' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, )
+        self::TYPE_PHPNAME       => array('EventoId' => 0, 'Titulo' => 1, 'Nome' => 2, 'Tipo' => 3, 'Ano' => 4, 'Menu' => 5, 'Ativo' => 6, 'Finalizado' => 7, 'Spoilers' => 8, ),
+        self::TYPE_CAMELNAME     => array('eventoId' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, ),
+        self::TYPE_COLNAME       => array(EventoTableMap::COL_EVENTO_ID => 0, EventoTableMap::COL_TITULO => 1, EventoTableMap::COL_NOME => 2, EventoTableMap::COL_TIPO => 3, EventoTableMap::COL_ANO => 4, EventoTableMap::COL_MENU => 5, EventoTableMap::COL_ATIVO => 6, EventoTableMap::COL_FINALIZADO => 7, EventoTableMap::COL_SPOILERS => 8, ),
+        self::TYPE_FIELDNAME     => array('evento_id' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
     );
 
     /** The enumerated values for this table */
@@ -199,8 +204,8 @@ class EventoTableMap extends TableMap
         $this->setUseIdGenerator(false);
         // columns
         $this->addPrimaryKey('evento_id', 'EventoId', 'CHAR', true, 4, null);
-        $this->addColumn('titulo', 'Titulo', 'VARCHAR', false, 45, null);
-        $this->addColumn('nome', 'Nome', 'VARCHAR', false, 60, null);
+        $this->addColumn('titulo', 'Titulo', 'VARCHAR', false, 100, null);
+        $this->addColumn('nome', 'Nome', 'VARCHAR', false, 120, null);
         $this->addColumn('tipo', 'Tipo', 'ENUM', false, null, null);
         $this->getColumn('tipo')->setValueSet(array (
   0 => 'Nacional',
@@ -212,6 +217,7 @@ class EventoTableMap extends TableMap
         $this->addColumn('menu', 'Menu', 'LONGVARCHAR', false, null, null);
         $this->addColumn('ativo', 'Ativo', 'BOOLEAN', true, 1, true);
         $this->addColumn('finalizado', 'Finalizado', 'BOOLEAN', true, 1, false);
+        $this->addColumn('spoilers', 'Spoilers', 'BOOLEAN', true, 1, false);
     } // initialize()
 
     /**
@@ -402,6 +408,7 @@ class EventoTableMap extends TableMap
             $criteria->addSelectColumn(EventoTableMap::COL_MENU);
             $criteria->addSelectColumn(EventoTableMap::COL_ATIVO);
             $criteria->addSelectColumn(EventoTableMap::COL_FINALIZADO);
+            $criteria->addSelectColumn(EventoTableMap::COL_SPOILERS);
         } else {
             $criteria->addSelectColumn($alias . '.evento_id');
             $criteria->addSelectColumn($alias . '.titulo');
@@ -411,6 +418,7 @@ class EventoTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.menu');
             $criteria->addSelectColumn($alias . '.ativo');
             $criteria->addSelectColumn($alias . '.finalizado');
+            $criteria->addSelectColumn($alias . '.spoilers');
         }
     }
 
