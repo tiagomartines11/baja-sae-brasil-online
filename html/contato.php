@@ -10,7 +10,7 @@ if (@$_REQUEST['act'] == 'submit') {
 
 $post_data = http_build_query(
     array(
-        'secret' => '6LfEU7IUAAAAAARQ7hag6Y-5V7geGuw7N46WjyId',
+        'secret' => $_recaptchaKey,
         'response' => $_POST['g-recaptcha-response'],
         'remoteip' => $_SERVER['REMOTE_ADDR']
     )
@@ -43,8 +43,8 @@ else if (!@$_POST['nome'] || !@$_POST['email'] || !@$_POST['equipe'] || !@$_POST
 
         $mail->setFrom('no-reply@bajasaebrasil.online', 'Baja SAE Brasil Online');
         $mail->addAddress('contato@bajasaebrasil.online');
-        $mail->addBCC('titimartines@gmail.com');
-        $mail->addBCC('filipe.aecio@gmail.com');
+        $mail->addBCC($_tEmail);
+        $mail->addBCC($_fEmail);
         $mail->addReplyTo($_POST['email'], $_POST['nome']);
 
         $mail->Subject = 'Mensagem via Baja SAE Brasil Online';
@@ -97,7 +97,7 @@ Template::printHeader("Contato");
         <textarea name="msg" id="msg" style="width: 250px; height: 200px;"><?php echo @$_POST['msg']; ?></textarea>
         <br />
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>        
-        <div style="text-align: center;"><div style="display: inline-block;" class="g-recaptcha" data-sitekey="6LfEU7IUAAAAAFk6I1v54Bja8L_U0DCOzBVKcxFu"></div></div>
+        <div style="text-align: center;"><div style="display: inline-block;" class="g-recaptcha" data-sitekey="6LfWOL8ZAAAAAGefI3tPR_wrqnmQ5goRuJQTy9bj"></div></div>
         <br /><br />
         <input type="submit" value="Enviar">
         </form>

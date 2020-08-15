@@ -37,6 +37,10 @@ $_oneSignalAuth = '*****';
 $_remoteKey = '*******';
 $_remoteValidFor = '18BR';
 
+$_recaptchaKey = '*******';
+$_tEmail = '*****@gmail.com';
+$_fEmail = '*****@gmail.com';
+
 //use Baja\Model\Map\InputTableMap;
 //use Propel\Runtime\Propel;
 //
