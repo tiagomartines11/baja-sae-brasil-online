@@ -1,0 +1,9 @@
+# This will automatically include our bootstrap on top of every .php file from this directory on
+# Make sure AllowOverride All is set in Apache config!!
+php_value   auto_prepend_file   "/var/www/src/bootstrap.php"
+
+SetEnvIf REDIRECT_EVENT "^\s*$" REDIRECT_EVENT=20BR
+
+RewriteEngine on
+RewriteRule   "^([0-2][0-9](BR|SE|SU|NE))$"    /$1/ [R=301]
+RewriteRule   "^([0-2][0-9](BR|SE|SU|NE))/(.*)"   "/$3" [E=EVENT:$1]
