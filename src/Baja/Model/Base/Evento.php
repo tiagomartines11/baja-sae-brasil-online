@@ -124,6 +124,14 @@ abstract class Evento implements ActiveRecordInterface
     protected $ativo;
 
     /**
+     * The value for the principal field.
+     *
+     * Note: this column has a database default value of: false
+     * @var        boolean
+     */
+    protected $principal;
+
+    /**
      * The value for the finalizado field.
      *
      * Note: this column has a database default value of: false
@@ -240,6 +248,7 @@ abstract class Evento implements ActiveRecordInterface
     public function applyDefaultValues()
     {
         $this->ativo = true;
+        $this->principal = false;
         $this->finalizado = false;
         $this->spoilers = false;
         $this->tem_certificado = false;
@@ -562,6 +571,26 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Get the [principal] column value.
+     *
+     * @return boolean
+     */
+    public function getPrincipal()
+    {
+        return $this->principal;
+    }
+
+    /**
+     * Get the [principal] column value.
+     *
+     * @return boolean
+     */
+    public function isPrincipal()
+    {
+        return $this->getPrincipal();
+    }
+
+    /**
      * Get the [finalizado] column value.
      *
      * @return boolean
@@ -815,6 +844,34 @@ abstract class Evento implements ActiveRecordInterface
     } // setAtivo()
 
     /**
+     * Sets the value of the [principal] column.
+     * Non-boolean arguments are converted using the following rules:
+     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     *
+     * @param  boolean|integer|string $v The new value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setPrincipal($v)
+    {
+        if ($v !== null) {
+            if (is_string($v)) {
+                $v = in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            } else {
+                $v = (boolean) $v;
+            }
+        }
+
+        if ($this->principal !== $v) {
+            $this->principal = $v;
+            $this->modifiedColumns[EventoTableMap::COL_PRINCIPAL] = true;
+        }
+
+        return $this;
+    } // setPrincipal()
+
+    /**
      * Sets the value of the [finalizado] column.
      * Non-boolean arguments are converted using the following rules:
      *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
@@ -992,6 +1049,10 @@ abstract class Evento implements ActiveRecordInterface
                 return false;
             }
 
+            if ($this->principal !== false) {
+                return false;
+            }
+
             if ($this->finalizado !== false) {
                 return false;
             }
@@ -1051,25 +1112,28 @@ abstract class Evento implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : EventoTableMap::translateFieldName('Ativo', TableMap::TYPE_PHPNAME, $indexType)];
             $this->ativo = (null !== $col) ? (boolean) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : EventoTableMap::translateFieldName('Finalizado', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : EventoTableMap::translateFieldName('Principal', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->principal = (null !== $col) ? (boolean) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : EventoTableMap::translateFieldName('Finalizado', TableMap::TYPE_PHPNAME, $indexType)];
             $this->finalizado = (null !== $col) ? (boolean) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : EventoTableMap::translateFieldName('Spoilers', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : EventoTableMap::translateFieldName('Spoilers', TableMap::TYPE_PHPNAME, $indexType)];
             $this->spoilers = (null !== $col) ? (boolean) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : EventoTableMap::translateFieldName('TemCertificado', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : EventoTableMap::translateFieldName('TemCertificado', TableMap::TYPE_PHPNAME, $indexType)];
             $this->tem_certificado = (null !== $col) ? (boolean) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : EventoTableMap::translateFieldName('Presidente', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : EventoTableMap::translateFieldName('Presidente', TableMap::TYPE_PHPNAME, $indexType)];
             $this->presidente = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : EventoTableMap::translateFieldName('Data', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : EventoTableMap::translateFieldName('Data', TableMap::TYPE_PHPNAME, $indexType)];
             $this->data = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : EventoTableMap::translateFieldName('MandatoPresidente', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : EventoTableMap::translateFieldName('MandatoPresidente', TableMap::TYPE_PHPNAME, $indexType)];
             $this->mandato_presidente = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : EventoTableMap::translateFieldName('Local', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 14 + $startcol : EventoTableMap::translateFieldName('Local', TableMap::TYPE_PHPNAME, $indexType)];
             $this->local = (null !== $col) ? (string) $col : null;
             $this->resetModified();
 
@@ -1079,7 +1143,7 @@ abstract class Evento implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 14; // 14 = EventoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 15; // 15 = EventoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Evento'), 0, $e);
@@ -1373,6 +1437,9 @@ abstract class Evento implements ActiveRecordInterface
         if ($this->isColumnModified(EventoTableMap::COL_ATIVO)) {
             $modifiedColumns[':p' . $index++]  = 'ativo';
         }
+        if ($this->isColumnModified(EventoTableMap::COL_PRINCIPAL)) {
+            $modifiedColumns[':p' . $index++]  = 'principal';
+        }
         if ($this->isColumnModified(EventoTableMap::COL_FINALIZADO)) {
             $modifiedColumns[':p' . $index++]  = 'finalizado';
         }
@@ -1425,6 +1492,9 @@ abstract class Evento implements ActiveRecordInterface
                         break;
                     case 'ativo':
                         $stmt->bindValue($identifier, (int) $this->ativo, PDO::PARAM_INT);
+                        break;
+                    case 'principal':
+                        $stmt->bindValue($identifier, (int) $this->principal, PDO::PARAM_INT);
                         break;
                     case 'finalizado':
                         $stmt->bindValue($identifier, (int) $this->finalizado, PDO::PARAM_INT);
@@ -1524,24 +1594,27 @@ abstract class Evento implements ActiveRecordInterface
                 return $this->getAtivo();
                 break;
             case 7:
-                return $this->getFinalizado();
+                return $this->getPrincipal();
                 break;
             case 8:
-                return $this->getSpoilers();
+                return $this->getFinalizado();
                 break;
             case 9:
-                return $this->getTemCertificado();
+                return $this->getSpoilers();
                 break;
             case 10:
-                return $this->getPresidente();
+                return $this->getTemCertificado();
                 break;
             case 11:
-                return $this->getData();
+                return $this->getPresidente();
                 break;
             case 12:
-                return $this->getMandatoPresidente();
+                return $this->getData();
                 break;
             case 13:
+                return $this->getMandatoPresidente();
+                break;
+            case 14:
                 return $this->getLocal();
                 break;
             default:
@@ -1581,13 +1654,14 @@ abstract class Evento implements ActiveRecordInterface
             $keys[4] => $this->getAno(),
             $keys[5] => $this->getMenu(),
             $keys[6] => $this->getAtivo(),
-            $keys[7] => $this->getFinalizado(),
-            $keys[8] => $this->getSpoilers(),
-            $keys[9] => $this->getTemCertificado(),
-            $keys[10] => $this->getPresidente(),
-            $keys[11] => $this->getData(),
-            $keys[12] => $this->getMandatoPresidente(),
-            $keys[13] => $this->getLocal(),
+            $keys[7] => $this->getPrincipal(),
+            $keys[8] => $this->getFinalizado(),
+            $keys[9] => $this->getSpoilers(),
+            $keys[10] => $this->getTemCertificado(),
+            $keys[11] => $this->getPresidente(),
+            $keys[12] => $this->getData(),
+            $keys[13] => $this->getMandatoPresidente(),
+            $keys[14] => $this->getLocal(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1715,24 +1789,27 @@ abstract class Evento implements ActiveRecordInterface
                 $this->setAtivo($value);
                 break;
             case 7:
-                $this->setFinalizado($value);
+                $this->setPrincipal($value);
                 break;
             case 8:
-                $this->setSpoilers($value);
+                $this->setFinalizado($value);
                 break;
             case 9:
-                $this->setTemCertificado($value);
+                $this->setSpoilers($value);
                 break;
             case 10:
-                $this->setPresidente($value);
+                $this->setTemCertificado($value);
                 break;
             case 11:
-                $this->setData($value);
+                $this->setPresidente($value);
                 break;
             case 12:
-                $this->setMandatoPresidente($value);
+                $this->setData($value);
                 break;
             case 13:
+                $this->setMandatoPresidente($value);
+                break;
+            case 14:
                 $this->setLocal($value);
                 break;
         } // switch()
@@ -1783,25 +1860,28 @@ abstract class Evento implements ActiveRecordInterface
             $this->setAtivo($arr[$keys[6]]);
         }
         if (array_key_exists($keys[7], $arr)) {
-            $this->setFinalizado($arr[$keys[7]]);
+            $this->setPrincipal($arr[$keys[7]]);
         }
         if (array_key_exists($keys[8], $arr)) {
-            $this->setSpoilers($arr[$keys[8]]);
+            $this->setFinalizado($arr[$keys[8]]);
         }
         if (array_key_exists($keys[9], $arr)) {
-            $this->setTemCertificado($arr[$keys[9]]);
+            $this->setSpoilers($arr[$keys[9]]);
         }
         if (array_key_exists($keys[10], $arr)) {
-            $this->setPresidente($arr[$keys[10]]);
+            $this->setTemCertificado($arr[$keys[10]]);
         }
         if (array_key_exists($keys[11], $arr)) {
-            $this->setData($arr[$keys[11]]);
+            $this->setPresidente($arr[$keys[11]]);
         }
         if (array_key_exists($keys[12], $arr)) {
-            $this->setMandatoPresidente($arr[$keys[12]]);
+            $this->setData($arr[$keys[12]]);
         }
         if (array_key_exists($keys[13], $arr)) {
-            $this->setLocal($arr[$keys[13]]);
+            $this->setMandatoPresidente($arr[$keys[13]]);
+        }
+        if (array_key_exists($keys[14], $arr)) {
+            $this->setLocal($arr[$keys[14]]);
         }
     }
 
@@ -1864,6 +1944,9 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(EventoTableMap::COL_ATIVO)) {
             $criteria->add(EventoTableMap::COL_ATIVO, $this->ativo);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_PRINCIPAL)) {
+            $criteria->add(EventoTableMap::COL_PRINCIPAL, $this->principal);
         }
         if ($this->isColumnModified(EventoTableMap::COL_FINALIZADO)) {
             $criteria->add(EventoTableMap::COL_FINALIZADO, $this->finalizado);
@@ -1979,6 +2062,7 @@ abstract class Evento implements ActiveRecordInterface
         $copyObj->setAno($this->getAno());
         $copyObj->setMenu($this->getMenu());
         $copyObj->setAtivo($this->getAtivo());
+        $copyObj->setPrincipal($this->getPrincipal());
         $copyObj->setFinalizado($this->getFinalizado());
         $copyObj->setSpoilers($this->getSpoilers());
         $copyObj->setTemCertificado($this->getTemCertificado());
@@ -3033,6 +3117,7 @@ abstract class Evento implements ActiveRecordInterface
         $this->ano = null;
         $this->menu = null;
         $this->ativo = null;
+        $this->principal = null;
         $this->finalizado = null;
         $this->spoilers = null;
         $this->tem_certificado = null;
