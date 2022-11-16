@@ -99,9 +99,9 @@ $html = "<html>
 			@page { margin: 0px;}
 		</style>
 	</head>	
-	<body style='font-family: Arial; margin: 0; padding: 0; font-size: 20px;'>
+	<body style='font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 18px;'>
 		<div style = 'text-align: center; background-image: url(\"img/certificado.png\"); width:100%; height:97%'>
-			<br><br><br><br><br><br><br><br><br><br><br><br>
+			<br><br><br><br><br><br><br><br><br><br><br><br><br>
 			<div style = 'font-size:24px'>A <b>SAE BRASIL</b> certifica que</div>
 			<br>
 			<div style = 'font-size:36px; text-transform: uppercase;margin: 0 75px'><b>".$nome."</b></div>
