@@ -14,7 +14,7 @@ $input = json_decode($inputJSON, TRUE);
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
-if (!isset($input) || !isset($input['key']) || $input['key'] != $_remoteKey || $currentEventId != $_remoteValidFor) {
+if (!isset($input) || !isset($input['key']) || $input['key'] != $_remoteKey) {
     header('HTTP/1.0 403 Forbidden');
     exit();
 }

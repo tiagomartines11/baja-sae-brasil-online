@@ -35,7 +35,6 @@ $_smtpPassword = '****';
 $_oneSignalAuth = '*****';
 
 $_remoteKey = '*******';
-$_remoteValidFor = '18BR';
 
 $_recaptchaKey = '*******';
 $_tEmail = '*****@gmail.com';
