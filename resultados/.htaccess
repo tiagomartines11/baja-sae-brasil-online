@@ -2,7 +2,7 @@
 # Make sure AllowOverride All is set in Apache config!!
 php_value   auto_prepend_file   "/var/www/src/bootstrap.php"
 
-SetEnvIf REDIRECT_EVENT "^\s*$" REDIRECT_EVENT=20BR
+SetEnvIf REDIRECT_EVENT "^\s*$" REDIRECT_EVENT=22SE
 
 RewriteEngine on
 RewriteRule   "^([0-2][0-9](BR|SE|SU|NE))$"    /$1/ [R=301]
