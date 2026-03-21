@@ -7,6 +7,7 @@ use Baja\Model\ProvaQuery;
 use Baja\Model\UserQuery;
 use DateTimeZone;
 use Propel\Runtime\ActiveQuery\Criteria;
+use Baja\Session;
 
 if (!isset($_REQUEST['id'])) header("Location: admin.php");
 

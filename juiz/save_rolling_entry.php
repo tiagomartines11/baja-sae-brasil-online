@@ -8,6 +8,7 @@ use Baja\Model\InputQuery;
 use Baja\Model\Log;
 use Baja\Model\ProvaQuery;
 use Baja\Site\OneSignalClient;
+use Baja\Session;
 
 if (!isset($_REQUEST['p'])) header("Location: index.php");
 
@@ -69,4 +70,7 @@ $log->setEquipe($equipe->getEquipeId());
 $log->setDados(json_encode($new_array));
 $log->save();
 
-header("Location: index.php");
+if ($_POST['submit'] == 'Salvar e Avançar')
+    header("Location: rolling_entry.php?p=$_page");
+else
+    header("Location: dashboard.php?p=$_page");

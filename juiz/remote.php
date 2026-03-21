@@ -6,6 +6,7 @@ use Baja\Model\Input;
 use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Propel\Runtime\Exception\PropelException;
+use Baja\Session;
 
 cors();
 
@@ -46,7 +47,7 @@ if (array_key_exists("cars", $input)) {
                 $input->setEventoId($currentEventId);
                 $input->setProvaId('END');
             }
-            $input->setDados(array("VOLTAS"=> intval($carObj["laps"]), "BEST"=> intval($carObj["bestLapTime"])));
+            $input->setDados(array("VOLTAS"=> intval($carObj["laps"]), "BEST"=> intval($carObj["bestLapTime"]), "LAST"=> intval($carObj["lastPass"])));
             try { $input->save(); } catch (PropelException $e) { continue; };
         }
     }

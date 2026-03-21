@@ -5,6 +5,7 @@ use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
+use Baja\Session;
 
 if (!isset($_REQUEST['p'])) header("Location: index.php");
 
@@ -40,7 +41,7 @@ echo '
 
 $fields = $prova->getParamsInputs();
 foreach ($fields as $k=>$field) {
-    echo '<tr '.(($field->getPass() == 1 && ($fields[$k+1] && $fields[$k+1]->getPass() == 2)) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($nota ? $nota->getDados()->{$field->getCode()} : null) . '</tr>';
+    echo '<tr '.(($field->getPass() >= 0 && ($fields[$k+1] && $fields[$k+1]->getPass() == ($field->getPass()+1))) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($nota ? $nota->getDados()->{$field->getCode()} : null) . '</tr>';
 }
 
 ?>
@@ -88,7 +89,7 @@ foreach ($fields as $k=>$field) {
         }
     }).trigger('input');
 
-    $('[data-group=1],[data-group=2]').on('input',function(e){
+    $('[data-group=1],[data-group=2],[data-group=3],[data-group=4],[data-group=5],[data-group=6],[data-group=7],[data-group=8],[data-group=9],[data-group=10]').on('input',function(e){
         var group = $(this).attr('data-group');
         var emptyGroup = $('[data-group='+group+']').filter(function() { return $(this).val() == "" && $(this).prop('disabled') == false; });
         $("#submit1,#submit2").prop('disabled', emptyGroup.length > 0)

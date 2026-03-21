@@ -9,21 +9,13 @@
     <link rel="icon" href="img/baja.png" type="image/png">
 </head>
 <body class="body-blue">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KBKCF1HW4R"></script>
 <script>
-    (function (i, s, o, g, r, a, m) {
-        i['GoogleAnalyticsObject'] = r;
-        i[r] = i[r] || function () {
-            (i[r].q = i[r].q || []).push(arguments)
-        }, i[r].l = 1 * new Date();
-        a = s.createElement(o),
-            m = s.getElementsByTagName(o)[0];
-        a.async = 1;
-        a.src = g;
-        m.parentNode.insertBefore(a, m)
-    })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-    ga('create', 'UA-92791788-1', 'auto');
-    ga('send', 'pageview');
+  gtag('config', 'G-KBKCF1HW4R');
 </script>
 
 <div style="font-size: 30px;">
@@ -35,15 +27,15 @@
     <br/>
     <br/>
     <b>Resultados</b><br/>
-    <a href="https://resultados.bajasaebrasil.online/">https://resultados.bajasaebrasil.online/</a>
+    <a href="https://resultados.bajasaebrasil.net/">https://resultados.bajasaebrasil.net/</a>
     <br/>
     <br/>
     <b>Fórum</b><br/>
-    <a href="https://forum.bajasaebrasil.online/">https://forum.bajasaebrasil.online/</a>
+    <a href="https://forum.bajasaebrasil.net/">https://forum.bajasaebrasil.net/</a>
     <br/>
     <br/>
     <b>Certificados</b><br/>
-    <a href="https://certificado.bajasaebrasil.online/">https://certificado.bajasaebrasil.online/</a>
+    <a href="https://certificado.bajasaebrasil.net/">https://certificado.bajasaebrasil.net/</a>
 </div>
 
 </body>

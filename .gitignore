@@ -82,8 +82,21 @@ fabric.properties
 
 vendor/
 
+# Generated/runtime
+generated-migrations/
+*/cache/*
+*/files/*
+*.log
+
 # Others
 propel.yaml
 */*.prod.*
-forum/*
 .idea/*
+*/img/uploads/
+
+#phpBB instances
+forum/*
+formula/*
+
+#Composer
+composer.phar

@@ -2,6 +2,7 @@
 namespace Baja\Juiz;
 
 use Baja\Model\EventoQuery;
+use Baja\Session;
 
 if (Session::getCurrentUser() && @$_REQUEST['act'] != 'change_pass') {
     header("Location: index.php");
@@ -52,7 +53,7 @@ echo '<form action="login.php?act=login" method="post">
         <br /><br />
         <input type="submit" value="Entrar"/>
         <br /><br /><br />
-        <a href="https://forum.bajasaebrasil.online/ucp.php?mode=sendpassword">Esqueci minha senha</a>
+        <a href="https://forum.bajasaebrasil.net/ucp.php?mode=sendpassword">Esqueci minha senha</a>
     </form>';
 
 echo '<br /></td></tr></table></div>';

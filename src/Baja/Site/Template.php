@@ -10,29 +10,56 @@ class Template
         ?>
         <!DOCTYPE html>
         <html>
-        <head>
+        <head><?php self::printGA(); ?>
             <link rel="manifest" href="/manifest.json">
-            <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+            <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
             <script>
-                var OneSignal = window.OneSignal || [];
-                OneSignal.push(["init", {
-                    appId: "f4b8f501-88bb-49fe-b209-712ae98da3e2",
-                    autoRegister: true,
-                    notifyButton: {
-                        enable: false /* Set to false to hide */
-                    },
-                    welcomeNotification: {
-                        "title": "Baja SAE Brasil Online",
-                        "message": "Obrigado por se inscrever!",
-                        "url": "<?= EventoQuery::getCurrentEvent()->getEventoId() ?>/notificacoes.php"
-                    },
-                    persistNotification: false,
-                    safari_web_id: "web.onesignal.auto.246fdfe2-a404-4d40-aa8a-d2b211d431d5"
-                }]);
                 var tagPrefix = '<?= EventoQuery::getCurrentEvent()->getEventoId() ?>_';
-                OneSignal.push(function() {
-                    OneSignal.on('subscriptionChange', function (isSubscribed) {
-                        if (isSubscribed) OneSignal.push(["sendTag", tagPrefix + "psa", 1])
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                OneSignalDeferred.push(async function(OneSignal) {
+                    console.log("OneSignal context received, starting init...");
+
+                    // Check service worker support
+                    if ('serviceWorker' in navigator) {
+                        console.log("Service Worker is supported");
+
+                        // Check if already registered
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        console.log("Existing service worker registrations:", registrations.length);
+
+                        // Try to register manually if needed
+                        if (registrations.length === 0) {
+                            console.log("No service workers found, attempting to register...");
+                            try {
+                                const registration = await navigator.serviceWorker.register('/OneSignalSDKWorker.js', {
+                                    scope: '/'
+                                });
+                                console.log("Service worker registered successfully:", registration);
+                            } catch (err) {
+                                console.error("Service worker registration failed:", err);
+                            }
+                        }
+                    } else {
+                        console.error("Service Worker is not supported in this browser!");
+                    }
+
+                    await OneSignal.init({
+                        appId: "2d1b50b2-362f-49c1-a854-3c8c7e0db587",
+                        serviceWorkerPath: "/OneSignalSDKWorker.js",
+                        allowLocalhostAsSecureOrigin: true,
+                        notifyButton: { enable: false }
+                    });
+                    console.log("OneSignal initialized");
+
+                    // Set up event listener
+                    OneSignal.User.PushSubscription.addEventListener('change', function (subscription) {
+                        console.log("Template: subscriptionChange", subscription);
+                        var optedIn = subscription.current ? subscription.current.optedIn : false;
+                        if (optedIn) {
+                            OneSignal.User.addTag({ [tagPrefix + "psa"]: "1" });
+                        } else {
+                            OneSignal.User.deleteTag(tagPrefix + "psa");
+                        }
                     });
                 });
             </script>
@@ -43,7 +70,7 @@ class Template
             <script src="js/jquery.tablesorter.js"></script>
             <script src="js/jquery.tablesorter.widgets.js"></script>
             <script src="js/menu.js"></script>
-            <link class="theme" rel="stylesheet" href="css/theme.blue.css">
+            <link class="theme" rel="stylesheet" href="css/theme.blue.css?version=3">
             <link class="theme" rel="stylesheet" href="css/slider.css">
             <link rel="icon" href="img/baja.png" type="image/png">
             <!--[if IE]>
@@ -52,8 +79,28 @@ class Template
         </head>
         <body class="body-blue">
         <?php
-        self::printGA();
         self::printMenu();
+    }
+
+    static function printHeaderTournament($title) {
+        ?>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <link rel="manifest" href="/manifest.json">
+            <title><?= EventoQuery::getCurrentEvent()->getTitulo() . ($title ? " - ".$title : "") ?></title>
+            <meta name="viewport" content="width=device-width" />
+            <meta charset="UTF-8" />
+            <meta http-equiv="refresh" content="5" />
+            <link rel="stylesheet/less" type="text/css" href="css/tournament.less">
+            <script src="https://cdn.jsdelivr.net/npm/less" ></script>
+            <link rel="icon" href="img/baja.png" type="image/png">
+            <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+            <![endif]-->
+        </head>
+        <body class="body-blue">
+        <?php
     }
 
     static function printFooter() {
@@ -65,15 +112,13 @@ class Template
 
     static function printGA() {
         ?>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-KBKCF1HW4R"></script>
         <script>
-            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-                    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
 
-            ga('create', 'UA-92791788-1', 'auto');
-            ga('send', 'pageview');
-
+          gtag('config', 'G-KBKCF1HW4R');
         </script>
         <?php
     }
@@ -130,7 +175,7 @@ class Template
                     }
                 }
                 ?>
-                <li><a id="contato" href="contato.php">Contato</a></li>
+                <!--li><a id="contato" href="contato.php">Contato</a></li-->
                 <li><a id="notificacoes" href="notificacoes.php">Notificações</a></li>
                 <li><a id="relogio" href="clock.php">Relógio Oficial</a></li>
                 <li><a id="Arquivo" href="#">Arquivo</a><ul>
@@ -154,14 +199,14 @@ class Template
         <?php
     }
 
-    public static function printColumnHeader($header, $size = null, $sort = null)
+    public static function printColumnHeader($header, $size = null, $sort = null, $hidden = false)
     {
         if ($header == "Pos") {
-            echo '<th style="width:20px;"><img src="img/trofeu.png"></th>';
+            echo '<th style="width:20px;'.($hidden?'display: none;':'').'"><img src="img/trofeu.png"></th>';
         } else if ($header == "Equipe") {
-            echo '<th>Equipe<br /><p class="nomeEscola">Escola</p></th>';
+            echo '<th '.($hidden?'class="hidden-column"':'').'">Equipe<br /><p class="nomeEscola">Escola</p></th>';
         } else {
-            echo '<th '.($size ? 'style="width: '.$size.'px"' : '').' '.($sort ? 'class="sorter-'.$sort.'"' : '').'>'. $header . '</th>';
+            echo '<th style="'.($size ? 'width: '.$size.'px;' : '').'" '.($hidden?'class="hidden-column"':'').' '.($sort ? 'class="sorter-'.$sort.'"' : '').'>'. $header . '</th>';
         }
     }
 }

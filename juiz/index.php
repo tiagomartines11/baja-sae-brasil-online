@@ -3,6 +3,7 @@ namespace Baja\Juiz;
 
 use Baja\Model\EventoQuery;
 use Baja\Model\ProvaQuery;
+use Baja\Session;
 
 Session::permissionCheck("index");
 
@@ -28,11 +29,14 @@ echo '<div style="max-width: 400px; margin: 0 auto"><table class="tablesorter">
         ';
 
 foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->getEventoId()) as $prova) {
-    if (Session::hasPermission($prova->getProvaId()) && count($prova->getParamsInputs()) > 0) {
-        if ($prova->getType() == 'normal')
+    if (Session::hasPermission($prova->getProvaId()) && (count($prova->getParamsInputs()) > 0 || $prova->getType() == 'tournament')) {
+        if ($prova->getType() == 'normal') {
             echo '<tr style="height: 40px"><td><a href="dashboard.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
-        else
+        } elseif ($prova->getType() == 'tournament'){
+            echo '<tr style="height: 40px"><td><a href="tournament_entry.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+        } else {
             echo '<tr style="height: 40px"><td><a href="rolling_entry.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+        }
     }
 }
 

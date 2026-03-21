@@ -8,17 +8,23 @@ use Baja\Model\Equipe as ChildEquipe;
 use Baja\Model\EquipeQuery as ChildEquipeQuery;
 use Baja\Model\Evento as ChildEvento;
 use Baja\Model\EventoQuery as ChildEventoQuery;
+use Baja\Model\Fila as ChildFila;
+use Baja\Model\FilaQuery as ChildFilaQuery;
 use Baja\Model\Participante as ChildParticipante;
 use Baja\Model\ParticipanteQuery as ChildParticipanteQuery;
 use Baja\Model\Prova as ChildProva;
 use Baja\Model\ProvaQuery as ChildProvaQuery;
 use Baja\Model\Resultado as ChildResultado;
 use Baja\Model\ResultadoQuery as ChildResultadoQuery;
+use Baja\Model\Senha as ChildSenha;
+use Baja\Model\SenhaQuery as ChildSenhaQuery;
 use Baja\Model\Map\EquipeTableMap;
 use Baja\Model\Map\EventoTableMap;
+use Baja\Model\Map\FilaTableMap;
 use Baja\Model\Map\ParticipanteTableMap;
 use Baja\Model\Map\ProvaTableMap;
 use Baja\Model\Map\ResultadoTableMap;
+use Baja\Model\Map\SenhaTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -176,6 +182,21 @@ abstract class Evento implements ActiveRecordInterface
     protected $local;
 
     /**
+     * The value for the em_andamento field.
+     *
+     * Note: this column has a database default value of: false
+     * @var        boolean
+     */
+    protected $em_andamento;
+
+    /**
+     * The value for the carga_horaria field.
+     *
+     * @var        int
+     */
+    protected $carga_horaria;
+
+    /**
      * @var        ObjectCollection|ChildEquipe[] Collection to store aggregation of ChildEquipe objects.
      */
     protected $collEquipes;
@@ -198,6 +219,18 @@ abstract class Evento implements ActiveRecordInterface
      */
     protected $collResultados;
     protected $collResultadosPartial;
+
+    /**
+     * @var        ObjectCollection|ChildFila[] Collection to store aggregation of ChildFila objects.
+     */
+    protected $collFilas;
+    protected $collFilasPartial;
+
+    /**
+     * @var        ObjectCollection|ChildSenha[] Collection to store aggregation of ChildSenha objects.
+     */
+    protected $collSenhas;
+    protected $collSenhasPartial;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -232,6 +265,18 @@ abstract class Evento implements ActiveRecordInterface
     protected $resultadosScheduledForDeletion = null;
 
     /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildFila[]
+     */
+    protected $filasScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSenha[]
+     */
+    protected $senhasScheduledForDeletion = null;
+
+    /**
      * Applies default values to this object.
      * This method should be called from the object's constructor (or
      * equivalent initialization method).
@@ -243,6 +288,7 @@ abstract class Evento implements ActiveRecordInterface
         $this->finalizado = false;
         $this->spoilers = false;
         $this->tem_certificado = false;
+        $this->em_andamento = false;
     }
 
     /**
@@ -662,6 +708,36 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Get the [em_andamento] column value.
+     *
+     * @return boolean
+     */
+    public function getEmAndamento()
+    {
+        return $this->em_andamento;
+    }
+
+    /**
+     * Get the [em_andamento] column value.
+     *
+     * @return boolean
+     */
+    public function isEmAndamento()
+    {
+        return $this->getEmAndamento();
+    }
+
+    /**
+     * Get the [carga_horaria] column value.
+     *
+     * @return int
+     */
+    public function getCargaHoraria()
+    {
+        return $this->carga_horaria;
+    }
+
+    /**
      * Set the value of [evento_id] column.
      *
      * @param string $v New value
@@ -979,6 +1055,54 @@ abstract class Evento implements ActiveRecordInterface
     } // setLocal()
 
     /**
+     * Sets the value of the [em_andamento] column.
+     * Non-boolean arguments are converted using the following rules:
+     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     *
+     * @param  boolean|integer|string $v The new value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setEmAndamento($v)
+    {
+        if ($v !== null) {
+            if (is_string($v)) {
+                $v = in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            } else {
+                $v = (boolean) $v;
+            }
+        }
+
+        if ($this->em_andamento !== $v) {
+            $this->em_andamento = $v;
+            $this->modifiedColumns[EventoTableMap::COL_EM_ANDAMENTO] = true;
+        }
+
+        return $this;
+    } // setEmAndamento()
+
+    /**
+     * Set the value of [carga_horaria] column.
+     *
+     * @param int|null $v New value
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function setCargaHoraria($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->carga_horaria !== $v) {
+            $this->carga_horaria = $v;
+            $this->modifiedColumns[EventoTableMap::COL_CARGA_HORARIA] = true;
+        }
+
+        return $this;
+    } // setCargaHoraria()
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -1001,6 +1125,10 @@ abstract class Evento implements ActiveRecordInterface
             }
 
             if ($this->tem_certificado !== false) {
+                return false;
+            }
+
+            if ($this->em_andamento !== false) {
                 return false;
             }
 
@@ -1071,6 +1199,12 @@ abstract class Evento implements ActiveRecordInterface
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : EventoTableMap::translateFieldName('Local', TableMap::TYPE_PHPNAME, $indexType)];
             $this->local = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 14 + $startcol : EventoTableMap::translateFieldName('EmAndamento', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->em_andamento = (null !== $col) ? (boolean) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 15 + $startcol : EventoTableMap::translateFieldName('CargaHoraria', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->carga_horaria = (null !== $col) ? (int) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -1079,7 +1213,7 @@ abstract class Evento implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 14; // 14 = EventoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 16; // 16 = EventoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Evento'), 0, $e);
@@ -1147,6 +1281,10 @@ abstract class Evento implements ActiveRecordInterface
             $this->collProvas = null;
 
             $this->collResultados = null;
+
+            $this->collFilas = null;
+
+            $this->collSenhas = null;
 
         } // if (deep)
     }
@@ -1330,6 +1468,40 @@ abstract class Evento implements ActiveRecordInterface
                 }
             }
 
+            if ($this->filasScheduledForDeletion !== null) {
+                if (!$this->filasScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\FilaQuery::create()
+                        ->filterByPrimaryKeys($this->filasScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->filasScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collFilas !== null) {
+                foreach ($this->collFilas as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->senhasScheduledForDeletion !== null) {
+                if (!$this->senhasScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\SenhaQuery::create()
+                        ->filterByPrimaryKeys($this->senhasScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->senhasScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collSenhas !== null) {
+                foreach ($this->collSenhas as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
             $this->alreadyInSave = false;
 
         }
@@ -1394,6 +1566,12 @@ abstract class Evento implements ActiveRecordInterface
         if ($this->isColumnModified(EventoTableMap::COL_LOCAL)) {
             $modifiedColumns[':p' . $index++]  = 'local';
         }
+        if ($this->isColumnModified(EventoTableMap::COL_EM_ANDAMENTO)) {
+            $modifiedColumns[':p' . $index++]  = 'em_andamento';
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_CARGA_HORARIA)) {
+            $modifiedColumns[':p' . $index++]  = 'carga_horaria';
+        }
 
         $sql = sprintf(
             'INSERT INTO evento (%s) VALUES (%s)',
@@ -1446,6 +1624,12 @@ abstract class Evento implements ActiveRecordInterface
                         break;
                     case 'local':
                         $stmt->bindValue($identifier, $this->local, PDO::PARAM_STR);
+                        break;
+                    case 'em_andamento':
+                        $stmt->bindValue($identifier, (int) $this->em_andamento, PDO::PARAM_INT);
+                        break;
+                    case 'carga_horaria':
+                        $stmt->bindValue($identifier, $this->carga_horaria, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -1544,6 +1728,12 @@ abstract class Evento implements ActiveRecordInterface
             case 13:
                 return $this->getLocal();
                 break;
+            case 14:
+                return $this->getEmAndamento();
+                break;
+            case 15:
+                return $this->getCargaHoraria();
+                break;
             default:
                 return null;
                 break;
@@ -1588,6 +1778,8 @@ abstract class Evento implements ActiveRecordInterface
             $keys[11] => $this->getData(),
             $keys[12] => $this->getMandatoPresidente(),
             $keys[13] => $this->getLocal(),
+            $keys[14] => $this->getEmAndamento(),
+            $keys[15] => $this->getCargaHoraria(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1654,6 +1846,36 @@ abstract class Evento implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collResultados->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collFilas) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'filas';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'filas';
+                        break;
+                    default:
+                        $key = 'Filas';
+                }
+
+                $result[$key] = $this->collFilas->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collSenhas) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'senhas';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'senhas';
+                        break;
+                    default:
+                        $key = 'Senhas';
+                }
+
+                $result[$key] = $this->collSenhas->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
         }
 
@@ -1735,6 +1957,12 @@ abstract class Evento implements ActiveRecordInterface
             case 13:
                 $this->setLocal($value);
                 break;
+            case 14:
+                $this->setEmAndamento($value);
+                break;
+            case 15:
+                $this->setCargaHoraria($value);
+                break;
         } // switch()
 
         return $this;
@@ -1802,6 +2030,12 @@ abstract class Evento implements ActiveRecordInterface
         }
         if (array_key_exists($keys[13], $arr)) {
             $this->setLocal($arr[$keys[13]]);
+        }
+        if (array_key_exists($keys[14], $arr)) {
+            $this->setEmAndamento($arr[$keys[14]]);
+        }
+        if (array_key_exists($keys[15], $arr)) {
+            $this->setCargaHoraria($arr[$keys[15]]);
         }
     }
 
@@ -1885,6 +2119,12 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(EventoTableMap::COL_LOCAL)) {
             $criteria->add(EventoTableMap::COL_LOCAL, $this->local);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_EM_ANDAMENTO)) {
+            $criteria->add(EventoTableMap::COL_EM_ANDAMENTO, $this->em_andamento);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_CARGA_HORARIA)) {
+            $criteria->add(EventoTableMap::COL_CARGA_HORARIA, $this->carga_horaria);
         }
 
         return $criteria;
@@ -1986,6 +2226,8 @@ abstract class Evento implements ActiveRecordInterface
         $copyObj->setData($this->getData());
         $copyObj->setMandatoPresidente($this->getMandatoPresidente());
         $copyObj->setLocal($this->getLocal());
+        $copyObj->setEmAndamento($this->getEmAndamento());
+        $copyObj->setCargaHoraria($this->getCargaHoraria());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -2013,6 +2255,18 @@ abstract class Evento implements ActiveRecordInterface
             foreach ($this->getResultados() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addResultado($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getFilas() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addFila($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getSenhas() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addSenha($relObj->copy($deepCopy));
                 }
             }
 
@@ -2070,6 +2324,14 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ('Resultado' === $relationName) {
             $this->initResultados();
+            return;
+        }
+        if ('Fila' === $relationName) {
+            $this->initFilas();
+            return;
+        }
+        if ('Senha' === $relationName) {
+            $this->initSenhas();
             return;
         }
     }
@@ -3020,6 +3282,505 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collFilas collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addFilas()
+     */
+    public function clearFilas()
+    {
+        $this->collFilas = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collFilas collection loaded partially.
+     */
+    public function resetPartialFilas($v = true)
+    {
+        $this->collFilasPartial = $v;
+    }
+
+    /**
+     * Initializes the collFilas collection.
+     *
+     * By default this just sets the collFilas collection to an empty array (like clearcollFilas());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initFilas($overrideExisting = true)
+    {
+        if (null !== $this->collFilas && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = FilaTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collFilas = new $collectionClassName;
+        $this->collFilas->setModel('\Baja\Model\Fila');
+    }
+
+    /**
+     * Gets an array of ChildFila objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildEvento is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildFila[] List of ChildFila objects
+     * @throws PropelException
+     */
+    public function getFilas(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collFilasPartial && !$this->isNew();
+        if (null === $this->collFilas || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collFilas) {
+                    $this->initFilas();
+                } else {
+                    $collectionClassName = FilaTableMap::getTableMap()->getCollectionClassName();
+
+                    $collFilas = new $collectionClassName;
+                    $collFilas->setModel('\Baja\Model\Fila');
+
+                    return $collFilas;
+                }
+            } else {
+                $collFilas = ChildFilaQuery::create(null, $criteria)
+                    ->filterByEvento($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collFilasPartial && count($collFilas)) {
+                        $this->initFilas(false);
+
+                        foreach ($collFilas as $obj) {
+                            if (false == $this->collFilas->contains($obj)) {
+                                $this->collFilas->append($obj);
+                            }
+                        }
+
+                        $this->collFilasPartial = true;
+                    }
+
+                    return $collFilas;
+                }
+
+                if ($partial && $this->collFilas) {
+                    foreach ($this->collFilas as $obj) {
+                        if ($obj->isNew()) {
+                            $collFilas[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collFilas = $collFilas;
+                $this->collFilasPartial = false;
+            }
+        }
+
+        return $this->collFilas;
+    }
+
+    /**
+     * Sets a collection of ChildFila objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $filas A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildEvento The current object (for fluent API support)
+     */
+    public function setFilas(Collection $filas, ConnectionInterface $con = null)
+    {
+        /** @var ChildFila[] $filasToDelete */
+        $filasToDelete = $this->getFilas(new Criteria(), $con)->diff($filas);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->filasScheduledForDeletion = clone $filasToDelete;
+
+        foreach ($filasToDelete as $filaRemoved) {
+            $filaRemoved->setEvento(null);
+        }
+
+        $this->collFilas = null;
+        foreach ($filas as $fila) {
+            $this->addFila($fila);
+        }
+
+        $this->collFilas = $filas;
+        $this->collFilasPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Fila objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Fila objects.
+     * @throws PropelException
+     */
+    public function countFilas(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collFilasPartial && !$this->isNew();
+        if (null === $this->collFilas || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collFilas) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getFilas());
+            }
+
+            $query = ChildFilaQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByEvento($this)
+                ->count($con);
+        }
+
+        return count($this->collFilas);
+    }
+
+    /**
+     * Method called to associate a ChildFila object to this object
+     * through the ChildFila foreign key attribute.
+     *
+     * @param  ChildFila $l ChildFila
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function addFila(ChildFila $l)
+    {
+        if ($this->collFilas === null) {
+            $this->initFilas();
+            $this->collFilasPartial = true;
+        }
+
+        if (!$this->collFilas->contains($l)) {
+            $this->doAddFila($l);
+
+            if ($this->filasScheduledForDeletion and $this->filasScheduledForDeletion->contains($l)) {
+                $this->filasScheduledForDeletion->remove($this->filasScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildFila $fila The ChildFila object to add.
+     */
+    protected function doAddFila(ChildFila $fila)
+    {
+        $this->collFilas[]= $fila;
+        $fila->setEvento($this);
+    }
+
+    /**
+     * @param  ChildFila $fila The ChildFila object to remove.
+     * @return $this|ChildEvento The current object (for fluent API support)
+     */
+    public function removeFila(ChildFila $fila)
+    {
+        if ($this->getFilas()->contains($fila)) {
+            $pos = $this->collFilas->search($fila);
+            $this->collFilas->remove($pos);
+            if (null === $this->filasScheduledForDeletion) {
+                $this->filasScheduledForDeletion = clone $this->collFilas;
+                $this->filasScheduledForDeletion->clear();
+            }
+            $this->filasScheduledForDeletion[]= clone $fila;
+            $fila->setEvento(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Clears out the collSenhas collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addSenhas()
+     */
+    public function clearSenhas()
+    {
+        $this->collSenhas = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collSenhas collection loaded partially.
+     */
+    public function resetPartialSenhas($v = true)
+    {
+        $this->collSenhasPartial = $v;
+    }
+
+    /**
+     * Initializes the collSenhas collection.
+     *
+     * By default this just sets the collSenhas collection to an empty array (like clearcollSenhas());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initSenhas($overrideExisting = true)
+    {
+        if (null !== $this->collSenhas && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = SenhaTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collSenhas = new $collectionClassName;
+        $this->collSenhas->setModel('\Baja\Model\Senha');
+    }
+
+    /**
+     * Gets an array of ChildSenha objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildEvento is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildSenha[] List of ChildSenha objects
+     * @throws PropelException
+     */
+    public function getSenhas(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSenhasPartial && !$this->isNew();
+        if (null === $this->collSenhas || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collSenhas) {
+                    $this->initSenhas();
+                } else {
+                    $collectionClassName = SenhaTableMap::getTableMap()->getCollectionClassName();
+
+                    $collSenhas = new $collectionClassName;
+                    $collSenhas->setModel('\Baja\Model\Senha');
+
+                    return $collSenhas;
+                }
+            } else {
+                $collSenhas = ChildSenhaQuery::create(null, $criteria)
+                    ->filterByEvento($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collSenhasPartial && count($collSenhas)) {
+                        $this->initSenhas(false);
+
+                        foreach ($collSenhas as $obj) {
+                            if (false == $this->collSenhas->contains($obj)) {
+                                $this->collSenhas->append($obj);
+                            }
+                        }
+
+                        $this->collSenhasPartial = true;
+                    }
+
+                    return $collSenhas;
+                }
+
+                if ($partial && $this->collSenhas) {
+                    foreach ($this->collSenhas as $obj) {
+                        if ($obj->isNew()) {
+                            $collSenhas[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collSenhas = $collSenhas;
+                $this->collSenhasPartial = false;
+            }
+        }
+
+        return $this->collSenhas;
+    }
+
+    /**
+     * Sets a collection of ChildSenha objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $senhas A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildEvento The current object (for fluent API support)
+     */
+    public function setSenhas(Collection $senhas, ConnectionInterface $con = null)
+    {
+        /** @var ChildSenha[] $senhasToDelete */
+        $senhasToDelete = $this->getSenhas(new Criteria(), $con)->diff($senhas);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->senhasScheduledForDeletion = clone $senhasToDelete;
+
+        foreach ($senhasToDelete as $senhaRemoved) {
+            $senhaRemoved->setEvento(null);
+        }
+
+        $this->collSenhas = null;
+        foreach ($senhas as $senha) {
+            $this->addSenha($senha);
+        }
+
+        $this->collSenhas = $senhas;
+        $this->collSenhasPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Senha objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Senha objects.
+     * @throws PropelException
+     */
+    public function countSenhas(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSenhasPartial && !$this->isNew();
+        if (null === $this->collSenhas || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collSenhas) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getSenhas());
+            }
+
+            $query = ChildSenhaQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByEvento($this)
+                ->count($con);
+        }
+
+        return count($this->collSenhas);
+    }
+
+    /**
+     * Method called to associate a ChildSenha object to this object
+     * through the ChildSenha foreign key attribute.
+     *
+     * @param  ChildSenha $l ChildSenha
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function addSenha(ChildSenha $l)
+    {
+        if ($this->collSenhas === null) {
+            $this->initSenhas();
+            $this->collSenhasPartial = true;
+        }
+
+        if (!$this->collSenhas->contains($l)) {
+            $this->doAddSenha($l);
+
+            if ($this->senhasScheduledForDeletion and $this->senhasScheduledForDeletion->contains($l)) {
+                $this->senhasScheduledForDeletion->remove($this->senhasScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildSenha $senha The ChildSenha object to add.
+     */
+    protected function doAddSenha(ChildSenha $senha)
+    {
+        $this->collSenhas[]= $senha;
+        $senha->setEvento($this);
+    }
+
+    /**
+     * @param  ChildSenha $senha The ChildSenha object to remove.
+     * @return $this|ChildEvento The current object (for fluent API support)
+     */
+    public function removeSenha(ChildSenha $senha)
+    {
+        if ($this->getSenhas()->contains($senha)) {
+            $pos = $this->collSenhas->search($senha);
+            $this->collSenhas->remove($pos);
+            if (null === $this->senhasScheduledForDeletion) {
+                $this->senhasScheduledForDeletion = clone $this->collSenhas;
+                $this->senhasScheduledForDeletion->clear();
+            }
+            $this->senhasScheduledForDeletion[]= clone $senha;
+            $senha->setEvento(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Evento is new, it will return
+     * an empty collection; or if this Evento has previously
+     * been saved, it will retrieve related Senhas from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Evento.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSenha[] List of ChildSenha objects
+     */
+    public function getSenhasJoinEquipe(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSenhaQuery::create(null, $criteria);
+        $query->joinWith('Equipe', $joinBehavior);
+
+        return $this->getSenhas($query, $con);
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -3040,6 +3801,8 @@ abstract class Evento implements ActiveRecordInterface
         $this->data = null;
         $this->mandato_presidente = null;
         $this->local = null;
+        $this->em_andamento = null;
+        $this->carga_horaria = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();
@@ -3079,12 +3842,24 @@ abstract class Evento implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collFilas) {
+                foreach ($this->collFilas as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collSenhas) {
+                foreach ($this->collSenhas as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
         $this->collEquipes = null;
         $this->collParticipantes = null;
         $this->collProvas = null;
         $this->collResultados = null;
+        $this->collFilas = null;
+        $this->collSenhas = null;
     }
 
     /**

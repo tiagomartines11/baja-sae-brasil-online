@@ -1,8 +1,15 @@
 {
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
   "name": "Baja SAE Brasil Online",
-  "short_name": "BajaSAEBrasilOnline",
-  "start_url": "/",
+  "short_name": "Baja Online",
+  "description": "Resultados e notificações ao vivo da Baja SAE Brasil",
   "display": "standalone",
-  "gcm_sender_id": "482941778795",
-  "DO_NOT_CHANGE_GCM_SENDER_ID": "Do not change the GCM Sender ID"
+  "start_url": "/",
+  "theme_color": "#004785",
+  "background_color": "#ffffff",
+  "icons": [
+    { "src": "../img/baja.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../img/baja.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "id": "?homescreen=1"
 }

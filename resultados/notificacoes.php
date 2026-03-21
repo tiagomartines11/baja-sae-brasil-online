@@ -7,95 +7,111 @@ use Baja\Site\Template;
 Template::printHeader("Notificações");
 ?>
     <script>
+        console.log("=== notificacoes.php: setting up OneSignal ===");
+
         var pushStatus = -2;
         var pushTags = {};
         var tagPrefix = '<?= EventoQuery::getCurrentEvent()->getEventoId() ?>_';
 
-        function registerForPush() {
-            if (pushStatus === false) {
-                OneSignal.push(["getNotificationPermission", function (permission) {
-                    if (permission === "denied") {
-                        alert("Você precisa desbloquear as notificações do nosso site em seu navegador. Clique no cadeado na barra de endereço para desbloquear.");
-                        $("#pushEnabled").prop("checked", false);
-                    } else {
-                        OneSignal.push(["registerForPushNotifications"]);
-                        OneSignal.push(["setSubscription", true]);
-                    }
-                }]);
-            } else
-                OneSignal.push(["setSubscription", false]);
-        }
+        // Use the same OneSignalDeferred pattern as Template.php
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            console.log("notificacoes.php: OneSignal ready");
 
-        function registerForCar(car) {
-            car = tagPrefix + car;
-            if (pushTags[car] == "1") {
-                OneSignal.push(["deleteTag", car])
-                pushTags[car] = "0"
-            } else {
-                OneSignal.push(["sendTag", car, 1])
-                pushTags[car] = "1"
+            // Listen for subscription changes
+            OneSignal.User.PushSubscription.addEventListener('change', function (subscription) {
+                console.log("subscriptionChange:", subscription);
+                var optedIn = subscription.current ? subscription.current.optedIn : false;
+                pushStatus = optedIn;
+                $("#pushEnabled").prop("disabled", false).prop("checked", pushStatus);
+                updateUI();
+            });
+
+            // Listen for permission changes
+            OneSignal.Notifications.addEventListener('permissionChange', function (permission) {
+                console.log("permissionChange:", permission);
+                if (permission !== 'granted') {
+                    $("#pushEnabled").prop("checked", false);
+                    pushStatus = false;
+                    updateUI();
+                }
+            });
+
+            // Get current subscription status
+            var isSubscribed = OneSignal.User.PushSubscription.optedIn;
+            console.log("isPushNotificationsEnabled:", isSubscribed);
+            pushStatus = isSubscribed;
+            $("#pushEnabled").prop("disabled", false).prop("checked", pushStatus);
+
+            // Get tags
+            try {
+                var tags = await OneSignal.User.getTags();
+                pushTags = tags || {};
+                console.log("getTags retrieved on init:", pushTags);
+
+                // If user is subscribed but doesn't have the psa tag yet, set it now
+                // This ensures existing subscribers get the "send to all" notifications
+                if (isSubscribed && !pushTags[tagPrefix + 'psa']) {
+                    console.log("Setting missing psa tag for existing subscriber");
+                    OneSignal.User.addTag(tagPrefix + 'psa', "1");
+                    pushTags[tagPrefix + 'psa'] = "1";
+                }
+            } catch (e) {
+                console.error("Error getting tags:", e);
+                pushTags = {};
             }
+
             updateUI();
-        }
+
+            // Expose functions to global scope for onchange handlers
+            window.registerForPush = function() {
+                console.log("registerForPush called, pushStatus:", pushStatus);
+                if (pushStatus === false) {
+                    // optIn() will trigger permission prompt if needed
+                    OneSignal.User.PushSubscription.optIn().then(function() {
+                        console.log("optIn successful");
+                        // Set the psa tag for general notifications
+                        OneSignal.User.addTag(tagPrefix + 'psa', "1");
+                    }).catch(function(err) {
+                        console.error("optIn error:", err);
+                        $("#pushEnabled").prop("checked", false);
+                    });
+                } else {
+                    console.log("Calling optOut()...");
+                    OneSignal.User.PushSubscription.optOut().then(function() {
+                        // Remove the psa tag when opting out
+                        OneSignal.User.deleteTag(tagPrefix + 'psa');
+                    }).catch(function(err) {
+                        console.error("optOut error:", err);
+                    });
+                }
+            };
+
+            window.registerForCar = function(car) {
+                car = String(tagPrefix + car);
+                console.log("registerForCar called:", car);
+                if (pushTags[car] == "1") {
+                    OneSignal.User.deleteTag(car);
+                    pushTags[car] = "0";
+                } else {
+                    // Use key, value format instead of object
+                    OneSignal.User.addTag(car, "1");
+                    pushTags[car] = "1";
+                }
+                updateUI();
+            };
+        });
 
         function updateUI() {
-            for (var i = 0; i < 88; i++) {
-                if (pushTags[i] && pushTags[i] == "1") {
-                    OneSignal.push(["deleteTag", i])
-                    pushTags[car] = "0"
-                    OneSignal.push(["sendTag", tagPrefix + i, 1])
-                    pushTags[tagPrefix + i] = "1"
-                }
-            }
-
             var inputs = $('.tagInput').prop("disabled", !pushStatus);
-            if (pushStatus) inputs.each(function () {
-                $(this).prop("checked", pushTags[tagPrefix + $(this).attr("data-num")] == "1")
-            });
-            else inputs.prop("checked", false);
-        }
-
-        function updateId() {
-            OneSignal.getUserId(function (userId) {
-                $('#userId').html("User ID: " + userId);
-            });
-        }
-
-        OneSignal.push(function () {
-            // If we're on an unsupported browser, do nothing
-            if (!OneSignal.isPushNotificationsSupported()) {
-                alert("Seu navegador não suporta notificações.");
-                return;
+            if (pushStatus) {
+                inputs.each(function () {
+                    $(this).prop("checked", pushTags[tagPrefix + $(this).attr("data-num")] == "1");
+                });
+            } else {
+                inputs.prop("checked", false);
             }
-
-            // Occurs when the user's subscription changes to a new value.
-            OneSignal.on('subscriptionChange', function (isSubscribed) {
-                pushStatus = isSubscribed
-                $("#pushEnabled").prop("disabled", false).prop("checked", pushStatus);
-                if (isSubscribed) OneSignal.push(["sendTag", tagPrefix + "psa", 1])
-                OneSignal.push(["getTags", function (tags) {
-                    pushTags = tags;
-                    updateUI();
-                }]);
-                updateId();
-            });
-
-            OneSignal.on('notificationPermissionChange', function (permissionChange) {
-                var currentPermission = permissionChange.to;
-                if (currentPermission != 'granted') $("#pushEnabled").prop("checked", false);
-            });
-
-            OneSignal.isPushNotificationsEnabled(function (isEnabled) {
-                pushStatus = isEnabled;
-                $("#pushEnabled").prop("disabled", false).prop("checked", pushStatus);
-                if (isEnabled) OneSignal.push(["sendTag", tagPrefix + "psa", 1])
-                OneSignal.push(["getTags", function (tags) {
-                    pushTags = tags;
-                    updateUI();
-                }]);
-                updateId();
-            });
-        });
+        }
     </script>
 <table class="tablesorter-blue">
 <tbody style="text-align: left"> 	
@@ -129,5 +145,42 @@ Template::printHeader("Notificações");
 	<tr><td colspan="2" style="font-size: 10px" id="userId"></td> </tr>
 </tbody>
 </table>
+
+<!-- iOS Instructions -->
+<div style="margin-top: 20px;">
+    <button onclick="document.getElementById('iosInstructions').style.display = document.getElementById('iosInstructions').style.display === 'none' ? 'block' : 'none'" style="background: #007AFF; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        📱 Instruções para iPhone/iPad
+    </button>
+    <div id="iosInstructions" style="display: none; margin-top: 15px; padding: 15px; background: #f0f8ff; border-radius: 10px; border: 1px solid #007AFF;">
+        <h3 style="color: #007AFF; margin-top: 0;">Como ativar notificações no iPhone/iPad</h3>
+        <p><strong>Requisitos:</strong> iOS 16.4+ ou iPadOS 16.4+ (Safari, Chrome ou Edge)</p>
+
+        <ol style="line-height: 1.8;">
+            <li>Abra este site no <strong>Safari</strong> do seu iPhone/iPad</li>
+            <li>Toque no botão <strong>Compartilhar</strong> <small>(ícone de seta para cima em um quadrado)</small></li>
+            <li>Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong></li>
+            <li>Toque em <strong>"Adicionar"</strong> no canto superior direito</li>
+            <li><strong>Importante:</strong> Abra o aplicativo pela <strong>Tela de Início</strong> (não pelo navegador)</li>
+            <li>Volte a esta página de notificações pelo app da Tela de Início</li>
+            <li>Ative as notificações usando os botões acima</li>
+        </ol>
+
+        <p style="background: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <small>⚠️ <strong>Nota:</strong> No iPhone/iPad, a permissão de notificação só aparece após você adicionar o site à Tela de Início e abrir o app a partir dele. Esta é uma exigência da Apple.</small>
+        </p>
+    </div>
+</div>
+
+<!-- Detect iOS and show auto -->
+<script>
+if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('iosInstructions').style.display = 'block';
+        }, 1000);
+    });
+}
+</script>
+
 <?php
 Template::printFooter();

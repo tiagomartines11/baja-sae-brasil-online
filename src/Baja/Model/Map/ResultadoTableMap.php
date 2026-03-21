@@ -58,7 +58,7 @@ class ResultadoTableMap extends TableMap
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 5;
+    const NUM_COLUMNS = 6;
 
     /**
      * The number of lazy-loaded columns
@@ -68,7 +68,7 @@ class ResultadoTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 5;
+    const NUM_HYDRATE_COLUMNS = 6;
 
     /**
      * the column name for the resultado_id field
@@ -96,6 +96,11 @@ class ResultadoTableMap extends TableMap
     const COL_COLUNAS = 'resultado.colunas';
 
     /**
+     * the column name for the colunas_backup field
+     */
+    const COL_COLUNAS_BACKUP = 'resultado.colunas_backup';
+
+    /**
      * The default string format for model objects of the related table
      */
     const DEFAULT_STRING_FORMAT = 'YAML';
@@ -107,11 +112,11 @@ class ResultadoTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('ResultadoId', 'EventoId', 'Nome', 'Inputs', 'Colunas', ),
-        self::TYPE_CAMELNAME     => array('resultadoId', 'eventoId', 'nome', 'inputs', 'colunas', ),
-        self::TYPE_COLNAME       => array(ResultadoTableMap::COL_RESULTADO_ID, ResultadoTableMap::COL_EVENTO_ID, ResultadoTableMap::COL_NOME, ResultadoTableMap::COL_INPUTS, ResultadoTableMap::COL_COLUNAS, ),
-        self::TYPE_FIELDNAME     => array('resultado_id', 'evento_id', 'nome', 'inputs', 'colunas', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, )
+        self::TYPE_PHPNAME       => array('ResultadoId', 'EventoId', 'Nome', 'Inputs', 'Colunas', 'ColunasBackup', ),
+        self::TYPE_CAMELNAME     => array('resultadoId', 'eventoId', 'nome', 'inputs', 'colunas', 'colunasBackup', ),
+        self::TYPE_COLNAME       => array(ResultadoTableMap::COL_RESULTADO_ID, ResultadoTableMap::COL_EVENTO_ID, ResultadoTableMap::COL_NOME, ResultadoTableMap::COL_INPUTS, ResultadoTableMap::COL_COLUNAS, ResultadoTableMap::COL_COLUNAS_BACKUP, ),
+        self::TYPE_FIELDNAME     => array('resultado_id', 'evento_id', 'nome', 'inputs', 'colunas', 'colunas_backup', ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
     );
 
     /**
@@ -121,11 +126,11 @@ class ResultadoTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('ResultadoId' => 0, 'EventoId' => 1, 'Nome' => 2, 'Inputs' => 3, 'Colunas' => 4, ),
-        self::TYPE_CAMELNAME     => array('resultadoId' => 0, 'eventoId' => 1, 'nome' => 2, 'inputs' => 3, 'colunas' => 4, ),
-        self::TYPE_COLNAME       => array(ResultadoTableMap::COL_RESULTADO_ID => 0, ResultadoTableMap::COL_EVENTO_ID => 1, ResultadoTableMap::COL_NOME => 2, ResultadoTableMap::COL_INPUTS => 3, ResultadoTableMap::COL_COLUNAS => 4, ),
-        self::TYPE_FIELDNAME     => array('resultado_id' => 0, 'evento_id' => 1, 'nome' => 2, 'inputs' => 3, 'colunas' => 4, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, )
+        self::TYPE_PHPNAME       => array('ResultadoId' => 0, 'EventoId' => 1, 'Nome' => 2, 'Inputs' => 3, 'Colunas' => 4, 'ColunasBackup' => 5, ),
+        self::TYPE_CAMELNAME     => array('resultadoId' => 0, 'eventoId' => 1, 'nome' => 2, 'inputs' => 3, 'colunas' => 4, 'colunasBackup' => 5, ),
+        self::TYPE_COLNAME       => array(ResultadoTableMap::COL_RESULTADO_ID => 0, ResultadoTableMap::COL_EVENTO_ID => 1, ResultadoTableMap::COL_NOME => 2, ResultadoTableMap::COL_INPUTS => 3, ResultadoTableMap::COL_COLUNAS => 4, ResultadoTableMap::COL_COLUNAS_BACKUP => 5, ),
+        self::TYPE_FIELDNAME     => array('resultado_id' => 0, 'evento_id' => 1, 'nome' => 2, 'inputs' => 3, 'colunas' => 4, 'colunas_backup' => 5, ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
     );
 
     /**
@@ -150,6 +155,7 @@ class ResultadoTableMap extends TableMap
         $this->addColumn('nome', 'Nome', 'VARCHAR', true, 45, null);
         $this->addColumn('inputs', 'Inputs', 'ARRAY', false, null, null);
         $this->addColumn('colunas', 'Colunas', 'LONGVARCHAR', false, null, null);
+        $this->addColumn('colunas_backup', 'ColunasBackup', 'LONGVARCHAR', false, null, null);
     } // initialize()
 
     /**
@@ -312,12 +318,14 @@ class ResultadoTableMap extends TableMap
             $criteria->addSelectColumn(ResultadoTableMap::COL_NOME);
             $criteria->addSelectColumn(ResultadoTableMap::COL_INPUTS);
             $criteria->addSelectColumn(ResultadoTableMap::COL_COLUNAS);
+            $criteria->addSelectColumn(ResultadoTableMap::COL_COLUNAS_BACKUP);
         } else {
             $criteria->addSelectColumn($alias . '.resultado_id');
             $criteria->addSelectColumn($alias . '.evento_id');
             $criteria->addSelectColumn($alias . '.nome');
             $criteria->addSelectColumn($alias . '.inputs');
             $criteria->addSelectColumn($alias . '.colunas');
+            $criteria->addSelectColumn($alias . '.colunas_backup');
         }
     }
 

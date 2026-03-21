@@ -8,6 +8,7 @@ use Baja\Model\InputQuery;
 use Baja\Model\Log;
 use Baja\Model\ProvaQuery;
 use Baja\Site\OneSignalClient;
+use Baja\Session;
 
 if (!isset($_REQUEST['p'])) header("Location: index.php");
 
@@ -67,14 +68,25 @@ foreach ($provaInput as $k=>$v) {
 }
 unset($v);
 
+$sensitive = false;
+
 $diff = [];
 foreach ($provaInput as $k=>$v) {
     $hasOld = array_key_exists($k, $new_array);
     $hasNew = array_key_exists($k, $new_array);
+    $changed = false;
     if ((!$hasOld && $hasNew) || ($hasOld && $hasNew && $new_array[$k] !== $old_array[$k])) {
         $diff[$k] = $new_array[$k];
+        $changed = true;
     } else if (!$hasNew && $hasOld) {
         $diff[$k] = 'removed';
+        $changed = true;
+    }
+
+    if ($changed) {
+        if ($v->getSensitive()) {
+            $sensitive = true;   
+        }
     }
 }
 
@@ -91,7 +103,9 @@ if (count($diff) > 0) {
     $log->setDados(json_encode($diff));
     $log->save();
 
-    OneSignalClient::sendMessage('Pontuação Publicada', '#' . $equipe->getEquipeId() . ' - ' . $prova->getNome() . (count(array_values((array)$nota->getPontos())) > 0 ? ': '. array_values((array)$nota->getPontos())[0] : ''), 'prova.php?id='.$prova->getProvaId(), $equipe->getEquipeId());
+    if (!$sensitive) {
+        OneSignalClient::sendMessage('Pontuação Publicada', '#' . $equipe->getEquipeId() . ' - ' . $prova->getNome() . (count(array_values((array)$nota->getPontos())) > 0 ? ': '. array_values((array)$nota->getPontos())[0] : ''), 'prova.php?id='.$prova->getProvaId(), $equipe->getEquipeId());
+    }
 }
 
 if ($_POST['submit'] == 'Salvar e Avançar')

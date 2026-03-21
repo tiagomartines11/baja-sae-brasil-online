@@ -377,7 +377,7 @@ a {
 
 .nav {
     list-style: none;
-    *zoom: 1;
+    zoom: 1;
     background: #004785;
 }
 
@@ -520,3 +520,11 @@ a {
     font-size: 60px;
     line-height: 80px;
 }
+
+.hidden-column {
+    position: absolute;
+    left: -9999px;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }

@@ -31,14 +31,13 @@ $manager->setName('resultados');
 $serviceContainer->setConnectionManager('resultados', $manager);
 $serviceContainer->setDefaultDatasource('resultados');
 
-$_smtpPassword = '****';
 $_oneSignalAuth = '*****';
 
 $_remoteKey = '*******';
 
 $_recaptchaKey = '*******';
 $_tEmail = '*****@gmail.com';
-$_fEmail = '*****@gmail.com';
+$_bEmail = '*****@gmail.com';
 
 //use Baja\Model\Map\InputTableMap;
 //use Propel\Runtime\Propel;

@@ -17,13 +17,21 @@ if ($conn->connect_error) {
 } 
 //echo "Connected successfully";
 
-$sql = "SELECT * FROM evento WHERE tem_certificado = 1";
+$sql = "SELECT * FROM evento WHERE tem_certificado = 1 ORDER BY titulo";
 $result = $conn->query($sql);
                
 ?>
 <!DOCTYPE html>
         <html xmlns="http://www.w3.org/1999/html">
         <head>
+            <script async src="https://www.googletagmanager.com/gtag/js?id=G-KBKCF1HW4R"></script>
+            <script>
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+
+              gtag('config', 'G-KBKCF1HW4R');
+            </script>
             <meta name="viewport" content="width=device-width" />
             <meta charset="UTF-8" />
             <meta http-equiv="Content-Language" content="pt-br">
@@ -49,17 +57,7 @@ $result = $conn->query($sql);
             });
         </script>
         <body>
-                <script>
-            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-                    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-            ga('create', 'UA-92791788-1', 'auto');
-            ga('send', 'pageview');
-
-        </script>
-        
 <div style="max-width:400px; margin: 0 auto">
     <table class="tablesorter">
         <thead>

@@ -23,16 +23,24 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEquipeQuery orderByEventoId($order = Criteria::ASC) Order by the evento_id column
  * @method     ChildEquipeQuery orderByEquipeId($order = Criteria::ASC) Order by the equipe_id column
  * @method     ChildEquipeQuery orderByEscola($order = Criteria::ASC) Order by the escola column
+ * @method     ChildEquipeQuery orderByEscolaCurto($order = Criteria::ASC) Order by the escola_curto column
+ * @method     ChildEquipeQuery orderByCidade($order = Criteria::ASC) Order by the cidade column
  * @method     ChildEquipeQuery orderByEquipe($order = Criteria::ASC) Order by the equipe column
+ * @method     ChildEquipeQuery orderByEquipeCurto($order = Criteria::ASC) Order by the equipe_curto column
  * @method     ChildEquipeQuery orderByEstado($order = Criteria::ASC) Order by the estado column
  * @method     ChildEquipeQuery orderByPresente($order = Criteria::ASC) Order by the presente column
+ * @method     ChildEquipeQuery orderByDesclassificado($order = Criteria::ASC) Order by the desclassificado column
  *
  * @method     ChildEquipeQuery groupByEventoId() Group by the evento_id column
  * @method     ChildEquipeQuery groupByEquipeId() Group by the equipe_id column
  * @method     ChildEquipeQuery groupByEscola() Group by the escola column
+ * @method     ChildEquipeQuery groupByEscolaCurto() Group by the escola_curto column
+ * @method     ChildEquipeQuery groupByCidade() Group by the cidade column
  * @method     ChildEquipeQuery groupByEquipe() Group by the equipe column
+ * @method     ChildEquipeQuery groupByEquipeCurto() Group by the equipe_curto column
  * @method     ChildEquipeQuery groupByEstado() Group by the estado column
  * @method     ChildEquipeQuery groupByPresente() Group by the presente column
+ * @method     ChildEquipeQuery groupByDesclassificado() Group by the desclassificado column
  *
  * @method     ChildEquipeQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildEquipeQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -62,7 +70,27 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEquipeQuery rightJoinWithInput() Adds a RIGHT JOIN clause and with to the query using the Input relation
  * @method     ChildEquipeQuery innerJoinWithInput() Adds a INNER JOIN clause and with to the query using the Input relation
  *
- * @method     \Baja\Model\EventoQuery|\Baja\Model\InputQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildEquipeQuery leftJoinTournament($relationAlias = null) Adds a LEFT JOIN clause to the query using the Tournament relation
+ * @method     ChildEquipeQuery rightJoinTournament($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Tournament relation
+ * @method     ChildEquipeQuery innerJoinTournament($relationAlias = null) Adds a INNER JOIN clause to the query using the Tournament relation
+ *
+ * @method     ChildEquipeQuery joinWithTournament($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Tournament relation
+ *
+ * @method     ChildEquipeQuery leftJoinWithTournament() Adds a LEFT JOIN clause and with to the query using the Tournament relation
+ * @method     ChildEquipeQuery rightJoinWithTournament() Adds a RIGHT JOIN clause and with to the query using the Tournament relation
+ * @method     ChildEquipeQuery innerJoinWithTournament() Adds a INNER JOIN clause and with to the query using the Tournament relation
+ *
+ * @method     ChildEquipeQuery leftJoinSenha($relationAlias = null) Adds a LEFT JOIN clause to the query using the Senha relation
+ * @method     ChildEquipeQuery rightJoinSenha($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Senha relation
+ * @method     ChildEquipeQuery innerJoinSenha($relationAlias = null) Adds a INNER JOIN clause to the query using the Senha relation
+ *
+ * @method     ChildEquipeQuery joinWithSenha($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Senha relation
+ *
+ * @method     ChildEquipeQuery leftJoinWithSenha() Adds a LEFT JOIN clause and with to the query using the Senha relation
+ * @method     ChildEquipeQuery rightJoinWithSenha() Adds a RIGHT JOIN clause and with to the query using the Senha relation
+ * @method     ChildEquipeQuery innerJoinWithSenha() Adds a INNER JOIN clause and with to the query using the Senha relation
+ *
+ * @method     \Baja\Model\EventoQuery|\Baja\Model\InputQuery|\Baja\Model\TournamentQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildEquipe findOne(ConnectionInterface $con = null) Return the first ChildEquipe matching the query
  * @method     ChildEquipe findOneOrCreate(ConnectionInterface $con = null) Return the first ChildEquipe matching the query, or a new ChildEquipe object populated from the query conditions when no match is found
@@ -70,9 +98,13 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEquipe findOneByEventoId(string $evento_id) Return the first ChildEquipe filtered by the evento_id column
  * @method     ChildEquipe findOneByEquipeId(int $equipe_id) Return the first ChildEquipe filtered by the equipe_id column
  * @method     ChildEquipe findOneByEscola(string $escola) Return the first ChildEquipe filtered by the escola column
+ * @method     ChildEquipe findOneByEscolaCurto(string $escola_curto) Return the first ChildEquipe filtered by the escola_curto column
+ * @method     ChildEquipe findOneByCidade(string $cidade) Return the first ChildEquipe filtered by the cidade column
  * @method     ChildEquipe findOneByEquipe(string $equipe) Return the first ChildEquipe filtered by the equipe column
+ * @method     ChildEquipe findOneByEquipeCurto(string $equipe_curto) Return the first ChildEquipe filtered by the equipe_curto column
  * @method     ChildEquipe findOneByEstado(string $estado) Return the first ChildEquipe filtered by the estado column
- * @method     ChildEquipe findOneByPresente(boolean $presente) Return the first ChildEquipe filtered by the presente column *
+ * @method     ChildEquipe findOneByPresente(boolean $presente) Return the first ChildEquipe filtered by the presente column
+ * @method     ChildEquipe findOneByDesclassificado(boolean $desclassificado) Return the first ChildEquipe filtered by the desclassificado column *
 
  * @method     ChildEquipe requirePk($key, ConnectionInterface $con = null) Return the ChildEquipe by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEquipe requireOne(ConnectionInterface $con = null) Return the first ChildEquipe matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -80,17 +112,25 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEquipe requireOneByEventoId(string $evento_id) Return the first ChildEquipe filtered by the evento_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEquipe requireOneByEquipeId(int $equipe_id) Return the first ChildEquipe filtered by the equipe_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEquipe requireOneByEscola(string $escola) Return the first ChildEquipe filtered by the escola column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEquipe requireOneByEscolaCurto(string $escola_curto) Return the first ChildEquipe filtered by the escola_curto column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEquipe requireOneByCidade(string $cidade) Return the first ChildEquipe filtered by the cidade column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEquipe requireOneByEquipe(string $equipe) Return the first ChildEquipe filtered by the equipe column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEquipe requireOneByEquipeCurto(string $equipe_curto) Return the first ChildEquipe filtered by the equipe_curto column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEquipe requireOneByEstado(string $estado) Return the first ChildEquipe filtered by the estado column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEquipe requireOneByPresente(boolean $presente) Return the first ChildEquipe filtered by the presente column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEquipe requireOneByDesclassificado(boolean $desclassificado) Return the first ChildEquipe filtered by the desclassificado column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildEquipe[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildEquipe objects based on current ModelCriteria
  * @method     ChildEquipe[]|ObjectCollection findByEventoId(string $evento_id) Return ChildEquipe objects filtered by the evento_id column
  * @method     ChildEquipe[]|ObjectCollection findByEquipeId(int $equipe_id) Return ChildEquipe objects filtered by the equipe_id column
  * @method     ChildEquipe[]|ObjectCollection findByEscola(string $escola) Return ChildEquipe objects filtered by the escola column
+ * @method     ChildEquipe[]|ObjectCollection findByEscolaCurto(string $escola_curto) Return ChildEquipe objects filtered by the escola_curto column
+ * @method     ChildEquipe[]|ObjectCollection findByCidade(string $cidade) Return ChildEquipe objects filtered by the cidade column
  * @method     ChildEquipe[]|ObjectCollection findByEquipe(string $equipe) Return ChildEquipe objects filtered by the equipe column
+ * @method     ChildEquipe[]|ObjectCollection findByEquipeCurto(string $equipe_curto) Return ChildEquipe objects filtered by the equipe_curto column
  * @method     ChildEquipe[]|ObjectCollection findByEstado(string $estado) Return ChildEquipe objects filtered by the estado column
  * @method     ChildEquipe[]|ObjectCollection findByPresente(boolean $presente) Return ChildEquipe objects filtered by the presente column
+ * @method     ChildEquipe[]|ObjectCollection findByDesclassificado(boolean $desclassificado) Return ChildEquipe objects filtered by the desclassificado column
  * @method     ChildEquipe[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
@@ -189,7 +229,7 @@ abstract class EquipeQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT evento_id, equipe_id, escola, equipe, estado, presente FROM equipe WHERE evento_id = :p0 AND equipe_id = :p1';
+        $sql = 'SELECT evento_id, equipe_id, escola, escola_curto, cidade, equipe, equipe_curto, estado, presente, desclassificado FROM equipe WHERE evento_id = :p0 AND equipe_id = :p1';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key[0], PDO::PARAM_STR);
@@ -383,6 +423,56 @@ abstract class EquipeQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query on the escola_curto column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByEscolaCurto('fooValue');   // WHERE escola_curto = 'fooValue'
+     * $query->filterByEscolaCurto('%fooValue%', Criteria::LIKE); // WHERE escola_curto LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $escolaCurto The value to use as filter.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildEquipeQuery The current query, for fluid interface
+     */
+    public function filterByEscolaCurto($escolaCurto = null, $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($escolaCurto)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(EquipeTableMap::COL_ESCOLA_CURTO, $escolaCurto, $comparison);
+    }
+
+    /**
+     * Filter the query on the cidade column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByCidade('fooValue');   // WHERE cidade = 'fooValue'
+     * $query->filterByCidade('%fooValue%', Criteria::LIKE); // WHERE cidade LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $cidade The value to use as filter.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildEquipeQuery The current query, for fluid interface
+     */
+    public function filterByCidade($cidade = null, $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($cidade)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(EquipeTableMap::COL_CIDADE, $cidade, $comparison);
+    }
+
+    /**
      * Filter the query on the equipe column
      *
      * Example usage:
@@ -405,6 +495,31 @@ abstract class EquipeQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(EquipeTableMap::COL_EQUIPE, $equipe, $comparison);
+    }
+
+    /**
+     * Filter the query on the equipe_curto column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByEquipeCurto('fooValue');   // WHERE equipe_curto = 'fooValue'
+     * $query->filterByEquipeCurto('%fooValue%', Criteria::LIKE); // WHERE equipe_curto LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $equipeCurto The value to use as filter.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildEquipeQuery The current query, for fluid interface
+     */
+    public function filterByEquipeCurto($equipeCurto = null, $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($equipeCurto)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(EquipeTableMap::COL_EQUIPE_CURTO, $equipeCurto, $comparison);
     }
 
     /**
@@ -457,6 +572,33 @@ abstract class EquipeQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(EquipeTableMap::COL_PRESENTE, $presente, $comparison);
+    }
+
+    /**
+     * Filter the query on the desclassificado column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByDesclassificado(true); // WHERE desclassificado = true
+     * $query->filterByDesclassificado('yes'); // WHERE desclassificado = true
+     * </code>
+     *
+     * @param     boolean|string $desclassificado The value to use as filter.
+     *              Non-boolean arguments are converted using the following rules:
+     *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildEquipeQuery The current query, for fluid interface
+     */
+    public function filterByDesclassificado($desclassificado = null, $comparison = null)
+    {
+        if (is_string($desclassificado)) {
+            $desclassificado = in_array(strtolower($desclassificado), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+        }
+
+        return $this->addUsingAlias(EquipeTableMap::COL_DESCLASSIFICADO, $desclassificado, $comparison);
     }
 
     /**
@@ -603,6 +745,144 @@ abstract class EquipeQuery extends ModelCriteria
         return $this
             ->joinInput($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'Input', '\Baja\Model\InputQuery');
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Tournament object
+     *
+     * @param \Baja\Model\Tournament|ObjectCollection $tournament the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildEquipeQuery The current query, for fluid interface
+     */
+    public function filterByTournament($tournament, $comparison = null)
+    {
+        if ($tournament instanceof \Baja\Model\Tournament) {
+            return $this
+                ->addUsingAlias(EquipeTableMap::COL_EVENTO_ID, $tournament->getEventoId(), $comparison)
+                ->addUsingAlias(EquipeTableMap::COL_EQUIPE_ID, $tournament->getWinner(), $comparison);
+        } else {
+            throw new PropelException('filterByTournament() only accepts arguments of type \Baja\Model\Tournament');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Tournament relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildEquipeQuery The current query, for fluid interface
+     */
+    public function joinTournament($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Tournament');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Tournament');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Tournament relation Tournament object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\TournamentQuery A secondary query class using the current class as primary query
+     */
+    public function useTournamentQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinTournament($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Tournament', '\Baja\Model\TournamentQuery');
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Senha object
+     *
+     * @param \Baja\Model\Senha|ObjectCollection $senha the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildEquipeQuery The current query, for fluid interface
+     */
+    public function filterBySenha($senha, $comparison = null)
+    {
+        if ($senha instanceof \Baja\Model\Senha) {
+            return $this
+                ->addUsingAlias(EquipeTableMap::COL_EQUIPE_ID, $senha->getEquipeId(), $comparison)
+                ->addUsingAlias(EquipeTableMap::COL_EVENTO_ID, $senha->getEventoId(), $comparison);
+        } else {
+            throw new PropelException('filterBySenha() only accepts arguments of type \Baja\Model\Senha');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Senha relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildEquipeQuery The current query, for fluid interface
+     */
+    public function joinSenha($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Senha');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Senha');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Senha relation Senha object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\SenhaQuery A secondary query class using the current class as primary query
+     */
+    public function useSenhaQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinSenha($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Senha', '\Baja\Model\SenhaQuery');
     }
 
     /**

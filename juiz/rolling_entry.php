@@ -5,6 +5,7 @@ use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
+use Baja\Session;
 
 if (!isset($_REQUEST['p'])) header("Location: index.php");
 
@@ -47,7 +48,7 @@ foreach ($fields as $k=>$field) {
     <tfoot>
     <tr style="border: solid 2px black; height: 60px">
         <th colspan="2">
-            <input type="submit" name="submit" id="submit1" value="Salvar" disabled /></th>
+            <input type="submit" name="submit" id="submit1" value="Salvar" disabled />&nbsp&nbsp&nbspOU&nbsp&nbsp&nbsp <input type="submit" name="submit" id="submit2" value="Salvar e Avançar" disabled /></th>
     </tr>
     <tr>
         <th colspan="2">
@@ -88,11 +89,11 @@ foreach ($fields as $k=>$field) {
         $('[data-group=1],[data-group=2]').on('input',function(e){
             var group = $(this).attr('data-group');
             var emptyGroup = $('[data-group='+group+']').filter(function() { return $(this).val() == "" && $(this).prop('disabled') == false; });
-            $("#submit1").prop('disabled', emptyGroup.length > 0)
+            $("#submit1,#submit2").prop('disabled', emptyGroup.length > 0)
             if (group == 1) $('[data-group=2]').prop('group-disabled', emptyGroup.length > 0).computeDisable();
         }).trigger('input');
 
-        $("#submit1").prop('disabled', true)
+        $("#submit1,#submit2").prop('disabled', true)
     </script>
 
     <?php

@@ -104,6 +104,13 @@ abstract class Resultado implements ActiveRecordInterface
     protected $colunas;
 
     /**
+     * The value for the colunas_backup field.
+     *
+     * @var        string
+     */
+    protected $colunas_backup;
+
+    /**
      * @var        ChildEvento
      */
     protected $aEvento;
@@ -411,6 +418,16 @@ abstract class Resultado implements ActiveRecordInterface
     }
 
     /**
+     * Get the [colunas_backup] column value.
+     *
+     * @return string
+     */
+    public function getColunasBackup()
+    {
+        return $this->colunas_backup;
+    }
+
+    /**
      * Set the value of [resultado_id] column.
      *
      * @param string $v New value
@@ -546,6 +563,26 @@ abstract class Resultado implements ActiveRecordInterface
     } // setColunas()
 
     /**
+     * Set the value of [colunas_backup] column.
+     *
+     * @param string|null $v New value
+     * @return $this|\Baja\Model\Resultado The current object (for fluent API support)
+     */
+    public function setColunasBackup($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->colunas_backup !== $v) {
+            $this->colunas_backup = $v;
+            $this->modifiedColumns[ResultadoTableMap::COL_COLUNAS_BACKUP] = true;
+        }
+
+        return $this;
+    } // setColunasBackup()
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -596,6 +633,9 @@ abstract class Resultado implements ActiveRecordInterface
 
             $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ResultadoTableMap::translateFieldName('Colunas', TableMap::TYPE_PHPNAME, $indexType)];
             $this->colunas = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ResultadoTableMap::translateFieldName('ColunasBackup', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->colunas_backup = (null !== $col) ? (string) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -604,7 +644,7 @@ abstract class Resultado implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 5; // 5 = ResultadoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 6; // 6 = ResultadoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Resultado'), 0, $e);
@@ -832,6 +872,9 @@ abstract class Resultado implements ActiveRecordInterface
         if ($this->isColumnModified(ResultadoTableMap::COL_COLUNAS)) {
             $modifiedColumns[':p' . $index++]  = 'colunas';
         }
+        if ($this->isColumnModified(ResultadoTableMap::COL_COLUNAS_BACKUP)) {
+            $modifiedColumns[':p' . $index++]  = 'colunas_backup';
+        }
 
         $sql = sprintf(
             'INSERT INTO resultado (%s) VALUES (%s)',
@@ -857,6 +900,9 @@ abstract class Resultado implements ActiveRecordInterface
                         break;
                     case 'colunas':
                         $stmt->bindValue($identifier, $this->colunas, PDO::PARAM_STR);
+                        break;
+                    case 'colunas_backup':
+                        $stmt->bindValue($identifier, $this->colunas_backup, PDO::PARAM_STR);
                         break;
                 }
             }
@@ -928,6 +974,9 @@ abstract class Resultado implements ActiveRecordInterface
             case 4:
                 return $this->getColunas();
                 break;
+            case 5:
+                return $this->getColunasBackup();
+                break;
             default:
                 return null;
                 break;
@@ -963,6 +1012,7 @@ abstract class Resultado implements ActiveRecordInterface
             $keys[2] => $this->getNome(),
             $keys[3] => $this->getInputs(),
             $keys[4] => $this->getColunas(),
+            $keys[5] => $this->getColunasBackup(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1038,6 +1088,9 @@ abstract class Resultado implements ActiveRecordInterface
             case 4:
                 $this->setColunas($value);
                 break;
+            case 5:
+                $this->setColunasBackup($value);
+                break;
         } // switch()
 
         return $this;
@@ -1078,6 +1131,9 @@ abstract class Resultado implements ActiveRecordInterface
         }
         if (array_key_exists($keys[4], $arr)) {
             $this->setColunas($arr[$keys[4]]);
+        }
+        if (array_key_exists($keys[5], $arr)) {
+            $this->setColunasBackup($arr[$keys[5]]);
         }
     }
 
@@ -1134,6 +1190,9 @@ abstract class Resultado implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ResultadoTableMap::COL_COLUNAS)) {
             $criteria->add(ResultadoTableMap::COL_COLUNAS, $this->colunas);
+        }
+        if ($this->isColumnModified(ResultadoTableMap::COL_COLUNAS_BACKUP)) {
+            $criteria->add(ResultadoTableMap::COL_COLUNAS_BACKUP, $this->colunas_backup);
         }
 
         return $criteria;
@@ -1226,6 +1285,7 @@ abstract class Resultado implements ActiveRecordInterface
         $copyObj->setNome($this->getNome());
         $copyObj->setInputs($this->getInputs());
         $copyObj->setColunas($this->getColunas());
+        $copyObj->setColunasBackup($this->getColunasBackup());
         if ($makeNew) {
             $copyObj->setNew(true);
         }
@@ -1320,6 +1380,7 @@ abstract class Resultado implements ActiveRecordInterface
         $this->inputs = null;
         $this->inputs_unserialized = null;
         $this->colunas = null;
+        $this->colunas_backup = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();

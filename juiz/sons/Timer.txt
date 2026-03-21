@@ -1,0 +1,21 @@
+______
+
+
+[8:00] - |Nome: Apresentacao| - |Audio: Perguntas   |
+[3:00] - |Nome: Perguntas   | - |Audio: Feedback    |
+[2:00] - |Nome: Feedback    | - |Audio: TrocaEquipe |
+[2:30] - |Nome: TrocaEquipe | - |Audio: 30 segundos |
+[0:30] - |Nome: 30 segundos | - |Audio: Apresentacao|
+
+[8:00] - |Nome: Apresentacao| - |Audio: Perguntas   |
+[3:00] - |Nome: Perguntas   | - |Audio: Feedback    |
+[2:00] - |Nome: Feedback    | - |Audio: TrocaCarros |
+[5:00] - |Nome: TrocaGrupo  | - |Audio: 1 minuto    |
+[1:00] - |Nome: 1 minuto    | - |Audio: Apresentacao|
+
+
+
+
+
+
+

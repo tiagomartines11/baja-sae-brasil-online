@@ -1,4 +1,7 @@
 <?php
+
+use Baja\Session;
+
 define('IN_PHPBB', true);
 define('ROOT_PATH', __DIR__ . "/../forum");
 
