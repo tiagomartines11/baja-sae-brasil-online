@@ -27,6 +27,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildProvaQuery orderByTempo($order = Criteria::ASC) Order by the tempo column
  * @method     ChildProvaQuery orderByModificado($order = Criteria::ASC) Order by the modificado column
  * @method     ChildProvaQuery orderByParams($order = Criteria::ASC) Order by the params column
+ * @method     ChildProvaQuery orderByParamsBackup($order = Criteria::ASC) Order by the params_backup column
  * @method     ChildProvaQuery orderByTotals($order = Criteria::ASC) Order by the totals column
  *
  * @method     ChildProvaQuery groupByEventoId() Group by the evento_id column
@@ -36,6 +37,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildProvaQuery groupByTempo() Group by the tempo column
  * @method     ChildProvaQuery groupByModificado() Group by the modificado column
  * @method     ChildProvaQuery groupByParams() Group by the params column
+ * @method     ChildProvaQuery groupByParamsBackup() Group by the params_backup column
  * @method     ChildProvaQuery groupByTotals() Group by the totals column
  *
  * @method     ChildProvaQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
@@ -66,7 +68,17 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildProvaQuery rightJoinWithInput() Adds a RIGHT JOIN clause and with to the query using the Input relation
  * @method     ChildProvaQuery innerJoinWithInput() Adds a INNER JOIN clause and with to the query using the Input relation
  *
- * @method     \Baja\Model\EventoQuery|\Baja\Model\InputQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildProvaQuery leftJoinTournament($relationAlias = null) Adds a LEFT JOIN clause to the query using the Tournament relation
+ * @method     ChildProvaQuery rightJoinTournament($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Tournament relation
+ * @method     ChildProvaQuery innerJoinTournament($relationAlias = null) Adds a INNER JOIN clause to the query using the Tournament relation
+ *
+ * @method     ChildProvaQuery joinWithTournament($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Tournament relation
+ *
+ * @method     ChildProvaQuery leftJoinWithTournament() Adds a LEFT JOIN clause and with to the query using the Tournament relation
+ * @method     ChildProvaQuery rightJoinWithTournament() Adds a RIGHT JOIN clause and with to the query using the Tournament relation
+ * @method     ChildProvaQuery innerJoinWithTournament() Adds a INNER JOIN clause and with to the query using the Tournament relation
+ *
+ * @method     \Baja\Model\EventoQuery|\Baja\Model\InputQuery|\Baja\Model\TournamentQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildProva findOne(ConnectionInterface $con = null) Return the first ChildProva matching the query
  * @method     ChildProva findOneOrCreate(ConnectionInterface $con = null) Return the first ChildProva matching the query, or a new ChildProva object populated from the query conditions when no match is found
@@ -78,6 +90,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildProva findOneByTempo(int $tempo) Return the first ChildProva filtered by the tempo column
  * @method     ChildProva findOneByModificado(string $modificado) Return the first ChildProva filtered by the modificado column
  * @method     ChildProva findOneByParams(string $params) Return the first ChildProva filtered by the params column
+ * @method     ChildProva findOneByParamsBackup(string $params_backup) Return the first ChildProva filtered by the params_backup column
  * @method     ChildProva findOneByTotals(string $totals) Return the first ChildProva filtered by the totals column *
 
  * @method     ChildProva requirePk($key, ConnectionInterface $con = null) Return the ChildProva by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -90,6 +103,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildProva requireOneByTempo(int $tempo) Return the first ChildProva filtered by the tempo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildProva requireOneByModificado(string $modificado) Return the first ChildProva filtered by the modificado column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildProva requireOneByParams(string $params) Return the first ChildProva filtered by the params column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildProva requireOneByParamsBackup(string $params_backup) Return the first ChildProva filtered by the params_backup column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildProva requireOneByTotals(string $totals) Return the first ChildProva filtered by the totals column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildProva[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildProva objects based on current ModelCriteria
@@ -100,6 +114,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildProva[]|ObjectCollection findByTempo(int $tempo) Return ChildProva objects filtered by the tempo column
  * @method     ChildProva[]|ObjectCollection findByModificado(string $modificado) Return ChildProva objects filtered by the modificado column
  * @method     ChildProva[]|ObjectCollection findByParams(string $params) Return ChildProva objects filtered by the params column
+ * @method     ChildProva[]|ObjectCollection findByParamsBackup(string $params_backup) Return ChildProva objects filtered by the params_backup column
  * @method     ChildProva[]|ObjectCollection findByTotals(string $totals) Return ChildProva objects filtered by the totals column
  * @method     ChildProva[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
@@ -199,7 +214,7 @@ abstract class ProvaQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT evento_id, prova_id, nome, status, tempo, modificado, params, totals FROM prova WHERE evento_id = :p0 AND prova_id = :p1';
+        $sql = 'SELECT evento_id, prova_id, nome, status, tempo, modificado, params, params_backup, totals FROM prova WHERE evento_id = :p0 AND prova_id = :p1';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key[0], PDO::PARAM_STR);
@@ -519,6 +534,31 @@ abstract class ProvaQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query on the params_backup column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByParamsBackup('fooValue');   // WHERE params_backup = 'fooValue'
+     * $query->filterByParamsBackup('%fooValue%', Criteria::LIKE); // WHERE params_backup LIKE '%fooValue%'
+     * </code>
+     *
+     * @param     string $paramsBackup The value to use as filter.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildProvaQuery The current query, for fluid interface
+     */
+    public function filterByParamsBackup($paramsBackup = null, $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($paramsBackup)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(ProvaTableMap::COL_PARAMS_BACKUP, $paramsBackup, $comparison);
+    }
+
+    /**
      * Filter the query on the totals column
      *
      * Example usage:
@@ -687,6 +727,75 @@ abstract class ProvaQuery extends ModelCriteria
         return $this
             ->joinInput($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'Input', '\Baja\Model\InputQuery');
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Tournament object
+     *
+     * @param \Baja\Model\Tournament|ObjectCollection $tournament the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildProvaQuery The current query, for fluid interface
+     */
+    public function filterByTournament($tournament, $comparison = null)
+    {
+        if ($tournament instanceof \Baja\Model\Tournament) {
+            return $this
+                ->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $tournament->getEventoId(), $comparison)
+                ->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $tournament->getProvaId(), $comparison);
+        } else {
+            throw new PropelException('filterByTournament() only accepts arguments of type \Baja\Model\Tournament');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Tournament relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildProvaQuery The current query, for fluid interface
+     */
+    public function joinTournament($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Tournament');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Tournament');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Tournament relation Tournament object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\TournamentQuery A secondary query class using the current class as primary query
+     */
+    public function useTournamentQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinTournament($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Tournament', '\Baja\Model\TournamentQuery');
     }
 
     /**

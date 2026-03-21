@@ -58,7 +58,7 @@ class ProvaTableMap extends TableMap
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 8;
+    const NUM_COLUMNS = 9;
 
     /**
      * The number of lazy-loaded columns
@@ -68,7 +68,7 @@ class ProvaTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 8;
+    const NUM_HYDRATE_COLUMNS = 9;
 
     /**
      * the column name for the evento_id field
@@ -106,6 +106,11 @@ class ProvaTableMap extends TableMap
     const COL_PARAMS = 'prova.params';
 
     /**
+     * the column name for the params_backup field
+     */
+    const COL_PARAMS_BACKUP = 'prova.params_backup';
+
+    /**
      * the column name for the totals field
      */
     const COL_TOTALS = 'prova.totals';
@@ -126,11 +131,11 @@ class ProvaTableMap extends TableMap
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('EventoId', 'ProvaId', 'Nome', 'Status', 'Tempo', 'Modificado', 'Params', 'Totals', ),
-        self::TYPE_CAMELNAME     => array('eventoId', 'provaId', 'nome', 'status', 'tempo', 'modificado', 'params', 'totals', ),
-        self::TYPE_COLNAME       => array(ProvaTableMap::COL_EVENTO_ID, ProvaTableMap::COL_PROVA_ID, ProvaTableMap::COL_NOME, ProvaTableMap::COL_STATUS, ProvaTableMap::COL_TEMPO, ProvaTableMap::COL_MODIFICADO, ProvaTableMap::COL_PARAMS, ProvaTableMap::COL_TOTALS, ),
-        self::TYPE_FIELDNAME     => array('evento_id', 'prova_id', 'nome', 'status', 'tempo', 'modificado', 'params', 'totals', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, )
+        self::TYPE_PHPNAME       => array('EventoId', 'ProvaId', 'Nome', 'Status', 'Tempo', 'Modificado', 'Params', 'ParamsBackup', 'Totals', ),
+        self::TYPE_CAMELNAME     => array('eventoId', 'provaId', 'nome', 'status', 'tempo', 'modificado', 'params', 'paramsBackup', 'totals', ),
+        self::TYPE_COLNAME       => array(ProvaTableMap::COL_EVENTO_ID, ProvaTableMap::COL_PROVA_ID, ProvaTableMap::COL_NOME, ProvaTableMap::COL_STATUS, ProvaTableMap::COL_TEMPO, ProvaTableMap::COL_MODIFICADO, ProvaTableMap::COL_PARAMS, ProvaTableMap::COL_PARAMS_BACKUP, ProvaTableMap::COL_TOTALS, ),
+        self::TYPE_FIELDNAME     => array('evento_id', 'prova_id', 'nome', 'status', 'tempo', 'modificado', 'params', 'params_backup', 'totals', ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
     );
 
     /**
@@ -140,11 +145,11 @@ class ProvaTableMap extends TableMap
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
      */
     protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('EventoId' => 0, 'ProvaId' => 1, 'Nome' => 2, 'Status' => 3, 'Tempo' => 4, 'Modificado' => 5, 'Params' => 6, 'Totals' => 7, ),
-        self::TYPE_CAMELNAME     => array('eventoId' => 0, 'provaId' => 1, 'nome' => 2, 'status' => 3, 'tempo' => 4, 'modificado' => 5, 'params' => 6, 'totals' => 7, ),
-        self::TYPE_COLNAME       => array(ProvaTableMap::COL_EVENTO_ID => 0, ProvaTableMap::COL_PROVA_ID => 1, ProvaTableMap::COL_NOME => 2, ProvaTableMap::COL_STATUS => 3, ProvaTableMap::COL_TEMPO => 4, ProvaTableMap::COL_MODIFICADO => 5, ProvaTableMap::COL_PARAMS => 6, ProvaTableMap::COL_TOTALS => 7, ),
-        self::TYPE_FIELDNAME     => array('evento_id' => 0, 'prova_id' => 1, 'nome' => 2, 'status' => 3, 'tempo' => 4, 'modificado' => 5, 'params' => 6, 'totals' => 7, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, )
+        self::TYPE_PHPNAME       => array('EventoId' => 0, 'ProvaId' => 1, 'Nome' => 2, 'Status' => 3, 'Tempo' => 4, 'Modificado' => 5, 'Params' => 6, 'ParamsBackup' => 7, 'Totals' => 8, ),
+        self::TYPE_CAMELNAME     => array('eventoId' => 0, 'provaId' => 1, 'nome' => 2, 'status' => 3, 'tempo' => 4, 'modificado' => 5, 'params' => 6, 'paramsBackup' => 7, 'totals' => 8, ),
+        self::TYPE_COLNAME       => array(ProvaTableMap::COL_EVENTO_ID => 0, ProvaTableMap::COL_PROVA_ID => 1, ProvaTableMap::COL_NOME => 2, ProvaTableMap::COL_STATUS => 3, ProvaTableMap::COL_TEMPO => 4, ProvaTableMap::COL_MODIFICADO => 5, ProvaTableMap::COL_PARAMS => 6, ProvaTableMap::COL_PARAMS_BACKUP => 7, ProvaTableMap::COL_TOTALS => 8, ),
+        self::TYPE_FIELDNAME     => array('evento_id' => 0, 'prova_id' => 1, 'nome' => 2, 'status' => 3, 'tempo' => 4, 'modificado' => 5, 'params' => 6, 'params_backup' => 7, 'totals' => 8, ),
+        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
     );
 
     /** The enumerated values for this table */
@@ -204,6 +209,7 @@ class ProvaTableMap extends TableMap
         $this->addColumn('tempo', 'Tempo', 'INTEGER', false, 14, null);
         $this->addColumn('modificado', 'Modificado', 'TIMESTAMP', false, null, 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
         $this->addColumn('params', 'Params', 'LONGVARCHAR', false, null, null);
+        $this->addColumn('params_backup', 'ParamsBackup', 'LONGVARCHAR', false, null, null);
         $this->addColumn('totals', 'Totals', 'LONGVARCHAR', false, null, null);
     } // initialize()
 
@@ -231,6 +237,18 @@ class ProvaTableMap extends TableMap
     1 => ':prova_id',
   ),
 ), 'CASCADE', 'CASCADE', 'Inputs', false);
+        $this->addRelation('Tournament', '\\Baja\\Model\\Tournament', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':evento_id',
+    1 => ':evento_id',
+  ),
+  1 =>
+  array (
+    0 => ':prova_id',
+    1 => ':prova_id',
+  ),
+), 'CASCADE', 'CASCADE', 'Tournaments', false);
     } // buildRelations()
 
     /**
@@ -293,6 +311,7 @@ class ProvaTableMap extends TableMap
         // Invalidate objects in related instance pools,
         // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
         InputTableMap::clearInstancePool();
+        TournamentTableMap::clearInstancePool();
     }
 
     /**
@@ -452,6 +471,7 @@ class ProvaTableMap extends TableMap
             $criteria->addSelectColumn(ProvaTableMap::COL_TEMPO);
             $criteria->addSelectColumn(ProvaTableMap::COL_MODIFICADO);
             $criteria->addSelectColumn(ProvaTableMap::COL_PARAMS);
+            $criteria->addSelectColumn(ProvaTableMap::COL_PARAMS_BACKUP);
             $criteria->addSelectColumn(ProvaTableMap::COL_TOTALS);
         } else {
             $criteria->addSelectColumn($alias . '.evento_id');
@@ -461,6 +481,7 @@ class ProvaTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.tempo');
             $criteria->addSelectColumn($alias . '.modificado');
             $criteria->addSelectColumn($alias . '.params');
+            $criteria->addSelectColumn($alias . '.params_backup');
             $criteria->addSelectColumn($alias . '.totals');
         }
     }

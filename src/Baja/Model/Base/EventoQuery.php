@@ -34,6 +34,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery orderByData($order = Criteria::ASC) Order by the data column
  * @method     ChildEventoQuery orderByMandatoPresidente($order = Criteria::ASC) Order by the mandato_presidente column
  * @method     ChildEventoQuery orderByLocal($order = Criteria::ASC) Order by the local column
+ * @method     ChildEventoQuery orderByEmAndamento($order = Criteria::ASC) Order by the em_andamento column
+ * @method     ChildEventoQuery orderByCargaHoraria($order = Criteria::ASC) Order by the carga_horaria column
  *
  * @method     ChildEventoQuery groupByEventoId() Group by the evento_id column
  * @method     ChildEventoQuery groupByTitulo() Group by the titulo column
@@ -49,6 +51,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery groupByData() Group by the data column
  * @method     ChildEventoQuery groupByMandatoPresidente() Group by the mandato_presidente column
  * @method     ChildEventoQuery groupByLocal() Group by the local column
+ * @method     ChildEventoQuery groupByEmAndamento() Group by the em_andamento column
+ * @method     ChildEventoQuery groupByCargaHoraria() Group by the carga_horaria column
  *
  * @method     ChildEventoQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildEventoQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -98,7 +102,27 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery rightJoinWithResultado() Adds a RIGHT JOIN clause and with to the query using the Resultado relation
  * @method     ChildEventoQuery innerJoinWithResultado() Adds a INNER JOIN clause and with to the query using the Resultado relation
  *
- * @method     \Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildEventoQuery leftJoinFila($relationAlias = null) Adds a LEFT JOIN clause to the query using the Fila relation
+ * @method     ChildEventoQuery rightJoinFila($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Fila relation
+ * @method     ChildEventoQuery innerJoinFila($relationAlias = null) Adds a INNER JOIN clause to the query using the Fila relation
+ *
+ * @method     ChildEventoQuery joinWithFila($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Fila relation
+ *
+ * @method     ChildEventoQuery leftJoinWithFila() Adds a LEFT JOIN clause and with to the query using the Fila relation
+ * @method     ChildEventoQuery rightJoinWithFila() Adds a RIGHT JOIN clause and with to the query using the Fila relation
+ * @method     ChildEventoQuery innerJoinWithFila() Adds a INNER JOIN clause and with to the query using the Fila relation
+ *
+ * @method     ChildEventoQuery leftJoinSenha($relationAlias = null) Adds a LEFT JOIN clause to the query using the Senha relation
+ * @method     ChildEventoQuery rightJoinSenha($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Senha relation
+ * @method     ChildEventoQuery innerJoinSenha($relationAlias = null) Adds a INNER JOIN clause to the query using the Senha relation
+ *
+ * @method     ChildEventoQuery joinWithSenha($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Senha relation
+ *
+ * @method     ChildEventoQuery leftJoinWithSenha() Adds a LEFT JOIN clause and with to the query using the Senha relation
+ * @method     ChildEventoQuery rightJoinWithSenha() Adds a RIGHT JOIN clause and with to the query using the Senha relation
+ * @method     ChildEventoQuery innerJoinWithSenha() Adds a INNER JOIN clause and with to the query using the Senha relation
+ *
+ * @method     \Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery|\Baja\Model\FilaQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildEvento findOne(ConnectionInterface $con = null) Return the first ChildEvento matching the query
  * @method     ChildEvento findOneOrCreate(ConnectionInterface $con = null) Return the first ChildEvento matching the query, or a new ChildEvento object populated from the query conditions when no match is found
@@ -116,7 +140,9 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento findOneByPresidente(string $presidente) Return the first ChildEvento filtered by the presidente column
  * @method     ChildEvento findOneByData(string $data) Return the first ChildEvento filtered by the data column
  * @method     ChildEvento findOneByMandatoPresidente(string $mandato_presidente) Return the first ChildEvento filtered by the mandato_presidente column
- * @method     ChildEvento findOneByLocal(string $local) Return the first ChildEvento filtered by the local column *
+ * @method     ChildEvento findOneByLocal(string $local) Return the first ChildEvento filtered by the local column
+ * @method     ChildEvento findOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column
+ * @method     ChildEvento findOneByCargaHoraria(int $carga_horaria) Return the first ChildEvento filtered by the carga_horaria column *
 
  * @method     ChildEvento requirePk($key, ConnectionInterface $con = null) Return the ChildEvento by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOne(ConnectionInterface $con = null) Return the first ChildEvento matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -135,6 +161,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento requireOneByData(string $data) Return the first ChildEvento filtered by the data column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByMandatoPresidente(string $mandato_presidente) Return the first ChildEvento filtered by the mandato_presidente column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByLocal(string $local) Return the first ChildEvento filtered by the local column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEvento requireOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEvento requireOneByCargaHoraria(int $carga_horaria) Return the first ChildEvento filtered by the carga_horaria column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildEvento[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildEvento objects based on current ModelCriteria
  * @method     ChildEvento[]|ObjectCollection findByEventoId(string $evento_id) Return ChildEvento objects filtered by the evento_id column
@@ -151,6 +179,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento[]|ObjectCollection findByData(string $data) Return ChildEvento objects filtered by the data column
  * @method     ChildEvento[]|ObjectCollection findByMandatoPresidente(string $mandato_presidente) Return ChildEvento objects filtered by the mandato_presidente column
  * @method     ChildEvento[]|ObjectCollection findByLocal(string $local) Return ChildEvento objects filtered by the local column
+ * @method     ChildEvento[]|ObjectCollection findByEmAndamento(boolean $em_andamento) Return ChildEvento objects filtered by the em_andamento column
+ * @method     ChildEvento[]|ObjectCollection findByCargaHoraria(int $carga_horaria) Return ChildEvento objects filtered by the carga_horaria column
  * @method     ChildEvento[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  *
  */
@@ -249,7 +279,7 @@ abstract class EventoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers, tem_certificado, presidente, data, mandato_presidente, local FROM evento WHERE evento_id = :p0';
+        $sql = 'SELECT evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers, tem_certificado, presidente, data, mandato_presidente, local, em_andamento, carga_horaria FROM evento WHERE evento_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
@@ -722,6 +752,74 @@ abstract class EventoQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query on the em_andamento column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByEmAndamento(true); // WHERE em_andamento = true
+     * $query->filterByEmAndamento('yes'); // WHERE em_andamento = true
+     * </code>
+     *
+     * @param     boolean|string $emAndamento The value to use as filter.
+     *              Non-boolean arguments are converted using the following rules:
+     *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildEventoQuery The current query, for fluid interface
+     */
+    public function filterByEmAndamento($emAndamento = null, $comparison = null)
+    {
+        if (is_string($emAndamento)) {
+            $emAndamento = in_array(strtolower($emAndamento), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+        }
+
+        return $this->addUsingAlias(EventoTableMap::COL_EM_ANDAMENTO, $emAndamento, $comparison);
+    }
+
+    /**
+     * Filter the query on the carga_horaria column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByCargaHoraria(1234); // WHERE carga_horaria = 1234
+     * $query->filterByCargaHoraria(array(12, 34)); // WHERE carga_horaria IN (12, 34)
+     * $query->filterByCargaHoraria(array('min' => 12)); // WHERE carga_horaria > 12
+     * </code>
+     *
+     * @param     mixed $cargaHoraria The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this|ChildEventoQuery The current query, for fluid interface
+     */
+    public function filterByCargaHoraria($cargaHoraria = null, $comparison = null)
+    {
+        if (is_array($cargaHoraria)) {
+            $useMinMax = false;
+            if (isset($cargaHoraria['min'])) {
+                $this->addUsingAlias(EventoTableMap::COL_CARGA_HORARIA, $cargaHoraria['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($cargaHoraria['max'])) {
+                $this->addUsingAlias(EventoTableMap::COL_CARGA_HORARIA, $cargaHoraria['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        return $this->addUsingAlias(EventoTableMap::COL_CARGA_HORARIA, $cargaHoraria, $comparison);
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Equipe object
      *
      * @param \Baja\Model\Equipe|ObjectCollection $equipe the related object to use as filter
@@ -1011,6 +1109,152 @@ abstract class EventoQuery extends ModelCriteria
         return $this
             ->joinResultado($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'Resultado', '\Baja\Model\ResultadoQuery');
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Fila object
+     *
+     * @param \Baja\Model\Fila|ObjectCollection $fila the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildEventoQuery The current query, for fluid interface
+     */
+    public function filterByFila($fila, $comparison = null)
+    {
+        if ($fila instanceof \Baja\Model\Fila) {
+            return $this
+                ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $fila->getEventoId(), $comparison);
+        } elseif ($fila instanceof ObjectCollection) {
+            return $this
+                ->useFilaQuery()
+                ->filterByPrimaryKeys($fila->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByFila() only accepts arguments of type \Baja\Model\Fila or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Fila relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildEventoQuery The current query, for fluid interface
+     */
+    public function joinFila($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Fila');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Fila');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Fila relation Fila object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\FilaQuery A secondary query class using the current class as primary query
+     */
+    public function useFilaQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinFila($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Fila', '\Baja\Model\FilaQuery');
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Senha object
+     *
+     * @param \Baja\Model\Senha|ObjectCollection $senha the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildEventoQuery The current query, for fluid interface
+     */
+    public function filterBySenha($senha, $comparison = null)
+    {
+        if ($senha instanceof \Baja\Model\Senha) {
+            return $this
+                ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $senha->getEventoId(), $comparison);
+        } elseif ($senha instanceof ObjectCollection) {
+            return $this
+                ->useSenhaQuery()
+                ->filterByPrimaryKeys($senha->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterBySenha() only accepts arguments of type \Baja\Model\Senha or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Senha relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildEventoQuery The current query, for fluid interface
+     */
+    public function joinSenha($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Senha');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Senha');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Senha relation Senha object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\SenhaQuery A secondary query class using the current class as primary query
+     */
+    public function useSenhaQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinSenha($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Senha', '\Baja\Model\SenhaQuery');
     }
 
     /**

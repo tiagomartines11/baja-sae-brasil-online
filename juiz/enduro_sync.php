@@ -1,7 +1,7 @@
 <?php
 namespace Baja\Model;
 
-//$mysql2_hostname	=	"bajasaebrasil.online";
+//$mysql2_hostname	=	"bajasaebrasil.net";
 //$mysql2_user		=	"enduro";
 //$mysql2_password	=	"baja2018";
 //$mysql2_database =	"baja";

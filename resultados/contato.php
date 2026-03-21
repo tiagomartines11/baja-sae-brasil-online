@@ -35,17 +35,14 @@ else if (!@$_POST['nome'] || !@$_POST['email'] || !@$_POST['equipe'] || !@$_POST
         $mail = new PHPMailer;
         $mail->CharSet = 'UTF-8';
         $mail->isSMTP();                                      // Set mailer to use SMTP
-        $mail->Host = 'bajasaebrasil.online';               // Specify main and backup SMTP servers
-        $mail->SMTPAuth = true;                               // Enable SMTP authentication
-        $mail->Username = 'no-reply@bajasaebrasil.online';    // SMTP username
-        $mail->Password = $_smtpPassword;                 // SMTP password
+        $mail->Host = 'smtp-relay.gmail.com';               // Specify main and backup SMTP servers
+        $mail->SMTPAuth = false;                               // Enable SMTP authentication
         $mail->SMTPSecure = 'tls';                            // Enable TLS encryption, `ssl` also accepted
         $mail->Port = 587;                                    // TCP port to connect to
 
-        $mail->setFrom('no-reply@bajasaebrasil.online', 'Baja SAE Brasil Online');
-        $mail->addAddress('contato@bajasaebrasil.online');
-        $mail->addBCC($_tEmail);
-        $mail->addBCC($_fEmail);
+        $mail->setFrom('no-reply@bajasaebrasil.net', 'Baja SAE Brasil Online');
+        $mail->addAddress('contato@bajasaebrasil.net');
+        $mail->addBCC($_bEmail);
         $mail->addReplyTo($_POST['email'], $_POST['nome']);
 
         $mail->Subject = 'Mensagem via Baja SAE Brasil Online';
@@ -55,11 +52,12 @@ Equipe: '.$_POST['equipe'].'
 
 '.strip_tags($_POST['msg']).'';
 
-        if ($mail->send()) {
+        $res = $mail->send();
+        if ($res) {
             $msg = "Mensagem enviada com sucesso! Entraremos em contato o mais breve possível.";
             unset($_POST);
         } else
-            $msg = "Erro ao enviar a mensagem. Tente mais tarde ou nos procure pessoalmente.";
+            $msg = "Erro ao enviar a mensagem. Tente mais tarde ou nos procure pessoalmente." . $mail->ErrorInfo;
     }
 }
 

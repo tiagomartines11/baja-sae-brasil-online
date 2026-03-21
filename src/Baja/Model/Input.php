@@ -83,21 +83,41 @@ class Input extends BaseInput
 
     public function updatePontos() {
         try {
-            $prova = $this->getProva();
-            $dados = $this->getDados();
-            $vars = $this->getVars();
-            $varsMinMax = $prova->getTotals();
+            #$prova = $this->getProva();
+            #$dados = $this->getDados();
+            #$vars = $this->getVars();
+            #$varsMinMax = $prova->getTotals();
 
-            $vars = array_merge((array)$dados, (array)$vars, (array)$varsMinMax);
+            #$vars = array_merge((array)$dados, (array)$vars, (array)$varsMinMax);
 
-            $pontos = (array)$prova->getParamsPontos();
-            ksort($pontos);
-            $pts = [];
-            foreach ($pontos as $p => $formula) {
-                $pts[$p] = self::solveFormula($vars, $formula);
-                $vars[$p] = $pts[$p];
+            #$pontos = (array)$prova->getParamsPontos();
+            #ksort($pontos);
+            #$pts = [];
+            #foreach ($pontos as $p => $formula) {
+                #$pts[$p] = self::solveFormula($vars, $formula);
+                #$vars[$p] = $pts[$p];
+            #}
+            #$this->setPontos($pts);
+
+            #Ajuste para desclassificadas
+            if (!$this->getEquipe()->isDesclassificado()) {
+            
+                $prova = $this->getProva();
+                $dados = $this->getDados();
+                $vars = $this->getVars();
+                $varsMinMax = $prova->getTotals();
+
+                $vars = array_merge((array)$dados, (array)$vars, (array)$varsMinMax);
+
+                $pontos = (array)$prova->getParamsPontos();
+                ksort($pontos);
+                $pts = [];
+                foreach ($pontos as $p => $formula) {
+                    $pts[$p] = self::solveFormula($vars, $formula);
+                    $vars[$p] = $pts[$p];
+                }
+                $this->setPontos($pts);
             }
-            $this->setPontos($pts);
         } catch (PropelException $e) {
             return;
         }

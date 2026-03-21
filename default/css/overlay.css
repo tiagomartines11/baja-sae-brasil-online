@@ -1,0 +1,278 @@
+@font-face {
+    font-family: "Bastard-up";
+    src: url(/assets/bastard.ttf) format("truetype");
+}
+
+body {
+  font-family: "Bastard-up", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: "Bastard-up", sans-serif;
+}
+
+
+.positionScroll {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 70px;
+  background: rgba(0,0,0,0.5);
+  -webkit-transition: 1s all ease;
+  -moz-transition: 1s all ease;
+  -ms-transition: 1s all ease;
+  transition: 1s all ease;
+}
+
+.pshidden {
+  bottom: -70px !important;
+}
+
+.positionScrollMarquee {
+  display: flex;
+  position: relative;
+  height: 70px;
+  white-space: nowrap;
+}
+
+.scrollPosition {
+  display: inline-flex;
+  font-size: 40px;
+  height: 50px;
+  padding: 0px 10px 0px 10px;
+  line-height: 50px;
+  background: rgba(255,255,255,0.8);
+  transform: skew(-20deg);
+  border-radius: 4px;
+  box-shadow: 5px 5px rgba(0,0,0,0.5);
+  z-index: 20;
+  margin: 10px 3px 10px 0;
+}
+
+.scrollPosition span {
+  transform: skew(20deg); 
+}
+
+.scrollEquipe {
+  display: inline-flex;
+  white-space: nowrap;
+  margin: 15px 15px 15px 0px;
+  height: 40px;
+  background: rgba(23,71,128,0.8);
+  font-size: 30px;
+  line-height: 40px;
+  padding-left: 10px;
+  padding-right: 10px;
+  transform: skew(-20deg);
+  z-index: -1;
+  color: white;
+}
+
+.scrollEquipe span {
+  transform: skew(20deg); 
+}
+
+.enduroTotals {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 440px;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  -webkit-transition: 1s all ease;
+  -moz-transition: 1s all ease;
+  -ms-transition: 1s all ease;
+  transition: 1s all ease;
+}
+
+.ethidden {
+  right: -440px !important;
+}
+
+.etLine {
+  display: flex;
+  width: 100%;
+  height: 50px;
+  color: white;
+  padding-right: 15px;
+  padding-left: 5px;
+}
+
+.etPos {
+  display: block;
+  height: 40px;
+  width: 50px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  text-align: center;
+  /*vertical-align: middle;*/
+  font-size: 20px;
+  line-height: 40px;
+}
+
+.etNum {
+  display: inline;
+  height: 40px;
+  width: 50px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: 10px;
+  margin-left: 10px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 35px;
+  line-height: 40px;
+  background: rgba(255,255,255,0.8);
+  transform: skew(-20deg);
+  border-radius: 4px;
+  box-shadow: 5px 5px rgba(0,0,0,0.5);
+  z-index: 20;
+  
+}
+
+.etNum span {
+  display: block;
+  transform: skew(20deg); 
+  color: black;
+}
+
+.etMiddle {
+  display: block;
+  height: 40px;
+  width: 230px;
+  margin: 5px 0px 5px 0px;
+  /*vertical-align: middle;*/
+  padding-left: 10px;
+  line-height: 20px;
+}
+
+.etEq {
+  font-weight: bold;
+}
+
+.etCid {
+  font-weight: normal;
+  color: rgb(255,255,255);
+}
+
+.etVts {
+  display: inline;
+  height: 40px;
+  width: 50px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: 10px;
+  margin-left: 10px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 35px;
+  line-height: 40px;
+  background: rgba(23,71,128,0.8);
+  transform: skew(-20deg);
+  border-radius: 4px;
+  box-shadow: 5px 5px rgba(0,0,0,0.5);
+  z-index: 20;
+}
+
+.etVts span {
+  display: block;
+  transform: skew(20deg); 
+  color: white;
+}
+
+.enduroTotals img {
+  height: 15px;
+}
+
+.enduroTotals hr {
+  border: 1px solid darkgrey;
+  margin: 0px 30px 0px 30px;
+}
+
+.etLineTitle {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  color: white;
+  padding-right: 15px;
+  padding-left: 5px;
+}
+
+.etPosTitle {
+  display: block;
+  height: 30px;
+  width: 50px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  text-align: center;
+  /*vertical-align: middle;*/
+  font-size: 20px;
+  line-height: 30px;
+  text-shadow: 3px 3px #000000;
+}
+
+.etNumTitle {
+  display: inline;
+  height: 30px;
+  width: 50px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: 10px;
+  margin-left: 10px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 20px;
+  line-height: 30px;
+  text-shadow: 3px 3px #000000;
+}
+
+.etMiddleTitle {
+  display: block;
+  height: 30px;
+  width: 190px;
+  margin: 5px 0px 5px 0px;
+  /*vertical-align: middle;*/
+  padding-left: 10px;
+  line-height: 30px;
+  font-size: 20px;
+  line-height: 30px;
+  text-align: center;
+  text-shadow: 3px 3px #000000;
+}
+
+.etVtsTitle {
+  display: inline;
+  height: 30px;
+  width: 50px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-right: 10px;
+  margin-left: 10px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 20px;
+  line-height: 30px;
+  text-shadow: 3px 3px #000000;
+}
+
+.enduroTotalsTitle {
+  text-align: center;
+  font-size: 50px;
+  color: white;
+  text-shadow: 3px 3px #000000;
+}
+
+#enduroTotals {
+  position: fixed;
+  top: 0px;
+  padding-top: 100px;
+}
+
+.collapsed {
+  height: 0px;
+  overflow: hidden;
+  -webkit-transition: 1s all ease;
+  -moz-transition: 1s all ease;
+  -ms-transition: 1s all ease;
+  transition: 1s all ease;
+}

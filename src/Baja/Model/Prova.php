@@ -69,9 +69,11 @@ class Prova extends BaseProva
     public function getParamsInputs() {
         $ret = [];
         foreach ((array)$this->getParams()->inputs as $i){
-            $f = new Field($i->code, $i->name, $i->pass, $i->xor);
+            $f = new Field($i->code, $i->name, $i->pass, $i->xor, $i->sensitive);
             if ($i->type == "enum") {
                 $f->setEnum($i->options, $i->multiple);
+            } else if ($i->type == "enum-assoc") {
+                $f->setEnumAssoc($i->options, $i->multiple);
             } else if ($i->type == "time") {
                 $f->setTime();
             } else {
@@ -87,7 +89,9 @@ class Prova extends BaseProva
     }
 
     public function refreshVarsAndPontos() {
-        $inputs = InputQuery::create()->filterByEventoId($this->getEventoId())->findByProvaId($this->getProvaId());
+        #$inputs = InputQuery::create()->filterByEventoId($this->getEventoId())->findByProvaId($this->getProvaId());
+        #Ajuste para desclassificadas
+        $inputs = InputQuery::create()->filterByEventoId($this->getEventoId())->joinEquipe()->findByProvaId($this->getProvaId());
         foreach ($inputs as $i) {
             $i->updateVars();
             $i->save();
@@ -120,7 +124,9 @@ class Prova extends BaseProva
         }
 
         $con = Propel::getWriteConnection("resultados");
-        $sql = "SELECT JSON_OBJECT(" . implode(",", $varsQuery) . ") as v FROM input WHERE prova_id = :id AND evento_id = :ev";
+        #$sql = "SELECT JSON_OBJECT(" . implode(",", $varsQuery) . ") as v FROM input WHERE prova_id = :id AND evento_id = :ev";
+        #Ajuste para desclassificadas
+        $sql = "SELECT JSON_OBJECT(" . implode(",", $varsQuery) . ") as v FROM input INNER JOIN equipe ON equipe.equipe_id=input.equipe_id AND equipe.evento_id=input.evento_id WHERE equipe.desclassificado=0 AND prova_id = :id AND input.evento_id = :ev";
         $stmt = $con->prepare($sql);
         $stmt->execute(array(':id' => $this->getProvaId(), ':ev' => $this->getEventoId()));
         $varsMinMax = json_decode($stmt->fetch()[0]);

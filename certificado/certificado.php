@@ -51,6 +51,7 @@ $result = $conn->query($sql);
 			$presidente =  $row["presidente"];
 			$data =  $row["data"];
 			$mandatoPresidente =  $row["mandato_presidente"];
+			$cargaHoraria = $row["carga_horaria"];
 	
 		}
 	} else {
@@ -76,13 +77,18 @@ $conn->close();
 
 
 if($funcao == "competidor"){
-	$texto = "Participou da <b>".$evento."</b>, ".$local.", no período de <b>".$data."</b>.";
+	$texto = "Participou da <b>".$evento."</b>, ".$local.", no período de <b>".$data."</b>";
+	if($cargaHoraria){
+		$texto .= ", com carga horária de ".(string)$cargaHoraria." horas.";
+	} else {
+		$texto .= ".";
+	}
 }else if($funcao == "comissario"){
 	$texto = "Realizou trabalho voluntário na organização da <b>".$evento."</b>, ".$local.", no período de <b>".$data."</b> na função de <b>COMISSÁRIO</b>.";
 }else if($funcao == "juiz"){
 	$texto = "Realizou trabalho voluntário na organização da <b>".$evento."</b>, ".$local.", no período de <b>".$data."</b> na função de <b>JUIZ</b>.";
 }else if($funcao == "comite"){
-	$texto = "Realizou trabalho voluntário na organização da <b>".$evento."</b>, ".$local.", no período de <b>".$data."</b> na função de <b>COMISSÃO TÉCNICA</b>.";
+	$texto = "Realizou trabalho voluntário na organização da <b>".$evento."</b>, ".$local.", no período de <b>".$data."</b> na função de <b>COMISSÃO TÉCNICA</b>.";	
 }else if($funcao == "engenheiro"){
 	$texto = "Realizou trabalho voluntário na organização da <b>".$evento."</b>, ".$local.", no período de <b>".$data."</b> na função de <b>ENGENHEIRO</b>.";
 }else if($funcao == "orientador"){
@@ -117,7 +123,7 @@ $html = "<html>
 			</div>	
 			<div style = 'font-size:16px; margin: 0 250px'>
 				Este documento eletrônico dispensa carimbo e assinatura.<br>Sua autenticidade pode ser comprovada acessando a seguinte página: <br>
-				<a href=\"http://certificado.bajasaebrasil.online/c/".$evt."/".$cpf2."\">http://certificado.bajasaebrasil.online/c/".$evt."/".$cpf2."</a>
+				<a href=\"http://certificado.bajasaebrasil.net/c/".$evt."/".$cpf2."\">http://certificado.bajasaebrasil.net/c/".$evt."/".$cpf2."</a>
 			</div>
 		</div>
 	</body>

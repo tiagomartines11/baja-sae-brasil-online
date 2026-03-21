@@ -10,8 +10,14 @@ use Baja\Model\Evento as ChildEvento;
 use Baja\Model\EventoQuery as ChildEventoQuery;
 use Baja\Model\Input as ChildInput;
 use Baja\Model\InputQuery as ChildInputQuery;
+use Baja\Model\Senha as ChildSenha;
+use Baja\Model\SenhaQuery as ChildSenhaQuery;
+use Baja\Model\Tournament as ChildTournament;
+use Baja\Model\TournamentQuery as ChildTournamentQuery;
 use Baja\Model\Map\EquipeTableMap;
 use Baja\Model\Map\InputTableMap;
+use Baja\Model\Map\SenhaTableMap;
+use Baja\Model\Map\TournamentTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -88,11 +94,32 @@ abstract class Equipe implements ActiveRecordInterface
     protected $escola;
 
     /**
+     * The value for the escola_curto field.
+     *
+     * @var        string
+     */
+    protected $escola_curto;
+
+    /**
+     * The value for the cidade field.
+     *
+     * @var        string
+     */
+    protected $cidade;
+
+    /**
      * The value for the equipe field.
      *
      * @var        string
      */
     protected $equipe;
+
+    /**
+     * The value for the equipe_curto field.
+     *
+     * @var        string
+     */
+    protected $equipe_curto;
 
     /**
      * The value for the estado field.
@@ -110,6 +137,14 @@ abstract class Equipe implements ActiveRecordInterface
     protected $presente;
 
     /**
+     * The value for the desclassificado field.
+     *
+     * Note: this column has a database default value of: false
+     * @var        boolean
+     */
+    protected $desclassificado;
+
+    /**
      * @var        ChildEvento
      */
     protected $aEvento;
@@ -119,6 +154,18 @@ abstract class Equipe implements ActiveRecordInterface
      */
     protected $collInputs;
     protected $collInputsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildTournament[] Collection to store aggregation of ChildTournament objects.
+     */
+    protected $collTournaments;
+    protected $collTournamentsPartial;
+
+    /**
+     * @var        ObjectCollection|ChildSenha[] Collection to store aggregation of ChildSenha objects.
+     */
+    protected $collSenhas;
+    protected $collSenhasPartial;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -135,6 +182,18 @@ abstract class Equipe implements ActiveRecordInterface
     protected $inputsScheduledForDeletion = null;
 
     /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildTournament[]
+     */
+    protected $tournamentsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildSenha[]
+     */
+    protected $senhasScheduledForDeletion = null;
+
+    /**
      * Applies default values to this object.
      * This method should be called from the object's constructor (or
      * equivalent initialization method).
@@ -143,6 +202,7 @@ abstract class Equipe implements ActiveRecordInterface
     public function applyDefaultValues()
     {
         $this->presente = true;
+        $this->desclassificado = false;
     }
 
     /**
@@ -403,6 +463,26 @@ abstract class Equipe implements ActiveRecordInterface
     }
 
     /**
+     * Get the [escola_curto] column value.
+     *
+     * @return string
+     */
+    public function getEscolaCurto()
+    {
+        return $this->escola_curto;
+    }
+
+    /**
+     * Get the [cidade] column value.
+     *
+     * @return string
+     */
+    public function getCidade()
+    {
+        return $this->cidade;
+    }
+
+    /**
      * Get the [equipe] column value.
      *
      * @return string
@@ -410,6 +490,16 @@ abstract class Equipe implements ActiveRecordInterface
     public function getEquipe()
     {
         return $this->equipe;
+    }
+
+    /**
+     * Get the [equipe_curto] column value.
+     *
+     * @return string
+     */
+    public function getEquipeCurto()
+    {
+        return $this->equipe_curto;
     }
 
     /**
@@ -440,6 +530,26 @@ abstract class Equipe implements ActiveRecordInterface
     public function isPresente()
     {
         return $this->getPresente();
+    }
+
+    /**
+     * Get the [desclassificado] column value.
+     *
+     * @return boolean
+     */
+    public function getDesclassificado()
+    {
+        return $this->desclassificado;
+    }
+
+    /**
+     * Get the [desclassificado] column value.
+     *
+     * @return boolean
+     */
+    public function isDesclassificado()
+    {
+        return $this->getDesclassificado();
     }
 
     /**
@@ -507,6 +617,46 @@ abstract class Equipe implements ActiveRecordInterface
     } // setEscola()
 
     /**
+     * Set the value of [escola_curto] column.
+     *
+     * @param string $v New value
+     * @return $this|\Baja\Model\Equipe The current object (for fluent API support)
+     */
+    public function setEscolaCurto($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->escola_curto !== $v) {
+            $this->escola_curto = $v;
+            $this->modifiedColumns[EquipeTableMap::COL_ESCOLA_CURTO] = true;
+        }
+
+        return $this;
+    } // setEscolaCurto()
+
+    /**
+     * Set the value of [cidade] column.
+     *
+     * @param string $v New value
+     * @return $this|\Baja\Model\Equipe The current object (for fluent API support)
+     */
+    public function setCidade($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->cidade !== $v) {
+            $this->cidade = $v;
+            $this->modifiedColumns[EquipeTableMap::COL_CIDADE] = true;
+        }
+
+        return $this;
+    } // setCidade()
+
+    /**
      * Set the value of [equipe] column.
      *
      * @param string $v New value
@@ -525,6 +675,26 @@ abstract class Equipe implements ActiveRecordInterface
 
         return $this;
     } // setEquipe()
+
+    /**
+     * Set the value of [equipe_curto] column.
+     *
+     * @param string $v New value
+     * @return $this|\Baja\Model\Equipe The current object (for fluent API support)
+     */
+    public function setEquipeCurto($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->equipe_curto !== $v) {
+            $this->equipe_curto = $v;
+            $this->modifiedColumns[EquipeTableMap::COL_EQUIPE_CURTO] = true;
+        }
+
+        return $this;
+    } // setEquipeCurto()
 
     /**
      * Set the value of [estado] column.
@@ -575,6 +745,34 @@ abstract class Equipe implements ActiveRecordInterface
     } // setPresente()
 
     /**
+     * Sets the value of the [desclassificado] column.
+     * Non-boolean arguments are converted using the following rules:
+     *   * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
+     *   * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
+     * Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
+     *
+     * @param  boolean|integer|string $v The new value
+     * @return $this|\Baja\Model\Equipe The current object (for fluent API support)
+     */
+    public function setDesclassificado($v)
+    {
+        if ($v !== null) {
+            if (is_string($v)) {
+                $v = in_array(strtolower($v), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            } else {
+                $v = (boolean) $v;
+            }
+        }
+
+        if ($this->desclassificado !== $v) {
+            $this->desclassificado = $v;
+            $this->modifiedColumns[EquipeTableMap::COL_DESCLASSIFICADO] = true;
+        }
+
+        return $this;
+    } // setDesclassificado()
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -585,6 +783,10 @@ abstract class Equipe implements ActiveRecordInterface
     public function hasOnlyDefaultValues()
     {
             if ($this->presente !== true) {
+                return false;
+            }
+
+            if ($this->desclassificado !== false) {
                 return false;
             }
 
@@ -623,14 +825,26 @@ abstract class Equipe implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : EquipeTableMap::translateFieldName('Escola', TableMap::TYPE_PHPNAME, $indexType)];
             $this->escola = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : EquipeTableMap::translateFieldName('Equipe', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : EquipeTableMap::translateFieldName('EscolaCurto', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->escola_curto = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : EquipeTableMap::translateFieldName('Cidade', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->cidade = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : EquipeTableMap::translateFieldName('Equipe', TableMap::TYPE_PHPNAME, $indexType)];
             $this->equipe = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : EquipeTableMap::translateFieldName('Estado', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : EquipeTableMap::translateFieldName('EquipeCurto', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->equipe_curto = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : EquipeTableMap::translateFieldName('Estado', TableMap::TYPE_PHPNAME, $indexType)];
             $this->estado = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : EquipeTableMap::translateFieldName('Presente', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : EquipeTableMap::translateFieldName('Presente', TableMap::TYPE_PHPNAME, $indexType)];
             $this->presente = (null !== $col) ? (boolean) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : EquipeTableMap::translateFieldName('Desclassificado', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->desclassificado = (null !== $col) ? (boolean) $col : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -639,7 +853,7 @@ abstract class Equipe implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 6; // 6 = EquipeTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 10; // 10 = EquipeTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Equipe'), 0, $e);
@@ -705,6 +919,10 @@ abstract class Equipe implements ActiveRecordInterface
 
             $this->aEvento = null;
             $this->collInputs = null;
+
+            $this->collTournaments = null;
+
+            $this->collSenhas = null;
 
         } // if (deep)
     }
@@ -849,6 +1067,40 @@ abstract class Equipe implements ActiveRecordInterface
                 }
             }
 
+            if ($this->tournamentsScheduledForDeletion !== null) {
+                if (!$this->tournamentsScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\TournamentQuery::create()
+                        ->filterByPrimaryKeys($this->tournamentsScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->tournamentsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collTournaments !== null) {
+                foreach ($this->collTournaments as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->senhasScheduledForDeletion !== null) {
+                if (!$this->senhasScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\SenhaQuery::create()
+                        ->filterByPrimaryKeys($this->senhasScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->senhasScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collSenhas !== null) {
+                foreach ($this->collSenhas as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
             $this->alreadyInSave = false;
 
         }
@@ -880,14 +1132,26 @@ abstract class Equipe implements ActiveRecordInterface
         if ($this->isColumnModified(EquipeTableMap::COL_ESCOLA)) {
             $modifiedColumns[':p' . $index++]  = 'escola';
         }
+        if ($this->isColumnModified(EquipeTableMap::COL_ESCOLA_CURTO)) {
+            $modifiedColumns[':p' . $index++]  = 'escola_curto';
+        }
+        if ($this->isColumnModified(EquipeTableMap::COL_CIDADE)) {
+            $modifiedColumns[':p' . $index++]  = 'cidade';
+        }
         if ($this->isColumnModified(EquipeTableMap::COL_EQUIPE)) {
             $modifiedColumns[':p' . $index++]  = 'equipe';
+        }
+        if ($this->isColumnModified(EquipeTableMap::COL_EQUIPE_CURTO)) {
+            $modifiedColumns[':p' . $index++]  = 'equipe_curto';
         }
         if ($this->isColumnModified(EquipeTableMap::COL_ESTADO)) {
             $modifiedColumns[':p' . $index++]  = 'estado';
         }
         if ($this->isColumnModified(EquipeTableMap::COL_PRESENTE)) {
             $modifiedColumns[':p' . $index++]  = 'presente';
+        }
+        if ($this->isColumnModified(EquipeTableMap::COL_DESCLASSIFICADO)) {
+            $modifiedColumns[':p' . $index++]  = 'desclassificado';
         }
 
         $sql = sprintf(
@@ -909,14 +1173,26 @@ abstract class Equipe implements ActiveRecordInterface
                     case 'escola':
                         $stmt->bindValue($identifier, $this->escola, PDO::PARAM_STR);
                         break;
+                    case 'escola_curto':
+                        $stmt->bindValue($identifier, $this->escola_curto, PDO::PARAM_STR);
+                        break;
+                    case 'cidade':
+                        $stmt->bindValue($identifier, $this->cidade, PDO::PARAM_STR);
+                        break;
                     case 'equipe':
                         $stmt->bindValue($identifier, $this->equipe, PDO::PARAM_STR);
+                        break;
+                    case 'equipe_curto':
+                        $stmt->bindValue($identifier, $this->equipe_curto, PDO::PARAM_STR);
                         break;
                     case 'estado':
                         $stmt->bindValue($identifier, $this->estado, PDO::PARAM_STR);
                         break;
                     case 'presente':
                         $stmt->bindValue($identifier, (int) $this->presente, PDO::PARAM_INT);
+                        break;
+                    case 'desclassificado':
+                        $stmt->bindValue($identifier, (int) $this->desclassificado, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -983,13 +1259,25 @@ abstract class Equipe implements ActiveRecordInterface
                 return $this->getEscola();
                 break;
             case 3:
-                return $this->getEquipe();
+                return $this->getEscolaCurto();
                 break;
             case 4:
-                return $this->getEstado();
+                return $this->getCidade();
                 break;
             case 5:
+                return $this->getEquipe();
+                break;
+            case 6:
+                return $this->getEquipeCurto();
+                break;
+            case 7:
+                return $this->getEstado();
+                break;
+            case 8:
                 return $this->getPresente();
+                break;
+            case 9:
+                return $this->getDesclassificado();
                 break;
             default:
                 return null;
@@ -1024,9 +1312,13 @@ abstract class Equipe implements ActiveRecordInterface
             $keys[0] => $this->getEventoId(),
             $keys[1] => $this->getEquipeId(),
             $keys[2] => $this->getEscola(),
-            $keys[3] => $this->getEquipe(),
-            $keys[4] => $this->getEstado(),
-            $keys[5] => $this->getPresente(),
+            $keys[3] => $this->getEscolaCurto(),
+            $keys[4] => $this->getCidade(),
+            $keys[5] => $this->getEquipe(),
+            $keys[6] => $this->getEquipeCurto(),
+            $keys[7] => $this->getEstado(),
+            $keys[8] => $this->getPresente(),
+            $keys[9] => $this->getDesclassificado(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1063,6 +1355,36 @@ abstract class Equipe implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collInputs->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collTournaments) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'tournaments';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'tournaments';
+                        break;
+                    default:
+                        $key = 'Tournaments';
+                }
+
+                $result[$key] = $this->collTournaments->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collSenhas) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'senhas';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'senhas';
+                        break;
+                    default:
+                        $key = 'Senhas';
+                }
+
+                $result[$key] = $this->collSenhas->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
         }
 
@@ -1108,13 +1430,25 @@ abstract class Equipe implements ActiveRecordInterface
                 $this->setEscola($value);
                 break;
             case 3:
-                $this->setEquipe($value);
+                $this->setEscolaCurto($value);
                 break;
             case 4:
-                $this->setEstado($value);
+                $this->setCidade($value);
                 break;
             case 5:
+                $this->setEquipe($value);
+                break;
+            case 6:
+                $this->setEquipeCurto($value);
+                break;
+            case 7:
+                $this->setEstado($value);
+                break;
+            case 8:
                 $this->setPresente($value);
+                break;
+            case 9:
+                $this->setDesclassificado($value);
                 break;
         } // switch()
 
@@ -1152,13 +1486,25 @@ abstract class Equipe implements ActiveRecordInterface
             $this->setEscola($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setEquipe($arr[$keys[3]]);
+            $this->setEscolaCurto($arr[$keys[3]]);
         }
         if (array_key_exists($keys[4], $arr)) {
-            $this->setEstado($arr[$keys[4]]);
+            $this->setCidade($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setPresente($arr[$keys[5]]);
+            $this->setEquipe($arr[$keys[5]]);
+        }
+        if (array_key_exists($keys[6], $arr)) {
+            $this->setEquipeCurto($arr[$keys[6]]);
+        }
+        if (array_key_exists($keys[7], $arr)) {
+            $this->setEstado($arr[$keys[7]]);
+        }
+        if (array_key_exists($keys[8], $arr)) {
+            $this->setPresente($arr[$keys[8]]);
+        }
+        if (array_key_exists($keys[9], $arr)) {
+            $this->setDesclassificado($arr[$keys[9]]);
         }
     }
 
@@ -1210,14 +1556,26 @@ abstract class Equipe implements ActiveRecordInterface
         if ($this->isColumnModified(EquipeTableMap::COL_ESCOLA)) {
             $criteria->add(EquipeTableMap::COL_ESCOLA, $this->escola);
         }
+        if ($this->isColumnModified(EquipeTableMap::COL_ESCOLA_CURTO)) {
+            $criteria->add(EquipeTableMap::COL_ESCOLA_CURTO, $this->escola_curto);
+        }
+        if ($this->isColumnModified(EquipeTableMap::COL_CIDADE)) {
+            $criteria->add(EquipeTableMap::COL_CIDADE, $this->cidade);
+        }
         if ($this->isColumnModified(EquipeTableMap::COL_EQUIPE)) {
             $criteria->add(EquipeTableMap::COL_EQUIPE, $this->equipe);
+        }
+        if ($this->isColumnModified(EquipeTableMap::COL_EQUIPE_CURTO)) {
+            $criteria->add(EquipeTableMap::COL_EQUIPE_CURTO, $this->equipe_curto);
         }
         if ($this->isColumnModified(EquipeTableMap::COL_ESTADO)) {
             $criteria->add(EquipeTableMap::COL_ESTADO, $this->estado);
         }
         if ($this->isColumnModified(EquipeTableMap::COL_PRESENTE)) {
             $criteria->add(EquipeTableMap::COL_PRESENTE, $this->presente);
+        }
+        if ($this->isColumnModified(EquipeTableMap::COL_DESCLASSIFICADO)) {
+            $criteria->add(EquipeTableMap::COL_DESCLASSIFICADO, $this->desclassificado);
         }
 
         return $criteria;
@@ -1323,9 +1681,13 @@ abstract class Equipe implements ActiveRecordInterface
         $copyObj->setEventoId($this->getEventoId());
         $copyObj->setEquipeId($this->getEquipeId());
         $copyObj->setEscola($this->getEscola());
+        $copyObj->setEscolaCurto($this->getEscolaCurto());
+        $copyObj->setCidade($this->getCidade());
         $copyObj->setEquipe($this->getEquipe());
+        $copyObj->setEquipeCurto($this->getEquipeCurto());
         $copyObj->setEstado($this->getEstado());
         $copyObj->setPresente($this->getPresente());
+        $copyObj->setDesclassificado($this->getDesclassificado());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -1335,6 +1697,18 @@ abstract class Equipe implements ActiveRecordInterface
             foreach ($this->getInputs() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addInput($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getTournaments() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addTournament($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getSenhas() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addSenha($relObj->copy($deepCopy));
                 }
             }
 
@@ -1431,6 +1805,14 @@ abstract class Equipe implements ActiveRecordInterface
     {
         if ('Input' === $relationName) {
             $this->initInputs();
+            return;
+        }
+        if ('Tournament' === $relationName) {
+            $this->initTournaments();
+            return;
+        }
+        if ('Senha' === $relationName) {
+            $this->initSenhas();
             return;
         }
     }
@@ -1698,6 +2080,530 @@ abstract class Equipe implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collTournaments collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addTournaments()
+     */
+    public function clearTournaments()
+    {
+        $this->collTournaments = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collTournaments collection loaded partially.
+     */
+    public function resetPartialTournaments($v = true)
+    {
+        $this->collTournamentsPartial = $v;
+    }
+
+    /**
+     * Initializes the collTournaments collection.
+     *
+     * By default this just sets the collTournaments collection to an empty array (like clearcollTournaments());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initTournaments($overrideExisting = true)
+    {
+        if (null !== $this->collTournaments && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = TournamentTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collTournaments = new $collectionClassName;
+        $this->collTournaments->setModel('\Baja\Model\Tournament');
+    }
+
+    /**
+     * Gets an array of ChildTournament objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildEquipe is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildTournament[] List of ChildTournament objects
+     * @throws PropelException
+     */
+    public function getTournaments(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collTournamentsPartial && !$this->isNew();
+        if (null === $this->collTournaments || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collTournaments) {
+                    $this->initTournaments();
+                } else {
+                    $collectionClassName = TournamentTableMap::getTableMap()->getCollectionClassName();
+
+                    $collTournaments = new $collectionClassName;
+                    $collTournaments->setModel('\Baja\Model\Tournament');
+
+                    return $collTournaments;
+                }
+            } else {
+                $collTournaments = ChildTournamentQuery::create(null, $criteria)
+                    ->filterByEquipe($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collTournamentsPartial && count($collTournaments)) {
+                        $this->initTournaments(false);
+
+                        foreach ($collTournaments as $obj) {
+                            if (false == $this->collTournaments->contains($obj)) {
+                                $this->collTournaments->append($obj);
+                            }
+                        }
+
+                        $this->collTournamentsPartial = true;
+                    }
+
+                    return $collTournaments;
+                }
+
+                if ($partial && $this->collTournaments) {
+                    foreach ($this->collTournaments as $obj) {
+                        if ($obj->isNew()) {
+                            $collTournaments[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collTournaments = $collTournaments;
+                $this->collTournamentsPartial = false;
+            }
+        }
+
+        return $this->collTournaments;
+    }
+
+    /**
+     * Sets a collection of ChildTournament objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $tournaments A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildEquipe The current object (for fluent API support)
+     */
+    public function setTournaments(Collection $tournaments, ConnectionInterface $con = null)
+    {
+        /** @var ChildTournament[] $tournamentsToDelete */
+        $tournamentsToDelete = $this->getTournaments(new Criteria(), $con)->diff($tournaments);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->tournamentsScheduledForDeletion = clone $tournamentsToDelete;
+
+        foreach ($tournamentsToDelete as $tournamentRemoved) {
+            $tournamentRemoved->setEquipe(null);
+        }
+
+        $this->collTournaments = null;
+        foreach ($tournaments as $tournament) {
+            $this->addTournament($tournament);
+        }
+
+        $this->collTournaments = $tournaments;
+        $this->collTournamentsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Tournament objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Tournament objects.
+     * @throws PropelException
+     */
+    public function countTournaments(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collTournamentsPartial && !$this->isNew();
+        if (null === $this->collTournaments || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collTournaments) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getTournaments());
+            }
+
+            $query = ChildTournamentQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByEquipe($this)
+                ->count($con);
+        }
+
+        return count($this->collTournaments);
+    }
+
+    /**
+     * Method called to associate a ChildTournament object to this object
+     * through the ChildTournament foreign key attribute.
+     *
+     * @param  ChildTournament $l ChildTournament
+     * @return $this|\Baja\Model\Equipe The current object (for fluent API support)
+     */
+    public function addTournament(ChildTournament $l)
+    {
+        if ($this->collTournaments === null) {
+            $this->initTournaments();
+            $this->collTournamentsPartial = true;
+        }
+
+        if (!$this->collTournaments->contains($l)) {
+            $this->doAddTournament($l);
+
+            if ($this->tournamentsScheduledForDeletion and $this->tournamentsScheduledForDeletion->contains($l)) {
+                $this->tournamentsScheduledForDeletion->remove($this->tournamentsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildTournament $tournament The ChildTournament object to add.
+     */
+    protected function doAddTournament(ChildTournament $tournament)
+    {
+        $this->collTournaments[]= $tournament;
+        $tournament->setEquipe($this);
+    }
+
+    /**
+     * @param  ChildTournament $tournament The ChildTournament object to remove.
+     * @return $this|ChildEquipe The current object (for fluent API support)
+     */
+    public function removeTournament(ChildTournament $tournament)
+    {
+        if ($this->getTournaments()->contains($tournament)) {
+            $pos = $this->collTournaments->search($tournament);
+            $this->collTournaments->remove($pos);
+            if (null === $this->tournamentsScheduledForDeletion) {
+                $this->tournamentsScheduledForDeletion = clone $this->collTournaments;
+                $this->tournamentsScheduledForDeletion->clear();
+            }
+            $this->tournamentsScheduledForDeletion[]= clone $tournament;
+            $tournament->setEquipe(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Equipe is new, it will return
+     * an empty collection; or if this Equipe has previously
+     * been saved, it will retrieve related Tournaments from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Equipe.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildTournament[] List of ChildTournament objects
+     */
+    public function getTournamentsJoinProva(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildTournamentQuery::create(null, $criteria);
+        $query->joinWith('Prova', $joinBehavior);
+
+        return $this->getTournaments($query, $con);
+    }
+
+    /**
+     * Clears out the collSenhas collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addSenhas()
+     */
+    public function clearSenhas()
+    {
+        $this->collSenhas = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collSenhas collection loaded partially.
+     */
+    public function resetPartialSenhas($v = true)
+    {
+        $this->collSenhasPartial = $v;
+    }
+
+    /**
+     * Initializes the collSenhas collection.
+     *
+     * By default this just sets the collSenhas collection to an empty array (like clearcollSenhas());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initSenhas($overrideExisting = true)
+    {
+        if (null !== $this->collSenhas && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = SenhaTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collSenhas = new $collectionClassName;
+        $this->collSenhas->setModel('\Baja\Model\Senha');
+    }
+
+    /**
+     * Gets an array of ChildSenha objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildEquipe is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildSenha[] List of ChildSenha objects
+     * @throws PropelException
+     */
+    public function getSenhas(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSenhasPartial && !$this->isNew();
+        if (null === $this->collSenhas || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collSenhas) {
+                    $this->initSenhas();
+                } else {
+                    $collectionClassName = SenhaTableMap::getTableMap()->getCollectionClassName();
+
+                    $collSenhas = new $collectionClassName;
+                    $collSenhas->setModel('\Baja\Model\Senha');
+
+                    return $collSenhas;
+                }
+            } else {
+                $collSenhas = ChildSenhaQuery::create(null, $criteria)
+                    ->filterByEquipe($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collSenhasPartial && count($collSenhas)) {
+                        $this->initSenhas(false);
+
+                        foreach ($collSenhas as $obj) {
+                            if (false == $this->collSenhas->contains($obj)) {
+                                $this->collSenhas->append($obj);
+                            }
+                        }
+
+                        $this->collSenhasPartial = true;
+                    }
+
+                    return $collSenhas;
+                }
+
+                if ($partial && $this->collSenhas) {
+                    foreach ($this->collSenhas as $obj) {
+                        if ($obj->isNew()) {
+                            $collSenhas[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collSenhas = $collSenhas;
+                $this->collSenhasPartial = false;
+            }
+        }
+
+        return $this->collSenhas;
+    }
+
+    /**
+     * Sets a collection of ChildSenha objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $senhas A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildEquipe The current object (for fluent API support)
+     */
+    public function setSenhas(Collection $senhas, ConnectionInterface $con = null)
+    {
+        /** @var ChildSenha[] $senhasToDelete */
+        $senhasToDelete = $this->getSenhas(new Criteria(), $con)->diff($senhas);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->senhasScheduledForDeletion = clone $senhasToDelete;
+
+        foreach ($senhasToDelete as $senhaRemoved) {
+            $senhaRemoved->setEquipe(null);
+        }
+
+        $this->collSenhas = null;
+        foreach ($senhas as $senha) {
+            $this->addSenha($senha);
+        }
+
+        $this->collSenhas = $senhas;
+        $this->collSenhasPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Senha objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Senha objects.
+     * @throws PropelException
+     */
+    public function countSenhas(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collSenhasPartial && !$this->isNew();
+        if (null === $this->collSenhas || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collSenhas) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getSenhas());
+            }
+
+            $query = ChildSenhaQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByEquipe($this)
+                ->count($con);
+        }
+
+        return count($this->collSenhas);
+    }
+
+    /**
+     * Method called to associate a ChildSenha object to this object
+     * through the ChildSenha foreign key attribute.
+     *
+     * @param  ChildSenha $l ChildSenha
+     * @return $this|\Baja\Model\Equipe The current object (for fluent API support)
+     */
+    public function addSenha(ChildSenha $l)
+    {
+        if ($this->collSenhas === null) {
+            $this->initSenhas();
+            $this->collSenhasPartial = true;
+        }
+
+        if (!$this->collSenhas->contains($l)) {
+            $this->doAddSenha($l);
+
+            if ($this->senhasScheduledForDeletion and $this->senhasScheduledForDeletion->contains($l)) {
+                $this->senhasScheduledForDeletion->remove($this->senhasScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildSenha $senha The ChildSenha object to add.
+     */
+    protected function doAddSenha(ChildSenha $senha)
+    {
+        $this->collSenhas[]= $senha;
+        $senha->setEquipe($this);
+    }
+
+    /**
+     * @param  ChildSenha $senha The ChildSenha object to remove.
+     * @return $this|ChildEquipe The current object (for fluent API support)
+     */
+    public function removeSenha(ChildSenha $senha)
+    {
+        if ($this->getSenhas()->contains($senha)) {
+            $pos = $this->collSenhas->search($senha);
+            $this->collSenhas->remove($pos);
+            if (null === $this->senhasScheduledForDeletion) {
+                $this->senhasScheduledForDeletion = clone $this->collSenhas;
+                $this->senhasScheduledForDeletion->clear();
+            }
+            $this->senhasScheduledForDeletion[]= clone $senha;
+            $senha->setEquipe(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Equipe is new, it will return
+     * an empty collection; or if this Equipe has previously
+     * been saved, it will retrieve related Senhas from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Equipe.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @param      string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildSenha[] List of ChildSenha objects
+     */
+    public function getSenhasJoinEvento(Criteria $criteria = null, ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildSenhaQuery::create(null, $criteria);
+        $query->joinWith('Evento', $joinBehavior);
+
+        return $this->getSenhas($query, $con);
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -1710,9 +2616,13 @@ abstract class Equipe implements ActiveRecordInterface
         $this->evento_id = null;
         $this->equipe_id = null;
         $this->escola = null;
+        $this->escola_curto = null;
+        $this->cidade = null;
         $this->equipe = null;
+        $this->equipe_curto = null;
         $this->estado = null;
         $this->presente = null;
+        $this->desclassificado = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();
@@ -1737,9 +2647,21 @@ abstract class Equipe implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collTournaments) {
+                foreach ($this->collTournaments as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collSenhas) {
+                foreach ($this->collSenhas as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
         $this->collInputs = null;
+        $this->collTournaments = null;
+        $this->collSenhas = null;
         $this->aEvento = null;
     }
 

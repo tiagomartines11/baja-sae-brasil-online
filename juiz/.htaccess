@@ -2,7 +2,15 @@
 # Make sure AllowOverride All is set in Apache config!!
 php_value   auto_prepend_file   "/var/www/src/bootstrap.php"
 
-SetEnvIf REDIRECT_EVENT "^\s*$" REDIRECT_EVENT=22SE
+# Lógica substituida em bootstrap.php
+# SetEnvIf REDIRECT_EVENT "^\s*$" REDIRECT_EVENT=25NE
+
+<IfModule mod_headers.c>
+    SetEnvIf Origin "http(s)?://(.+\.)?bajasaebrasil\.net(:\d{1,5})?$" CORS=$0
+
+    Header set Access-Control-Allow-Origin "%{CORS}e" env=CORS
+    Header merge  Vary "Origin"
+</IfModule>
 
 RewriteEngine on
 RewriteRule   "^([0-2][0-9](BR|SE|SU|NE))$"    /$1/ [R=301]
