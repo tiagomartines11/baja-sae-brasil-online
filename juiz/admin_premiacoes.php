@@ -27,7 +27,7 @@ Template::printHeader("Admin");
             <tr>
                 <th>ID</th>
                 <th>Nome</th>
-                <th class="sorter-false">Ação</th>
+                <th>Código</th>
             </tr>
         </thead>
         <tbody>

@@ -31,7 +31,7 @@ Template::printHeader('Premiações', false);
             <th>ID</th>
             <th>Nome</th>
             <th>Status</th>
-            <th class="sorter-false">Ação</th>
+            <th>Código</th>
         </tr>
         </thead>
         <tbody>
