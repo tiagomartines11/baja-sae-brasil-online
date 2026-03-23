@@ -40,6 +40,10 @@ foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->get
     }
 }
 
+if (Session::hasPermission('PREMIACAO')) {
+    echo '<tr style="height: 40px"><td><a href="premiacoes.php">Premia&ccedil;&otilde;es</a></td></tr>';
+}
+
 echo '
 <tfoot>
 <tr>

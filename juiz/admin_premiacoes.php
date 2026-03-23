@@ -19,7 +19,7 @@ Template::printHeader("Admin");
     <table id="myTable2" class="tablesorter">
         <thead>
             <tr style="height: 50px;">
-                <th colspan="3" class="sorter-false">
+                <th colspan="4" class="sorter-false">
                     <span style="float:left;"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
                     <span style="font-size: 28px;">Premiações (<?= $evento ?>)</span>
                 </th>
@@ -28,6 +28,7 @@ Template::printHeader("Admin");
                 <th>ID</th>
                 <th>Nome</th>
                 <th>Código</th>
+                <th>Abrir</th>
             </tr>
         </thead>
         <tbody>
@@ -37,13 +38,14 @@ Template::printHeader("Admin");
                 <td><?= htmlspecialchars($p->getPremiacaoId()) ?></td>
                 <td><?= htmlspecialchars($p->getNome()) ?></td>
                 <td><a href='premiacao_admin.php?id=<?= urlencode($p->getPremiacaoId()) ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
+                <td><a href="premiacao_view.php?id=<?= urlencode($p->getPremiacaoId()) ?>">Abrir</a></td>
             </tr>
 <?php } ?>
 
         </tbody>
         <tfoot>
             <tr>
-                <th colspan="3" style="height: 30px">
+                <th colspan="4" style="height: 30px">
                     <input type="button" onclick="location.href='premiacao_admin.php?nova=true';" value="Nova Premiação"/>
                 </th>
             </tr>
