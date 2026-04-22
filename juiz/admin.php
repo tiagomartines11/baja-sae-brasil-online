@@ -43,6 +43,9 @@ Template::printHeader("Admin");
             <a href="admin_filas.php">Administrar filas</a>
         </td></tr>
         <tr><td>
+            <a href="admin_premiacoes.php">Administrar premiações</a>
+        </td></tr>
+        <tr><td>
             <a href="admin_push.php">Enviar notificações</a>
         </td></tr>
     </tbody>
