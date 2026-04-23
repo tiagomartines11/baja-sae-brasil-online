@@ -2,6 +2,10 @@
 # Make sure AllowOverride All is set in Apache config!!
 php_value   auto_prepend_file   "/var/www/src/bootstrap.php"
 
+<Files "prova.php">
+    SetEnv SKIP_AUTH 1
+</Files>
+
 # Lógica substituida em bootstrap.php
 # SetEnvIf REDIRECT_EVENT "^\s*$" REDIRECT_EVENT=25NE
 

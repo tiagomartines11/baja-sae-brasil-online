@@ -1,15 +1,23 @@
 <?php
-$_ENV = getenv('ENV') ?: 'dev';
+if (getenv('SKIP_AUTH')) {
+    ini_set('display_errors', 'Off');
+    error_reporting(0);
+}
+
+$_REQUEST = array_merge($_GET, $_POST);
+$_ENV = getenv('ENV') ?: 'prod';
 require_once(__DIR__ . "/../vendor/autoload.php");
 require_once(__DIR__ . "/config." . $_ENV . ".php");
-
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
-
-require_once(__DIR__ . "/phpbb_login.php");
-
-$_DEV_MODE = $user->data["username"] == "Tiago" || $user->data["username"] == "jbresolin";
-
+if (!getenv('SKIP_AUTH')) {
+    require_once(__DIR__ . "/phpbb_login.php");
+    $_DEV_MODE = $user->data["username"] == "Tiago" || $user->data["username"] == "jbresolin";
+} else {
+    $_DEV_MODE = false;
+    ini_set('display_errors', 'Off');
+    error_reporting(0);
+}
 date_default_timezone_set('America/Sao_Paulo');
 
 use Baja\Model\EventoQuery;

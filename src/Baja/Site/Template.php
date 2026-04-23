@@ -6,7 +6,7 @@ use Baja\Model\ResultadoQuery;
 
 class Template
 {
-    static function printHeader($title, $stickyHeader = true) {
+    static function printHeader($title, $stickyHeader = true, $juiz=false) {
         ?>
         <!DOCTYPE html>
         <html>
@@ -79,7 +79,7 @@ class Template
         </head>
         <body class="body-blue">
         <?php
-        self::printMenu();
+        self::printMenu(false, $juiz);
     }
 
     static function printHeaderTournament($title) {
@@ -123,7 +123,7 @@ class Template
         <?php
     }
 
-    static function printMenu($mobile = false) {
+    static function printMenu($mobile = false, $juiz=false) {
         ?>
         <div style="background: #004785;">
         <div class="top-header">
@@ -158,7 +158,12 @@ class Template
                                     if (strstr($v, "php") === false) {
                                         $resultado = ResultadoQuery::create()->findPk($v);
                                         $nome = $resultado ? $resultado->getNome() : $v;
-                                        echo '<li><a id="' . $v . '" href="prova.php?id=' . $v . '">' . $nome . '</a></li>';
+                                        if (@$juiz) {
+                                            echo '<li><a id="' . $v . '" href="prova_juiz.php?id=' . $v . '">' . $nome . '</a></li>';
+                                        } else {
+                                            echo '<li><a id="' . $v . '" href="prova.php?id=' . $v . '">' . $nome . '</a></li>';
+                                        }
+                                        
                                     } else {
                                         echo '<li><a id="' . $k . '" href="' . $v . '">' . $k . '</a></li>';
                                     }
@@ -171,7 +176,11 @@ class Template
                     } else {
                         $resultado = ResultadoQuery::create()->findPk($item);
                         $nome = $resultado ? $resultado->getNome() : $item;
-                        echo '<li><a id="'.$item.'" href="prova.php?id='.$item.'">'.$nome.'</a></li>';
+                        if ($juiz) {
+                            echo '<li><a id="'.$item.'" href="prova_juiz.php?id='.$item.'">'.$nome.'</a></li>';
+                        } else {
+                            echo '<li><a id="'.$item.'" href="prova.php?id='.$item.'">'.$nome.'</a></li>';
+                        }
                     }
                 }
                 ?>
