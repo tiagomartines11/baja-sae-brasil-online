@@ -8,8 +8,6 @@ use Baja\Model\InputQuery;
 use Baja\Session;
 use Baja\Model\User;
 
-header('Cache-Control: public, max-age=30');
-
 $resultado = ResultadoQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->findPk($_REQUEST['id']);
 if (!$resultado) header("Location: index.php");
 $colunas = (array)$resultado->getColunas()->colunas;
@@ -18,9 +16,9 @@ $pos = @$resultado->getColunas()->pos;
 $filter = @$resultado->getColunas()->filter;
 $tiebreak = @$resultado->getColunas()->tiebreak;
 
-$authorized_users = (array)@$resultado->getColunas()->authorized_users;
+$authorized_users = (array)$resultado->getColunas()->authorized_users;
 
-$current_user = getenv('SKIP_AUTH') ? '' : $user->data["username"];
+$current_user = $user->data["username"];
 
 $user_authorized = in_array($current_user, $authorized_users);
 
@@ -41,7 +39,7 @@ foreach ($i as $input) {
     if (!array_key_exists($input->getEquipeId(), $vars)) $vars[$input->getEquipeId()] = ["NUM" => $input->getEquipeEquipeId(), "EQUIPE" => $input->getEquipeEquipe(), "ESCOLA" => $input->getEquipeEscola(), "ESTADO" => $input->getEquipeEstado(), "DESCLASSIFICADO" =>$input->getEquipeDesclassificado()];
     $dados = (array)$input->getDados();
     if (!@$input->getDados()->entries) {
-        if (!empty($vars[$input->getEquipeId()]["entries"])) {
+        if ($vars[$input->getEquipeId()]["entries"]) {
             $current = $vars[$input->getEquipeId()]["entries"][0];
             $dados = ["entries" => [array_merge((array)$current, (array)$input->getDados())]];
         } else {
@@ -156,13 +154,11 @@ if ($pos) {
 
 
 usort($vars, function ($a, $b) {
-    $ta = $a["ts"] ?? 0;
-    $tb = $b["ts"] ?? 0;
-    if ($ta != $tb) return ($ta > $tb) ? 1 : -1;
+    if ($a["ts"] != $b["ts"]) return ($a["ts"] > $b["ts"]) ? 1 : -1;
     return ($a["NUM"] > $b["NUM"]) ? 1 : -1;
 });
 
-Template::printHeader($resultado->getNome());
+Template::printHeader($resultado->getNome(),true,true);
 ?>
 <script id="js">
 	$(function(){
@@ -216,7 +212,7 @@ if (count($vars) && count($colunas)) {
         <thead>
         <tr>
             <?php foreach ($colunas as $col) {
-                Template::printColumnHeader($col->header, $col->size ?? null, $col->sort ?? null, $col->hidden ?? null);
+                Template::printColumnHeader($col->header, $col->size, $col->sort, $col->hidden);
             } ?>
         </tr>
         </thead>

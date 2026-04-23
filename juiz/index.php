@@ -52,6 +52,11 @@ echo '
         <a href="login.php?act=logout" style="color: white;" />Logout</a>
     </th>
 </tr>
+<tr>
+    <th style="height: 20px; font-size: 100%;">
+        <a href="https://resultados.bajasaebrasil.net/index_juiz.php" style="color: white;" />Resultados</a>
+    </th>
+</tr>
 </tfoot>';
 echo '</table></div>';
 

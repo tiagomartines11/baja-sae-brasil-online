@@ -160,8 +160,8 @@ class Fila
         foreach($permissoes as $p) {
             if (str_contains($p, 'FILA')) {
                 $permissao_detalhes = explode('_', $p);
-
-                if (true || !EventoQuery::create()->findPk($permissao_detalhes[0])->isFinalizado()) {                
+                
+                if (!EventoQuery::create()->findPk($permissao_detalhes[0])->isFinalizado()) {                
                     array_push($permissoes_filas, array("evento_id"=>$permissao_detalhes[0],"fila_id"=>$permissao_detalhes[2],"permissao"=>$permissao_detalhes[3]));
                 }
             }

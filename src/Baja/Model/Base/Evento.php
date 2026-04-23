@@ -12,6 +12,8 @@ use Baja\Model\Fila as ChildFila;
 use Baja\Model\FilaQuery as ChildFilaQuery;
 use Baja\Model\Participante as ChildParticipante;
 use Baja\Model\ParticipanteQuery as ChildParticipanteQuery;
+use Baja\Model\Premiacao as ChildPremiacao;
+use Baja\Model\PremiacaoQuery as ChildPremiacaoQuery;
 use Baja\Model\Prova as ChildProva;
 use Baja\Model\ProvaQuery as ChildProvaQuery;
 use Baja\Model\Resultado as ChildResultado;
@@ -22,6 +24,7 @@ use Baja\Model\Map\EquipeTableMap;
 use Baja\Model\Map\EventoTableMap;
 use Baja\Model\Map\FilaTableMap;
 use Baja\Model\Map\ParticipanteTableMap;
+use Baja\Model\Map\PremiacaoTableMap;
 use Baja\Model\Map\ProvaTableMap;
 use Baja\Model\Map\ResultadoTableMap;
 use Baja\Model\Map\SenhaTableMap;
@@ -227,6 +230,12 @@ abstract class Evento implements ActiveRecordInterface
     protected $collFilasPartial;
 
     /**
+     * @var        ObjectCollection|ChildPremiacao[] Collection to store aggregation of ChildPremiacao objects.
+     */
+    protected $collPremiacaos;
+    protected $collPremiacaosPartial;
+
+    /**
      * @var        ObjectCollection|ChildSenha[] Collection to store aggregation of ChildSenha objects.
      */
     protected $collSenhas;
@@ -269,6 +278,12 @@ abstract class Evento implements ActiveRecordInterface
      * @var ObjectCollection|ChildFila[]
      */
     protected $filasScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildPremiacao[]
+     */
+    protected $premiacaosScheduledForDeletion = null;
 
     /**
      * An array of objects scheduled for deletion.
@@ -1284,6 +1299,8 @@ abstract class Evento implements ActiveRecordInterface
 
             $this->collFilas = null;
 
+            $this->collPremiacaos = null;
+
             $this->collSenhas = null;
 
         } // if (deep)
@@ -1479,6 +1496,23 @@ abstract class Evento implements ActiveRecordInterface
 
             if ($this->collFilas !== null) {
                 foreach ($this->collFilas as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->premiacaosScheduledForDeletion !== null) {
+                if (!$this->premiacaosScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\PremiacaoQuery::create()
+                        ->filterByPrimaryKeys($this->premiacaosScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->premiacaosScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collPremiacaos !== null) {
+                foreach ($this->collPremiacaos as $referrerFK) {
                     if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
                         $affectedRows += $referrerFK->save($con);
                     }
@@ -1861,6 +1895,21 @@ abstract class Evento implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collFilas->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collPremiacaos) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'premiacaos';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'premiacaos';
+                        break;
+                    default:
+                        $key = 'Premiacaos';
+                }
+
+                $result[$key] = $this->collPremiacaos->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
             if (null !== $this->collSenhas) {
 
@@ -2264,6 +2313,12 @@ abstract class Evento implements ActiveRecordInterface
                 }
             }
 
+            foreach ($this->getPremiacaos() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addPremiacao($relObj->copy($deepCopy));
+                }
+            }
+
             foreach ($this->getSenhas() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addSenha($relObj->copy($deepCopy));
@@ -2328,6 +2383,10 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ('Fila' === $relationName) {
             $this->initFilas();
+            return;
+        }
+        if ('Premiacao' === $relationName) {
+            $this->initPremiacaos();
             return;
         }
         if ('Senha' === $relationName) {
@@ -3519,6 +3578,240 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collPremiacaos collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return void
+     * @see        addPremiacaos()
+     */
+    public function clearPremiacaos()
+    {
+        $this->collPremiacaos = null; // important to set this to NULL since that means it is uninitialized
+    }
+
+    /**
+     * Reset is the collPremiacaos collection loaded partially.
+     */
+    public function resetPartialPremiacaos($v = true)
+    {
+        $this->collPremiacaosPartial = $v;
+    }
+
+    /**
+     * Initializes the collPremiacaos collection.
+     *
+     * By default this just sets the collPremiacaos collection to an empty array (like clearcollPremiacaos());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param      boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initPremiacaos($overrideExisting = true)
+    {
+        if (null !== $this->collPremiacaos && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = PremiacaoTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collPremiacaos = new $collectionClassName;
+        $this->collPremiacaos->setModel('\Baja\Model\Premiacao');
+    }
+
+    /**
+     * Gets an array of ChildPremiacao objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildEvento is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param      Criteria $criteria optional Criteria object to narrow the query
+     * @param      ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildPremiacao[] List of ChildPremiacao objects
+     * @throws PropelException
+     */
+    public function getPremiacaos(Criteria $criteria = null, ConnectionInterface $con = null)
+    {
+        $partial = $this->collPremiacaosPartial && !$this->isNew();
+        if (null === $this->collPremiacaos || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collPremiacaos) {
+                    $this->initPremiacaos();
+                } else {
+                    $collectionClassName = PremiacaoTableMap::getTableMap()->getCollectionClassName();
+
+                    $collPremiacaos = new $collectionClassName;
+                    $collPremiacaos->setModel('\Baja\Model\Premiacao');
+
+                    return $collPremiacaos;
+                }
+            } else {
+                $collPremiacaos = ChildPremiacaoQuery::create(null, $criteria)
+                    ->filterByEvento($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collPremiacaosPartial && count($collPremiacaos)) {
+                        $this->initPremiacaos(false);
+
+                        foreach ($collPremiacaos as $obj) {
+                            if (false == $this->collPremiacaos->contains($obj)) {
+                                $this->collPremiacaos->append($obj);
+                            }
+                        }
+
+                        $this->collPremiacaosPartial = true;
+                    }
+
+                    return $collPremiacaos;
+                }
+
+                if ($partial && $this->collPremiacaos) {
+                    foreach ($this->collPremiacaos as $obj) {
+                        if ($obj->isNew()) {
+                            $collPremiacaos[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collPremiacaos = $collPremiacaos;
+                $this->collPremiacaosPartial = false;
+            }
+        }
+
+        return $this->collPremiacaos;
+    }
+
+    /**
+     * Sets a collection of ChildPremiacao objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param      Collection $premiacaos A Propel collection.
+     * @param      ConnectionInterface $con Optional connection object
+     * @return $this|ChildEvento The current object (for fluent API support)
+     */
+    public function setPremiacaos(Collection $premiacaos, ConnectionInterface $con = null)
+    {
+        /** @var ChildPremiacao[] $premiacaosToDelete */
+        $premiacaosToDelete = $this->getPremiacaos(new Criteria(), $con)->diff($premiacaos);
+
+
+        $this->premiacaosScheduledForDeletion = $premiacaosToDelete;
+
+        foreach ($premiacaosToDelete as $premiacaoRemoved) {
+            $premiacaoRemoved->setEvento(null);
+        }
+
+        $this->collPremiacaos = null;
+        foreach ($premiacaos as $premiacao) {
+            $this->addPremiacao($premiacao);
+        }
+
+        $this->collPremiacaos = $premiacaos;
+        $this->collPremiacaosPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Premiacao objects.
+     *
+     * @param      Criteria $criteria
+     * @param      boolean $distinct
+     * @param      ConnectionInterface $con
+     * @return int             Count of related Premiacao objects.
+     * @throws PropelException
+     */
+    public function countPremiacaos(Criteria $criteria = null, $distinct = false, ConnectionInterface $con = null)
+    {
+        $partial = $this->collPremiacaosPartial && !$this->isNew();
+        if (null === $this->collPremiacaos || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collPremiacaos) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getPremiacaos());
+            }
+
+            $query = ChildPremiacaoQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByEvento($this)
+                ->count($con);
+        }
+
+        return count($this->collPremiacaos);
+    }
+
+    /**
+     * Method called to associate a ChildPremiacao object to this object
+     * through the ChildPremiacao foreign key attribute.
+     *
+     * @param  ChildPremiacao $l ChildPremiacao
+     * @return $this|\Baja\Model\Evento The current object (for fluent API support)
+     */
+    public function addPremiacao(ChildPremiacao $l)
+    {
+        if ($this->collPremiacaos === null) {
+            $this->initPremiacaos();
+            $this->collPremiacaosPartial = true;
+        }
+
+        if (!$this->collPremiacaos->contains($l)) {
+            $this->doAddPremiacao($l);
+
+            if ($this->premiacaosScheduledForDeletion and $this->premiacaosScheduledForDeletion->contains($l)) {
+                $this->premiacaosScheduledForDeletion->remove($this->premiacaosScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildPremiacao $premiacao The ChildPremiacao object to add.
+     */
+    protected function doAddPremiacao(ChildPremiacao $premiacao)
+    {
+        $this->collPremiacaos[]= $premiacao;
+        $premiacao->setEvento($this);
+    }
+
+    /**
+     * @param  ChildPremiacao $premiacao The ChildPremiacao object to remove.
+     * @return $this|ChildEvento The current object (for fluent API support)
+     */
+    public function removePremiacao(ChildPremiacao $premiacao)
+    {
+        if ($this->getPremiacaos()->contains($premiacao)) {
+            $pos = $this->collPremiacaos->search($premiacao);
+            $this->collPremiacaos->remove($pos);
+            if (null === $this->premiacaosScheduledForDeletion) {
+                $this->premiacaosScheduledForDeletion = clone $this->collPremiacaos;
+                $this->premiacaosScheduledForDeletion->clear();
+            }
+            $this->premiacaosScheduledForDeletion[]= clone $premiacao;
+            $premiacao->setEvento(null);
+        }
+
+        return $this;
+    }
+
+    /**
      * Clears out the collSenhas collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
@@ -3847,6 +4140,11 @@ abstract class Evento implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collPremiacaos) {
+                foreach ($this->collPremiacaos as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
             if ($this->collSenhas) {
                 foreach ($this->collSenhas as $o) {
                     $o->clearAllReferences($deep);
@@ -3859,6 +4157,7 @@ abstract class Evento implements ActiveRecordInterface
         $this->collProvas = null;
         $this->collResultados = null;
         $this->collFilas = null;
+        $this->collPremiacaos = null;
         $this->collSenhas = null;
     }
 

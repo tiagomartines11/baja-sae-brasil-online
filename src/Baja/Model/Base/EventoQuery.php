@@ -112,6 +112,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery rightJoinWithFila() Adds a RIGHT JOIN clause and with to the query using the Fila relation
  * @method     ChildEventoQuery innerJoinWithFila() Adds a INNER JOIN clause and with to the query using the Fila relation
  *
+ * @method     ChildEventoQuery leftJoinPremiacao($relationAlias = null) Adds a LEFT JOIN clause to the query using the Premiacao relation
+ * @method     ChildEventoQuery rightJoinPremiacao($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Premiacao relation
+ * @method     ChildEventoQuery innerJoinPremiacao($relationAlias = null) Adds a INNER JOIN clause to the query using the Premiacao relation
+ *
+ * @method     ChildEventoQuery joinWithPremiacao($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Premiacao relation
+ *
+ * @method     ChildEventoQuery leftJoinWithPremiacao() Adds a LEFT JOIN clause and with to the query using the Premiacao relation
+ * @method     ChildEventoQuery rightJoinWithPremiacao() Adds a RIGHT JOIN clause and with to the query using the Premiacao relation
+ * @method     ChildEventoQuery innerJoinWithPremiacao() Adds a INNER JOIN clause and with to the query using the Premiacao relation
+ *
  * @method     ChildEventoQuery leftJoinSenha($relationAlias = null) Adds a LEFT JOIN clause to the query using the Senha relation
  * @method     ChildEventoQuery rightJoinSenha($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Senha relation
  * @method     ChildEventoQuery innerJoinSenha($relationAlias = null) Adds a INNER JOIN clause to the query using the Senha relation
@@ -122,7 +132,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery rightJoinWithSenha() Adds a RIGHT JOIN clause and with to the query using the Senha relation
  * @method     ChildEventoQuery innerJoinWithSenha() Adds a INNER JOIN clause and with to the query using the Senha relation
  *
- * @method     \Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery|\Baja\Model\FilaQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery|\Baja\Model\FilaQuery|\Baja\Model\PremiacaoQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildEvento findOne(ConnectionInterface $con = null) Return the first ChildEvento matching the query
  * @method     ChildEvento findOneOrCreate(ConnectionInterface $con = null) Return the first ChildEvento matching the query, or a new ChildEvento object populated from the query conditions when no match is found
@@ -1182,6 +1192,79 @@ abstract class EventoQuery extends ModelCriteria
         return $this
             ->joinFila($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'Fila', '\Baja\Model\FilaQuery');
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Premiacao object
+     *
+     * @param \Baja\Model\Premiacao|ObjectCollection $premiacao the related object to use as filter
+     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return ChildEventoQuery The current query, for fluid interface
+     */
+    public function filterByPremiacao($premiacao, $comparison = null)
+    {
+        if ($premiacao instanceof \Baja\Model\Premiacao) {
+            return $this
+                ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $premiacao->getEventoId(), $comparison);
+        } elseif ($premiacao instanceof ObjectCollection) {
+            return $this
+                ->usePremiacaoQuery()
+                ->filterByPrimaryKeys($premiacao->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByPremiacao() only accepts arguments of type \Baja\Model\Premiacao or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Premiacao relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this|ChildEventoQuery The current query, for fluid interface
+     */
+    public function joinPremiacao($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Premiacao');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Premiacao');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Premiacao relation Premiacao object
+     *
+     * @see useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\PremiacaoQuery A secondary query class using the current class as primary query
+     */
+    public function usePremiacaoQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinPremiacao($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Premiacao', '\Baja\Model\PremiacaoQuery');
     }
 
     /**
