@@ -20,7 +20,23 @@ This is a monorepo with three concerns:
 
 ## Getting started
 
-You need [Docker](https://docs.docker.com/get-docker/) (with Docker Compose v2) and a way to edit `/etc/hosts`.
+You need:
+- [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2
+- Linux, macOS, or Windows with WSL2
+
+### Windows + WSL2 specifics
+
+Docker Desktop must be told about your WSL distro before it can be used. Open Docker Desktop → Settings → Resources → WSL Integration, and toggle on the distro you'll use. Apply & Restart.
+
+If `docker` commands give "permission denied" errors, add your user to the docker group:
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Then close and reopen your WSL terminal.
+
+### Run the stack
 
 ```bash
 git clone https://github.com/tiagomartines11/baja-sae-brasil-online.git
@@ -30,13 +46,17 @@ cp .env.example .env       # dev defaults work; edit if needed
 docker compose up -d
 ```
 
-Add the local domains to `/etc/hosts` (or your platform's equivalent):
+### Add local hostnames
+
+The stack uses subdomains of `baja.local`. Add this line to `/etc/hosts` (or your platform's equivalent):
 
 ```
 127.0.0.1  baja.local forum.baja.local juiz.baja.local fila.baja.local resultados.baja.local certificado.baja.local forum.formula.local
 ```
 
-Then visit:
+### Verify
+
+After ~60 seconds (first run includes image builds), visit:
 
 - `http://baja.local/` — public landing page (Next.js)
 - `http://forum.baja.local/` — phpBB Baja
