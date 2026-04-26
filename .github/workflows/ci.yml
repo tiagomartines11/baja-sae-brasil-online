@@ -1,0 +1,97 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+  push:
+    branches:
+      - master
+      - develop
+
+jobs:
+  frontend:
+    name: Frontend (baja-js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baja-js
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: baja-js/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+  php:
+    name: Backend (baja-php)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: baja-php
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, intl, mysqli, gd, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-publish
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: baja-php/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('baja-php/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: PHP syntax check
+        run: |
+          find . -name '*.php' \
+            -not -path './vendor/*' \
+            -not -path './src/Baja/Model/Base/*' \
+            -not -path './src/Baja/Model/Map/*' \
+            -print0 | xargs -0 -n1 -P4 php -l
+
+  infra:
+    name: Infrastructure (baja-infra)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose syntax
+        working-directory: baja-infra
+        run: |
+          # docker compose config will fail on syntax errors, missing
+          # required env vars, or invalid service definitions.
+          # We use --quiet to suppress the resolved YAML output.
+          cp .env.example .env 2>/dev/null || true
+          docker compose config --quiet
