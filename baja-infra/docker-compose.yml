@@ -39,7 +39,8 @@ services:
 
   phpbb-baja:
     build:
-      context: ./phpbb-baja
+      context: ..
+      dockerfile: baja-infra/phpbb-baja/Dockerfile
     image: baja-phpbb-baja:latest
     container_name: baja-phpbb-baja
     restart: unless-stopped
@@ -96,7 +97,7 @@ services:
       REDIS_PORT: "6379"
       SESSION_CACHE_TTL_SECONDS: "60"
     volumes:
-      - ${BAJA_APP_PATH:-../code/baja-sae-brasil-online}:/var/www/html
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/html
     depends_on:
       mysql:
         condition: service_healthy
@@ -115,7 +116,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - phpbb_baja_html:/var/www/phpbb-baja:ro
       - phpbb_formula_html:/var/www/phpbb-formula:ro
-      - ${BAJA_APP_PATH:-../code/baja-sae-brasil-online}:/var/www/baja-app:ro
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/baja-app:ro
     depends_on:
       - phpbb-baja
       - phpbb-formula

@@ -18,7 +18,11 @@ COPY config.php.seed /var/www/html/config.php.seed
 # volume on first volume creation; on subsequent boots the volume already
 # has the prior content, so updating the extension requires `docker compose
 # down -v && docker compose up -d`.
-COPY ext/baja/auth /var/www/html/ext/baja/auth
+#
+# Build context is the monorepo root (compose sets context: ..) so this
+# COPY reaches across into the PHP app's tree. Source-of-truth lives with
+# the application code, not with this infra Dockerfile.
+COPY baja-php/phpbb-extensions/baja-auth /var/www/html/ext/baja/auth
 
 # CMD becomes the argument to the base entrypoint (which does config.php
 # seed + dir perms then exec's its argument). Our script picks up after

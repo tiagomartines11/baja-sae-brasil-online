@@ -1,0 +1,30 @@
+# .dockerignore for the monorepo root build context.
+# Phpbb-baja and baja-js builds run with context: .. (monorepo root),
+# so without these excludes every build would ship the entire tree —
+# including vendor/ and node_modules/ — to the docker daemon.
+
+# Version control
+.git
+.gitignore
+
+# IDE / agent
+.idea
+.vscode
+.claude
+
+# Build artifacts and dependencies
+**/vendor
+**/node_modules
+**/.next
+**/dist
+**/cache
+**/files
+
+# Logs and OS noise
+*.log
+.DS_Store
+Thumbs.db
+
+# Local env — never ship secrets into images
+**/.env
+**/.env.local
