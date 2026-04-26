@@ -12,7 +12,7 @@ RUN mv /var/www/html/install /var/www/html/install.off
 
 # Bake in the dev seed config.php — base entrypoint copies it to the
 # volume on first boot if no config.php exists yet.
-COPY config.php.seed /var/www/html/config.php.seed
+COPY baja-infra/phpbb-baja/config.php.seed /var/www/html/config.php.seed
 
 # Bake the baja/auth extension into the image. Lands in the phpbb_baja_html
 # volume on first volume creation; on subsequent boots the volume already
@@ -28,6 +28,6 @@ COPY baja-php/phpbb-extensions/baja-auth /var/www/html/ext/baja/auth
 # seed + dir perms then exec's its argument). Our script picks up after
 # the base setup, enables the extension, refreshes config from env, and
 # hands off to php-fpm.
-COPY entrypoint.sh /usr/local/bin/baja-init.sh
+COPY baja-infra/phpbb-baja/entrypoint.sh /usr/local/bin/baja-init.sh
 RUN chmod +x /usr/local/bin/baja-init.sh
 CMD ["/usr/local/bin/baja-init.sh"]
