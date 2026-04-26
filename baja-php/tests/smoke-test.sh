@@ -2,7 +2,7 @@
 # Smoke tests for the phpBB session shim (WP2).
 # Run from the host while baja-infra docker compose stack is up:
 #   cd ~/baja-infra && docker compose up -d
-#   ~/code/baja-sae-brasil-online/scripts/smoke-test.sh
+#   ~/code/baja-sae-brasil-online/baja-php/tests/smoke-test.sh
 #
 # Hostnames must resolve — add to /etc/hosts:
 #   127.0.0.1 resultados.baja.local juiz.baja.local fila.baja.local certificado.baja.local forum.baja.local
