@@ -4,15 +4,20 @@ services:
     container_name: baja-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: America/Sao_Paulo
+      # Available to mysql/init/02-create-users.sh (which runs as part of
+      # the container's first-boot init via /docker-entrypoint-initdb.d/).
+      MYSQL_RESULTADOS_PASSWORD: ${MYSQL_RESULTADOS_PASSWORD}
+      MYSQL_PHPBB_BAJA_PASSWORD: ${MYSQL_PHPBB_BAJA_PASSWORD}
+      MYSQL_PHPBB_FORMULA_PASSWORD: ${MYSQL_PHPBB_FORMULA_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysql -uroot -p${MYSQL_ROOT_PASSWORD:-rootpass} -e 'SELECT 1 FROM phpbb_baja.phpbb_config LIMIT 1' >/dev/null 2>&1"]
+      test: ["CMD-SHELL", "mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'SELECT 1 FROM phpbb_baja.phpbb_config LIMIT 1' >/dev/null 2>&1"]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -49,8 +54,10 @@ services:
       # Source of truth for the baja/auth extension's redirect validation.
       # The extension reads cached values from phpbb_config; the entrypoint
       # refreshes those rows from these env vars on every boot.
-      BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX: ".baja.local"
-      BAJA_AUTH_DEFAULT_REDIRECT: "http://baja.local/"
+      BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX: ${BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX}
+      BAJA_AUTH_DEFAULT_REDIRECT: ${BAJA_AUTH_DEFAULT_REDIRECT}
+      # Used by baja-init.sh's wait-for-mysql loop (see entrypoint.sh).
+      MYSQL_PHPBB_BAJA_PASSWORD: ${MYSQL_PHPBB_BAJA_PASSWORD}
     volumes:
       - phpbb_baja_html:/var/www/html
     depends_on:
@@ -83,21 +90,24 @@ services:
     restart: unless-stopped
     environment:
       TZ: America/Sao_Paulo
-      ENV: dev
-      BAJA_PUBLIC_DOMAIN: baja.local      # prod: bajasaebrasil.net
-      BAJA_PUBLIC_SCHEME: http
-      # phpBB session shim — see src/Baja/Auth/SessionStore.php in baja-sae-brasil-online.
+      ENV: ${ENV}
+      BAJA_PUBLIC_DOMAIN: ${BAJA_PUBLIC_DOMAIN}
+      BAJA_PUBLIC_SCHEME: ${BAJA_PUBLIC_SCHEME}
+      # phpBB session shim — see baja-php/src/Baja/Auth/SessionStore.php.
+      # The shim connects as the `resultados` MySQL user (full grants on
+      # baja_resultados, SELECT on phpbb_baja). One MySQL account, two
+      # roles — same secret for both.
       PHPBB_DB_HOST: mysql
       PHPBB_DB_PORT: "3306"
       PHPBB_DB_NAME: phpbb_baja
       PHPBB_DB_USER: resultados
-      PHPBB_DB_PASS: devresultados
-      PHPBB_COOKIE_PREFIX: phpbb3_baja
+      PHPBB_DB_PASS: ${MYSQL_RESULTADOS_PASSWORD}
+      PHPBB_COOKIE_PREFIX: ${PHPBB_COOKIE_PREFIX}
       REDIS_HOST: redis
       REDIS_PORT: "6379"
-      SESSION_CACHE_TTL_SECONDS: "60"
+      SESSION_CACHE_TTL_SECONDS: ${SESSION_CACHE_TTL_SECONDS}
     volumes:
-      - ${BAJA_APP_PATH:-../baja-php}:/var/www/html
+      - ${BAJA_APP_PATH}:/var/www/html
     depends_on:
       mysql:
         condition: service_healthy
@@ -129,7 +139,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - phpbb_baja_html:/var/www/phpbb-baja:ro
       - phpbb_formula_html:/var/www/phpbb-formula:ro
-      - ${BAJA_APP_PATH:-../baja-php}:/var/www/baja-app:ro
+      - ${BAJA_APP_PATH}:/var/www/baja-app:ro
     depends_on:
       - phpbb-baja
       - phpbb-formula
