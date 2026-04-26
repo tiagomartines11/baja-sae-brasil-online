@@ -1,0 +1,8 @@
+services:
+    baja.auth.controller.main:
+        class: baja\auth\controller\main
+        arguments:
+            - '@auth'
+            - '@user'
+            - '@config'
+            - '@request'

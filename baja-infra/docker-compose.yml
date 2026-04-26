@@ -1,0 +1,134 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: baja-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      TZ: America/Sao_Paulo
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -uroot -p${MYSQL_ROOT_PASSWORD:-rootpass} -e 'SELECT 1 FROM phpbb_baja.phpbb_config LIMIT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+    networks:
+      - baja
+
+  redis:
+    image: redis:7-alpine
+    container_name: baja-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 900 1 --save 300 10 --maxmemory 128mb --maxmemory-policy volatile-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - baja
+
+  phpbb-baja:
+    build:
+      context: ./phpbb-baja
+    image: baja-phpbb-baja:latest
+    container_name: baja-phpbb-baja
+    restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+      # Source of truth for the baja/auth extension's redirect validation.
+      # The extension reads cached values from phpbb_config; the entrypoint
+      # refreshes those rows from these env vars on every boot.
+      BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX: ".baja.local"
+      BAJA_AUTH_DEFAULT_REDIRECT: "http://baja.local/"
+    volumes:
+      - phpbb_baja_html:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - baja
+
+  phpbb-formula:
+    build:
+      context: ./phpbb-formula
+    image: baja-phpbb-formula:latest
+    container_name: baja-phpbb-formula
+    restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+    volumes:
+      - phpbb_formula_html:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - baja
+
+  baja-app:
+    build:
+      context: ./baja-app
+    image: baja-app:latest
+    container_name: baja-app
+    restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+      ENV: dev
+      BAJA_PUBLIC_DOMAIN: baja.local      # prod: bajasaebrasil.net
+      BAJA_PUBLIC_SCHEME: http
+      # phpBB session shim — see src/Baja/Auth/SessionStore.php in baja-sae-brasil-online.
+      PHPBB_DB_HOST: mysql
+      PHPBB_DB_PORT: "3306"
+      PHPBB_DB_NAME: phpbb_baja
+      PHPBB_DB_USER: resultados
+      PHPBB_DB_PASS: devresultados
+      PHPBB_COOKIE_PREFIX: phpbb3_baja
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      SESSION_CACHE_TTL_SECONDS: "60"
+    volumes:
+      - ${BAJA_APP_PATH:-../code/baja-sae-brasil-online}:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - baja
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: baja-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - phpbb_baja_html:/var/www/phpbb-baja:ro
+      - phpbb_formula_html:/var/www/phpbb-formula:ro
+      - ${BAJA_APP_PATH:-../code/baja-sae-brasil-online}:/var/www/baja-app:ro
+    depends_on:
+      - phpbb-baja
+      - phpbb-formula
+      - baja-app
+    networks:
+      - baja
+
+volumes:
+  mysql_data:
+  redis_data:
+  phpbb_baja_html:
+  phpbb_formula_html:
+
+networks:
+  baja:
+    driver: bridge

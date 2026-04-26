@@ -1,0 +1,26 @@
+{
+    "name": "baja/auth",
+    "type": "phpbb-extension",
+    "description": "Cross-subdomain login/logout endpoints for the baja-sae-brasil-online app.",
+    "homepage": "https://github.com/tiagomartines11/baja-sae-brasil-online",
+    "version": "0.1.0",
+    "time": "2026-04-25",
+    "license": "GPL-2.0-only",
+    "authors": [
+        {
+            "name": "Baja SAE Brasil",
+            "homepage": "https://www.bajasaebrasil.net",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "phpbb/phpbb": ">=3.3.0"
+    },
+    "extra": {
+        "display-name": "Baja Cross-Subdomain Auth",
+        "soft-require": {
+            "phpbb/phpbb": "3.3.*"
+        }
+    }
+}

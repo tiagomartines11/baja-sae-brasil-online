@@ -1,0 +1,11 @@
+baja_auth_login:
+    path: /baja/login
+    defaults:
+        _controller: baja.auth.controller.main:login
+    methods: [POST]
+
+baja_auth_logout:
+    path: /baja/logout
+    defaults:
+        _controller: baja.auth.controller.main:logout
+    methods: [GET, POST]
