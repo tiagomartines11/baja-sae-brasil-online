@@ -33,8 +33,7 @@ match what's actually happening, the doc is wrong; fix it.
 
 Before requesting review:
 
-- [ ] Lint passes locally (`composer lint` for PHP if defined,
-      `npm run lint` for `baja-js/`).
+- [ ] Lint passes locally: (`baja-js`: `cd baja-js && npm run lint`; baja-php: TBD, `php -l` for syntax, not enforced linter yet).
 - [ ] Smoke test passes: `baja-php/tests/smoke-test.sh` against a
       running local stack.
 - [ ] If you touched `baja-php/src/` Propel models, the generated
@@ -76,11 +75,11 @@ Once the pipeline is in place, this section will cover:
 
 ## Competition freeze policy
 
-**No merges to `master` 48 hours before a competition event, and
+**No merges to `master` 7 days before a competition event, and
 none during the event.** Hotfixes only, with explicit sign-off
 from whoever is running ops for that event.
 
-The 48h window is to give the system time to surface late-binding
+The 7-day window is to give the system time to surface late-binding
 bugs (caching, slow queries that only show under real load) before
 teams start arriving on-site. During the event itself, the live
 demo gods punish anyone who deploys for fun.
@@ -106,6 +105,16 @@ docker compose up -d
 The `-v` is what wipes the volume so your fresh build actually
 takes effect. See [`baja-php/docs/baja-auth-extension.md`](../baja-php/docs/baja-auth-extension.md)
 for the longer explanation.
+
+**Q: I changed a value in `.env` but it's not taking effect.**
+A: Compose reads `.env` at `up` time, not for already-running containers.
+After editing `.env`: `docker compose up -d` (recreates affected
+containers). For values baked into images at build time — specifically
+phpBB DB passwords mirrored in `phpbb-baja/config.php.seed` and
+`phpbb-formula/config.php.seed` — you also need `docker compose build`
++ `down -v` (the latter to reset the volumes that hold the previous
+`config.php`). See `baja-infra/.env.example` for which values have
+this coupling.
 
 **Q: What about the data in the dev DB after `down -v`?**
 A: It gets re-seeded from `baja-infra/mysql/init/`. If you've made
