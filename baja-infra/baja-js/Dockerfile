@@ -23,9 +23,6 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/next.config.js ./next.config.js
-# --ignore-scripts skips the package.json "prepare": "husky" hook, which
-# would otherwise invoke husky here — and husky is a devDep that --omit=dev
-# strips. The builder stage already ran scripts with husky present.
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm ci --omit=dev
 EXPOSE 3000
 CMD ["npm", "start"]
