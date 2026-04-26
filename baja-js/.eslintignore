@@ -1,0 +1,4 @@
+!.storybook
+!.jest
+!src/types/jest-styled-components.d.ts
+generators
