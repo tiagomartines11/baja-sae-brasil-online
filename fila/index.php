@@ -3,10 +3,10 @@ namespace Baja\Fila;
 
 Template::printHeader("Início");
 
-define("FECHADA",0);
-define("ABERTA",1);
-define("PROG_ABRIR",2);
-define("PROG_FECHAR",3);
+if (!defined("FECHADA"))     define("FECHADA",0);
+if (!defined("ABERTA"))      define("ABERTA",1);
+if (!defined("PROG_ABRIR"))  define("PROG_ABRIR",2);
+if (!defined("PROG_FECHAR")) define("PROG_FECHAR",3);
 
 ?>
 

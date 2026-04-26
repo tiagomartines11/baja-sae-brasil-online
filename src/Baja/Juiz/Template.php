@@ -5,7 +5,7 @@ use Baja\Model\EventoQuery;
 
 class Template
 {
-    static function printHeader($title, $stickyHeader = true) {
+    static function printHeader($title, $stickyHeader = true, $prefixWithEvent = true) {
         ?>
         <!DOCTYPE html>
         <html xmlns="http://www.w3.org/1999/html">
@@ -23,7 +23,7 @@ class Template
             <!--[if IE]>
             <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
             <![endif]-->
-            <title><?= EventoQuery::getCurrentEvent()->getTitulo() ?> - <?= $title ?></title>
+            <title><?= $prefixWithEvent ? EventoQuery::getCurrentEvent()->getTitulo() . ' - ' . $title : $title ?></title>
         </head>
         <script id="js">
             $(function(){

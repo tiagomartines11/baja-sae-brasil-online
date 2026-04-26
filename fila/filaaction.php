@@ -9,16 +9,16 @@ use Baja\Model\FilaQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 
-$operacao = filter_var($_POST['operacao'], FILTER_SANITIZE_STRING);
+$operacao = htmlspecialchars(strip_tags($_POST['operacao'] ?? ''), ENT_QUOTES, 'UTF-8');
 
 $usuario = Session::getCurrentUser()->getUsername();
 
 switch($operacao){
     case 'novaSenha':
         try {
-            $evento_id = filter_var($_POST['evento_id'], FILTER_SANITIZE_STRING);
-            $fila_id = filter_var($_POST['fila_id'], FILTER_SANITIZE_STRING);
-            $carro = filter_var($_POST['carro'], FILTER_SANITIZE_STRING);
+            $evento_id = htmlspecialchars(strip_tags($_POST['evento_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fila_id = htmlspecialchars(strip_tags($_POST['fila_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $carro = htmlspecialchars(strip_tags($_POST['carro'] ?? ''), ENT_QUOTES, 'UTF-8');
             if (Fila::checkPermissaoFila($usuario, $evento_id, $fila_id, $carro)) {
                 $fila = FilaQuery::create()->filterByEventoId($evento_id)->findOneByFilaId($fila_id);
 
@@ -54,8 +54,8 @@ switch($operacao){
         break;
     case 'filaAtual':
         try {
-            $evento_id = filter_var($_POST['evento_id'], FILTER_SANITIZE_STRING);
-            $fila_id = filter_var($_POST['fila_id'], FILTER_SANITIZE_STRING);
+            $evento_id = htmlspecialchars(strip_tags($_POST['evento_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fila_id = htmlspecialchars(strip_tags($_POST['fila_id'] ?? ''), ENT_QUOTES, 'UTF-8');
             http_response_code(200);
             echo json_encode(array("operacao"=>"filaAtual","evento_id"=>$evento_id,"fila_id"=>$fila_id,"senhaAtual"=>Fila::getSenhaAtual($evento_id, $fila_id)));
             exit();
@@ -66,9 +66,9 @@ switch($operacao){
         break;
     case 'getSenhasCarro':
         try {
-            $evento_id = filter_var($_POST['evento_id'], FILTER_SANITIZE_STRING);
-            $fila_id = filter_var($_POST['fila_id'], FILTER_SANITIZE_STRING);
-            $carro = filter_var($_POST['carro'], FILTER_SANITIZE_STRING);
+            $evento_id = htmlspecialchars(strip_tags($_POST['evento_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fila_id = htmlspecialchars(strip_tags($_POST['fila_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $carro = htmlspecialchars(strip_tags($_POST['carro'] ?? ''), ENT_QUOTES, 'UTF-8');
             
             http_response_code(200);
             echo json_encode(array("operacao"=>"getSenhasCarro","evento_id"=>$evento_id,"fila_id"=>$fila_id,"carro"=>$carro,"senhas"=>Fila::getSenhasCarro($evento_id, $fila_id, $carro)));
@@ -81,10 +81,10 @@ switch($operacao){
         break;
     case 'abandonaSenha':
         try {
-            $evento_id = filter_var($_POST['evento_id'], FILTER_SANITIZE_STRING);
-            $fila_id = filter_var($_POST['fila_id'], FILTER_SANITIZE_STRING);
-            $carro = filter_var($_POST['carro'], FILTER_SANITIZE_STRING);
-            $senha = filter_var($_POST['senha'], FILTER_SANITIZE_STRING);
+            $evento_id = htmlspecialchars(strip_tags($_POST['evento_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fila_id = htmlspecialchars(strip_tags($_POST['fila_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $carro = htmlspecialchars(strip_tags($_POST['carro'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $senha = htmlspecialchars(strip_tags($_POST['senha'] ?? ''), ENT_QUOTES, 'UTF-8');
             if (Fila::checkPermissaoFila($usuario, $evento_id, $fila_id, $carro)) {
                 if (Fila::abandonaSenha($evento_id, $fila_id, $senha) === true) {
                     http_response_code(200);
@@ -106,8 +106,8 @@ switch($operacao){
     
     case 'getSenhas':
         try {
-            $evento_id = filter_var($_POST['evento_id'], FILTER_SANITIZE_STRING);
-            $fila_id = filter_var($_POST['fila_id'], FILTER_SANITIZE_STRING);
+            $evento_id = htmlspecialchars(strip_tags($_POST['evento_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fila_id = htmlspecialchars(strip_tags($_POST['fila_id'] ?? ''), ENT_QUOTES, 'UTF-8');
             
             http_response_code(200);
             echo json_encode(array("operacao"=>"getSenhas","evento_id"=>$evento_id,"fila_id"=>$fila_id,"senhas"=>Fila::getFila($evento_id, $fila_id, $limit=1000, $detalhes=true)));
@@ -120,10 +120,10 @@ switch($operacao){
     
     case 'setStatus':
         try {
-            $evento_id = filter_var($_POST['evento_id'], FILTER_SANITIZE_STRING);
-            $fila_id = filter_var($_POST['fila_id'], FILTER_SANITIZE_STRING);
-            $senha = filter_var($_POST['senha'], FILTER_SANITIZE_STRING);
-            $status = filter_var($_POST['status'], FILTER_SANITIZE_STRING);
+            $evento_id = htmlspecialchars(strip_tags($_POST['evento_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fila_id = htmlspecialchars(strip_tags($_POST['fila_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $senha = htmlspecialchars(strip_tags($_POST['senha'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $status = htmlspecialchars(strip_tags($_POST['status'] ?? ''), ENT_QUOTES, 'UTF-8');
 
             if (Fila::checkPermissaoFila($usuario, $evento_id, $fila_id, $equipe_id, true)) {
                 if (Fila::setStatus($evento_id, $fila_id, $senha, $status)) {
@@ -146,10 +146,10 @@ switch($operacao){
     
     case 'addPermissao':
         try {
-            $evento_id = filter_var($_POST['evento_id'], FILTER_SANITIZE_STRING);
-            $fila_id = filter_var($_POST['fila_id'], FILTER_SANITIZE_STRING);
-            $equipe_id = filter_var($_POST['equipe_id'], FILTER_SANITIZE_STRING);
-            $novo_usuario = filter_var($_POST['novo_usuario'], FILTER_SANITIZE_STRING);
+            $evento_id = htmlspecialchars(strip_tags($_POST['evento_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $fila_id = htmlspecialchars(strip_tags($_POST['fila_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $equipe_id = htmlspecialchars(strip_tags($_POST['equipe_id'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $novo_usuario = htmlspecialchars(strip_tags($_POST['novo_usuario'] ?? ''), ENT_QUOTES, 'UTF-8');
 
             if (Fila::checkPermissaoFila($usuario, $evento_id, $fila_id, $equipe_id, true)) {
                 if (Fila::addPermissaoFila($evento_id, $fila_id, $equipe_id, $novo_usuario)) {

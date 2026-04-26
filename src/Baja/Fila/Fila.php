@@ -16,17 +16,17 @@ use Propel\Runtime\Propel;
 
 use \Datetime;
 
-define("FECHADA",0);
-define("ABERTA",1);
-define("PROG_ABRIR",2);
-define("PROG_FECHAR",3);
+if (!defined("FECHADA"))     define("FECHADA",0);
+if (!defined("ABERTA"))      define("ABERTA",1);
+if (!defined("PROG_ABRIR"))  define("PROG_ABRIR",2);
+if (!defined("PROG_FECHAR")) define("PROG_FECHAR",3);
 
-define("FILA",0);
-define("ATENDIDO",1);
-define("AGUARDANDO",2);
-define("NOSHOW",3);
-define("ABANDONADO",4);
-define("CANCELADA",5);
+if (!defined("FILA"))        define("FILA",0);
+if (!defined("ATENDIDO"))    define("ATENDIDO",1);
+if (!defined("AGUARDANDO"))  define("AGUARDANDO",2);
+if (!defined("NOSHOW"))      define("NOSHOW",3);
+if (!defined("ABANDONADO"))  define("ABANDONADO",4);
+if (!defined("CANCELADA"))   define("CANCELADA",5);
 
 
 class Fila

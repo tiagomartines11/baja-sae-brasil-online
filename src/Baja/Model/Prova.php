@@ -56,11 +56,11 @@ class Prova extends BaseProva
     }
 
     public function getParamsVars() {
-        return $this->getParams()->vars;
+        return $this->getParams()->vars ?? null;
     }
 
     public function getParamsMinMax() {
-        return $this->getParams()->min_max;
+        return $this->getParams()->min_max ?? null;
     }
 
     /**
@@ -68,16 +68,16 @@ class Prova extends BaseProva
      */
     public function getParamsInputs() {
         $ret = [];
-        foreach ((array)$this->getParams()->inputs as $i){
-            $f = new Field($i->code, $i->name, $i->pass, $i->xor, $i->sensitive);
+        foreach ((array)($this->getParams()->inputs ?? []) as $i){
+            $f = new Field($i->code, $i->name, $i->pass ?? null, $i->xor ?? null, $i->sensitive ?? null);
             if ($i->type == "enum") {
-                $f->setEnum($i->options, $i->multiple);
+                $f->setEnum($i->options, $i->multiple ?? null);
             } else if ($i->type == "enum-assoc") {
-                $f->setEnumAssoc($i->options, $i->multiple);
+                $f->setEnumAssoc($i->options, $i->multiple ?? null);
             } else if ($i->type == "time") {
                 $f->setTime();
             } else {
-                $f->setNumber($i->precision, $i->negative);
+                $f->setNumber($i->precision ?? null, $i->negative ?? null);
             }
             $ret[]= $f;
         }
@@ -85,7 +85,7 @@ class Prova extends BaseProva
     }
 
     public function getParamsPontos() {
-        return $this->getParams()->pontos;
+        return $this->getParams()->pontos ?? null;
     }
 
     public function refreshVarsAndPontos() {
@@ -105,7 +105,7 @@ class Prova extends BaseProva
     }
 
     public function getType() {
-        return $this->getParams()->type ? $this->getParams()->type : 'normal';
+        return !empty($this->getParams()->type) ? $this->getParams()->type : 'normal';
     }
 
     public function getFullCode() {
