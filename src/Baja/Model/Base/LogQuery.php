@@ -10,14 +10,12 @@ use Baja\Model\Map\LogTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
-use Propel\Runtime\Collection\ObjectCollection;
+use Propel\Runtime\Collection\Collection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 
 /**
- * Base class that represents a query for the 'log' table.
- *
- *
+ * Base class that represents a query for the `log` table.
  *
  * @method     ChildLogQuery orderById($order = Criteria::ASC) Order by the id column
  * @method     ChildLogQuery orderByUser($order = Criteria::ASC) Order by the user column
@@ -41,18 +39,18 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildLogQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildLogQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
  *
- * @method     ChildLog findOne(ConnectionInterface $con = null) Return the first ChildLog matching the query
- * @method     ChildLog findOneOrCreate(ConnectionInterface $con = null) Return the first ChildLog matching the query, or a new ChildLog object populated from the query conditions when no match is found
+ * @method     ChildLog|null findOne(?ConnectionInterface $con = null) Return the first ChildLog matching the query
+ * @method     ChildLog findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildLog matching the query, or a new ChildLog object populated from the query conditions when no match is found
  *
- * @method     ChildLog findOneById(string $id) Return the first ChildLog filtered by the id column
- * @method     ChildLog findOneByUser(string $user) Return the first ChildLog filtered by the user column
- * @method     ChildLog findOneByPagina(string $pagina) Return the first ChildLog filtered by the pagina column
- * @method     ChildLog findOneByEquipe(int $equipe) Return the first ChildLog filtered by the equipe column
- * @method     ChildLog findOneByDados(string $dados) Return the first ChildLog filtered by the dados column
- * @method     ChildLog findOneByData(string $data) Return the first ChildLog filtered by the data column *
-
- * @method     ChildLog requirePk($key, ConnectionInterface $con = null) Return the ChildLog by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildLog requireOne(ConnectionInterface $con = null) Return the first ChildLog matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildLog|null findOneById(string $id) Return the first ChildLog filtered by the id column
+ * @method     ChildLog|null findOneByUser(string $user) Return the first ChildLog filtered by the user column
+ * @method     ChildLog|null findOneByPagina(string $pagina) Return the first ChildLog filtered by the pagina column
+ * @method     ChildLog|null findOneByEquipe(int $equipe) Return the first ChildLog filtered by the equipe column
+ * @method     ChildLog|null findOneByDados(string $dados) Return the first ChildLog filtered by the dados column
+ * @method     ChildLog|null findOneByData(string $data) Return the first ChildLog filtered by the data column
+ *
+ * @method     ChildLog requirePk($key, ?ConnectionInterface $con = null) Return the ChildLog by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildLog requireOne(?ConnectionInterface $con = null) Return the first ChildLog matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildLog requireOneById(string $id) Return the first ChildLog filtered by the id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildLog requireOneByUser(string $user) Return the first ChildLog filtered by the user column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -61,15 +59,24 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildLog requireOneByDados(string $dados) Return the first ChildLog filtered by the dados column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildLog requireOneByData(string $data) Return the first ChildLog filtered by the data column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildLog[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildLog objects based on current ModelCriteria
- * @method     ChildLog[]|ObjectCollection findById(string $id) Return ChildLog objects filtered by the id column
- * @method     ChildLog[]|ObjectCollection findByUser(string $user) Return ChildLog objects filtered by the user column
- * @method     ChildLog[]|ObjectCollection findByPagina(string $pagina) Return ChildLog objects filtered by the pagina column
- * @method     ChildLog[]|ObjectCollection findByEquipe(int $equipe) Return ChildLog objects filtered by the equipe column
- * @method     ChildLog[]|ObjectCollection findByDados(string $dados) Return ChildLog objects filtered by the dados column
- * @method     ChildLog[]|ObjectCollection findByData(string $data) Return ChildLog objects filtered by the data column
- * @method     ChildLog[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @method     ChildLog[]|Collection find(?ConnectionInterface $con = null) Return ChildLog objects based on current ModelCriteria
+ * @psalm-method Collection&\Traversable<ChildLog> find(?ConnectionInterface $con = null) Return ChildLog objects based on current ModelCriteria
  *
+ * @method     ChildLog[]|Collection findById(string|array<string> $id) Return ChildLog objects filtered by the id column
+ * @psalm-method Collection&\Traversable<ChildLog> findById(string|array<string> $id) Return ChildLog objects filtered by the id column
+ * @method     ChildLog[]|Collection findByUser(string|array<string> $user) Return ChildLog objects filtered by the user column
+ * @psalm-method Collection&\Traversable<ChildLog> findByUser(string|array<string> $user) Return ChildLog objects filtered by the user column
+ * @method     ChildLog[]|Collection findByPagina(string|array<string> $pagina) Return ChildLog objects filtered by the pagina column
+ * @psalm-method Collection&\Traversable<ChildLog> findByPagina(string|array<string> $pagina) Return ChildLog objects filtered by the pagina column
+ * @method     ChildLog[]|Collection findByEquipe(int|array<int> $equipe) Return ChildLog objects filtered by the equipe column
+ * @psalm-method Collection&\Traversable<ChildLog> findByEquipe(int|array<int> $equipe) Return ChildLog objects filtered by the equipe column
+ * @method     ChildLog[]|Collection findByDados(string|array<string> $dados) Return ChildLog objects filtered by the dados column
+ * @psalm-method Collection&\Traversable<ChildLog> findByDados(string|array<string> $dados) Return ChildLog objects filtered by the dados column
+ * @method     ChildLog[]|Collection findByData(string|array<string> $data) Return ChildLog objects filtered by the data column
+ * @psalm-method Collection&\Traversable<ChildLog> findByData(string|array<string> $data) Return ChildLog objects filtered by the data column
+ *
+ * @method     ChildLog[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildLog> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  */
 abstract class LogQuery extends ModelCriteria
 {
@@ -78,9 +85,9 @@ abstract class LogQuery extends ModelCriteria
     /**
      * Initializes internal state of \Baja\Model\Base\LogQuery object.
      *
-     * @param     string $dbName The database name
-     * @param     string $modelName The phpName of a model, e.g. 'Book'
-     * @param     string $modelAlias The alias for the model in this query, e.g. 'b'
+     * @param string $dbName The database name
+     * @param string $modelName The phpName of a model, e.g. 'Book'
+     * @param string $modelAlias The alias for the model in this query, e.g. 'b'
      */
     public function __construct($dbName = 'resultados', $modelName = '\\Baja\\Model\\Log', $modelAlias = null)
     {
@@ -90,12 +97,12 @@ abstract class LogQuery extends ModelCriteria
     /**
      * Returns a new ChildLogQuery object.
      *
-     * @param     string $modelAlias The alias of a model in the query
-     * @param     Criteria $criteria Optional Criteria to build the query from
+     * @param string $modelAlias The alias of a model in the query
+     * @param Criteria $criteria Optional Criteria to build the query from
      *
      * @return ChildLogQuery
      */
-    public static function create($modelAlias = null, Criteria $criteria = null)
+    public static function create(?string $modelAlias = null, ?Criteria $criteria = null): Criteria
     {
         if ($criteria instanceof ChildLogQuery) {
             return $criteria;
@@ -125,7 +132,7 @@ abstract class LogQuery extends ModelCriteria
      *
      * @return ChildLog|array|mixed the result, formatted by the current formatter
      */
-    public function findPk($key, ConnectionInterface $con = null)
+    public function findPk($key, ?ConnectionInterface $con = null)
     {
         if ($key === null) {
             return null;
@@ -157,8 +164,8 @@ abstract class LogQuery extends ModelCriteria
      * Find object by primary key using raw SQL to go fast.
      * Bypass doSelect() and the object formatter by using generated code.
      *
-     * @param     mixed $key Primary key to use for the query
-     * @param     ConnectionInterface $con A connection object
+     * @param mixed $key Primary key to use for the query
+     * @param ConnectionInterface $con A connection object
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
@@ -190,8 +197,8 @@ abstract class LogQuery extends ModelCriteria
     /**
      * Find object by primary key.
      *
-     * @param     mixed $key Primary key to use for the query
-     * @param     ConnectionInterface $con A connection object
+     * @param mixed $key Primary key to use for the query
+     * @param ConnectionInterface $con A connection object
      *
      * @return ChildLog|array|mixed the result, formatted by the current formatter
      */
@@ -211,12 +218,12 @@ abstract class LogQuery extends ModelCriteria
      * <code>
      * $objs = $c->findPks(array(12, 56, 832), $con);
      * </code>
-     * @param     array $keys Primary keys to use for the query
-     * @param     ConnectionInterface $con an optional connection object
+     * @param array $keys Primary keys to use for the query
+     * @param ConnectionInterface $con an optional connection object
      *
-     * @return ObjectCollection|array|mixed the list of results, formatted by the current formatter
+     * @return Collection|array|mixed the list of results, formatted by the current formatter
      */
-    public function findPks($keys, ConnectionInterface $con = null)
+    public function findPks($keys, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getReadConnection($this->getDbName());
@@ -233,27 +240,31 @@ abstract class LogQuery extends ModelCriteria
     /**
      * Filter the query by primary key
      *
-     * @param     mixed $key Primary key to use for the query
+     * @param mixed $key Primary key to use for the query
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
 
-        return $this->addUsingAlias(LogTableMap::COL_ID, $key, Criteria::EQUAL);
+        $this->addUsingAlias(LogTableMap::COL_ID, $key, Criteria::EQUAL);
+
+        return $this;
     }
 
     /**
      * Filter the query by a list of primary keys
      *
-     * @param     array $keys The list of primary key to use for the query
+     * @param array|int $keys The list of primary key to use for the query
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
 
-        return $this->addUsingAlias(LogTableMap::COL_ID, $keys, Criteria::IN);
+        $this->addUsingAlias(LogTableMap::COL_ID, $keys, Criteria::IN);
+
+        return $this;
     }
 
     /**
@@ -266,15 +277,15 @@ abstract class LogQuery extends ModelCriteria
      * $query->filterById(array('min' => 12)); // WHERE id > 12
      * </code>
      *
-     * @param     mixed $id The value to use as filter.
+     * @param mixed $id The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterById($id = null, $comparison = null)
+    public function filterById($id = null, ?string $comparison = null)
     {
         if (is_array($id)) {
             $useMinMax = false;
@@ -294,7 +305,9 @@ abstract class LogQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(LogTableMap::COL_ID, $id, $comparison);
+        $this->addUsingAlias(LogTableMap::COL_ID, $id, $comparison);
+
+        return $this;
     }
 
     /**
@@ -304,14 +317,15 @@ abstract class LogQuery extends ModelCriteria
      * <code>
      * $query->filterByUser('fooValue');   // WHERE user = 'fooValue'
      * $query->filterByUser('%fooValue%', Criteria::LIKE); // WHERE user LIKE '%fooValue%'
+     * $query->filterByUser(['foo', 'bar']); // WHERE user IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $user The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $user The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByUser($user = null, $comparison = null)
+    public function filterByUser($user = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($user)) {
@@ -319,7 +333,9 @@ abstract class LogQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(LogTableMap::COL_USER, $user, $comparison);
+        $this->addUsingAlias(LogTableMap::COL_USER, $user, $comparison);
+
+        return $this;
     }
 
     /**
@@ -329,14 +345,15 @@ abstract class LogQuery extends ModelCriteria
      * <code>
      * $query->filterByPagina('fooValue');   // WHERE pagina = 'fooValue'
      * $query->filterByPagina('%fooValue%', Criteria::LIKE); // WHERE pagina LIKE '%fooValue%'
+     * $query->filterByPagina(['foo', 'bar']); // WHERE pagina IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $pagina The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $pagina The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByPagina($pagina = null, $comparison = null)
+    public function filterByPagina($pagina = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($pagina)) {
@@ -344,7 +361,9 @@ abstract class LogQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(LogTableMap::COL_PAGINA, $pagina, $comparison);
+        $this->addUsingAlias(LogTableMap::COL_PAGINA, $pagina, $comparison);
+
+        return $this;
     }
 
     /**
@@ -357,15 +376,15 @@ abstract class LogQuery extends ModelCriteria
      * $query->filterByEquipe(array('min' => 12)); // WHERE equipe > 12
      * </code>
      *
-     * @param     mixed $equipe The value to use as filter.
+     * @param mixed $equipe The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEquipe($equipe = null, $comparison = null)
+    public function filterByEquipe($equipe = null, ?string $comparison = null)
     {
         if (is_array($equipe)) {
             $useMinMax = false;
@@ -385,7 +404,9 @@ abstract class LogQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(LogTableMap::COL_EQUIPE, $equipe, $comparison);
+        $this->addUsingAlias(LogTableMap::COL_EQUIPE, $equipe, $comparison);
+
+        return $this;
     }
 
     /**
@@ -395,14 +416,15 @@ abstract class LogQuery extends ModelCriteria
      * <code>
      * $query->filterByDados('fooValue');   // WHERE dados = 'fooValue'
      * $query->filterByDados('%fooValue%', Criteria::LIKE); // WHERE dados LIKE '%fooValue%'
+     * $query->filterByDados(['foo', 'bar']); // WHERE dados IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $dados The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $dados The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByDados($dados = null, $comparison = null)
+    public function filterByDados($dados = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($dados)) {
@@ -410,7 +432,9 @@ abstract class LogQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(LogTableMap::COL_DADOS, $dados, $comparison);
+        $this->addUsingAlias(LogTableMap::COL_DADOS, $dados, $comparison);
+
+        return $this;
     }
 
     /**
@@ -423,17 +447,17 @@ abstract class LogQuery extends ModelCriteria
      * $query->filterByData(array('max' => 'yesterday')); // WHERE data > '2011-03-13'
      * </code>
      *
-     * @param     mixed $data The value to use as filter.
+     * @param mixed $data The value to use as filter.
      *              Values can be integers (unix timestamps), DateTime objects, or strings.
      *              Empty strings are treated as NULL.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByData($data = null, $comparison = null)
+    public function filterByData($data = null, ?string $comparison = null)
     {
         if (is_array($data)) {
             $useMinMax = false;
@@ -453,15 +477,17 @@ abstract class LogQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(LogTableMap::COL_DATA, $data, $comparison);
+        $this->addUsingAlias(LogTableMap::COL_DATA, $data, $comparison);
+
+        return $this;
     }
 
     /**
      * Exclude object from result
      *
-     * @param   ChildLog $log Object to remove from the list of results
+     * @param ChildLog $log Object to remove from the list of results
      *
-     * @return $this|ChildLogQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function prune($log = null)
     {
@@ -478,7 +504,7 @@ abstract class LogQuery extends ModelCriteria
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public function doDeleteAll(ConnectionInterface $con = null)
+    public function doDeleteAll(?ConnectionInterface $con = null): int
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(LogTableMap::DATABASE_NAME);
@@ -503,12 +529,12 @@ abstract class LogQuery extends ModelCriteria
      * Performs a DELETE on the database based on the current ModelCriteria
      *
      * @param ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public function delete(ConnectionInterface $con = null)
+    public function delete(?ConnectionInterface $con = null): int
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(LogTableMap::DATABASE_NAME);
@@ -533,4 +559,4 @@ abstract class LogQuery extends ModelCriteria
         });
     }
 
-} // LogQuery
+}

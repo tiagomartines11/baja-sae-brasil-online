@@ -33,124 +33,198 @@ class TournamentTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'Baja.Model.Map.TournamentTableMap';
+    public const CLASS_NAME = 'Baja.Model.Map.TournamentTableMap';
 
     /**
      * The default database name for this class
      */
-    const DATABASE_NAME = 'resultados';
+    public const DATABASE_NAME = 'resultados';
 
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'tournament';
+    public const TABLE_NAME = 'tournament';
+
+    /**
+     * The PHP name of this class (PascalCase)
+     */
+    public const TABLE_PHP_NAME = 'Tournament';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\Baja\\Model\\Tournament';
+    public const OM_CLASS = '\\Baja\\Model\\Tournament';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'Baja.Model.Tournament';
+    public const CLASS_DEFAULT = 'Baja.Model.Tournament';
 
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 8;
+    public const NUM_COLUMNS = 8;
 
     /**
      * The number of lazy-loaded columns
      */
-    const NUM_LAZY_LOAD_COLUMNS = 0;
+    public const NUM_LAZY_LOAD_COLUMNS = 0;
 
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 8;
+    public const NUM_HYDRATE_COLUMNS = 8;
 
     /**
      * the column name for the evento_id field
      */
-    const COL_EVENTO_ID = 'tournament.evento_id';
+    public const COL_EVENTO_ID = 'tournament.evento_id';
 
     /**
      * the column name for the prova_id field
      */
-    const COL_PROVA_ID = 'tournament.prova_id';
+    public const COL_PROVA_ID = 'tournament.prova_id';
 
     /**
      * the column name for the match_id field
      */
-    const COL_MATCH_ID = 'tournament.match_id';
+    public const COL_MATCH_ID = 'tournament.match_id';
 
     /**
      * the column name for the round field
      */
-    const COL_ROUND = 'tournament.round';
+    public const COL_ROUND = 'tournament.round';
 
     /**
      * the column name for the equipe1_id field
      */
-    const COL_EQUIPE1_ID = 'tournament.equipe1_id';
+    public const COL_EQUIPE1_ID = 'tournament.equipe1_id';
 
     /**
      * the column name for the equipe2_id field
      */
-    const COL_EQUIPE2_ID = 'tournament.equipe2_id';
+    public const COL_EQUIPE2_ID = 'tournament.equipe2_id';
 
     /**
      * the column name for the winner field
      */
-    const COL_WINNER = 'tournament.winner';
+    public const COL_WINNER = 'tournament.winner';
 
     /**
      * the column name for the dados field
      */
-    const COL_DADOS = 'tournament.dados';
+    public const COL_DADOS = 'tournament.dados';
 
     /**
      * The default string format for model objects of the related table
      */
-    const DEFAULT_STRING_FORMAT = 'YAML';
+    public const DEFAULT_STRING_FORMAT = 'YAML';
 
     /**
      * holds an array of fieldnames
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('EventoId', 'ProvaId', 'MatchId', 'round', 'Equipe1Id', 'Equipe2Id', 'Winner', 'Dados', ),
-        self::TYPE_CAMELNAME     => array('eventoId', 'provaId', 'matchId', 'round', 'equipe1Id', 'equipe2Id', 'winner', 'dados', ),
-        self::TYPE_COLNAME       => array(TournamentTableMap::COL_EVENTO_ID, TournamentTableMap::COL_PROVA_ID, TournamentTableMap::COL_MATCH_ID, TournamentTableMap::COL_ROUND, TournamentTableMap::COL_EQUIPE1_ID, TournamentTableMap::COL_EQUIPE2_ID, TournamentTableMap::COL_WINNER, TournamentTableMap::COL_DADOS, ),
-        self::TYPE_FIELDNAME     => array('evento_id', 'prova_id', 'match_id', 'round', 'equipe1_id', 'equipe2_id', 'winner', 'dados', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, )
-    );
+    protected static $fieldNames = [
+        self::TYPE_PHPNAME       => ['EventoId', 'ProvaId', 'MatchId', 'round', 'Equipe1Id', 'Equipe2Id', 'Winner', 'Dados', ],
+        self::TYPE_CAMELNAME     => ['eventoId', 'provaId', 'matchId', 'round', 'equipe1Id', 'equipe2Id', 'winner', 'dados', ],
+        self::TYPE_COLNAME       => [TournamentTableMap::COL_EVENTO_ID, TournamentTableMap::COL_PROVA_ID, TournamentTableMap::COL_MATCH_ID, TournamentTableMap::COL_ROUND, TournamentTableMap::COL_EQUIPE1_ID, TournamentTableMap::COL_EQUIPE2_ID, TournamentTableMap::COL_WINNER, TournamentTableMap::COL_DADOS, ],
+        self::TYPE_FIELDNAME     => ['evento_id', 'prova_id', 'match_id', 'round', 'equipe1_id', 'equipe2_id', 'winner', 'dados', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, ]
+    ];
 
     /**
      * holds an array of keys for quick access to the fieldnames array
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('EventoId' => 0, 'ProvaId' => 1, 'MatchId' => 2, 'round' => 3, 'Equipe1Id' => 4, 'Equipe2Id' => 5, 'Winner' => 6, 'Dados' => 7, ),
-        self::TYPE_CAMELNAME     => array('eventoId' => 0, 'provaId' => 1, 'matchId' => 2, 'round' => 3, 'equipe1Id' => 4, 'equipe2Id' => 5, 'winner' => 6, 'dados' => 7, ),
-        self::TYPE_COLNAME       => array(TournamentTableMap::COL_EVENTO_ID => 0, TournamentTableMap::COL_PROVA_ID => 1, TournamentTableMap::COL_MATCH_ID => 2, TournamentTableMap::COL_ROUND => 3, TournamentTableMap::COL_EQUIPE1_ID => 4, TournamentTableMap::COL_EQUIPE2_ID => 5, TournamentTableMap::COL_WINNER => 6, TournamentTableMap::COL_DADOS => 7, ),
-        self::TYPE_FIELDNAME     => array('evento_id' => 0, 'prova_id' => 1, 'match_id' => 2, 'round' => 3, 'equipe1_id' => 4, 'equipe2_id' => 5, 'winner' => 6, 'dados' => 7, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, )
-    );
+    protected static $fieldKeys = [
+        self::TYPE_PHPNAME       => ['EventoId' => 0, 'ProvaId' => 1, 'MatchId' => 2, 'round' => 3, 'Equipe1Id' => 4, 'Equipe2Id' => 5, 'Winner' => 6, 'Dados' => 7, ],
+        self::TYPE_CAMELNAME     => ['eventoId' => 0, 'provaId' => 1, 'matchId' => 2, 'round' => 3, 'equipe1Id' => 4, 'equipe2Id' => 5, 'winner' => 6, 'dados' => 7, ],
+        self::TYPE_COLNAME       => [TournamentTableMap::COL_EVENTO_ID => 0, TournamentTableMap::COL_PROVA_ID => 1, TournamentTableMap::COL_MATCH_ID => 2, TournamentTableMap::COL_ROUND => 3, TournamentTableMap::COL_EQUIPE1_ID => 4, TournamentTableMap::COL_EQUIPE2_ID => 5, TournamentTableMap::COL_WINNER => 6, TournamentTableMap::COL_DADOS => 7, ],
+        self::TYPE_FIELDNAME     => ['evento_id' => 0, 'prova_id' => 1, 'match_id' => 2, 'round' => 3, 'equipe1_id' => 4, 'equipe2_id' => 5, 'winner' => 6, 'dados' => 7, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, ]
+    ];
+
+    /**
+     * Holds a list of column names and their normalized version.
+     *
+     * @var array<string>
+     */
+    protected $normalizedColumnNameMap = [
+        'EventoId' => 'EVENTO_ID',
+        'Tournament.EventoId' => 'EVENTO_ID',
+        'eventoId' => 'EVENTO_ID',
+        'tournament.eventoId' => 'EVENTO_ID',
+        'TournamentTableMap::COL_EVENTO_ID' => 'EVENTO_ID',
+        'COL_EVENTO_ID' => 'EVENTO_ID',
+        'evento_id' => 'EVENTO_ID',
+        'tournament.evento_id' => 'EVENTO_ID',
+        'ProvaId' => 'PROVA_ID',
+        'Tournament.ProvaId' => 'PROVA_ID',
+        'provaId' => 'PROVA_ID',
+        'tournament.provaId' => 'PROVA_ID',
+        'TournamentTableMap::COL_PROVA_ID' => 'PROVA_ID',
+        'COL_PROVA_ID' => 'PROVA_ID',
+        'prova_id' => 'PROVA_ID',
+        'tournament.prova_id' => 'PROVA_ID',
+        'MatchId' => 'MATCH_ID',
+        'Tournament.MatchId' => 'MATCH_ID',
+        'matchId' => 'MATCH_ID',
+        'tournament.matchId' => 'MATCH_ID',
+        'TournamentTableMap::COL_MATCH_ID' => 'MATCH_ID',
+        'COL_MATCH_ID' => 'MATCH_ID',
+        'match_id' => 'MATCH_ID',
+        'tournament.match_id' => 'MATCH_ID',
+        'round' => 'ROUND',
+        'Tournament.round' => 'ROUND',
+        'tournament.round' => 'ROUND',
+        'TournamentTableMap::COL_ROUND' => 'ROUND',
+        'COL_ROUND' => 'ROUND',
+        'Equipe1Id' => 'EQUIPE1_ID',
+        'Tournament.Equipe1Id' => 'EQUIPE1_ID',
+        'equipe1Id' => 'EQUIPE1_ID',
+        'tournament.equipe1Id' => 'EQUIPE1_ID',
+        'TournamentTableMap::COL_EQUIPE1_ID' => 'EQUIPE1_ID',
+        'COL_EQUIPE1_ID' => 'EQUIPE1_ID',
+        'equipe1_id' => 'EQUIPE1_ID',
+        'tournament.equipe1_id' => 'EQUIPE1_ID',
+        'Equipe2Id' => 'EQUIPE2_ID',
+        'Tournament.Equipe2Id' => 'EQUIPE2_ID',
+        'equipe2Id' => 'EQUIPE2_ID',
+        'tournament.equipe2Id' => 'EQUIPE2_ID',
+        'TournamentTableMap::COL_EQUIPE2_ID' => 'EQUIPE2_ID',
+        'COL_EQUIPE2_ID' => 'EQUIPE2_ID',
+        'equipe2_id' => 'EQUIPE2_ID',
+        'tournament.equipe2_id' => 'EQUIPE2_ID',
+        'Winner' => 'WINNER',
+        'Tournament.Winner' => 'WINNER',
+        'winner' => 'WINNER',
+        'tournament.winner' => 'WINNER',
+        'TournamentTableMap::COL_WINNER' => 'WINNER',
+        'COL_WINNER' => 'WINNER',
+        'Dados' => 'DADOS',
+        'Tournament.Dados' => 'DADOS',
+        'dados' => 'DADOS',
+        'tournament.dados' => 'DADOS',
+        'TournamentTableMap::COL_DADOS' => 'DADOS',
+        'COL_DADOS' => 'DADOS',
+    ];
 
     /**
      * Initialize the table attributes and columns
      * Relations are not initialized by this method since they are lazy loaded
      *
      * @return void
-     * @throws PropelException
+     * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function initialize()
+    public function initialize(): void
     {
         // attributes
         $this->setName('tournament');
@@ -169,12 +243,14 @@ class TournamentTableMap extends TableMap
         $this->addColumn('equipe2_id', 'Equipe2Id', 'CHAR', false, 6, null);
         $this->addForeignKey('winner', 'Winner', 'INTEGER', 'equipe', 'equipe_id', false, null, null);
         $this->addColumn('dados', 'Dados', 'LONGVARCHAR', false, null, null);
-    } // initialize()
+    }
 
     /**
      * Build the RelationMap objects for this table relationships
+     *
+     * @return void
      */
-    public function buildRelations()
+    public function buildRelations(): void
     {
         $this->addRelation('Prova', '\\Baja\\Model\\Prova', RelationMap::MANY_TO_ONE, array (
   0 =>
@@ -200,7 +276,7 @@ class TournamentTableMap extends TableMap
     1 => ':equipe_id',
   ),
 ), 'CASCADE', 'CASCADE', null, false);
-    } // buildRelations()
+    }
 
     /**
      * Adds an object to the instance pool.
@@ -211,9 +287,11 @@ class TournamentTableMap extends TableMap
      * and findPk*() calls.
      *
      * @param \Baja\Model\Tournament $obj A \Baja\Model\Tournament object.
-     * @param string $key             (optional) key to use for instance map (for performance boost if key was already calculated externally).
+     * @param string|null $key Key (optional) to use for instance map (for performance boost if key was already calculated externally).
+     *
+     * @return void
      */
-    public static function addInstanceToPool($obj, $key = null)
+    public static function addInstanceToPool(Tournament $obj, ?string $key = null): void
     {
         if (Propel::isInstancePoolingEnabled()) {
             if (null === $key) {
@@ -232,8 +310,10 @@ class TournamentTableMap extends TableMap
      * from the cache in order to prevent returning objects that no longer exist.
      *
      * @param mixed $value A \Baja\Model\Tournament object or a primary key value.
+     *
+     * @return void
      */
-    public static function removeInstanceFromPool($value)
+    public static function removeInstanceFromPool($value): void
     {
         if (Propel::isInstancePoolingEnabled() && null !== $value) {
             if (is_object($value) && $value instanceof \Baja\Model\Tournament) {
@@ -261,14 +341,14 @@ class TournamentTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, a serialize()d version of the primary key will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
-     * @return string The primary key hash of the row
+     * @return string|null The primary key hash of the row
      */
-    public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyHashFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): ?string
     {
         // If the PK cannot be derived from the row, return NULL.
         if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('ProvaId', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 2 + $offset : static::translateFieldName('MatchId', TableMap::TYPE_PHPNAME, $indexType)] === null) {
@@ -283,14 +363,14 @@ class TournamentTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, an array of the primary key columns will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
      * @return mixed The primary key of the row
      */
-    public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM)
     {
             $pks = [];
 
@@ -321,10 +401,10 @@ class TournamentTableMap extends TableMap
      * relative to a location on the PHP include_path.
      * (e.g. path.to.MyClass -> 'path/to/MyClass.php')
      *
-     * @param boolean $withPrefix Whether or not to return the path with the class name
+     * @param bool $withPrefix Whether to return the path with the class name
      * @return string path.to.ClassName
      */
-    public static function getOMClass($withPrefix = true)
+    public static function getOMClass(bool $withPrefix = true): string
     {
         return $withPrefix ? TournamentTableMap::CLASS_DEFAULT : TournamentTableMap::OM_CLASS;
     }
@@ -332,17 +412,17 @@ class TournamentTableMap extends TableMap
     /**
      * Populates an object of the default type or an object that inherit from the default.
      *
-     * @param array  $row       row returned by DataFetcher->fetch().
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Row returned by DataFetcher->fetch().
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType The index type of $row. Mostly DataFetcher->getIndexType().
                                  One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Tournament object, last column rank)
+     * @return array (Tournament object, last column rank)
      */
-    public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function populateObject(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): array
     {
         $key = TournamentTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
         if (null !== ($obj = TournamentTableMap::getInstanceFromPool($key))) {
@@ -358,7 +438,7 @@ class TournamentTableMap extends TableMap
             TournamentTableMap::addInstanceToPool($obj, $key);
         }
 
-        return array($obj, $col);
+        return [$obj, $col];
     }
 
     /**
@@ -366,13 +446,13 @@ class TournamentTableMap extends TableMap
      * objects that inherit from the default.
      *
      * @param DataFetcherInterface $dataFetcher
-     * @return array
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return array<object>
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function populateObjects(DataFetcherInterface $dataFetcher)
+    public static function populateObjects(DataFetcherInterface $dataFetcher): array
     {
-        $results = array();
+        $results = [];
 
         // set the class once to avoid overhead in the loop
         $cls = static::getOMClass(false);
@@ -402,12 +482,13 @@ class TournamentTableMap extends TableMap
      * XML schema will not be added to the select list and only loaded
      * on demand.
      *
-     * @param Criteria $criteria object containing the columns to add.
-     * @param string   $alias    optional table alias
-     * @throws PropelException Any exceptions caught during processing will be
+     * @param Criteria $criteria Object containing the columns to add.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
+     * @return void
      */
-    public static function addSelectColumns(Criteria $criteria, $alias = null)
+    public static function addSelectColumns(Criteria $criteria, ?string $alias = null): void
     {
         if (null === $alias) {
             $criteria->addSelectColumn(TournamentTableMap::COL_EVENTO_ID);
@@ -431,40 +512,64 @@ class TournamentTableMap extends TableMap
     }
 
     /**
+     * Remove all the columns needed to create a new object.
+     *
+     * Note: any columns that were marked with lazyLoad="true" in the
+     * XML schema will not be removed as they are only loaded on demand.
+     *
+     * @param Criteria $criteria Object containing the columns to remove.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
+     *                         rethrown wrapped into a PropelException.
+     * @return void
+     */
+    public static function removeSelectColumns(Criteria $criteria, ?string $alias = null): void
+    {
+        if (null === $alias) {
+            $criteria->removeSelectColumn(TournamentTableMap::COL_EVENTO_ID);
+            $criteria->removeSelectColumn(TournamentTableMap::COL_PROVA_ID);
+            $criteria->removeSelectColumn(TournamentTableMap::COL_MATCH_ID);
+            $criteria->removeSelectColumn(TournamentTableMap::COL_ROUND);
+            $criteria->removeSelectColumn(TournamentTableMap::COL_EQUIPE1_ID);
+            $criteria->removeSelectColumn(TournamentTableMap::COL_EQUIPE2_ID);
+            $criteria->removeSelectColumn(TournamentTableMap::COL_WINNER);
+            $criteria->removeSelectColumn(TournamentTableMap::COL_DADOS);
+        } else {
+            $criteria->removeSelectColumn($alias . '.evento_id');
+            $criteria->removeSelectColumn($alias . '.prova_id');
+            $criteria->removeSelectColumn($alias . '.match_id');
+            $criteria->removeSelectColumn($alias . '.round');
+            $criteria->removeSelectColumn($alias . '.equipe1_id');
+            $criteria->removeSelectColumn($alias . '.equipe2_id');
+            $criteria->removeSelectColumn($alias . '.winner');
+            $criteria->removeSelectColumn($alias . '.dados');
+        }
+    }
+
+    /**
      * Returns the TableMap related to this object.
      * This method is not needed for general use but a specific application could have a need.
      * @return TableMap
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function getTableMap()
+    public static function getTableMap(): TableMap
     {
         return Propel::getServiceContainer()->getDatabaseMap(TournamentTableMap::DATABASE_NAME)->getTable(TournamentTableMap::TABLE_NAME);
     }
 
     /**
-     * Add a TableMap instance to the database for this tableMap class.
-     */
-    public static function buildTableMap()
-    {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(TournamentTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(TournamentTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new TournamentTableMap());
-        }
-    }
-
-    /**
      * Performs a DELETE on the database, given a Tournament or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Tournament object or primary key or array of primary keys
+     * @param mixed $values Criteria or Tournament object or primary key or array of primary keys
      *              which is used to create the DELETE statement
-     * @param  ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @param ConnectionInterface $con the connection to use
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-     public static function doDelete($values, ConnectionInterface $con = null)
+     public static function doDelete($values, ?ConnectionInterface $con = null): int
      {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(TournamentTableMap::DATABASE_NAME);
@@ -482,7 +587,7 @@ class TournamentTableMap extends TableMap
             // the primary key passed to be an array of pkey values
             if (count($values) == count($values, COUNT_RECURSIVE)) {
                 // array is not multi-dimensional
-                $values = array($values);
+                $values = [$values];
             }
             foreach ($values as $value) {
                 $criterion = $criteria->getNewCriterion(TournamentTableMap::COL_EVENTO_ID, $value[0]);
@@ -511,7 +616,7 @@ class TournamentTableMap extends TableMap
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public static function doDeleteAll(ConnectionInterface $con = null)
+    public static function doDeleteAll(?ConnectionInterface $con = null): int
     {
         return TournamentQuery::create()->doDeleteAll($con);
     }
@@ -519,13 +624,13 @@ class TournamentTableMap extends TableMap
     /**
      * Performs an INSERT on the database, given a Tournament or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Tournament object containing data that is used to create the INSERT statement.
+     * @param mixed $criteria Criteria or Tournament object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
-     * @return mixed           The new primary key.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return mixed The new primary key.
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function doInsert($criteria, ConnectionInterface $con = null)
+    public static function doInsert($criteria, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(TournamentTableMap::DATABASE_NAME);
@@ -548,7 +653,4 @@ class TournamentTableMap extends TableMap
         });
     }
 
-} // TournamentTableMap
-// This is the static code needed to register the TableMap for this table with the main Propel class.
-//
-TournamentTableMap::buildTableMap();
+}

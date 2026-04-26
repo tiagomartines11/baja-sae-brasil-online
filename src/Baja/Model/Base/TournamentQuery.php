@@ -11,14 +11,12 @@ use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveQuery\ModelJoin;
-use Propel\Runtime\Collection\ObjectCollection;
+use Propel\Runtime\Collection\Collection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 
 /**
- * Base class that represents a query for the 'tournament' table.
- *
- *
+ * Base class that represents a query for the `tournament` table.
  *
  * @method     ChildTournamentQuery orderByEventoId($order = Criteria::ASC) Order by the evento_id column
  * @method     ChildTournamentQuery orderByProvaId($order = Criteria::ASC) Order by the prova_id column
@@ -68,20 +66,20 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     \Baja\Model\ProvaQuery|\Baja\Model\EquipeQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
- * @method     ChildTournament findOne(ConnectionInterface $con = null) Return the first ChildTournament matching the query
- * @method     ChildTournament findOneOrCreate(ConnectionInterface $con = null) Return the first ChildTournament matching the query, or a new ChildTournament object populated from the query conditions when no match is found
+ * @method     ChildTournament|null findOne(?ConnectionInterface $con = null) Return the first ChildTournament matching the query
+ * @method     ChildTournament findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildTournament matching the query, or a new ChildTournament object populated from the query conditions when no match is found
  *
- * @method     ChildTournament findOneByEventoId(string $evento_id) Return the first ChildTournament filtered by the evento_id column
- * @method     ChildTournament findOneByProvaId(string $prova_id) Return the first ChildTournament filtered by the prova_id column
- * @method     ChildTournament findOneByMatchId(int $match_id) Return the first ChildTournament filtered by the match_id column
- * @method     ChildTournament findOneByround(string $round) Return the first ChildTournament filtered by the round column
- * @method     ChildTournament findOneByEquipe1Id(string $equipe1_id) Return the first ChildTournament filtered by the equipe1_id column
- * @method     ChildTournament findOneByEquipe2Id(string $equipe2_id) Return the first ChildTournament filtered by the equipe2_id column
- * @method     ChildTournament findOneByWinner(int $winner) Return the first ChildTournament filtered by the winner column
- * @method     ChildTournament findOneByDados(string $dados) Return the first ChildTournament filtered by the dados column *
-
- * @method     ChildTournament requirePk($key, ConnectionInterface $con = null) Return the ChildTournament by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildTournament requireOne(ConnectionInterface $con = null) Return the first ChildTournament matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildTournament|null findOneByEventoId(string $evento_id) Return the first ChildTournament filtered by the evento_id column
+ * @method     ChildTournament|null findOneByProvaId(string $prova_id) Return the first ChildTournament filtered by the prova_id column
+ * @method     ChildTournament|null findOneByMatchId(int $match_id) Return the first ChildTournament filtered by the match_id column
+ * @method     ChildTournament|null findOneByround(string $round) Return the first ChildTournament filtered by the round column
+ * @method     ChildTournament|null findOneByEquipe1Id(string $equipe1_id) Return the first ChildTournament filtered by the equipe1_id column
+ * @method     ChildTournament|null findOneByEquipe2Id(string $equipe2_id) Return the first ChildTournament filtered by the equipe2_id column
+ * @method     ChildTournament|null findOneByWinner(int $winner) Return the first ChildTournament filtered by the winner column
+ * @method     ChildTournament|null findOneByDados(string $dados) Return the first ChildTournament filtered by the dados column
+ *
+ * @method     ChildTournament requirePk($key, ?ConnectionInterface $con = null) Return the ChildTournament by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildTournament requireOne(?ConnectionInterface $con = null) Return the first ChildTournament matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildTournament requireOneByEventoId(string $evento_id) Return the first ChildTournament filtered by the evento_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildTournament requireOneByProvaId(string $prova_id) Return the first ChildTournament filtered by the prova_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -92,17 +90,28 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildTournament requireOneByWinner(int $winner) Return the first ChildTournament filtered by the winner column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildTournament requireOneByDados(string $dados) Return the first ChildTournament filtered by the dados column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildTournament[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildTournament objects based on current ModelCriteria
- * @method     ChildTournament[]|ObjectCollection findByEventoId(string $evento_id) Return ChildTournament objects filtered by the evento_id column
- * @method     ChildTournament[]|ObjectCollection findByProvaId(string $prova_id) Return ChildTournament objects filtered by the prova_id column
- * @method     ChildTournament[]|ObjectCollection findByMatchId(int $match_id) Return ChildTournament objects filtered by the match_id column
- * @method     ChildTournament[]|ObjectCollection findByround(string $round) Return ChildTournament objects filtered by the round column
- * @method     ChildTournament[]|ObjectCollection findByEquipe1Id(string $equipe1_id) Return ChildTournament objects filtered by the equipe1_id column
- * @method     ChildTournament[]|ObjectCollection findByEquipe2Id(string $equipe2_id) Return ChildTournament objects filtered by the equipe2_id column
- * @method     ChildTournament[]|ObjectCollection findByWinner(int $winner) Return ChildTournament objects filtered by the winner column
- * @method     ChildTournament[]|ObjectCollection findByDados(string $dados) Return ChildTournament objects filtered by the dados column
- * @method     ChildTournament[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @method     ChildTournament[]|Collection find(?ConnectionInterface $con = null) Return ChildTournament objects based on current ModelCriteria
+ * @psalm-method Collection&\Traversable<ChildTournament> find(?ConnectionInterface $con = null) Return ChildTournament objects based on current ModelCriteria
  *
+ * @method     ChildTournament[]|Collection findByEventoId(string|array<string> $evento_id) Return ChildTournament objects filtered by the evento_id column
+ * @psalm-method Collection&\Traversable<ChildTournament> findByEventoId(string|array<string> $evento_id) Return ChildTournament objects filtered by the evento_id column
+ * @method     ChildTournament[]|Collection findByProvaId(string|array<string> $prova_id) Return ChildTournament objects filtered by the prova_id column
+ * @psalm-method Collection&\Traversable<ChildTournament> findByProvaId(string|array<string> $prova_id) Return ChildTournament objects filtered by the prova_id column
+ * @method     ChildTournament[]|Collection findByMatchId(int|array<int> $match_id) Return ChildTournament objects filtered by the match_id column
+ * @psalm-method Collection&\Traversable<ChildTournament> findByMatchId(int|array<int> $match_id) Return ChildTournament objects filtered by the match_id column
+ * @method     ChildTournament[]|Collection findByround(string|array<string> $round) Return ChildTournament objects filtered by the round column
+ * @psalm-method Collection&\Traversable<ChildTournament> findByround(string|array<string> $round) Return ChildTournament objects filtered by the round column
+ * @method     ChildTournament[]|Collection findByEquipe1Id(string|array<string> $equipe1_id) Return ChildTournament objects filtered by the equipe1_id column
+ * @psalm-method Collection&\Traversable<ChildTournament> findByEquipe1Id(string|array<string> $equipe1_id) Return ChildTournament objects filtered by the equipe1_id column
+ * @method     ChildTournament[]|Collection findByEquipe2Id(string|array<string> $equipe2_id) Return ChildTournament objects filtered by the equipe2_id column
+ * @psalm-method Collection&\Traversable<ChildTournament> findByEquipe2Id(string|array<string> $equipe2_id) Return ChildTournament objects filtered by the equipe2_id column
+ * @method     ChildTournament[]|Collection findByWinner(int|array<int> $winner) Return ChildTournament objects filtered by the winner column
+ * @psalm-method Collection&\Traversable<ChildTournament> findByWinner(int|array<int> $winner) Return ChildTournament objects filtered by the winner column
+ * @method     ChildTournament[]|Collection findByDados(string|array<string> $dados) Return ChildTournament objects filtered by the dados column
+ * @psalm-method Collection&\Traversable<ChildTournament> findByDados(string|array<string> $dados) Return ChildTournament objects filtered by the dados column
+ *
+ * @method     ChildTournament[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildTournament> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  */
 abstract class TournamentQuery extends ModelCriteria
 {
@@ -111,9 +120,9 @@ abstract class TournamentQuery extends ModelCriteria
     /**
      * Initializes internal state of \Baja\Model\Base\TournamentQuery object.
      *
-     * @param     string $dbName The database name
-     * @param     string $modelName The phpName of a model, e.g. 'Book'
-     * @param     string $modelAlias The alias for the model in this query, e.g. 'b'
+     * @param string $dbName The database name
+     * @param string $modelName The phpName of a model, e.g. 'Book'
+     * @param string $modelAlias The alias for the model in this query, e.g. 'b'
      */
     public function __construct($dbName = 'resultados', $modelName = '\\Baja\\Model\\Tournament', $modelAlias = null)
     {
@@ -123,12 +132,12 @@ abstract class TournamentQuery extends ModelCriteria
     /**
      * Returns a new ChildTournamentQuery object.
      *
-     * @param     string $modelAlias The alias of a model in the query
-     * @param     Criteria $criteria Optional Criteria to build the query from
+     * @param string $modelAlias The alias of a model in the query
+     * @param Criteria $criteria Optional Criteria to build the query from
      *
      * @return ChildTournamentQuery
      */
-    public static function create($modelAlias = null, Criteria $criteria = null)
+    public static function create(?string $modelAlias = null, ?Criteria $criteria = null): Criteria
     {
         if ($criteria instanceof ChildTournamentQuery) {
             return $criteria;
@@ -158,7 +167,7 @@ abstract class TournamentQuery extends ModelCriteria
      *
      * @return ChildTournament|array|mixed the result, formatted by the current formatter
      */
-    public function findPk($key, ConnectionInterface $con = null)
+    public function findPk($key, ?ConnectionInterface $con = null)
     {
         if ($key === null) {
             return null;
@@ -190,8 +199,8 @@ abstract class TournamentQuery extends ModelCriteria
      * Find object by primary key using raw SQL to go fast.
      * Bypass doSelect() and the object formatter by using generated code.
      *
-     * @param     mixed $key Primary key to use for the query
-     * @param     ConnectionInterface $con A connection object
+     * @param mixed $key Primary key to use for the query
+     * @param ConnectionInterface $con A connection object
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
@@ -225,8 +234,8 @@ abstract class TournamentQuery extends ModelCriteria
     /**
      * Find object by primary key.
      *
-     * @param     mixed $key Primary key to use for the query
-     * @param     ConnectionInterface $con A connection object
+     * @param mixed $key Primary key to use for the query
+     * @param ConnectionInterface $con A connection object
      *
      * @return ChildTournament|array|mixed the result, formatted by the current formatter
      */
@@ -246,12 +255,12 @@ abstract class TournamentQuery extends ModelCriteria
      * <code>
      * $objs = $c->findPks(array(array(12, 56), array(832, 123), array(123, 456)), $con);
      * </code>
-     * @param     array $keys Primary keys to use for the query
-     * @param     ConnectionInterface $con an optional connection object
+     * @param array $keys Primary keys to use for the query
+     * @param ConnectionInterface $con an optional connection object
      *
-     * @return ObjectCollection|array|mixed the list of results, formatted by the current formatter
+     * @return Collection|array|mixed the list of results, formatted by the current formatter
      */
-    public function findPks($keys, ConnectionInterface $con = null)
+    public function findPks($keys, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getReadConnection($this->getDbName());
@@ -268,9 +277,9 @@ abstract class TournamentQuery extends ModelCriteria
     /**
      * Filter the query by primary key
      *
-     * @param     mixed $key Primary key to use for the query
+     * @param mixed $key Primary key to use for the query
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
@@ -284,14 +293,16 @@ abstract class TournamentQuery extends ModelCriteria
     /**
      * Filter the query by a list of primary keys
      *
-     * @param     array $keys The list of primary key to use for the query
+     * @param array|int $keys The list of primary key to use for the query
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
         if (empty($keys)) {
-            return $this->add(null, '1<>1', Criteria::CUSTOM);
+            $this->add(null, '1<>1', Criteria::CUSTOM);
+
+            return $this;
         }
         foreach ($keys as $key) {
             $cton0 = $this->getNewCriterion(TournamentTableMap::COL_EVENTO_ID, $key[0], Criteria::EQUAL);
@@ -312,14 +323,15 @@ abstract class TournamentQuery extends ModelCriteria
      * <code>
      * $query->filterByEventoId('fooValue');   // WHERE evento_id = 'fooValue'
      * $query->filterByEventoId('%fooValue%', Criteria::LIKE); // WHERE evento_id LIKE '%fooValue%'
+     * $query->filterByEventoId(['foo', 'bar']); // WHERE evento_id IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $eventoId The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $eventoId The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEventoId($eventoId = null, $comparison = null)
+    public function filterByEventoId($eventoId = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($eventoId)) {
@@ -327,7 +339,9 @@ abstract class TournamentQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(TournamentTableMap::COL_EVENTO_ID, $eventoId, $comparison);
+        $this->addUsingAlias(TournamentTableMap::COL_EVENTO_ID, $eventoId, $comparison);
+
+        return $this;
     }
 
     /**
@@ -337,14 +351,15 @@ abstract class TournamentQuery extends ModelCriteria
      * <code>
      * $query->filterByProvaId('fooValue');   // WHERE prova_id = 'fooValue'
      * $query->filterByProvaId('%fooValue%', Criteria::LIKE); // WHERE prova_id LIKE '%fooValue%'
+     * $query->filterByProvaId(['foo', 'bar']); // WHERE prova_id IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $provaId The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $provaId The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByProvaId($provaId = null, $comparison = null)
+    public function filterByProvaId($provaId = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($provaId)) {
@@ -352,7 +367,9 @@ abstract class TournamentQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(TournamentTableMap::COL_PROVA_ID, $provaId, $comparison);
+        $this->addUsingAlias(TournamentTableMap::COL_PROVA_ID, $provaId, $comparison);
+
+        return $this;
     }
 
     /**
@@ -365,15 +382,15 @@ abstract class TournamentQuery extends ModelCriteria
      * $query->filterByMatchId(array('min' => 12)); // WHERE match_id > 12
      * </code>
      *
-     * @param     mixed $matchId The value to use as filter.
+     * @param mixed $matchId The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByMatchId($matchId = null, $comparison = null)
+    public function filterByMatchId($matchId = null, ?string $comparison = null)
     {
         if (is_array($matchId)) {
             $useMinMax = false;
@@ -393,7 +410,9 @@ abstract class TournamentQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(TournamentTableMap::COL_MATCH_ID, $matchId, $comparison);
+        $this->addUsingAlias(TournamentTableMap::COL_MATCH_ID, $matchId, $comparison);
+
+        return $this;
     }
 
     /**
@@ -403,14 +422,15 @@ abstract class TournamentQuery extends ModelCriteria
      * <code>
      * $query->filterByround('fooValue');   // WHERE round = 'fooValue'
      * $query->filterByround('%fooValue%', Criteria::LIKE); // WHERE round LIKE '%fooValue%'
+     * $query->filterByround(['foo', 'bar']); // WHERE round IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $round The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $round The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByround($round = null, $comparison = null)
+    public function filterByround($round = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($round)) {
@@ -418,7 +438,9 @@ abstract class TournamentQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(TournamentTableMap::COL_ROUND, $round, $comparison);
+        $this->addUsingAlias(TournamentTableMap::COL_ROUND, $round, $comparison);
+
+        return $this;
     }
 
     /**
@@ -428,14 +450,15 @@ abstract class TournamentQuery extends ModelCriteria
      * <code>
      * $query->filterByEquipe1Id('fooValue');   // WHERE equipe1_id = 'fooValue'
      * $query->filterByEquipe1Id('%fooValue%', Criteria::LIKE); // WHERE equipe1_id LIKE '%fooValue%'
+     * $query->filterByEquipe1Id(['foo', 'bar']); // WHERE equipe1_id IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $equipe1Id The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $equipe1Id The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEquipe1Id($equipe1Id = null, $comparison = null)
+    public function filterByEquipe1Id($equipe1Id = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($equipe1Id)) {
@@ -443,7 +466,9 @@ abstract class TournamentQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(TournamentTableMap::COL_EQUIPE1_ID, $equipe1Id, $comparison);
+        $this->addUsingAlias(TournamentTableMap::COL_EQUIPE1_ID, $equipe1Id, $comparison);
+
+        return $this;
     }
 
     /**
@@ -453,14 +478,15 @@ abstract class TournamentQuery extends ModelCriteria
      * <code>
      * $query->filterByEquipe2Id('fooValue');   // WHERE equipe2_id = 'fooValue'
      * $query->filterByEquipe2Id('%fooValue%', Criteria::LIKE); // WHERE equipe2_id LIKE '%fooValue%'
+     * $query->filterByEquipe2Id(['foo', 'bar']); // WHERE equipe2_id IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $equipe2Id The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $equipe2Id The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEquipe2Id($equipe2Id = null, $comparison = null)
+    public function filterByEquipe2Id($equipe2Id = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($equipe2Id)) {
@@ -468,7 +494,9 @@ abstract class TournamentQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(TournamentTableMap::COL_EQUIPE2_ID, $equipe2Id, $comparison);
+        $this->addUsingAlias(TournamentTableMap::COL_EQUIPE2_ID, $equipe2Id, $comparison);
+
+        return $this;
     }
 
     /**
@@ -483,15 +511,15 @@ abstract class TournamentQuery extends ModelCriteria
      *
      * @see       filterByEquipe()
      *
-     * @param     mixed $winner The value to use as filter.
+     * @param mixed $winner The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByWinner($winner = null, $comparison = null)
+    public function filterByWinner($winner = null, ?string $comparison = null)
     {
         if (is_array($winner)) {
             $useMinMax = false;
@@ -511,7 +539,9 @@ abstract class TournamentQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(TournamentTableMap::COL_WINNER, $winner, $comparison);
+        $this->addUsingAlias(TournamentTableMap::COL_WINNER, $winner, $comparison);
+
+        return $this;
     }
 
     /**
@@ -521,14 +551,15 @@ abstract class TournamentQuery extends ModelCriteria
      * <code>
      * $query->filterByDados('fooValue');   // WHERE dados = 'fooValue'
      * $query->filterByDados('%fooValue%', Criteria::LIKE); // WHERE dados LIKE '%fooValue%'
+     * $query->filterByDados(['foo', 'bar']); // WHERE dados IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $dados The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $dados The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByDados($dados = null, $comparison = null)
+    public function filterByDados($dados = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($dados)) {
@@ -536,20 +567,22 @@ abstract class TournamentQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(TournamentTableMap::COL_DADOS, $dados, $comparison);
+        $this->addUsingAlias(TournamentTableMap::COL_DADOS, $dados, $comparison);
+
+        return $this;
     }
 
     /**
      * Filter the query by a related \Baja\Model\Prova object
      *
      * @param \Baja\Model\Prova $prova The related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByProva($prova, $comparison = null)
+    public function filterByProva($prova, ?string $comparison = null)
     {
         if ($prova instanceof \Baja\Model\Prova) {
             return $this
@@ -563,12 +596,12 @@ abstract class TournamentQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Prova relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinProva($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinProva(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Prova');
@@ -597,9 +630,9 @@ abstract class TournamentQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\ProvaQuery A secondary query class using the current class as primary query
      */
@@ -611,16 +644,112 @@ abstract class TournamentQuery extends ModelCriteria
     }
 
     /**
+     * Use the Prova relation Prova object
+     *
+     * @param callable(\Baja\Model\ProvaQuery):\Baja\Model\ProvaQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withProvaQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useProvaQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Prova table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ProvaQuery The inner query object of the EXISTS statement
+     */
+    public function useProvaExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ProvaQuery */
+        $q = $this->useExistsQuery('Prova', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Prova table for a NOT EXISTS query.
+     *
+     * @see useProvaExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ProvaQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useProvaNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ProvaQuery */
+        $q = $this->useExistsQuery('Prova', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Prova table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ProvaQuery The inner query object of the IN statement
+     */
+    public function useInProvaQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ProvaQuery */
+        $q = $this->useInQuery('Prova', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Prova table for a NOT IN query.
+     *
+     * @see useProvaInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ProvaQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInProvaQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ProvaQuery */
+        $q = $this->useInQuery('Prova', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Equipe object
      *
      * @param \Baja\Model\Equipe $equipe The related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEquipe($equipe, $comparison = null)
+    public function filterByEquipe($equipe, ?string $comparison = null)
     {
         if ($equipe instanceof \Baja\Model\Equipe) {
             return $this
@@ -634,12 +763,12 @@ abstract class TournamentQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Equipe relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinEquipe($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    public function joinEquipe(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Equipe');
@@ -668,9 +797,9 @@ abstract class TournamentQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\EquipeQuery A secondary query class using the current class as primary query
      */
@@ -682,11 +811,107 @@ abstract class TournamentQuery extends ModelCriteria
     }
 
     /**
+     * Use the Equipe relation Equipe object
+     *
+     * @param callable(\Baja\Model\EquipeQuery):\Baja\Model\EquipeQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withEquipeQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::LEFT_JOIN
+    ) {
+        $relatedQuery = $this->useEquipeQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Equipe table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\EquipeQuery The inner query object of the EXISTS statement
+     */
+    public function useEquipeExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\EquipeQuery */
+        $q = $this->useExistsQuery('Equipe', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Equipe table for a NOT EXISTS query.
+     *
+     * @see useEquipeExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\EquipeQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useEquipeNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\EquipeQuery */
+        $q = $this->useExistsQuery('Equipe', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Equipe table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\EquipeQuery The inner query object of the IN statement
+     */
+    public function useInEquipeQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\EquipeQuery */
+        $q = $this->useInQuery('Equipe', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Equipe table for a NOT IN query.
+     *
+     * @see useEquipeInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\EquipeQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInEquipeQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\EquipeQuery */
+        $q = $this->useInQuery('Equipe', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Exclude object from result
      *
-     * @param   ChildTournament $tournament Object to remove from the list of results
+     * @param ChildTournament $tournament Object to remove from the list of results
      *
-     * @return $this|ChildTournamentQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function prune($tournament = null)
     {
@@ -706,7 +931,7 @@ abstract class TournamentQuery extends ModelCriteria
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public function doDeleteAll(ConnectionInterface $con = null)
+    public function doDeleteAll(?ConnectionInterface $con = null): int
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(TournamentTableMap::DATABASE_NAME);
@@ -731,12 +956,12 @@ abstract class TournamentQuery extends ModelCriteria
      * Performs a DELETE on the database based on the current ModelCriteria
      *
      * @param ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public function delete(ConnectionInterface $con = null)
+    public function delete(?ConnectionInterface $con = null): int
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(TournamentTableMap::DATABASE_NAME);
@@ -761,4 +986,4 @@ abstract class TournamentQuery extends ModelCriteria
         });
     }
 
-} // TournamentQuery
+}

@@ -11,14 +11,13 @@ use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveQuery\ModelJoin;
+use Propel\Runtime\Collection\Collection;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 
 /**
- * Base class that represents a query for the 'prova' table.
- *
- *
+ * Base class that represents a query for the `prova` table.
  *
  * @method     ChildProvaQuery orderByEventoId($order = Criteria::ASC) Order by the evento_id column
  * @method     ChildProvaQuery orderByProvaId($order = Criteria::ASC) Order by the prova_id column
@@ -80,21 +79,21 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     \Baja\Model\EventoQuery|\Baja\Model\InputQuery|\Baja\Model\TournamentQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
- * @method     ChildProva findOne(ConnectionInterface $con = null) Return the first ChildProva matching the query
- * @method     ChildProva findOneOrCreate(ConnectionInterface $con = null) Return the first ChildProva matching the query, or a new ChildProva object populated from the query conditions when no match is found
+ * @method     ChildProva|null findOne(?ConnectionInterface $con = null) Return the first ChildProva matching the query
+ * @method     ChildProva findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildProva matching the query, or a new ChildProva object populated from the query conditions when no match is found
  *
- * @method     ChildProva findOneByEventoId(string $evento_id) Return the first ChildProva filtered by the evento_id column
- * @method     ChildProva findOneByProvaId(string $prova_id) Return the first ChildProva filtered by the prova_id column
- * @method     ChildProva findOneByNome(string $nome) Return the first ChildProva filtered by the nome column
- * @method     ChildProva findOneByStatus(int $status) Return the first ChildProva filtered by the status column
- * @method     ChildProva findOneByTempo(int $tempo) Return the first ChildProva filtered by the tempo column
- * @method     ChildProva findOneByModificado(string $modificado) Return the first ChildProva filtered by the modificado column
- * @method     ChildProva findOneByParams(string $params) Return the first ChildProva filtered by the params column
- * @method     ChildProva findOneByParamsBackup(string $params_backup) Return the first ChildProva filtered by the params_backup column
- * @method     ChildProva findOneByTotals(string $totals) Return the first ChildProva filtered by the totals column *
-
- * @method     ChildProva requirePk($key, ConnectionInterface $con = null) Return the ChildProva by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildProva requireOne(ConnectionInterface $con = null) Return the first ChildProva matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildProva|null findOneByEventoId(string $evento_id) Return the first ChildProva filtered by the evento_id column
+ * @method     ChildProva|null findOneByProvaId(string $prova_id) Return the first ChildProva filtered by the prova_id column
+ * @method     ChildProva|null findOneByNome(string $nome) Return the first ChildProva filtered by the nome column
+ * @method     ChildProva|null findOneByStatus(int $status) Return the first ChildProva filtered by the status column
+ * @method     ChildProva|null findOneByTempo(int $tempo) Return the first ChildProva filtered by the tempo column
+ * @method     ChildProva|null findOneByModificado(string $modificado) Return the first ChildProva filtered by the modificado column
+ * @method     ChildProva|null findOneByParams(string $params) Return the first ChildProva filtered by the params column
+ * @method     ChildProva|null findOneByParamsBackup(string $params_backup) Return the first ChildProva filtered by the params_backup column
+ * @method     ChildProva|null findOneByTotals(string $totals) Return the first ChildProva filtered by the totals column
+ *
+ * @method     ChildProva requirePk($key, ?ConnectionInterface $con = null) Return the ChildProva by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildProva requireOne(?ConnectionInterface $con = null) Return the first ChildProva matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildProva requireOneByEventoId(string $evento_id) Return the first ChildProva filtered by the evento_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildProva requireOneByProvaId(string $prova_id) Return the first ChildProva filtered by the prova_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -106,18 +105,30 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildProva requireOneByParamsBackup(string $params_backup) Return the first ChildProva filtered by the params_backup column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildProva requireOneByTotals(string $totals) Return the first ChildProva filtered by the totals column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildProva[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildProva objects based on current ModelCriteria
- * @method     ChildProva[]|ObjectCollection findByEventoId(string $evento_id) Return ChildProva objects filtered by the evento_id column
- * @method     ChildProva[]|ObjectCollection findByProvaId(string $prova_id) Return ChildProva objects filtered by the prova_id column
- * @method     ChildProva[]|ObjectCollection findByNome(string $nome) Return ChildProva objects filtered by the nome column
- * @method     ChildProva[]|ObjectCollection findByStatus(int $status) Return ChildProva objects filtered by the status column
- * @method     ChildProva[]|ObjectCollection findByTempo(int $tempo) Return ChildProva objects filtered by the tempo column
- * @method     ChildProva[]|ObjectCollection findByModificado(string $modificado) Return ChildProva objects filtered by the modificado column
- * @method     ChildProva[]|ObjectCollection findByParams(string $params) Return ChildProva objects filtered by the params column
- * @method     ChildProva[]|ObjectCollection findByParamsBackup(string $params_backup) Return ChildProva objects filtered by the params_backup column
- * @method     ChildProva[]|ObjectCollection findByTotals(string $totals) Return ChildProva objects filtered by the totals column
- * @method     ChildProva[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @method     ChildProva[]|Collection find(?ConnectionInterface $con = null) Return ChildProva objects based on current ModelCriteria
+ * @psalm-method Collection&\Traversable<ChildProva> find(?ConnectionInterface $con = null) Return ChildProva objects based on current ModelCriteria
  *
+ * @method     ChildProva[]|Collection findByEventoId(string|array<string> $evento_id) Return ChildProva objects filtered by the evento_id column
+ * @psalm-method Collection&\Traversable<ChildProva> findByEventoId(string|array<string> $evento_id) Return ChildProva objects filtered by the evento_id column
+ * @method     ChildProva[]|Collection findByProvaId(string|array<string> $prova_id) Return ChildProva objects filtered by the prova_id column
+ * @psalm-method Collection&\Traversable<ChildProva> findByProvaId(string|array<string> $prova_id) Return ChildProva objects filtered by the prova_id column
+ * @method     ChildProva[]|Collection findByNome(string|array<string> $nome) Return ChildProva objects filtered by the nome column
+ * @psalm-method Collection&\Traversable<ChildProva> findByNome(string|array<string> $nome) Return ChildProva objects filtered by the nome column
+ * @method     ChildProva[]|Collection findByStatus(int|array<int> $status) Return ChildProva objects filtered by the status column
+ * @psalm-method Collection&\Traversable<ChildProva> findByStatus(int|array<int> $status) Return ChildProva objects filtered by the status column
+ * @method     ChildProva[]|Collection findByTempo(int|array<int> $tempo) Return ChildProva objects filtered by the tempo column
+ * @psalm-method Collection&\Traversable<ChildProva> findByTempo(int|array<int> $tempo) Return ChildProva objects filtered by the tempo column
+ * @method     ChildProva[]|Collection findByModificado(string|array<string> $modificado) Return ChildProva objects filtered by the modificado column
+ * @psalm-method Collection&\Traversable<ChildProva> findByModificado(string|array<string> $modificado) Return ChildProva objects filtered by the modificado column
+ * @method     ChildProva[]|Collection findByParams(string|array<string> $params) Return ChildProva objects filtered by the params column
+ * @psalm-method Collection&\Traversable<ChildProva> findByParams(string|array<string> $params) Return ChildProva objects filtered by the params column
+ * @method     ChildProva[]|Collection findByParamsBackup(string|array<string> $params_backup) Return ChildProva objects filtered by the params_backup column
+ * @psalm-method Collection&\Traversable<ChildProva> findByParamsBackup(string|array<string> $params_backup) Return ChildProva objects filtered by the params_backup column
+ * @method     ChildProva[]|Collection findByTotals(string|array<string> $totals) Return ChildProva objects filtered by the totals column
+ * @psalm-method Collection&\Traversable<ChildProva> findByTotals(string|array<string> $totals) Return ChildProva objects filtered by the totals column
+ *
+ * @method     ChildProva[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildProva> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  */
 abstract class ProvaQuery extends ModelCriteria
 {
@@ -126,9 +137,9 @@ abstract class ProvaQuery extends ModelCriteria
     /**
      * Initializes internal state of \Baja\Model\Base\ProvaQuery object.
      *
-     * @param     string $dbName The database name
-     * @param     string $modelName The phpName of a model, e.g. 'Book'
-     * @param     string $modelAlias The alias for the model in this query, e.g. 'b'
+     * @param string $dbName The database name
+     * @param string $modelName The phpName of a model, e.g. 'Book'
+     * @param string $modelAlias The alias for the model in this query, e.g. 'b'
      */
     public function __construct($dbName = 'resultados', $modelName = '\\Baja\\Model\\Prova', $modelAlias = null)
     {
@@ -138,12 +149,12 @@ abstract class ProvaQuery extends ModelCriteria
     /**
      * Returns a new ChildProvaQuery object.
      *
-     * @param     string $modelAlias The alias of a model in the query
-     * @param     Criteria $criteria Optional Criteria to build the query from
+     * @param string $modelAlias The alias of a model in the query
+     * @param Criteria $criteria Optional Criteria to build the query from
      *
      * @return ChildProvaQuery
      */
-    public static function create($modelAlias = null, Criteria $criteria = null)
+    public static function create(?string $modelAlias = null, ?Criteria $criteria = null): Criteria
     {
         if ($criteria instanceof ChildProvaQuery) {
             return $criteria;
@@ -173,7 +184,7 @@ abstract class ProvaQuery extends ModelCriteria
      *
      * @return ChildProva|array|mixed the result, formatted by the current formatter
      */
-    public function findPk($key, ConnectionInterface $con = null)
+    public function findPk($key, ?ConnectionInterface $con = null)
     {
         if ($key === null) {
             return null;
@@ -205,8 +216,8 @@ abstract class ProvaQuery extends ModelCriteria
      * Find object by primary key using raw SQL to go fast.
      * Bypass doSelect() and the object formatter by using generated code.
      *
-     * @param     mixed $key Primary key to use for the query
-     * @param     ConnectionInterface $con A connection object
+     * @param mixed $key Primary key to use for the query
+     * @param ConnectionInterface $con A connection object
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
@@ -239,8 +250,8 @@ abstract class ProvaQuery extends ModelCriteria
     /**
      * Find object by primary key.
      *
-     * @param     mixed $key Primary key to use for the query
-     * @param     ConnectionInterface $con A connection object
+     * @param mixed $key Primary key to use for the query
+     * @param ConnectionInterface $con A connection object
      *
      * @return ChildProva|array|mixed the result, formatted by the current formatter
      */
@@ -260,12 +271,12 @@ abstract class ProvaQuery extends ModelCriteria
      * <code>
      * $objs = $c->findPks(array(array(12, 56), array(832, 123), array(123, 456)), $con);
      * </code>
-     * @param     array $keys Primary keys to use for the query
-     * @param     ConnectionInterface $con an optional connection object
+     * @param array $keys Primary keys to use for the query
+     * @param ConnectionInterface $con an optional connection object
      *
-     * @return ObjectCollection|array|mixed the list of results, formatted by the current formatter
+     * @return Collection|array|mixed the list of results, formatted by the current formatter
      */
-    public function findPks($keys, ConnectionInterface $con = null)
+    public function findPks($keys, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getReadConnection($this->getDbName());
@@ -282,9 +293,9 @@ abstract class ProvaQuery extends ModelCriteria
     /**
      * Filter the query by primary key
      *
-     * @param     mixed $key Primary key to use for the query
+     * @param mixed $key Primary key to use for the query
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
@@ -297,14 +308,16 @@ abstract class ProvaQuery extends ModelCriteria
     /**
      * Filter the query by a list of primary keys
      *
-     * @param     array $keys The list of primary key to use for the query
+     * @param array|int $keys The list of primary key to use for the query
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
         if (empty($keys)) {
-            return $this->add(null, '1<>1', Criteria::CUSTOM);
+            $this->add(null, '1<>1', Criteria::CUSTOM);
+
+            return $this;
         }
         foreach ($keys as $key) {
             $cton0 = $this->getNewCriterion(ProvaTableMap::COL_EVENTO_ID, $key[0], Criteria::EQUAL);
@@ -323,14 +336,15 @@ abstract class ProvaQuery extends ModelCriteria
      * <code>
      * $query->filterByEventoId('fooValue');   // WHERE evento_id = 'fooValue'
      * $query->filterByEventoId('%fooValue%', Criteria::LIKE); // WHERE evento_id LIKE '%fooValue%'
+     * $query->filterByEventoId(['foo', 'bar']); // WHERE evento_id IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $eventoId The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $eventoId The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEventoId($eventoId = null, $comparison = null)
+    public function filterByEventoId($eventoId = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($eventoId)) {
@@ -338,7 +352,9 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $eventoId, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $eventoId, $comparison);
+
+        return $this;
     }
 
     /**
@@ -348,14 +364,15 @@ abstract class ProvaQuery extends ModelCriteria
      * <code>
      * $query->filterByProvaId('fooValue');   // WHERE prova_id = 'fooValue'
      * $query->filterByProvaId('%fooValue%', Criteria::LIKE); // WHERE prova_id LIKE '%fooValue%'
+     * $query->filterByProvaId(['foo', 'bar']); // WHERE prova_id IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $provaId The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $provaId The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByProvaId($provaId = null, $comparison = null)
+    public function filterByProvaId($provaId = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($provaId)) {
@@ -363,7 +380,9 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $provaId, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $provaId, $comparison);
+
+        return $this;
     }
 
     /**
@@ -373,14 +392,15 @@ abstract class ProvaQuery extends ModelCriteria
      * <code>
      * $query->filterByNome('fooValue');   // WHERE nome = 'fooValue'
      * $query->filterByNome('%fooValue%', Criteria::LIKE); // WHERE nome LIKE '%fooValue%'
+     * $query->filterByNome(['foo', 'bar']); // WHERE nome IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $nome The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $nome The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByNome($nome = null, $comparison = null)
+    public function filterByNome($nome = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($nome)) {
@@ -388,18 +408,20 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_NOME, $nome, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_NOME, $nome, $comparison);
+
+        return $this;
     }
 
     /**
      * Filter the query on the status column
      *
-     * @param     mixed $status The value to use as filter
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param mixed $status The value to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByStatus($status = null, $comparison = null)
+    public function filterByStatus($status = null, ?string $comparison = null)
     {
         $valueSet = ProvaTableMap::getValueSet(ProvaTableMap::COL_STATUS);
         if (is_scalar($status)) {
@@ -408,7 +430,7 @@ abstract class ProvaQuery extends ModelCriteria
             }
             $status = array_search($status, $valueSet);
         } elseif (is_array($status)) {
-            $convertedValues = array();
+            $convertedValues = [];
             foreach ($status as $value) {
                 if (!in_array($value, $valueSet)) {
                     throw new PropelException(sprintf('Value "%s" is not accepted in this enumerated column', $value));
@@ -421,7 +443,9 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_STATUS, $status, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_STATUS, $status, $comparison);
+
+        return $this;
     }
 
     /**
@@ -434,15 +458,15 @@ abstract class ProvaQuery extends ModelCriteria
      * $query->filterByTempo(array('min' => 12)); // WHERE tempo > 12
      * </code>
      *
-     * @param     mixed $tempo The value to use as filter.
+     * @param mixed $tempo The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByTempo($tempo = null, $comparison = null)
+    public function filterByTempo($tempo = null, ?string $comparison = null)
     {
         if (is_array($tempo)) {
             $useMinMax = false;
@@ -462,7 +486,9 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_TEMPO, $tempo, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_TEMPO, $tempo, $comparison);
+
+        return $this;
     }
 
     /**
@@ -475,17 +501,17 @@ abstract class ProvaQuery extends ModelCriteria
      * $query->filterByModificado(array('max' => 'yesterday')); // WHERE modificado > '2011-03-13'
      * </code>
      *
-     * @param     mixed $modificado The value to use as filter.
+     * @param mixed $modificado The value to use as filter.
      *              Values can be integers (unix timestamps), DateTime objects, or strings.
      *              Empty strings are treated as NULL.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByModificado($modificado = null, $comparison = null)
+    public function filterByModificado($modificado = null, ?string $comparison = null)
     {
         if (is_array($modificado)) {
             $useMinMax = false;
@@ -505,7 +531,9 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_MODIFICADO, $modificado, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_MODIFICADO, $modificado, $comparison);
+
+        return $this;
     }
 
     /**
@@ -515,14 +543,15 @@ abstract class ProvaQuery extends ModelCriteria
      * <code>
      * $query->filterByParams('fooValue');   // WHERE params = 'fooValue'
      * $query->filterByParams('%fooValue%', Criteria::LIKE); // WHERE params LIKE '%fooValue%'
+     * $query->filterByParams(['foo', 'bar']); // WHERE params IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $params The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $params The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByParams($params = null, $comparison = null)
+    public function filterByParams($params = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($params)) {
@@ -530,7 +559,9 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_PARAMS, $params, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_PARAMS, $params, $comparison);
+
+        return $this;
     }
 
     /**
@@ -540,14 +571,15 @@ abstract class ProvaQuery extends ModelCriteria
      * <code>
      * $query->filterByParamsBackup('fooValue');   // WHERE params_backup = 'fooValue'
      * $query->filterByParamsBackup('%fooValue%', Criteria::LIKE); // WHERE params_backup LIKE '%fooValue%'
+     * $query->filterByParamsBackup(['foo', 'bar']); // WHERE params_backup IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $paramsBackup The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $paramsBackup The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByParamsBackup($paramsBackup = null, $comparison = null)
+    public function filterByParamsBackup($paramsBackup = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($paramsBackup)) {
@@ -555,7 +587,9 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_PARAMS_BACKUP, $paramsBackup, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_PARAMS_BACKUP, $paramsBackup, $comparison);
+
+        return $this;
     }
 
     /**
@@ -565,14 +599,15 @@ abstract class ProvaQuery extends ModelCriteria
      * <code>
      * $query->filterByTotals('fooValue');   // WHERE totals = 'fooValue'
      * $query->filterByTotals('%fooValue%', Criteria::LIKE); // WHERE totals LIKE '%fooValue%'
+     * $query->filterByTotals(['foo', 'bar']); // WHERE totals IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $totals The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $totals The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByTotals($totals = null, $comparison = null)
+    public function filterByTotals($totals = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($totals)) {
@@ -580,20 +615,22 @@ abstract class ProvaQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(ProvaTableMap::COL_TOTALS, $totals, $comparison);
+        $this->addUsingAlias(ProvaTableMap::COL_TOTALS, $totals, $comparison);
+
+        return $this;
     }
 
     /**
      * Filter the query by a related \Baja\Model\Evento object
      *
      * @param \Baja\Model\Evento|ObjectCollection $evento The related object(s) to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
-     * @return ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEvento($evento, $comparison = null)
+    public function filterByEvento($evento, ?string $comparison = null)
     {
         if ($evento instanceof \Baja\Model\Evento) {
             return $this
@@ -603,8 +640,10 @@ abstract class ProvaQuery extends ModelCriteria
                 $comparison = Criteria::IN;
             }
 
-            return $this
+            $this
                 ->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $evento->toKeyValue('PrimaryKey', 'EventoId'), $comparison);
+
+            return $this;
         } else {
             throw new PropelException('filterByEvento() only accepts arguments of type \Baja\Model\Evento or Collection');
         }
@@ -613,12 +652,12 @@ abstract class ProvaQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Evento relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinEvento($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinEvento(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Evento');
@@ -647,9 +686,9 @@ abstract class ProvaQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\EventoQuery A secondary query class using the current class as primary query
      */
@@ -661,19 +700,117 @@ abstract class ProvaQuery extends ModelCriteria
     }
 
     /**
+     * Use the Evento relation Evento object
+     *
+     * @param callable(\Baja\Model\EventoQuery):\Baja\Model\EventoQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withEventoQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useEventoQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Evento table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\EventoQuery The inner query object of the EXISTS statement
+     */
+    public function useEventoExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\EventoQuery */
+        $q = $this->useExistsQuery('Evento', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Evento table for a NOT EXISTS query.
+     *
+     * @see useEventoExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\EventoQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useEventoNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\EventoQuery */
+        $q = $this->useExistsQuery('Evento', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Evento table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\EventoQuery The inner query object of the IN statement
+     */
+    public function useInEventoQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\EventoQuery */
+        $q = $this->useInQuery('Evento', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Evento table for a NOT IN query.
+     *
+     * @see useEventoInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\EventoQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInEventoQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\EventoQuery */
+        $q = $this->useInQuery('Evento', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Input object
      *
      * @param \Baja\Model\Input|ObjectCollection $input the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByInput($input, $comparison = null)
+    public function filterByInput($input, ?string $comparison = null)
     {
         if ($input instanceof \Baja\Model\Input) {
-            return $this
+            $this
                 ->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $input->getEventoId(), $comparison)
                 ->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $input->getProvaId(), $comparison);
+
+            return $this;
         } else {
             throw new PropelException('filterByInput() only accepts arguments of type \Baja\Model\Input');
         }
@@ -682,12 +819,12 @@ abstract class ProvaQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Input relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinInput($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinInput(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Input');
@@ -716,9 +853,9 @@ abstract class ProvaQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\InputQuery A secondary query class using the current class as primary query
      */
@@ -730,19 +867,117 @@ abstract class ProvaQuery extends ModelCriteria
     }
 
     /**
+     * Use the Input relation Input object
+     *
+     * @param callable(\Baja\Model\InputQuery):\Baja\Model\InputQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withInputQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useInputQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Input table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\InputQuery The inner query object of the EXISTS statement
+     */
+    public function useInputExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\InputQuery */
+        $q = $this->useExistsQuery('Input', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Input table for a NOT EXISTS query.
+     *
+     * @see useInputExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\InputQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useInputNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\InputQuery */
+        $q = $this->useExistsQuery('Input', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Input table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\InputQuery The inner query object of the IN statement
+     */
+    public function useInInputQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\InputQuery */
+        $q = $this->useInQuery('Input', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Input table for a NOT IN query.
+     *
+     * @see useInputInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\InputQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInInputQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\InputQuery */
+        $q = $this->useInQuery('Input', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Tournament object
      *
      * @param \Baja\Model\Tournament|ObjectCollection $tournament the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByTournament($tournament, $comparison = null)
+    public function filterByTournament($tournament, ?string $comparison = null)
     {
         if ($tournament instanceof \Baja\Model\Tournament) {
-            return $this
+            $this
                 ->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $tournament->getEventoId(), $comparison)
                 ->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $tournament->getProvaId(), $comparison);
+
+            return $this;
         } else {
             throw new PropelException('filterByTournament() only accepts arguments of type \Baja\Model\Tournament');
         }
@@ -751,12 +986,12 @@ abstract class ProvaQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Tournament relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinTournament($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinTournament(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Tournament');
@@ -785,9 +1020,9 @@ abstract class ProvaQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\TournamentQuery A secondary query class using the current class as primary query
      */
@@ -799,11 +1034,107 @@ abstract class ProvaQuery extends ModelCriteria
     }
 
     /**
+     * Use the Tournament relation Tournament object
+     *
+     * @param callable(\Baja\Model\TournamentQuery):\Baja\Model\TournamentQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withTournamentQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useTournamentQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Tournament table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\TournamentQuery The inner query object of the EXISTS statement
+     */
+    public function useTournamentExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\TournamentQuery */
+        $q = $this->useExistsQuery('Tournament', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Tournament table for a NOT EXISTS query.
+     *
+     * @see useTournamentExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\TournamentQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useTournamentNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\TournamentQuery */
+        $q = $this->useExistsQuery('Tournament', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Tournament table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\TournamentQuery The inner query object of the IN statement
+     */
+    public function useInTournamentQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\TournamentQuery */
+        $q = $this->useInQuery('Tournament', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Tournament table for a NOT IN query.
+     *
+     * @see useTournamentInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\TournamentQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInTournamentQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\TournamentQuery */
+        $q = $this->useInQuery('Tournament', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Exclude object from result
      *
-     * @param   ChildProva $prova Object to remove from the list of results
+     * @param ChildProva $prova Object to remove from the list of results
      *
-     * @return $this|ChildProvaQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function prune($prova = null)
     {
@@ -822,7 +1153,7 @@ abstract class ProvaQuery extends ModelCriteria
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public function doDeleteAll(ConnectionInterface $con = null)
+    public function doDeleteAll(?ConnectionInterface $con = null): int
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(ProvaTableMap::DATABASE_NAME);
@@ -847,12 +1178,12 @@ abstract class ProvaQuery extends ModelCriteria
      * Performs a DELETE on the database based on the current ModelCriteria
      *
      * @param ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public function delete(ConnectionInterface $con = null)
+    public function delete(?ConnectionInterface $con = null): int
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(ProvaTableMap::DATABASE_NAME);
@@ -877,4 +1208,4 @@ abstract class ProvaQuery extends ModelCriteria
         });
     }
 
-} // ProvaQuery
+}

@@ -33,119 +33,184 @@ class PremiacaoTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'Baja.Model.Map.PremiacaoTableMap';
+    public const CLASS_NAME = 'Baja.Model.Map.PremiacaoTableMap';
 
     /**
      * The default database name for this class
      */
-    const DATABASE_NAME = 'resultados';
+    public const DATABASE_NAME = 'resultados';
 
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'premiacao';
+    public const TABLE_NAME = 'premiacao';
+
+    /**
+     * The PHP name of this class (PascalCase)
+     */
+    public const TABLE_PHP_NAME = 'Premiacao';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\Baja\\Model\\Premiacao';
+    public const OM_CLASS = '\\Baja\\Model\\Premiacao';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'Baja.Model.Premiacao';
+    public const CLASS_DEFAULT = 'Baja.Model.Premiacao';
 
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 7;
+    public const NUM_COLUMNS = 7;
 
     /**
      * The number of lazy-loaded columns
      */
-    const NUM_LAZY_LOAD_COLUMNS = 0;
+    public const NUM_LAZY_LOAD_COLUMNS = 0;
 
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 7;
+    public const NUM_HYDRATE_COLUMNS = 7;
 
     /**
      * the column name for the premiacao_id field
      */
-    const COL_PREMIACAO_ID = 'premiacao.premiacao_id';
+    public const COL_PREMIACAO_ID = 'premiacao.premiacao_id';
 
     /**
      * the column name for the evento_id field
      */
-    const COL_EVENTO_ID = 'premiacao.evento_id';
+    public const COL_EVENTO_ID = 'premiacao.evento_id';
 
     /**
      * the column name for the nome field
      */
-    const COL_NOME = 'premiacao.nome';
+    public const COL_NOME = 'premiacao.nome';
 
     /**
      * the column name for the status field
      */
-    const COL_STATUS = 'premiacao.status';
+    public const COL_STATUS = 'premiacao.status';
 
     /**
      * the column name for the modificado field
      */
-    const COL_MODIFICADO = 'premiacao.modificado';
+    public const COL_MODIFICADO = 'premiacao.modificado';
 
     /**
      * the column name for the categorias field
      */
-    const COL_CATEGORIAS = 'premiacao.categorias';
+    public const COL_CATEGORIAS = 'premiacao.categorias';
 
     /**
      * the column name for the categorias_backup field
      */
-    const COL_CATEGORIAS_BACKUP = 'premiacao.categorias_backup';
+    public const COL_CATEGORIAS_BACKUP = 'premiacao.categorias_backup';
 
     /**
      * The default string format for model objects of the related table
      */
-    const DEFAULT_STRING_FORMAT = 'YAML';
+    public const DEFAULT_STRING_FORMAT = 'YAML';
 
     /**
      * holds an array of fieldnames
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('PremiacaoId', 'EventoId', 'Nome', 'Status', 'Modificado', 'Categorias', 'CategoriasBackup', ),
-        self::TYPE_CAMELNAME     => array('premiacaoId', 'eventoId', 'nome', 'status', 'modificado', 'categorias', 'categoriasBackup', ),
-        self::TYPE_COLNAME       => array(PremiacaoTableMap::COL_PREMIACAO_ID, PremiacaoTableMap::COL_EVENTO_ID, PremiacaoTableMap::COL_NOME, PremiacaoTableMap::COL_STATUS, PremiacaoTableMap::COL_MODIFICADO, PremiacaoTableMap::COL_CATEGORIAS, PremiacaoTableMap::COL_CATEGORIAS_BACKUP, ),
-        self::TYPE_FIELDNAME     => array('premiacao_id', 'evento_id', 'nome', 'status', 'modificado', 'categorias', 'categorias_backup', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, )
-    );
+    protected static $fieldNames = [
+        self::TYPE_PHPNAME       => ['PremiacaoId', 'EventoId', 'Nome', 'Status', 'Modificado', 'Categorias', 'CategoriasBackup', ],
+        self::TYPE_CAMELNAME     => ['premiacaoId', 'eventoId', 'nome', 'status', 'modificado', 'categorias', 'categoriasBackup', ],
+        self::TYPE_COLNAME       => [PremiacaoTableMap::COL_PREMIACAO_ID, PremiacaoTableMap::COL_EVENTO_ID, PremiacaoTableMap::COL_NOME, PremiacaoTableMap::COL_STATUS, PremiacaoTableMap::COL_MODIFICADO, PremiacaoTableMap::COL_CATEGORIAS, PremiacaoTableMap::COL_CATEGORIAS_BACKUP, ],
+        self::TYPE_FIELDNAME     => ['premiacao_id', 'evento_id', 'nome', 'status', 'modificado', 'categorias', 'categorias_backup', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, ]
+    ];
 
     /**
      * holds an array of keys for quick access to the fieldnames array
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('PremiacaoId' => 0, 'EventoId' => 1, 'Nome' => 2, 'Status' => 3, 'Modificado' => 4, 'Categorias' => 5, 'CategoriasBackup' => 6, ),
-        self::TYPE_CAMELNAME     => array('premiacaoId' => 0, 'eventoId' => 1, 'nome' => 2, 'status' => 3, 'modificado' => 4, 'categorias' => 5, 'categoriasBackup' => 6, ),
-        self::TYPE_COLNAME       => array(PremiacaoTableMap::COL_PREMIACAO_ID => 0, PremiacaoTableMap::COL_EVENTO_ID => 1, PremiacaoTableMap::COL_NOME => 2, PremiacaoTableMap::COL_STATUS => 3, PremiacaoTableMap::COL_MODIFICADO => 4, PremiacaoTableMap::COL_CATEGORIAS => 5, PremiacaoTableMap::COL_CATEGORIAS_BACKUP => 6, ),
-        self::TYPE_FIELDNAME     => array('premiacao_id' => 0, 'evento_id' => 1, 'nome' => 2, 'status' => 3, 'modificado' => 4, 'categorias' => 5, 'categorias_backup' => 6, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, )
-    );
+    protected static $fieldKeys = [
+        self::TYPE_PHPNAME       => ['PremiacaoId' => 0, 'EventoId' => 1, 'Nome' => 2, 'Status' => 3, 'Modificado' => 4, 'Categorias' => 5, 'CategoriasBackup' => 6, ],
+        self::TYPE_CAMELNAME     => ['premiacaoId' => 0, 'eventoId' => 1, 'nome' => 2, 'status' => 3, 'modificado' => 4, 'categorias' => 5, 'categoriasBackup' => 6, ],
+        self::TYPE_COLNAME       => [PremiacaoTableMap::COL_PREMIACAO_ID => 0, PremiacaoTableMap::COL_EVENTO_ID => 1, PremiacaoTableMap::COL_NOME => 2, PremiacaoTableMap::COL_STATUS => 3, PremiacaoTableMap::COL_MODIFICADO => 4, PremiacaoTableMap::COL_CATEGORIAS => 5, PremiacaoTableMap::COL_CATEGORIAS_BACKUP => 6, ],
+        self::TYPE_FIELDNAME     => ['premiacao_id' => 0, 'evento_id' => 1, 'nome' => 2, 'status' => 3, 'modificado' => 4, 'categorias' => 5, 'categorias_backup' => 6, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, ]
+    ];
+
+    /**
+     * Holds a list of column names and their normalized version.
+     *
+     * @var array<string>
+     */
+    protected $normalizedColumnNameMap = [
+        'PremiacaoId' => 'PREMIACAO_ID',
+        'Premiacao.PremiacaoId' => 'PREMIACAO_ID',
+        'premiacaoId' => 'PREMIACAO_ID',
+        'premiacao.premiacaoId' => 'PREMIACAO_ID',
+        'PremiacaoTableMap::COL_PREMIACAO_ID' => 'PREMIACAO_ID',
+        'COL_PREMIACAO_ID' => 'PREMIACAO_ID',
+        'premiacao_id' => 'PREMIACAO_ID',
+        'premiacao.premiacao_id' => 'PREMIACAO_ID',
+        'EventoId' => 'EVENTO_ID',
+        'Premiacao.EventoId' => 'EVENTO_ID',
+        'eventoId' => 'EVENTO_ID',
+        'premiacao.eventoId' => 'EVENTO_ID',
+        'PremiacaoTableMap::COL_EVENTO_ID' => 'EVENTO_ID',
+        'COL_EVENTO_ID' => 'EVENTO_ID',
+        'evento_id' => 'EVENTO_ID',
+        'premiacao.evento_id' => 'EVENTO_ID',
+        'Nome' => 'NOME',
+        'Premiacao.Nome' => 'NOME',
+        'nome' => 'NOME',
+        'premiacao.nome' => 'NOME',
+        'PremiacaoTableMap::COL_NOME' => 'NOME',
+        'COL_NOME' => 'NOME',
+        'Status' => 'STATUS',
+        'Premiacao.Status' => 'STATUS',
+        'status' => 'STATUS',
+        'premiacao.status' => 'STATUS',
+        'PremiacaoTableMap::COL_STATUS' => 'STATUS',
+        'COL_STATUS' => 'STATUS',
+        'Modificado' => 'MODIFICADO',
+        'Premiacao.Modificado' => 'MODIFICADO',
+        'modificado' => 'MODIFICADO',
+        'premiacao.modificado' => 'MODIFICADO',
+        'PremiacaoTableMap::COL_MODIFICADO' => 'MODIFICADO',
+        'COL_MODIFICADO' => 'MODIFICADO',
+        'Categorias' => 'CATEGORIAS',
+        'Premiacao.Categorias' => 'CATEGORIAS',
+        'categorias' => 'CATEGORIAS',
+        'premiacao.categorias' => 'CATEGORIAS',
+        'PremiacaoTableMap::COL_CATEGORIAS' => 'CATEGORIAS',
+        'COL_CATEGORIAS' => 'CATEGORIAS',
+        'CategoriasBackup' => 'CATEGORIAS_BACKUP',
+        'Premiacao.CategoriasBackup' => 'CATEGORIAS_BACKUP',
+        'categoriasBackup' => 'CATEGORIAS_BACKUP',
+        'premiacao.categoriasBackup' => 'CATEGORIAS_BACKUP',
+        'PremiacaoTableMap::COL_CATEGORIAS_BACKUP' => 'CATEGORIAS_BACKUP',
+        'COL_CATEGORIAS_BACKUP' => 'CATEGORIAS_BACKUP',
+        'categorias_backup' => 'CATEGORIAS_BACKUP',
+        'premiacao.categorias_backup' => 'CATEGORIAS_BACKUP',
+    ];
 
     /**
      * Initialize the table attributes and columns
      * Relations are not initialized by this method since they are lazy loaded
      *
      * @return void
-     * @throws PropelException
+     * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function initialize()
+    public function initialize(): void
     {
         // attributes
         $this->setName('premiacao');
@@ -162,12 +227,14 @@ class PremiacaoTableMap extends TableMap
         $this->addColumn('modificado', 'Modificado', 'TIMESTAMP', false, null, 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
         $this->addColumn('categorias', 'Categorias', 'LONGVARCHAR', false, null, null);
         $this->addColumn('categorias_backup', 'CategoriasBackup', 'LONGVARCHAR', false, null, null);
-    } // initialize()
+    }
 
     /**
      * Build the RelationMap objects for this table relationships
+     *
+     * @return void
      */
-    public function buildRelations()
+    public function buildRelations(): void
     {
         $this->addRelation('Evento', '\\Baja\\Model\\Evento', RelationMap::MANY_TO_ONE, array (
   0 =>
@@ -176,7 +243,7 @@ class PremiacaoTableMap extends TableMap
     1 => ':evento_id',
   ),
 ), 'CASCADE', 'CASCADE', null, false);
-    } // buildRelations()
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.
@@ -184,14 +251,14 @@ class PremiacaoTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, a serialize()d version of the primary key will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
-     * @return string The primary key hash of the row
+     * @return string|null The primary key hash of the row
      */
-    public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyHashFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): ?string
     {
         // If the PK cannot be derived from the row, return NULL.
         if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('PremiacaoId', TableMap::TYPE_PHPNAME, $indexType)] === null) {
@@ -206,14 +273,14 @@ class PremiacaoTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, an array of the primary key columns will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
      * @return mixed The primary key of the row
      */
-    public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM)
     {
         return (string) $row[
             $indexType == TableMap::TYPE_NUM
@@ -230,10 +297,10 @@ class PremiacaoTableMap extends TableMap
      * relative to a location on the PHP include_path.
      * (e.g. path.to.MyClass -> 'path/to/MyClass.php')
      *
-     * @param boolean $withPrefix Whether or not to return the path with the class name
+     * @param bool $withPrefix Whether to return the path with the class name
      * @return string path.to.ClassName
      */
-    public static function getOMClass($withPrefix = true)
+    public static function getOMClass(bool $withPrefix = true): string
     {
         return $withPrefix ? PremiacaoTableMap::CLASS_DEFAULT : PremiacaoTableMap::OM_CLASS;
     }
@@ -241,17 +308,17 @@ class PremiacaoTableMap extends TableMap
     /**
      * Populates an object of the default type or an object that inherit from the default.
      *
-     * @param array  $row       row returned by DataFetcher->fetch().
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Row returned by DataFetcher->fetch().
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType The index type of $row. Mostly DataFetcher->getIndexType().
                                  One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Premiacao object, last column rank)
+     * @return array (Premiacao object, last column rank)
      */
-    public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function populateObject(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): array
     {
         $key = PremiacaoTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
         if (null !== ($obj = PremiacaoTableMap::getInstanceFromPool($key))) {
@@ -267,7 +334,7 @@ class PremiacaoTableMap extends TableMap
             PremiacaoTableMap::addInstanceToPool($obj, $key);
         }
 
-        return array($obj, $col);
+        return [$obj, $col];
     }
 
     /**
@@ -275,13 +342,13 @@ class PremiacaoTableMap extends TableMap
      * objects that inherit from the default.
      *
      * @param DataFetcherInterface $dataFetcher
-     * @return array
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return array<object>
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function populateObjects(DataFetcherInterface $dataFetcher)
+    public static function populateObjects(DataFetcherInterface $dataFetcher): array
     {
-        $results = array();
+        $results = [];
 
         // set the class once to avoid overhead in the loop
         $cls = static::getOMClass(false);
@@ -311,12 +378,13 @@ class PremiacaoTableMap extends TableMap
      * XML schema will not be added to the select list and only loaded
      * on demand.
      *
-     * @param Criteria $criteria object containing the columns to add.
-     * @param string   $alias    optional table alias
-     * @throws PropelException Any exceptions caught during processing will be
+     * @param Criteria $criteria Object containing the columns to add.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
+     * @return void
      */
-    public static function addSelectColumns(Criteria $criteria, $alias = null)
+    public static function addSelectColumns(Criteria $criteria, ?string $alias = null): void
     {
         if (null === $alias) {
             $criteria->addSelectColumn(PremiacaoTableMap::COL_PREMIACAO_ID);
@@ -338,40 +406,62 @@ class PremiacaoTableMap extends TableMap
     }
 
     /**
+     * Remove all the columns needed to create a new object.
+     *
+     * Note: any columns that were marked with lazyLoad="true" in the
+     * XML schema will not be removed as they are only loaded on demand.
+     *
+     * @param Criteria $criteria Object containing the columns to remove.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
+     *                         rethrown wrapped into a PropelException.
+     * @return void
+     */
+    public static function removeSelectColumns(Criteria $criteria, ?string $alias = null): void
+    {
+        if (null === $alias) {
+            $criteria->removeSelectColumn(PremiacaoTableMap::COL_PREMIACAO_ID);
+            $criteria->removeSelectColumn(PremiacaoTableMap::COL_EVENTO_ID);
+            $criteria->removeSelectColumn(PremiacaoTableMap::COL_NOME);
+            $criteria->removeSelectColumn(PremiacaoTableMap::COL_STATUS);
+            $criteria->removeSelectColumn(PremiacaoTableMap::COL_MODIFICADO);
+            $criteria->removeSelectColumn(PremiacaoTableMap::COL_CATEGORIAS);
+            $criteria->removeSelectColumn(PremiacaoTableMap::COL_CATEGORIAS_BACKUP);
+        } else {
+            $criteria->removeSelectColumn($alias . '.premiacao_id');
+            $criteria->removeSelectColumn($alias . '.evento_id');
+            $criteria->removeSelectColumn($alias . '.nome');
+            $criteria->removeSelectColumn($alias . '.status');
+            $criteria->removeSelectColumn($alias . '.modificado');
+            $criteria->removeSelectColumn($alias . '.categorias');
+            $criteria->removeSelectColumn($alias . '.categorias_backup');
+        }
+    }
+
+    /**
      * Returns the TableMap related to this object.
      * This method is not needed for general use but a specific application could have a need.
      * @return TableMap
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function getTableMap()
+    public static function getTableMap(): TableMap
     {
         return Propel::getServiceContainer()->getDatabaseMap(PremiacaoTableMap::DATABASE_NAME)->getTable(PremiacaoTableMap::TABLE_NAME);
     }
 
     /**
-     * Add a TableMap instance to the database for this tableMap class.
-     */
-    public static function buildTableMap()
-    {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(PremiacaoTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(PremiacaoTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new PremiacaoTableMap());
-        }
-    }
-
-    /**
      * Performs a DELETE on the database, given a Premiacao or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Premiacao object or primary key or array of primary keys
+     * @param mixed $values Criteria or Premiacao object or primary key or array of primary keys
      *              which is used to create the DELETE statement
-     * @param  ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @param ConnectionInterface $con the connection to use
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-     public static function doDelete($values, ConnectionInterface $con = null)
+     public static function doDelete($values, ?ConnectionInterface $con = null): int
      {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(PremiacaoTableMap::DATABASE_NAME);
@@ -407,7 +497,7 @@ class PremiacaoTableMap extends TableMap
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public static function doDeleteAll(ConnectionInterface $con = null)
+    public static function doDeleteAll(?ConnectionInterface $con = null): int
     {
         return PremiacaoQuery::create()->doDeleteAll($con);
     }
@@ -415,13 +505,13 @@ class PremiacaoTableMap extends TableMap
     /**
      * Performs an INSERT on the database, given a Premiacao or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Premiacao object containing data that is used to create the INSERT statement.
+     * @param mixed $criteria Criteria or Premiacao object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
-     * @return mixed           The new primary key.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return mixed The new primary key.
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function doInsert($criteria, ConnectionInterface $con = null)
+    public static function doInsert($criteria, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(PremiacaoTableMap::DATABASE_NAME);
@@ -444,7 +534,4 @@ class PremiacaoTableMap extends TableMap
         });
     }
 
-} // PremiacaoTableMap
-// This is the static code needed to register the TableMap for this table with the main Propel class.
-//
-PremiacaoTableMap::buildTableMap();
+}

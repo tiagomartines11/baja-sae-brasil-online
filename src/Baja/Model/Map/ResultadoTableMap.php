@@ -33,114 +33,173 @@ class ResultadoTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'Baja.Model.Map.ResultadoTableMap';
+    public const CLASS_NAME = 'Baja.Model.Map.ResultadoTableMap';
 
     /**
      * The default database name for this class
      */
-    const DATABASE_NAME = 'resultados';
+    public const DATABASE_NAME = 'resultados';
 
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'resultado';
+    public const TABLE_NAME = 'resultado';
+
+    /**
+     * The PHP name of this class (PascalCase)
+     */
+    public const TABLE_PHP_NAME = 'Resultado';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\Baja\\Model\\Resultado';
+    public const OM_CLASS = '\\Baja\\Model\\Resultado';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'Baja.Model.Resultado';
+    public const CLASS_DEFAULT = 'Baja.Model.Resultado';
 
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 6;
+    public const NUM_COLUMNS = 6;
 
     /**
      * The number of lazy-loaded columns
      */
-    const NUM_LAZY_LOAD_COLUMNS = 0;
+    public const NUM_LAZY_LOAD_COLUMNS = 0;
 
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 6;
+    public const NUM_HYDRATE_COLUMNS = 6;
 
     /**
      * the column name for the resultado_id field
      */
-    const COL_RESULTADO_ID = 'resultado.resultado_id';
+    public const COL_RESULTADO_ID = 'resultado.resultado_id';
 
     /**
      * the column name for the evento_id field
      */
-    const COL_EVENTO_ID = 'resultado.evento_id';
+    public const COL_EVENTO_ID = 'resultado.evento_id';
 
     /**
      * the column name for the nome field
      */
-    const COL_NOME = 'resultado.nome';
+    public const COL_NOME = 'resultado.nome';
 
     /**
      * the column name for the inputs field
      */
-    const COL_INPUTS = 'resultado.inputs';
+    public const COL_INPUTS = 'resultado.inputs';
 
     /**
      * the column name for the colunas field
      */
-    const COL_COLUNAS = 'resultado.colunas';
+    public const COL_COLUNAS = 'resultado.colunas';
 
     /**
      * the column name for the colunas_backup field
      */
-    const COL_COLUNAS_BACKUP = 'resultado.colunas_backup';
+    public const COL_COLUNAS_BACKUP = 'resultado.colunas_backup';
 
     /**
      * The default string format for model objects of the related table
      */
-    const DEFAULT_STRING_FORMAT = 'YAML';
+    public const DEFAULT_STRING_FORMAT = 'YAML';
 
     /**
      * holds an array of fieldnames
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('ResultadoId', 'EventoId', 'Nome', 'Inputs', 'Colunas', 'ColunasBackup', ),
-        self::TYPE_CAMELNAME     => array('resultadoId', 'eventoId', 'nome', 'inputs', 'colunas', 'colunasBackup', ),
-        self::TYPE_COLNAME       => array(ResultadoTableMap::COL_RESULTADO_ID, ResultadoTableMap::COL_EVENTO_ID, ResultadoTableMap::COL_NOME, ResultadoTableMap::COL_INPUTS, ResultadoTableMap::COL_COLUNAS, ResultadoTableMap::COL_COLUNAS_BACKUP, ),
-        self::TYPE_FIELDNAME     => array('resultado_id', 'evento_id', 'nome', 'inputs', 'colunas', 'colunas_backup', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
-    );
+    protected static $fieldNames = [
+        self::TYPE_PHPNAME       => ['ResultadoId', 'EventoId', 'Nome', 'Inputs', 'Colunas', 'ColunasBackup', ],
+        self::TYPE_CAMELNAME     => ['resultadoId', 'eventoId', 'nome', 'inputs', 'colunas', 'colunasBackup', ],
+        self::TYPE_COLNAME       => [ResultadoTableMap::COL_RESULTADO_ID, ResultadoTableMap::COL_EVENTO_ID, ResultadoTableMap::COL_NOME, ResultadoTableMap::COL_INPUTS, ResultadoTableMap::COL_COLUNAS, ResultadoTableMap::COL_COLUNAS_BACKUP, ],
+        self::TYPE_FIELDNAME     => ['resultado_id', 'evento_id', 'nome', 'inputs', 'colunas', 'colunas_backup', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, ]
+    ];
 
     /**
      * holds an array of keys for quick access to the fieldnames array
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('ResultadoId' => 0, 'EventoId' => 1, 'Nome' => 2, 'Inputs' => 3, 'Colunas' => 4, 'ColunasBackup' => 5, ),
-        self::TYPE_CAMELNAME     => array('resultadoId' => 0, 'eventoId' => 1, 'nome' => 2, 'inputs' => 3, 'colunas' => 4, 'colunasBackup' => 5, ),
-        self::TYPE_COLNAME       => array(ResultadoTableMap::COL_RESULTADO_ID => 0, ResultadoTableMap::COL_EVENTO_ID => 1, ResultadoTableMap::COL_NOME => 2, ResultadoTableMap::COL_INPUTS => 3, ResultadoTableMap::COL_COLUNAS => 4, ResultadoTableMap::COL_COLUNAS_BACKUP => 5, ),
-        self::TYPE_FIELDNAME     => array('resultado_id' => 0, 'evento_id' => 1, 'nome' => 2, 'inputs' => 3, 'colunas' => 4, 'colunas_backup' => 5, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, )
-    );
+    protected static $fieldKeys = [
+        self::TYPE_PHPNAME       => ['ResultadoId' => 0, 'EventoId' => 1, 'Nome' => 2, 'Inputs' => 3, 'Colunas' => 4, 'ColunasBackup' => 5, ],
+        self::TYPE_CAMELNAME     => ['resultadoId' => 0, 'eventoId' => 1, 'nome' => 2, 'inputs' => 3, 'colunas' => 4, 'colunasBackup' => 5, ],
+        self::TYPE_COLNAME       => [ResultadoTableMap::COL_RESULTADO_ID => 0, ResultadoTableMap::COL_EVENTO_ID => 1, ResultadoTableMap::COL_NOME => 2, ResultadoTableMap::COL_INPUTS => 3, ResultadoTableMap::COL_COLUNAS => 4, ResultadoTableMap::COL_COLUNAS_BACKUP => 5, ],
+        self::TYPE_FIELDNAME     => ['resultado_id' => 0, 'evento_id' => 1, 'nome' => 2, 'inputs' => 3, 'colunas' => 4, 'colunas_backup' => 5, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, ]
+    ];
+
+    /**
+     * Holds a list of column names and their normalized version.
+     *
+     * @var array<string>
+     */
+    protected $normalizedColumnNameMap = [
+        'ResultadoId' => 'RESULTADO_ID',
+        'Resultado.ResultadoId' => 'RESULTADO_ID',
+        'resultadoId' => 'RESULTADO_ID',
+        'resultado.resultadoId' => 'RESULTADO_ID',
+        'ResultadoTableMap::COL_RESULTADO_ID' => 'RESULTADO_ID',
+        'COL_RESULTADO_ID' => 'RESULTADO_ID',
+        'resultado_id' => 'RESULTADO_ID',
+        'resultado.resultado_id' => 'RESULTADO_ID',
+        'EventoId' => 'EVENTO_ID',
+        'Resultado.EventoId' => 'EVENTO_ID',
+        'eventoId' => 'EVENTO_ID',
+        'resultado.eventoId' => 'EVENTO_ID',
+        'ResultadoTableMap::COL_EVENTO_ID' => 'EVENTO_ID',
+        'COL_EVENTO_ID' => 'EVENTO_ID',
+        'evento_id' => 'EVENTO_ID',
+        'resultado.evento_id' => 'EVENTO_ID',
+        'Nome' => 'NOME',
+        'Resultado.Nome' => 'NOME',
+        'nome' => 'NOME',
+        'resultado.nome' => 'NOME',
+        'ResultadoTableMap::COL_NOME' => 'NOME',
+        'COL_NOME' => 'NOME',
+        'Inputs' => 'INPUTS',
+        'Resultado.Inputs' => 'INPUTS',
+        'inputs' => 'INPUTS',
+        'resultado.inputs' => 'INPUTS',
+        'ResultadoTableMap::COL_INPUTS' => 'INPUTS',
+        'COL_INPUTS' => 'INPUTS',
+        'Colunas' => 'COLUNAS',
+        'Resultado.Colunas' => 'COLUNAS',
+        'colunas' => 'COLUNAS',
+        'resultado.colunas' => 'COLUNAS',
+        'ResultadoTableMap::COL_COLUNAS' => 'COLUNAS',
+        'COL_COLUNAS' => 'COLUNAS',
+        'ColunasBackup' => 'COLUNAS_BACKUP',
+        'Resultado.ColunasBackup' => 'COLUNAS_BACKUP',
+        'colunasBackup' => 'COLUNAS_BACKUP',
+        'resultado.colunasBackup' => 'COLUNAS_BACKUP',
+        'ResultadoTableMap::COL_COLUNAS_BACKUP' => 'COLUNAS_BACKUP',
+        'COL_COLUNAS_BACKUP' => 'COLUNAS_BACKUP',
+        'colunas_backup' => 'COLUNAS_BACKUP',
+        'resultado.colunas_backup' => 'COLUNAS_BACKUP',
+    ];
 
     /**
      * Initialize the table attributes and columns
      * Relations are not initialized by this method since they are lazy loaded
      *
      * @return void
-     * @throws PropelException
+     * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function initialize()
+    public function initialize(): void
     {
         // attributes
         $this->setName('resultado');
@@ -156,12 +215,14 @@ class ResultadoTableMap extends TableMap
         $this->addColumn('inputs', 'Inputs', 'ARRAY', false, null, null);
         $this->addColumn('colunas', 'Colunas', 'LONGVARCHAR', false, null, null);
         $this->addColumn('colunas_backup', 'ColunasBackup', 'LONGVARCHAR', false, null, null);
-    } // initialize()
+    }
 
     /**
      * Build the RelationMap objects for this table relationships
+     *
+     * @return void
      */
-    public function buildRelations()
+    public function buildRelations(): void
     {
         $this->addRelation('Evento', '\\Baja\\Model\\Evento', RelationMap::MANY_TO_ONE, array (
   0 =>
@@ -170,7 +231,7 @@ class ResultadoTableMap extends TableMap
     1 => ':evento_id',
   ),
 ), 'CASCADE', 'CASCADE', null, false);
-    } // buildRelations()
+    }
 
     /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.
@@ -178,14 +239,14 @@ class ResultadoTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, a serialize()d version of the primary key will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
-     * @return string The primary key hash of the row
+     * @return string|null The primary key hash of the row
      */
-    public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyHashFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): ?string
     {
         // If the PK cannot be derived from the row, return NULL.
         if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('ResultadoId', TableMap::TYPE_PHPNAME, $indexType)] === null) {
@@ -200,14 +261,14 @@ class ResultadoTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, an array of the primary key columns will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
      * @return mixed The primary key of the row
      */
-    public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM)
     {
         return (string) $row[
             $indexType == TableMap::TYPE_NUM
@@ -224,10 +285,10 @@ class ResultadoTableMap extends TableMap
      * relative to a location on the PHP include_path.
      * (e.g. path.to.MyClass -> 'path/to/MyClass.php')
      *
-     * @param boolean $withPrefix Whether or not to return the path with the class name
+     * @param bool $withPrefix Whether to return the path with the class name
      * @return string path.to.ClassName
      */
-    public static function getOMClass($withPrefix = true)
+    public static function getOMClass(bool $withPrefix = true): string
     {
         return $withPrefix ? ResultadoTableMap::CLASS_DEFAULT : ResultadoTableMap::OM_CLASS;
     }
@@ -235,17 +296,17 @@ class ResultadoTableMap extends TableMap
     /**
      * Populates an object of the default type or an object that inherit from the default.
      *
-     * @param array  $row       row returned by DataFetcher->fetch().
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Row returned by DataFetcher->fetch().
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType The index type of $row. Mostly DataFetcher->getIndexType().
                                  One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Resultado object, last column rank)
+     * @return array (Resultado object, last column rank)
      */
-    public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function populateObject(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): array
     {
         $key = ResultadoTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
         if (null !== ($obj = ResultadoTableMap::getInstanceFromPool($key))) {
@@ -261,7 +322,7 @@ class ResultadoTableMap extends TableMap
             ResultadoTableMap::addInstanceToPool($obj, $key);
         }
 
-        return array($obj, $col);
+        return [$obj, $col];
     }
 
     /**
@@ -269,13 +330,13 @@ class ResultadoTableMap extends TableMap
      * objects that inherit from the default.
      *
      * @param DataFetcherInterface $dataFetcher
-     * @return array
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return array<object>
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function populateObjects(DataFetcherInterface $dataFetcher)
+    public static function populateObjects(DataFetcherInterface $dataFetcher): array
     {
-        $results = array();
+        $results = [];
 
         // set the class once to avoid overhead in the loop
         $cls = static::getOMClass(false);
@@ -305,12 +366,13 @@ class ResultadoTableMap extends TableMap
      * XML schema will not be added to the select list and only loaded
      * on demand.
      *
-     * @param Criteria $criteria object containing the columns to add.
-     * @param string   $alias    optional table alias
-     * @throws PropelException Any exceptions caught during processing will be
+     * @param Criteria $criteria Object containing the columns to add.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
+     * @return void
      */
-    public static function addSelectColumns(Criteria $criteria, $alias = null)
+    public static function addSelectColumns(Criteria $criteria, ?string $alias = null): void
     {
         if (null === $alias) {
             $criteria->addSelectColumn(ResultadoTableMap::COL_RESULTADO_ID);
@@ -330,40 +392,60 @@ class ResultadoTableMap extends TableMap
     }
 
     /**
+     * Remove all the columns needed to create a new object.
+     *
+     * Note: any columns that were marked with lazyLoad="true" in the
+     * XML schema will not be removed as they are only loaded on demand.
+     *
+     * @param Criteria $criteria Object containing the columns to remove.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
+     *                         rethrown wrapped into a PropelException.
+     * @return void
+     */
+    public static function removeSelectColumns(Criteria $criteria, ?string $alias = null): void
+    {
+        if (null === $alias) {
+            $criteria->removeSelectColumn(ResultadoTableMap::COL_RESULTADO_ID);
+            $criteria->removeSelectColumn(ResultadoTableMap::COL_EVENTO_ID);
+            $criteria->removeSelectColumn(ResultadoTableMap::COL_NOME);
+            $criteria->removeSelectColumn(ResultadoTableMap::COL_INPUTS);
+            $criteria->removeSelectColumn(ResultadoTableMap::COL_COLUNAS);
+            $criteria->removeSelectColumn(ResultadoTableMap::COL_COLUNAS_BACKUP);
+        } else {
+            $criteria->removeSelectColumn($alias . '.resultado_id');
+            $criteria->removeSelectColumn($alias . '.evento_id');
+            $criteria->removeSelectColumn($alias . '.nome');
+            $criteria->removeSelectColumn($alias . '.inputs');
+            $criteria->removeSelectColumn($alias . '.colunas');
+            $criteria->removeSelectColumn($alias . '.colunas_backup');
+        }
+    }
+
+    /**
      * Returns the TableMap related to this object.
      * This method is not needed for general use but a specific application could have a need.
      * @return TableMap
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function getTableMap()
+    public static function getTableMap(): TableMap
     {
         return Propel::getServiceContainer()->getDatabaseMap(ResultadoTableMap::DATABASE_NAME)->getTable(ResultadoTableMap::TABLE_NAME);
     }
 
     /**
-     * Add a TableMap instance to the database for this tableMap class.
-     */
-    public static function buildTableMap()
-    {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(ResultadoTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(ResultadoTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new ResultadoTableMap());
-        }
-    }
-
-    /**
      * Performs a DELETE on the database, given a Resultado or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Resultado object or primary key or array of primary keys
+     * @param mixed $values Criteria or Resultado object or primary key or array of primary keys
      *              which is used to create the DELETE statement
-     * @param  ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @param ConnectionInterface $con the connection to use
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-     public static function doDelete($values, ConnectionInterface $con = null)
+     public static function doDelete($values, ?ConnectionInterface $con = null): int
      {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(ResultadoTableMap::DATABASE_NAME);
@@ -399,7 +481,7 @@ class ResultadoTableMap extends TableMap
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public static function doDeleteAll(ConnectionInterface $con = null)
+    public static function doDeleteAll(?ConnectionInterface $con = null): int
     {
         return ResultadoQuery::create()->doDeleteAll($con);
     }
@@ -407,13 +489,13 @@ class ResultadoTableMap extends TableMap
     /**
      * Performs an INSERT on the database, given a Resultado or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Resultado object containing data that is used to create the INSERT statement.
+     * @param mixed $criteria Criteria or Resultado object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
-     * @return mixed           The new primary key.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return mixed The new primary key.
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function doInsert($criteria, ConnectionInterface $con = null)
+    public static function doInsert($criteria, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(ResultadoTableMap::DATABASE_NAME);
@@ -436,7 +518,4 @@ class ResultadoTableMap extends TableMap
         });
     }
 
-} // ResultadoTableMap
-// This is the static code needed to register the TableMap for this table with the main Propel class.
-//
-ResultadoTableMap::buildTableMap();
+}

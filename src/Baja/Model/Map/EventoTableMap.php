@@ -33,177 +33,304 @@ class EventoTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'Baja.Model.Map.EventoTableMap';
+    public const CLASS_NAME = 'Baja.Model.Map.EventoTableMap';
 
     /**
      * The default database name for this class
      */
-    const DATABASE_NAME = 'resultados';
+    public const DATABASE_NAME = 'resultados';
 
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'evento';
+    public const TABLE_NAME = 'evento';
+
+    /**
+     * The PHP name of this class (PascalCase)
+     */
+    public const TABLE_PHP_NAME = 'Evento';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\Baja\\Model\\Evento';
+    public const OM_CLASS = '\\Baja\\Model\\Evento';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'Baja.Model.Evento';
+    public const CLASS_DEFAULT = 'Baja.Model.Evento';
 
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 16;
+    public const NUM_COLUMNS = 16;
 
     /**
      * The number of lazy-loaded columns
      */
-    const NUM_LAZY_LOAD_COLUMNS = 0;
+    public const NUM_LAZY_LOAD_COLUMNS = 0;
 
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 16;
+    public const NUM_HYDRATE_COLUMNS = 16;
 
     /**
      * the column name for the evento_id field
      */
-    const COL_EVENTO_ID = 'evento.evento_id';
+    public const COL_EVENTO_ID = 'evento.evento_id';
 
     /**
      * the column name for the titulo field
      */
-    const COL_TITULO = 'evento.titulo';
+    public const COL_TITULO = 'evento.titulo';
 
     /**
      * the column name for the nome field
      */
-    const COL_NOME = 'evento.nome';
+    public const COL_NOME = 'evento.nome';
 
     /**
      * the column name for the tipo field
      */
-    const COL_TIPO = 'evento.tipo';
+    public const COL_TIPO = 'evento.tipo';
 
     /**
      * the column name for the ano field
      */
-    const COL_ANO = 'evento.ano';
+    public const COL_ANO = 'evento.ano';
 
     /**
      * the column name for the menu field
      */
-    const COL_MENU = 'evento.menu';
+    public const COL_MENU = 'evento.menu';
 
     /**
      * the column name for the ativo field
      */
-    const COL_ATIVO = 'evento.ativo';
+    public const COL_ATIVO = 'evento.ativo';
 
     /**
      * the column name for the finalizado field
      */
-    const COL_FINALIZADO = 'evento.finalizado';
+    public const COL_FINALIZADO = 'evento.finalizado';
 
     /**
      * the column name for the spoilers field
      */
-    const COL_SPOILERS = 'evento.spoilers';
+    public const COL_SPOILERS = 'evento.spoilers';
 
     /**
      * the column name for the tem_certificado field
      */
-    const COL_TEM_CERTIFICADO = 'evento.tem_certificado';
+    public const COL_TEM_CERTIFICADO = 'evento.tem_certificado';
 
     /**
      * the column name for the presidente field
      */
-    const COL_PRESIDENTE = 'evento.presidente';
+    public const COL_PRESIDENTE = 'evento.presidente';
 
     /**
      * the column name for the data field
      */
-    const COL_DATA = 'evento.data';
+    public const COL_DATA = 'evento.data';
 
     /**
      * the column name for the mandato_presidente field
      */
-    const COL_MANDATO_PRESIDENTE = 'evento.mandato_presidente';
+    public const COL_MANDATO_PRESIDENTE = 'evento.mandato_presidente';
 
     /**
      * the column name for the local field
      */
-    const COL_LOCAL = 'evento.local';
+    public const COL_LOCAL = 'evento.local';
 
     /**
      * the column name for the em_andamento field
      */
-    const COL_EM_ANDAMENTO = 'evento.em_andamento';
+    public const COL_EM_ANDAMENTO = 'evento.em_andamento';
 
     /**
      * the column name for the carga_horaria field
      */
-    const COL_CARGA_HORARIA = 'evento.carga_horaria';
+    public const COL_CARGA_HORARIA = 'evento.carga_horaria';
 
     /**
      * The default string format for model objects of the related table
      */
-    const DEFAULT_STRING_FORMAT = 'YAML';
+    public const DEFAULT_STRING_FORMAT = 'YAML';
 
     /** The enumerated values for the tipo field */
-    const COL_TIPO_NACIONAL = 'Nacional';
-    const COL_TIPO_SUDESTE = 'Sudeste';
-    const COL_TIPO_NORDESTE = 'Nordeste';
-    const COL_TIPO_SUL = 'Sul';
+    public const COL_TIPO_NACIONAL = 'Nacional';
+    public const COL_TIPO_SUDESTE = 'Sudeste';
+    public const COL_TIPO_NORDESTE = 'Nordeste';
+    public const COL_TIPO_SUL = 'Sul';
 
     /**
      * holds an array of fieldnames
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('EventoId', 'Titulo', 'Nome', 'Tipo', 'Ano', 'Menu', 'Ativo', 'Finalizado', 'Spoilers', 'TemCertificado', 'Presidente', 'Data', 'MandatoPresidente', 'Local', 'EmAndamento', 'CargaHoraria', ),
-        self::TYPE_CAMELNAME     => array('eventoId', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', 'temCertificado', 'presidente', 'data', 'mandatoPresidente', 'local', 'emAndamento', 'cargaHoraria', ),
-        self::TYPE_COLNAME       => array(EventoTableMap::COL_EVENTO_ID, EventoTableMap::COL_TITULO, EventoTableMap::COL_NOME, EventoTableMap::COL_TIPO, EventoTableMap::COL_ANO, EventoTableMap::COL_MENU, EventoTableMap::COL_ATIVO, EventoTableMap::COL_FINALIZADO, EventoTableMap::COL_SPOILERS, EventoTableMap::COL_TEM_CERTIFICADO, EventoTableMap::COL_PRESIDENTE, EventoTableMap::COL_DATA, EventoTableMap::COL_MANDATO_PRESIDENTE, EventoTableMap::COL_LOCAL, EventoTableMap::COL_EM_ANDAMENTO, EventoTableMap::COL_CARGA_HORARIA, ),
-        self::TYPE_FIELDNAME     => array('evento_id', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', 'tem_certificado', 'presidente', 'data', 'mandato_presidente', 'local', 'em_andamento', 'carga_horaria', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, )
-    );
+    protected static $fieldNames = [
+        self::TYPE_PHPNAME       => ['EventoId', 'Titulo', 'Nome', 'Tipo', 'Ano', 'Menu', 'Ativo', 'Finalizado', 'Spoilers', 'TemCertificado', 'Presidente', 'Data', 'MandatoPresidente', 'Local', 'EmAndamento', 'CargaHoraria', ],
+        self::TYPE_CAMELNAME     => ['eventoId', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', 'temCertificado', 'presidente', 'data', 'mandatoPresidente', 'local', 'emAndamento', 'cargaHoraria', ],
+        self::TYPE_COLNAME       => [EventoTableMap::COL_EVENTO_ID, EventoTableMap::COL_TITULO, EventoTableMap::COL_NOME, EventoTableMap::COL_TIPO, EventoTableMap::COL_ANO, EventoTableMap::COL_MENU, EventoTableMap::COL_ATIVO, EventoTableMap::COL_FINALIZADO, EventoTableMap::COL_SPOILERS, EventoTableMap::COL_TEM_CERTIFICADO, EventoTableMap::COL_PRESIDENTE, EventoTableMap::COL_DATA, EventoTableMap::COL_MANDATO_PRESIDENTE, EventoTableMap::COL_LOCAL, EventoTableMap::COL_EM_ANDAMENTO, EventoTableMap::COL_CARGA_HORARIA, ],
+        self::TYPE_FIELDNAME     => ['evento_id', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', 'tem_certificado', 'presidente', 'data', 'mandato_presidente', 'local', 'em_andamento', 'carga_horaria', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ]
+    ];
 
     /**
      * holds an array of keys for quick access to the fieldnames array
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('EventoId' => 0, 'Titulo' => 1, 'Nome' => 2, 'Tipo' => 3, 'Ano' => 4, 'Menu' => 5, 'Ativo' => 6, 'Finalizado' => 7, 'Spoilers' => 8, 'TemCertificado' => 9, 'Presidente' => 10, 'Data' => 11, 'MandatoPresidente' => 12, 'Local' => 13, 'EmAndamento' => 14, 'CargaHoraria' => 15, ),
-        self::TYPE_CAMELNAME     => array('eventoId' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, 'temCertificado' => 9, 'presidente' => 10, 'data' => 11, 'mandatoPresidente' => 12, 'local' => 13, 'emAndamento' => 14, 'cargaHoraria' => 15, ),
-        self::TYPE_COLNAME       => array(EventoTableMap::COL_EVENTO_ID => 0, EventoTableMap::COL_TITULO => 1, EventoTableMap::COL_NOME => 2, EventoTableMap::COL_TIPO => 3, EventoTableMap::COL_ANO => 4, EventoTableMap::COL_MENU => 5, EventoTableMap::COL_ATIVO => 6, EventoTableMap::COL_FINALIZADO => 7, EventoTableMap::COL_SPOILERS => 8, EventoTableMap::COL_TEM_CERTIFICADO => 9, EventoTableMap::COL_PRESIDENTE => 10, EventoTableMap::COL_DATA => 11, EventoTableMap::COL_MANDATO_PRESIDENTE => 12, EventoTableMap::COL_LOCAL => 13, EventoTableMap::COL_EM_ANDAMENTO => 14, EventoTableMap::COL_CARGA_HORARIA => 15, ),
-        self::TYPE_FIELDNAME     => array('evento_id' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, 'tem_certificado' => 9, 'presidente' => 10, 'data' => 11, 'mandato_presidente' => 12, 'local' => 13, 'em_andamento' => 14, 'carga_horaria' => 15, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, )
-    );
+    protected static $fieldKeys = [
+        self::TYPE_PHPNAME       => ['EventoId' => 0, 'Titulo' => 1, 'Nome' => 2, 'Tipo' => 3, 'Ano' => 4, 'Menu' => 5, 'Ativo' => 6, 'Finalizado' => 7, 'Spoilers' => 8, 'TemCertificado' => 9, 'Presidente' => 10, 'Data' => 11, 'MandatoPresidente' => 12, 'Local' => 13, 'EmAndamento' => 14, 'CargaHoraria' => 15, ],
+        self::TYPE_CAMELNAME     => ['eventoId' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, 'temCertificado' => 9, 'presidente' => 10, 'data' => 11, 'mandatoPresidente' => 12, 'local' => 13, 'emAndamento' => 14, 'cargaHoraria' => 15, ],
+        self::TYPE_COLNAME       => [EventoTableMap::COL_EVENTO_ID => 0, EventoTableMap::COL_TITULO => 1, EventoTableMap::COL_NOME => 2, EventoTableMap::COL_TIPO => 3, EventoTableMap::COL_ANO => 4, EventoTableMap::COL_MENU => 5, EventoTableMap::COL_ATIVO => 6, EventoTableMap::COL_FINALIZADO => 7, EventoTableMap::COL_SPOILERS => 8, EventoTableMap::COL_TEM_CERTIFICADO => 9, EventoTableMap::COL_PRESIDENTE => 10, EventoTableMap::COL_DATA => 11, EventoTableMap::COL_MANDATO_PRESIDENTE => 12, EventoTableMap::COL_LOCAL => 13, EventoTableMap::COL_EM_ANDAMENTO => 14, EventoTableMap::COL_CARGA_HORARIA => 15, ],
+        self::TYPE_FIELDNAME     => ['evento_id' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, 'tem_certificado' => 9, 'presidente' => 10, 'data' => 11, 'mandato_presidente' => 12, 'local' => 13, 'em_andamento' => 14, 'carga_horaria' => 15, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ]
+    ];
 
-    /** The enumerated values for this table */
-    protected static $enumValueSets = array(
-                EventoTableMap::COL_TIPO => array(
+    /**
+     * Holds a list of column names and their normalized version.
+     *
+     * @var array<string>
+     */
+    protected $normalizedColumnNameMap = [
+        'EventoId' => 'EVENTO_ID',
+        'Evento.EventoId' => 'EVENTO_ID',
+        'eventoId' => 'EVENTO_ID',
+        'evento.eventoId' => 'EVENTO_ID',
+        'EventoTableMap::COL_EVENTO_ID' => 'EVENTO_ID',
+        'COL_EVENTO_ID' => 'EVENTO_ID',
+        'evento_id' => 'EVENTO_ID',
+        'evento.evento_id' => 'EVENTO_ID',
+        'Titulo' => 'TITULO',
+        'Evento.Titulo' => 'TITULO',
+        'titulo' => 'TITULO',
+        'evento.titulo' => 'TITULO',
+        'EventoTableMap::COL_TITULO' => 'TITULO',
+        'COL_TITULO' => 'TITULO',
+        'Nome' => 'NOME',
+        'Evento.Nome' => 'NOME',
+        'nome' => 'NOME',
+        'evento.nome' => 'NOME',
+        'EventoTableMap::COL_NOME' => 'NOME',
+        'COL_NOME' => 'NOME',
+        'Tipo' => 'TIPO',
+        'Evento.Tipo' => 'TIPO',
+        'tipo' => 'TIPO',
+        'evento.tipo' => 'TIPO',
+        'EventoTableMap::COL_TIPO' => 'TIPO',
+        'COL_TIPO' => 'TIPO',
+        'Ano' => 'ANO',
+        'Evento.Ano' => 'ANO',
+        'ano' => 'ANO',
+        'evento.ano' => 'ANO',
+        'EventoTableMap::COL_ANO' => 'ANO',
+        'COL_ANO' => 'ANO',
+        'Menu' => 'MENU',
+        'Evento.Menu' => 'MENU',
+        'menu' => 'MENU',
+        'evento.menu' => 'MENU',
+        'EventoTableMap::COL_MENU' => 'MENU',
+        'COL_MENU' => 'MENU',
+        'Ativo' => 'ATIVO',
+        'Evento.Ativo' => 'ATIVO',
+        'ativo' => 'ATIVO',
+        'evento.ativo' => 'ATIVO',
+        'EventoTableMap::COL_ATIVO' => 'ATIVO',
+        'COL_ATIVO' => 'ATIVO',
+        'Finalizado' => 'FINALIZADO',
+        'Evento.Finalizado' => 'FINALIZADO',
+        'finalizado' => 'FINALIZADO',
+        'evento.finalizado' => 'FINALIZADO',
+        'EventoTableMap::COL_FINALIZADO' => 'FINALIZADO',
+        'COL_FINALIZADO' => 'FINALIZADO',
+        'Spoilers' => 'SPOILERS',
+        'Evento.Spoilers' => 'SPOILERS',
+        'spoilers' => 'SPOILERS',
+        'evento.spoilers' => 'SPOILERS',
+        'EventoTableMap::COL_SPOILERS' => 'SPOILERS',
+        'COL_SPOILERS' => 'SPOILERS',
+        'TemCertificado' => 'TEM_CERTIFICADO',
+        'Evento.TemCertificado' => 'TEM_CERTIFICADO',
+        'temCertificado' => 'TEM_CERTIFICADO',
+        'evento.temCertificado' => 'TEM_CERTIFICADO',
+        'EventoTableMap::COL_TEM_CERTIFICADO' => 'TEM_CERTIFICADO',
+        'COL_TEM_CERTIFICADO' => 'TEM_CERTIFICADO',
+        'tem_certificado' => 'TEM_CERTIFICADO',
+        'evento.tem_certificado' => 'TEM_CERTIFICADO',
+        'Presidente' => 'PRESIDENTE',
+        'Evento.Presidente' => 'PRESIDENTE',
+        'presidente' => 'PRESIDENTE',
+        'evento.presidente' => 'PRESIDENTE',
+        'EventoTableMap::COL_PRESIDENTE' => 'PRESIDENTE',
+        'COL_PRESIDENTE' => 'PRESIDENTE',
+        'Data' => 'DATA',
+        'Evento.Data' => 'DATA',
+        'data' => 'DATA',
+        'evento.data' => 'DATA',
+        'EventoTableMap::COL_DATA' => 'DATA',
+        'COL_DATA' => 'DATA',
+        'MandatoPresidente' => 'MANDATO_PRESIDENTE',
+        'Evento.MandatoPresidente' => 'MANDATO_PRESIDENTE',
+        'mandatoPresidente' => 'MANDATO_PRESIDENTE',
+        'evento.mandatoPresidente' => 'MANDATO_PRESIDENTE',
+        'EventoTableMap::COL_MANDATO_PRESIDENTE' => 'MANDATO_PRESIDENTE',
+        'COL_MANDATO_PRESIDENTE' => 'MANDATO_PRESIDENTE',
+        'mandato_presidente' => 'MANDATO_PRESIDENTE',
+        'evento.mandato_presidente' => 'MANDATO_PRESIDENTE',
+        'Local' => 'LOCAL',
+        'Evento.Local' => 'LOCAL',
+        'local' => 'LOCAL',
+        'evento.local' => 'LOCAL',
+        'EventoTableMap::COL_LOCAL' => 'LOCAL',
+        'COL_LOCAL' => 'LOCAL',
+        'EmAndamento' => 'EM_ANDAMENTO',
+        'Evento.EmAndamento' => 'EM_ANDAMENTO',
+        'emAndamento' => 'EM_ANDAMENTO',
+        'evento.emAndamento' => 'EM_ANDAMENTO',
+        'EventoTableMap::COL_EM_ANDAMENTO' => 'EM_ANDAMENTO',
+        'COL_EM_ANDAMENTO' => 'EM_ANDAMENTO',
+        'em_andamento' => 'EM_ANDAMENTO',
+        'evento.em_andamento' => 'EM_ANDAMENTO',
+        'CargaHoraria' => 'CARGA_HORARIA',
+        'Evento.CargaHoraria' => 'CARGA_HORARIA',
+        'cargaHoraria' => 'CARGA_HORARIA',
+        'evento.cargaHoraria' => 'CARGA_HORARIA',
+        'EventoTableMap::COL_CARGA_HORARIA' => 'CARGA_HORARIA',
+        'COL_CARGA_HORARIA' => 'CARGA_HORARIA',
+        'carga_horaria' => 'CARGA_HORARIA',
+        'evento.carga_horaria' => 'CARGA_HORARIA',
+    ];
+
+    /**
+     * The enumerated values for this table
+     *
+     * @var array<string, array<string>>
+     */
+    protected static $enumValueSets = [
+                EventoTableMap::COL_TIPO => [
                             self::COL_TIPO_NACIONAL,
             self::COL_TIPO_SUDESTE,
             self::COL_TIPO_NORDESTE,
             self::COL_TIPO_SUL,
-        ),
-    );
+        ],
+    ];
 
     /**
      * Gets the list of values for all ENUM and SET columns
      * @return array
      */
-    public static function getValueSets()
+    public static function getValueSets(): array
     {
       return static::$enumValueSets;
     }
@@ -213,7 +340,7 @@ class EventoTableMap extends TableMap
      * @param string $colname
      * @return array list of possible values for the column
      */
-    public static function getValueSet($colname)
+    public static function getValueSet(string $colname): array
     {
         $valueSets = self::getValueSets();
 
@@ -225,9 +352,9 @@ class EventoTableMap extends TableMap
      * Relations are not initialized by this method since they are lazy loaded
      *
      * @return void
-     * @throws PropelException
+     * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function initialize()
+    public function initialize(): void
     {
         // attributes
         $this->setName('evento');
@@ -259,12 +386,14 @@ class EventoTableMap extends TableMap
         $this->addColumn('local', 'Local', 'VARCHAR', false, 120, null);
         $this->addColumn('em_andamento', 'EmAndamento', 'BOOLEAN', true, 1, false);
         $this->addColumn('carga_horaria', 'CargaHoraria', 'INTEGER', false, 4, null);
-    } // initialize()
+    }
 
     /**
      * Build the RelationMap objects for this table relationships
+     *
+     * @return void
      */
-    public function buildRelations()
+    public function buildRelations(): void
     {
         $this->addRelation('Equipe', '\\Baja\\Model\\Equipe', RelationMap::ONE_TO_MANY, array (
   0 =>
@@ -315,11 +444,12 @@ class EventoTableMap extends TableMap
     1 => ':evento_id',
   ),
 ), 'CASCADE', 'CASCADE', 'Senhas', false);
-    } // buildRelations()
+    }
+
     /**
      * Method to invalidate the instance pool of all tables related to evento     * by a foreign key with ON DELETE CASCADE
      */
-    public static function clearRelatedInstancePool()
+    public static function clearRelatedInstancePool(): void
     {
         // Invalidate objects in related instance pools,
         // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
@@ -338,14 +468,14 @@ class EventoTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, a serialize()d version of the primary key will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
-     * @return string The primary key hash of the row
+     * @return string|null The primary key hash of the row
      */
-    public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyHashFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): ?string
     {
         // If the PK cannot be derived from the row, return NULL.
         if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)] === null) {
@@ -360,14 +490,14 @@ class EventoTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, an array of the primary key columns will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
      * @return mixed The primary key of the row
      */
-    public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM)
     {
         return (string) $row[
             $indexType == TableMap::TYPE_NUM
@@ -384,10 +514,10 @@ class EventoTableMap extends TableMap
      * relative to a location on the PHP include_path.
      * (e.g. path.to.MyClass -> 'path/to/MyClass.php')
      *
-     * @param boolean $withPrefix Whether or not to return the path with the class name
+     * @param bool $withPrefix Whether to return the path with the class name
      * @return string path.to.ClassName
      */
-    public static function getOMClass($withPrefix = true)
+    public static function getOMClass(bool $withPrefix = true): string
     {
         return $withPrefix ? EventoTableMap::CLASS_DEFAULT : EventoTableMap::OM_CLASS;
     }
@@ -395,17 +525,17 @@ class EventoTableMap extends TableMap
     /**
      * Populates an object of the default type or an object that inherit from the default.
      *
-     * @param array  $row       row returned by DataFetcher->fetch().
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Row returned by DataFetcher->fetch().
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType The index type of $row. Mostly DataFetcher->getIndexType().
                                  One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Evento object, last column rank)
+     * @return array (Evento object, last column rank)
      */
-    public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function populateObject(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): array
     {
         $key = EventoTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
         if (null !== ($obj = EventoTableMap::getInstanceFromPool($key))) {
@@ -421,7 +551,7 @@ class EventoTableMap extends TableMap
             EventoTableMap::addInstanceToPool($obj, $key);
         }
 
-        return array($obj, $col);
+        return [$obj, $col];
     }
 
     /**
@@ -429,13 +559,13 @@ class EventoTableMap extends TableMap
      * objects that inherit from the default.
      *
      * @param DataFetcherInterface $dataFetcher
-     * @return array
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return array<object>
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function populateObjects(DataFetcherInterface $dataFetcher)
+    public static function populateObjects(DataFetcherInterface $dataFetcher): array
     {
-        $results = array();
+        $results = [];
 
         // set the class once to avoid overhead in the loop
         $cls = static::getOMClass(false);
@@ -465,12 +595,13 @@ class EventoTableMap extends TableMap
      * XML schema will not be added to the select list and only loaded
      * on demand.
      *
-     * @param Criteria $criteria object containing the columns to add.
-     * @param string   $alias    optional table alias
-     * @throws PropelException Any exceptions caught during processing will be
+     * @param Criteria $criteria Object containing the columns to add.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
+     * @return void
      */
-    public static function addSelectColumns(Criteria $criteria, $alias = null)
+    public static function addSelectColumns(Criteria $criteria, ?string $alias = null): void
     {
         if (null === $alias) {
             $criteria->addSelectColumn(EventoTableMap::COL_EVENTO_ID);
@@ -510,40 +641,80 @@ class EventoTableMap extends TableMap
     }
 
     /**
+     * Remove all the columns needed to create a new object.
+     *
+     * Note: any columns that were marked with lazyLoad="true" in the
+     * XML schema will not be removed as they are only loaded on demand.
+     *
+     * @param Criteria $criteria Object containing the columns to remove.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
+     *                         rethrown wrapped into a PropelException.
+     * @return void
+     */
+    public static function removeSelectColumns(Criteria $criteria, ?string $alias = null): void
+    {
+        if (null === $alias) {
+            $criteria->removeSelectColumn(EventoTableMap::COL_EVENTO_ID);
+            $criteria->removeSelectColumn(EventoTableMap::COL_TITULO);
+            $criteria->removeSelectColumn(EventoTableMap::COL_NOME);
+            $criteria->removeSelectColumn(EventoTableMap::COL_TIPO);
+            $criteria->removeSelectColumn(EventoTableMap::COL_ANO);
+            $criteria->removeSelectColumn(EventoTableMap::COL_MENU);
+            $criteria->removeSelectColumn(EventoTableMap::COL_ATIVO);
+            $criteria->removeSelectColumn(EventoTableMap::COL_FINALIZADO);
+            $criteria->removeSelectColumn(EventoTableMap::COL_SPOILERS);
+            $criteria->removeSelectColumn(EventoTableMap::COL_TEM_CERTIFICADO);
+            $criteria->removeSelectColumn(EventoTableMap::COL_PRESIDENTE);
+            $criteria->removeSelectColumn(EventoTableMap::COL_DATA);
+            $criteria->removeSelectColumn(EventoTableMap::COL_MANDATO_PRESIDENTE);
+            $criteria->removeSelectColumn(EventoTableMap::COL_LOCAL);
+            $criteria->removeSelectColumn(EventoTableMap::COL_EM_ANDAMENTO);
+            $criteria->removeSelectColumn(EventoTableMap::COL_CARGA_HORARIA);
+        } else {
+            $criteria->removeSelectColumn($alias . '.evento_id');
+            $criteria->removeSelectColumn($alias . '.titulo');
+            $criteria->removeSelectColumn($alias . '.nome');
+            $criteria->removeSelectColumn($alias . '.tipo');
+            $criteria->removeSelectColumn($alias . '.ano');
+            $criteria->removeSelectColumn($alias . '.menu');
+            $criteria->removeSelectColumn($alias . '.ativo');
+            $criteria->removeSelectColumn($alias . '.finalizado');
+            $criteria->removeSelectColumn($alias . '.spoilers');
+            $criteria->removeSelectColumn($alias . '.tem_certificado');
+            $criteria->removeSelectColumn($alias . '.presidente');
+            $criteria->removeSelectColumn($alias . '.data');
+            $criteria->removeSelectColumn($alias . '.mandato_presidente');
+            $criteria->removeSelectColumn($alias . '.local');
+            $criteria->removeSelectColumn($alias . '.em_andamento');
+            $criteria->removeSelectColumn($alias . '.carga_horaria');
+        }
+    }
+
+    /**
      * Returns the TableMap related to this object.
      * This method is not needed for general use but a specific application could have a need.
      * @return TableMap
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function getTableMap()
+    public static function getTableMap(): TableMap
     {
         return Propel::getServiceContainer()->getDatabaseMap(EventoTableMap::DATABASE_NAME)->getTable(EventoTableMap::TABLE_NAME);
     }
 
     /**
-     * Add a TableMap instance to the database for this tableMap class.
-     */
-    public static function buildTableMap()
-    {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(EventoTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(EventoTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new EventoTableMap());
-        }
-    }
-
-    /**
      * Performs a DELETE on the database, given a Evento or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Evento object or primary key or array of primary keys
+     * @param mixed $values Criteria or Evento object or primary key or array of primary keys
      *              which is used to create the DELETE statement
-     * @param  ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @param ConnectionInterface $con the connection to use
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-     public static function doDelete($values, ConnectionInterface $con = null)
+     public static function doDelete($values, ?ConnectionInterface $con = null): int
      {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(EventoTableMap::DATABASE_NAME);
@@ -579,7 +750,7 @@ class EventoTableMap extends TableMap
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public static function doDeleteAll(ConnectionInterface $con = null)
+    public static function doDeleteAll(?ConnectionInterface $con = null): int
     {
         return EventoQuery::create()->doDeleteAll($con);
     }
@@ -587,13 +758,13 @@ class EventoTableMap extends TableMap
     /**
      * Performs an INSERT on the database, given a Evento or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Evento object containing data that is used to create the INSERT statement.
+     * @param mixed $criteria Criteria or Evento object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
-     * @return mixed           The new primary key.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return mixed The new primary key.
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function doInsert($criteria, ConnectionInterface $con = null)
+    public static function doInsert($criteria, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(EventoTableMap::DATABASE_NAME);
@@ -616,7 +787,4 @@ class EventoTableMap extends TableMap
         });
     }
 
-} // EventoTableMap
-// This is the static code needed to register the TableMap for this table with the main Propel class.
-//
-EventoTableMap::buildTableMap();
+}

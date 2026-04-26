@@ -33,124 +33,199 @@ class SenhaTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'Baja.Model.Map.SenhaTableMap';
+    public const CLASS_NAME = 'Baja.Model.Map.SenhaTableMap';
 
     /**
      * The default database name for this class
      */
-    const DATABASE_NAME = 'resultados';
+    public const DATABASE_NAME = 'resultados';
 
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'senha';
+    public const TABLE_NAME = 'senha';
+
+    /**
+     * The PHP name of this class (PascalCase)
+     */
+    public const TABLE_PHP_NAME = 'Senha';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\Baja\\Model\\Senha';
+    public const OM_CLASS = '\\Baja\\Model\\Senha';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'Baja.Model.Senha';
+    public const CLASS_DEFAULT = 'Baja.Model.Senha';
 
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 8;
+    public const NUM_COLUMNS = 8;
 
     /**
      * The number of lazy-loaded columns
      */
-    const NUM_LAZY_LOAD_COLUMNS = 0;
+    public const NUM_LAZY_LOAD_COLUMNS = 0;
 
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 8;
+    public const NUM_HYDRATE_COLUMNS = 8;
 
     /**
      * the column name for the evento_id field
      */
-    const COL_EVENTO_ID = 'senha.evento_id';
+    public const COL_EVENTO_ID = 'senha.evento_id';
 
     /**
      * the column name for the fila_id field
      */
-    const COL_FILA_ID = 'senha.fila_id';
+    public const COL_FILA_ID = 'senha.fila_id';
 
     /**
      * the column name for the senha field
      */
-    const COL_SENHA = 'senha.senha';
+    public const COL_SENHA = 'senha.senha';
 
     /**
      * the column name for the equipe_id field
      */
-    const COL_EQUIPE_ID = 'senha.equipe_id';
+    public const COL_EQUIPE_ID = 'senha.equipe_id';
 
     /**
      * the column name for the status field
      */
-    const COL_STATUS = 'senha.status';
+    public const COL_STATUS = 'senha.status';
 
     /**
      * the column name for the ts_requisicao field
      */
-    const COL_TS_REQUISICAO = 'senha.ts_requisicao';
+    public const COL_TS_REQUISICAO = 'senha.ts_requisicao';
 
     /**
      * the column name for the ts_status field
      */
-    const COL_TS_STATUS = 'senha.ts_status';
+    public const COL_TS_STATUS = 'senha.ts_status';
 
     /**
      * the column name for the detalhes field
      */
-    const COL_DETALHES = 'senha.detalhes';
+    public const COL_DETALHES = 'senha.detalhes';
 
     /**
      * The default string format for model objects of the related table
      */
-    const DEFAULT_STRING_FORMAT = 'YAML';
+    public const DEFAULT_STRING_FORMAT = 'YAML';
 
     /**
      * holds an array of fieldnames
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('EventoId', 'FilaId', 'Senha', 'EquipeId', 'Status', 'TsRequisicao', 'TsStatus', 'Detalhes', ),
-        self::TYPE_CAMELNAME     => array('eventoId', 'filaId', 'senha', 'equipeId', 'status', 'tsRequisicao', 'tsStatus', 'detalhes', ),
-        self::TYPE_COLNAME       => array(SenhaTableMap::COL_EVENTO_ID, SenhaTableMap::COL_FILA_ID, SenhaTableMap::COL_SENHA, SenhaTableMap::COL_EQUIPE_ID, SenhaTableMap::COL_STATUS, SenhaTableMap::COL_TS_REQUISICAO, SenhaTableMap::COL_TS_STATUS, SenhaTableMap::COL_DETALHES, ),
-        self::TYPE_FIELDNAME     => array('evento_id', 'fila_id', 'senha', 'equipe_id', 'status', 'ts_requisicao', 'ts_status', 'detalhes', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, )
-    );
+    protected static $fieldNames = [
+        self::TYPE_PHPNAME       => ['EventoId', 'FilaId', 'Senha', 'EquipeId', 'Status', 'TsRequisicao', 'TsStatus', 'Detalhes', ],
+        self::TYPE_CAMELNAME     => ['eventoId', 'filaId', 'senha', 'equipeId', 'status', 'tsRequisicao', 'tsStatus', 'detalhes', ],
+        self::TYPE_COLNAME       => [SenhaTableMap::COL_EVENTO_ID, SenhaTableMap::COL_FILA_ID, SenhaTableMap::COL_SENHA, SenhaTableMap::COL_EQUIPE_ID, SenhaTableMap::COL_STATUS, SenhaTableMap::COL_TS_REQUISICAO, SenhaTableMap::COL_TS_STATUS, SenhaTableMap::COL_DETALHES, ],
+        self::TYPE_FIELDNAME     => ['evento_id', 'fila_id', 'senha', 'equipe_id', 'status', 'ts_requisicao', 'ts_status', 'detalhes', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, ]
+    ];
 
     /**
      * holds an array of keys for quick access to the fieldnames array
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('EventoId' => 0, 'FilaId' => 1, 'Senha' => 2, 'EquipeId' => 3, 'Status' => 4, 'TsRequisicao' => 5, 'TsStatus' => 6, 'Detalhes' => 7, ),
-        self::TYPE_CAMELNAME     => array('eventoId' => 0, 'filaId' => 1, 'senha' => 2, 'equipeId' => 3, 'status' => 4, 'tsRequisicao' => 5, 'tsStatus' => 6, 'detalhes' => 7, ),
-        self::TYPE_COLNAME       => array(SenhaTableMap::COL_EVENTO_ID => 0, SenhaTableMap::COL_FILA_ID => 1, SenhaTableMap::COL_SENHA => 2, SenhaTableMap::COL_EQUIPE_ID => 3, SenhaTableMap::COL_STATUS => 4, SenhaTableMap::COL_TS_REQUISICAO => 5, SenhaTableMap::COL_TS_STATUS => 6, SenhaTableMap::COL_DETALHES => 7, ),
-        self::TYPE_FIELDNAME     => array('evento_id' => 0, 'fila_id' => 1, 'senha' => 2, 'equipe_id' => 3, 'status' => 4, 'ts_requisicao' => 5, 'ts_status' => 6, 'detalhes' => 7, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, )
-    );
+    protected static $fieldKeys = [
+        self::TYPE_PHPNAME       => ['EventoId' => 0, 'FilaId' => 1, 'Senha' => 2, 'EquipeId' => 3, 'Status' => 4, 'TsRequisicao' => 5, 'TsStatus' => 6, 'Detalhes' => 7, ],
+        self::TYPE_CAMELNAME     => ['eventoId' => 0, 'filaId' => 1, 'senha' => 2, 'equipeId' => 3, 'status' => 4, 'tsRequisicao' => 5, 'tsStatus' => 6, 'detalhes' => 7, ],
+        self::TYPE_COLNAME       => [SenhaTableMap::COL_EVENTO_ID => 0, SenhaTableMap::COL_FILA_ID => 1, SenhaTableMap::COL_SENHA => 2, SenhaTableMap::COL_EQUIPE_ID => 3, SenhaTableMap::COL_STATUS => 4, SenhaTableMap::COL_TS_REQUISICAO => 5, SenhaTableMap::COL_TS_STATUS => 6, SenhaTableMap::COL_DETALHES => 7, ],
+        self::TYPE_FIELDNAME     => ['evento_id' => 0, 'fila_id' => 1, 'senha' => 2, 'equipe_id' => 3, 'status' => 4, 'ts_requisicao' => 5, 'ts_status' => 6, 'detalhes' => 7, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, ]
+    ];
+
+    /**
+     * Holds a list of column names and their normalized version.
+     *
+     * @var array<string>
+     */
+    protected $normalizedColumnNameMap = [
+        'EventoId' => 'EVENTO_ID',
+        'Senha.EventoId' => 'EVENTO_ID',
+        'eventoId' => 'EVENTO_ID',
+        'senha.eventoId' => 'EVENTO_ID',
+        'SenhaTableMap::COL_EVENTO_ID' => 'EVENTO_ID',
+        'COL_EVENTO_ID' => 'EVENTO_ID',
+        'evento_id' => 'EVENTO_ID',
+        'senha.evento_id' => 'EVENTO_ID',
+        'FilaId' => 'FILA_ID',
+        'Senha.FilaId' => 'FILA_ID',
+        'filaId' => 'FILA_ID',
+        'senha.filaId' => 'FILA_ID',
+        'SenhaTableMap::COL_FILA_ID' => 'FILA_ID',
+        'COL_FILA_ID' => 'FILA_ID',
+        'fila_id' => 'FILA_ID',
+        'senha.fila_id' => 'FILA_ID',
+        'Senha' => 'SENHA',
+        'Senha.Senha' => 'SENHA',
+        'senha' => 'SENHA',
+        'senha.senha' => 'SENHA',
+        'SenhaTableMap::COL_SENHA' => 'SENHA',
+        'COL_SENHA' => 'SENHA',
+        'EquipeId' => 'EQUIPE_ID',
+        'Senha.EquipeId' => 'EQUIPE_ID',
+        'equipeId' => 'EQUIPE_ID',
+        'senha.equipeId' => 'EQUIPE_ID',
+        'SenhaTableMap::COL_EQUIPE_ID' => 'EQUIPE_ID',
+        'COL_EQUIPE_ID' => 'EQUIPE_ID',
+        'equipe_id' => 'EQUIPE_ID',
+        'senha.equipe_id' => 'EQUIPE_ID',
+        'Status' => 'STATUS',
+        'Senha.Status' => 'STATUS',
+        'status' => 'STATUS',
+        'senha.status' => 'STATUS',
+        'SenhaTableMap::COL_STATUS' => 'STATUS',
+        'COL_STATUS' => 'STATUS',
+        'TsRequisicao' => 'TS_REQUISICAO',
+        'Senha.TsRequisicao' => 'TS_REQUISICAO',
+        'tsRequisicao' => 'TS_REQUISICAO',
+        'senha.tsRequisicao' => 'TS_REQUISICAO',
+        'SenhaTableMap::COL_TS_REQUISICAO' => 'TS_REQUISICAO',
+        'COL_TS_REQUISICAO' => 'TS_REQUISICAO',
+        'ts_requisicao' => 'TS_REQUISICAO',
+        'senha.ts_requisicao' => 'TS_REQUISICAO',
+        'TsStatus' => 'TS_STATUS',
+        'Senha.TsStatus' => 'TS_STATUS',
+        'tsStatus' => 'TS_STATUS',
+        'senha.tsStatus' => 'TS_STATUS',
+        'SenhaTableMap::COL_TS_STATUS' => 'TS_STATUS',
+        'COL_TS_STATUS' => 'TS_STATUS',
+        'ts_status' => 'TS_STATUS',
+        'senha.ts_status' => 'TS_STATUS',
+        'Detalhes' => 'DETALHES',
+        'Senha.Detalhes' => 'DETALHES',
+        'detalhes' => 'DETALHES',
+        'senha.detalhes' => 'DETALHES',
+        'SenhaTableMap::COL_DETALHES' => 'DETALHES',
+        'COL_DETALHES' => 'DETALHES',
+    ];
 
     /**
      * Initialize the table attributes and columns
      * Relations are not initialized by this method since they are lazy loaded
      *
      * @return void
-     * @throws PropelException
+     * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function initialize()
+    public function initialize(): void
     {
         // attributes
         $this->setName('senha');
@@ -169,12 +244,14 @@ class SenhaTableMap extends TableMap
         $this->addColumn('ts_requisicao', 'TsRequisicao', 'BIGINT', false, null, null);
         $this->addColumn('ts_status', 'TsStatus', 'BIGINT', false, null, null);
         $this->addColumn('detalhes', 'Detalhes', 'LONGVARCHAR', false, null, null);
-    } // initialize()
+    }
 
     /**
      * Build the RelationMap objects for this table relationships
+     *
+     * @return void
      */
-    public function buildRelations()
+    public function buildRelations(): void
     {
         $this->addRelation('Evento', '\\Baja\\Model\\Evento', RelationMap::MANY_TO_ONE, array (
   0 =>
@@ -195,7 +272,7 @@ class SenhaTableMap extends TableMap
     1 => ':evento_id',
   ),
 ), 'CASCADE', 'CASCADE', null, false);
-    } // buildRelations()
+    }
 
     /**
      * Adds an object to the instance pool.
@@ -206,9 +283,11 @@ class SenhaTableMap extends TableMap
      * and findPk*() calls.
      *
      * @param \Baja\Model\Senha $obj A \Baja\Model\Senha object.
-     * @param string $key             (optional) key to use for instance map (for performance boost if key was already calculated externally).
+     * @param string|null $key Key (optional) to use for instance map (for performance boost if key was already calculated externally).
+     *
+     * @return void
      */
-    public static function addInstanceToPool($obj, $key = null)
+    public static function addInstanceToPool(Senha $obj, ?string $key = null): void
     {
         if (Propel::isInstancePoolingEnabled()) {
             if (null === $key) {
@@ -227,8 +306,10 @@ class SenhaTableMap extends TableMap
      * from the cache in order to prevent returning objects that no longer exist.
      *
      * @param mixed $value A \Baja\Model\Senha object or a primary key value.
+     *
+     * @return void
      */
-    public static function removeInstanceFromPool($value)
+    public static function removeInstanceFromPool($value): void
     {
         if (Propel::isInstancePoolingEnabled() && null !== $value) {
             if (is_object($value) && $value instanceof \Baja\Model\Senha) {
@@ -256,14 +337,14 @@ class SenhaTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, a serialize()d version of the primary key will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
-     * @return string The primary key hash of the row
+     * @return string|null The primary key hash of the row
      */
-    public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyHashFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): ?string
     {
         // If the PK cannot be derived from the row, return NULL.
         if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('FilaId', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 2 + $offset : static::translateFieldName('Senha', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 3 + $offset : static::translateFieldName('EquipeId', TableMap::TYPE_PHPNAME, $indexType)] === null) {
@@ -278,14 +359,14 @@ class SenhaTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, an array of the primary key columns will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
      * @return mixed The primary key of the row
      */
-    public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM)
     {
             $pks = [];
 
@@ -321,10 +402,10 @@ class SenhaTableMap extends TableMap
      * relative to a location on the PHP include_path.
      * (e.g. path.to.MyClass -> 'path/to/MyClass.php')
      *
-     * @param boolean $withPrefix Whether or not to return the path with the class name
+     * @param bool $withPrefix Whether to return the path with the class name
      * @return string path.to.ClassName
      */
-    public static function getOMClass($withPrefix = true)
+    public static function getOMClass(bool $withPrefix = true): string
     {
         return $withPrefix ? SenhaTableMap::CLASS_DEFAULT : SenhaTableMap::OM_CLASS;
     }
@@ -332,17 +413,17 @@ class SenhaTableMap extends TableMap
     /**
      * Populates an object of the default type or an object that inherit from the default.
      *
-     * @param array  $row       row returned by DataFetcher->fetch().
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Row returned by DataFetcher->fetch().
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType The index type of $row. Mostly DataFetcher->getIndexType().
                                  One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Senha object, last column rank)
+     * @return array (Senha object, last column rank)
      */
-    public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function populateObject(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): array
     {
         $key = SenhaTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
         if (null !== ($obj = SenhaTableMap::getInstanceFromPool($key))) {
@@ -358,7 +439,7 @@ class SenhaTableMap extends TableMap
             SenhaTableMap::addInstanceToPool($obj, $key);
         }
 
-        return array($obj, $col);
+        return [$obj, $col];
     }
 
     /**
@@ -366,13 +447,13 @@ class SenhaTableMap extends TableMap
      * objects that inherit from the default.
      *
      * @param DataFetcherInterface $dataFetcher
-     * @return array
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return array<object>
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function populateObjects(DataFetcherInterface $dataFetcher)
+    public static function populateObjects(DataFetcherInterface $dataFetcher): array
     {
-        $results = array();
+        $results = [];
 
         // set the class once to avoid overhead in the loop
         $cls = static::getOMClass(false);
@@ -402,12 +483,13 @@ class SenhaTableMap extends TableMap
      * XML schema will not be added to the select list and only loaded
      * on demand.
      *
-     * @param Criteria $criteria object containing the columns to add.
-     * @param string   $alias    optional table alias
-     * @throws PropelException Any exceptions caught during processing will be
+     * @param Criteria $criteria Object containing the columns to add.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
+     * @return void
      */
-    public static function addSelectColumns(Criteria $criteria, $alias = null)
+    public static function addSelectColumns(Criteria $criteria, ?string $alias = null): void
     {
         if (null === $alias) {
             $criteria->addSelectColumn(SenhaTableMap::COL_EVENTO_ID);
@@ -431,40 +513,64 @@ class SenhaTableMap extends TableMap
     }
 
     /**
+     * Remove all the columns needed to create a new object.
+     *
+     * Note: any columns that were marked with lazyLoad="true" in the
+     * XML schema will not be removed as they are only loaded on demand.
+     *
+     * @param Criteria $criteria Object containing the columns to remove.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
+     *                         rethrown wrapped into a PropelException.
+     * @return void
+     */
+    public static function removeSelectColumns(Criteria $criteria, ?string $alias = null): void
+    {
+        if (null === $alias) {
+            $criteria->removeSelectColumn(SenhaTableMap::COL_EVENTO_ID);
+            $criteria->removeSelectColumn(SenhaTableMap::COL_FILA_ID);
+            $criteria->removeSelectColumn(SenhaTableMap::COL_SENHA);
+            $criteria->removeSelectColumn(SenhaTableMap::COL_EQUIPE_ID);
+            $criteria->removeSelectColumn(SenhaTableMap::COL_STATUS);
+            $criteria->removeSelectColumn(SenhaTableMap::COL_TS_REQUISICAO);
+            $criteria->removeSelectColumn(SenhaTableMap::COL_TS_STATUS);
+            $criteria->removeSelectColumn(SenhaTableMap::COL_DETALHES);
+        } else {
+            $criteria->removeSelectColumn($alias . '.evento_id');
+            $criteria->removeSelectColumn($alias . '.fila_id');
+            $criteria->removeSelectColumn($alias . '.senha');
+            $criteria->removeSelectColumn($alias . '.equipe_id');
+            $criteria->removeSelectColumn($alias . '.status');
+            $criteria->removeSelectColumn($alias . '.ts_requisicao');
+            $criteria->removeSelectColumn($alias . '.ts_status');
+            $criteria->removeSelectColumn($alias . '.detalhes');
+        }
+    }
+
+    /**
      * Returns the TableMap related to this object.
      * This method is not needed for general use but a specific application could have a need.
      * @return TableMap
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function getTableMap()
+    public static function getTableMap(): TableMap
     {
         return Propel::getServiceContainer()->getDatabaseMap(SenhaTableMap::DATABASE_NAME)->getTable(SenhaTableMap::TABLE_NAME);
     }
 
     /**
-     * Add a TableMap instance to the database for this tableMap class.
-     */
-    public static function buildTableMap()
-    {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(SenhaTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(SenhaTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new SenhaTableMap());
-        }
-    }
-
-    /**
      * Performs a DELETE on the database, given a Senha or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Senha object or primary key or array of primary keys
+     * @param mixed $values Criteria or Senha object or primary key or array of primary keys
      *              which is used to create the DELETE statement
-     * @param  ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @param ConnectionInterface $con the connection to use
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-     public static function doDelete($values, ConnectionInterface $con = null)
+     public static function doDelete($values, ?ConnectionInterface $con = null): int
      {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(SenhaTableMap::DATABASE_NAME);
@@ -482,7 +588,7 @@ class SenhaTableMap extends TableMap
             // the primary key passed to be an array of pkey values
             if (count($values) == count($values, COUNT_RECURSIVE)) {
                 // array is not multi-dimensional
-                $values = array($values);
+                $values = [$values];
             }
             foreach ($values as $value) {
                 $criterion = $criteria->getNewCriterion(SenhaTableMap::COL_EVENTO_ID, $value[0]);
@@ -512,7 +618,7 @@ class SenhaTableMap extends TableMap
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public static function doDeleteAll(ConnectionInterface $con = null)
+    public static function doDeleteAll(?ConnectionInterface $con = null): int
     {
         return SenhaQuery::create()->doDeleteAll($con);
     }
@@ -520,13 +626,13 @@ class SenhaTableMap extends TableMap
     /**
      * Performs an INSERT on the database, given a Senha or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Senha object containing data that is used to create the INSERT statement.
+     * @param mixed $criteria Criteria or Senha object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
-     * @return mixed           The new primary key.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return mixed The new primary key.
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function doInsert($criteria, ConnectionInterface $con = null)
+    public static function doInsert($criteria, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(SenhaTableMap::DATABASE_NAME);
@@ -553,7 +659,4 @@ class SenhaTableMap extends TableMap
         });
     }
 
-} // SenhaTableMap
-// This is the static code needed to register the TableMap for this table with the main Propel class.
-//
-SenhaTableMap::buildTableMap();
+}

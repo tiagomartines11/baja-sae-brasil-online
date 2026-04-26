@@ -33,138 +33,219 @@ class ProvaTableMap extends TableMap
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'Baja.Model.Map.ProvaTableMap';
+    public const CLASS_NAME = 'Baja.Model.Map.ProvaTableMap';
 
     /**
      * The default database name for this class
      */
-    const DATABASE_NAME = 'resultados';
+    public const DATABASE_NAME = 'resultados';
 
     /**
      * The table name for this class
      */
-    const TABLE_NAME = 'prova';
+    public const TABLE_NAME = 'prova';
+
+    /**
+     * The PHP name of this class (PascalCase)
+     */
+    public const TABLE_PHP_NAME = 'Prova';
 
     /**
      * The related Propel class for this table
      */
-    const OM_CLASS = '\\Baja\\Model\\Prova';
+    public const OM_CLASS = '\\Baja\\Model\\Prova';
 
     /**
      * A class that can be returned by this tableMap
      */
-    const CLASS_DEFAULT = 'Baja.Model.Prova';
+    public const CLASS_DEFAULT = 'Baja.Model.Prova';
 
     /**
      * The total number of columns
      */
-    const NUM_COLUMNS = 9;
+    public const NUM_COLUMNS = 9;
 
     /**
      * The number of lazy-loaded columns
      */
-    const NUM_LAZY_LOAD_COLUMNS = 0;
+    public const NUM_LAZY_LOAD_COLUMNS = 0;
 
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    const NUM_HYDRATE_COLUMNS = 9;
+    public const NUM_HYDRATE_COLUMNS = 9;
 
     /**
      * the column name for the evento_id field
      */
-    const COL_EVENTO_ID = 'prova.evento_id';
+    public const COL_EVENTO_ID = 'prova.evento_id';
 
     /**
      * the column name for the prova_id field
      */
-    const COL_PROVA_ID = 'prova.prova_id';
+    public const COL_PROVA_ID = 'prova.prova_id';
 
     /**
      * the column name for the nome field
      */
-    const COL_NOME = 'prova.nome';
+    public const COL_NOME = 'prova.nome';
 
     /**
      * the column name for the status field
      */
-    const COL_STATUS = 'prova.status';
+    public const COL_STATUS = 'prova.status';
 
     /**
      * the column name for the tempo field
      */
-    const COL_TEMPO = 'prova.tempo';
+    public const COL_TEMPO = 'prova.tempo';
 
     /**
      * the column name for the modificado field
      */
-    const COL_MODIFICADO = 'prova.modificado';
+    public const COL_MODIFICADO = 'prova.modificado';
 
     /**
      * the column name for the params field
      */
-    const COL_PARAMS = 'prova.params';
+    public const COL_PARAMS = 'prova.params';
 
     /**
      * the column name for the params_backup field
      */
-    const COL_PARAMS_BACKUP = 'prova.params_backup';
+    public const COL_PARAMS_BACKUP = 'prova.params_backup';
 
     /**
      * the column name for the totals field
      */
-    const COL_TOTALS = 'prova.totals';
+    public const COL_TOTALS = 'prova.totals';
 
     /**
      * The default string format for model objects of the related table
      */
-    const DEFAULT_STRING_FORMAT = 'YAML';
+    public const DEFAULT_STRING_FORMAT = 'YAML';
 
     /** The enumerated values for the status field */
-    const COL_STATUS_PARCIAL = 'Parcial';
-    const COL_STATUS_FINAL = 'Final';
+    public const COL_STATUS_PARCIAL = 'Parcial';
+    public const COL_STATUS_FINAL = 'Final';
 
     /**
      * holds an array of fieldnames
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldNames = array (
-        self::TYPE_PHPNAME       => array('EventoId', 'ProvaId', 'Nome', 'Status', 'Tempo', 'Modificado', 'Params', 'ParamsBackup', 'Totals', ),
-        self::TYPE_CAMELNAME     => array('eventoId', 'provaId', 'nome', 'status', 'tempo', 'modificado', 'params', 'paramsBackup', 'totals', ),
-        self::TYPE_COLNAME       => array(ProvaTableMap::COL_EVENTO_ID, ProvaTableMap::COL_PROVA_ID, ProvaTableMap::COL_NOME, ProvaTableMap::COL_STATUS, ProvaTableMap::COL_TEMPO, ProvaTableMap::COL_MODIFICADO, ProvaTableMap::COL_PARAMS, ProvaTableMap::COL_PARAMS_BACKUP, ProvaTableMap::COL_TOTALS, ),
-        self::TYPE_FIELDNAME     => array('evento_id', 'prova_id', 'nome', 'status', 'tempo', 'modificado', 'params', 'params_backup', 'totals', ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
-    );
+    protected static $fieldNames = [
+        self::TYPE_PHPNAME       => ['EventoId', 'ProvaId', 'Nome', 'Status', 'Tempo', 'Modificado', 'Params', 'ParamsBackup', 'Totals', ],
+        self::TYPE_CAMELNAME     => ['eventoId', 'provaId', 'nome', 'status', 'tempo', 'modificado', 'params', 'paramsBackup', 'totals', ],
+        self::TYPE_COLNAME       => [ProvaTableMap::COL_EVENTO_ID, ProvaTableMap::COL_PROVA_ID, ProvaTableMap::COL_NOME, ProvaTableMap::COL_STATUS, ProvaTableMap::COL_TEMPO, ProvaTableMap::COL_MODIFICADO, ProvaTableMap::COL_PARAMS, ProvaTableMap::COL_PARAMS_BACKUP, ProvaTableMap::COL_TOTALS, ],
+        self::TYPE_FIELDNAME     => ['evento_id', 'prova_id', 'nome', 'status', 'tempo', 'modificado', 'params', 'params_backup', 'totals', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, ]
+    ];
 
     /**
      * holds an array of keys for quick access to the fieldnames array
      *
      * first dimension keys are the type constants
      * e.g. self::$fieldKeys[self::TYPE_PHPNAME]['Id'] = 0
+     *
+     * @var array<string, mixed>
      */
-    protected static $fieldKeys = array (
-        self::TYPE_PHPNAME       => array('EventoId' => 0, 'ProvaId' => 1, 'Nome' => 2, 'Status' => 3, 'Tempo' => 4, 'Modificado' => 5, 'Params' => 6, 'ParamsBackup' => 7, 'Totals' => 8, ),
-        self::TYPE_CAMELNAME     => array('eventoId' => 0, 'provaId' => 1, 'nome' => 2, 'status' => 3, 'tempo' => 4, 'modificado' => 5, 'params' => 6, 'paramsBackup' => 7, 'totals' => 8, ),
-        self::TYPE_COLNAME       => array(ProvaTableMap::COL_EVENTO_ID => 0, ProvaTableMap::COL_PROVA_ID => 1, ProvaTableMap::COL_NOME => 2, ProvaTableMap::COL_STATUS => 3, ProvaTableMap::COL_TEMPO => 4, ProvaTableMap::COL_MODIFICADO => 5, ProvaTableMap::COL_PARAMS => 6, ProvaTableMap::COL_PARAMS_BACKUP => 7, ProvaTableMap::COL_TOTALS => 8, ),
-        self::TYPE_FIELDNAME     => array('evento_id' => 0, 'prova_id' => 1, 'nome' => 2, 'status' => 3, 'tempo' => 4, 'modificado' => 5, 'params' => 6, 'params_backup' => 7, 'totals' => 8, ),
-        self::TYPE_NUM           => array(0, 1, 2, 3, 4, 5, 6, 7, 8, )
-    );
+    protected static $fieldKeys = [
+        self::TYPE_PHPNAME       => ['EventoId' => 0, 'ProvaId' => 1, 'Nome' => 2, 'Status' => 3, 'Tempo' => 4, 'Modificado' => 5, 'Params' => 6, 'ParamsBackup' => 7, 'Totals' => 8, ],
+        self::TYPE_CAMELNAME     => ['eventoId' => 0, 'provaId' => 1, 'nome' => 2, 'status' => 3, 'tempo' => 4, 'modificado' => 5, 'params' => 6, 'paramsBackup' => 7, 'totals' => 8, ],
+        self::TYPE_COLNAME       => [ProvaTableMap::COL_EVENTO_ID => 0, ProvaTableMap::COL_PROVA_ID => 1, ProvaTableMap::COL_NOME => 2, ProvaTableMap::COL_STATUS => 3, ProvaTableMap::COL_TEMPO => 4, ProvaTableMap::COL_MODIFICADO => 5, ProvaTableMap::COL_PARAMS => 6, ProvaTableMap::COL_PARAMS_BACKUP => 7, ProvaTableMap::COL_TOTALS => 8, ],
+        self::TYPE_FIELDNAME     => ['evento_id' => 0, 'prova_id' => 1, 'nome' => 2, 'status' => 3, 'tempo' => 4, 'modificado' => 5, 'params' => 6, 'params_backup' => 7, 'totals' => 8, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, ]
+    ];
 
-    /** The enumerated values for this table */
-    protected static $enumValueSets = array(
-                ProvaTableMap::COL_STATUS => array(
+    /**
+     * Holds a list of column names and their normalized version.
+     *
+     * @var array<string>
+     */
+    protected $normalizedColumnNameMap = [
+        'EventoId' => 'EVENTO_ID',
+        'Prova.EventoId' => 'EVENTO_ID',
+        'eventoId' => 'EVENTO_ID',
+        'prova.eventoId' => 'EVENTO_ID',
+        'ProvaTableMap::COL_EVENTO_ID' => 'EVENTO_ID',
+        'COL_EVENTO_ID' => 'EVENTO_ID',
+        'evento_id' => 'EVENTO_ID',
+        'prova.evento_id' => 'EVENTO_ID',
+        'ProvaId' => 'PROVA_ID',
+        'Prova.ProvaId' => 'PROVA_ID',
+        'provaId' => 'PROVA_ID',
+        'prova.provaId' => 'PROVA_ID',
+        'ProvaTableMap::COL_PROVA_ID' => 'PROVA_ID',
+        'COL_PROVA_ID' => 'PROVA_ID',
+        'prova_id' => 'PROVA_ID',
+        'prova.prova_id' => 'PROVA_ID',
+        'Nome' => 'NOME',
+        'Prova.Nome' => 'NOME',
+        'nome' => 'NOME',
+        'prova.nome' => 'NOME',
+        'ProvaTableMap::COL_NOME' => 'NOME',
+        'COL_NOME' => 'NOME',
+        'Status' => 'STATUS',
+        'Prova.Status' => 'STATUS',
+        'status' => 'STATUS',
+        'prova.status' => 'STATUS',
+        'ProvaTableMap::COL_STATUS' => 'STATUS',
+        'COL_STATUS' => 'STATUS',
+        'Tempo' => 'TEMPO',
+        'Prova.Tempo' => 'TEMPO',
+        'tempo' => 'TEMPO',
+        'prova.tempo' => 'TEMPO',
+        'ProvaTableMap::COL_TEMPO' => 'TEMPO',
+        'COL_TEMPO' => 'TEMPO',
+        'Modificado' => 'MODIFICADO',
+        'Prova.Modificado' => 'MODIFICADO',
+        'modificado' => 'MODIFICADO',
+        'prova.modificado' => 'MODIFICADO',
+        'ProvaTableMap::COL_MODIFICADO' => 'MODIFICADO',
+        'COL_MODIFICADO' => 'MODIFICADO',
+        'Params' => 'PARAMS',
+        'Prova.Params' => 'PARAMS',
+        'params' => 'PARAMS',
+        'prova.params' => 'PARAMS',
+        'ProvaTableMap::COL_PARAMS' => 'PARAMS',
+        'COL_PARAMS' => 'PARAMS',
+        'ParamsBackup' => 'PARAMS_BACKUP',
+        'Prova.ParamsBackup' => 'PARAMS_BACKUP',
+        'paramsBackup' => 'PARAMS_BACKUP',
+        'prova.paramsBackup' => 'PARAMS_BACKUP',
+        'ProvaTableMap::COL_PARAMS_BACKUP' => 'PARAMS_BACKUP',
+        'COL_PARAMS_BACKUP' => 'PARAMS_BACKUP',
+        'params_backup' => 'PARAMS_BACKUP',
+        'prova.params_backup' => 'PARAMS_BACKUP',
+        'Totals' => 'TOTALS',
+        'Prova.Totals' => 'TOTALS',
+        'totals' => 'TOTALS',
+        'prova.totals' => 'TOTALS',
+        'ProvaTableMap::COL_TOTALS' => 'TOTALS',
+        'COL_TOTALS' => 'TOTALS',
+    ];
+
+    /**
+     * The enumerated values for this table
+     *
+     * @var array<string, array<string>>
+     */
+    protected static $enumValueSets = [
+                ProvaTableMap::COL_STATUS => [
                             self::COL_STATUS_PARCIAL,
             self::COL_STATUS_FINAL,
-        ),
-    );
+        ],
+    ];
 
     /**
      * Gets the list of values for all ENUM and SET columns
      * @return array
      */
-    public static function getValueSets()
+    public static function getValueSets(): array
     {
       return static::$enumValueSets;
     }
@@ -174,7 +255,7 @@ class ProvaTableMap extends TableMap
      * @param string $colname
      * @return array list of possible values for the column
      */
-    public static function getValueSet($colname)
+    public static function getValueSet(string $colname): array
     {
         $valueSets = self::getValueSets();
 
@@ -186,9 +267,9 @@ class ProvaTableMap extends TableMap
      * Relations are not initialized by this method since they are lazy loaded
      *
      * @return void
-     * @throws PropelException
+     * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function initialize()
+    public function initialize(): void
     {
         // attributes
         $this->setName('prova');
@@ -211,12 +292,14 @@ class ProvaTableMap extends TableMap
         $this->addColumn('params', 'Params', 'LONGVARCHAR', false, null, null);
         $this->addColumn('params_backup', 'ParamsBackup', 'LONGVARCHAR', false, null, null);
         $this->addColumn('totals', 'Totals', 'LONGVARCHAR', false, null, null);
-    } // initialize()
+    }
 
     /**
      * Build the RelationMap objects for this table relationships
+     *
+     * @return void
      */
-    public function buildRelations()
+    public function buildRelations(): void
     {
         $this->addRelation('Evento', '\\Baja\\Model\\Evento', RelationMap::MANY_TO_ONE, array (
   0 =>
@@ -249,7 +332,7 @@ class ProvaTableMap extends TableMap
     1 => ':prova_id',
   ),
 ), 'CASCADE', 'CASCADE', 'Tournaments', false);
-    } // buildRelations()
+    }
 
     /**
      * Adds an object to the instance pool.
@@ -260,9 +343,11 @@ class ProvaTableMap extends TableMap
      * and findPk*() calls.
      *
      * @param \Baja\Model\Prova $obj A \Baja\Model\Prova object.
-     * @param string $key             (optional) key to use for instance map (for performance boost if key was already calculated externally).
+     * @param string|null $key Key (optional) to use for instance map (for performance boost if key was already calculated externally).
+     *
+     * @return void
      */
-    public static function addInstanceToPool($obj, $key = null)
+    public static function addInstanceToPool(Prova $obj, ?string $key = null): void
     {
         if (Propel::isInstancePoolingEnabled()) {
             if (null === $key) {
@@ -281,8 +366,10 @@ class ProvaTableMap extends TableMap
      * from the cache in order to prevent returning objects that no longer exist.
      *
      * @param mixed $value A \Baja\Model\Prova object or a primary key value.
+     *
+     * @return void
      */
-    public static function removeInstanceFromPool($value)
+    public static function removeInstanceFromPool($value): void
     {
         if (Propel::isInstancePoolingEnabled() && null !== $value) {
             if (is_object($value) && $value instanceof \Baja\Model\Prova) {
@@ -303,10 +390,11 @@ class ProvaTableMap extends TableMap
             unset(self::$instances[$key]);
         }
     }
+
     /**
      * Method to invalidate the instance pool of all tables related to prova     * by a foreign key with ON DELETE CASCADE
      */
-    public static function clearRelatedInstancePool()
+    public static function clearRelatedInstancePool(): void
     {
         // Invalidate objects in related instance pools,
         // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
@@ -320,14 +408,14 @@ class ProvaTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, a serialize()d version of the primary key will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
-     * @return string The primary key hash of the row
+     * @return string|null The primary key hash of the row
      */
-    public static function getPrimaryKeyHashFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyHashFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): ?string
     {
         // If the PK cannot be derived from the row, return NULL.
         if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 1 + $offset : static::translateFieldName('ProvaId', TableMap::TYPE_PHPNAME, $indexType)] === null) {
@@ -342,14 +430,14 @@ class ProvaTableMap extends TableMap
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
      * a multi-column primary key, an array of the primary key columns will be returned.
      *
-     * @param array  $row       resultset row.
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Resultset row.
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM
      *
      * @return mixed The primary key of the row
      */
-    public static function getPrimaryKeyFromRow($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function getPrimaryKeyFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM)
     {
             $pks = [];
 
@@ -375,10 +463,10 @@ class ProvaTableMap extends TableMap
      * relative to a location on the PHP include_path.
      * (e.g. path.to.MyClass -> 'path/to/MyClass.php')
      *
-     * @param boolean $withPrefix Whether or not to return the path with the class name
+     * @param bool $withPrefix Whether to return the path with the class name
      * @return string path.to.ClassName
      */
-    public static function getOMClass($withPrefix = true)
+    public static function getOMClass(bool $withPrefix = true): string
     {
         return $withPrefix ? ProvaTableMap::CLASS_DEFAULT : ProvaTableMap::OM_CLASS;
     }
@@ -386,17 +474,17 @@ class ProvaTableMap extends TableMap
     /**
      * Populates an object of the default type or an object that inherit from the default.
      *
-     * @param array  $row       row returned by DataFetcher->fetch().
-     * @param int    $offset    The 0-based offset for reading from the resultset row.
+     * @param array $row Row returned by DataFetcher->fetch().
+     * @param int $offset The 0-based offset for reading from the resultset row.
      * @param string $indexType The index type of $row. Mostly DataFetcher->getIndexType().
                                  One of the class type constants TableMap::TYPE_PHPNAME, TableMap::TYPE_CAMELNAME
      *                           TableMap::TYPE_COLNAME, TableMap::TYPE_FIELDNAME, TableMap::TYPE_NUM.
      *
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
-     * @return array           (Prova object, last column rank)
+     * @return array (Prova object, last column rank)
      */
-    public static function populateObject($row, $offset = 0, $indexType = TableMap::TYPE_NUM)
+    public static function populateObject(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): array
     {
         $key = ProvaTableMap::getPrimaryKeyHashFromRow($row, $offset, $indexType);
         if (null !== ($obj = ProvaTableMap::getInstanceFromPool($key))) {
@@ -412,7 +500,7 @@ class ProvaTableMap extends TableMap
             ProvaTableMap::addInstanceToPool($obj, $key);
         }
 
-        return array($obj, $col);
+        return [$obj, $col];
     }
 
     /**
@@ -420,13 +508,13 @@ class ProvaTableMap extends TableMap
      * objects that inherit from the default.
      *
      * @param DataFetcherInterface $dataFetcher
-     * @return array
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return array<object>
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function populateObjects(DataFetcherInterface $dataFetcher)
+    public static function populateObjects(DataFetcherInterface $dataFetcher): array
     {
-        $results = array();
+        $results = [];
 
         // set the class once to avoid overhead in the loop
         $cls = static::getOMClass(false);
@@ -456,12 +544,13 @@ class ProvaTableMap extends TableMap
      * XML schema will not be added to the select list and only loaded
      * on demand.
      *
-     * @param Criteria $criteria object containing the columns to add.
-     * @param string   $alias    optional table alias
-     * @throws PropelException Any exceptions caught during processing will be
+     * @param Criteria $criteria Object containing the columns to add.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
+     * @return void
      */
-    public static function addSelectColumns(Criteria $criteria, $alias = null)
+    public static function addSelectColumns(Criteria $criteria, ?string $alias = null): void
     {
         if (null === $alias) {
             $criteria->addSelectColumn(ProvaTableMap::COL_EVENTO_ID);
@@ -487,40 +576,66 @@ class ProvaTableMap extends TableMap
     }
 
     /**
+     * Remove all the columns needed to create a new object.
+     *
+     * Note: any columns that were marked with lazyLoad="true" in the
+     * XML schema will not be removed as they are only loaded on demand.
+     *
+     * @param Criteria $criteria Object containing the columns to remove.
+     * @param string|null $alias Optional table alias
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
+     *                         rethrown wrapped into a PropelException.
+     * @return void
+     */
+    public static function removeSelectColumns(Criteria $criteria, ?string $alias = null): void
+    {
+        if (null === $alias) {
+            $criteria->removeSelectColumn(ProvaTableMap::COL_EVENTO_ID);
+            $criteria->removeSelectColumn(ProvaTableMap::COL_PROVA_ID);
+            $criteria->removeSelectColumn(ProvaTableMap::COL_NOME);
+            $criteria->removeSelectColumn(ProvaTableMap::COL_STATUS);
+            $criteria->removeSelectColumn(ProvaTableMap::COL_TEMPO);
+            $criteria->removeSelectColumn(ProvaTableMap::COL_MODIFICADO);
+            $criteria->removeSelectColumn(ProvaTableMap::COL_PARAMS);
+            $criteria->removeSelectColumn(ProvaTableMap::COL_PARAMS_BACKUP);
+            $criteria->removeSelectColumn(ProvaTableMap::COL_TOTALS);
+        } else {
+            $criteria->removeSelectColumn($alias . '.evento_id');
+            $criteria->removeSelectColumn($alias . '.prova_id');
+            $criteria->removeSelectColumn($alias . '.nome');
+            $criteria->removeSelectColumn($alias . '.status');
+            $criteria->removeSelectColumn($alias . '.tempo');
+            $criteria->removeSelectColumn($alias . '.modificado');
+            $criteria->removeSelectColumn($alias . '.params');
+            $criteria->removeSelectColumn($alias . '.params_backup');
+            $criteria->removeSelectColumn($alias . '.totals');
+        }
+    }
+
+    /**
      * Returns the TableMap related to this object.
      * This method is not needed for general use but a specific application could have a need.
      * @return TableMap
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function getTableMap()
+    public static function getTableMap(): TableMap
     {
         return Propel::getServiceContainer()->getDatabaseMap(ProvaTableMap::DATABASE_NAME)->getTable(ProvaTableMap::TABLE_NAME);
     }
 
     /**
-     * Add a TableMap instance to the database for this tableMap class.
-     */
-    public static function buildTableMap()
-    {
-        $dbMap = Propel::getServiceContainer()->getDatabaseMap(ProvaTableMap::DATABASE_NAME);
-        if (!$dbMap->hasTable(ProvaTableMap::TABLE_NAME)) {
-            $dbMap->addTableObject(new ProvaTableMap());
-        }
-    }
-
-    /**
      * Performs a DELETE on the database, given a Prova or Criteria object OR a primary key value.
      *
-     * @param mixed               $values Criteria or Prova object or primary key or array of primary keys
+     * @param mixed $values Criteria or Prova object or primary key or array of primary keys
      *              which is used to create the DELETE statement
-     * @param  ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @param ConnectionInterface $con the connection to use
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-     public static function doDelete($values, ConnectionInterface $con = null)
+     public static function doDelete($values, ?ConnectionInterface $con = null): int
      {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(ProvaTableMap::DATABASE_NAME);
@@ -538,7 +653,7 @@ class ProvaTableMap extends TableMap
             // the primary key passed to be an array of pkey values
             if (count($values) == count($values, COUNT_RECURSIVE)) {
                 // array is not multi-dimensional
-                $values = array($values);
+                $values = [$values];
             }
             foreach ($values as $value) {
                 $criterion = $criteria->getNewCriterion(ProvaTableMap::COL_EVENTO_ID, $value[0]);
@@ -566,7 +681,7 @@ class ProvaTableMap extends TableMap
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public static function doDeleteAll(ConnectionInterface $con = null)
+    public static function doDeleteAll(?ConnectionInterface $con = null): int
     {
         return ProvaQuery::create()->doDeleteAll($con);
     }
@@ -574,13 +689,13 @@ class ProvaTableMap extends TableMap
     /**
      * Performs an INSERT on the database, given a Prova or Criteria object.
      *
-     * @param mixed               $criteria Criteria or Prova object containing data that is used to create the INSERT statement.
+     * @param mixed $criteria Criteria or Prova object containing data that is used to create the INSERT statement.
      * @param ConnectionInterface $con the ConnectionInterface connection to use
-     * @return mixed           The new primary key.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @return mixed The new primary key.
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public static function doInsert($criteria, ConnectionInterface $con = null)
+    public static function doInsert($criteria, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(ProvaTableMap::DATABASE_NAME);
@@ -603,7 +718,4 @@ class ProvaTableMap extends TableMap
         });
     }
 
-} // ProvaTableMap
-// This is the static code needed to register the TableMap for this table with the main Propel class.
-//
-ProvaTableMap::buildTableMap();
+}

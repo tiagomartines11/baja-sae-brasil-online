@@ -1,13 +1,28 @@
 <?php
+// Dev-environment Propel + app-secret config.
+// Loaded by src/bootstrap.php when env var ENV=dev.
+//
+// Public URL configuration is via env vars (BAJA_PUBLIC_DOMAIN,
+// BAJA_PUBLIC_SCHEME). See \Baja\Url for the assembly helpers.
+//
+// NOTE: phpBB session shim configuration is handled separately via env vars
+// (PHPBB_DB_HOST, PHPBB_DB_PORT, PHPBB_DB_NAME, PHPBB_DB_USER, PHPBB_DB_PASS,
+// PHPBB_COOKIE_PREFIX, REDIS_HOST, REDIS_PORT, SESSION_CACHE_TTL_SECONDS).
+// See src/Baja/Auth/SessionStore.php for the full list. Those env vars are
+// set in baja-infra/docker-compose.yml under the baja-app service. The shim
+// has its own PDO connection scoped to phpBB tables (read-only via the
+// 'resultados' MySQL user's SELECT grant on phpbb_baja.*); it does NOT use
+// Propel.
+
 $serviceContainer = \Propel\Runtime\Propel::getServiceContainer();
-$serviceContainer->checkVersion('2.0.0-dev');
+$serviceContainer->checkVersion(2);
 $serviceContainer->setAdapterClass('resultados', 'mysql');
-$manager = new \Propel\Runtime\Connection\ConnectionManagerSingle();
+$manager = new \Propel\Runtime\Connection\ConnectionManagerSingle('resultados');
 $manager->setConfiguration(array (
   'classname' => 'Propel\\Runtime\\Connection\\ConnectionWrapper',
-  'dsn' => 'mysql:host=localhost;dbname=baja_resultados',
+  'dsn' => 'mysql:host=mysql;dbname=baja_resultados',
   'user' => 'resultados',
-  'password' => '****',
+  'password' => 'devresultados',
   'attributes' =>
   array (
     'ATTR_EMULATE_PREPARES' => false,
@@ -27,26 +42,13 @@ $manager->setConfiguration(array (
     1 => 'vendor',
   ),
 ));
-$manager->setName('resultados');
-$serviceContainer->setConnectionManager('resultados', $manager);
+$serviceContainer->setConnectionManager($manager);
 $serviceContainer->setDefaultDatasource('resultados');
+require_once __DIR__ . '/loadDatabase.php';
 
-$_oneSignalAuth = '*****';
-
-$_remoteKey = '*******';
-
-$_recaptchaKey = '*******';
-$_tEmail = '*****@gmail.com';
-$_bEmail = '*****@gmail.com';
-
-//use Baja\Model\Map\InputTableMap;
-//use Propel\Runtime\Propel;
-//
-//use Monolog\Logger;
-//use Monolog\Handler\StreamHandler;
-//$logger = new Logger('defaultLogger');
-//$logger->pushHandler(new StreamHandler('/var/log/propel.log'));
-//Propel::getServiceContainer()->setLogger('defaultLogger', $logger);
-//$logger->warning('Foo');
-//$con = Propel::getWriteConnection(InputTableMap::DATABASE_NAME);
-//$con->useDebug(true);
+// Dev placeholder values for app-level secrets
+$_oneSignalAuth = 'dev-onesignal-auth';
+$_remoteKey = 'dev-remote-key';
+$_recaptchaKey = 'dev-recaptcha-key';
+$_tEmail = 'dev-tiago@example.com';
+$_bEmail = 'dev-bresolin@example.com';

@@ -11,14 +11,13 @@ use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveQuery\ModelJoin;
+use Propel\Runtime\Collection\Collection;
 use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 
 /**
- * Base class that represents a query for the 'evento' table.
- *
- *
+ * Base class that represents a query for the `evento` table.
  *
  * @method     ChildEventoQuery orderByEventoId($order = Criteria::ASC) Order by the evento_id column
  * @method     ChildEventoQuery orderByTitulo($order = Criteria::ASC) Order by the titulo column
@@ -134,28 +133,28 @@ use Propel\Runtime\Exception\PropelException;
  *
  * @method     \Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery|\Baja\Model\FilaQuery|\Baja\Model\PremiacaoQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
- * @method     ChildEvento findOne(ConnectionInterface $con = null) Return the first ChildEvento matching the query
- * @method     ChildEvento findOneOrCreate(ConnectionInterface $con = null) Return the first ChildEvento matching the query, or a new ChildEvento object populated from the query conditions when no match is found
+ * @method     ChildEvento|null findOne(?ConnectionInterface $con = null) Return the first ChildEvento matching the query
+ * @method     ChildEvento findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildEvento matching the query, or a new ChildEvento object populated from the query conditions when no match is found
  *
- * @method     ChildEvento findOneByEventoId(string $evento_id) Return the first ChildEvento filtered by the evento_id column
- * @method     ChildEvento findOneByTitulo(string $titulo) Return the first ChildEvento filtered by the titulo column
- * @method     ChildEvento findOneByNome(string $nome) Return the first ChildEvento filtered by the nome column
- * @method     ChildEvento findOneByTipo(int $tipo) Return the first ChildEvento filtered by the tipo column
- * @method     ChildEvento findOneByAno(int $ano) Return the first ChildEvento filtered by the ano column
- * @method     ChildEvento findOneByMenu(string $menu) Return the first ChildEvento filtered by the menu column
- * @method     ChildEvento findOneByAtivo(boolean $ativo) Return the first ChildEvento filtered by the ativo column
- * @method     ChildEvento findOneByFinalizado(boolean $finalizado) Return the first ChildEvento filtered by the finalizado column
- * @method     ChildEvento findOneBySpoilers(boolean $spoilers) Return the first ChildEvento filtered by the spoilers column
- * @method     ChildEvento findOneByTemCertificado(boolean $tem_certificado) Return the first ChildEvento filtered by the tem_certificado column
- * @method     ChildEvento findOneByPresidente(string $presidente) Return the first ChildEvento filtered by the presidente column
- * @method     ChildEvento findOneByData(string $data) Return the first ChildEvento filtered by the data column
- * @method     ChildEvento findOneByMandatoPresidente(string $mandato_presidente) Return the first ChildEvento filtered by the mandato_presidente column
- * @method     ChildEvento findOneByLocal(string $local) Return the first ChildEvento filtered by the local column
- * @method     ChildEvento findOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column
- * @method     ChildEvento findOneByCargaHoraria(int $carga_horaria) Return the first ChildEvento filtered by the carga_horaria column *
-
- * @method     ChildEvento requirePk($key, ConnectionInterface $con = null) Return the ChildEvento by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildEvento requireOne(ConnectionInterface $con = null) Return the first ChildEvento matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEvento|null findOneByEventoId(string $evento_id) Return the first ChildEvento filtered by the evento_id column
+ * @method     ChildEvento|null findOneByTitulo(string $titulo) Return the first ChildEvento filtered by the titulo column
+ * @method     ChildEvento|null findOneByNome(string $nome) Return the first ChildEvento filtered by the nome column
+ * @method     ChildEvento|null findOneByTipo(int $tipo) Return the first ChildEvento filtered by the tipo column
+ * @method     ChildEvento|null findOneByAno(int $ano) Return the first ChildEvento filtered by the ano column
+ * @method     ChildEvento|null findOneByMenu(string $menu) Return the first ChildEvento filtered by the menu column
+ * @method     ChildEvento|null findOneByAtivo(boolean $ativo) Return the first ChildEvento filtered by the ativo column
+ * @method     ChildEvento|null findOneByFinalizado(boolean $finalizado) Return the first ChildEvento filtered by the finalizado column
+ * @method     ChildEvento|null findOneBySpoilers(boolean $spoilers) Return the first ChildEvento filtered by the spoilers column
+ * @method     ChildEvento|null findOneByTemCertificado(boolean $tem_certificado) Return the first ChildEvento filtered by the tem_certificado column
+ * @method     ChildEvento|null findOneByPresidente(string $presidente) Return the first ChildEvento filtered by the presidente column
+ * @method     ChildEvento|null findOneByData(string $data) Return the first ChildEvento filtered by the data column
+ * @method     ChildEvento|null findOneByMandatoPresidente(string $mandato_presidente) Return the first ChildEvento filtered by the mandato_presidente column
+ * @method     ChildEvento|null findOneByLocal(string $local) Return the first ChildEvento filtered by the local column
+ * @method     ChildEvento|null findOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column
+ * @method     ChildEvento|null findOneByCargaHoraria(int $carga_horaria) Return the first ChildEvento filtered by the carga_horaria column
+ *
+ * @method     ChildEvento requirePk($key, ?ConnectionInterface $con = null) Return the ChildEvento by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEvento requireOne(?ConnectionInterface $con = null) Return the first ChildEvento matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildEvento requireOneByEventoId(string $evento_id) Return the first ChildEvento filtered by the evento_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByTitulo(string $titulo) Return the first ChildEvento filtered by the titulo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -174,25 +173,44 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento requireOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByCargaHoraria(int $carga_horaria) Return the first ChildEvento filtered by the carga_horaria column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildEvento[]|ObjectCollection find(ConnectionInterface $con = null) Return ChildEvento objects based on current ModelCriteria
- * @method     ChildEvento[]|ObjectCollection findByEventoId(string $evento_id) Return ChildEvento objects filtered by the evento_id column
- * @method     ChildEvento[]|ObjectCollection findByTitulo(string $titulo) Return ChildEvento objects filtered by the titulo column
- * @method     ChildEvento[]|ObjectCollection findByNome(string $nome) Return ChildEvento objects filtered by the nome column
- * @method     ChildEvento[]|ObjectCollection findByTipo(int $tipo) Return ChildEvento objects filtered by the tipo column
- * @method     ChildEvento[]|ObjectCollection findByAno(int $ano) Return ChildEvento objects filtered by the ano column
- * @method     ChildEvento[]|ObjectCollection findByMenu(string $menu) Return ChildEvento objects filtered by the menu column
- * @method     ChildEvento[]|ObjectCollection findByAtivo(boolean $ativo) Return ChildEvento objects filtered by the ativo column
- * @method     ChildEvento[]|ObjectCollection findByFinalizado(boolean $finalizado) Return ChildEvento objects filtered by the finalizado column
- * @method     ChildEvento[]|ObjectCollection findBySpoilers(boolean $spoilers) Return ChildEvento objects filtered by the spoilers column
- * @method     ChildEvento[]|ObjectCollection findByTemCertificado(boolean $tem_certificado) Return ChildEvento objects filtered by the tem_certificado column
- * @method     ChildEvento[]|ObjectCollection findByPresidente(string $presidente) Return ChildEvento objects filtered by the presidente column
- * @method     ChildEvento[]|ObjectCollection findByData(string $data) Return ChildEvento objects filtered by the data column
- * @method     ChildEvento[]|ObjectCollection findByMandatoPresidente(string $mandato_presidente) Return ChildEvento objects filtered by the mandato_presidente column
- * @method     ChildEvento[]|ObjectCollection findByLocal(string $local) Return ChildEvento objects filtered by the local column
- * @method     ChildEvento[]|ObjectCollection findByEmAndamento(boolean $em_andamento) Return ChildEvento objects filtered by the em_andamento column
- * @method     ChildEvento[]|ObjectCollection findByCargaHoraria(int $carga_horaria) Return ChildEvento objects filtered by the carga_horaria column
- * @method     ChildEvento[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @method     ChildEvento[]|Collection find(?ConnectionInterface $con = null) Return ChildEvento objects based on current ModelCriteria
+ * @psalm-method Collection&\Traversable<ChildEvento> find(?ConnectionInterface $con = null) Return ChildEvento objects based on current ModelCriteria
  *
+ * @method     ChildEvento[]|Collection findByEventoId(string|array<string> $evento_id) Return ChildEvento objects filtered by the evento_id column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByEventoId(string|array<string> $evento_id) Return ChildEvento objects filtered by the evento_id column
+ * @method     ChildEvento[]|Collection findByTitulo(string|array<string> $titulo) Return ChildEvento objects filtered by the titulo column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByTitulo(string|array<string> $titulo) Return ChildEvento objects filtered by the titulo column
+ * @method     ChildEvento[]|Collection findByNome(string|array<string> $nome) Return ChildEvento objects filtered by the nome column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByNome(string|array<string> $nome) Return ChildEvento objects filtered by the nome column
+ * @method     ChildEvento[]|Collection findByTipo(int|array<int> $tipo) Return ChildEvento objects filtered by the tipo column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByTipo(int|array<int> $tipo) Return ChildEvento objects filtered by the tipo column
+ * @method     ChildEvento[]|Collection findByAno(int|array<int> $ano) Return ChildEvento objects filtered by the ano column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByAno(int|array<int> $ano) Return ChildEvento objects filtered by the ano column
+ * @method     ChildEvento[]|Collection findByMenu(string|array<string> $menu) Return ChildEvento objects filtered by the menu column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByMenu(string|array<string> $menu) Return ChildEvento objects filtered by the menu column
+ * @method     ChildEvento[]|Collection findByAtivo(boolean|array<boolean> $ativo) Return ChildEvento objects filtered by the ativo column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByAtivo(boolean|array<boolean> $ativo) Return ChildEvento objects filtered by the ativo column
+ * @method     ChildEvento[]|Collection findByFinalizado(boolean|array<boolean> $finalizado) Return ChildEvento objects filtered by the finalizado column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByFinalizado(boolean|array<boolean> $finalizado) Return ChildEvento objects filtered by the finalizado column
+ * @method     ChildEvento[]|Collection findBySpoilers(boolean|array<boolean> $spoilers) Return ChildEvento objects filtered by the spoilers column
+ * @psalm-method Collection&\Traversable<ChildEvento> findBySpoilers(boolean|array<boolean> $spoilers) Return ChildEvento objects filtered by the spoilers column
+ * @method     ChildEvento[]|Collection findByTemCertificado(boolean|array<boolean> $tem_certificado) Return ChildEvento objects filtered by the tem_certificado column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByTemCertificado(boolean|array<boolean> $tem_certificado) Return ChildEvento objects filtered by the tem_certificado column
+ * @method     ChildEvento[]|Collection findByPresidente(string|array<string> $presidente) Return ChildEvento objects filtered by the presidente column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByPresidente(string|array<string> $presidente) Return ChildEvento objects filtered by the presidente column
+ * @method     ChildEvento[]|Collection findByData(string|array<string> $data) Return ChildEvento objects filtered by the data column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByData(string|array<string> $data) Return ChildEvento objects filtered by the data column
+ * @method     ChildEvento[]|Collection findByMandatoPresidente(string|array<string> $mandato_presidente) Return ChildEvento objects filtered by the mandato_presidente column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByMandatoPresidente(string|array<string> $mandato_presidente) Return ChildEvento objects filtered by the mandato_presidente column
+ * @method     ChildEvento[]|Collection findByLocal(string|array<string> $local) Return ChildEvento objects filtered by the local column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByLocal(string|array<string> $local) Return ChildEvento objects filtered by the local column
+ * @method     ChildEvento[]|Collection findByEmAndamento(boolean|array<boolean> $em_andamento) Return ChildEvento objects filtered by the em_andamento column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByEmAndamento(boolean|array<boolean> $em_andamento) Return ChildEvento objects filtered by the em_andamento column
+ * @method     ChildEvento[]|Collection findByCargaHoraria(int|array<int> $carga_horaria) Return ChildEvento objects filtered by the carga_horaria column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByCargaHoraria(int|array<int> $carga_horaria) Return ChildEvento objects filtered by the carga_horaria column
+ *
+ * @method     ChildEvento[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
+ * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildEvento> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  */
 abstract class EventoQuery extends ModelCriteria
 {
@@ -201,9 +219,9 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Initializes internal state of \Baja\Model\Base\EventoQuery object.
      *
-     * @param     string $dbName The database name
-     * @param     string $modelName The phpName of a model, e.g. 'Book'
-     * @param     string $modelAlias The alias for the model in this query, e.g. 'b'
+     * @param string $dbName The database name
+     * @param string $modelName The phpName of a model, e.g. 'Book'
+     * @param string $modelAlias The alias for the model in this query, e.g. 'b'
      */
     public function __construct($dbName = 'resultados', $modelName = '\\Baja\\Model\\Evento', $modelAlias = null)
     {
@@ -213,12 +231,12 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Returns a new ChildEventoQuery object.
      *
-     * @param     string $modelAlias The alias of a model in the query
-     * @param     Criteria $criteria Optional Criteria to build the query from
+     * @param string $modelAlias The alias of a model in the query
+     * @param Criteria $criteria Optional Criteria to build the query from
      *
      * @return ChildEventoQuery
      */
-    public static function create($modelAlias = null, Criteria $criteria = null)
+    public static function create(?string $modelAlias = null, ?Criteria $criteria = null): Criteria
     {
         if ($criteria instanceof ChildEventoQuery) {
             return $criteria;
@@ -248,7 +266,7 @@ abstract class EventoQuery extends ModelCriteria
      *
      * @return ChildEvento|array|mixed the result, formatted by the current formatter
      */
-    public function findPk($key, ConnectionInterface $con = null)
+    public function findPk($key, ?ConnectionInterface $con = null)
     {
         if ($key === null) {
             return null;
@@ -280,8 +298,8 @@ abstract class EventoQuery extends ModelCriteria
      * Find object by primary key using raw SQL to go fast.
      * Bypass doSelect() and the object formatter by using generated code.
      *
-     * @param     mixed $key Primary key to use for the query
-     * @param     ConnectionInterface $con A connection object
+     * @param mixed $key Primary key to use for the query
+     * @param ConnectionInterface $con A connection object
      *
      * @throws \Propel\Runtime\Exception\PropelException
      *
@@ -313,8 +331,8 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Find object by primary key.
      *
-     * @param     mixed $key Primary key to use for the query
-     * @param     ConnectionInterface $con A connection object
+     * @param mixed $key Primary key to use for the query
+     * @param ConnectionInterface $con A connection object
      *
      * @return ChildEvento|array|mixed the result, formatted by the current formatter
      */
@@ -334,12 +352,12 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $objs = $c->findPks(array(12, 56, 832), $con);
      * </code>
-     * @param     array $keys Primary keys to use for the query
-     * @param     ConnectionInterface $con an optional connection object
+     * @param array $keys Primary keys to use for the query
+     * @param ConnectionInterface $con an optional connection object
      *
-     * @return ObjectCollection|array|mixed the list of results, formatted by the current formatter
+     * @return Collection|array|mixed the list of results, formatted by the current formatter
      */
-    public function findPks($keys, ConnectionInterface $con = null)
+    public function findPks($keys, ?ConnectionInterface $con = null)
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getReadConnection($this->getDbName());
@@ -356,27 +374,31 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Filter the query by primary key
      *
-     * @param     mixed $key Primary key to use for the query
+     * @param mixed $key Primary key to use for the query
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function filterByPrimaryKey($key)
     {
 
-        return $this->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $key, Criteria::EQUAL);
+        $this->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $key, Criteria::EQUAL);
+
+        return $this;
     }
 
     /**
      * Filter the query by a list of primary keys
      *
-     * @param     array $keys The list of primary key to use for the query
+     * @param array|int $keys The list of primary key to use for the query
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function filterByPrimaryKeys($keys)
     {
 
-        return $this->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $keys, Criteria::IN);
+        $this->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $keys, Criteria::IN);
+
+        return $this;
     }
 
     /**
@@ -386,14 +408,15 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $query->filterByEventoId('fooValue');   // WHERE evento_id = 'fooValue'
      * $query->filterByEventoId('%fooValue%', Criteria::LIKE); // WHERE evento_id LIKE '%fooValue%'
+     * $query->filterByEventoId(['foo', 'bar']); // WHERE evento_id IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $eventoId The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $eventoId The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEventoId($eventoId = null, $comparison = null)
+    public function filterByEventoId($eventoId = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($eventoId)) {
@@ -401,7 +424,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $eventoId, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $eventoId, $comparison);
+
+        return $this;
     }
 
     /**
@@ -411,14 +436,15 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $query->filterByTitulo('fooValue');   // WHERE titulo = 'fooValue'
      * $query->filterByTitulo('%fooValue%', Criteria::LIKE); // WHERE titulo LIKE '%fooValue%'
+     * $query->filterByTitulo(['foo', 'bar']); // WHERE titulo IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $titulo The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $titulo The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByTitulo($titulo = null, $comparison = null)
+    public function filterByTitulo($titulo = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($titulo)) {
@@ -426,7 +452,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_TITULO, $titulo, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_TITULO, $titulo, $comparison);
+
+        return $this;
     }
 
     /**
@@ -436,14 +464,15 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $query->filterByNome('fooValue');   // WHERE nome = 'fooValue'
      * $query->filterByNome('%fooValue%', Criteria::LIKE); // WHERE nome LIKE '%fooValue%'
+     * $query->filterByNome(['foo', 'bar']); // WHERE nome IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $nome The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $nome The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByNome($nome = null, $comparison = null)
+    public function filterByNome($nome = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($nome)) {
@@ -451,18 +480,20 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_NOME, $nome, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_NOME, $nome, $comparison);
+
+        return $this;
     }
 
     /**
      * Filter the query on the tipo column
      *
-     * @param     mixed $tipo The value to use as filter
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param mixed $tipo The value to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByTipo($tipo = null, $comparison = null)
+    public function filterByTipo($tipo = null, ?string $comparison = null)
     {
         $valueSet = EventoTableMap::getValueSet(EventoTableMap::COL_TIPO);
         if (is_scalar($tipo)) {
@@ -471,7 +502,7 @@ abstract class EventoQuery extends ModelCriteria
             }
             $tipo = array_search($tipo, $valueSet);
         } elseif (is_array($tipo)) {
-            $convertedValues = array();
+            $convertedValues = [];
             foreach ($tipo as $value) {
                 if (!in_array($value, $valueSet)) {
                     throw new PropelException(sprintf('Value "%s" is not accepted in this enumerated column', $value));
@@ -484,7 +515,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_TIPO, $tipo, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_TIPO, $tipo, $comparison);
+
+        return $this;
     }
 
     /**
@@ -497,15 +530,15 @@ abstract class EventoQuery extends ModelCriteria
      * $query->filterByAno(array('min' => 12)); // WHERE ano > 12
      * </code>
      *
-     * @param     mixed $ano The value to use as filter.
+     * @param mixed $ano The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByAno($ano = null, $comparison = null)
+    public function filterByAno($ano = null, ?string $comparison = null)
     {
         if (is_array($ano)) {
             $useMinMax = false;
@@ -525,7 +558,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_ANO, $ano, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_ANO, $ano, $comparison);
+
+        return $this;
     }
 
     /**
@@ -535,14 +570,15 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $query->filterByMenu('fooValue');   // WHERE menu = 'fooValue'
      * $query->filterByMenu('%fooValue%', Criteria::LIKE); // WHERE menu LIKE '%fooValue%'
+     * $query->filterByMenu(['foo', 'bar']); // WHERE menu IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $menu The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $menu The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByMenu($menu = null, $comparison = null)
+    public function filterByMenu($menu = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($menu)) {
@@ -550,7 +586,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_MENU, $menu, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_MENU, $menu, $comparison);
+
+        return $this;
     }
 
     /**
@@ -562,22 +600,24 @@ abstract class EventoQuery extends ModelCriteria
      * $query->filterByAtivo('yes'); // WHERE ativo = true
      * </code>
      *
-     * @param     boolean|string $ativo The value to use as filter.
+     * @param bool|string $ativo The value to use as filter.
      *              Non-boolean arguments are converted using the following rules:
      *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
      *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByAtivo($ativo = null, $comparison = null)
+    public function filterByAtivo($ativo = null, ?string $comparison = null)
     {
         if (is_string($ativo)) {
-            $ativo = in_array(strtolower($ativo), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            $ativo = in_array(strtolower($ativo), array('false', 'off', '-', 'no', 'n', '0', ''), true) ? false : true;
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_ATIVO, $ativo, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_ATIVO, $ativo, $comparison);
+
+        return $this;
     }
 
     /**
@@ -589,22 +629,24 @@ abstract class EventoQuery extends ModelCriteria
      * $query->filterByFinalizado('yes'); // WHERE finalizado = true
      * </code>
      *
-     * @param     boolean|string $finalizado The value to use as filter.
+     * @param bool|string $finalizado The value to use as filter.
      *              Non-boolean arguments are converted using the following rules:
      *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
      *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByFinalizado($finalizado = null, $comparison = null)
+    public function filterByFinalizado($finalizado = null, ?string $comparison = null)
     {
         if (is_string($finalizado)) {
-            $finalizado = in_array(strtolower($finalizado), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            $finalizado = in_array(strtolower($finalizado), array('false', 'off', '-', 'no', 'n', '0', ''), true) ? false : true;
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_FINALIZADO, $finalizado, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_FINALIZADO, $finalizado, $comparison);
+
+        return $this;
     }
 
     /**
@@ -616,22 +658,24 @@ abstract class EventoQuery extends ModelCriteria
      * $query->filterBySpoilers('yes'); // WHERE spoilers = true
      * </code>
      *
-     * @param     boolean|string $spoilers The value to use as filter.
+     * @param bool|string $spoilers The value to use as filter.
      *              Non-boolean arguments are converted using the following rules:
      *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
      *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterBySpoilers($spoilers = null, $comparison = null)
+    public function filterBySpoilers($spoilers = null, ?string $comparison = null)
     {
         if (is_string($spoilers)) {
-            $spoilers = in_array(strtolower($spoilers), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            $spoilers = in_array(strtolower($spoilers), array('false', 'off', '-', 'no', 'n', '0', ''), true) ? false : true;
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_SPOILERS, $spoilers, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_SPOILERS, $spoilers, $comparison);
+
+        return $this;
     }
 
     /**
@@ -643,22 +687,24 @@ abstract class EventoQuery extends ModelCriteria
      * $query->filterByTemCertificado('yes'); // WHERE tem_certificado = true
      * </code>
      *
-     * @param     boolean|string $temCertificado The value to use as filter.
+     * @param bool|string $temCertificado The value to use as filter.
      *              Non-boolean arguments are converted using the following rules:
      *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
      *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByTemCertificado($temCertificado = null, $comparison = null)
+    public function filterByTemCertificado($temCertificado = null, ?string $comparison = null)
     {
         if (is_string($temCertificado)) {
-            $temCertificado = in_array(strtolower($temCertificado), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            $temCertificado = in_array(strtolower($temCertificado), array('false', 'off', '-', 'no', 'n', '0', ''), true) ? false : true;
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_TEM_CERTIFICADO, $temCertificado, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_TEM_CERTIFICADO, $temCertificado, $comparison);
+
+        return $this;
     }
 
     /**
@@ -668,14 +714,15 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $query->filterByPresidente('fooValue');   // WHERE presidente = 'fooValue'
      * $query->filterByPresidente('%fooValue%', Criteria::LIKE); // WHERE presidente LIKE '%fooValue%'
+     * $query->filterByPresidente(['foo', 'bar']); // WHERE presidente IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $presidente The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $presidente The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByPresidente($presidente = null, $comparison = null)
+    public function filterByPresidente($presidente = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($presidente)) {
@@ -683,7 +730,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_PRESIDENTE, $presidente, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_PRESIDENTE, $presidente, $comparison);
+
+        return $this;
     }
 
     /**
@@ -693,14 +742,15 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $query->filterByData('fooValue');   // WHERE data = 'fooValue'
      * $query->filterByData('%fooValue%', Criteria::LIKE); // WHERE data LIKE '%fooValue%'
+     * $query->filterByData(['foo', 'bar']); // WHERE data IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $data The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $data The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByData($data = null, $comparison = null)
+    public function filterByData($data = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($data)) {
@@ -708,7 +758,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_DATA, $data, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_DATA, $data, $comparison);
+
+        return $this;
     }
 
     /**
@@ -718,14 +770,15 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $query->filterByMandatoPresidente('fooValue');   // WHERE mandato_presidente = 'fooValue'
      * $query->filterByMandatoPresidente('%fooValue%', Criteria::LIKE); // WHERE mandato_presidente LIKE '%fooValue%'
+     * $query->filterByMandatoPresidente(['foo', 'bar']); // WHERE mandato_presidente IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $mandatoPresidente The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $mandatoPresidente The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByMandatoPresidente($mandatoPresidente = null, $comparison = null)
+    public function filterByMandatoPresidente($mandatoPresidente = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($mandatoPresidente)) {
@@ -733,7 +786,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_MANDATO_PRESIDENTE, $mandatoPresidente, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_MANDATO_PRESIDENTE, $mandatoPresidente, $comparison);
+
+        return $this;
     }
 
     /**
@@ -743,14 +798,15 @@ abstract class EventoQuery extends ModelCriteria
      * <code>
      * $query->filterByLocal('fooValue');   // WHERE local = 'fooValue'
      * $query->filterByLocal('%fooValue%', Criteria::LIKE); // WHERE local LIKE '%fooValue%'
+     * $query->filterByLocal(['foo', 'bar']); // WHERE local IN ('foo', 'bar')
      * </code>
      *
-     * @param     string $local The value to use as filter.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|string[] $local The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByLocal($local = null, $comparison = null)
+    public function filterByLocal($local = null, ?string $comparison = null)
     {
         if (null === $comparison) {
             if (is_array($local)) {
@@ -758,7 +814,9 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_LOCAL, $local, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_LOCAL, $local, $comparison);
+
+        return $this;
     }
 
     /**
@@ -770,22 +828,24 @@ abstract class EventoQuery extends ModelCriteria
      * $query->filterByEmAndamento('yes'); // WHERE em_andamento = true
      * </code>
      *
-     * @param     boolean|string $emAndamento The value to use as filter.
+     * @param bool|string $emAndamento The value to use as filter.
      *              Non-boolean arguments are converted using the following rules:
      *                * 1, '1', 'true',  'on',  and 'yes' are converted to boolean true
      *                * 0, '0', 'false', 'off', and 'no'  are converted to boolean false
      *              Check on string values is case insensitive (so 'FaLsE' is seen as 'false').
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEmAndamento($emAndamento = null, $comparison = null)
+    public function filterByEmAndamento($emAndamento = null, ?string $comparison = null)
     {
         if (is_string($emAndamento)) {
-            $emAndamento = in_array(strtolower($emAndamento), array('false', 'off', '-', 'no', 'n', '0', '')) ? false : true;
+            $emAndamento = in_array(strtolower($emAndamento), array('false', 'off', '-', 'no', 'n', '0', ''), true) ? false : true;
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_EM_ANDAMENTO, $emAndamento, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_EM_ANDAMENTO, $emAndamento, $comparison);
+
+        return $this;
     }
 
     /**
@@ -798,15 +858,15 @@ abstract class EventoQuery extends ModelCriteria
      * $query->filterByCargaHoraria(array('min' => 12)); // WHERE carga_horaria > 12
      * </code>
      *
-     * @param     mixed $cargaHoraria The value to use as filter.
+     * @param mixed $cargaHoraria The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByCargaHoraria($cargaHoraria = null, $comparison = null)
+    public function filterByCargaHoraria($cargaHoraria = null, ?string $comparison = null)
     {
         if (is_array($cargaHoraria)) {
             $useMinMax = false;
@@ -826,27 +886,33 @@ abstract class EventoQuery extends ModelCriteria
             }
         }
 
-        return $this->addUsingAlias(EventoTableMap::COL_CARGA_HORARIA, $cargaHoraria, $comparison);
+        $this->addUsingAlias(EventoTableMap::COL_CARGA_HORARIA, $cargaHoraria, $comparison);
+
+        return $this;
     }
 
     /**
      * Filter the query by a related \Baja\Model\Equipe object
      *
      * @param \Baja\Model\Equipe|ObjectCollection $equipe the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByEquipe($equipe, $comparison = null)
+    public function filterByEquipe($equipe, ?string $comparison = null)
     {
         if ($equipe instanceof \Baja\Model\Equipe) {
-            return $this
+            $this
                 ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $equipe->getEventoId(), $comparison);
+
+            return $this;
         } elseif ($equipe instanceof ObjectCollection) {
-            return $this
+            $this
                 ->useEquipeQuery()
                 ->filterByPrimaryKeys($equipe->getPrimaryKeys())
                 ->endUse();
+
+            return $this;
         } else {
             throw new PropelException('filterByEquipe() only accepts arguments of type \Baja\Model\Equipe or Collection');
         }
@@ -855,12 +921,12 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Equipe relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinEquipe($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinEquipe(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Equipe');
@@ -889,9 +955,9 @@ abstract class EventoQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\EquipeQuery A secondary query class using the current class as primary query
      */
@@ -903,23 +969,123 @@ abstract class EventoQuery extends ModelCriteria
     }
 
     /**
+     * Use the Equipe relation Equipe object
+     *
+     * @param callable(\Baja\Model\EquipeQuery):\Baja\Model\EquipeQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withEquipeQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useEquipeQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Equipe table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\EquipeQuery The inner query object of the EXISTS statement
+     */
+    public function useEquipeExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\EquipeQuery */
+        $q = $this->useExistsQuery('Equipe', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Equipe table for a NOT EXISTS query.
+     *
+     * @see useEquipeExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\EquipeQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useEquipeNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\EquipeQuery */
+        $q = $this->useExistsQuery('Equipe', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Equipe table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\EquipeQuery The inner query object of the IN statement
+     */
+    public function useInEquipeQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\EquipeQuery */
+        $q = $this->useInQuery('Equipe', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Equipe table for a NOT IN query.
+     *
+     * @see useEquipeInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\EquipeQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInEquipeQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\EquipeQuery */
+        $q = $this->useInQuery('Equipe', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Participante object
      *
      * @param \Baja\Model\Participante|ObjectCollection $participante the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByParticipante($participante, $comparison = null)
+    public function filterByParticipante($participante, ?string $comparison = null)
     {
         if ($participante instanceof \Baja\Model\Participante) {
-            return $this
+            $this
                 ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $participante->getEventoId(), $comparison);
+
+            return $this;
         } elseif ($participante instanceof ObjectCollection) {
-            return $this
+            $this
                 ->useParticipanteQuery()
                 ->filterByPrimaryKeys($participante->getPrimaryKeys())
                 ->endUse();
+
+            return $this;
         } else {
             throw new PropelException('filterByParticipante() only accepts arguments of type \Baja\Model\Participante or Collection');
         }
@@ -928,12 +1094,12 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Participante relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinParticipante($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinParticipante(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Participante');
@@ -962,9 +1128,9 @@ abstract class EventoQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\ParticipanteQuery A secondary query class using the current class as primary query
      */
@@ -976,23 +1142,123 @@ abstract class EventoQuery extends ModelCriteria
     }
 
     /**
+     * Use the Participante relation Participante object
+     *
+     * @param callable(\Baja\Model\ParticipanteQuery):\Baja\Model\ParticipanteQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withParticipanteQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useParticipanteQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Participante table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ParticipanteQuery The inner query object of the EXISTS statement
+     */
+    public function useParticipanteExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ParticipanteQuery */
+        $q = $this->useExistsQuery('Participante', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Participante table for a NOT EXISTS query.
+     *
+     * @see useParticipanteExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ParticipanteQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useParticipanteNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ParticipanteQuery */
+        $q = $this->useExistsQuery('Participante', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Participante table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ParticipanteQuery The inner query object of the IN statement
+     */
+    public function useInParticipanteQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ParticipanteQuery */
+        $q = $this->useInQuery('Participante', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Participante table for a NOT IN query.
+     *
+     * @see useParticipanteInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ParticipanteQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInParticipanteQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ParticipanteQuery */
+        $q = $this->useInQuery('Participante', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Prova object
      *
      * @param \Baja\Model\Prova|ObjectCollection $prova the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByProva($prova, $comparison = null)
+    public function filterByProva($prova, ?string $comparison = null)
     {
         if ($prova instanceof \Baja\Model\Prova) {
-            return $this
+            $this
                 ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $prova->getEventoId(), $comparison);
+
+            return $this;
         } elseif ($prova instanceof ObjectCollection) {
-            return $this
+            $this
                 ->useProvaQuery()
                 ->filterByPrimaryKeys($prova->getPrimaryKeys())
                 ->endUse();
+
+            return $this;
         } else {
             throw new PropelException('filterByProva() only accepts arguments of type \Baja\Model\Prova or Collection');
         }
@@ -1001,12 +1267,12 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Prova relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinProva($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinProva(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Prova');
@@ -1035,9 +1301,9 @@ abstract class EventoQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\ProvaQuery A secondary query class using the current class as primary query
      */
@@ -1049,23 +1315,123 @@ abstract class EventoQuery extends ModelCriteria
     }
 
     /**
+     * Use the Prova relation Prova object
+     *
+     * @param callable(\Baja\Model\ProvaQuery):\Baja\Model\ProvaQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withProvaQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useProvaQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Prova table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ProvaQuery The inner query object of the EXISTS statement
+     */
+    public function useProvaExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ProvaQuery */
+        $q = $this->useExistsQuery('Prova', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Prova table for a NOT EXISTS query.
+     *
+     * @see useProvaExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ProvaQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useProvaNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ProvaQuery */
+        $q = $this->useExistsQuery('Prova', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Prova table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ProvaQuery The inner query object of the IN statement
+     */
+    public function useInProvaQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ProvaQuery */
+        $q = $this->useInQuery('Prova', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Prova table for a NOT IN query.
+     *
+     * @see useProvaInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ProvaQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInProvaQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ProvaQuery */
+        $q = $this->useInQuery('Prova', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Resultado object
      *
      * @param \Baja\Model\Resultado|ObjectCollection $resultado the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByResultado($resultado, $comparison = null)
+    public function filterByResultado($resultado, ?string $comparison = null)
     {
         if ($resultado instanceof \Baja\Model\Resultado) {
-            return $this
+            $this
                 ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $resultado->getEventoId(), $comparison);
+
+            return $this;
         } elseif ($resultado instanceof ObjectCollection) {
-            return $this
+            $this
                 ->useResultadoQuery()
                 ->filterByPrimaryKeys($resultado->getPrimaryKeys())
                 ->endUse();
+
+            return $this;
         } else {
             throw new PropelException('filterByResultado() only accepts arguments of type \Baja\Model\Resultado or Collection');
         }
@@ -1074,12 +1440,12 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Resultado relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinResultado($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinResultado(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Resultado');
@@ -1108,9 +1474,9 @@ abstract class EventoQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\ResultadoQuery A secondary query class using the current class as primary query
      */
@@ -1122,23 +1488,123 @@ abstract class EventoQuery extends ModelCriteria
     }
 
     /**
+     * Use the Resultado relation Resultado object
+     *
+     * @param callable(\Baja\Model\ResultadoQuery):\Baja\Model\ResultadoQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withResultadoQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useResultadoQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Resultado table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ResultadoQuery The inner query object of the EXISTS statement
+     */
+    public function useResultadoExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ResultadoQuery */
+        $q = $this->useExistsQuery('Resultado', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Resultado table for a NOT EXISTS query.
+     *
+     * @see useResultadoExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ResultadoQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useResultadoNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ResultadoQuery */
+        $q = $this->useExistsQuery('Resultado', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Resultado table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ResultadoQuery The inner query object of the IN statement
+     */
+    public function useInResultadoQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ResultadoQuery */
+        $q = $this->useInQuery('Resultado', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Resultado table for a NOT IN query.
+     *
+     * @see useResultadoInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ResultadoQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInResultadoQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ResultadoQuery */
+        $q = $this->useInQuery('Resultado', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Fila object
      *
      * @param \Baja\Model\Fila|ObjectCollection $fila the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByFila($fila, $comparison = null)
+    public function filterByFila($fila, ?string $comparison = null)
     {
         if ($fila instanceof \Baja\Model\Fila) {
-            return $this
+            $this
                 ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $fila->getEventoId(), $comparison);
+
+            return $this;
         } elseif ($fila instanceof ObjectCollection) {
-            return $this
+            $this
                 ->useFilaQuery()
                 ->filterByPrimaryKeys($fila->getPrimaryKeys())
                 ->endUse();
+
+            return $this;
         } else {
             throw new PropelException('filterByFila() only accepts arguments of type \Baja\Model\Fila or Collection');
         }
@@ -1147,12 +1613,12 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Fila relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinFila($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinFila(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Fila');
@@ -1181,9 +1647,9 @@ abstract class EventoQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\FilaQuery A secondary query class using the current class as primary query
      */
@@ -1195,23 +1661,123 @@ abstract class EventoQuery extends ModelCriteria
     }
 
     /**
+     * Use the Fila relation Fila object
+     *
+     * @param callable(\Baja\Model\FilaQuery):\Baja\Model\FilaQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withFilaQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useFilaQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Fila table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\FilaQuery The inner query object of the EXISTS statement
+     */
+    public function useFilaExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\FilaQuery */
+        $q = $this->useExistsQuery('Fila', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Fila table for a NOT EXISTS query.
+     *
+     * @see useFilaExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\FilaQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useFilaNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\FilaQuery */
+        $q = $this->useExistsQuery('Fila', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Fila table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\FilaQuery The inner query object of the IN statement
+     */
+    public function useInFilaQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\FilaQuery */
+        $q = $this->useInQuery('Fila', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Fila table for a NOT IN query.
+     *
+     * @see useFilaInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\FilaQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInFilaQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\FilaQuery */
+        $q = $this->useInQuery('Fila', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Premiacao object
      *
      * @param \Baja\Model\Premiacao|ObjectCollection $premiacao the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterByPremiacao($premiacao, $comparison = null)
+    public function filterByPremiacao($premiacao, ?string $comparison = null)
     {
         if ($premiacao instanceof \Baja\Model\Premiacao) {
-            return $this
+            $this
                 ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $premiacao->getEventoId(), $comparison);
+
+            return $this;
         } elseif ($premiacao instanceof ObjectCollection) {
-            return $this
+            $this
                 ->usePremiacaoQuery()
                 ->filterByPrimaryKeys($premiacao->getPrimaryKeys())
                 ->endUse();
+
+            return $this;
         } else {
             throw new PropelException('filterByPremiacao() only accepts arguments of type \Baja\Model\Premiacao or Collection');
         }
@@ -1220,12 +1786,12 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Premiacao relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinPremiacao($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinPremiacao(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Premiacao');
@@ -1254,9 +1820,9 @@ abstract class EventoQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\PremiacaoQuery A secondary query class using the current class as primary query
      */
@@ -1268,23 +1834,123 @@ abstract class EventoQuery extends ModelCriteria
     }
 
     /**
+     * Use the Premiacao relation Premiacao object
+     *
+     * @param callable(\Baja\Model\PremiacaoQuery):\Baja\Model\PremiacaoQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withPremiacaoQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->usePremiacaoQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Premiacao table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\PremiacaoQuery The inner query object of the EXISTS statement
+     */
+    public function usePremiacaoExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\PremiacaoQuery */
+        $q = $this->useExistsQuery('Premiacao', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Premiacao table for a NOT EXISTS query.
+     *
+     * @see usePremiacaoExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\PremiacaoQuery The inner query object of the NOT EXISTS statement
+     */
+    public function usePremiacaoNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\PremiacaoQuery */
+        $q = $this->useExistsQuery('Premiacao', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Premiacao table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\PremiacaoQuery The inner query object of the IN statement
+     */
+    public function useInPremiacaoQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\PremiacaoQuery */
+        $q = $this->useInQuery('Premiacao', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Premiacao table for a NOT IN query.
+     *
+     * @see usePremiacaoInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\PremiacaoQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInPremiacaoQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\PremiacaoQuery */
+        $q = $this->useInQuery('Premiacao', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Senha object
      *
      * @param \Baja\Model\Senha|ObjectCollection $senha the related object to use as filter
-     * @param string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
-     * @return ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function filterBySenha($senha, $comparison = null)
+    public function filterBySenha($senha, ?string $comparison = null)
     {
         if ($senha instanceof \Baja\Model\Senha) {
-            return $this
+            $this
                 ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $senha->getEventoId(), $comparison);
+
+            return $this;
         } elseif ($senha instanceof ObjectCollection) {
-            return $this
+            $this
                 ->useSenhaQuery()
                 ->filterByPrimaryKeys($senha->getPrimaryKeys())
                 ->endUse();
+
+            return $this;
         } else {
             throw new PropelException('filterBySenha() only accepts arguments of type \Baja\Model\Senha or Collection');
         }
@@ -1293,12 +1959,12 @@ abstract class EventoQuery extends ModelCriteria
     /**
      * Adds a JOIN clause to the query using the Senha relation
      *
-     * @param     string $relationAlias optional alias for the relation
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
-    public function joinSenha($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    public function joinSenha(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
     {
         $tableMap = $this->getTableMap();
         $relationMap = $tableMap->getRelation('Senha');
@@ -1327,9 +1993,9 @@ abstract class EventoQuery extends ModelCriteria
      *
      * @see useQuery()
      *
-     * @param     string $relationAlias optional alias for the relation,
+     * @param string $relationAlias optional alias for the relation,
      *                                   to be used as main alias in the secondary query
-     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return \Baja\Model\SenhaQuery A secondary query class using the current class as primary query
      */
@@ -1341,11 +2007,107 @@ abstract class EventoQuery extends ModelCriteria
     }
 
     /**
+     * Use the Senha relation Senha object
+     *
+     * @param callable(\Baja\Model\SenhaQuery):\Baja\Model\SenhaQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withSenhaQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useSenhaQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Senha table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\SenhaQuery The inner query object of the EXISTS statement
+     */
+    public function useSenhaExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\SenhaQuery */
+        $q = $this->useExistsQuery('Senha', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Senha table for a NOT EXISTS query.
+     *
+     * @see useSenhaExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\SenhaQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useSenhaNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\SenhaQuery */
+        $q = $this->useExistsQuery('Senha', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Senha table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\SenhaQuery The inner query object of the IN statement
+     */
+    public function useInSenhaQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\SenhaQuery */
+        $q = $this->useInQuery('Senha', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Senha table for a NOT IN query.
+     *
+     * @see useSenhaInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\SenhaQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInSenhaQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\SenhaQuery */
+        $q = $this->useInQuery('Senha', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
      * Exclude object from result
      *
-     * @param   ChildEvento $evento Object to remove from the list of results
+     * @param ChildEvento $evento Object to remove from the list of results
      *
-     * @return $this|ChildEventoQuery The current query, for fluid interface
+     * @return $this The current query, for fluid interface
      */
     public function prune($evento = null)
     {
@@ -1362,7 +2124,7 @@ abstract class EventoQuery extends ModelCriteria
      * @param ConnectionInterface $con the connection to use
      * @return int The number of affected rows (if supported by underlying database driver).
      */
-    public function doDeleteAll(ConnectionInterface $con = null)
+    public function doDeleteAll(?ConnectionInterface $con = null): int
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(EventoTableMap::DATABASE_NAME);
@@ -1387,12 +2149,12 @@ abstract class EventoQuery extends ModelCriteria
      * Performs a DELETE on the database based on the current ModelCriteria
      *
      * @param ConnectionInterface $con the connection to use
-     * @return int             The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
+     * @return int The number of affected rows (if supported by underlying database driver).  This includes CASCADE-related rows
      *                         if supported by native driver or if emulated using Propel.
-     * @throws PropelException Any exceptions caught during processing will be
+     * @throws \Propel\Runtime\Exception\PropelException Any exceptions caught during processing will be
      *                         rethrown wrapped into a PropelException.
      */
-    public function delete(ConnectionInterface $con = null)
+    public function delete(?ConnectionInterface $con = null): int
     {
         if (null === $con) {
             $con = Propel::getServiceContainer()->getWriteConnection(EventoTableMap::DATABASE_NAME);
@@ -1417,4 +2179,4 @@ abstract class EventoQuery extends ModelCriteria
         });
     }
 
-} // EventoQuery
+}
