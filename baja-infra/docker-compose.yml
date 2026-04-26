@@ -106,6 +106,19 @@ services:
     networks:
       - baja
 
+  baja-js:
+    build:
+      context: ..
+      dockerfile: baja-infra/baja-js/Dockerfile
+    image: baja-js:latest
+    container_name: baja-js
+    restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+      NODE_ENV: production
+    networks:
+      - baja
+
   nginx:
     image: nginx:1.27-alpine
     container_name: baja-nginx
@@ -121,6 +134,7 @@ services:
       - phpbb-baja
       - phpbb-formula
       - baja-app
+      - baja-js
     networks:
       - baja
 
