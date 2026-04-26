@@ -100,3 +100,5 @@ formula/*
 
 #Composer
 composer.phar
+# IDE / agent config
+.claude/
