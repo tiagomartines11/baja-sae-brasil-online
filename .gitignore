@@ -102,3 +102,26 @@ formula/*
 composer.phar
 # IDE / agent config
 .claude/
+
+# --- Monorepo-level additions (WP6) ---
+# Per-language gitignores still live alongside their code
+# (baja-js/.gitignore, baja-php-specific patterns above, etc.).
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor (covers VS Code; .idea/* already above)
+.vscode/
+
+# Local env
+.env.local
+.env.*.local
+
+# Node (baja-js)
+node_modules/
+.next/
+dist/
+
+# Backup files
+*.bak
