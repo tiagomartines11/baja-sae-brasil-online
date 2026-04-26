@@ -40,15 +40,17 @@ class Session
     }
 
     static function endSession() {
-        global $user;
-        $user->session_kill();
-        $user->session_begin();
-        session_unset();
-        session_destroy();
-        session_write_close();
-        setcookie(session_name(), '', 0, '/');
-        session_regenerate_id(true);
-        header("Location: login.php");
+        // Cookie clearing has to happen on the domain that set the cookies —
+        // forum.baja.local — so we bounce through the forum's logout
+        // endpoint. After phpBB clears its session row + cookies, it
+        // redirects the browser back to our login page, which lands
+        // anonymous on the next request.
+        Session::$_currentUser = null;
+        $scheme = $_SERVER['REQUEST_SCHEME'] ?? Url::scheme();
+        $host   = $_SERVER['HTTP_HOST']      ?? Url::domain();
+        $loginUrl = $scheme . '://' . $host . '/login.php';
+        $logoutUrl = Url::forum('/app.php/baja/logout?redirect=' . urlencode($loginUrl));
+        header("Location: $logoutUrl");
         exit();
     }
 
