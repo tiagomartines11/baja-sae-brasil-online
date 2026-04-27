@@ -68,12 +68,14 @@ services:
 
   phpbb-formula:
     build:
-      context: ./phpbb-formula
+      context: ..
+      dockerfile: baja-infra/phpbb-formula/Dockerfile
     image: baja-phpbb-formula:latest
     container_name: baja-phpbb-formula
     restart: unless-stopped
     environment:
       TZ: America/Sao_Paulo
+      MYSQL_PHPBB_FORMULA_PASSWORD: ${MYSQL_PHPBB_FORMULA_PASSWORD}
     volumes:
       - phpbb_formula_html:/var/www/html
     depends_on:

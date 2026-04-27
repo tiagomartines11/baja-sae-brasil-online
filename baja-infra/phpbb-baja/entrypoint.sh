@@ -1,14 +1,50 @@
 #!/bin/sh
-# Invoked by the base phpBB entrypoint after config.php seeding and dir
-# perms. Enables the baja/auth extension and refreshes its phpbb_config
-# rows from env vars so prod/dev values stay in sync without manual ACP
-# edits, then hands off to php-fpm.
+# phpbb-baja entrypoint.
+# Runs in this order:
+#   1. Set up writable directories (cache, store, etc.)
+#   2. Seed config.php from baked-in template if needed
+#   3. Wait for MySQL to be query-ready
+#   4. Enable baja/auth extension and refresh its config from env
+#   5. Hand off to php-fpm (or whatever CMD was passed)
 set -e
 
+# ----- 1. Runtime-writable directories -----
+# phpBB writes cache, session, and uploaded files to these paths.
+for dir in cache store files images/avatars/upload; do
+    mkdir -p "/var/www/html/${dir}"
+    chown -R www-data:www-data "/var/www/html/${dir}"
+done
+
+# ----- 2. Seed config.php on first boot -----
+# If a seed config.php is baked into the image and the volume doesn't have
+# one yet (fresh volume), copy it in. Makes "docker compose up -d" from a
+# clean clone work zero-touch.
+if [ -f /var/www/html/config.php.seed ] && [ ! -s /var/www/html/config.php ]; then
+    echo "phpbb-baja: seeding config.php from baked-in seed..."
+    cp /var/www/html/config.php.seed /var/www/html/config.php
+    chown www-data:www-data /var/www/html/config.php
+    chmod 640 /var/www/html/config.php
+fi
+
+# Make sure config.php is writable during install if it doesn't exist yet
+# (relevant only when there's no seed and someone wants to run the installer
+# manually — not our normal flow, but cheap defense).
+if [ ! -f /var/www/html/config.php ]; then
+    touch /var/www/html/config.php
+    chown www-data:www-data /var/www/html/config.php
+    chmod 660 /var/www/html/config.php
+fi
+
+# Make sure install directory is writable (if still present — we move it
+# to install.off in the Dockerfile, so this is mostly defensive).
+chmod -R u+w /var/www/html/install 2>/dev/null || true
+
+# Beyond this point, we run extension setup and config sync. Skip if config.php
+# isn't seeded (fresh-install scenario) or the extension isn't bundled.
 if [ -f /var/www/html/config.php ] && [ -d /var/www/html/ext/baja/auth ]; then
     cd /var/www/html
 
-    # ----- Wait for MySQL to actually be query-ready -----
+    # ----- 3. Wait for MySQL to actually be query-ready -----
     # mysql's depends_on:condition:service_healthy only verifies that the
     # daemon is listening + the seed has loaded. But on cold start the
     # init scripts (CREATE DATABASE, dumps, CREATE USER) run AFTER
@@ -34,6 +70,7 @@ if [ -f /var/www/html/config.php ] && [ -d /var/www/html/ext/baja/auth ]; then
     done
     echo "phpbb-baja: mysql is query-ready"
 
+    # ----- 4. Enable extension and refresh its config -----
     # `|| true` — the CLI returns nonzero when the extension is already
     # enabled, which is the steady state on container restart. We don't
     # want a crash-loop on what is effectively a no-op.
@@ -51,4 +88,5 @@ if [ -f /var/www/html/config.php ] && [ -d /var/www/html/ext/baja/auth ]; then
     fi
 fi
 
-exec php-fpm
+# ----- 5. Hand off to CMD -----
+exec "$@"
