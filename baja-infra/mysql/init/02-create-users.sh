@@ -8,9 +8,15 @@
 # Env vars are inherited from the mysql container (see compose).
 # `set -u` makes a missing password error early instead of running with
 # an empty password and creating a wide-open user.
-set -euo pipefail
+#
+# Wrapped in a subshell because MySQL's docker-entrypoint *sources* this
+# script when the executable bit is missing (common with Windows-host
+# bind mounts). Without the subshell, `set -euo pipefail` leaks into the
+# parent entrypoint shell and aborts it before the seed scripts (03+) run.
+(
+    set -euo pipefail
 
-mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" <<EOF
+    mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" <<EOF
 -- phpBB Baja user (full access to its own DB only)
 CREATE USER IF NOT EXISTS 'phpbb_baja'@'%' IDENTIFIED BY '${MYSQL_PHPBB_BAJA_PASSWORD}';
 GRANT ALL PRIVILEGES ON phpbb_baja.* TO 'phpbb_baja'@'%';
@@ -29,4 +35,5 @@ GRANT SELECT ON phpbb_baja.* TO 'resultados'@'%';
 FLUSH PRIVILEGES;
 EOF
 
-echo "Application users created."
+    echo "Application users created."
+)
