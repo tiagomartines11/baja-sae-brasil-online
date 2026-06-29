@@ -59,5 +59,13 @@ until php -r 'exit(@(new mysqli("mysql", "phpbb_formula", getenv("MYSQL_PHPBB_FO
 done
 echo "phpbb-formula: mysql is query-ready"
 
-# ----- 4. Hand off to CMD -----
+# ----- 4. Enable extension and refresh its config -----
+# `|| true` — the CLI returns nonzero when the extension is already
+# enabled, which is the steady state on container restart. We don't
+# want a crash-loop on what is effectively a no-op.
+su-exec www-data php bin/phpbbcli.php extension:enable bakasura/xforwardedfor || true
+su-exec www-data php bin/phpbbcli.php extension:enable vse/abbc3 || true
+su-exec www-data php bin/phpbbcli.php --safe-mode extension:disable phpbb/viglink || true
+
+# ----- 5. Hand off to CMD -----
 exec "$@"

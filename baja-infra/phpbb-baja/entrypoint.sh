@@ -4,7 +4,7 @@
 #   1. Set up writable directories (cache, store, etc.)
 #   2. Seed config.php from baked-in template if needed
 #   3. Wait for MySQL to be query-ready
-#   4. Enable baja/auth extension and refresh its config from env
+#   4. Enable extensions and refresh baja/auth config from env
 #   5. Hand off to php-fpm (or whatever CMD was passed)
 set -e
 
@@ -39,53 +39,52 @@ fi
 # to install.off in the Dockerfile, so this is mostly defensive).
 chmod -R u+w /var/www/html/install 2>/dev/null || true
 
-# Beyond this point, we run extension setup and config sync. Skip if config.php
-# isn't seeded (fresh-install scenario) or the extension isn't bundled.
-if [ -f /var/www/html/config.php ] && [ -d /var/www/html/ext/baja/auth ]; then
-    cd /var/www/html
+cd /var/www/html
 
-    # ----- 3. Wait for MySQL to actually be query-ready -----
-    # mysql's depends_on:condition:service_healthy only verifies that the
-    # daemon is listening + the seed has loaded. But on cold start the
-    # init scripts (CREATE DATABASE, dumps, CREATE USER) run AFTER
-    # mysqld accepts connections, and there's a brief window where the
-    # phpbb_baja DB user we're about to authenticate as doesn't exist
-    # yet. Without this loop, phpbbcli below errors + set -e kills the
-    # script + restart: unless-stopped cycles us 5-6 times until the
-    # timing happens to line up.
-    #
-    # Probe via PHP's mysqli (already in this image — phpBB uses it) so
-    # we don't need to pull in mariadb-client (which on alpine lacks the
-    # caching_sha2_password plugin MySQL 8.x defaults to). The query
-    # succeeds only after both seed load AND user creation are done.
-    echo "phpbb-baja: waiting for mysql to be query-ready..."
-    RETRIES=60
-    until php -r 'exit(@(new mysqli("mysql", "phpbb_baja", getenv("MYSQL_PHPBB_BAJA_PASSWORD"), "phpbb_baja"))->query("SELECT 1 FROM phpbb_config LIMIT 1") ? 0 : 1);' 2>/dev/null; do
-        RETRIES=$((RETRIES - 1))
-        if [ $RETRIES -le 0 ]; then
-            echo "phpbb-baja: mysql did not become query-ready in 60s, giving up"
-            exit 1
-        fi
-        sleep 1
-    done
-    echo "phpbb-baja: mysql is query-ready"
-
-    # ----- 4. Enable extension and refresh its config -----
-    # `|| true` — the CLI returns nonzero when the extension is already
-    # enabled, which is the steady state on container restart. We don't
-    # want a crash-loop on what is effectively a no-op.
-    su-exec www-data php bin/phpbbcli.php --safe-mode extension:enable baja/auth || true
-
-    # Only push values that are actually set; an empty env var must not
-    # overwrite an admin-customized phpbb_config row.
-    if [ -n "$BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX" ]; then
-        su-exec www-data php bin/phpbbcli.php --safe-mode config:set \
-            baja_auth_allowed_domain_suffix "$BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX"
+# ----- 3. Wait for MySQL to actually be query-ready -----
+# mysql's depends_on:condition:service_healthy only verifies that the
+# daemon is listening + the seed has loaded. But on cold start the
+# init scripts (CREATE DATABASE, dumps, CREATE USER) run AFTER
+# mysqld accepts connections, and there's a brief window where the
+# phpbb_baja DB user we're about to authenticate as doesn't exist
+# yet. Without this loop, phpbbcli below errors + set -e kills the
+# script + restart: unless-stopped cycles us 5-6 times until the
+# timing happens to line up.
+#
+# Probe via PHP's mysqli (already in this image — phpBB uses it) so
+# we don't need to pull in mariadb-client (which on alpine lacks the
+# caching_sha2_password plugin MySQL 8.x defaults to). The query
+# succeeds only after both seed load AND user creation are done.
+echo "phpbb-baja: waiting for mysql to be query-ready..."
+RETRIES=60
+until php -r 'exit(@(new mysqli("mysql", "phpbb_baja", getenv("MYSQL_PHPBB_BAJA_PASSWORD"), "phpbb_baja"))->query("SELECT 1 FROM phpbb_config LIMIT 1") ? 0 : 1);' 2>/dev/null; do
+    RETRIES=$((RETRIES - 1))
+    if [ $RETRIES -le 0 ]; then
+        echo "phpbb-baja: mysql did not become query-ready in 60s, giving up"
+        exit 1
     fi
-    if [ -n "$BAJA_AUTH_DEFAULT_REDIRECT" ]; then
-        su-exec www-data php bin/phpbbcli.php --safe-mode config:set \
-            baja_auth_default_redirect "$BAJA_AUTH_DEFAULT_REDIRECT"
-    fi
+    sleep 1
+done
+echo "phpbb-baja: mysql is query-ready"
+
+# ----- 4. Enable extensions and refresh baja/auth config -----
+# `|| true` — the CLI returns nonzero when the extension is already
+# enabled, which is the steady state on container restart. We don't
+# want a crash-loop on what is effectively a no-op.
+su-exec www-data php bin/phpbbcli.php --safe-mode extension:enable baja/auth || true
+su-exec www-data php bin/phpbbcli.php extension:enable bakasura/xforwardedfor || true
+su-exec www-data php bin/phpbbcli.php extension:enable vse/abbc3 || true
+su-exec www-data php bin/phpbbcli.php --safe-mode extension:disable phpbb/viglink || true
+
+# Only push values that are actually set; an empty env var must not
+# overwrite an admin-customized phpbb_config row.
+if [ -n "$BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX" ]; then
+    su-exec www-data php bin/phpbbcli.php --safe-mode config:set \
+        baja_auth_allowed_domain_suffix "$BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX"
+fi
+if [ -n "$BAJA_AUTH_DEFAULT_REDIRECT" ]; then
+    su-exec www-data php bin/phpbbcli.php --safe-mode config:set \
+        baja_auth_default_redirect "$BAJA_AUTH_DEFAULT_REDIRECT"
 fi
 
 # ----- 5. Hand off to CMD -----

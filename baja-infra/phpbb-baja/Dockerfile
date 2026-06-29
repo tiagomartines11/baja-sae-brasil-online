@@ -50,6 +50,24 @@ RUN curl -fsSL "https://download.phpbb.com/pub/release/3.3/${PHPBB_VERSION}/phpB
     && mv /var/www/html/install /var/www/html/install.off \
     && chown -R www-data:www-data /var/www/html
 
+# Third-party extensions.
+# Note: bakasura/xforwardedfor has no versioned releases — pinned to master.
+# If the author pushes breaking changes this build will silently pick them up.
+RUN curl -fsSL "https://github.com/BakasuraRCE/phpbb-ext-xforwardedfor/archive/refs/heads/master.tar.gz" \
+        -o /tmp/xforwardedfor.tar.gz \
+    && mkdir -p /var/www/html/ext/bakasura/xforwardedfor \
+    && tar -xzf /tmp/xforwardedfor.tar.gz --strip-components=3 \
+        -C /var/www/html/ext/bakasura/xforwardedfor \
+    && rm /tmp/xforwardedfor.tar.gz \
+    \
+    && curl -fsSL "https://github.com/iMattPro/abbc3/archive/refs/tags/v3.3.8.tar.gz" \
+        -o /tmp/abbc3.tar.gz \
+    && mkdir -p /var/www/html/ext/vse/abbc3 \
+    && tar -xzf /tmp/abbc3.tar.gz --strip-components=1 \
+        -C /var/www/html/ext/vse/abbc3 \
+    && rm /tmp/abbc3.tar.gz \
+    && chown -R www-data:www-data /var/www/html/ext
+
 # Bake in the dev seed config.php — entrypoint copies it to the volume on
 # first boot if no config.php exists yet.
 #
