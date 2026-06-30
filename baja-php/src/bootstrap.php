@@ -5,9 +5,8 @@ if (getenv('SKIP_AUTH')) {
 }
 
 $_REQUEST = array_merge($_GET, $_POST);
-$_ENV = getenv('ENV') ?: 'prod';
 require_once(__DIR__ . "/../vendor/autoload.php");
-require_once(__DIR__ . "/config." . $_ENV . ".php");
+require_once(__DIR__ . "/config.php");
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 if (!getenv('SKIP_AUTH')) {
