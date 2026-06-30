@@ -15,13 +15,15 @@ for dir in cache store files images/avatars/upload; do
     chown -R www-data:www-data "/var/www/html/${dir}"
 done
 
-# ----- 2. Seed config.php on first boot -----
-# If a seed config.php is baked into the image and the volume doesn't have
-# one yet (fresh volume), copy it in. Makes "docker compose up -d" from a
-# clean clone work zero-touch.
-if [ -f /var/www/html/config.php.seed ] && [ ! -s /var/www/html/config.php ]; then
-    echo "phpbb-baja: seeding config.php from baked-in seed..."
-    cp /var/www/html/config.php.seed /var/www/html/config.php
+# ----- 2. Generate config.php on first boot -----
+# If a template is baked into the image and the volume doesn't have a
+# config.php yet (fresh volume), render it from env vars. Makes
+# "docker compose up -d" from a clean clone work zero-touch, and means
+# rotating MYSQL_PHPBB_BAJA_PASSWORD in .env no longer requires a rebuild
+# — just `down -v && up -d`.
+if [ -f /var/www/html/config.php.template ] && [ ! -s /var/www/html/config.php ]; then
+    echo "phpbb-baja: generating config.php from template..."
+    envsubst '${MYSQL_PHPBB_BAJA_PASSWORD}' < /var/www/html/config.php.template > /var/www/html/config.php
     chown www-data:www-data /var/www/html/config.php
     chmod 640 /var/www/html/config.php
 fi

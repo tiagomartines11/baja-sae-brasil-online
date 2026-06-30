@@ -29,6 +29,7 @@ RUN apk add --no-cache \
         unzip \
         gnu-libiconv \
         su-exec \
+        gettext \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         gd \
@@ -76,7 +77,7 @@ RUN curl -fsSL "https://github.com/BakasuraRCE/phpbb-ext-xforwardedfor/archive/r
 # (docker compose down -v && docker compose build phpbb-baja && up -d).
 # Eliminating this coupling by generating config.php from env at start is
 # tracked as a future ticket.
-COPY baja-infra/phpbb-baja/config.php.seed /var/www/html/config.php.seed
+COPY baja-infra/phpbb-baja/config.php.template /var/www/html/config.php.template
 
 # Bake the baja/auth extension into the image. Lands in the phpbb_baja_html
 # volume on first volume creation; on subsequent boots the volume already

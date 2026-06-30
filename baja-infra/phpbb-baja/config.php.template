@@ -4,9 +4,9 @@
 $dbms = 'phpbb\\db\\driver\\mysqli';
 $dbhost = 'mysql';
 $dbport = '3306';
-$dbname = 'phpbb_formula';
-$dbuser = 'phpbb_formula';
-$dbpasswd = 'devphpbbformula';
+$dbname = 'phpbb_baja';
+$dbuser = 'phpbb_baja';
+$dbpasswd = '${MYSQL_PHPBB_BAJA_PASSWORD}';
 $table_prefix = 'phpbb_';
 $phpbb_adm_relative_path = 'adm/';
 $acm_type = 'phpbb\\cache\\driver\\file';

@@ -109,12 +109,18 @@ for the longer explanation.
 **Q: I changed a value in `.env` but it's not taking effect.**
 A: Compose reads `.env` at `up` time, not for already-running containers.
 After editing `.env`: `docker compose up -d` (recreates affected
-containers). For values baked into images at build time — specifically
-phpBB DB passwords mirrored in `phpbb-baja/config.php.seed` and
-`phpbb-formula/config.php.seed` — you also need `docker compose build`
-+ `down -v` (the latter to reset the volumes that hold the previous
-`config.php`). See `baja-infra/.env.example` for which values have
-this coupling.
+containers).
+
+phpBB DB passwords no longer need a rebuild — `config.php` is generated
+at container boot from `phpbb-baja/config.php.template` and
+`phpbb-formula/config.php.template` via `envsubst`, reading directly from
+the live environment. Changing `MYSQL_PHPBB_BAJA_PASSWORD` or
+`MYSQL_PHPBB_FORMULA_PASSWORD` only requires:
+    docker compose down -v
+    docker compose up -d
+(`-v` resets the volume holding the previous `config.php`; no `build`
+step needed.) See `baja-infra/.env.example` for the full list of values
+and which ones drive this template.
 
 **Q: What about the data in the dev DB after `down -v`?**
 A: It gets re-seeded from `baja-infra/mysql/init/`. If you've made

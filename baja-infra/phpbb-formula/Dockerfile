@@ -26,6 +26,7 @@ RUN apk add --no-cache \
         unzip \
         gnu-libiconv \
         su-exec \
+        gettext \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         gd \
@@ -71,7 +72,7 @@ RUN curl -fsSL "https://github.com/BakasuraRCE/phpbb-ext-xforwardedfor/archive/r
 # COUPLING NOTE: this file contains DB password as a string literal. Changes
 # to MYSQL_PHPBB_FORMULA_PASSWORD in .env require rebuilding this image
 # (docker compose down -v && docker compose build phpbb-formula && up -d).
-COPY baja-infra/phpbb-formula/config.php.seed /var/www/html/config.php.seed
+COPY baja-infra/phpbb-formula/config.php.template /var/www/html/config.php.template
 
 # Single entrypoint: handles dir perms, config.php seeding, then exec's
 # php-fpm. Formula has no custom extension, so the entrypoint is simpler
