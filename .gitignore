@@ -90,7 +90,10 @@ generated-migrations/
 
 # Others
 propel.yaml
+
 */*.prod.*
+!docker-compose.prod.yml
+
 .idea/*
 */img/uploads/
 

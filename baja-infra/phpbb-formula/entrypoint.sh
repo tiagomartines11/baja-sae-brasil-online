@@ -7,9 +7,18 @@ set -e
 
 # ----- 1. Runtime-writable directories -----
 # phpBB writes cache, session, and uploaded files to these paths.
-for dir in cache store files images/avatars/upload; do
+# Regenerable dirs (live in the code volume) — safe to recursively chown.
+for dir in cache store; do
     mkdir -p "/var/www/html/${dir}"
     chown -R www-data:www-data "/var/www/html/${dir}"
+done
+
+# User-content dirs — bind-mounted in prod and potentially huge. chown only
+# the mount point, not the tree; host-side ownership is normalized once at
+# post-migration time (to the container's www-data UID).
+for dir in files images/avatars/upload; do
+    mkdir -p "/var/www/html/${dir}"
+    chown www-data:www-data "/var/www/html/${dir}"
 done
 
 # ----- 2. Generate config.php on first boot -----

@@ -1,0 +1,36 @@
+# Production / staging overlay. Layered on the base file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Adds durable bind-mounted data (survives `down -v`), Tailscale-only DB
+# access, and TLS on nginx. Does NOT re-list inherited mounts — Compose
+# concatenates service volume/port lists across files. ALWAYS verify the
+# merged result with `config` (gate G1).
+services:
+  mysql:
+    ports:
+      # Re-publish 3306 on the Tailscale interface so tailnet members reach
+      # it; the base localhost binding stays too. TAILSCALE_IP in .env.
+      - "${TAILSCALE_IP}:3306:3306"
+    volumes:
+      # Replaces the named mysql_data volume at the same target. The
+      # /docker-entrypoint-initdb.d bind is inherited from base.
+      - /srv/baja/mysql:/var/lib/mysql
+
+  phpbb-baja:
+    volumes:
+      # Nested binds inside the inherited phpbb_baja_html code volume.
+      # ONLY user content — code/ext/cache/store stay in the volume.
+      - /srv/baja/phpbb-baja/files:/var/www/html/files
+      - /srv/baja/phpbb-baja/avatars:/var/www/html/images/avatars/upload
+
+  phpbb-formula:
+    volumes:
+      - /srv/baja/phpbb-formula/files:/var/www/html/files
+      - /srv/baja/phpbb-formula/avatars:/var/www/html/images/avatars/upload
+
+  nginx:
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d-prod:/etc/nginx/conf.d:ro   # same target as base → supersedes dev conf.d
+      - /etc/letsencrypt:/etc/letsencrypt:ro
