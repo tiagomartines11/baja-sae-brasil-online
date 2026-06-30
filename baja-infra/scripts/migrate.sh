@@ -259,8 +259,15 @@ import_one() {
     log "import: $src -> $target (drop+recreate, then load)"
     stage_mysql -e "DROP DATABASE IF EXISTS \`$target\`; CREATE DATABASE \`$target\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-    docker compose "${COMPOSE_FILES[@]}" exec -T mysql \
-        mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$target" < "$src"
+    # Load with FK checks disabled for the session. Prod's baja_resultados
+    # has a historical reversed-order PK on `prova` (prova_id,evento_id) that
+    # the new stack corrected to (evento_id,prova_id); the input->prova FK
+    # can't be *created* against the reversed-order key on reload, though the
+    # data itself is referentially valid. Disabling FK checks lets all tables
+    # and constraints load in any order — standard for full-dump restores.
+    { echo "SET FOREIGN_KEY_CHECKS=0;"; cat "$src"; } | \
+        docker compose "${COMPOSE_FILES[@]}" exec -T mysql \
+        mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$target"
 
     if [[ -n "$check_user" ]]; then
         # Confirm the per-DB user can still authenticate after the drop+recreate.
