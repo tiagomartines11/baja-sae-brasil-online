@@ -128,3 +128,7 @@ dist/
 
 # Backup files
 *.bak
+
+# --- WP9: migration script secrets / dump files ---
+baja-infra/scripts/migration.env
+baja-infra/scripts/*.sql
