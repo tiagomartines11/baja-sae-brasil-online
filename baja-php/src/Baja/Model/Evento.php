@@ -19,7 +19,7 @@ class Evento extends BaseEvento
 
     public function getMenu()
     {
-        return json_decode(parent::getMenu());
+        return json_decode(parent::getMenu() ?? '');
     }
 
     /**

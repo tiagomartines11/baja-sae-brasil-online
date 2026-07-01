@@ -19,7 +19,7 @@ class Premiacao extends BasePremiacao
      */
     public function getCategorias()
     {
-        return json_decode(parent::getCategorias());
+        return json_decode(parent::getCategorias() ?? '');
     }
 
     /**

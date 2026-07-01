@@ -167,8 +167,6 @@ $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProva
 
 Template::printHeader($prova->getNome(), true);
 
-var_dump($currentEventId);
-
 $rounds = [-1=>"Disputa 3° lugar", 0=>"Final", 1=>"Semifinais", 2=>"Quartas de final", 3=>"Oitavas de Final",4=>"16 avos de Final",5=>"32 avos de Final",6=>"64 avos de Final"];
 
 

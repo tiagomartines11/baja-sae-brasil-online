@@ -175,7 +175,10 @@ Template::printHeader("Detalhes de Resultado", false);
                     </td>
                 </tr>
                 <tr>
-                <td><textarea style="width:700px;min-height:600px;" name="colunas" id="colunas" <?= $nova?'':'oninput="resetStyles();"' ?>><?= $novo?'':json_encode($resultado->getColunas(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></textarea></td>
+                <td><textarea style="width:700px;min-height:600px;" name="colunas" id="colunas" <?= $novo?'':'oninput="resetStyles();"' ?>><?php
+                    $colunas = $novo ? null : $resultado->getColunas();
+                    echo $colunas === null ? '' : json_encode($colunas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                ?></textarea></td>
                 </tr>
             </tbody>
             <tfoot>

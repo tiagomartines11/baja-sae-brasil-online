@@ -185,7 +185,7 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
 
         $fila->save();
 
-        header("Location: fila.php?evento=".$_evento_id."&id=".$_fila_id);
+        header("Location: fila.php?evento=".$currentEventId."&id=".$_fila_id);
     }
 
     if (@$_REQUEST['act'] == 'Deletar Fila') {

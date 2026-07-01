@@ -189,7 +189,10 @@ Template::printHeader("Detalhes do Evento", false);
                 </tr>
                 <tr>
                     <td>Menu</td>
-                    <td><textarea style="width:700px;min-height:600px;" name="menu" id="menu" <?= $nova?'':'oninput="resetStyles();"' ?>><?= $novo?'':json_encode($evento->getMenu(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></textarea></td>
+                    <td><textarea style="width:700px;min-height:600px;" name="menu" id="menu" <?= $novo?'':'oninput="resetStyles();"' ?>><?php
+                        $menu = $novo ? null : $evento->getMenu();
+                        echo $menu === null ? '' : json_encode($menu, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    ?></textarea></td>
                 </tr>
                 <tr>
                     <td>Ativo?</td>

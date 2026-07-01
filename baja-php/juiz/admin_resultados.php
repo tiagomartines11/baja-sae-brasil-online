@@ -2,6 +2,7 @@
 namespace Baja\Juiz;
 
 use Baja\Model\EventoQuery;
+use Baja\Model\ProvaQuery;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\User;
 use Baja\Model\UserQuery;

@@ -180,7 +180,10 @@ Template::printHeader("Detalhes de Prova", false);
                     </td>
                 </tr>                
                 <tr>
-                    <td><textarea style="width:700px;min-height:600px;" name="params" id="params" <?= $nova?'':'oninput="resetStyles();"' ?>><?= $nova?'':json_encode($prova->getParams(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></textarea></td>
+                    <td><textarea style="width:700px;min-height:600px;" name="params" id="params" <?= $nova?'':'oninput="resetStyles();"' ?>><?php
+                        $params = $nova ? null : $prova->getParams();
+                        echo $params === null ? '' : json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    ?></textarea></td>
                 </tr>                
                 <?php if (!$nova) { ?>
                 <tr>

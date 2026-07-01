@@ -21,7 +21,7 @@ class Resultado extends BaseResultado
      */
     public function getColunas()
     {
-        return json_decode(parent::getColunas());
+        return json_decode(parent::getColunas() ?? '');
     }
 
     /**

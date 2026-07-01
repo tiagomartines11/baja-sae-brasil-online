@@ -169,7 +169,10 @@ Template::printHeader("Premiação", false);
                     </td>
                 </tr>
                 <tr>
-                    <td><textarea style="width:700px;min-height:600px;" name="categorias" id="categorias" <?= $nova ? '' : 'oninput="resetStyles();"' ?>><?= $nova ? '' : json_encode($premiacao->getCategorias(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></textarea></td>
+                    <td><textarea style="width:700px;min-height:600px;" name="categorias" id="categorias" <?= $nova ? '' : 'oninput="resetStyles();"' ?>><?php
+                        $categorias = $nova ? null : $premiacao->getCategorias();
+                        echo $categorias === null ? '' : json_encode($categorias, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    ?></textarea></td>
                 </tr>
             </tbody>
             <tfoot>

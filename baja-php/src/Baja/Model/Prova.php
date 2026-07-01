@@ -26,7 +26,7 @@ class Prova extends BaseProva
      */
     public function getParams()
     {
-        return json_decode(parent::getParams());
+        return json_decode(parent::getParams() ?? '');
     }
 
     /**
@@ -43,7 +43,7 @@ class Prova extends BaseProva
      */
     public function getTotals()
     {
-        return json_decode(parent::getTotals());
+        return json_decode(parent::getTotals() ?? '');
     }
 
     /**
@@ -129,7 +129,7 @@ class Prova extends BaseProva
         $sql = "SELECT JSON_OBJECT(" . implode(",", $varsQuery) . ") as v FROM input INNER JOIN equipe ON equipe.equipe_id=input.equipe_id AND equipe.evento_id=input.evento_id WHERE equipe.desclassificado=0 AND prova_id = :id AND input.evento_id = :ev";
         $stmt = $con->prepare($sql);
         $stmt->execute(array(':id' => $this->getProvaId(), ':ev' => $this->getEventoId()));
-        $varsMinMax = json_decode($stmt->fetch()[0]);
+        $varsMinMax = json_decode($stmt->fetch()[0] ?? '');
         foreach ($varsMinMax as &$v) {
             if (is_numeric($v)) $v = doubleval($v);
             else if ($v === "null") $v = null;

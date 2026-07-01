@@ -23,7 +23,7 @@ class Input extends BaseInput
      */
     public function getDados()
     {
-        return json_decode(parent::getDados());
+        return json_decode(parent::getDados() ?? '');
     }
 
     /**
@@ -40,7 +40,7 @@ class Input extends BaseInput
      */
     public function getVars()
     {
-        return json_decode(parent::getVars());
+        return json_decode(parent::getVars() ?? '');
     }
 
     /**
@@ -57,7 +57,7 @@ class Input extends BaseInput
      */
     public function getPontos()
     {
-        return json_decode(parent::getPontos());
+        return json_decode(parent::getPontos() ?? '');
     }
 
     /**
