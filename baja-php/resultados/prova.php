@@ -11,7 +11,10 @@ use Baja\Model\User;
 header('Cache-Control: public, max-age=30');
 
 $resultado = ResultadoQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->findPk($_REQUEST['id']);
-if (!$resultado) header("Location: index.php");
+if (!$resultado) {
+    header("Location: index.php");
+    exit;
+}
 $colunas = (array)$resultado->getColunas()->colunas;
 if (@$resultado->getColunas()->type == "tournament") header("Location: torneio.php?id=".$_REQUEST['id']);
 $pos = @$resultado->getColunas()->pos;

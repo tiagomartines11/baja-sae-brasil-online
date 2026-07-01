@@ -19,6 +19,9 @@ if (!getenv('SKIP_AUTH')) {
 }
 date_default_timezone_set('America/Sao_Paulo');
 
+// Ajuste para que solveFormula não gere erro com php > 7
+define('Pos', 'Pos'); define('EquipeNum', 'EquipeNum'); define('Equipe', 'Equipe');
+
 use Baja\Model\EventoQuery;
 
 // Lógica para seleção de evento se não houver request de um eveno específico (substituição ao setup manual em .htaccess)
