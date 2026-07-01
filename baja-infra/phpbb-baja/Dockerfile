@@ -51,6 +51,31 @@ RUN curl -fsSL "https://download.phpbb.com/pub/release/3.3/${PHPBB_VERSION}/phpB
     && mv /var/www/html/install /var/www/html/install.off \
     && chown -R www-data:www-data /var/www/html
 
+# Brazilian Portuguese language pack (pt_br). phpBB ships English-only, but
+# the migrated baja DB references pt_br in phpbb_lang / default_lang, so the
+# files must be present or phpBB errors with "language not valid". Baked
+# into both phpBB images so a future formula switch to pt_br is an ACP
+# setting rather than an image change.
+#
+# Sourced from suportephpbb/phpbb — the community-maintained pack the phpbb.com
+# customise DB points at. phpbb.com is not on the build network's allowlist;
+# github.com is, so this follows the extension-fetch pattern below. Pinned
+# to a commit on the pack's 3.3.x branch (no versioned releases on that
+# line). Version-match: the branch tracks phpBB 3.3.x — revisit when
+# ARG PHPBB_VERSION is bumped; strings missing at the pinned commit fall
+# back to English rather than breaking.
+RUN curl -fsSL "https://github.com/suportephpbb/phpbb/archive/f4c24709c957d1c2a577c07208aac9cd59a85666.tar.gz" \
+        -o /tmp/lang_ptbr.tar.gz \
+    && mkdir -p /tmp/lang_ptbr \
+    && tar -xzf /tmp/lang_ptbr.tar.gz -C /tmp/lang_ptbr --strip-components=1 \
+    && cp -r /tmp/lang_ptbr/language/pt_br /var/www/html/language/pt_br \
+    && cp -r /tmp/lang_ptbr/styles/prosilver/theme/pt_br \
+            /var/www/html/styles/prosilver/theme/pt_br \
+    && rm -rf /tmp/lang_ptbr /tmp/lang_ptbr.tar.gz \
+    && chown -R www-data:www-data \
+        /var/www/html/language/pt_br \
+        /var/www/html/styles/prosilver/theme/pt_br
+
 # Third-party extensions.
 # Note: bakasura/xforwardedfor has no versioned releases — pinned to master.
 # If the author pushes breaking changes this build will silently pick them up.
