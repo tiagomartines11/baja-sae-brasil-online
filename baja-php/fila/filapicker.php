@@ -10,8 +10,6 @@ use Baja\Session;
 
 $filas = Fila::getFilasUsuario(Session::getCurrentUser()->getUsername());
 
-var_dump(Session::getCurrentUser()->getUsername());
-
 foreach($filas as $k=>$f){
 
     $filas[$k]['evento_nome'] = EventoQuery::create()->findPk($f['evento_id'])->getTitulo();
