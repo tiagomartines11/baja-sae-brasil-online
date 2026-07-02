@@ -81,7 +81,7 @@ load_config() {
     for var in \
         MYSQL_ROOT_PASSWORD \
         BAJA_COOKIE_DOMAIN FORMULA_COOKIE_DOMAIN \
-        PHPBB_COOKIE_PREFIX \
+        PHPBB_COOKIE_PREFIX PHPBB_FORMULA_COOKIE_PREFIX \
         PROD_TAILSCALE_IP PROD_SSH_USER PROD_SSH_KEY \
         PROD_BAJA_RESULTADOS_USER PROD_BAJA_RESULTADOS_PASSWORD \
         PROD_BAJA_FORUM_USER      PROD_BAJA_FORUM_PASSWORD \
@@ -294,8 +294,8 @@ phase_import() {
 # any cron/registration/notification path on staging would otherwise mail
 # real users from a staging copy. Non-negotiable.
 patch_one() {
-    local target_db="$1" cookie_domain="$2" forum_domain="$3"
-    log "patch: $target_db (cookie_domain=$cookie_domain, server_name=$forum_domain)"
+    local target_db="$1" cookie_domain="$2" forum_domain="$3" cookie_prefix="$4"
+    log "patch: $target_db (cookie_domain=$cookie_domain, server_name=$forum_domain, cookie_name=$cookie_prefix)"
 
     # Heredoc piped into mysql via the container. All UPDATEs are idempotent
     # — re-running yields the same end state. The [TEST] marker is guarded
@@ -305,6 +305,7 @@ UPDATE phpbb_config SET config_value='0'  WHERE config_name='email_enable';
 UPDATE phpbb_config SET config_value='0'  WHERE config_name='smtp_delivery';
 UPDATE phpbb_config SET config_value='${cookie_domain}' WHERE config_name='cookie_domain';
 UPDATE phpbb_config SET config_value='${forum_domain}'  WHERE config_name='server_name';
+UPDATE phpbb_config SET config_value='${cookie_prefix}' WHERE config_name='cookie_name';
 UPDATE phpbb_config SET config_value=CONCAT(config_value,' [TEST]')
     WHERE config_name='sitename' AND config_value NOT LIKE '% [TEST]';
 -- Optional, for HTTPS staging behind Cloudflare. Leave commented unless
@@ -313,24 +314,22 @@ UPDATE phpbb_config SET config_value=CONCAT(config_value,' [TEST]')
 -- UPDATE phpbb_config SET config_value='1'        WHERE config_name='cookie_secure';
 SQL
 
-    # Cookie-prefix check — surface, don't auto-fix .env. The session shim
-    # reads PHPBB_COOKIE_PREFIX; the imported DB carries prod's value.
-    local imported_cookie
-    imported_cookie=$(stage_mysql -BN "$target_db" \
-        -e "SELECT config_value FROM phpbb_config WHERE config_name='cookie_name'" 2>/dev/null | tr -d '\r' || true)
-    if [[ "$target_db" = "phpbb_baja" && -n "$imported_cookie" ]]; then
-        if [[ "$imported_cookie" != "$PHPBB_COOKIE_PREFIX" ]]; then
-            warn "phpbb_baja cookie_name='$imported_cookie' does not match PHPBB_COOKIE_PREFIX='$PHPBB_COOKIE_PREFIX' in .env."
-            warn "  -> The session shim will NOT find sessions. Align PHPBB_COOKIE_PREFIX in baja-infra/.env to '$imported_cookie',"
-            warn "     or update phpbb_baja's cookie_name. Then 'docker compose ... up -d' the baja-app service."
-        fi
+    # Verify cookie_name took. The baja-app session shim depends on this
+    # matching PHPBB_COOKIE_PREFIX for baja; enforce for both forums so
+    # the DB is guaranteed to match .env after patch.
+    local set_cookie
+    set_cookie=$(stage_mysql -BN "$target_db" \
+        -e "SELECT config_value FROM phpbb_config WHERE config_name='cookie_name'" | tr -d '\r')
+    if [[ "$set_cookie" != "$cookie_prefix" ]]; then
+        die "$target_db: cookie_name is '$set_cookie', expected '$cookie_prefix' after patch"
     fi
+    log "patch: $target_db cookie_name = $set_cookie (matches env)"
 }
 
 phase_patch() {
     log "patch: applying staging-specific SQL (disables email; re-runs are safe)"
-    patch_one phpbb_baja    "$BAJA_COOKIE_DOMAIN"    "$STAGING_BAJA_FORUM_DOMAIN"
-    patch_one phpbb_formula "$FORMULA_COOKIE_DOMAIN" "$STAGING_FORMULA_FORUM_DOMAIN"
+    patch_one phpbb_baja    "$BAJA_COOKIE_DOMAIN"    "$STAGING_BAJA_FORUM_DOMAIN"    "$PHPBB_COOKIE_PREFIX"
+    patch_one phpbb_formula "$FORMULA_COOKIE_DOMAIN" "$STAGING_FORMULA_FORUM_DOMAIN" "$PHPBB_FORMULA_COOKIE_PREFIX"
 
     # Belt-and-suspenders: assert email is actually disabled in both DBs.
     local db
@@ -341,7 +340,15 @@ phase_patch() {
         [[ "$ee" = "0" && "$sd" = "0" ]] || die "$db: email NOT disabled (email_enable=$ee smtp_delivery=$sd) — refusing to continue"
     done
 
-    log "patch: OK (email disabled in phpbb_baja and phpbb_formula)"
+    # Purge phpBB config cache so cookie_name/cookie_domain/sitename changes
+    # take effect immediately (config is cached; DB change alone isn't enough).
+    log "patch: purging phpBB cache so config changes take effect"
+    docker compose "${COMPOSE_FILES[@]}" exec -T phpbb-baja \
+        su-exec www-data php bin/phpbbcli.php cache:purge || warn "phpbb-baja cache:purge returned nonzero"
+    docker compose "${COMPOSE_FILES[@]}" exec -T phpbb-formula \
+        su-exec www-data php bin/phpbbcli.php cache:purge || warn "phpbb-formula cache:purge returned nonzero"
+
+    log "patch: OK (email disabled, cookie_name normalized, cache purged)"
 }
 
 # ----- Phase: files -----
