@@ -10,6 +10,9 @@ set -eu
 
 INTERVAL="${CRON_INTERVAL_SECONDS:-300}"
 
+echo "phpbb-cron: waiting for config.php in shared volume..."
+until [ -s /var/www/html/config.php ]; do sleep 2; done
+
 # The fpm container's entrypoint generates config.php into the shared
 # volume; wait for it before running the CLI (which needs DB creds from it).
 echo "phpbb-cron: waiting for config.php in shared volume..."
@@ -22,7 +25,11 @@ while true; do
     # || echo — a failed run (e.g. transient DB blip) is logged and retried
     # next interval rather than killing the loop (note: set -e is satisfied
     # because the || branch succeeds).
-    timeout 240 su-exec www-data php bin/phpbbcli.php cron:run \
-        || echo "phpbb-cron: cron:run exited nonzero (will retry next interval)"
+    echo "phpbb-cron: [$(date -u '+%Y-%m-%dT%H:%M:%SZ')] running cron:run..."
+    if timeout 240 su-exec www-data php bin/phpbbcli.php cron:run; then
+        echo "phpbb-cron: [$(date -u '+%Y-%m-%dT%H:%M:%SZ')] cron:run completed"
+    else
+        echo "phpbb-cron: [$(date -u '+%Y-%m-%dT%H:%M:%SZ')] cron:run exited nonzero (will retry next interval)"
+    fi
     sleep "$INTERVAL"
 done
