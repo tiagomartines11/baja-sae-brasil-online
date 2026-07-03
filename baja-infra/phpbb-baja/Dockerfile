@@ -119,6 +119,10 @@ COPY baja-php/phpbb-extensions/baja-auth /var/www/html/ext/baja/auth
 COPY baja-infra/phpbb-baja/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Cron loop used by the cron sidecar service (see docker-compose.prod.yml).
+COPY baja-infra/phpbb-baja/cron-loop.sh /usr/local/bin/cron-loop.sh
+RUN chmod +x /usr/local/bin/cron-loop.sh
+
 EXPOSE 9000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
