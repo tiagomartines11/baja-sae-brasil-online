@@ -7,7 +7,7 @@ use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
 
-if (!isset($_REQUEST['p'])) header("Location: index.php");
+if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
 $_team = $_REQUEST['t'];
@@ -16,7 +16,7 @@ Session::permissionCheck($_page);
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $equipe = EquipeQuery::create()->filterByEventoId($currentEventId)->findOneByEquipeId($_team);
-if (!$equipe) header("Location: dashboard.php?p=$_page");
+if (!$equipe) { header("Location: dashboard.php?p=$_page"); exit; }
 
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
 
@@ -41,7 +41,7 @@ echo '
 
 $fields = $prova->getParamsInputs();
 foreach ($fields as $k=>$field) {
-    echo '<tr '.(($field->getPass() >= 0 && ($fields[$k+1] && $fields[$k+1]->getPass() == ($field->getPass()+1))) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($nota ? $nota->getDados()->{$field->getCode()} : null) . '</tr>';
+    echo '<tr '.(($field->getPass() >= 0 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == ($field->getPass()+1))) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($nota ? $nota->getDados()->{$field->getCode()} : null) . '</tr>';
 }
 
 ?>

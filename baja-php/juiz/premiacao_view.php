@@ -14,7 +14,7 @@ $isAdmin = Session::getCurrentUser()->hasPermission('admin');
 $premiacaoId = trim((string)@$_REQUEST['id']);
 
 if ($premiacaoId === '') {
-    header('Location: premiacoes.php');
+    header('Location: premiacoes.php'); exit;
 }
 
 $query = PremiacaoQuery::create()
@@ -28,7 +28,7 @@ if (!$isAdmin) {
 $premiacao = $query->findOne();
 
 if (!$premiacao) {
-    header('Location: premiacoes.php');
+    header('Location: premiacoes.php'); exit;
 }
 
 $categorias = PremiacaoResolver::resolve($premiacao);
@@ -50,7 +50,7 @@ Template::printHeader(htmlspecialchars($premiacao->getNome()), false);
         <tbody>
         <tr>
             <td>Evento</td>
-            <td><?= htmlspecialchars($currentEvent->getNome()) ?></td>
+            <td><?= htmlspecialchars($currentEvent->getNome() ?? '') ?></td>
         </tr>
         <tr>
             <td>Status</td>

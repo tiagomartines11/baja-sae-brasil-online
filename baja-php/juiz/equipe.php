@@ -7,9 +7,9 @@ use Baja\Model\Equipe;
 use Baja\Session;
 use DateTimeZone;
 
-if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) header("Location: admin_equipes.php");
+if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_equipes.php"); exit; }
 
-$_page = $_REQUEST['id'];
+$_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
 
@@ -22,10 +22,10 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
 
     if (@$_REQUEST['act'] == 'Salvar') {
         if (!isset($_POST['equipe_id']) || $_POST['equipe_id'] == '') {
-            header("Location: equipe.php?nova=true");
+            header("Location: equipe.php?nova=true"); exit;
         } else {
             $equipe = EquipeQuery::create()->filterByEventoId($currentEventId)->findOneByEquipeId($_POST['equipe_id']);
-            if ($equipe) header("Location: equipe.php?id=".$_POST['evento_id']);
+            if ($equipe) { header("Location: equipe.php?id=".$_POST['evento_id']); exit; }
 
             $equipe = new Equipe();
             
@@ -52,14 +52,14 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
 
             $equipe->save();
 
-            header("Location: admin_equipes.php");
+            header("Location: admin_equipes.php"); exit;
         }
     }
 
 } else {
 
     $equipe = EquipeQuery::create()->filterByEventoId($currentEventId)->findOneByEquipeId($_REQUEST['id']);
-    if (!$equipe) header("Location: admin_equipes.php");
+    if (!$equipe) { header("Location: admin_equipes.php"); exit; }
 
     if (@$_REQUEST['act'] == 'Atualizar') {
         
@@ -84,12 +84,12 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
 
         $equipe->save();
 
-        header("Location: equipe.php?id=".$_page);
+        header("Location: equipe.php?id=".$_page); exit;
     }
 
     if (@$_REQUEST['act'] == 'Deletar Equipe') {
         $equipe->delete();
-        header("Location: admin_equipes.php");
+        header("Location: admin_equipes.php"); exit;
     }
 }
 

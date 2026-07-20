@@ -9,9 +9,9 @@ use Baja\Site\OneSignalClient;
 use Baja\Session;
 use DateTimeZone;
 
-if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) header("Location: admin_resultados.php");
+if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) { header("Location: admin_resultados.php"); exit; }
 
-$_page = $_REQUEST['id'];
+$_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
 
@@ -24,29 +24,29 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
 
     if (@$_REQUEST['act'] == 'Salvar') {
         if (!isset($_POST['resultado_id']) || !isset($_POST['nome']) || !isset($_POST['inputs']) || !isset($_POST['colunas']) || $_POST['resultado_id'] == '' || $_POST['nome'] == '' || $_POST['inputs'] == '' || $_POST['colunas'] == '') {
-            header("Location: resultado.php?novo=true");
+            header("Location: resultado.php?novo=true"); exit;
         } else {
             $resultado = ResultadoQuery::create()->filterByEventoId($currentEventId)->findOneByResultadoId($_POST['resultado_id']);
-            if ($resultado) header("Location: resultado.php?id=".$_POST['resultado_id']);
+            if ($resultado) { header("Location: resultado.php?id=".$_POST['resultado_id']); exit; }
 
             $resultado = new Resultado();
             $resultado->setEventoId($currentEventId);
             $resultado->setResultadoId($_POST['resultado_id']);
             $resultado->setNome($_POST['nome']);
-            $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'])));
-            $resultado->setColunas(json_decode($_POST['colunas']));
+            $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'] ?? '')));
+            $resultado->setColunas(json_decode($_POST['colunas'] ?? ''));
             $resultado->save();
 
-            header("Location: admin_resultados.php");
+            header("Location: admin_resultados.php"); exit;
         }
     }
 
 } else {
 
     $resultado = ResultadoQuery::create()->filterByEventoId($currentEventId)->findOneByResultadoId($_page);
-    if (!$resultado) header("Location: admin_resultados.php");
+    if (!$resultado) { header("Location: admin_resultados.php"); exit; }
 
-    $backups = json_decode($resultado->getColunasBackup(), true);
+    $backups = @json_decode($resultado->getColunasBackup(), true);
 
     $bkNomeados = [];
 
@@ -64,7 +64,7 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             $resultado->setColunasBackup(json_encode($backups));
             $resultado->save();
         }
-        header("Location: resultado.php?id=".$_page);
+        header("Location: resultado.php?id=".$_page); exit;
     }
 
     if (@$_REQUEST['act'] == '💾') {
@@ -73,14 +73,14 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             $resultado->setColunasBackup(json_encode($backups));
             $resultado->save();
         }
-        header("Location: resultado.php?id=".$_page);
+        header("Location: resultado.php?id=".$_page); exit;
     }
 
-    $bk1 = $backups['-1'];
-    $bk2 = $backups['-2'];
-    $bk3 = $backups['-3'];
-    $bk4 = $backups['-4'];
-    $bk5 = $backups['-5'];
+    $bk1 = @$backups['-1'];
+    $bk2 = @$backups['-2'];
+    $bk3 = @$backups['-3'];
+    $bk4 = @$backups['-4'];
+    $bk5 = @$backups['-5'];
 
     if (@$_REQUEST['act'] == 'Atualizar') {
         if ($resultado->getColunas() != json_decode($_POST['colunas'])) {
@@ -92,16 +92,16 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             $resultado->setColunasBackup(json_encode($backups));
         }
         $resultado->setNome($_POST['nome']);
-        $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'])));
-        $resultado->setColunas(json_decode($_POST['colunas']));
+        $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'] ?? '')));
+        $resultado->setColunas(json_decode($_POST['colunas'] ?? ''));
         $resultado->save();
 
-        header("Location: resultado.php?id=".$_page);
+        header("Location: resultado.php?id=".$_page); exit;
     }
 
     if (@$_REQUEST['act'] == 'Deletar Resultado') {
         $resultado->delete();
-        header("Location: admin_resultados.php");
+        header("Location: admin_resultados.php"); exit;
     }
 }
 

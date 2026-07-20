@@ -120,7 +120,7 @@ class Field
                 $ret .= '<td style="width: 80px"><input data-group="' . $this->pass . '" data-xor="' . $this->xor . '" style="width: 100%; font: 20px/20px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" type="number" ' . ($this->negative ? 'max="0"' : 'min="0"') . ' step="' . (1 / pow(10, $this->precision)) . '" name="' . $this->code . '" id="' . $this->code . '" ' . ($value !== null ? 'value="' . $value . '" ' . ($canJudge ? '' : 'disabled') : '') . ' /></td>';
                 break;
             case "enum":
-                $valArray = explode(',', $value);
+                $valArray = explode(',', $value ?? '');
                 $ret .= '<td><label for="' . $this->code . '">' . $this->name . '</label></td>';
                 $ret .= '<td style="width: 120px">
                         <select ' . ($this->multiple ? 'multiple' : '') . ' data-group="' . $this->pass . '" data-xor="' . $this->xor . '" style="width: 100%; font: 12px/12px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" name="' . $this->code . ($this->multiple ? '[]' : '') . '" id="' . $this->code . '" ' . ($value !== null ? ($canJudge ? '' : 'disabled') : '') . ' />

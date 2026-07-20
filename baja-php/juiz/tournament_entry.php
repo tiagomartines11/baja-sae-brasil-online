@@ -8,7 +8,7 @@ use Baja\Model\ProvaQuery;
 use Baja\Model\TournamentQuery;
 use Baja\Session;
 
-if (!isset($_REQUEST['p'])) header("Location: index.php");
+if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
@@ -18,11 +18,11 @@ function checkBlocked($match, $currentEventId, $_page) {
     $blocked = false;
 
     foreach($matches as $m) {
-        
+        $dados = json_decode($m->getDados() ?? '');
         if (
-            (isset(json_decode($m->getDados())->old1) && (json_decode($m->getDados())->old1=='win'.$match || json_decode($m->getDados())->old1=='los'.$match )) 
-            || 
-            (isset(json_decode($m->getDados())->old2) && (json_decode($m->getDados())->old2=='win'.$match || json_decode($m->getDados())->old2=='los'.$match ))) {
+            (isset($dados->old1) && ($dados->old1=='win'.$match || $dados->old1=='los'.$match ))
+            ||
+            (isset($dados->old2) && ($dados->old2=='win'.$match || $dados->old2=='los'.$match ))) {
             if ($m->getWinner()>0) {
                 $blocked = true;
             }
@@ -38,7 +38,7 @@ if (isset($_REQUEST['reset'])) {
 
     $match->setWinner(null);
 
-    $match_dados = json_decode($match->getDados());
+    $match_dados = json_decode($match->getDados() ?? '');
 
     if (isset($match_dados->bestof)){
         $match_dados->win1=0;
@@ -51,30 +51,29 @@ if (isset($_REQUEST['reset'])) {
     $matches = TournamentQuery::create()->filterByEventoId($currentEventId)->filterByProvaId($_page)->find();
 
     foreach($matches as $m){
-        $dados = false;
-        if (is_object(json_decode($m->getDados()))){
-            $dados = json_decode($m->getDados());
+        $dados = json_decode($m->getDados() ?? '');
+        if (is_object($dados)){
 
-            if ($dados->old1 == 'win'.$_REQUEST['reset'] || $dados->old1 == 'los'.$_REQUEST['reset']) {
+            if (isset($dados->old1) && ($dados->old1 == 'win'.$_REQUEST['reset'] || $dados->old1 == 'los'.$_REQUEST['reset'])) {
                 $m->setEquipe1Id($dados->old1);
                 $m->save();
             }
-            
-            if ($dados->old2 == 'win'.$_REQUEST['reset'] || $dados->old2 == 'los'.$_REQUEST['reset']) {
+
+            if (isset($dados->old2) && ($dados->old2 == 'win'.$_REQUEST['reset'] || $dados->old2 == 'los'.$_REQUEST['reset'])) {
                 $m->setEquipe2Id($dados->old2);
                 $m->save();
             }
         }
     }
 
-    header("Location: tournament_entry.php?p=".$_page.(isset($_REQUEST['round'])?'&round='.$_REQUEST['round']:''));
+    header("Location: tournament_entry.php?p=".$_page.(isset($_REQUEST['round'])?'&round='.$_REQUEST['round']:'')); exit;
 }
 
 if (isset($_REQUEST['setwinner']) && isset($_REQUEST['match'])) {
 
     $match = TournamentQuery::create()->filterByEventoId($currentEventId)->filterByProvaId($_page)->filterByMatchId((int)$_REQUEST['match'])->findOne();
 
-    $match_dados = json_decode($match->getDados());
+    $match_dados = json_decode($match->getDados() ?? '');
 
     $victory = false;
     $winner = null;
@@ -117,8 +116,7 @@ if (isset($_REQUEST['setwinner']) && isset($_REQUEST['match'])) {
 
         function updateDependents($dependent_matches, $winner, $loser) {
             foreach($dependent_matches as $dm) {
-                $dados = new \stdClass();
-                $dados = json_decode($dm->getDados());
+                $dados = json_decode($dm->getDados() ?? '');
 
                 if ($dm->getEquipe1Id()=='win'.$_REQUEST['match']) {
                     $dados->old1=$dm->getEquipe1Id();
@@ -152,7 +150,7 @@ if (isset($_REQUEST['setwinner']) && isset($_REQUEST['match'])) {
     $match->setDados(json_encode($match_dados));
     $match->save();
 
-    header("Location: tournament_entry.php?p=".$_page.(isset($_REQUEST['round'])?'&round='.$_REQUEST['round']:''));
+    header("Location: tournament_entry.php?p=".$_page.(isset($_REQUEST['round'])?'&round='.$_REQUEST['round']:'')); exit;
 }
 
 

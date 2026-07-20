@@ -11,7 +11,7 @@ use Baja\Session;
 
 Session::permissionCheck("admin");
 
-if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) header("Location: admin_provas.php");
+if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_provas.php"); exit; }
 
 $_page = $_REQUEST['id'];
 
@@ -49,7 +49,7 @@ Template::printHeader("Admin");
                 <td><?= $log->getUser() ?></td>
                 <td><?= $log->getData()->format('Y-m-d H:i:s') ?></td>
                 <td><?= $log->getEquipe() ?></td>
-                <td ><?= json_encode(json_decode($log->getDados()), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></td>                
+                <td ><?= json_encode(json_decode($log->getDados() ?? ''), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></td>                
             </tr>
 <?php } ?>
         </tbody>        

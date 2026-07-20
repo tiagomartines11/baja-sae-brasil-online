@@ -23,7 +23,7 @@ if (!defined("ABANDONADO"))  define("ABANDONADO",4);
 if (!defined("CANCELADA"))   define("CANCELADA",5);
 
 if (!isset($_REQUEST['evento']) || !isset($_REQUEST['fila'])) {
-    header("Location: filapicker.php");
+    header("Location: filapicker.php"); exit;
 }
 
 $evento_id = $_REQUEST['evento'];
@@ -40,7 +40,7 @@ foreach($filas_usuario as $fu) {
 }
 
 if (!$permissao) {
-    header("Location: filapicker.php");
+    header("Location: filapicker.php"); exit;
 }
 
 // Handle push notification requests

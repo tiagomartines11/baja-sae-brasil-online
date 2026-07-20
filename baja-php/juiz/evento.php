@@ -7,9 +7,9 @@ use Baja\Session;
 use DateTimeZone;
 use Propel\Runtime\ActiveQuery\Criteria;
 
-if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) header("Location: admin_eventos.php");
+if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) { header("Location: admin_eventos.php"); exit; }
 
-$_page = $_REQUEST['id'];
+$_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
 
@@ -22,10 +22,10 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
 
     if (@$_REQUEST['act'] == 'Salvar') {
         if (!isset($_POST['evento_id']) || $_POST['evento_id'] == '') {
-            header("Location: evento.php?novo=true");
+            header("Location: evento.php?novo=true"); exit;
         } else {
             $evento = EventoQuery::create()->findOneByEventoId($_POST['evento_id']);
-            if ($evento) header("Location: evento.php?id=".$_POST['evento_id']);
+            if ($evento) { header("Location: evento.php?id=".$_POST['evento_id']); exit; }
 
             $evento = new Evento();
             
@@ -66,20 +66,20 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             $evento->setPresidente($_POST['presidente']);
             $evento->setMandatoPresidente($_POST['mandato']);
 
-            $evento->setMenu(json_decode($_POST['menu']));
+            $evento->setMenu(json_decode($_POST['menu'] ?? ''));
 
             $evento->setEmAndamento(false);            
 
             $evento->save();
 
-            header("Location: admin_eventos.php");
+            header("Location: admin_eventos.php"); exit;
         }
     }
 
 } else {
 
     $evento = EventoQuery::create()->findOneByEventoId($_REQUEST['id']);
-    if (!$evento) header("Location: admin_eventos.php");
+    if (!$evento) { header("Location: admin_eventos.php"); exit; }
 
     if (@$_REQUEST['act'] == 'Atualizar') {
         $evento->setTitulo($_POST['titulo']);
@@ -126,7 +126,7 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
         $evento->setPresidente($_POST['presidente']);
         $evento->setMandatoPresidente($_POST['mandato']);
 
-        $evento->setMenu(json_decode($_POST['menu']));
+        $evento->setMenu(json_decode($_POST['menu'] ?? ''));
 
         $evento->save();
 
@@ -137,12 +137,12 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
         }
 
 
-        header("Location: evento.php?id=".$_page);
+        header("Location: evento.php?id=".$_page); exit;
     }
 
     if (@$_REQUEST['act'] == 'Deletar Evento') {
         $evento->delete();
-        header("Location: admin_eventos.php");
+        header("Location: admin_eventos.php"); exit;
     }
 }
 

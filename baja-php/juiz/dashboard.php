@@ -9,7 +9,7 @@ use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
 
-if (!isset($_REQUEST['p'])) header("Location: index.php");
+if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
 
@@ -17,7 +17,7 @@ Session::permissionCheck($_page);
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
-if (!$prova) header("Location: index.php");
+if (!$prova) { header("Location: index.php"); exit; }
 
 /** @var Equipe[] $teams */
 $teams = EquipeQuery::create()->filterByPresente(true)->findByEventoId($currentEventId)->toKeyIndex('EquipeId');
@@ -46,15 +46,15 @@ echo '<thead>
 		';
 
 foreach ($teams as $num=>$team) {
-    $dados = $items[$num] ? $items[$num]->getDados() : [];
+    $dados = @$items[$num] ? $items[$num]->getDados() : [];
     echo "<tr>";
     echo "<td>$num</td>";
     echo "<td>{$team->getEquipe()}</td>";
     echo '<td><a href="entry.php?p='.$_page.'&t='.$num.'">Editar</a></td>';
     foreach ($colunas as $c) {
         $style = "";
-        if (!$dados || $dados->{$c->getCode()} === null) $style = "background-color: #FFD1D1";
-        echo "<td style='".$style."'>".$dados->{$c->getCode()}."</td>";
+        if (!$dados || ($dados->{$c->getCode()} ?? null) === null) $style = "background-color: #FFD1D1";
+        echo "<td style='".$style."'>".($dados->{$c->getCode()} ?? '')."</td>";
     }
     echo '<td><a href="entry.php?p='.$_page.'&t='.$num.'">Editar</a></td>';
     echo "</tr>";

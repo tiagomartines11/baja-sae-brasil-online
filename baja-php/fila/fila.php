@@ -29,7 +29,7 @@ try {
 }
 
 if (!$evento_id || !$fila_id || !is_int($fila_id)) {
-	header("Location: index.php");
+	header("Location: index.php"); exit;
 }
 
 $fila = FilaQuery::create()->filterByEventoId($evento_id)->findOneByFilaId($fila_id);

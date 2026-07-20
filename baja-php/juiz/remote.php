@@ -21,7 +21,7 @@ if (!isset($input) || !isset($input['key']) || $input['key'] != $_remoteKey) {
 }
 
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId('END');
-if (!$prova) header("Location: index.php");
+if (!$prova) { header("Location: index.php"); exit; }
 
 if (array_key_exists("truncate", $input) && $input["truncate"] == "all") {
     $allInputs = InputQuery::create()->filterByProvaId('END')->filterByEventoId($currentEventId);

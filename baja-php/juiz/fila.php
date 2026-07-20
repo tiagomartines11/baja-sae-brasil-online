@@ -8,9 +8,9 @@ use Baja\Session;
 use DateTimeZone;
 use Baja\Fila\Fila as FilaAdmin;
 
-if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) header("Location: admin_filas.php");
+if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_filas.php"); exit; }
 
-$_fila_id = $_REQUEST['id'];
+$_fila_id = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
 
@@ -23,10 +23,10 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
 
     if (@$_REQUEST['act'] == 'Salvar') {
         if (!isset($_POST['evento_id']) || $_POST['evento_id'] == '' || !isset($_POST['fila_id']) || $_POST['fila_id'] == '') {
-            header("Location: fila.php?nova=true");
+            header("Location: fila.php?nova=true"); exit;
         } else {
             $fila = FilaQuery::create()->filterByEventoId($_POST['evento_id'])->findOneByFilaId($_POST['fila_id']);
-            if ($fila) header("Location: fila.php?evento=".$_POST['evento_id']."&id=".$_POST['fila_id']);
+            if ($fila) { header("Location: fila.php?evento=".$_POST['evento_id']."&id=".$_POST['fila_id']); exit; }
 
             $fila = new Fila();
             
@@ -102,14 +102,14 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
 
             $fila->save();
 
-            header("Location: admin_filas.php");
+            header("Location: admin_filas.php"); exit;
         }
     }
 
 } else {
 
     $fila = FilaQuery::create()->filterByEventoId($currentEventId)->findOneByFilaId($_REQUEST['id']);
-    if (!$fila) header("Location: admin_filas.php");
+    if (!$fila) { header("Location: admin_filas.php"); exit; }
 
     if (@$_REQUEST['act'] == 'Atualizar') {
         $now = new \DateTime();
@@ -185,12 +185,12 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
 
         $fila->save();
 
-        header("Location: fila.php?evento=".$currentEventId."&id=".$_fila_id);
+        header("Location: fila.php?evento=".$currentEventId."&id=".$_fila_id); exit;
     }
 
     if (@$_REQUEST['act'] == 'Deletar Fila') {
         $fila->delete();
-        header("Location: admin_filas.php");
+        header("Location: admin_filas.php"); exit;
     }
 }
 

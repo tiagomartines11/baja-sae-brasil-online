@@ -9,9 +9,9 @@ use Baja\Site\OneSignalClient;
 use Baja\Session;
 use DateTimeZone;
 
-if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) header("Location: admin_provas.php");
+if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_provas.php"); exit; }
 
-$_page = $_REQUEST['id'];
+$_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
 
@@ -23,11 +23,11 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
     $nova = true;
 
     if (@$_REQUEST['act'] == 'Salvar') {
-        if (!isset($_POST['prova_id']) || !isset($_POST['nome']) || !isset($_POST['params']) || $_POST['prova_id'] == '' || $_POST['nome'] == '' || $_POST['params'] == '') {
-            header("Location: prova.php?nova=true");
+        if (!isset($_POST['prova_id']) || !isset($_POST['nome']) || !isset($_POST['params']) || $_POST['prova_id'] == '' || $_POST['nome'] == '' || $_POST['params'] == '' || strlen($_POST['prova_id']) > 3) {
+            header("Location: prova.php?nova=true"); exit;
         } else {
             $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_POST['prova_id']);
-            if ($prova) header("Location: prova.php?id=".$_POST['prova_id']);
+            if ($prova) { header("Location: prova.php?id=".$_POST['prova_id']); exit; }
 
             $prova = new Prova();
             $prova->setEventoId($currentEventId);
@@ -36,20 +36,20 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
             $prova->setParams(json_decode($_POST['params']));
             $prova->save();
 
-            header("Location: admin_provas.php");
+            header("Location: admin_provas.php"); exit;
         }
     }
 
 } else {
 
     $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
-    if (!$prova) header("Location: admin_provas.php");
+    if (!$prova) { header("Location: admin_provas.php"); exit; }
 
-    $backups = json_decode($prova->getParamsBackup(), true);
+    $backups = @json_decode($prova->getParamsBackup(), true);
 
     if (@$_REQUEST['act'] == 'Refresh Pontos') {
         $prova->refreshVarsAndPontos();
-        header("Location: prova.php?id=".$_page);
+        header("Location: prova.php?id=".$_page); exit;
     }
 
     $bkNomeados = [];
@@ -68,7 +68,7 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
             $prova->setParamsBackup(json_encode($backups));
             $prova->save();
         }
-        header("Location: prova.php?id=".$_page);
+        header("Location: prova.php?id=".$_page); exit;
     }
 
     if (@$_REQUEST['act'] == '💾') {
@@ -77,14 +77,14 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
             $prova->setParamsBackup(json_encode($backups));
             $prova->save();
         }
-        header("Location: prova.php?id=".$_page);
+        header("Location: prova.php?id=".$_page); exit;
     }
 
-    $bk1 = $backups['-1'];
-    $bk2 = $backups['-2'];
-    $bk3 = $backups['-3'];
-    $bk4 = $backups['-4'];
-    $bk5 = $backups['-5'];
+    $bk1 = @$backups['-1'];
+    $bk2 = @$backups['-2'];
+    $bk3 = @$backups['-3'];
+    $bk4 = @$backups['-4'];
+    $bk5 = @$backups['-5'];
 
     if (@$_REQUEST['act'] == 'Atualizar') {
         if ($prova->getParams() != json_decode($_POST['params'])) {
@@ -103,12 +103,12 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
             $prova->refreshVarsAndPontos();
         }
 
-        header("Location: prova.php?id=".$_page);
+        header("Location: prova.php?id=".$_page); exit;
     }
 
     if (@$_REQUEST['act'] == 'Deletar Prova') {
         $prova->delete();
-        header("Location: admin_provas.php");
+        header("Location: admin_provas.php"); exit;
     }
 }
 
@@ -141,7 +141,7 @@ Template::printHeader("Detalhes de Prova", false);
                 </tr>
                 <tr>
                     <td>ID Prova</td>
-                    <td><input style="width:700px;" type="text" name="prova_id" <?= $nova?'':'disabled' ?> value="<?= $nova?'':$prova->getProvaId() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="prova_id" maxlength="3" <?= $nova?'':'disabled' ?> value="<?= $nova?'':$prova->getProvaId() ?>" /></td>
                 </tr>
                 <tr>
                     <td>Nome Prova</td>

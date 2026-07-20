@@ -33,7 +33,7 @@ if (@$_REQUEST['act'] == 'create') {
     } else {
         $user->save();
     }
-    header("Location: admin_users.php");
+    header("Location: admin_users.php"); exit;
 }
 
 $users = UserQuery::create()->find();

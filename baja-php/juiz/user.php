@@ -9,7 +9,7 @@ use DateTimeZone;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Baja\Session;
 
-if (!isset($_REQUEST['id'])) header("Location: admin.php");
+if (!isset($_REQUEST['id'])) { header("Location: admin.php"); exit; }
 
 $_user_id = $_REQUEST['id'];
 
@@ -17,7 +17,7 @@ Session::permissionCheck('admin');
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $user = UserQuery::create()->findOneByUserId($_user_id);
-if (!$user) header("Location: admin.php");
+if (!$user) { header("Location: admin.php"); exit; }
 
 $provas = ProvaQuery::create()->filterByEventoId($currentEventId)->find();
 
@@ -30,10 +30,10 @@ if (@$_REQUEST['act'] == 'save') {
 
     if ($user->hasNoMeaningfulPermissions()) {
         $user->delete();
-        header("Location: admin_users.php");
+        header("Location: admin_users.php"); exit;
     } else {
         $user->save();
-        header("Location: user.php?id=".$_user_id);
+        header("Location: user.php?id=".$_user_id); exit;
     }
 }
 $logs = LogQuery::create()->filterByUser($user->getUsername())->orderById(Criteria::DESC)->find();

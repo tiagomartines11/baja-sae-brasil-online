@@ -36,7 +36,7 @@ Template::printHeader('Baja SAE BRASIL - Certificados', false, false);
 			<select name="evt">
 			<?php if (count($eventos) > 0): ?>
 				<?php foreach ($eventos as $evento): ?>
-					<option value="<?= htmlspecialchars($evento->getEventoId(), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($evento->getTitulo(), ENT_QUOTES, 'UTF-8') ?></option>
+					<option value="<?= htmlspecialchars($evento->getEventoId(), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($evento->getTitulo() ?? '', ENT_QUOTES, 'UTF-8') ?></option>
 				<?php endforeach; ?>
 			<?php else: ?>
 				<option disabled>0 results</option>

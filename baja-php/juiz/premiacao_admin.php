@@ -6,7 +6,7 @@ use Baja\Model\PremiacaoQuery;
 use Baja\Model\Premiacao;
 use Baja\Session;
 
-if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) header("Location: admin_premiacoes.php");
+if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_premiacoes.php"); exit; }
 
 $_page = @$_REQUEST['id'];
 
@@ -21,10 +21,10 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova'] == 'true') {
 
     if (@$_REQUEST['act'] == 'Salvar') {
         if (!isset($_POST['premiacao_id']) || !isset($_POST['nome']) || !isset($_POST['categorias']) || $_POST['premiacao_id'] == '' || $_POST['nome'] == '' || $_POST['categorias'] == '') {
-            header("Location: premiacao_admin.php?nova=true");
+            header("Location: premiacao_admin.php?nova=true"); exit;
         } else {
             $exists = PremiacaoQuery::create()->filterByEventoId($currentEventId)->findOneByPremiacaoId($_POST['premiacao_id']);
-            if ($exists) header("Location: premiacao_admin.php?id=" . urlencode($_POST['premiacao_id']));
+            if ($exists) { header("Location: premiacao_admin.php?id=" . urlencode($_POST['premiacao_id'])); exit; }
 
             $premiacao = new Premiacao();
             $premiacao->setPremiacaoId($_POST['premiacao_id']);
@@ -34,16 +34,16 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova'] == 'true') {
             $premiacao->setCategorias(json_decode($_POST['categorias']));
             $premiacao->save();
 
-            header("Location: admin_premiacoes.php");
+            header("Location: admin_premiacoes.php"); exit;
         }
     }
 
 } else {
 
     $premiacao = PremiacaoQuery::create()->filterByEventoId($currentEventId)->findOneByPremiacaoId($_page);
-    if (!$premiacao) header("Location: admin_premiacoes.php");
+    if (!$premiacao) { header("Location: admin_premiacoes.php"); exit; }
 
-    $backups = json_decode($premiacao->getCategoriasBackup(), true);
+    $backups = @json_decode($premiacao->getCategoriasBackup(), true);
     if (!$backups) $backups = array();
 
     $bkNomeados = array();
@@ -61,7 +61,7 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova'] == 'true') {
             $premiacao->setCategoriasBackup(json_encode($backups));
             $premiacao->save();
         }
-        header("Location: premiacao_admin.php?id=" . urlencode($_page));
+        header("Location: premiacao_admin.php?id=" . urlencode($_page)); exit;
     }
 
     if (@$_REQUEST['act'] == '💾') {
@@ -70,7 +70,7 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova'] == 'true') {
             $premiacao->setCategoriasBackup(json_encode($backups));
             $premiacao->save();
         }
-        header("Location: premiacao_admin.php?id=" . urlencode($_page));
+        header("Location: premiacao_admin.php?id=" . urlencode($_page)); exit;
     }
 
     $bk1 = isset($backups['-1']) ? $backups['-1'] : null;
@@ -95,12 +95,12 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova'] == 'true') {
         $premiacao->setCategorias($incoming);
         $premiacao->save();
 
-        header("Location: premiacao_admin.php?id=" . urlencode($_page));
+        header("Location: premiacao_admin.php?id=" . urlencode($_page)); exit;
     }
 
     if (@$_REQUEST['act'] == 'Deletar Premiação') {
         $premiacao->delete();
-        header("Location: admin_premiacoes.php");
+        header("Location: admin_premiacoes.php"); exit;
     }
 }
 

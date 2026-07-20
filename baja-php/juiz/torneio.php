@@ -14,7 +14,7 @@ use Baja\Model\Input;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\InputQuery;
 
-if (!isset($_REQUEST['id'])) header("Location: index.php");
+if (!isset($_REQUEST['id'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['id'];
 
@@ -22,7 +22,7 @@ Session::permissionCheck('admin');
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
-if (!$prova) header("Location: index.php");
+if (!$prova) { header("Location: index.php"); exit; }
 
 $params = $prova->getParams();
 
@@ -35,7 +35,7 @@ if (isset($_REQUEST['freeze']) && isset($_REQUEST['classification'])) {
 
     $prova->setParams($params)->save();
 
-    header("Location: torneio.php?id=".$_page);
+    header("Location: torneio.php?id=".$_page); exit;
     
 }
 
@@ -45,14 +45,14 @@ if (isset($_REQUEST['unfreeze'])) {
 
     $prova->setParams($params)->save();
 
-    header("Location: torneio.php?id=".$_page);
+    header("Location: torneio.php?id=".$_page); exit;
 }
 
 if (isset($_REQUEST['destroybracket'])) {
     
     TournamentQuery::create()->filterByEventoId($currentEventId)->filterByProvaId($_page)->delete();
 
-    header("Location: torneio.php?id=".$_page);
+    header("Location: torneio.php?id=".$_page); exit;
 
 }
 
@@ -154,7 +154,7 @@ if (isset($_REQUEST['createbracket'])) {
         }
     }
     
-    header("Location: torneio.php?id=".$_page);
+    header("Location: torneio.php?id=".$_page); exit;
 
 }
 

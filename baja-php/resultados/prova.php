@@ -16,7 +16,7 @@ if (!$resultado) {
     exit;
 }
 $colunas = (array)$resultado->getColunas()->colunas;
-if (@$resultado->getColunas()->type == "tournament") header("Location: torneio.php?id=".$_REQUEST['id']);
+if (@$resultado->getColunas()->type == "tournament") { header("Location: torneio.php?id=".$_REQUEST['id']); exit; }
 $pos = @$resultado->getColunas()->pos;
 $filter = @$resultado->getColunas()->filter;
 $tiebreak = @$resultado->getColunas()->tiebreak;

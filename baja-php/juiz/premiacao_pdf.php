@@ -15,7 +15,7 @@ $isAdmin = Session::getCurrentUser()->hasPermission('admin');
 $premiacaoId = trim((string)@$_REQUEST['id']);
 
 if ($premiacaoId === '') {
-    header('Location: premiacoes.php');
+    header('Location: premiacoes.php'); exit;
 }
 
 $query = PremiacaoQuery::create()
@@ -29,7 +29,7 @@ if (!$isAdmin) {
 $premiacao = $query->findOne();
 
 if (!$premiacao) {
-    header('Location: premiacoes.php');
+    header('Location: premiacoes.php'); exit;
 }
 
 $categorias = PremiacaoResolver::resolve($premiacao);

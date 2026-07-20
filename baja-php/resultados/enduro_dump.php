@@ -10,7 +10,7 @@ $_evento = '19SU';
 $_prova = '19SU_END';
 
 $resultado = ResultadoQuery::create()->filterByEventoId($_evento)->findPk($_prova);
-if (!$resultado) header("Location: index.php");
+if (!$resultado) { header("Location: index.php"); exit; }
 $colunas = (array)$resultado->getColunas()->colunas;
 $filter = @$resultado->getColunas()->filter;
 

@@ -12,9 +12,9 @@ use Baja\Model\TournamentQuery;
 $evt = ResultadoQuery::create()->findOneByResultadoId($_REQUEST['id'])->getEventoId();
 
 $resultado = ResultadoQuery::create()->filterByEventoId($evt)->findPk($_REQUEST['id']);
-if (!$resultado) header("Location: index.php");
+if (!$resultado) { header("Location: index.php"); exit; }
 $colunas = (array)$resultado->getColunas()->colunas;
-if (@$resultado->getColunas()->type != "tournament") header("Location: prova.php?id=".$_REQUEST['id']);
+if (@$resultado->getColunas()->type != "tournament") { header("Location: prova.php?id=".$_REQUEST['id']); exit; }
 
 Template::printHeaderTournament($resultado->getNome());
 

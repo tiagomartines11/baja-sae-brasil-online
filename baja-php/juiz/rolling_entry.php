@@ -7,7 +7,7 @@ use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
 
-if (!isset($_REQUEST['p'])) header("Location: index.php");
+if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
 
@@ -41,7 +41,7 @@ echo '</select></td></tr>';
 
 $fields = $prova->getParamsInputs();
 foreach ($fields as $k=>$field) {
-    echo '<tr '.(($field->getPass() == 1 && ($fields[$k+1] && $fields[$k+1]->getPass() == 2)) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf() . '</tr>';
+    echo '<tr '.(($field->getPass() == 1 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == 2)) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf() . '</tr>';
 }
 
 ?>

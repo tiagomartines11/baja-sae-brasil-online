@@ -7,7 +7,7 @@ use Baja\Model\ResultadoQuery;
 use Baja\Model\InputQuery;
 
 $resultado = ResultadoQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->findPk($_REQUEST['id']);
-if (!$resultado) header("Location: index.php");
+if (!$resultado) { header("Location: index.php"); exit; }
 $colunas = (array)$resultado->getColunas()->colunas;
 $pos = @$resultado->getColunas()->pos;
 $filter = @$resultado->getColunas()->filter;

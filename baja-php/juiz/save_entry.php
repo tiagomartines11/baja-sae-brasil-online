@@ -10,7 +10,7 @@ use Baja\Model\ProvaQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 
-if (!isset($_REQUEST['p'])) header("Location: index.php");
+if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
 $_team = $_REQUEST['t'];
@@ -19,14 +19,15 @@ Session::permissionCheck($_page);
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $equipe = EquipeQuery::create()->filterByEventoId($currentEventId)->findOneByEquipeId($_team);
-if (!$equipe) header("Location: dashboard.php?p=$_page");
+if (!$equipe) { header("Location: dashboard.php?p=$_page"); exit; }
 
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
-if (!$prova) header("Location: index.php");
+if (!$prova) { header("Location: index.php"); exit; }
 $provaInput = [];
-array_walk($prova->getParamsInputs(), function($v) use (&$provaInput) { $provaInput[$v->getCode()] = $v; });
+$paramsInputs = $prova->getParamsInputs();
+array_walk($paramsInputs, function($v) use (&$provaInput) { $provaInput[$v->getCode()] = $v; });
 
-if (!array_key_exists("submit", $_POST)) header("Location: dashboard.php?p=$_page");
+if (!array_key_exists("submit", $_POST) && !array_key_exists("delete", $_POST)) { header("Location: dashboard.php?p=$_page"); exit; }
 
 $nota = InputQuery::create()->filterByEventoId($currentEventId)->filterByProvaId($prova->getProvaId())->findOneByEquipeId($equipe->getEquipeId());
 if (!$nota) {
@@ -37,7 +38,7 @@ if (!$nota) {
     $nota->setEventoId($currentEventId);
 }
 
-if ($_POST['delete'] == 'Deletar Nota') {
+if (($_POST['delete'] ?? '') == 'Deletar Nota') {
     $log = new Log();
     $log->setUser(Session::getCurrentUser()->getUsername());
     $log->setPagina($prova->getEventoId()."_".$prova->getProvaId());

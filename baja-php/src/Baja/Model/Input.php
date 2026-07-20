@@ -125,7 +125,26 @@ class Input extends BaseInput
 
     public static function solveFormula($vars, $formula) {
         extract((array)$vars);
-        @eval("\$formula = $formula;");
-        return (!is_string($formula) && (is_bool($formula) || is_nan($formula) || is_infinite($formula))) ? null : ($formula === false ? null : $formula);
+
+        // Rede de segurança: uma fórmula malformada não deve derrubar a página
+        // inteira. Em PHP 8 usar "+" para concatenar strings ('<b>'+X) é um
+        // TypeError fatal (no PHP 7 a string era coagida a 0 silenciosamente).
+        // Fórmulas assim devem ser corrigidas na origem (usar "." em vez de "+");
+        // aqui apenas degradamos para null em vez de derrubar a página — o mesmo
+        // que o "@" fazia no PHP 7 para erros não fatais.
+        try {
+            @eval("\$formula = $formula;");
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        if (is_string($formula)) {
+            return $formula;
+        }
+        // is_nan()/is_infinite() só aceitam float; chamar com null gera deprecation.
+        if (!is_int($formula) && !is_float($formula)) {
+            return null;
+        }
+        return (is_nan($formula) || is_infinite($formula)) ? null : $formula;
     }
 }

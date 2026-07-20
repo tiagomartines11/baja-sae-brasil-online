@@ -9,9 +9,9 @@ use Baja\Session;
 use Baja\Model\User;
 
 $resultado = ResultadoQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->findPk($_REQUEST['id']);
-if (!$resultado) header("Location: index.php");
+if (!$resultado) { header("Location: index.php"); exit; }
 $colunas = (array)$resultado->getColunas()->colunas;
-if (@$resultado->getColunas()->type == "tournament") header("Location: torneio.php?id=".$_REQUEST['id']);
+if (@$resultado->getColunas()->type == "tournament") { header("Location: torneio.php?id=".$_REQUEST['id']); exit; }
 $pos = @$resultado->getColunas()->pos;
 $filter = @$resultado->getColunas()->filter;
 $tiebreak = @$resultado->getColunas()->tiebreak;

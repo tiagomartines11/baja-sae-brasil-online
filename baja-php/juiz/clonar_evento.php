@@ -32,13 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $con->transaction(function() use (
             $refEventoId, $novoEventoId,
             $cloneProvas, $cloneResultados,
-            $autoUpdateAno, $autoUpdateNome,
-            $con
+            $autoUpdateAno, $con
         ) {
 
             // Para presidente e mandato, copia do último evento tipo=0 (nacional)
             $refEventoPresidente = EventoQuery::create()
-                ->filterByTipo(0)
+                ->filterByTipo('Nacional')
                 ->orderByAno('desc')
                 ->findOne($con);
 
@@ -159,13 +158,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
-        header("Location: evento.php?id=".$novoEventoId);
+        header("Location: evento.php?id=".$novoEventoId); exit;
 
     } catch (\Propel\Runtime\Exception\PropelException $e) {
         if (str_contains($e->getMessage(), '1062')) {
             echo "❌ O evento '$novoEventoId' já existe.";
         } else {
             echo "❌ Erro no banco de dados: " . $e->getMessage();
+            var_dump($e);
         }
     } catch (Exception $e) {
         echo "❌ Falha ao clonar evento: " . $e->getMessage();

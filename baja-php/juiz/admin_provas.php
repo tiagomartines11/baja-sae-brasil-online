@@ -19,14 +19,14 @@ if (@$_REQUEST['act'] == 'chstatus' && isset($_REQUEST['prova']) ) {
     $prova->setStatus($prova->getStatus() == "Parcial" ? "Final" : "Parcial");
     $prova->save();
     //if ($prova->getStatus() == 'Final') OneSignalClient::sendMessage($prova->getNome(), "Prova finalizada! Confira os resultados!!", "index.php?pg=".$prova->getProvaId());
-    header("Location: admin_provas.php");
+    header("Location: admin_provas.php"); exit;
 }
 
 if (@$_REQUEST['act'] == 'spoilers') {
     $e = EventoQuery::getCurrentEvent();
     $e->setSpoilers(!$e->getSpoilers());
     $e->save();
-    header("Location: admin_provas.php");
+    header("Location: admin_provas.php"); exit;
 }
 
 Template::printHeader("Admin");
