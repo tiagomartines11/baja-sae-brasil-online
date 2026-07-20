@@ -10,24 +10,33 @@ use Baja\Session;
 
 Session::permissionCheck("admin");
 
+$evento = EventoQuery::getCurrentEvent()->getEventoId();
+$provas = ProvaQuery::create()->filterByEventoId($evento)->find();
+
 if (@$_REQUEST['act'] == 'create') {
     $user = UserQuery::create()->findOneByUsername($_POST['username']);
-    if (!$user) {
+    $isNew = !$user;
+    if ($isNew) {
         $user = new User();
         $user->setUsername($_POST['username']);
     }
-    if (count((array)@$_POST['j']) > 1) {
-        $user->setPermissions((array)@$_POST['j']);
-        $user->save();
+    // Only touch the provas of the current event; every other permission the
+    // user holds (admin, other events, PREMIACAO, FILA, ...) is preserved.
+    $scope = [];
+    foreach ($provas as $p) $scope[] = $p->getFullCode();
+    $user->setScopedPermissions($scope, (array)@$_POST['j']);
+
+    if ($user->hasNoMeaningfulPermissions()) {
+        // Never create an empty user; delete an existing one only when nothing
+        // is left across ANY scope, not just this event.
+        if (!$isNew) $user->delete();
     } else {
-        $user->delete();
+        $user->save();
     }
     header("Location: admin_users.php");
 }
 
-$evento = EventoQuery::getCurrentEvent()->getEventoId();
 $users = UserQuery::create()->find();
-$provas = ProvaQuery::create()->filterByEventoId($evento)->find();
 
 Template::printHeader("Admin");
 

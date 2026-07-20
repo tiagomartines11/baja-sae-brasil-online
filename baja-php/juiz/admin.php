@@ -65,6 +65,9 @@ Template::printHeader("Admin");
         <tr><td>
             <a href="/admin_eventos.php">Administrar eventos</a>
         </td></tr>
+        <tr><td>
+            <a href="/admin_usuarios.php">Administrar usuários</a>
+        </td></tr>
     </tbody>
 </table>
 

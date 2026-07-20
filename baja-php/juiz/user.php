@@ -19,17 +19,23 @@ $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $user = UserQuery::create()->findOneByUserId($_user_id);
 if (!$user) header("Location: admin.php");
 
-if (@$_REQUEST['act'] == 'save') {
-    if (count((array)@$_POST['j']) > 1) {
-        $user->setPermissions((array)@$_POST['j']);
-        $user->save();
-    } else {
-        $user->delete();
-    }
-    header("Location: user.php?id=".$_user_id);
-}
-
 $provas = ProvaQuery::create()->filterByEventoId($currentEventId)->find();
+
+if (@$_REQUEST['act'] == 'save') {
+    // This form only exposes the global admin flag and the provas of the current
+    // event, so it must only edit those; other events, PREMIACAO, FILA, etc. stay.
+    $scope = ['admin'];
+    foreach ($provas as $p) $scope[] = $p->getFullCode();
+    $user->setScopedPermissions($scope, (array)@$_POST['j']);
+
+    if ($user->hasNoMeaningfulPermissions()) {
+        $user->delete();
+        header("Location: admin_users.php");
+    } else {
+        $user->save();
+        header("Location: user.php?id=".$_user_id);
+    }
+}
 $logs = LogQuery::create()->filterByUser($user->getUsername())->orderById(Criteria::DESC)->find();
 
 Template::printHeader("Detalhes de Usuário", false);
