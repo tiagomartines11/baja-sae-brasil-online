@@ -62,10 +62,10 @@ $new_array = [];
 $i = 0;
 foreach ($provaInput as $k=>$v) {
     $input = $prova->getParamsInputs()[$i++];
-    if ($input->getType() == "number" && $_POST[$k] !== null)
+    if ($input->getType() == "number" && ($_POST[$k] ?? null) !== null)
         $new_array[$k] = doubleval($_POST[$k]);
     else
-        $new_array[$k] = $_POST[$k];
+        $new_array[$k] = $_POST[$k] ?? null;
 }
 unset($v);
 
