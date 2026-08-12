@@ -29,7 +29,7 @@ class ApiDocsConfig
         return [
             'title' => 'Baja SAE Brasil API',
             'version' => '1.0.0',
-            'description' => 'API para gerenciamento de eventos, equipes e inscricoes do programa Baja SAE Brasil.',
+            'description' => 'API para gerenciamento de eventos, equipes e inscrições dos programas estudantis da SAE BRASIL.',
             'base_url' => '/api',
         ];
     }
