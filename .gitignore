@@ -83,10 +83,25 @@ fabric.properties
 vendor/
 
 # Generated/runtime
+#
+# Propel codegen output. Regenerate with `./propel <command>`; never commit.
+# The exception is the model tree itself (src/Baja/Model), which propel.yaml.dist
+# redirects into src/ and which IS committed — see docs/dev-workflow.md.
+# generated-classes/ and generated-conf/ are Propel's defaults for that tree:
+# they only appear if a propel command runs without picking up the config, and
+# ignoring them stops a stray duplicate model tree being committed by accident.
 generated-migrations/
+generated-sql/
+generated-reversed-database/
+generated-classes/
+generated-conf/
 */cache/*
 */files/*
 *.log
+
+# Built by Baja\Api\GenerateDocs from the api/ tree; regenerate rather than
+# commit, so it can never drift from the endpoints actually present.
+baja-php/src/Baja/Api/ApiDocs.json
 
 # Others
 propel.yaml
