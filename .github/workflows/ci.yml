@@ -5,15 +5,10 @@ on:
     branches:
       - master
       - develop
-      # Integration branch for the containerization work. The forward-port
-      # (FP) series PRs into this branch, so it needs checks too. Remove
-      # once it merges into master.
-      - containerized-monorepo-restructure
   push:
     branches:
       - master
       - develop
-      - containerized-monorepo-restructure
 
 jobs:
   frontend:
