@@ -222,4 +222,20 @@
       <parameter name="Engine" value="MYISAM"/>
     </vendor>
   </table>
+
+  <!-- Application configuration: JSON values keyed by name, editable at
+       runtime rather than through a deploy. Read via Baja\SysConfig. -->
+  <table name="config" idMethod="native" phpName="Config">
+    <column name="config_key" phpName="ConfigKey" type="VARCHAR" size="100" primaryKey="true" required="true"/>
+    <column name="config_value" phpName="ConfigValue" type="LONGVARCHAR" sqlType="json"/>
+    <column name="description" phpName="Description" type="VARCHAR" size="255"/>
+    <column name="updated_at" phpName="UpdatedAt" type="TIMESTAMP"/>
+    <column name="updated_by" phpName="UpdatedBy" type="INTEGER"/>
+    <foreign-key foreignTable="user" name="config_updated_by" onDelete="SET NULL" onUpdate="CASCADE">
+      <reference local="updated_by" foreign="user_id"/>
+    </foreign-key>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
 </database>

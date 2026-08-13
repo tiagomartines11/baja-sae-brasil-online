@@ -5,18 +5,15 @@ namespace Baja\Model\Base;
 use \DateTime;
 use \Exception;
 use \PDO;
-use Baja\Model\Config as ChildConfig;
 use Baja\Model\ConfigQuery as ChildConfigQuery;
 use Baja\Model\User as ChildUser;
 use Baja\Model\UserQuery as ChildUserQuery;
 use Baja\Model\Map\ConfigTableMap;
-use Baja\Model\Map\UserTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
-use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -26,20 +23,20 @@ use Propel\Runtime\Parser\AbstractParser;
 use Propel\Runtime\Util\PropelDateTime;
 
 /**
- * Base class that represents a row from the 'user' table.
+ * Base class that represents a row from the 'config' table.
  *
  *
  *
  * @package    propel.generator.Baja.Model.Base
  */
-abstract class User implements ActiveRecordInterface
+abstract class Config implements ActiveRecordInterface
 {
     /**
      * TableMap class name
      *
      * @var string
      */
-    public const TABLE_MAP = '\\Baja\\Model\\Map\\UserTableMap';
+    public const TABLE_MAP = '\\Baja\\Model\\Map\\ConfigTableMap';
 
 
     /**
@@ -69,46 +66,44 @@ abstract class User implements ActiveRecordInterface
     protected $virtualColumns = [];
 
     /**
-     * The value for the user_id field.
+     * The value for the config_key field.
      *
-     * @var        int
+     * @var        string
      */
-    protected $user_id;
+    protected $config_key;
 
     /**
-     * The value for the username field.
+     * The value for the config_value field.
      *
      * @var        string|null
      */
-    protected $username;
+    protected $config_value;
 
     /**
-     * The value for the permissions field.
+     * The value for the description field.
      *
-     * @var        array|null
+     * @var        string|null
      */
-    protected $permissions;
+    protected $description;
 
     /**
-     * The unserialized $permissions value - i.e. the persisted object.
-     * This is necessary to avoid repeated calls to unserialize() at runtime.
-     * @var object
-     */
-    protected $permissions_unserialized;
-
-    /**
-     * The value for the last_login field.
+     * The value for the updated_at field.
      *
      * @var        DateTime|null
      */
-    protected $last_login;
+    protected $updated_at;
 
     /**
-     * @var        ObjectCollection|ChildConfig[] Collection to store aggregation of ChildConfig objects.
-     * @phpstan-var ObjectCollection&\Traversable<ChildConfig> Collection to store aggregation of ChildConfig objects.
+     * The value for the updated_by field.
+     *
+     * @var        int|null
      */
-    protected $collConfigs;
-    protected $collConfigsPartial;
+    protected $updated_by;
+
+    /**
+     * @var        ChildUser
+     */
+    protected $aUser;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -119,14 +114,7 @@ abstract class User implements ActiveRecordInterface
     protected $alreadyInSave = false;
 
     /**
-     * An array of objects scheduled for deletion.
-     * @var ObjectCollection|ChildConfig[]
-     * @phpstan-var ObjectCollection&\Traversable<ChildConfig>
-     */
-    protected $configsScheduledForDeletion = null;
-
-    /**
-     * Initializes internal state of Baja\Model\Base\User object.
+     * Initializes internal state of Baja\Model\Base\Config object.
      */
     public function __construct()
     {
@@ -219,9 +207,9 @@ abstract class User implements ActiveRecordInterface
     }
 
     /**
-     * Compares this with another <code>User</code> instance.  If
-     * <code>obj</code> is an instance of <code>User</code>, delegates to
-     * <code>equals(User)</code>.  Otherwise, returns <code>false</code>.
+     * Compares this with another <code>Config</code> instance.  If
+     * <code>obj</code> is an instance of <code>Config</code>, delegates to
+     * <code>equals(Config)</code>.  Otherwise, returns <code>false</code>.
      *
      * @param mixed $obj The object to compare to.
      * @return bool Whether equal to the object specified.
@@ -352,56 +340,37 @@ abstract class User implements ActiveRecordInterface
     }
 
     /**
-     * Get the [user_id] column value.
+     * Get the [config_key] column value.
      *
-     * @return int
+     * @return string
      */
-    public function getUserId()
+    public function getConfigKey()
     {
-        return $this->user_id;
+        return $this->config_key;
     }
 
     /**
-     * Get the [username] column value.
+     * Get the [config_value] column value.
      *
      * @return string|null
      */
-    public function getUsername()
+    public function getConfigValue()
     {
-        return $this->username;
+        return $this->config_value;
     }
 
     /**
-     * Get the [permissions] column value.
+     * Get the [description] column value.
      *
-     * @return array|null
+     * @return string|null
      */
-    public function getPermissions()
+    public function getDescription()
     {
-        if (null === $this->permissions_unserialized) {
-            $this->permissions_unserialized = [];
-        }
-        if (!$this->permissions_unserialized && null !== $this->permissions) {
-            $permissions_unserialized = substr($this->permissions, 2, -2);
-            $this->permissions_unserialized = '' !== $permissions_unserialized ? explode(' | ', $permissions_unserialized) : array();
-        }
-
-        return $this->permissions_unserialized;
+        return $this->description;
     }
 
     /**
-     * Test the presence of a value in the [permissions] array column value.
-     * @param mixed $value
-     *
-     * @return bool
-     */
-    public function hasPermission($value): bool
-    {
-        return in_array($value, $this->getPermissions());
-    }
-
-    /**
-     * Get the [optionally formatted] temporal [last_login] column value.
+     * Get the [optionally formatted] temporal [updated_at] column value.
      *
      *
      * @param string|null $format The date/time format string (either date()-style or strftime()-style).
@@ -413,122 +382,125 @@ abstract class User implements ActiveRecordInterface
      *
      * @psalm-return ($format is null ? DateTime|null : string|null)
      */
-    public function getLastLogin($format = null)
+    public function getUpdatedAt($format = null)
     {
         if ($format === null) {
-            return $this->last_login;
+            return $this->updated_at;
         } else {
-            return $this->last_login instanceof \DateTimeInterface ? $this->last_login->format($format) : null;
+            return $this->updated_at instanceof \DateTimeInterface ? $this->updated_at->format($format) : null;
         }
     }
 
     /**
-     * Set the value of [user_id] column.
+     * Get the [updated_by] column value.
      *
-     * @param int $v New value
-     * @return $this The current object (for fluent API support)
+     * @return int|null
      */
-    public function setUserId($v)
+    public function getUpdatedBy()
     {
-        if ($v !== null) {
-            $v = (int) $v;
-        }
-
-        if ($this->user_id !== $v) {
-            $this->user_id = $v;
-            $this->modifiedColumns[UserTableMap::COL_USER_ID] = true;
-        }
-
-        return $this;
+        return $this->updated_by;
     }
 
     /**
-     * Set the value of [username] column.
+     * Set the value of [config_key] column.
      *
-     * @param string|null $v New value
+     * @param string $v New value
      * @return $this The current object (for fluent API support)
      */
-    public function setUsername($v)
+    public function setConfigKey($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->username !== $v) {
-            $this->username = $v;
-            $this->modifiedColumns[UserTableMap::COL_USERNAME] = true;
+        if ($this->config_key !== $v) {
+            $this->config_key = $v;
+            $this->modifiedColumns[ConfigTableMap::COL_CONFIG_KEY] = true;
         }
 
         return $this;
     }
 
     /**
-     * Set the value of [permissions] column.
+     * Set the value of [config_value] column.
      *
-     * @param array|null $v New value
+     * @param string|null $v New value
      * @return $this The current object (for fluent API support)
      */
-    public function setPermissions($v)
+    public function setConfigValue($v)
     {
-        if ($this->permissions_unserialized !== $v) {
-            $this->permissions_unserialized = $v;
-            $this->permissions = '| ' . implode(' | ', $v) . ' |';
-            $this->modifiedColumns[UserTableMap::COL_PERMISSIONS] = true;
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->config_value !== $v) {
+            $this->config_value = $v;
+            $this->modifiedColumns[ConfigTableMap::COL_CONFIG_VALUE] = true;
         }
 
         return $this;
     }
 
     /**
-     * Adds a value to the [permissions] array column value.
-     * @param mixed $value
+     * Set the value of [description] column.
      *
+     * @param string|null $v New value
      * @return $this The current object (for fluent API support)
      */
-    public function addPermission($value)
+    public function setDescription($v)
     {
-        $currentArray = $this->getPermissions();
-        $currentArray []= $value;
-        $this->setPermissions($currentArray);
-
-        return $this;
-    }
-
-    /**
-     * Removes a value from the [permissions] array column value.
-     * @param mixed $value
-     *
-     * @return $this The current object (for fluent API support)
-     */
-    public function removePermission($value)
-    {
-        $targetArray = [];
-        foreach ($this->getPermissions() as $element) {
-            if ($element != $value) {
-                $targetArray []= $element;
-            }
+        if ($v !== null) {
+            $v = (string) $v;
         }
-        $this->setPermissions($targetArray);
+
+        if ($this->description !== $v) {
+            $this->description = $v;
+            $this->modifiedColumns[ConfigTableMap::COL_DESCRIPTION] = true;
+        }
 
         return $this;
     }
 
     /**
-     * Sets the value of [last_login] column to a normalized version of the date/time value specified.
+     * Sets the value of [updated_at] column to a normalized version of the date/time value specified.
      *
      * @param string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
      *               Empty strings are treated as NULL.
      * @return $this The current object (for fluent API support)
      */
-    public function setLastLogin($v)
+    public function setUpdatedAt($v)
     {
         $dt = PropelDateTime::newInstance($v, null, 'DateTime');
-        if ($this->last_login !== null || $dt !== null) {
-            if ($this->last_login === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->last_login->format("Y-m-d H:i:s.u")) {
-                $this->last_login = $dt === null ? null : clone $dt;
-                $this->modifiedColumns[UserTableMap::COL_LAST_LOGIN] = true;
+        if ($this->updated_at !== null || $dt !== null) {
+            if ($this->updated_at === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->updated_at->format("Y-m-d H:i:s.u")) {
+                $this->updated_at = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[ConfigTableMap::COL_UPDATED_AT] = true;
             }
         } // if either are not null
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [updated_by] column.
+     *
+     * @param int|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setUpdatedBy($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->updated_by !== $v) {
+            $this->updated_by = $v;
+            $this->modifiedColumns[ConfigTableMap::COL_UPDATED_BY] = true;
+        }
+
+        if ($this->aUser !== null && $this->aUser->getUserId() !== $v) {
+            $this->aUser = null;
+        }
 
         return $this;
     }
@@ -569,21 +541,23 @@ abstract class User implements ActiveRecordInterface
     {
         try {
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : UserTableMap::translateFieldName('UserId', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->user_id = (null !== $col) ? (int) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 0 + $startcol : ConfigTableMap::translateFieldName('ConfigKey', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->config_key = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : UserTableMap::translateFieldName('Username', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->username = (null !== $col) ? (string) $col : null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 1 + $startcol : ConfigTableMap::translateFieldName('ConfigValue', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->config_value = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : UserTableMap::translateFieldName('Permissions', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->permissions = $col;
-            $this->permissions_unserialized = null;
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 2 + $startcol : ConfigTableMap::translateFieldName('Description', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->description = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : UserTableMap::translateFieldName('LastLogin', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ConfigTableMap::translateFieldName('UpdatedAt', TableMap::TYPE_PHPNAME, $indexType)];
             if ($col === '0000-00-00 00:00:00') {
                 $col = null;
             }
-            $this->last_login = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+            $this->updated_at = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ConfigTableMap::translateFieldName('UpdatedBy', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->updated_by = (null !== $col) ? (int) $col : null;
 
             $this->resetModified();
             $this->setNew(false);
@@ -592,10 +566,10 @@ abstract class User implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 4; // 4 = UserTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 5; // 5 = ConfigTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
-            throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\User'), 0, $e);
+            throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Config'), 0, $e);
         }
     }
 
@@ -615,6 +589,9 @@ abstract class User implements ActiveRecordInterface
      */
     public function ensureConsistency(): void
     {
+        if ($this->aUser !== null && $this->updated_by !== $this->aUser->getUserId()) {
+            $this->aUser = null;
+        }
     }
 
     /**
@@ -638,13 +615,13 @@ abstract class User implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getReadConnection(UserTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getReadConnection(ConfigTableMap::DATABASE_NAME);
         }
 
         // We don't need to alter the object instance pool; we're just modifying this instance
         // already in the pool.
 
-        $dataFetcher = ChildUserQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
+        $dataFetcher = ChildConfigQuery::create(null, $this->buildPkeyCriteria())->setFormatter(ModelCriteria::FORMAT_STATEMENT)->find($con);
         $row = $dataFetcher->fetch();
         $dataFetcher->close();
         if (!$row) {
@@ -654,8 +631,7 @@ abstract class User implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
-            $this->collConfigs = null;
-
+            $this->aUser = null;
         } // if (deep)
     }
 
@@ -665,8 +641,8 @@ abstract class User implements ActiveRecordInterface
      * @param ConnectionInterface $con
      * @return void
      * @throws \Propel\Runtime\Exception\PropelException
-     * @see User::setDeleted()
-     * @see User::isDeleted()
+     * @see Config::setDeleted()
+     * @see Config::isDeleted()
      */
     public function delete(?ConnectionInterface $con = null): void
     {
@@ -675,11 +651,11 @@ abstract class User implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(UserTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ConfigTableMap::DATABASE_NAME);
         }
 
         $con->transaction(function () use ($con) {
-            $deleteQuery = ChildUserQuery::create()
+            $deleteQuery = ChildConfigQuery::create()
                 ->filterByPrimaryKey($this->getPrimaryKey());
             $ret = $this->preDelete($con);
             if ($ret) {
@@ -714,7 +690,7 @@ abstract class User implements ActiveRecordInterface
         }
 
         if ($con === null) {
-            $con = Propel::getServiceContainer()->getWriteConnection(UserTableMap::DATABASE_NAME);
+            $con = Propel::getServiceContainer()->getWriteConnection(ConfigTableMap::DATABASE_NAME);
         }
 
         return $con->transaction(function () use ($con) {
@@ -733,7 +709,7 @@ abstract class User implements ActiveRecordInterface
                     $this->postUpdate($con);
                 }
                 $this->postSave($con);
-                UserTableMap::addInstanceToPool($this);
+                ConfigTableMap::addInstanceToPool($this);
             } else {
                 $affectedRows = 0;
             }
@@ -759,6 +735,18 @@ abstract class User implements ActiveRecordInterface
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
 
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aUser !== null) {
+                if ($this->aUser->isModified() || $this->aUser->isNew()) {
+                    $affectedRows += $this->aUser->save($con);
+                }
+                $this->setUser($this->aUser);
+            }
+
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -768,24 +756,6 @@ abstract class User implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
-            }
-
-            if ($this->configsScheduledForDeletion !== null) {
-                if (!$this->configsScheduledForDeletion->isEmpty()) {
-                    foreach ($this->configsScheduledForDeletion as $config) {
-                        // need to save related object because we set the relation to null
-                        $config->save($con);
-                    }
-                    $this->configsScheduledForDeletion = null;
-                }
-            }
-
-            if ($this->collConfigs !== null) {
-                foreach ($this->collConfigs as $referrerFK) {
-                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
-                        $affectedRows += $referrerFK->save($con);
-                    }
-                }
             }
 
             $this->alreadyInSave = false;
@@ -808,27 +778,26 @@ abstract class User implements ActiveRecordInterface
         $modifiedColumns = [];
         $index = 0;
 
-        $this->modifiedColumns[UserTableMap::COL_USER_ID] = true;
-        if (null !== $this->user_id) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key (' . UserTableMap::COL_USER_ID . ')');
-        }
 
          // check the columns in natural order for more readable SQL queries
-        if ($this->isColumnModified(UserTableMap::COL_USER_ID)) {
-            $modifiedColumns[':p' . $index++]  = 'user_id';
+        if ($this->isColumnModified(ConfigTableMap::COL_CONFIG_KEY)) {
+            $modifiedColumns[':p' . $index++]  = 'config_key';
         }
-        if ($this->isColumnModified(UserTableMap::COL_USERNAME)) {
-            $modifiedColumns[':p' . $index++]  = 'username';
+        if ($this->isColumnModified(ConfigTableMap::COL_CONFIG_VALUE)) {
+            $modifiedColumns[':p' . $index++]  = 'config_value';
         }
-        if ($this->isColumnModified(UserTableMap::COL_PERMISSIONS)) {
-            $modifiedColumns[':p' . $index++]  = 'permissions';
+        if ($this->isColumnModified(ConfigTableMap::COL_DESCRIPTION)) {
+            $modifiedColumns[':p' . $index++]  = 'description';
         }
-        if ($this->isColumnModified(UserTableMap::COL_LAST_LOGIN)) {
-            $modifiedColumns[':p' . $index++]  = 'last_login';
+        if ($this->isColumnModified(ConfigTableMap::COL_UPDATED_AT)) {
+            $modifiedColumns[':p' . $index++]  = 'updated_at';
+        }
+        if ($this->isColumnModified(ConfigTableMap::COL_UPDATED_BY)) {
+            $modifiedColumns[':p' . $index++]  = 'updated_by';
         }
 
         $sql = sprintf(
-            'INSERT INTO user (%s) VALUES (%s)',
+            'INSERT INTO config (%s) VALUES (%s)',
             implode(', ', $modifiedColumns),
             implode(', ', array_keys($modifiedColumns))
         );
@@ -837,20 +806,24 @@ abstract class User implements ActiveRecordInterface
             $stmt = $con->prepare($sql);
             foreach ($modifiedColumns as $identifier => $columnName) {
                 switch ($columnName) {
-                    case 'user_id':
-                        $stmt->bindValue($identifier, $this->user_id, PDO::PARAM_INT);
+                    case 'config_key':
+                        $stmt->bindValue($identifier, $this->config_key, PDO::PARAM_STR);
 
                         break;
-                    case 'username':
-                        $stmt->bindValue($identifier, $this->username, PDO::PARAM_STR);
+                    case 'config_value':
+                        $stmt->bindValue($identifier, $this->config_value, PDO::PARAM_STR);
 
                         break;
-                    case 'permissions':
-                        $stmt->bindValue($identifier, $this->permissions, PDO::PARAM_STR);
+                    case 'description':
+                        $stmt->bindValue($identifier, $this->description, PDO::PARAM_STR);
 
                         break;
-                    case 'last_login':
-                        $stmt->bindValue($identifier, $this->last_login ? $this->last_login->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
+                    case 'updated_at':
+                        $stmt->bindValue($identifier, $this->updated_at ? $this->updated_at->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
+
+                        break;
+                    case 'updated_by':
+                        $stmt->bindValue($identifier, $this->updated_by, PDO::PARAM_INT);
 
                         break;
                 }
@@ -860,13 +833,6 @@ abstract class User implements ActiveRecordInterface
             Propel::log($e->getMessage(), Propel::LOG_ERR);
             throw new PropelException(sprintf('Unable to execute INSERT statement [%s]', $sql), 0, $e);
         }
-
-        try {
-            $pk = $con->lastInsertId();
-        } catch (Exception $e) {
-            throw new PropelException('Unable to get autoincrement id.', 0, $e);
-        }
-        $this->setUserId($pk);
 
         $this->setNew(false);
     }
@@ -899,7 +865,7 @@ abstract class User implements ActiveRecordInterface
      */
     public function getByName(string $name, string $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = UserTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = ConfigTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
         $field = $this->getByPosition($pos);
 
         return $field;
@@ -916,16 +882,19 @@ abstract class User implements ActiveRecordInterface
     {
         switch ($pos) {
             case 0:
-                return $this->getUserId();
+                return $this->getConfigKey();
 
             case 1:
-                return $this->getUsername();
+                return $this->getConfigValue();
 
             case 2:
-                return $this->getPermissions();
+                return $this->getDescription();
 
             case 3:
-                return $this->getLastLogin();
+                return $this->getUpdatedAt();
+
+            case 4:
+                return $this->getUpdatedBy();
 
             default:
                 return null;
@@ -949,16 +918,17 @@ abstract class User implements ActiveRecordInterface
      */
     public function toArray(string $keyType = TableMap::TYPE_PHPNAME, bool $includeLazyLoadColumns = true, array $alreadyDumpedObjects = [], bool $includeForeignObjects = false): array
     {
-        if (isset($alreadyDumpedObjects['User'][$this->hashCode()])) {
+        if (isset($alreadyDumpedObjects['Config'][$this->hashCode()])) {
             return ['*RECURSION*'];
         }
-        $alreadyDumpedObjects['User'][$this->hashCode()] = true;
-        $keys = UserTableMap::getFieldNames($keyType);
+        $alreadyDumpedObjects['Config'][$this->hashCode()] = true;
+        $keys = ConfigTableMap::getFieldNames($keyType);
         $result = [
-            $keys[0] => $this->getUserId(),
-            $keys[1] => $this->getUsername(),
-            $keys[2] => $this->getPermissions(),
-            $keys[3] => $this->getLastLogin(),
+            $keys[0] => $this->getConfigKey(),
+            $keys[1] => $this->getConfigValue(),
+            $keys[2] => $this->getDescription(),
+            $keys[3] => $this->getUpdatedAt(),
+            $keys[4] => $this->getUpdatedBy(),
         ];
         if ($result[$keys[3]] instanceof \DateTimeInterface) {
             $result[$keys[3]] = $result[$keys[3]]->format('Y-m-d H:i:s.u');
@@ -970,20 +940,20 @@ abstract class User implements ActiveRecordInterface
         }
 
         if ($includeForeignObjects) {
-            if (null !== $this->collConfigs) {
+            if (null !== $this->aUser) {
 
                 switch ($keyType) {
                     case TableMap::TYPE_CAMELNAME:
-                        $key = 'configs';
+                        $key = 'user';
                         break;
                     case TableMap::TYPE_FIELDNAME:
-                        $key = 'configs';
+                        $key = 'user';
                         break;
                     default:
-                        $key = 'Configs';
+                        $key = 'User';
                 }
 
-                $result[$key] = $this->collConfigs->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+                $result[$key] = $this->aUser->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
         }
 
@@ -1003,7 +973,7 @@ abstract class User implements ActiveRecordInterface
      */
     public function setByName(string $name, $value, string $type = TableMap::TYPE_PHPNAME)
     {
-        $pos = UserTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
+        $pos = ConfigTableMap::translateFieldName($name, $type, TableMap::TYPE_NUM);
 
         $this->setByPosition($pos, $value);
 
@@ -1022,20 +992,19 @@ abstract class User implements ActiveRecordInterface
     {
         switch ($pos) {
             case 0:
-                $this->setUserId($value);
+                $this->setConfigKey($value);
                 break;
             case 1:
-                $this->setUsername($value);
+                $this->setConfigValue($value);
                 break;
             case 2:
-                if (!is_array($value)) {
-                    $v = trim(substr($value, 2, -2));
-                    $value = $v ? explode(' | ', $v) : array();
-                }
-                $this->setPermissions($value);
+                $this->setDescription($value);
                 break;
             case 3:
-                $this->setLastLogin($value);
+                $this->setUpdatedAt($value);
+                break;
+            case 4:
+                $this->setUpdatedBy($value);
                 break;
         } // switch()
 
@@ -1061,19 +1030,22 @@ abstract class User implements ActiveRecordInterface
      */
     public function fromArray(array $arr, string $keyType = TableMap::TYPE_PHPNAME)
     {
-        $keys = UserTableMap::getFieldNames($keyType);
+        $keys = ConfigTableMap::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
-            $this->setUserId($arr[$keys[0]]);
+            $this->setConfigKey($arr[$keys[0]]);
         }
         if (array_key_exists($keys[1], $arr)) {
-            $this->setUsername($arr[$keys[1]]);
+            $this->setConfigValue($arr[$keys[1]]);
         }
         if (array_key_exists($keys[2], $arr)) {
-            $this->setPermissions($arr[$keys[2]]);
+            $this->setDescription($arr[$keys[2]]);
         }
         if (array_key_exists($keys[3], $arr)) {
-            $this->setLastLogin($arr[$keys[3]]);
+            $this->setUpdatedAt($arr[$keys[3]]);
+        }
+        if (array_key_exists($keys[4], $arr)) {
+            $this->setUpdatedBy($arr[$keys[4]]);
         }
 
         return $this;
@@ -1116,19 +1088,22 @@ abstract class User implements ActiveRecordInterface
      */
     public function buildCriteria(): Criteria
     {
-        $criteria = new Criteria(UserTableMap::DATABASE_NAME);
+        $criteria = new Criteria(ConfigTableMap::DATABASE_NAME);
 
-        if ($this->isColumnModified(UserTableMap::COL_USER_ID)) {
-            $criteria->add(UserTableMap::COL_USER_ID, $this->user_id);
+        if ($this->isColumnModified(ConfigTableMap::COL_CONFIG_KEY)) {
+            $criteria->add(ConfigTableMap::COL_CONFIG_KEY, $this->config_key);
         }
-        if ($this->isColumnModified(UserTableMap::COL_USERNAME)) {
-            $criteria->add(UserTableMap::COL_USERNAME, $this->username);
+        if ($this->isColumnModified(ConfigTableMap::COL_CONFIG_VALUE)) {
+            $criteria->add(ConfigTableMap::COL_CONFIG_VALUE, $this->config_value);
         }
-        if ($this->isColumnModified(UserTableMap::COL_PERMISSIONS)) {
-            $criteria->add(UserTableMap::COL_PERMISSIONS, $this->permissions);
+        if ($this->isColumnModified(ConfigTableMap::COL_DESCRIPTION)) {
+            $criteria->add(ConfigTableMap::COL_DESCRIPTION, $this->description);
         }
-        if ($this->isColumnModified(UserTableMap::COL_LAST_LOGIN)) {
-            $criteria->add(UserTableMap::COL_LAST_LOGIN, $this->last_login);
+        if ($this->isColumnModified(ConfigTableMap::COL_UPDATED_AT)) {
+            $criteria->add(ConfigTableMap::COL_UPDATED_AT, $this->updated_at);
+        }
+        if ($this->isColumnModified(ConfigTableMap::COL_UPDATED_BY)) {
+            $criteria->add(ConfigTableMap::COL_UPDATED_BY, $this->updated_by);
         }
 
         return $criteria;
@@ -1146,8 +1121,8 @@ abstract class User implements ActiveRecordInterface
      */
     public function buildPkeyCriteria(): Criteria
     {
-        $criteria = ChildUserQuery::create();
-        $criteria->add(UserTableMap::COL_USER_ID, $this->user_id);
+        $criteria = ChildConfigQuery::create();
+        $criteria->add(ConfigTableMap::COL_CONFIG_KEY, $this->config_key);
 
         return $criteria;
     }
@@ -1160,7 +1135,7 @@ abstract class User implements ActiveRecordInterface
      */
     public function hashCode()
     {
-        $validPk = null !== $this->getUserId();
+        $validPk = null !== $this->getConfigKey();
 
         $validPrimaryKeyFKs = 0;
         $primaryKeyFKs = [];
@@ -1176,22 +1151,22 @@ abstract class User implements ActiveRecordInterface
 
     /**
      * Returns the primary key for this object (row).
-     * @return int
+     * @return string
      */
     public function getPrimaryKey()
     {
-        return $this->getUserId();
+        return $this->getConfigKey();
     }
 
     /**
-     * Generic method to set the primary key (user_id column).
+     * Generic method to set the primary key (config_key column).
      *
-     * @param int|null $key Primary key.
+     * @param string|null $key Primary key.
      * @return void
      */
-    public function setPrimaryKey(?int $key = null): void
+    public function setPrimaryKey(?string $key = null): void
     {
-        $this->setUserId($key);
+        $this->setConfigKey($key);
     }
 
     /**
@@ -1201,7 +1176,7 @@ abstract class User implements ActiveRecordInterface
      */
     public function isPrimaryKeyNull(): bool
     {
-        return null === $this->getUserId();
+        return null === $this->getConfigKey();
     }
 
     /**
@@ -1210,7 +1185,7 @@ abstract class User implements ActiveRecordInterface
      * If desired, this method can also make copies of all associated (fkey referrers)
      * objects.
      *
-     * @param object $copyObj An object of \Baja\Model\User (or compatible) type.
+     * @param object $copyObj An object of \Baja\Model\Config (or compatible) type.
      * @param bool $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
      * @param bool $makeNew Whether to reset autoincrement PKs and make the object new.
      * @throws \Propel\Runtime\Exception\PropelException
@@ -1218,26 +1193,13 @@ abstract class User implements ActiveRecordInterface
      */
     public function copyInto(object $copyObj, bool $deepCopy = false, bool $makeNew = true): void
     {
-        $copyObj->setUsername($this->getUsername());
-        $copyObj->setPermissions($this->getPermissions());
-        $copyObj->setLastLogin($this->getLastLogin());
-
-        if ($deepCopy) {
-            // important: temporarily setNew(false) because this affects the behavior of
-            // the getter/setter methods for fkey referrer objects.
-            $copyObj->setNew(false);
-
-            foreach ($this->getConfigs() as $relObj) {
-                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
-                    $copyObj->addConfig($relObj->copy($deepCopy));
-                }
-            }
-
-        } // if ($deepCopy)
-
+        $copyObj->setConfigKey($this->getConfigKey());
+        $copyObj->setConfigValue($this->getConfigValue());
+        $copyObj->setDescription($this->getDescription());
+        $copyObj->setUpdatedAt($this->getUpdatedAt());
+        $copyObj->setUpdatedBy($this->getUpdatedBy());
         if ($makeNew) {
             $copyObj->setNew(true);
-            $copyObj->setUserId(NULL); // this is a auto-increment column, so set to default value
         }
     }
 
@@ -1250,7 +1212,7 @@ abstract class User implements ActiveRecordInterface
      * objects.
      *
      * @param bool $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
-     * @return \Baja\Model\User Clone of current object.
+     * @return \Baja\Model\Config Clone of current object.
      * @throws \Propel\Runtime\Exception\PropelException
      */
     public function copy(bool $deepCopy = false)
@@ -1263,260 +1225,55 @@ abstract class User implements ActiveRecordInterface
         return $copyObj;
     }
 
-
     /**
-     * Initializes a collection based on the name of a relation.
-     * Avoids crafting an 'init[$relationName]s' method name
-     * that wouldn't work when StandardEnglishPluralizer is used.
+     * Declares an association between this object and a ChildUser object.
      *
-     * @param string $relationName The name of the relation to initialize
-     * @return void
-     */
-    public function initRelation($relationName): void
-    {
-        if ('Config' === $relationName) {
-            $this->initConfigs();
-            return;
-        }
-    }
-
-    /**
-     * Clears out the collConfigs collection
-     *
-     * This does not modify the database; however, it will remove any associated objects, causing
-     * them to be refetched by subsequent calls to accessor method.
-     *
-     * @return $this
-     * @see addConfigs()
-     */
-    public function clearConfigs()
-    {
-        $this->collConfigs = null; // important to set this to NULL since that means it is uninitialized
-
-        return $this;
-    }
-
-    /**
-     * Reset is the collConfigs collection loaded partially.
-     *
-     * @return void
-     */
-    public function resetPartialConfigs($v = true): void
-    {
-        $this->collConfigsPartial = $v;
-    }
-
-    /**
-     * Initializes the collConfigs collection.
-     *
-     * By default this just sets the collConfigs collection to an empty array (like clearcollConfigs());
-     * however, you may wish to override this method in your stub class to provide setting appropriate
-     * to your application -- for example, setting the initial array to the values stored in database.
-     *
-     * @param bool $overrideExisting If set to true, the method call initializes
-     *                                        the collection even if it is not empty
-     *
-     * @return void
-     */
-    public function initConfigs(bool $overrideExisting = true): void
-    {
-        if (null !== $this->collConfigs && !$overrideExisting) {
-            return;
-        }
-
-        $collectionClassName = ConfigTableMap::getTableMap()->getCollectionClassName();
-
-        $this->collConfigs = new $collectionClassName;
-        $this->collConfigs->setModel('\Baja\Model\Config');
-    }
-
-    /**
-     * Gets an array of ChildConfig objects which contain a foreign key that references this object.
-     *
-     * If the $criteria is not null, it is used to always fetch the results from the database.
-     * Otherwise the results are fetched from the database the first time, then cached.
-     * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this ChildUser is new, it will return
-     * an empty collection or the current collection; the criteria is ignored on a new object.
-     *
-     * @param Criteria $criteria optional Criteria object to narrow the query
-     * @param ConnectionInterface $con optional connection object
-     * @return ObjectCollection|ChildConfig[] List of ChildConfig objects
-     * @phpstan-return ObjectCollection&\Traversable<ChildConfig> List of ChildConfig objects
+     * @param ChildUser|null $v
+     * @return $this The current object (for fluent API support)
      * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function getConfigs(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    public function setUser(ChildUser $v = null)
     {
-        $partial = $this->collConfigsPartial && !$this->isNew();
-        if (null === $this->collConfigs || null !== $criteria || $partial) {
-            if ($this->isNew()) {
-                // return empty collection
-                if (null === $this->collConfigs) {
-                    $this->initConfigs();
-                } else {
-                    $collectionClassName = ConfigTableMap::getTableMap()->getCollectionClassName();
-
-                    $collConfigs = new $collectionClassName;
-                    $collConfigs->setModel('\Baja\Model\Config');
-
-                    return $collConfigs;
-                }
-            } else {
-                $collConfigs = ChildConfigQuery::create(null, $criteria)
-                    ->filterByUser($this)
-                    ->find($con);
-
-                if (null !== $criteria) {
-                    if (false !== $this->collConfigsPartial && count($collConfigs)) {
-                        $this->initConfigs(false);
-
-                        foreach ($collConfigs as $obj) {
-                            if (false == $this->collConfigs->contains($obj)) {
-                                $this->collConfigs->append($obj);
-                            }
-                        }
-
-                        $this->collConfigsPartial = true;
-                    }
-
-                    return $collConfigs;
-                }
-
-                if ($partial && $this->collConfigs) {
-                    foreach ($this->collConfigs as $obj) {
-                        if ($obj->isNew()) {
-                            $collConfigs[] = $obj;
-                        }
-                    }
-                }
-
-                $this->collConfigs = $collConfigs;
-                $this->collConfigsPartial = false;
-            }
+        if ($v === null) {
+            $this->setUpdatedBy(NULL);
+        } else {
+            $this->setUpdatedBy($v->getUserId());
         }
 
-        return $this->collConfigs;
-    }
+        $this->aUser = $v;
 
-    /**
-     * Sets a collection of ChildConfig objects related by a one-to-many relationship
-     * to the current object.
-     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
-     * and new objects from the given Propel collection.
-     *
-     * @param Collection $configs A Propel collection.
-     * @param ConnectionInterface $con Optional connection object
-     * @return $this The current object (for fluent API support)
-     */
-    public function setConfigs(Collection $configs, ?ConnectionInterface $con = null)
-    {
-        /** @var ChildConfig[] $configsToDelete */
-        $configsToDelete = $this->getConfigs(new Criteria(), $con)->diff($configs);
-
-
-        $this->configsScheduledForDeletion = $configsToDelete;
-
-        foreach ($configsToDelete as $configRemoved) {
-            $configRemoved->setUser(null);
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildUser object, it will not be re-added.
+        if ($v !== null) {
+            $v->addConfig($this);
         }
 
-        $this->collConfigs = null;
-        foreach ($configs as $config) {
-            $this->addConfig($config);
-        }
-
-        $this->collConfigs = $configs;
-        $this->collConfigsPartial = false;
 
         return $this;
     }
 
+
     /**
-     * Returns the number of related Config objects.
+     * Get the associated ChildUser object
      *
-     * @param Criteria $criteria
-     * @param bool $distinct
-     * @param ConnectionInterface $con
-     * @return int Count of related Config objects.
+     * @param ConnectionInterface $con Optional Connection object.
+     * @return ChildUser|null The associated ChildUser object.
      * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function countConfigs(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    public function getUser(?ConnectionInterface $con = null)
     {
-        $partial = $this->collConfigsPartial && !$this->isNew();
-        if (null === $this->collConfigs || null !== $criteria || $partial) {
-            if ($this->isNew() && null === $this->collConfigs) {
-                return 0;
-            }
-
-            if ($partial && !$criteria) {
-                return count($this->getConfigs());
-            }
-
-            $query = ChildConfigQuery::create(null, $criteria);
-            if ($distinct) {
-                $query->distinct();
-            }
-
-            return $query
-                ->filterByUser($this)
-                ->count($con);
+        if ($this->aUser === null && ($this->updated_by != 0)) {
+            $this->aUser = ChildUserQuery::create()->findPk($this->updated_by, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aUser->addConfigs($this);
+             */
         }
 
-        return count($this->collConfigs);
-    }
-
-    /**
-     * Method called to associate a ChildConfig object to this object
-     * through the ChildConfig foreign key attribute.
-     *
-     * @param ChildConfig $l ChildConfig
-     * @return $this The current object (for fluent API support)
-     */
-    public function addConfig(ChildConfig $l)
-    {
-        if ($this->collConfigs === null) {
-            $this->initConfigs();
-            $this->collConfigsPartial = true;
-        }
-
-        if (!$this->collConfigs->contains($l)) {
-            $this->doAddConfig($l);
-
-            if ($this->configsScheduledForDeletion and $this->configsScheduledForDeletion->contains($l)) {
-                $this->configsScheduledForDeletion->remove($this->configsScheduledForDeletion->search($l));
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param ChildConfig $config The ChildConfig object to add.
-     */
-    protected function doAddConfig(ChildConfig $config): void
-    {
-        $this->collConfigs[]= $config;
-        $config->setUser($this);
-    }
-
-    /**
-     * @param ChildConfig $config The ChildConfig object to remove.
-     * @return $this The current object (for fluent API support)
-     */
-    public function removeConfig(ChildConfig $config)
-    {
-        if ($this->getConfigs()->contains($config)) {
-            $pos = $this->collConfigs->search($config);
-            $this->collConfigs->remove($pos);
-            if (null === $this->configsScheduledForDeletion) {
-                $this->configsScheduledForDeletion = clone $this->collConfigs;
-                $this->configsScheduledForDeletion->clear();
-            }
-            $this->configsScheduledForDeletion[]= $config;
-            $config->setUser(null);
-        }
-
-        return $this;
+        return $this->aUser;
     }
 
     /**
@@ -1528,11 +1285,14 @@ abstract class User implements ActiveRecordInterface
      */
     public function clear()
     {
-        $this->user_id = null;
-        $this->username = null;
-        $this->permissions = null;
-        $this->permissions_unserialized = null;
-        $this->last_login = null;
+        if (null !== $this->aUser) {
+            $this->aUser->removeConfig($this);
+        }
+        $this->config_key = null;
+        $this->config_value = null;
+        $this->description = null;
+        $this->updated_at = null;
+        $this->updated_by = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();
@@ -1554,14 +1314,9 @@ abstract class User implements ActiveRecordInterface
     public function clearAllReferences(bool $deep = false)
     {
         if ($deep) {
-            if ($this->collConfigs) {
-                foreach ($this->collConfigs as $o) {
-                    $o->clearAllReferences($deep);
-                }
-            }
         } // if ($deep)
 
-        $this->collConfigs = null;
+        $this->aUser = null;
         return $this;
     }
 
@@ -1572,7 +1327,7 @@ abstract class User implements ActiveRecordInterface
      */
     public function __toString()
     {
-        return (string) $this->exportTo(UserTableMap::DEFAULT_STRING_FORMAT);
+        return (string) $this->exportTo(ConfigTableMap::DEFAULT_STRING_FORMAT);
     }
 
     /**

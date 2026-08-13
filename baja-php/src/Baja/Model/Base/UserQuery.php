@@ -10,7 +10,9 @@ use Baja\Model\Map\UserTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
+use Propel\Runtime\ActiveQuery\ModelJoin;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\PropelException;
 
@@ -34,6 +36,18 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildUserQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildUserQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildUserQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildUserQuery leftJoinConfig($relationAlias = null) Adds a LEFT JOIN clause to the query using the Config relation
+ * @method     ChildUserQuery rightJoinConfig($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Config relation
+ * @method     ChildUserQuery innerJoinConfig($relationAlias = null) Adds a INNER JOIN clause to the query using the Config relation
+ *
+ * @method     ChildUserQuery joinWithConfig($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Config relation
+ *
+ * @method     ChildUserQuery leftJoinWithConfig() Adds a LEFT JOIN clause and with to the query using the Config relation
+ * @method     ChildUserQuery rightJoinWithConfig() Adds a RIGHT JOIN clause and with to the query using the Config relation
+ * @method     ChildUserQuery innerJoinWithConfig() Adds a INNER JOIN clause and with to the query using the Config relation
+ *
+ * @method     \Baja\Model\ConfigQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildUser|null findOne(?ConnectionInterface $con = null) Return the first ChildUser matching the query
  * @method     ChildUser findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildUser matching the query, or a new ChildUser object populated from the query conditions when no match is found
@@ -454,6 +468,179 @@ abstract class UserQuery extends ModelCriteria
         $this->addUsingAlias(UserTableMap::COL_LAST_LOGIN, $lastLogin, $comparison);
 
         return $this;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Config object
+     *
+     * @param \Baja\Model\Config|ObjectCollection $config the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByConfig($config, ?string $comparison = null)
+    {
+        if ($config instanceof \Baja\Model\Config) {
+            $this
+                ->addUsingAlias(UserTableMap::COL_USER_ID, $config->getUpdatedBy(), $comparison);
+
+            return $this;
+        } elseif ($config instanceof ObjectCollection) {
+            $this
+                ->useConfigQuery()
+                ->filterByPrimaryKeys($config->getPrimaryKeys())
+                ->endUse();
+
+            return $this;
+        } else {
+            throw new PropelException('filterByConfig() only accepts arguments of type \Baja\Model\Config or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Config relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinConfig(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Config');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Config');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Config relation Config object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\ConfigQuery A secondary query class using the current class as primary query
+     */
+    public function useConfigQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinConfig($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Config', '\Baja\Model\ConfigQuery');
+    }
+
+    /**
+     * Use the Config relation Config object
+     *
+     * @param callable(\Baja\Model\ConfigQuery):\Baja\Model\ConfigQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withConfigQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::LEFT_JOIN
+    ) {
+        $relatedQuery = $this->useConfigQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Config table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ConfigQuery The inner query object of the EXISTS statement
+     */
+    public function useConfigExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ConfigQuery */
+        $q = $this->useExistsQuery('Config', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Config table for a NOT EXISTS query.
+     *
+     * @see useConfigExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ConfigQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useConfigNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ConfigQuery */
+        $q = $this->useExistsQuery('Config', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Config table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ConfigQuery The inner query object of the IN statement
+     */
+    public function useInConfigQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ConfigQuery */
+        $q = $this->useInQuery('Config', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Config table for a NOT IN query.
+     *
+     * @see useConfigInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ConfigQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInConfigQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ConfigQuery */
+        $q = $this->useInQuery('Config', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
     }
 
     /**

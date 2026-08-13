@@ -113,6 +113,11 @@ services:
       RECAPTCHA_KEY: ${RECAPTCHA_KEY}
       SYSADMIN_1_EMAIL: ${SYSADMIN_1_EMAIL}
       SYSADMIN_2_EMAIL: ${SYSADMIN_2_EMAIL}
+      # ----- API foundation (FP0) -----
+      # RateLimiter reuses REDIS_HOST/REDIS_PORT above.
+      API_CORS_ORIGINS: ${API_CORS_ORIGINS}
+      STORAGE_ENCRYPTION_KEY: ${STORAGE_ENCRYPTION_KEY}
+      LOG_LEVEL: ${LOG_LEVEL}
     volumes:
       - ${BAJA_APP_PATH}:/var/www/html
     depends_on:
