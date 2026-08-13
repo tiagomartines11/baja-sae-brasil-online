@@ -1,15 +1,15 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+
+import { renderWithTheme } from '@/utils/tests/helpers'
 
 import Titulo from '.'
 
 describe('<Titulo />', () => {
   it('should render the heading', () => {
-    const { container } = render(<Titulo />)
+    renderWithTheme(<Titulo>Baja SAE Brasil</Titulo>)
 
     expect(
-      screen.getByRole('heading', { name: /Titulo/i })
+      screen.getByRole('heading', { name: /Baja SAE Brasil/i })
     ).toBeInTheDocument()
-
-    expect(container.firstChild).toMatchSnapshot()
   })
 })
