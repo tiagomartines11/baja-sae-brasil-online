@@ -1,4 +1,7 @@
 {
+  "description": "Backend PHP do portal Baja SAE Brasil",
+  "type": "project",
+  "license": "Apache-2.0",
   "require": {
     "propel/propel": "^2.0@alpha",
     "phpmailer/phpmailer": "^6.9",
