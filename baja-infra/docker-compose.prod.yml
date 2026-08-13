@@ -1,0 +1,78 @@
+# Production / staging overlay. Layered on the base file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Adds durable bind-mounted data (survives `down -v`), Tailscale-only DB
+# access, and TLS on nginx. Does NOT re-list inherited mounts — Compose
+# concatenates service volume/port lists across files. ALWAYS verify the
+# merged result with `config` (gate G1).
+services:
+  mysql:
+    ports:
+      # Re-publish 3306 on the Tailscale interface so tailnet members reach
+      # it; the base localhost binding stays too. TAILSCALE_IP in .env.
+      - "${TAILSCALE_IP}:3306:3306"
+    volumes:
+      # Replaces the named mysql_data volume at the same target. The
+      # /docker-entrypoint-initdb.d bind is inherited from base.
+      - /srv/baja/mysql:/var/lib/mysql
+
+  phpbb-baja:
+    volumes:
+      # Nested binds inside the inherited phpbb_baja_html code volume.
+      # ONLY user content — code/ext/cache/store stay in the volume.
+      - /srv/baja/phpbb-baja/files:/var/www/html/files
+      - /srv/baja/phpbb-baja/avatars:/var/www/html/images/avatars/upload
+
+  phpbb-formula:
+    volumes:
+      - /srv/baja/phpbb-formula/files:/var/www/html/files
+      - /srv/baja/phpbb-formula/avatars:/var/www/html/images/avatars/upload
+
+  # Per-forum cron sidecars. phpBB has no built-in scheduler; web-triggered
+  # cron is traffic-dependent and effectively dead on low-traffic /
+  # containerized setups (queued email — password resets, registration
+  # confirmations — silently never sends). These reuse the forum image and
+  # SHARE its code volume so cron:run reads the same cache/queue.php that
+  # php-fpm writes. Prod-overlay-only; dev keeps web-triggered cron.
+  phpbb-baja-cron:
+    image: baja-phpbb-baja:latest
+    container_name: baja-phpbb-baja-cron
+    restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+      CRON_INTERVAL_SECONDS: ${CRON_INTERVAL_SECONDS:-300}
+    volumes:
+      - phpbb_baja_html:/var/www/html   # SHARED with phpbb-baja: needed for cache/queue.php
+    depends_on:
+      mysql:
+        condition: service_healthy
+      phpbb-baja:
+        condition: service_started
+    networks:
+      - baja
+    entrypoint: ["/usr/local/bin/cron-loop.sh"]
+
+  phpbb-formula-cron:
+    image: baja-phpbb-formula:latest
+    container_name: baja-phpbb-formula-cron
+    restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+      CRON_INTERVAL_SECONDS: ${CRON_INTERVAL_SECONDS:-300}
+    volumes:
+      - phpbb_formula_html:/var/www/html   # SHARED with phpbb-formula
+    depends_on:
+      mysql:
+        condition: service_healthy
+      phpbb-formula:
+        condition: service_started
+    networks:
+      - baja
+    entrypoint: ["/usr/local/bin/cron-loop.sh"]
+
+  nginx:
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d-prod:/etc/nginx/conf.d:ro   # same target as base → supersedes dev conf.d
+      - /etc/letsencrypt:/etc/letsencrypt:ro

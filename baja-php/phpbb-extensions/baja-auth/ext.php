@@ -1,0 +1,19 @@
+<?php
+/**
+ * ============================================================================
+ * THIS FILE IS BAKED INTO THE phpbb-baja CONTAINER AT BUILD TIME.
+ * ============================================================================
+ * Editing this file does NOT take effect in a running container.
+ *
+ * To apply changes:
+ *     cd baja-infra && docker compose down -v && docker compose build phpbb-baja && docker compose up -d
+ *
+ * The down -v is required: the phpbb_baja_html volume retains its initial
+ * content, and rebuilding the image alone won't propagate changes. See
+ * baja-php/docs/baja-auth-extension.md "Operating notes" for context.
+ * ============================================================================
+ */
+
+namespace baja\auth;
+
+class ext extends \phpbb\extension\base {}
