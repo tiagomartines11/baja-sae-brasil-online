@@ -26,8 +26,18 @@ Installing at boot from a path outside the volume avoids it:
 ```
 cd baja-infra
 docker compose build phpbb-baja
-docker compose up -d
+docker compose up -d phpbb-baja
+docker compose restart nginx
 ```
+
+The `restart nginx` is required, not tidiness. nginx resolves
+`fastcgi_pass phpbb-baja:9000` once at config load and caches the IP; the
+`up -d` above *recreates* the container, which gives it a new one. Skip the
+restart and `forum.baja.local` 502s while `forum.formula.local` starts
+serving the Baja board, because the freed IP gets reused by the other phpBB
+container. The logo will look correct throughout — static files come off
+the volume — so this is easy to misdiagnose as an app bug. See the FAQ in
+[`docs/dev-workflow.md`](../../../docs/dev-workflow.md).
 
 If no `site_logo.svg` is present, the entrypoint logs that and leaves
 phpBB's stock logo in place. The build and boot still succeed.
