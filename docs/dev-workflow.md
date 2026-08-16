@@ -106,6 +106,21 @@ The `-v` is what wipes the volume so your fresh build actually
 takes effect. See [`baja-php/docs/baja-auth-extension.md`](../baja-php/docs/baja-auth-extension.md)
 for the longer explanation.
 
+**Q: How do I change a forum's logo?**
+A: Drop an SVG at `baja-infra/phpbb-baja/branding/site_logo.svg` (or
+`phpbb-formula/`), then:
+```
+cd baja-infra
+docker compose build phpbb-baja
+docker compose up -d
+```
+No `down -v` here, unlike extensions above — branding is copied into the
+volume by the entrypoint on every boot precisely so logo changes don't cost
+a volume wipe. It replaces prosilver's own `site_logo.svg`, so no CSS
+change is needed. Note that nginx serves `.svg` with `expires 30d` and the
+filename doesn't change, so hard-refresh before concluding it didn't work.
+See [`baja-infra/phpbb-baja/branding/README.md`](../baja-infra/phpbb-baja/branding/README.md).
+
 **Q: I changed a value in `.env` but it's not taking effect.**
 A: Compose reads `.env` at `up` time, not for already-running containers.
 After editing `.env`: `docker compose up -d` (recreates affected

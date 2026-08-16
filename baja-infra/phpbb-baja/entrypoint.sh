@@ -2,10 +2,11 @@
 # phpbb-baja entrypoint.
 # Runs in this order:
 #   1. Set up writable directories (cache, store, etc.)
-#   2. Seed config.php from baked-in template if needed
-#   3. Wait for MySQL to be query-ready
-#   4. Enable extensions and refresh baja/auth config from env
-#   5. Hand off to php-fpm (or whatever CMD was passed)
+#   2. Install branded prosilver assets (forum logo)
+#   3. Seed config.php from baked-in template if needed
+#   4. Wait for MySQL to be query-ready
+#   5. Enable extensions and refresh baja/auth config from env
+#   6. Hand off to php-fpm (or whatever CMD was passed)
 set -e
 
 # ----- 1. Runtime-writable directories -----
@@ -24,7 +25,37 @@ for dir in files images/avatars/upload; do
     chown www-data:www-data "/var/www/html/${dir}"
 done
 
-# ----- 2. Generate config.php on first boot -----
+# ----- 2. Install branded prosilver assets -----
+# The forum logo is baked into the image at /usr/local/share/baja/branding,
+# deliberately OUTSIDE /var/www/html, and copied into the theme on every
+# boot. The indirection is the whole point: /var/www/html is a named volume
+# that is seeded from the image only when the volume is FIRST created, so a
+# logo COPYed straight into the theme would need a `down -v` to ever change
+# (same trap as the extensions — see docs/dev-workflow.md FAQ). Installing
+# from outside the volume at boot makes a logo swap `build` + `up -d`.
+#
+# We only replace prosilver's site_logo.svg, matching filename and format,
+# because stock colours.css already resolves .site_logo to
+# ./images/site_logo.svg — so no CSS or template override is needed. We
+# have exactly one theme (prosilver); if that ever stops being true this
+# needs to grow a loop over the installed styles.
+#
+# No branding baked in is a supported state, not an error: phpBB's stock
+# logo stays and the build/boot succeeds.
+BRANDING_DIR=/usr/local/share/baja/branding
+THEME_IMAGES=/var/www/html/styles/prosilver/theme/images
+if [ ! -d "$THEME_IMAGES" ]; then
+    echo "phpbb-baja: WARNING: $THEME_IMAGES not found, skipping branding install"
+elif [ -f "$BRANDING_DIR/site_logo.svg" ]; then
+    echo "phpbb-baja: installing branded site_logo.svg into prosilver..."
+    cp "$BRANDING_DIR/site_logo.svg" "$THEME_IMAGES/site_logo.svg"
+    chown www-data:www-data "$THEME_IMAGES/site_logo.svg"
+    chmod 644 "$THEME_IMAGES/site_logo.svg"
+else
+    echo "phpbb-baja: no branding/site_logo.svg baked in, keeping phpBB's stock logo"
+fi
+
+# ----- 3. Generate config.php on first boot -----
 # If a template is baked into the image and the volume doesn't have a
 # config.php yet (fresh volume), render it from env vars. Makes
 # "docker compose up -d" from a clean clone work zero-touch, and means
@@ -52,7 +83,7 @@ chmod -R u+w /var/www/html/install 2>/dev/null || true
 
 cd /var/www/html
 
-# ----- 3. Wait for MySQL to actually be query-ready -----
+# ----- 4. Wait for MySQL to actually be query-ready -----
 # mysql's depends_on:condition:service_healthy only verifies that the
 # daemon is listening + the seed has loaded. But on cold start the
 # init scripts (CREATE DATABASE, dumps, CREATE USER) run AFTER
@@ -78,7 +109,7 @@ until php -r 'exit(@(new mysqli("mysql", "phpbb_baja", getenv("MYSQL_PHPBB_BAJA_
 done
 echo "phpbb-baja: mysql is query-ready"
 
-# ----- 4. Enable extensions and refresh baja/auth config -----
+# ----- 5. Enable extensions and refresh baja/auth config -----
 # `|| true` — the CLI returns nonzero when the extension is already
 # enabled, which is the steady state on container restart. We don't
 # want a crash-loop on what is effectively a no-op.
@@ -98,5 +129,5 @@ if [ -n "$BAJA_AUTH_DEFAULT_REDIRECT" ]; then
         baja_auth_default_redirect "$BAJA_AUTH_DEFAULT_REDIRECT"
 fi
 
-# ----- 5. Hand off to CMD -----
+# ----- 6. Hand off to CMD -----
 exec "$@"

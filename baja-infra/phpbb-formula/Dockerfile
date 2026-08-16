@@ -99,9 +99,18 @@ RUN curl -fsSL "https://github.com/BakasuraRCE/phpbb-ext-xforwardedfor/archive/r
 # (docker compose down -v && docker compose build phpbb-formula && up -d).
 COPY baja-infra/phpbb-formula/config.php.template /var/www/html/config.php.template
 
-# Single entrypoint: handles dir perms, config.php seeding, then exec's
-# php-fpm. Formula has no custom extension, so the entrypoint is simpler
-# than phpbb-baja's.
+# Forum branding (the prosilver logo). Lands OUTSIDE /var/www/html on
+# purpose — the entrypoint installs it into the theme on every boot, so a
+# logo swap is `docker compose build phpbb-formula && up -d` rather than
+# the `down -v` volume wipe that baked-into-the-volume assets require. Drop
+# a replacement at baja-infra/phpbb-formula/branding/site_logo.svg; the
+# directory's README has the details. An empty branding dir is fine — the
+# entrypoint then leaves phpBB's stock logo alone.
+COPY baja-infra/phpbb-formula/branding/ /usr/local/share/baja/branding/
+
+# Single entrypoint: handles dir perms, branding install, and config.php
+# seeding, then exec's php-fpm. Formula has no custom extension, so the
+# entrypoint is simpler than phpbb-baja's.
 COPY baja-infra/phpbb-formula/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
