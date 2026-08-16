@@ -106,6 +106,53 @@ The `-v` is what wipes the volume so your fresh build actually
 takes effect. See [`baja-php/docs/baja-auth-extension.md`](../baja-php/docs/baja-auth-extension.md)
 for the longer explanation.
 
+**Q: How do I change a forum's logo?**
+A: Drop an SVG at `baja-infra/phpbb-baja/branding/site_logo.svg` (or
+`phpbb-formula/`), then:
+```
+cd baja-infra
+docker compose build phpbb-baja
+docker compose up -d phpbb-baja
+docker compose restart nginx
+```
+No `down -v` here, unlike extensions above — branding is copied into the
+volume by the entrypoint on every boot precisely so logo changes don't cost
+a volume wipe. It replaces prosilver's own `site_logo.svg`, so no CSS
+change is needed. Note that nginx serves `.svg` with `expires 30d` and the
+filename doesn't change, so hard-refresh before concluding it didn't work.
+See [`baja-infra/phpbb-baja/branding/README.md`](../baja-infra/phpbb-baja/branding/README.md).
+
+**That last `restart nginx` is not optional** — see the next entry.
+
+**Q: After `docker compose up -d`, one forum 502s and the other serves the
+wrong board. What happened?**
+A: nginx resolves `fastcgi_pass phpbb-baja:9000` **once, at config load**,
+and caches the IP. Any `up -d` that *recreates* a phpBB container gives it a
+new IP on the `baja` bridge, and nginx keeps pointing at the old one. The
+failure is nastier than a plain outage, because the freed IP usually gets
+reused by the *other* phpBB container:
+
+- `forum.baja.local` → dead IP → **502**
+- `forum.formula.local` → the IP now held by phpbb-baja → **serves the Baja
+  board under the Formula hostname**
+
+Static files still look right (nginx serves those from the volume itself),
+so the logo/CSS can be perfectly correct while the PHP behind it is the
+wrong forum entirely. Don't debug the app — check the IPs:
+```
+docker inspect -f '{{.Name}} {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+  baja-nginx baja-phpbb-baja baja-phpbb-formula
+docker logs baja-nginx | grep 'connect() failed'   # shows the stale upstream IP
+```
+`docker compose restart nginx` fixes it by forcing re-resolution. `docker
+compose restart <phpbb service>` does *not* trigger this — restart keeps the
+IP; only recreation changes it.
+
+The real fix is to make nginx re-resolve per request (Docker's embedded DNS
+at `127.0.0.11` plus a variable `fastcgi_pass`) rather than relying on
+everyone remembering the restart. That's a change across every file in
+`nginx/conf.d/` and `nginx/conf.d-prod/` and hasn't been done yet.
+
 **Q: I changed a value in `.env` but it's not taking effect.**
 A: Compose reads `.env` at `up` time, not for already-running containers.
 After editing `.env`: `docker compose up -d` (recreates affected

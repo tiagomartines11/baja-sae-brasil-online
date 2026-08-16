@@ -114,8 +114,18 @@ COPY baja-infra/phpbb-baja/config.php.template /var/www/html/config.php.template
 # the application code, not with this infra Dockerfile.
 COPY baja-php/phpbb-extensions/baja-auth /var/www/html/ext/baja/auth
 
-# Single entrypoint: handles dir perms, config.php seeding, MySQL readiness
-# probe, extension enable, and dynamic config refresh, then exec's php-fpm.
+# Forum branding (the prosilver logo). Lands OUTSIDE /var/www/html on
+# purpose — the entrypoint installs it into the theme on every boot, so a
+# logo swap is `docker compose build phpbb-baja && up -d` rather than the
+# `down -v` volume wipe that baked-into-the-volume assets require. Drop a
+# replacement at baja-infra/phpbb-baja/branding/site_logo.svg; the
+# directory's README has the details. An empty branding dir is fine — the
+# entrypoint then leaves phpBB's stock logo alone.
+COPY baja-infra/phpbb-baja/branding/ /usr/local/share/baja/branding/
+
+# Single entrypoint: handles dir perms, branding install, config.php
+# seeding, MySQL readiness probe, extension enable, and dynamic config
+# refresh, then exec's php-fpm.
 COPY baja-infra/phpbb-baja/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
