@@ -17,7 +17,11 @@ if (!defined('LOGIN_SUCCESS'))        define('LOGIN_SUCCESS',        1);
 if (!defined('LOGIN_ERROR_USERNAME')) define('LOGIN_ERROR_USERNAME', 10);
 if (!defined('LOGIN_ERROR_PASSWORD')) define('LOGIN_ERROR_PASSWORD', 11);
 
-$cookiePrefix = getenv('PHPBB_COOKIE_PREFIX') ?: 'phpbb3_baja';
+// No default on purpose. This must match phpbb_config.cookie_name for the
+// baja forum; any other value makes PhpbbSessionShim look for a cookie that
+// was never set, so it returns an unpopulated $user->data and the user is
+// bounced back to login with nothing logged anywhere. Fail at boot instead.
+$cookiePrefix = SessionStore::requireEnv('PHPBB_COOKIE_PREFIX')['PHPBB_COOKIE_PREFIX'];
 
 $store = new SessionStore();
 $user  = new PhpbbSessionShim($store, $cookiePrefix);
