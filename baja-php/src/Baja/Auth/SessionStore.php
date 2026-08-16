@@ -254,11 +254,23 @@ class SessionStore
         }
     }
 
-    private static function loadFromEnv(): array
+    /**
+     * Read environment variables that the session path cannot run without,
+     * failing loudly if any is unset or empty.
+     *
+     * Public so callers outside this class validate session-related variables
+     * the same way. Never substitute a default for one of these: a wrong-but-
+     * plausible value (a cookie prefix that doesn't match the forum's, a DB
+     * name that exists but is empty) produces a session lookup that misses
+     * silently and surfaces only as an unexplained login bounce.
+     *
+     * @return array<string, string>
+     */
+    public static function requireEnv(string ...$keys): array
     {
         $config = [];
         $missing = [];
-        foreach (self::REQUIRED_ENV as $key) {
+        foreach ($keys as $key) {
             $v = getenv($key);
             if ($v === false || $v === '') {
                 $missing[] = $key;
@@ -268,9 +280,14 @@ class SessionStore
         }
         if ($missing) {
             throw new SessionStoreException(
-                'Missing required environment variables for SessionStore: ' . implode(', ', $missing)
+                'Missing required environment variables: ' . implode(', ', $missing)
             );
         }
         return $config;
+    }
+
+    private static function loadFromEnv(): array
+    {
+        return self::requireEnv(...self::REQUIRED_ENV);
     }
 }
