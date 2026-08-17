@@ -28,6 +28,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_PREFIX="verify-run"
+# shellcheck source-path=SCRIPTDIR
 # shellcheck source=./backup-lib.sh
 source "$SCRIPT_DIR/backup-lib.sh"
 

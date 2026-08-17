@@ -22,6 +22,7 @@
 # credential a former student can no longer verify — and if a run is
 # going to die partway through, it should die having already secured the
 # database that cannot be reconstructed from anywhere else.
+# shellcheck disable=SC2034  # consumed by the scripts that source this file
 BACKUP_DATABASES=(baja_resultados phpbb_baja phpbb_formula)
 
 # Expected number of BASE TABLEs per database, used by the verifier as an

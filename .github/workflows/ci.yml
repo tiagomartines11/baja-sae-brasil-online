@@ -87,6 +87,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Shellcheck
+        run: |
+          # -x follows sourced files. The scripts carry
+          # `# shellcheck source-path=SCRIPTDIR`, so backup-lib.sh is
+          # resolved regardless of the working directory.
+          #
+          # Scoped to the directories this repo actually maintains as
+          # scripts. The phpBB entrypoints are excluded: they trip SC2016
+          # on `envsubst '${VAR}'`, where the single quotes are envsubst's
+          # variable whitelist and removing them would break the config
+          # templating. Worth silencing there one day, but not from a
+          # backups change.
+          find baja-infra/scripts baja-infra/mysql/init -name '*.sh' -print0 \
+            | xargs -0 shellcheck -x
+
       - name: Validate docker-compose syntax
         working-directory: baja-infra
         run: |

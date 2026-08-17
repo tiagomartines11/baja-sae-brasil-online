@@ -52,6 +52,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_PREFIX="erasure"
+# shellcheck source-path=SCRIPTDIR
 # shellcheck source=./backup-lib.sh
 source "$SCRIPT_DIR/backup-lib.sh"
 

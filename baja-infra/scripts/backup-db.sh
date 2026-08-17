@@ -72,6 +72,7 @@ SCRIPT_VERSION="1.0.0"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_PREFIX="backup"
+# shellcheck source-path=SCRIPTDIR
 # shellcheck source=./backup-lib.sh
 source "$SCRIPT_DIR/backup-lib.sh"
 
@@ -425,6 +426,9 @@ phase_manifest() {
     log "manifest: assembling"
 
     local -a jq_args=()
+    # The $names below are jq variables bound by --arg/--argjson, not
+    # shell expansions; the single quotes are what keeps them that way.
+    # shellcheck disable=SC2016
     local jq_expr='{
         schema_version: 2,
         run_id: $run_id,
@@ -542,7 +546,11 @@ phase_report() {
         total=$(( total + ${ARTIFACT_BYTES[$db]} ))
     done
 
-    local msg="run=${RUN_ID} dbs=${#BACKUP_DATABASES[@]} size=$(human_bytes "$total") duration=${duration}s"
+    # Declared and assigned separately so a failure inside human_bytes is
+    # not masked by `local`'s own exit status.
+    local size_text msg
+    size_text="$(human_bytes "$total")"
+    msg="run=${RUN_ID} dbs=${#BACKUP_DATABASES[@]} size=${size_text} duration=${duration}s"
     log "report: ${msg}"
 
     if [[ "$BACKUP_REMOTE" != "gdrive:" ]]; then
