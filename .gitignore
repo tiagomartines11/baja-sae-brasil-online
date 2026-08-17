@@ -144,6 +144,40 @@ dist/
 # Backup files
 *.bak
 
+# Local scratch space (notes, PR bodies, throwaway downloads)
+.scratch/
+
 # --- WP9: migration script secrets / dump files ---
 baja-infra/scripts/migration.env
 baja-infra/scripts/*.sql
+
+# --- WP: encrypted database backups ---
+# This repo is PUBLIC. A dump, an artifact or a service-account key
+# reaching a commit — including an intermediate one that is later
+# amended away — is a disclosure, not a mistake to clean up afterwards.
+#
+# Blanket-ignore anything dump-shaped, then re-admit the seed files in
+# mysql/init/, which are deliberately committed and contain only
+# synthetic data.
+*.sql
+!baja-infra/mysql/init/*.sql
+*.sql.gz
+*.age
+
+# Google service-account keys (baja-backup-writer / baja-backup-reader).
+# Named broadly on purpose — the failure mode is someone saving the
+# download under whatever name the Cloud console suggested.
+*service-account*.json
+*-sa.json
+gdrive-backup-*.json
+baja-infra/secrets/
+
+# Scratch space for dumps, on the VPS and in a checkout alike.
+baja-infra/scripts/backup-work/
+/var-tmp-baja-backup/
+
+# age private keys. The escrow key must never be on a machine that has a
+# checkout of this repo in the first place; this is the second net.
+*.age-key
+*.agekey
+age-key*.txt

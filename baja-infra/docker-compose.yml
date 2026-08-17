@@ -11,6 +11,12 @@ services:
       MYSQL_RESULTADOS_PASSWORD: ${MYSQL_RESULTADOS_PASSWORD}
       MYSQL_PHPBB_BAJA_PASSWORD: ${MYSQL_PHPBB_BAJA_PASSWORD}
       MYSQL_PHPBB_FORMULA_PASSWORD: ${MYSQL_PHPBB_FORMULA_PASSWORD}
+      # Read-only user for the `backup` service below. On an ALREADY
+      # INITIALISED server (i.e. production) these are inert — the init
+      # scripts only run on first boot — and the GRANT has to be applied
+      # by hand. See baja-infra/docs/backup-restore.md.
+      MYSQL_BACKUP_USER: ${MYSQL_BACKUP_USER}
+      MYSQL_BACKUP_PASSWORD: ${MYSQL_BACKUP_PASSWORD}
     ports:
       - "127.0.0.1:3306:3306"
     volumes:
@@ -138,6 +144,55 @@ services:
     environment:
       TZ: America/Sao_Paulo
       NODE_ENV: production
+    networks:
+      - baja
+
+  # Nightly encrypted logical backup of all three databases to the
+  # SAE BRASIL `baja-backups` Google Shared Drive.
+  #
+  # profiles: ["tools"] keeps it out of `docker compose up` — this is a
+  # run-to-completion job, not a service. Host cron invokes:
+  #
+  #     docker compose --profile tools run --rm backup
+  #
+  # which also means ad-hoc runs come free. That matters: the documented
+  # pre-event ritual is to run this manually before and after each scoring
+  # session, because a 24-hour RPO is the wrong answer on results day.
+  #
+  # It talks to MySQL as an ordinary CLIENT over the compose network. It
+  # does NOT mount the docker socket, and must never be given it: a job
+  # whose whole purpose is to read every row in the database has no
+  # business also being able to control the daemon that runs production.
+  backup:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    image: baja-backup:latest
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_BACKUP_USER: ${MYSQL_BACKUP_USER}
+      MYSQL_BACKUP_PASSWORD: ${MYSQL_BACKUP_PASSWORD}
+      # NOTE the two-sidedness: in .env this variable holds the HOST path
+      # to the service-account key (used by the bind mount below); inside
+      # the container it is the fixed read-only path the key appears at.
+      GDRIVE_SA_WRITER_JSON: /run/secrets/gdrive-backup-writer.json
+      GDRIVE_SHARED_DRIVE_ID: ${GDRIVE_SHARED_DRIVE_ID}
+      AGE_RECIPIENT_ESCROW: ${AGE_RECIPIENT_ESCROW}
+      AGE_RECIPIENT_VERIFIER: ${AGE_RECIPIENT_VERIFIER}
+      KUMA_PUSH_URL_BACKUP: ${KUMA_PUSH_URL_BACKUP}
+      # Test hooks. BACKUP_REMOTE redirects the upload away from Drive and
+      # suppresses the Kuma heartbeat; BACKUP_RUN_ID fakes the date so the
+      # monthly/yearly branches can be exercised. Both empty in normal use.
+      BACKUP_REMOTE: ${BACKUP_REMOTE:-}
+      BACKUP_RUN_ID: ${BACKUP_RUN_ID:-}
+    volumes:
+      - ${GDRIVE_SA_WRITER_JSON}:/run/secrets/gdrive-backup-writer.json:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - baja
 
