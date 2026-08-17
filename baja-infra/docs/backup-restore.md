@@ -257,6 +257,115 @@ plaintext CPFs on a production host. Delete it once the real backup works.
 
 ---
 
+## Weekly verification
+
+An untested backup is a hypothesis. Every Tuesday at 04:00 the newest
+`daily/` run is downloaded, decrypted, imported into a throwaway MySQL,
+and compared against its own manifest.
+
+```
+cd /srv/baja/baja-sae-brasil-online/baja-infra
+./scripts/verify-run.sh
+```
+
+Cron:
+
+```
+0 4 * * 2 cd /srv/baja/baja-sae-brasil-online/baja-infra && ./scripts/verify-run.sh >> /var/log/baja-verify.log 2>&1
+```
+
+`verify-run.sh` runs on the host and owns the lifecycle; `verify-db.sh`
+runs inside the verifier container and does the checking. The split is not
+arbitrary: **asserting that a docker volume is really gone cannot be done
+from inside a container**, and that assertion is the point.
+
+### It shares a box with production
+
+A verification job that takes prod down at 4am is strictly worse than no
+verification. The guardrails, all of them deliberate:
+
+- Its own compose project (`baja-verify`), its own bridge network, **no
+  route to production MySQL**, no published ports.
+- `mem_limit: 768m` plus `--innodb-buffer-pool-size=256M` and
+  `--performance-schema=OFF`. The VPS has 4 GB and is already running
+  production; a default MySQL alongside it invites the OOM killer, which
+  does not pick the process you would have picked.
+- **A different root password**, specifically so a misconfigured
+  `mysql <` cannot reach production. `verify-db.sh` refuses to start if it
+  matches `MYSQL_ROOT_PASSWORD`.
+- Before importing anything it asserts the scratch server is **empty** and
+  that its hostname is `baja-verify-mysql`. Restoring into the wrong
+  instance is plausible and unrecoverable.
+- A **read-only** Drive credential — `baja-backup-reader` (Viewer), plus
+  rclone's `drive.readonly` scope.
+
+Every run prints the peak memory it observed. Measure, do not assume:
+
+```
+[verify-run] peak memory observed across the verify stack: 222.9 MiB (mem_limit is 768 MiB)
+```
+
+### Hard versus soft
+
+**Hard** — nothing arrived, a checksum mismatch, a failed import, a row
+count that disagrees with the manifest, a mangled charset canary, or a
+failed teardown. These suppress the Kuma heartbeat and the monitor alerts.
+
+**Soft** — schema drift since the previous run, a large swing in total row
+count, restore duration. These are logged under `for review` and do **not**
+alert. Noisy checks train people to ignore the alert that matters, so
+resist the urge to promote one.
+
+Schema drift is soft on purpose: schema changes have been made directly in
+MySQL before, so this is a free drift detector, and failing on it would
+page someone for every legitimate migration.
+
+### Reading the results
+
+Results are **per database**, so a corrupt `phpbb_formula` never masks a
+healthy `baja_resultados`:
+
+```
+[verify] ----- results -----
+[verify]   baja_resultados: OK (restored in 1s)
+[verify]   phpbb_baja: OK (restored in 2s)
+[verify]   phpbb_formula: CHECKSUM MISMATCH
+```
+
+| Result | What to do |
+|---|---|
+| `OK (restored in Ns)` | Nothing. N is that database's measured RTO |
+| `INCOMPLETE RUN, not a backup` | The manifest never uploaded. Check the backup job |
+| `CHECKSUM MISMATCH` | The artifact is corrupt. Restore from the previous run |
+| `TRUNCATED` | The dump died mid-write. The backup job is failing silently |
+| `DECRYPT FAILED` | Wrong verifier key, or a damaged artifact |
+| `row counts differ` | Data changed in transit, **or** the backup user lost SELECT |
+| `CHARSET CANARY MISMATCH` | Accents did not survive. Do **not** restore from this |
+| `certificate lookup is missing ...` | The restore imports but cannot produce a PDF |
+
+The certificate lookup is the check that matters. Certificates are
+generated on demand, so "the backup restored" means nothing until a
+certificate can actually be produced from it. It picks its subject by a
+deterministic rule — the oldest participant row on a certificate-issuing
+event — and never by a hardcoded CPF, because this repository is public.
+
+### "LEFTOVERS from a previous run were found"
+
+The previous run did not tear itself down, which means a volume holding
+**decrypted production data** sat on the production host until this run
+destroyed it. The run continues, but this is a compliance incident, not a
+warning to scroll past. Find out why the last run died — check
+`/var/log/baja-verify.log` around its start time.
+
+### Testing it without Google Drive
+
+`VERIFY_REMOTE` and `VERIFY_LOCAL_DRIVE` point the verifier at a local
+directory laid out like the Shared Drive, so the whole path can be
+exercised without credentials. Both are already in `.env.example`. The
+run logs a loud warning and never pings Kuma.
+
+---
+
 ## Retention tiers, and reaching an old artifact
 
 | | `daily/` | `monthly/` | `yearly/` |

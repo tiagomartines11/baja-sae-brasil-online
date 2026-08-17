@@ -73,10 +73,16 @@ RUN set -eux; \
 # is the point — the two sides cannot drift.
 COPY scripts/backup-lib.sh   /usr/local/bin/backup-lib.sh
 COPY scripts/backup-db.sh    /usr/local/bin/backup-db.sh
+# The verifier runs from this same image, with its entrypoint overridden
+# by docker-compose.verify.yml. One image on purpose: verify-db.sh and
+# backup-db.sh share backup-lib.sh, and two images would let the
+# definitions they both depend on drift apart.
+COPY scripts/verify-db.sh    /usr/local/bin/verify-db.sh
 # Rides along because it needs exactly the same two tools (mysql, jq) and
 # is run through this image with --entrypoint. See docs/backup-restore.md.
 COPY scripts/erasure-log.sh  /usr/local/bin/erasure-log.sh
-RUN chmod 0755 /usr/local/bin/backup-db.sh /usr/local/bin/erasure-log.sh \
+RUN chmod 0755 /usr/local/bin/backup-db.sh /usr/local/bin/verify-db.sh \
+                /usr/local/bin/erasure-log.sh \
     && chmod 0644 /usr/local/bin/backup-lib.sh
 
 # Scratch space for plaintext dumps. Declared here so the intent is
