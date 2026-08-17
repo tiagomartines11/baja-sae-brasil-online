@@ -95,3 +95,13 @@ jobs:
           # We use --quiet to suppress the resolved YAML output.
           cp .env.example .env 2>/dev/null || true
           docker compose config --quiet
+          # The verify stack is a separate compose project and is never
+          # brought up by `docker compose up`, so nothing else would
+          # notice it going stale.
+          docker compose -f docker-compose.verify.yml config --quiet
+
+      - name: Retention pruner tests
+        # Apps Script cannot run in CI, so the pruner's logic is exercised
+        # against a fake Drive. It is the only code in the backup system
+        # that can actively destroy data.
+        run: node baja-infra/gas/retention/test/prune.test.js

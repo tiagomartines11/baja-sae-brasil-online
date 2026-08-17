@@ -528,7 +528,7 @@ Recording an erasure (**after** you have erased it in production):
 docker compose --profile tools run --rm --entrypoint erasure-log.sh backup \
     record --request REQ-2026-014 \
            --database baja_resultados --table participantes --column cpf \
-           --value 12345678901 \
+           --value '<the CPF named in the request>' \
            --note "Art. 18 request, ticket 014"
 ```
 
