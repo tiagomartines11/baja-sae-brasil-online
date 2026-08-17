@@ -181,3 +181,7 @@ baja-infra/scripts/backup-work/
 *.age-key
 *.agekey
 age-key*.txt
+
+# clasp's per-deployment script id. Not a secret, but pinning one in the
+# repo makes it far too easy to `clasp push` over the wrong project.
+baja-infra/gas/**/.clasp.json

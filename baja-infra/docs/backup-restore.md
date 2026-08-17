@@ -404,6 +404,42 @@ A manifest in `monthly/` or `yearly/` describes the run **as created**, so
 it may reference artifacts that tier no longer holds. That is by design,
 not corruption.
 
+### What enforces this
+
+A Google Apps Script pruner, source in
+[`baja-infra/gas/retention/`](../gas/retention/README.md), running daily
+under a **dedicated role account** — not a person's, because Apps Script
+triggers execute as whoever installed them and a trigger bound to a
+student who graduates is exactly the failure this work package exists to
+prevent.
+
+It trashes rather than deletes, refuses to take `daily/` below 7 runs or
+`monthly/` below 6, caps itself at 30 files per run, is dry-run by
+default, and logs every action to `retention-log/` in the Shared Drive.
+If it aborts, do not just re-run it: an abort means either the backup job
+has stopped producing runs or the pruner has a bug.
+
+**Do not substitute a deduplicating backup tool** (restic and similar) to
+shorten these tiers further. Dedup operates on the uncompressed stream, so
+it would replace both the gzip and `age` layers, make the encryption
+symmetric with the repo password sitting on the VPS, and require delete
+rights for `prune` — which kills the Contributor-cannot-trash property and
+the separate pruner identity with it. It would also turn one corrupt
+artifact into damage spanning many snapshots. That trades recovery-path
+simplicity for storage that is not scarce. Revisit only if Drive quota
+becomes a real constraint.
+
+### Second copy — TrueNAS
+
+The pruner is not the last line of defence: a Manager can empty the Shared
+Drive's trash. A cron job on TrueNAS pulls the Shared Drive into a ZFS
+dataset via rclone, with ZFS snapshots. **Drive has no WORM primitive, so
+the ZFS snapshots are the retention floor.** The pull also doubles as
+proof the artifacts are readable from somewhere that is not the VPS.
+
+Uptime Kuma runs on TrueNAS and therefore cannot alert that TrueNAS is
+down. That one check needs an **external dead-man's switch**.
+
 ---
 
 ## MySQL backup user
