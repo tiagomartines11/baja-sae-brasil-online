@@ -203,6 +203,34 @@ final class Nome
     }
 
     /**
+     * A whole string reduced to something two spellings of it can be compared
+     * on.
+     *
+     * fold() is for names, where the token split depends on the spacing and
+     * the punctuation, so it leaves both alone. This is for values matched
+     * entire — a role, an event's name — where the opposite holds:
+     * "Comissão Técnica", "comissao  tecnica" and "Comissão-Técnica" are the
+     * same answer typed by three people, and only the letters carry meaning.
+     *
+     * Ordinal indicators fold to their letter rather than being dropped.
+     * Event names are full of them ("27ª Competição"), NFD leaves them intact
+     * because their decomposition is compatibility rather than canonical, and
+     * dropping them would make "27ª" and the "27a" somebody types instead
+     * differ by more than the character they are arguing about.
+     */
+    public static function chave(string $value): string
+    {
+        $folded = strtr(self::fold($value), ['ª' => 'a', 'º' => 'o']);
+
+        // Everything that is not a letter or a digit becomes a space, which
+        // takes punctuation, non-breaking spaces, and the literal entity text
+        // some stored event names carry, with it.
+        $folded = preg_replace('/[^a-z0-9]+/', ' ', $folded);
+
+        return trim($folded);
+    }
+
+    /**
      * @param bool $joinPunctuation true removes punctuation, false splits on it
      *
      * @return array<int, string>

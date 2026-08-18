@@ -131,3 +131,41 @@ T::ok(
     Nome::matches('Ana Bresolin Silva', 'Ana Bresolin-Silva')
         && Nome::matches('Ana Bresolin-Silva', 'Ana Bresolin Silva')
 );
+
+// --- the comparison key -------------------------------------------------------
+//
+// For values matched entire rather than tokenized: a role, an event's name.
+// Only the letters and digits carry meaning, so everything else folds away.
+
+T::same('comissao tecnica', Nome::chave('Comissão Técnica'), 'accents and case fold');
+T::same('comissao tecnica', Nome::chave('COMISSÃO  TÉCNICA'), 'so does repeated whitespace');
+T::same('comissao tecnica', Nome::chave('Comissão-Técnica'), 'and punctuation between words');
+T::same('comissao tecnica', Nome::chave('  Comissão Técnica.  '), 'and trailing punctuation');
+
+// Ordinal indicators fold to their letter. Event names are full of them, and
+// dropping them would make "27ª" and a typed "27a" differ by more than the
+// character being argued about.
+T::same('27a competicao baja sae brasil', Nome::chave('27ª Competição Baja SAE BRASIL'), 'an event name folds');
+T::same(
+    Nome::chave('27ª Competição Baja SAE BRASIL'),
+    Nome::chave('27a competicao baja sae brasil'),
+    'the ordinal and the letter reach the same key'
+);
+
+// Stored event names carry HTML entities as literal text, and decoding one
+// yields a non-breaking space. Both readings have to land in the same place.
+T::same(
+    Nome::chave('Baja SAE BRASIL'),
+    Nome::chave("Baja SAE\u{00A0}BRASIL"),
+    'a non-breaking space is a space'
+);
+T::same('baja sae nbsp brasil', Nome::chave('Baja SAE&nbsp;BRASIL'), 'an undecoded entity is not silently equal');
+
+T::same('', Nome::chave(''), 'an empty value has an empty key');
+T::same('', Nome::chave('   ---   '), 'and so does punctuation alone');
+
+// Distinct things must stay distinct. This is the whole safety property: the
+// key is allowed to be forgiving about how something is written and never
+// about which thing it is.
+T::notSame(Nome::chave('Comissário'), Nome::chave('Comissão Técnica'), 'two roles sharing a prefix keep different keys');
+T::notSame(Nome::chave('Etapa Sudeste'), Nome::chave('Etapa Sul'), 'two events sharing a prefix keep different keys');
