@@ -115,7 +115,7 @@ body() { # sid path
     curl -s "${CURL_ARGS[@]}" "${jar[@]}" "$BASE$2"
 }
 
-PAGINAS=(/certificados.php /certificados_lote.php /certificados_nome.php /certificados_busca.php /lote.php)
+PAGINAS=(/certificados.php /certificados_lote.php /certificados_nome.php /certificados_busca.php /lotes.php /lote.php)
 
 echo
 echo "--- anonymous ---"
@@ -301,6 +301,22 @@ aindaCriadas=$(docker exec "$APP" php -r '
         ->filterByNome("ZZHttp Parcial%", \Propel\Runtime\ActiveQuery\Criteria::LIKE)->count();
 ')
 same "so the row count is unchanged" 2 "$aindaCriadas"
+
+echo
+echo "--- the batch list ---"
+listaLotes=$(body "$PREFIX_COM" /lotes.php)
+contains "the batch list offers an event filter" 'name="eventos[]"' "$listaLotes"
+contains "and an author filter" 'name="autor"' "$listaLotes"
+contains "and a batch id box" 'name="id"' "$listaLotes"
+contains "and links to a batch" 'lote.php?id=' "$listaLotes"
+
+# GET here, unlike the certificate lookup. That page posts because a document
+# number in a URL is a document number in the access log; nothing on this page
+# is a document number or a name, so its filters can live in the address and a
+# view can be sent to somebody.
+contains "the filter form uses GET" 'method="get"' "$listaLotes"
+
+contains "a batch page links back to the list" 'lotes.php' "$(body "$PREFIX_COM" /lote.php)"
 
 echo
 echo "--- the lookup page ---"

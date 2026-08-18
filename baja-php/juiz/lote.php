@@ -92,17 +92,24 @@ $e = fn(string $v): string => Template::e($v);
 <?php endif; ?>
 
 <div class="card">
+    <p class="muted" style="margin: 0 0 8px;"><a href="lotes.php">&larr; Todos os lotes</a></p>
     <h1>Lote de certificados</h1>
 
     <?php if (!Token::isWellFormed($id)): ?>
         <p>Identificador de lote inválido.</p>
-        <p><a class="btn" href="certificados_lote.php">Inserção em lote</a></p>
+        <p>
+            <a class="btn" href="lotes.php">Ver todos os lotes</a>
+            <a class="btn btn-secondary" href="certificados_lote.php">Inserção em lote</a>
+        </p>
     <?php elseif ($linhas === []): ?>
         <p>
             Não há nenhum certificado no lote <code><?= $e($id) ?></code>.
             <?= $apagado > 0 ? 'Ele acabou de ser apagado.' : 'Ou ele nunca existiu, ou já foi apagado.' ?>
         </p>
-        <p><a class="btn" href="certificados_lote.php">Inserção em lote</a></p>
+        <p>
+            <a class="btn" href="lotes.php">Ver todos os lotes</a>
+            <a class="btn btn-secondary" href="certificados_lote.php">Inserção em lote</a>
+        </p>
     <?php else: ?>
         <dl>
             <dt>Lote</dt>

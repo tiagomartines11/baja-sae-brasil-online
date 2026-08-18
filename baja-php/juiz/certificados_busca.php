@@ -545,55 +545,11 @@ $restaurando = str_starts_with($acao, 'restaurar');
     </div>
 <?php endif; ?>
 
+<?php Template::printScriptMultiSelect(); ?>
+
 <script>
-// Progressive enhancement only. Without this the panels still open, every
-// option is still visible, and only the filter box does nothing.
-document.querySelectorAll('[data-multi]').forEach(function (bloco) {
-    var filtro  = bloco.querySelector('[data-filtro]');
-    var resumo  = bloco.querySelector('[data-resumo]');
-    var limpar  = bloco.querySelector('[data-limpar]');
-    var labels  = Array.prototype.slice.call(bloco.querySelectorAll('.multi-lista label'));
-    var vazio   = resumo.textContent.trim();
-
-    function atualizarResumo() {
-        var marcados = labels
-            .filter(function (l) { return l.querySelector('input').checked; })
-            .map(function (l) { return l.querySelector('input').value; });
-
-        if (marcados.length === 0)      resumo.textContent = vazio;
-        else if (marcados.length <= 3)  resumo.textContent = marcados.join(', ');
-        else                            resumo.textContent = marcados.length + ' selecionados';
-    }
-
-    filtro.addEventListener('input', function () {
-        var termo = filtro.value.toLowerCase();
-        labels.forEach(function (l) {
-            // A checked option always stays visible. Filtering something out
-            // of sight while it is still part of the search is how somebody
-            // ends up not understanding their own results.
-            var visivel = l.querySelector('input').checked
-                || l.textContent.toLowerCase().indexOf(termo) !== -1;
-            l.style.display = visivel ? '' : 'none';
-        });
-    });
-
-    // Typing in the filter must not submit the form.
-    filtro.addEventListener('keydown', function (ev) {
-        if (ev.key === 'Enter') { ev.preventDefault(); }
-    });
-
-    bloco.addEventListener('change', atualizarResumo);
-
-    limpar.addEventListener('click', function () {
-        labels.forEach(function (l) { l.querySelector('input').checked = false; });
-        atualizarResumo();
-    });
-
-    atualizarResumo();
-});
-
-// A new search starts at the first page; only the pager's own buttons carry
-// a page number.
+// A new search starts at the first page; only the pager's own buttons carry a
+// page number.
 var campoPagina = document.getElementById('pagina');
 if (campoPagina) { campoPagina.value = '1'; }
 </script>

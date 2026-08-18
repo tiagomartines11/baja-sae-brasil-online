@@ -197,6 +197,8 @@ final class Template
         &emsp;&middot;&emsp;
         <a href="certificados_busca.php">Consultar</a>
         &emsp;&middot;&emsp;
+        <a href="lotes.php">Lotes</a>
+        &emsp;&middot;&emsp;
         <a href="certificados.php">Novo certificado</a>
         &emsp;&middot;&emsp;
         <a href="certificados_lote.php">Inserção em lote</a>
@@ -212,6 +214,65 @@ final class Template
 </div>
 </body>
 </html>
+        <?php
+    }
+
+    /**
+     * The behaviour for the <details> multi-selects.
+     *
+     * Progressive enhancement only: without it the panels still open, every
+     * option is still there and still submits, and only the filter box goes
+     * inert. Emitted from here rather than copied into each page that uses
+     * one, because two copies of a filter's rules is how they stop agreeing.
+     */
+    public static function printScriptMultiSelect(): void
+    {
+        ?>
+<script>
+document.querySelectorAll('[data-multi]').forEach(function (bloco) {
+    var filtro = bloco.querySelector('[data-filtro]');
+    var resumo = bloco.querySelector('[data-resumo]');
+    var limpar = bloco.querySelector('[data-limpar]');
+    var labels = Array.prototype.slice.call(bloco.querySelectorAll('.multi-lista label'));
+    var vazio  = resumo.textContent.trim();
+
+    function atualizarResumo() {
+        var marcados = labels
+            .filter(function (l) { return l.querySelector('input').checked; })
+            .map(function (l) { return l.querySelector('input').value; });
+
+        if (marcados.length === 0)     resumo.textContent = vazio;
+        else if (marcados.length <= 3) resumo.textContent = marcados.join(', ');
+        else                           resumo.textContent = marcados.length + ' selecionados';
+    }
+
+    filtro.addEventListener('input', function () {
+        var termo = filtro.value.toLowerCase();
+        labels.forEach(function (l) {
+            // A checked option always stays visible. Filtering something out
+            // of sight while it is still part of the search is how somebody
+            // ends up not understanding their own results.
+            var visivel = l.querySelector('input').checked
+                || l.textContent.toLowerCase().indexOf(termo) !== -1;
+            l.style.display = visivel ? '' : 'none';
+        });
+    });
+
+    // Typing in the filter must not submit the form.
+    filtro.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); }
+    });
+
+    bloco.addEventListener('change', atualizarResumo);
+
+    limpar.addEventListener('click', function () {
+        labels.forEach(function (l) { l.querySelector('input').checked = false; });
+        atualizarResumo();
+    });
+
+    atualizarResumo();
+});
+</script>
         <?php
     }
 

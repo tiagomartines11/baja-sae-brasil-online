@@ -58,6 +58,18 @@ final class Padrao
     }
 
     /**
+     * Any other search box: the wildcard and the escaping, nothing folded.
+     *
+     * For values that are neither a name nor a document — a batch id, say —
+     * where there is nothing to normalise and the only job is keeping LIKE
+     * from reading the user's punctuation as instructions.
+     */
+    public static function paraTexto(string $termo): ?string
+    {
+        return self::montar($termo);
+    }
+
+    /**
      * @return string|null null when the term constrains nothing — empty, or
      *                     wildcards alone. A pattern of "%" would be a filter
      *                     that quietly matches the whole table, which is worse
