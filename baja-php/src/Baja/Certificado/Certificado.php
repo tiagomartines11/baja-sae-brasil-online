@@ -132,58 +132,25 @@ final class Certificado
     /**
      * How this role is named to a reader.
      *
-     * Kept beside getTexto() because the two must not drift: a page that calls
-     * someone a juiz above a sentence describing voluntary work as a
-     * comissário is worse than either alone.
+     * Delegated to Funcao, which is the only place the mapping lives. It used
+     * to be a switch here, beside a second switch in getTexto() that had to
+     * agree with it — and the pair had already drifted: `fiscal` was in
+     * neither, so a fiscal's certificate rendered with no role and no body
+     * sentence at all.
      */
     public function getFuncaoLabel(): string
     {
-        return match ($this->getFuncao()) {
-            'competidor'  => 'Competidor',
-            'comissario'  => 'Comissário',
-            'juiz'        => 'Juiz',
-            'comite'      => 'Comissão Técnica',
-            'engenheiro'  => 'Engenheiro',
-            'orientador'  => 'Professor Orientador',
-            'assessor'    => 'Assessor Técnico',
-            default       => '',
-        };
+        return Funcao::label($this->getFuncao());
     }
 
     /**
      * The body sentence of the certificate.
-     *
-     * Moved verbatim from certificado.php, including the <b> markup, which the
-     * PDF template inlines. The wording varies by role and is not ours to
-     * change — a COMISSÃO TÉCNICA certificate reads "Realizou trabalho
-     * voluntário na organização da…", which is not what a competitor's says.
      */
     public function getTexto(): string
     {
         $cabecalho = '<b>' . $this->getEventoNome() . '</b>, ' . $this->getLocal()
             . ', no período de <b>' . $this->getData() . '</b>';
 
-        $cargaHoraria = $this->evento->getCargaHoraria();
-
-        switch ($this->getFuncao()) {
-            case 'competidor':
-                return 'Participou da ' . $cabecalho . ($cargaHoraria
-                    ? ', com carga horária de ' . (string) $cargaHoraria . ' horas.'
-                    : '.');
-            case 'comissario':
-                return 'Realizou trabalho voluntário na organização da ' . $cabecalho . ' na função de <b>COMISSÁRIO</b>.';
-            case 'juiz':
-                return 'Realizou trabalho voluntário na organização da ' . $cabecalho . ' na função de <b>JUIZ</b>.';
-            case 'comite':
-                return 'Realizou trabalho voluntário na organização da ' . $cabecalho . ' na função de <b>COMISSÃO TÉCNICA</b>.';
-            case 'engenheiro':
-                return 'Realizou trabalho voluntário na organização da ' . $cabecalho . ' na função de <b>ENGENHEIRO</b>.';
-            case 'orientador':
-                return 'Participou da ' . $cabecalho . ' na função de <b>PROFESSOR ORIENTADOR</b>.';
-            case 'assessor':
-                return 'Realizou trabalho voluntário na organização da ' . $cabecalho . ' na função de <b>ASSESSOR TÉCNICO</b>.';
-            default:
-                return '';
-        }
+        return Funcao::texto($this->getFuncao(), $cabecalho, $this->evento->getCargaHoraria());
     }
 }

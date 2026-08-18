@@ -161,6 +161,11 @@ final class Nome
     /**
      * Lowercase ASCII, accents folded, punctuation still in place.
      *
+     * Public because anything else comparing user-supplied text against
+     * stored text has to fold it the same way or the two agree only by
+     * accident. Funcao matches whole strings with it; this class goes on to
+     * tokenize the result.
+     *
      * Two things here were specified differently and verified to do the
      * opposite of what they claimed on this stack:
      *
@@ -179,7 +184,7 @@ final class Nome
      *    name would satisfy the two-part minimum. Normalizer (ext-intl,
      *    already in the image) decomposes properly on any libc.
      */
-    private static function fold(string $name): string
+    public static function fold(string $name): string
     {
         if (!mb_check_encoding($name, 'UTF-8')) {
             $name = mb_convert_encoding($name, 'UTF-8', 'ISO-8859-1');
