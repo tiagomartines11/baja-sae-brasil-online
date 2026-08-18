@@ -150,6 +150,34 @@ final class Template
         th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--sae-border); vertical-align: top; }
         th { font-size: 12px; text-transform: uppercase; color: var(--sae-grey); }
         code { font-family: monospace; font-size: 13px; background: var(--sae-light); padding: 1px 4px; border-radius: 3px; }
+
+        /*
+         * Multi-select with a filter box, built out of <details> so that it
+         * degrades honestly: with no JavaScript the panel still opens, every
+         * checkbox is still there, and only the filter box goes inert. A
+         * custom widget that needs script to be usable at all would be worse
+         * than the native <select multiple> it replaces.
+         */
+        .multi { border: 1px solid var(--sae-border); border-radius: 4px; background: #fff; }
+        .multi > summary {
+            list-style: none; cursor: pointer; padding: 10px;
+            display: flex; justify-content: space-between; gap: 8px;
+        }
+        .multi > summary::-webkit-details-marker { display: none; }
+        .multi > summary::after { content: "▾"; color: var(--sae-grey); }
+        .multi[open] > summary::after { content: "▴"; }
+        .multi-painel { border-top: 1px solid var(--sae-border); padding: 8px; }
+        .multi-filtro { margin-bottom: 8px; }
+        .multi-lista { max-height: 220px; overflow-y: auto; }
+        .multi-lista label {
+            display: block; font-weight: normal; padding: 3px 2px; margin: 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .multi-lista label:hover { background: var(--sae-light); }
+        .multi-acoes { border-top: 1px solid var(--sae-border); padding-top: 6px; margin-top: 6px; font-size: 13px; }
+        .multi-acoes button { padding: 2px 8px; font-size: 13px; }
+        .doc-composto { display: flex; gap: 8px; }
+        .doc-composto select { width: auto; flex: 0 0 auto; }
     </style>
 </head>
 <body>
@@ -166,6 +194,8 @@ final class Template
     </header>
     <nav class="voltar">
         <a href="index.php">&larr; Entrada de dados</a>
+        &emsp;&middot;&emsp;
+        <a href="certificados_busca.php">Consultar</a>
         &emsp;&middot;&emsp;
         <a href="certificados.php">Novo certificado</a>
         &emsp;&middot;&emsp;

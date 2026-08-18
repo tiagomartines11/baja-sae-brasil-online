@@ -115,7 +115,7 @@ body() { # sid path
     curl -s "${CURL_ARGS[@]}" "${jar[@]}" "$BASE$2"
 }
 
-PAGINAS=(/certificados.php /certificados_lote.php /certificados_nome.php /lote.php)
+PAGINAS=(/certificados.php /certificados_lote.php /certificados_nome.php /certificados_busca.php /lote.php)
 
 echo
 echo "--- anonymous ---"
@@ -237,6 +237,34 @@ auditoria=$(docker exec "$APP" php -r '
         ? "completo" : "incompleto";
 ')
 same "and the row it created carries its whole audit trail" "completo" "$auditoria"
+
+echo
+echo "--- the lookup page ---"
+consulta=$(body "$PREFIX_COM" /certificados_busca.php)
+contains "the lookup page offers an event filter" 'name="eventos[]"' "$consulta"
+contains "and a role filter" 'name="funcoes[]"' "$consulta"
+contains "and a name box" 'name="nome"' "$consulta"
+contains "and a document box" 'name="documento"' "$consulta"
+contains "with a cpf/passport/both selector" 'name="tipo_documento"' "$consulta"
+contains "deprecated roles are searchable even though they are not issuable" 'value="fiscal"' "$consulta"
+
+# A search posts. A document number in a query string is a document number in
+# the access log, which is the thing the certificate work package exists to
+# stop, and this vhost has no log redaction.
+contains "the search form posts" 'method="post"' "$consulta"
+lacks "and offers no GET route for a document" 'action="certificados_busca.php?' "$consulta"
+
+busca_csrf=$(docker exec "$APP" php -r 'echo hash_hmac("sha256", "certificado-busca", "'"$PREFIX_COM"'");')
+resultado=$(curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baja_u=2" -X POST \
+    --data-urlencode "_csrf=$busca_csrf" \
+    --data-urlencode "nome=ZZHttp*Testeson" \
+    --data-urlencode "tipo_documento=ambos" \
+    "$BASE/certificados_busca.php")
+contains "a wildcard name search finds the row created above" "ZZHttp Fulano de Tal Testeson" "$resultado"
+
+semToken=$(curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baja_u=2" -X POST \
+    --data-urlencode "nome=ZZHttp*Testeson" "$BASE/certificados_busca.php")
+lacks "a search without a token returns nothing" "ZZHttp Fulano de Tal Testeson" "$semToken"
 
 echo
 echo "$PASS passed, $FAIL failed, $SKIP skipped"
