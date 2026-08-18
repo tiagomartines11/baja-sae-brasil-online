@@ -9,12 +9,23 @@
 # Run from the host against a stack serving the certificado vhost:
 #   baja-php/tests/certificado/http-test.sh [base-url] [token] [cpf]
 #
+# The base URL must be the vhost's own hostname, not 127.0.0.1 — nginx picks
+# the server block by Host, and an address lands on whichever vhost is the
+# default. If that hostname is not in /etc/hosts, point it at the stack with
+# CURL_EXTRA instead of editing hosts:
+#
+#   CURL_EXTRA="--resolve certificado.baja.local:80:127.0.0.1" \
+#       baja-php/tests/certificado/http-test.sh http://certificado.baja.local <token> <cpf>
+#
 # The token must belong to a participant in that database. Without one, the
 # tests that need a real certificate are skipped.
 
 set -u
 
 BASE="${1:-http://certificado.baja.local}"
+# Extra curl arguments, e.g. --resolve. Word-split on purpose.
+# shellcheck disable=SC2206
+CURL_ARGS=(${CURL_EXTRA:-})
 TOKEN="${2:-}"
 CPF="${3:-}"
 
@@ -42,9 +53,9 @@ skip() {
     SKIP=$((SKIP + 1))
 }
 
-status_of() { curl -s -o /dev/null -w "%{http_code}" "$1"; }
-body_of()   { curl -s "$1"; }
-header_of() { curl -s -D - -o /dev/null "$1" | tr -d '\r'; }
+status_of() { curl -s "${CURL_ARGS[@]}" -o /dev/null -w "%{http_code}" "$1"; }
+body_of()   { curl -s "${CURL_ARGS[@]}" "$1"; }
+header_of() { curl -s "${CURL_ARGS[@]}" -D - -o /dev/null "$1" | tr -d '\r'; }
 
 # --- failure responses are indistinguishable ---------------------------------
 #
@@ -71,7 +82,7 @@ ok "junk under /verificar/ returns the same body" \
 # matched" must be identical to the byte. Any difference — a count, a word, a
 # whitespace change — answers "did this person compete?" to anyone who asks.
 
-post_buscar() { curl -s -X POST --data-urlencode "documento=$1" --data-urlencode "nome=$2" "$BASE/buscar"; }
+post_buscar() { curl -s "${CURL_ARGS[@]}" -X POST --data-urlencode "documento=$1" --data-urlencode "nome=$2" "$BASE/buscar"; }
 
 unknown_doc=$(post_buscar "98765432100" "Alguem Improvavel Inexistente")
 wrong_name=$(post_buscar "00012345678" "Nome Que Nao Confere")
@@ -118,7 +129,7 @@ ok "certificado.php resolves nothing directly either" \
 ok "certificado.php redirects to /buscar" \
    "$(grep -qi '^Location:.*\/buscar' <<<"$direct_headers" && echo 1 || echo 0)"
 
-post_legacy=$(curl -s -D - -o /dev/null -X POST -d 'evt=26BR&cpf=52998224725' "$BASE/c/novo/certificado" | tr -d '\r')
+post_legacy=$(curl -s "${CURL_ARGS[@]}" -D - -o /dev/null -X POST -d 'evt=26BR&cpf=52998224725' "$BASE/c/novo/certificado" | tr -d '\r')
 ok "POST to the old form target resolves nothing" \
    "$(grep -qi 'application/pdf' <<<"$post_legacy" && echo 0 || echo 1)"
 ok "POST to the old form target redirects to /buscar" \
@@ -137,7 +148,7 @@ ok "the site root no longer serves an event selector" \
 
 limited=0
 for _ in $(seq 1 12); do
-    code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+    code=$(curl -s "${CURL_ARGS[@]}" -o /dev/null -w '%{http_code}' -X POST \
         --data-urlencode 'documento=99988877766' --data-urlencode 'nome=Teste Limite' "$BASE/buscar")
     [[ "$code" == 429 ]] && limited=$((limited + 1))
 done
@@ -267,8 +278,8 @@ fi
 # expensive thing here and most verifications do not need it. If the page ever
 # starts rendering one, this is what notices.
 
-page_ms=$(curl -s -o /dev/null -w '%{time_total}' "$BASE/verificar/$TOKEN" | tr -d '.' | sed 's/^0*//')
-pdf_ms=$(curl -s -o /dev/null -w '%{time_total}' "$BASE/verificar/$TOKEN/pdf" | tr -d '.' | sed 's/^0*//')
+page_ms=$(curl -s "${CURL_ARGS[@]}" -o /dev/null -w '%{time_total}' "$BASE/verificar/$TOKEN" | tr -d '.' | sed 's/^0*//')
+pdf_ms=$(curl -s "${CURL_ARGS[@]}" -o /dev/null -w '%{time_total}' "$BASE/verificar/$TOKEN/pdf" | tr -d '.' | sed 's/^0*//')
 ok "certificate page is much cheaper than the PDF it links to" \
    "$([[ "${page_ms:-0}" -lt "${pdf_ms:-1}" ]] && echo 1 || echo 0)" \
    "page ${page_ms}, pdf ${pdf_ms} (microseconds)"
