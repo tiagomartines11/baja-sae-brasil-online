@@ -197,6 +197,20 @@ ok "no Baja logo asset in the page furniture" \
 ok "page title is SAE BRASIL" \
    "$(grep -qi '<title>[^<]*SAE BRASIL' <<<"$page" && echo 1 || echo 0)"
 
+# --- no analytics, and therefore no cookie question --------------------------
+#
+# With no analytics there is no non-essential cookie on this property, so no
+# consent banner is required and none should be added. Session and auth cookies
+# would be strictly necessary anyway, and consent is the wrong legal basis for
+# those — but this vhost sets SKIP_AUTH and has no session at all.
+
+ok "certificate page sets no cookie" \
+   "$(grep -qi '^Set-Cookie' <<<"$page_headers" && echo 0 || echo 1)"
+ok "/buscar sets no cookie" \
+   "$(grep -qi '^Set-Cookie' <<<"$buscar_headers" && echo 0 || echo 1)"
+ok "no consent banner was added in place of analytics" \
+   "$(grep -qi 'cookie-consent\|aceitar cookies\|consentimento de cookies' <<<"$page" && echo 0 || echo 1)"
+
 # --- the page is not the PDF -------------------------------------------------
 
 ok "certificate page is HTML, not a PDF" \
