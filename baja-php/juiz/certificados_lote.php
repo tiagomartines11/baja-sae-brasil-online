@@ -5,6 +5,7 @@ namespace Baja\Juiz;
 use Baja\Certificado\Funcao;
 use Baja\Certificado\Insercao\Acesso;
 use Baja\Certificado\Insercao\Csrf;
+use Baja\Certificado\Insercao\Gravador;
 use Baja\Certificado\Insercao\Mapeamento;
 use Baja\Certificado\Insercao\Planilha;
 use Baja\Certificado\Insercao\Problema;
@@ -43,6 +44,7 @@ $colado     = '';
 $planilha   = null;
 $mapeamento = null;
 $revisao    = null;
+$resultado  = null;
 $irregulares = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
@@ -108,6 +110,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
                 }
 
                 $revisao = new Revisao((new Validador())->validar($brutas, $escolhas));
+
+                // podeGravar() is re-checked here against this pass's
+                // validation, not against what the previous page rendered. The
+                // browser can post 'gravar' whenever it likes; what decides is
+                // whether the rows, re-read and re-validated a moment ago, are
+                // all ready.
+                if ($pedido === 'gravar' && $revisao->podeGravar()) {
+                    $resultado = (new Gravador((int) $usuario->getUserId()))->gravar($revisao->linhas);
+                    $etapa     = 'gravado';
+                }
             }
         }
     }
@@ -134,7 +146,53 @@ $e = fn(string $v): string => Template::e($v);
     </div>
 <?php endif; ?>
 
-<?php if ($etapa === 'colar'): ?>
+<?php if ($etapa === 'gravado' && $resultado !== null): ?>
+
+<div class="card">
+    <h1>Lote criado</h1>
+    <div class="alerta ok">
+        <strong><?= $resultado->criadas ?>
+        certificado<?= $resultado->criadas === 1 ? '' : 's' ?>
+        criado<?= $resultado->criadas === 1 ? '' : 's' ?>.</strong>
+    </div>
+
+    <dl>
+        <dt>Evento<?= count($resultado->eventos) === 1 ? '' : 's' ?></dt>
+        <dd><?= $e(implode(', ', $resultado->eventos)) ?></dd>
+
+        <dt>Criados</dt>
+        <dd><?= $resultado->criadas ?></dd>
+
+        <?php if ($resultado->atualizadas > 0): ?>
+            <dt>Registros existentes atualizados</dt>
+            <dd><?= $resultado->atualizadas ?></dd>
+        <?php endif; ?>
+
+        <?php if ($resultado->ignoradas > 0): ?>
+            <dt>Linhas ignoradas</dt>
+            <dd><?= $resultado->ignoradas ?></dd>
+        <?php endif; ?>
+
+        <?php if ($resultado->nomesCorrigidos > 0): ?>
+            <dt>Nomes corrigidos em registros anteriores</dt>
+            <dd><?= $resultado->nomesCorrigidos ?></dd>
+        <?php endif; ?>
+
+        <dt>Lote</dt>
+        <dd><code><?= $e($resultado->loteId) ?></code></dd>
+    </dl>
+
+    <p style="margin-top: 20px;">
+        <a class="btn" href="lote.php?id=<?= urlencode($resultado->loteId) ?>">Ver o lote</a>
+        <a class="btn btn-secondary" href="certificados_lote.php">Colar outra planilha</a>
+    </p>
+    <p class="muted">
+        Guarde o identificador do lote. É por ele que este conjunto de linhas pode
+        ser encontrado — e desfeito — se tiver saído errado.
+    </p>
+</div>
+
+<?php elseif ($etapa === 'colar'): ?>
 
 <div class="card">
     <h1>Inserção em lote</h1>
