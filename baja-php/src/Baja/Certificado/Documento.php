@@ -68,6 +68,26 @@ final class Documento
     }
 
     /**
+     * A foreign document reduced to its digits, for comparison only.
+     *
+     * The letters have to come off both sides, because for anybody recorded
+     * before this branch they are already gone: the column was BIGINT, so a
+     * passport reached it as digits and nothing else. Someone on file as
+     * 123456 who correctly types AB123456 would otherwise be told their
+     * certificate does not exist, and so would the reverse.
+     *
+     * Leading zeros go too — an integer column dropped those as well.
+     *
+     * This is looser than comparing the whole string, and knowingly: it
+     * merges AB123456 with CD123456. The name check is what stops that
+     * mattering, on the same reasoning that already applies to leading zeros.
+     */
+    public static function comparableEstrangeiro(string $raw): string
+    {
+        return ltrim(self::digits($raw), '0');
+    }
+
+    /**
      * Whether the eleven digits carry a valid CPF check digit pair.
      *
      * Used for reporting and for tests, never to decide whether to run a

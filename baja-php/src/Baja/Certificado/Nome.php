@@ -84,29 +84,70 @@ final class Nome
     }
 
     /**
+     * How many tokens the person may have that the record does not.
+     *
+     * This is the whole security budget of the second rule below, so it is
+     * small on purpose. Requiring every stored token to be present already
+     * means an attacker must know the recorded name in full; the allowance
+     * only lets somebody add names the record is missing. Raising it turns
+     * the form into a coverage attack — submit a first name plus twenty
+     * common surnames and match anyone whose record is a subset of the pile.
+     */
+    private const MAX_TOKENS_ABSENT_FROM_RECORD = 2;
+
+    /**
      * Whether a submitted name matches one stored name.
      *
-     * Every submitted token must appear in the stored set, and there must be
-     * at least two distinct ones. That accepts "João Bresolin", "João Silva"
-     * and the full name against a stored "João Pedro Bresolin Silva", and
-     * rejects a bare first name — which matters, because the name is the only
-     * credential here and first names are not secret.
+     * Two ways to match, because the two names can be incomplete in either
+     * direction and neither party knows which:
      *
-     * Distinct rather than merely two, so that "Silva Silva" does not clear a
-     * bar meant to require two pieces of information.
+     * 1. Every submitted token appears in the record. This is the person
+     *    typing less than is on file — "João Bresolin" or "João Silva"
+     *    against a stored "João Pedro Bresolin Silva".
+     *
+     * 2. Every stored token appears in the submission, with at most a couple
+     *    of extras. This is the record being the incomplete one, which is
+     *    just as common: names were entered per event, by hand, and get
+     *    truncated. Somebody on file as "Fulano da Silva Testeson" typing
+     *    their full "Fulano da Silva Testeson dos Santos" should not be told
+     *    their certificate does not exist.
+     *
+     * Both directions need at least two distinct tokens in common. That is
+     * what rejects a bare first name — the name is the only credential here
+     * and first names are not secret — and it also means a record holding a
+     * single token cannot be matched at all, which is correct: one word is
+     * not a credential either.
+     *
+     * Note what case 2 deliberately does not accept: a submission that is
+     * missing stored tokens *and* adds its own. "João Bresolin Ferreira"
+     * against "João Pedro Bresolin Silva" stays a non-match, because nothing
+     * about it suggests a truncated record rather than a different person.
      */
     public static function matches(array $submitted, array $stored): bool
     {
-        if (count(array_unique($submitted)) < 2) {
+        $submitted = array_values(array_unique($submitted));
+        $stored    = array_values(array_unique($stored));
+
+        if (count($submitted) < 2) {
             return false;
         }
 
-        foreach ($submitted as $token) {
-            if (!in_array($token, $stored, true)) {
-                return false;
-            }
+        $inCommon = array_intersect($submitted, $stored);
+        if (count($inCommon) < 2) {
+            return false;
         }
 
-        return true;
+        $absentFromRecord = array_diff($submitted, $stored);
+
+        // 1. The submission is contained in the record.
+        if (count($absentFromRecord) === 0) {
+            return true;
+        }
+
+        // 2. The record is contained in the submission, give or take.
+        $absentFromSubmission = array_diff($stored, $submitted);
+
+        return count($absentFromSubmission) === 0
+            && count($absentFromRecord) <= self::MAX_TOKENS_ABSENT_FROM_RECORD;
     }
 }

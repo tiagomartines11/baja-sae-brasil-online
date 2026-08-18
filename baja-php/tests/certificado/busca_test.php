@@ -128,6 +128,47 @@ T::same(1, count($found), 'a foreign document resolves with its leading zeros dr
 $found = Busca::run($passaporteValidoComoCpf, 'Lars Johansson');
 T::same(1, count($found), 'a passport that passes the CPF check digits still resolves');
 
+// --- passports, whichever side is missing the letters ------------------------
+
+/*
+ * Randomized per run. A document number is not scoped by the fixture name
+ * prefix, and the cross-row rule returns every row filed under it — so a
+ * hardcoded number that happens to exist in the developer's database makes
+ * these counts fail for a reason that has nothing to do with the code.
+ */
+$passportDigits = (string) random_int(200000, 899999);
+$legacyDigits   = (string) random_int(200000, 899999);
+
+$make('Ingrid Larsen Berg', null, 'AB' . $passportDigits, $eventoIds[0]);
+
+foreach ([
+    'as recorded'        => 'AB' . $passportDigits,
+    'digits only'        => $passportDigits,
+    'punctuated'         => 'ab-' . $passportDigits,
+    'with leading zeros' => '00' . $passportDigits,
+] as $label => $form) {
+    $found = Busca::run($form, 'Ingrid Berg');
+    T::same(1, count($found), "a passport recorded with letters resolves when submitted $label");
+}
+
+// And the legacy direction: recorded digits-only, because the old column could
+// not hold letters, but the person types the passport they actually hold.
+$make('Petra Novak Horak', null, $legacyDigits, $eventoIds[0]);
+foreach ([
+    'digits only'  => $legacyDigits,
+    'with letters' => 'CD' . $legacyDigits,
+] as $label => $form) {
+    $found = Busca::run($form, 'Petra Horak');
+    T::same(1, count($found), "a passport recorded digits-only resolves when submitted $label");
+}
+
+// The suffix prefilter must not become the rule.
+$make('Sven Olsen Dahl', null, 'AB999' . $passportDigits, $eventoIds[0]);
+$found = Busca::run($passportDigits, 'Sven Dahl');
+T::same(0, count($found), 'a longer number merely ending in the submitted digits does not resolve');
+$found = Busca::run($passportDigits, 'Ingrid Berg');
+T::same(1, count($found), 'and the genuine holder of those digits still does');
+
 // --- no oracle ---------------------------------------------------------------
 
 $unknownDocument = Busca::run(synthetic_cpf('987654321'), 'Joana Pereira Antunes');

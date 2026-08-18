@@ -96,21 +96,45 @@ final class Busca
             return [];
         }
 
-        $query = ParticipanteQuery::create();
+        $digits = Documento::comparableEstrangeiro($documento);
+
+        $query  = ParticipanteQuery::create();
+        $needOr = false;
 
         if ($cpf !== null) {
             $query->filterByCpf($cpf);
-        }
-
-        if ($cpf !== null && $candidates !== []) {
-            $query->_or();
+            $needOr = true;
         }
 
         if ($candidates !== []) {
+            if ($needOr) {
+                $query->_or();
+            }
             $query->filterByDocumentoEstrangeiro($candidates);
+            $needOr = true;
         }
 
-        return iterator_to_array($query->orderByEventoId(Criteria::DESC)->find());
+        /*
+         * Suffix match, to reach a stored passport whose letters this
+         * submission does not have (or vice versa). It cannot use an index,
+         * which is why it is a prefilter rather than the answer: it is
+         * deliberately wider than the rule, and rowMatchesDocument() below
+         * applies the real comparison to what comes back. Foreign
+         * participants are a small slice of the table.
+         */
+        if ($digits !== '') {
+            if ($needOr) {
+                $query->_or();
+            }
+            $query->filterByDocumentoEstrangeiro('%' . $digits, Criteria::LIKE);
+        }
+
+        $rows = iterator_to_array($query->orderByEventoId(Criteria::DESC)->find());
+
+        return array_values(array_filter(
+            $rows,
+            static fn (Participante $row): bool => self::rowMatchesDocument($row, $cpf, $digits)
+        ));
     }
 
     /**
@@ -146,6 +170,28 @@ final class Busca
         }
 
         return $candidates;
+    }
+
+    /**
+     * Whether a row really is filed under the submitted document.
+     *
+     * The query above is wider than the rule on the foreign side, because a
+     * SQL suffix match is the only cheap way to reach a value whose letters
+     * differ. This narrows it back: the digits must be equal, not merely
+     * trailing, so a submitted 123456 does not resolve somebody recorded as
+     * AB999123456.
+     */
+    private static function rowMatchesDocument(Participante $row, ?string $cpf, string $digits): bool
+    {
+        if ($cpf !== null && $row->getCpf() === $cpf) {
+            return true;
+        }
+
+        $estrangeiro = (string) $row->getDocumentoEstrangeiro();
+
+        return $digits !== ''
+            && $estrangeiro !== ''
+            && Documento::comparableEstrangeiro($estrangeiro) === $digits;
     }
 
     /**

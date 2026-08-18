@@ -55,6 +55,35 @@ T::ok('reordered tokens match', Nome::matches(Nome::normalize('Silva João'), $s
 T::ok('unaccented spelling matches', Nome::matches(Nome::normalize('Joao Silva'), $stored));
 T::ok('case and punctuation do not matter', Nome::matches(Nome::normalize('joão, silva.'), $stored));
 
+// The record is the incomplete side. Names were entered per event, by hand,
+// and get truncated; somebody typing their full name must not be told their
+// certificate does not exist.
+$truncated = Nome::normalize('Fulano da Silva Testeson');
+T::ok(
+    'a fuller name than the record holds still matches',
+    Nome::matches(Nome::normalize('Fulano da Silva Testeson dos Santos'), $truncated)
+);
+T::ok(
+    'two extra names are still tolerated',
+    Nome::matches(Nome::normalize('Fulano da Silva Testeson dos Santos Junior'), $truncated)
+);
+T::ok(
+    'three extra names are not',
+    !Nome::matches(Nome::normalize('Fulano Silva Testeson Santos Junior Neto'), $truncated)
+);
+T::ok(
+    'a pile of common surnames does not cover a short record',
+    !Nome::matches(
+        Nome::normalize('Maria Silva Santos Souza Oliveira Pereira Costa Lima'),
+        Nome::normalize('Maria Silva')
+    ),
+    'coverage attack: knowing nothing but guessing widely must not match'
+);
+T::ok(
+    'a record of one token cannot be matched at all',
+    !Nome::matches(Nome::normalize('Fulano Silva'), Nome::normalize('Fulano'))
+);
+
 T::ok('a bare first name is rejected', !Nome::matches(Nome::normalize('João'), $stored));
 T::ok('a bare surname is rejected', !Nome::matches(Nome::normalize('Silva'), $stored));
 T::ok('an empty name is rejected', !Nome::matches(Nome::normalize(''), $stored));
