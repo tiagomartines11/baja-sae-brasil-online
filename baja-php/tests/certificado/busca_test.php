@@ -197,4 +197,28 @@ T::ok(
     sprintf('ratio %.1f (unknown %.4fs, wrong name %.4fs)', $ratio, $tUnknown, $tWrong)
 );
 
+// --- the document rule, reusable ----------------------------------------------
+//
+// rowsForDocument() and rowMatches() are what the insertion pages ask before
+// they decide whether a row they are about to create already exists. The two
+// have to agree with each other, because the paste flow uses the second
+// against rows it fetched in bulk while the single-entry page uses the first.
+
+$linhasDoCpf = Busca::rowsForDocument($cpfTresEventos);
+T::same(3, count($linhasDoCpf), 'rowsForDocument finds every event for one CPF');
+
+foreach ($linhasDoCpf as $linha) {
+    T::ok('rowMatches agrees with rowsForDocument', Busca::rowMatches($linha, $cpfTresEventos));
+}
+
+$outra = ParticipanteQuery::create()->filterByNome($prefix . ' Carlos Eduardo Prado')->findOne();
+T::ok('rowMatches rejects a row filed under another document', !Busca::rowMatches($outra, $cpfTresEventos));
+
+// The foreign side, where the two could most easily disagree: the query uses a
+// suffix match and the rule narrows it back to equal digits.
+$estrangeira = ParticipanteQuery::create()->filterByNome($prefix . ' Anna Kowalski Nowak')->findOne();
+T::ok('rowMatches reaches a digits-only passport from a lettered one', Busca::rowMatches($estrangeira, 'AB987654'));
+T::ok('rowMatches ignores leading zeros', Busca::rowMatches($estrangeira, '000987654'));
+T::ok('rowMatches is not a mere suffix', !Busca::rowMatches($estrangeira, '7654'));
+
 $cleanup();

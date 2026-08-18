@@ -101,9 +101,20 @@ final class Busca
      * by coincidence and a mistyped CPF fails them. Searching both absorbs
      * those misfilings instead of amplifying them, for one extra clause.
      *
+     * Public because the insertion pages have to ask the same question — a
+     * row they are about to create is a duplicate, or the name on it
+     * disagrees with what is on file, only relative to the rows this document
+     * already resolves to. Answering it a second time somewhere else would be
+     * two rules that must agree and eventually would not.
+     *
+     * One query per document, so a caller holding a whole pasted sheet should
+     * use rowMatches() against rows it fetched in bulk rather than calling
+     * this in a loop — the foreign-side clause is a suffix match and cannot
+     * use an index.
+     *
      * @return array<int, Participante>
      */
-    private static function rowsForDocument(string $documento): array
+    public static function rowsForDocument(string $documento): array
     {
         $cpf        = Documento::normalizeCpf($documento);
         $candidates = self::foreignCandidates($documento);
@@ -186,6 +197,23 @@ final class Busca
         }
 
         return $candidates;
+    }
+
+    /**
+     * Whether a row already in hand is filed under this document.
+     *
+     * The same rule rowsForDocument() applies to what its query returns,
+     * for a caller that fetched its candidate rows some other way — which
+     * the paste flow has to, since one query per row does not scale to a
+     * sheet of two thousand.
+     */
+    public static function rowMatches(Participante $row, string $documento): bool
+    {
+        return self::rowMatchesDocument(
+            $row,
+            Documento::normalizeCpf($documento),
+            Documento::comparableEstrangeiro($documento)
+        );
     }
 
     /**
