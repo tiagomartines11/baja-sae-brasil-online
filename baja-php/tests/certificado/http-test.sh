@@ -93,6 +93,41 @@ ok "/buscar carries no Google Analytics tag" \
 ok "/buscar does not use a number input, which would eat a leading zero" \
    "$(grep -qi 'type="number"' <<<"$(body_of "$BASE/buscar")" && echo 0 || echo 1)"
 
+# --- the legacy routes resolve nothing ---------------------------------------
+#
+# /c/{evt}/{cpf-hex} is printed on every certificate ever issued, so it must
+# keep answering indefinitely. It must also never resolve a certificate again,
+# and must never carry the CPF onward — not in the Location header, not as a
+# query parameter to prefill the form.
+
+legacy_headers=$(header_of "$BASE/c/26BR/c56f0bb55")
+legacy_status=$(status_of "$BASE/c/26BR/c56f0bb55")
+legacy_location=$(grep -i '^Location:' <<<"$legacy_headers")
+
+ok "legacy /c/{evt}/{hex} returns 302" "$([[ "$legacy_status" == 302 ]] && echo 1 || echo 0)" "got $legacy_status"
+ok "legacy route redirects to /buscar" \
+   "$(grep -q '/buscar' <<<"$legacy_location" && echo 1 || echo 0)" "$legacy_location"
+ok "legacy redirect carries no CPF in any encoding" \
+   "$(grep -qi 'c56f0bb55\|52998224725\|cpf' <<<"$legacy_location" && echo 0 || echo 1)" "$legacy_location"
+ok "legacy route does not return a PDF" \
+   "$(grep -qi 'application/pdf' <<<"$legacy_headers" && echo 0 || echo 1)"
+
+direct_headers=$(header_of "$BASE/certificado.php?evt=26BR&cpf=c56f0bb55")
+ok "certificado.php resolves nothing directly either" \
+   "$(grep -qi 'application/pdf' <<<"$direct_headers" && echo 0 || echo 1)"
+ok "certificado.php redirects to /buscar" \
+   "$(grep -qi '^Location:.*\/buscar' <<<"$direct_headers" && echo 1 || echo 0)"
+
+post_legacy=$(curl -s -D - -o /dev/null -X POST -d 'evt=26BR&cpf=52998224725' "$BASE/c/novo/certificado" | tr -d '\r')
+ok "POST to the old form target resolves nothing" \
+   "$(grep -qi 'application/pdf' <<<"$post_legacy" && echo 0 || echo 1)"
+ok "POST to the old form target redirects to /buscar" \
+   "$(grep -qi '^Location:.*\/buscar' <<<"$post_legacy" && echo 1 || echo 0)"
+
+root_headers=$(header_of "$BASE/")
+ok "the site root no longer serves an event selector" \
+   "$(grep -qi '^Location:.*\/buscar' <<<"$root_headers" && echo 1 || echo 0)"
+
 # --- headers -----------------------------------------------------------------
 
 headers=$(header_of "$BASE/verificar/AAAAAAAAAAAAAAAAAAAAAA")
