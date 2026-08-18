@@ -1,5 +1,6 @@
 <?php
 namespace Baja;
+use Baja\Auth\NaoProvisionado;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
 
@@ -10,13 +11,29 @@ class Session
 
     static function initSession() {
         global $user;
-        Session::$_currentUser = UserQuery::create()->findOneByUsername($user->data["username"]);
-        if (!Session::$_currentUser) {
-            if ($_SERVER["SCRIPT_NAME"] != "/login.php") {
-                header("Location: login.php");
-                exit();
-            }
+        $username = (string) ($user->data["username"] ?? '');
+        Session::$_currentUser = UserQuery::create()->findOneByUsername($username);
+
+        if (Session::$_currentUser || $_SERVER["SCRIPT_NAME"] == "/login.php") {
+            return;
         }
+
+        // Two different things end up here and they need different answers.
+        //
+        // No username means no forum session: the login page is the right
+        // place to send them, and it is where they were already going.
+        //
+        // A username with no row here means the forum knows them and this
+        // system does not — every new forum member is in that state. Sending
+        // them to login made the loop that reads as a broken site: the login
+        // succeeds, redirects back, and bounces again, with nothing said at
+        // any point. Say it instead.
+        if ($username !== '') {
+            NaoProvisionado::render($username);
+        }
+
+        header("Location: login.php");
+        exit();
     }
 
     /**

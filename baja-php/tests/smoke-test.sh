@@ -138,16 +138,33 @@ else
     FAIL=$((FAIL + 1))
 fi
 
-# 10. Use those cookies to hit /juiz/index.php — should now reach the
-# dashboard (not redirect to login). The dashboard shows a logout link
-# pointing at login.php?act=logout; presence of that link is our marker
-# that we landed on the authenticated page rather than the login form.
+# 10. Use those cookies to hit /juiz/index.php.
+#
+# This check asserted the dashboard and had been failing, with a comment
+# blaming cross-request login. That diagnosis was wrong: the login works —
+# checks 9 and 11 show the session row and the cookies. What is missing is a
+# row for juiz1 in baja_resultados.user. phpBB says who you are; that table
+# says what you may do here, and the seed data creates the first without the
+# second.
+#
+# Until recently that state redirected to login with nothing said, where
+# logging in succeeded and bounced again — which is why this read as a broken
+# login rather than as an unprovisioned account. It now renders a page saying
+# so, and that page is what this check asserts.
+#
+# To exercise the dashboard instead, give juiz1 a row:
+#   INSERT INTO baja_resultados.user (username, permissions)
+#        VALUES ('juiz1', '| index |');
+# and swap the expectation below for the logout-link marker.
 body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/index.php")
-if echo "$body" | grep -q 'login.php?act=logout'; then
-    green "PASS  authenticated /juiz/index.php (dashboard markers present)"
+if echo "$body" | grep -q 'ainda não tem acesso a este sistema'; then
+    green "PASS  authenticated but unprovisioned /juiz/index.php explains itself"
+    PASS=$((PASS + 1))
+elif echo "$body" | grep -q 'login.php?act=logout'; then
+    green "PASS  authenticated /juiz/index.php (dashboard markers present — juiz1 is provisioned here)"
     PASS=$((PASS + 1))
 else
-    red "FAIL  /juiz/index.php did not render dashboard for logged-in user"
+    red "FAIL  /juiz/index.php neither rendered the dashboard nor explained the missing account"
     FAIL=$((FAIL + 1))
 fi
 
