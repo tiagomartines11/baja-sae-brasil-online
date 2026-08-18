@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Certificado\Insercao\Acesso;
 use Baja\Model\EventoQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
@@ -42,6 +43,15 @@ foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->get
 
 if (Session::hasPermission('PREMIACAO')) {
     echo '<tr style="height: 40px"><td><a href="premiacoes.php">Premia&ccedil;&otilde;es</a></td></tr>';
+}
+
+// Rendered only for a user who actually holds `certificados`. Most people
+// reaching this page are judges, and a link that greets them with a permission
+// rejection is worse than no link — the same check that gates the page gates
+// the link. A stopgap alongside Logout and Resultados until there is real
+// navigation here.
+if (Acesso::permitido()) {
+    echo '<tr style="height: 40px"><td><a href="certificados.php">Certificados</a></td></tr>';
 }
 
 echo '

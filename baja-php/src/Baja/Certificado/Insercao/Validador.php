@@ -71,6 +71,7 @@ final class Validador
             foreach ($resolucoes[$linha->numero] ?? [] as $codigo => $escolha) {
                 $linha->resolver((string) $codigo, (string) $escolha);
             }
+            $this->aplicarResolucoes($linha);
         }
 
         return $linhas;
@@ -464,7 +465,20 @@ final class Validador
             }
         }
 
-        return array_values($existentes);
+        $existentes = array_values($existentes);
+
+        // Newest event first. It decides which name "use the existing name"
+        // means when a document carries more than one, and the most recently
+        // recorded spelling is the best available guess at the current one.
+        usort(
+            $existentes,
+            static fn (Participante $a, Participante $b) => strcmp(
+                (string) $b->getEventoId(),
+                (string) $a->getEventoId()
+            )
+        );
+
+        return $existentes;
     }
 
     /**
@@ -579,6 +593,43 @@ final class Validador
             [Problema::USAR_EXISTENTE, Problema::ATUALIZAR_NOME, Problema::MANTER_AMBOS],
             ['nomes' => array_keys($nomes)]
         ));
+    }
+
+    /**
+     * Fold the user's answers back into the values that will be written.
+     *
+     * Done here rather than at commit time so that a row which reports
+     * podeGravar() carries exactly what committing it would write, and the
+     * review screen can show it. A resolution that only takes effect inside
+     * the writer is a resolution nobody can check before it happens.
+     */
+    private function aplicarResolucoes(Linha $linha): void
+    {
+        $leitura = $linha->resolucao(Problema::DOCUMENTO_AMBIGUO);
+        if ($leitura !== null && $linha->documento !== null) {
+            $linha->cpf = null;
+            $linha->documentoEstrangeiro = null;
+
+            if ($leitura === Problema::LER_COMO_CPF) {
+                $linha->cpf = $linha->documento->cpf;
+            } else {
+                $linha->documentoEstrangeiro = $linha->documento->estrangeiro;
+            }
+        }
+
+        foreach ([Problema::NOME_DIVERGENTE_LEVE, Problema::NOME_DIVERGENTE] as $codigo) {
+            if ($linha->resolucao($codigo) !== Problema::USAR_EXISTENTE) {
+                continue;
+            }
+
+            foreach ($linha->existentes() as $row) {
+                $armazenado = trim((string) $row->getNome());
+                if ($armazenado !== '') {
+                    $linha->nome = $armazenado;
+                    break;
+                }
+            }
+        }
     }
 
     /** @return string|null null when the row is too broken to have a key */
