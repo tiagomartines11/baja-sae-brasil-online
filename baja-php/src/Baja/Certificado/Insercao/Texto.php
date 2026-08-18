@@ -120,6 +120,103 @@ final class Texto
     }
 
     /**
+     * Portuguese connectives, which stay lowercase inside a name.
+     *
+     * "João da Silva", never "João Da Silva". The same list Nome uses to drop
+     * them from a comparison — there because they carry no identity, here
+     * because they carry no capital.
+     */
+    private const CONECTIVOS = ['de', 'da', 'do', 'dos', 'das', 'e', 'du', 'del', 'della', 'van', 'von', 'y'];
+
+    /**
+     * Whether a name is uniformly one case, and which.
+     *
+     * Returns 'alta', 'baixa', or null for anything mixed. Only the uniform
+     * cases are mechanical enough to act on: a sheet is ALL CAPS or it is
+     * not. "ANA paula" is somebody's mistake and not one to guess at.
+     */
+    public static function caixaUniforme(string $nome): ?string
+    {
+        if (!preg_match('/\p{L}/u', $nome)) {
+            return null;
+        }
+
+        if (mb_strtoupper($nome, 'UTF-8') === $nome) {
+            return 'alta';
+        }
+
+        if (mb_strtolower($nome, 'UTF-8') === $nome) {
+            return 'baixa';
+        }
+
+        return null;
+    }
+
+    /**
+     * A name in the case a certificate should print it in.
+     *
+     * Offered, never applied on its own — see the NOME_CAIXA warning. Title
+     * casing a name is a guess about a person, and the guesses it gets wrong
+     * are the ones people care most about: a McDonald, a d'Ávila, a III.
+     *
+     * What it does handle:
+     *  - Portuguese connectives stay lowercase, except as the first word.
+     *  - Apostrophes and hyphens capitalise what follows them, so "d'avila"
+     *    becomes "D'Avila" and "maria-clara" becomes "Maria-Clara". Accents
+     *    are not restored: an ALL CAPS sheet has usually lost them, and
+     *    putting them back would be inventing the spelling of a name rather
+     *    than correcting its case.
+     *  - Roman numerals stay uppercase, so a "III" does not become "Iii".
+     *  - An initial keeps its full stop.
+     */
+    public static function caixaDeNome(string $nome): string
+    {
+        $partes = preg_split('/(\s+)/u', self::limpar($nome), -1, PREG_SPLIT_DELIM_CAPTURE);
+
+        if ($partes === false) {
+            return $nome;
+        }
+
+        $indice = 0;
+        foreach ($partes as $i => $parte) {
+            if (trim($parte) === '') {
+                continue;
+            }
+
+            $partes[$i] = self::capitalizarParte($parte, $indice === 0);
+            $indice++;
+        }
+
+        return implode('', $partes);
+    }
+
+    private static function capitalizarParte(string $parte, bool $primeira): string
+    {
+        $baixa = mb_strtolower($parte, 'UTF-8');
+
+        if (!$primeira && in_array($baixa, self::CONECTIVOS, true)) {
+            return $baixa;
+        }
+
+        // A roman numeral is already in the case it wants. Checked on the
+        // original rather than the lowered copy, so a lowercase "i" in
+        // "Silva i Costa" — which is not a numeral anybody wrote — is left to
+        // the ordinary rule.
+        if (preg_match('/\A[IVXLCDM]+\z/', $parte) === 1 && $parte !== 'I') {
+            return $parte;
+        }
+
+        // Capitalise the first letter, and any letter after an apostrophe or
+        // a hyphen. mb_convert_case would lowercase the rest and get the
+        // apostrophe wrong in the other direction.
+        return preg_replace_callback(
+            '/(?:\A|(?<=[\x27\x{2019}\x{2018}\-]))\p{L}/u',
+            static fn (array $m): string => mb_strtoupper($m[0], 'UTF-8'),
+            $baixa
+        ) ?? $parte;
+    }
+
+    /**
      * A character named so a person can find it in their spreadsheet.
      *
      * The character alone is not enough — the ones that cause this are

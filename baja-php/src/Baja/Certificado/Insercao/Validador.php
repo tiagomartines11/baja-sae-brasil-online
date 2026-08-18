@@ -6,7 +6,6 @@ use Baja\Certificado\Busca;
 use Baja\Certificado\Documento;
 use Baja\Certificado\Funcao;
 use Baja\Certificado\Nome;
-use Baja\Model\EventoQuery;
 use Baja\Model\Participante;
 use Baja\Model\ParticipanteQuery;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -30,8 +29,7 @@ final class Validador
      */
     private const NOME_MAX = 300;
 
-    /** @var array<string, string>|null eventoId => nome, loaded once */
-    private ?array $eventos = null;
+    private ?Eventos $eventos = null;
 
     /**
      * Validate a whole submission.
@@ -54,7 +52,8 @@ final class Validador
                 Texto::limpar((string) ($bruta['evento'] ?? '')),
                 Texto::limpar((string) ($bruta['nome'] ?? '')),
                 Texto::limpar((string) ($bruta['funcao'] ?? '')),
-                Texto::limpar((string) ($bruta['documento'] ?? ''))
+                Texto::limpar((string) ($bruta['documento'] ?? '')),
+                (string) ($bruta['documento_coluna'] ?? ClassificacaoDocumento::COLUNA_QUALQUER)
             );
         }
 
@@ -138,6 +137,34 @@ final class Validador
 
         $linha->nome = $nome;
 
+        // A sheet arrives ALL CAPS more often than not, and the stored name is
+        // what the certificate prints — so without this, an export from a
+        // registration system becomes two hundred certificates shouting.
+        //
+        // Offered, never applied on its own. Title casing a name is a guess
+        // about a person, and the guesses it gets wrong are the ones people
+        // mind most: a McDonald becomes a Mcdonald, and an ALL CAPS sheet has
+        // usually lost its accents, which this does not invent. So the
+        // suggestion is shown next to the original and somebody says which.
+        $caixa = Texto::caixaUniforme($nome);
+        if ($caixa !== null) {
+            $sugerido = Texto::caixaDeNome($nome);
+
+            if ($sugerido !== $nome) {
+                $linha->adicionar(Problema::aviso(
+                    Problema::NOME_CAIXA,
+                    sprintf(
+                        'O nome está todo em %s. O certificado imprime o nome exatamente '
+                        . 'como estiver aqui. Sugestão: "%s".',
+                        $caixa === 'alta' ? 'maiúsculas' : 'minúsculas',
+                        $sugerido
+                    ),
+                    [Problema::CORRIGIR_CAIXA, Problema::MANTER_CAIXA],
+                    ['sugerido' => $sugerido, 'caixa' => $caixa]
+                ));
+            }
+        }
+
         // A single-part name cannot be found again. /buscar requires two name
         // parts in common before it returns anything — that minimum is what
         // stops a first name being a credential — so a row stored under one
@@ -169,15 +196,38 @@ final class Validador
             return;
         }
 
-        // Event codes are four characters and stored uppercase. Accepting a
-        // lowercase paste is not a guess: the code is a primary key, so
-        // either it is that event or it is no event at all.
-        $codigo = strtoupper($linha->eventoBruto);
+        // The code, or the event's name. A sheet exported from this system
+        // carries codes; one somebody built by hand carries names, because
+        // "27ª Competição Baja SAE BRASIL" is what the event is called
+        // everywhere except in this database.
+        $codigo = $this->eventos()->resolve($linha->eventoBruto);
 
-        if (!isset($this->eventos()[$codigo])) {
+        if ($codigo === null) {
+            $ambiguos = $this->eventos()->ambiguos($linha->eventoBruto);
+
+            if ($ambiguos !== []) {
+                // Event names are free text and nothing stops two of them
+                // being identical. Choosing one would file a batch of
+                // certificates under whichever sorted first.
+                $linha->adicionar(Problema::erro(
+                    Problema::EVENTO_AMBIGUO,
+                    sprintf(
+                        '"%s" é o nome de mais de um evento (%s). Use o código do evento.',
+                        $linha->eventoBruto,
+                        implode(', ', $ambiguos)
+                    ),
+                    ['campo' => 'evento', 'eventos' => $ambiguos]
+                ));
+
+                return;
+            }
+
             $linha->adicionar(Problema::erro(
                 Problema::EVENTO_DESCONHECIDO,
-                sprintf('Não existe o evento "%s".', $linha->eventoBruto),
+                sprintf(
+                    'Não existe evento com código nem nome "%s".',
+                    $linha->eventoBruto
+                ),
                 ['campo' => 'evento']
             ));
 
@@ -242,7 +292,7 @@ final class Validador
 
     private function validarDocumento(Linha $linha): void
     {
-        $classificacao = ClassificacaoDocumento::de($linha->documentoBruto);
+        $classificacao = ClassificacaoDocumento::de($linha->documentoBruto, $linha->colunaDocumento);
         $linha->documento = $classificacao;
 
         switch ($classificacao->tipo) {
@@ -281,11 +331,41 @@ final class Validador
 
                 return;
 
+            case ClassificacaoDocumento::DOIS_DOCUMENTOS:
+                $linha->adicionar(Problema::erro(
+                    Problema::DOIS_DOCUMENTOS,
+                    'Esta linha tem CPF e passaporte preenchidos. Uma pessoa tem um '
+                    . 'documento de identidade: apague o que não valer.',
+                    ['campo' => 'documento']
+                ));
+
+                return;
+
+            case ClassificacaoDocumento::CONTRADIZ_COLUNA:
+                $linha->adicionar(Problema::erro(
+                    Problema::DOCUMENTO_CONTRADIZ,
+                    sprintf(
+                        '"%s" está na coluna de CPF e tem letras. Se for um passaporte, '
+                        . 'ele vai na coluna de passaporte.',
+                        $classificacao->original
+                    ),
+                    ['campo' => 'documento']
+                ));
+
+                return;
+
             case ClassificacaoDocumento::AMBIGUO:
                 $leituras = $classificacao->leiturasPossiveis();
                 $linha->adicionar(Problema::aviso(
                     Problema::DOCUMENTO_AMBIGUO,
-                    count($leituras) === 1
+                    $classificacao->coluna === ClassificacaoDocumento::COLUNA_CPF
+                        ? sprintf(
+                            '"%s" está na coluna de CPF e não passa na verificação. Pode '
+                            . 'ser um CPF digitado errado no cadastro, que continua sendo '
+                            . 'um CPF, ou um documento que foi parar na coluna errada.',
+                            $classificacao->original
+                        )
+                        : (count($leituras) === 1
                         ? sprintf(
                             '"%s" tem dígitos demais para ser um CPF, então só pode ser um '
                             . 'documento estrangeiro. Confirme.',
@@ -296,7 +376,7 @@ final class Validador
                             . 'errado no cadastro ou um passaporte registrado só com números — '
                             . 'daqui não dá para saber qual.',
                             $classificacao->original
-                        ),
+                        )),
                     $leituras,
                     ['documento' => $classificacao->original]
                 ));
@@ -638,6 +718,14 @@ final class Validador
             }
         }
 
+        // Casing first: "use the existing name" below overrules it, because
+        // the name already on file is a stronger statement about how this
+        // person writes their name than any rule about capitals.
+        if ($linha->resolucao(Problema::NOME_CAIXA) === Problema::CORRIGIR_CAIXA
+            && $linha->nome !== null) {
+            $linha->nome = Texto::caixaDeNome($linha->nome);
+        }
+
         foreach ([Problema::NOME_DIVERGENTE_LEVE, Problema::NOME_DIVERGENTE] as $codigo) {
             if ($linha->resolucao($codigo) !== Problema::USAR_EXISTENTE) {
                 continue;
@@ -673,18 +761,8 @@ final class Validador
         return $documento . '|' . $linha->eventoId . '|' . $linha->funcao;
     }
 
-    /** @return array<string, string> */
-    private function eventos(): array
+    private function eventos(): Eventos
     {
-        if ($this->eventos !== null) {
-            return $this->eventos;
-        }
-
-        $this->eventos = [];
-        foreach (EventoQuery::create()->find() as $evento) {
-            $this->eventos[(string) $evento->getEventoId()] = (string) $evento->getNome();
-        }
-
-        return $this->eventos;
+        return $this->eventos ??= new Eventos();
     }
 }

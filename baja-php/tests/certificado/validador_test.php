@@ -266,3 +266,117 @@ T::same(null, $naoOferecida->resolucao(Problema::FUNCAO_OBSOLETA), 'a resolution
 T::ok('and the row still cannot be written', !$naoOferecida->podeGravar());
 
 $cleanup();
+
+// --- events by name as well as by code --------------------------------------------
+//
+// A sheet exported from this system carries codes. One somebody built by hand
+// carries names, because that is what the event is called everywhere except
+// in this database.
+
+$nomeDoEvento = html_entity_decode((string) $eventos[0]->getNome(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+$porNome = $uma(['evento' => $nomeDoEvento, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same($evA, $porNome->eventoId, 'the full event name resolves to its code');
+T::same([], $codigos($porNome), 'and raises nothing');
+
+$semAcento = $uma(['evento' => \Baja\Certificado\Nome::chave($nomeDoEvento), 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same($evA, $semAcento->eventoId, 'unaccented and lowercase resolves too');
+
+$comEspacos = $uma(['evento' => '  ' . mb_strtoupper($nomeDoEvento) . '  ', 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same($evA, $comEspacos->eventoId, 'so does uppercase with stray whitespace');
+
+// The stored names carry HTML entities as literal text. A person pastes the
+// name with a real space in it, so the undecoded form must not be what we
+// compare against.
+T::ok(
+    'the stored name really does carry an entity, which is why decoding matters',
+    str_contains((string) $eventos[0]->getNome(), '&nbsp;') || !str_contains($nomeDoEvento, '&')
+);
+
+$codigoAinda = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same($evA, $codigoAinda->eventoId, 'the code still works');
+
+$quase = $uma(['evento' => substr($nomeDoEvento, 0, 12), 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::ok('half an event name is an error, not a nearest match', in_array(Problema::EVENTO_DESCONHECIDO, $codigos($quase), true));
+T::same(null, $quase->eventoId, 'and resolves to nothing');
+
+// --- separate CPF and passport columns ----------------------------------------------
+
+$passaporteDigitos = '00987654';
+
+$semColuna = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $passaporteDigitos]);
+T::ok('a digits-only passport with no column hint has to be asked about',
+    in_array(Problema::DOCUMENTO_AMBIGUO, $codigos($semColuna), true));
+
+$comColuna = $validador->validar([[
+    'evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor',
+    'documento' => $passaporteDigitos, 'documento_coluna' => 'estrangeiro',
+]])[0];
+T::same([], $codigos($comColuna), 'the passport column answers it with no warning at all');
+T::same($passaporteDigitos, $comColuna->documentoEstrangeiro, 'and files it verbatim');
+T::same(null, $comColuna->cpf, 'never in the CPF column');
+T::ok('so the row is ready to write', $comColuna->podeGravar());
+
+$cpfNaColuna = $validador->validar([[
+    'evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor',
+    'documento' => ltrim(synthetic_cpf('001234567'), '0'), 'documento_coluna' => 'cpf',
+]])[0];
+T::same(synthetic_cpf('001234567'), $cpfNaColuna->cpf, 'a CPF column still pads the leading zeros back');
+T::same([], $codigos($cpfNaColuna), 'and raises nothing');
+
+$letrasNoCpf = $validador->validar([[
+    'evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor',
+    'documento' => 'AB123456', 'documento_coluna' => 'cpf',
+]])[0];
+T::ok('letters in the CPF column are an error', in_array(Problema::DOCUMENTO_CONTRADIZ, $codigos($letrasNoCpf), true));
+T::same(null, $letrasNoCpf->documentoEstrangeiro, 'and are not quietly refiled as a passport');
+
+$ambos = $validador->validar([[
+    'evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor',
+    'documento' => $cpfLivre, 'documento_coluna' => 'ambos',
+]])[0];
+T::ok('CPF and passport both filled is an error', in_array(Problema::DOIS_DOCUMENTOS, $codigos($ambos), true));
+
+// A typo'd CPF in a CPF column is still worth asking about: the column saying
+// "CPF" does not make the digits right.
+$typoNaColuna = $validador->validar([[
+    'evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor',
+    'documento' => $typo, 'documento_coluna' => 'cpf',
+]])[0];
+T::ok('a failing checksum in a CPF column still asks', in_array(Problema::DOCUMENTO_AMBIGUO, $codigos($typoNaColuna), true));
+
+// --- name casing -----------------------------------------------------------------------
+
+$gritando = $uma(['evento' => $evA, 'nome' => 'ANA PAULA FERREIRA LIMA', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::ok('an ALL CAPS name warns', in_array(Problema::NOME_CAIXA, $codigos($gritando), true));
+T::same(Linha::AVISO, $gritando->situacao(), 'as a warning, not an error');
+T::ok('and blocks the commit until answered', !$gritando->podeGravar());
+
+$aviso = null;
+foreach ($gritando->avisos() as $p) {
+    if ($p->codigo === Problema::NOME_CAIXA) { $aviso = $p; }
+}
+T::same('Ana Paula Ferreira Lima', $aviso->contexto['sugerido'], 'the suggestion is carried on the warning');
+T::ok('and shown in the message', str_contains($aviso->mensagem, 'Ana Paula Ferreira Lima'));
+
+// Taking the suggestion changes what would be written.
+$corrigido = $validador->validar(
+    [['evento' => $evA, 'nome' => 'ANA PAULA FERREIRA LIMA', 'funcao' => 'competidor', 'documento' => $cpfLivre]],
+    [1 => [Problema::NOME_CAIXA => Problema::CORRIGIR_CAIXA]]
+)[0];
+T::same('Ana Paula Ferreira Lima', $corrigido->nome, 'the corrected name is what would be written');
+T::ok('and the row is ready', $corrigido->podeGravar());
+
+// Declining it keeps exactly what was pasted. Somebody may want the capitals.
+$mantido = $validador->validar(
+    [['evento' => $evA, 'nome' => 'ANA PAULA FERREIRA LIMA', 'funcao' => 'competidor', 'documento' => $cpfLivre]],
+    [1 => [Problema::NOME_CAIXA => Problema::MANTER_CAIXA]]
+)[0];
+T::same('ANA PAULA FERREIRA LIMA', $mantido->nome, 'declining keeps the name exactly as pasted');
+T::ok('and the row is ready that way too', $mantido->podeGravar());
+
+// A name already in ordinary case says nothing.
+$normal = $uma(['evento' => $evA, 'nome' => 'Ana Paula Ferreira Lima', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::ok('an ordinary name raises no casing warning', !in_array(Problema::NOME_CAIXA, $codigos($normal), true));
+
+$cleanup();

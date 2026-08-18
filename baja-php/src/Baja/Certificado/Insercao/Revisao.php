@@ -146,6 +146,7 @@ final class Revisao
             Problema::NOME_DIVERGENTE_LEVE => 'Nome escrito de outro jeito',
             Problema::NOME_DIVERGENTE      => 'Nome que não parece a mesma pessoa',
             Problema::NOME_UNICO           => 'Nome com uma parte só',
+            Problema::NOME_CAIXA           => 'Nome todo em maiúsculas ou minúsculas',
             default                        => $codigo,
         };
     }

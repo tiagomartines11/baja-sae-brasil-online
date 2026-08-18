@@ -47,8 +47,19 @@ final class Linha
         public readonly string $eventoBruto,
         public readonly string $nomeBruto,
         public readonly string $funcaoBruta,
-        public readonly string $documentoBruto
+        public readonly string $documentoBruto,
+        /**
+         * Which document column the operator said this came from, when they
+         * said. Empty means "work it out from the value".
+         */
+        public readonly string $colunaDocumento = ClassificacaoDocumento::COLUNA_QUALQUER
     ) {
+    }
+
+    /** The name as submitted, in the case a certificate should print it. */
+    public function nomeSugerido(): string
+    {
+        return Texto::caixaDeNome($this->nomeBruto);
     }
 
     public function adicionar(Problema $problema): void

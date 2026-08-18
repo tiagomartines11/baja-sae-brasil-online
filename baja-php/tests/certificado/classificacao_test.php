@@ -99,3 +99,80 @@ T::same(
 );
 
 T::same('"‑" (U+2011)', Texto::descrever("\u{2011}"), 'an invisible character is described by code point');
+
+// --- what an explicitly mapped column changes -------------------------------------
+//
+// A sheet with separate CPF and Passaporte columns states something the value
+// alone cannot. This is the case that motivated it: a passport recorded as
+// digits only, which is how this system recorded every one of them for years.
+
+$passaporteSoNumeros = '00987654';
+T::same(C::AMBIGUO, C::de($passaporteSoNumeros)->tipo, 'digits alone are ambiguous with no column to go on');
+T::same(
+    C::ESTRANGEIRO,
+    C::de($passaporteSoNumeros, C::COLUNA_ESTRANGEIRA)->tipo,
+    'but the passport column settles it'
+);
+T::same(
+    $passaporteSoNumeros,
+    C::de($passaporteSoNumeros, C::COLUNA_ESTRANGEIRA)->estrangeiro,
+    'and it is stored verbatim, leading zeros and all'
+);
+T::same(null, C::de($passaporteSoNumeros, C::COLUNA_ESTRANGEIRA)->cpf, 'never as a CPF');
+
+// A passport column is taken at its word even when the digits happen to pass
+// the CPF check — which they sometimes do by coincidence, and which is exactly
+// the misfiling that made this system store passports in a numeric column.
+T::same(C::ESTRANGEIRO, C::de($cpf, C::COLUNA_ESTRANGEIRA)->tipo, 'the passport column beats the check digits');
+
+// The CPF column, the other way.
+T::same(C::CPF, C::de($cpf, C::COLUNA_CPF)->tipo, 'a valid CPF in the CPF column is a CPF');
+T::same(C::CPF, C::de(ltrim($comZeros, '0'), C::COLUNA_CPF)->tipo, 'padding still happens there');
+
+// A failing checksum in a CPF column still asks. A mistyped CPF is worth
+// seeing, and the column saying "CPF" does not make the digits right.
+T::same(C::AMBIGUO, C::de($comTypo, C::COLUNA_CPF)->tipo, 'a failing checksum still asks, even in a CPF column');
+T::same(C::COLUNA_CPF, C::de($comTypo, C::COLUNA_CPF)->coluna, 'and remembers what the column claimed');
+
+// Letters in a CPF column are two statements that disagree, and neither is
+// ours to overrule.
+T::same(C::CONTRADIZ_COLUNA, C::de('AB123456', C::COLUNA_CPF)->tipo, 'letters in a CPF column contradict it');
+T::same(C::ESTRANGEIRO, C::de('AB123456')->tipo, 'the same value with no column is simply foreign');
+
+// Scientific notation is refused whichever column it was pasted into: the
+// digits are gone either way.
+foreach ([C::COLUNA_QUALQUER, C::COLUNA_CPF, C::COLUNA_ESTRANGEIRA] as $coluna) {
+    T::same(
+        C::NOTACAO_CIENTIFICA,
+        C::de('1.23457E+10', $coluna)->tipo,
+        'scientific notation is refused in any column'
+    );
+}
+
+// Both columns filled is one person with two documents.
+T::same(C::DOIS_DOCUMENTOS, C::de('52998224725', C::COLUNA_AMBAS)->tipo, 'both columns filled is an error');
+
+// An empty cell is still an absent document, whatever the column said.
+T::same(C::VAZIO, C::de('', C::COLUNA_ESTRANGEIRA)->tipo, 'an empty passport cell carries no document');
+
+// --- name casing --------------------------------------------------------------------
+
+T::same('alta',  Texto::caixaUniforme('ANA PAULA FERREIRA'), 'ALL CAPS is detected');
+T::same('baixa', Texto::caixaUniforme('ana paula ferreira'), 'all lowercase is detected');
+T::same(null,    Texto::caixaUniforme('Ana Paula Ferreira'), 'ordinary casing is left alone');
+T::same(null,    Texto::caixaUniforme('ANA paula'), 'and so is anything mixed — that is a mistake to look at, not to guess');
+T::same(null,    Texto::caixaUniforme('12345'), 'a value with no letters has no case');
+
+T::same('Ana Paula Ferreira Lima', Texto::caixaDeNome('ANA PAULA FERREIRA LIMA'), 'ALL CAPS gets a suggestion');
+T::same('Joao da Silva Santos', Texto::caixaDeNome('joao da silva santos'), 'Portuguese connectives stay lowercase');
+T::same('De Souza Lima', Texto::caixaDeNome('DE SOUZA LIMA'), 'except as the first word');
+T::same("D'Angelo Pereira", Texto::caixaDeNome("d'angelo pereira"), 'a letter after an apostrophe is capitalised');
+T::same('Jean-Luc Picard', Texto::caixaDeNome('JEAN-LUC PICARD'), 'and after a hyphen');
+T::same('Jose de Souza Neto III', Texto::caixaDeNome('JOSE DE SOUZA NETO III'), 'a roman numeral is not turned into Iii');
+T::same('João Pedro Silva', Texto::caixaDeNome('João Pedro Silva'), 'an already-correct name is unchanged');
+
+// Accents are not restored. An ALL CAPS sheet has usually lost them, and
+// putting them back would be inventing the spelling of somebody's name rather
+// than correcting its case — which is the whole reason this is a suggestion.
+T::same('Joao Goncalves', Texto::caixaDeNome('JOAO GONCALVES'), 'missing accents are not invented');
+T::same('João Gonçalves', Texto::caixaDeNome('JOÃO GONÇALVES'), 'but present ones survive');

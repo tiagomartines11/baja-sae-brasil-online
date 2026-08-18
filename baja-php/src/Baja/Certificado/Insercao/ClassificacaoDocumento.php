@@ -24,6 +24,19 @@ final class ClassificacaoDocumento
     public const AMBIGUO             = 'ambiguo';
     public const NOTACAO_CIENTIFICA  = 'notacao_cientifica';
     public const VAZIO               = 'vazio';
+    /** A letter in a column the operator said holds CPFs. */
+    public const CONTRADIZ_COLUNA    = 'contradiz_coluna';
+    /** Both document columns filled on one row. */
+    public const DOIS_DOCUMENTOS     = 'dois_documentos';
+
+    /** No column hint: decide from the value alone. */
+    public const COLUNA_QUALQUER     = '';
+    /** The operator mapped this column as CPF. */
+    public const COLUNA_CPF          = 'cpf';
+    /** The operator mapped this column as passport or other foreign document. */
+    public const COLUNA_ESTRANGEIRA  = 'estrangeiro';
+    /** Both were mapped and both are filled, which is one person too many. */
+    public const COLUNA_AMBAS        = 'ambos';
 
     /**
      * What a number-formatted Excel column does to an eleven-digit CPF.
@@ -50,28 +63,56 @@ final class ClassificacaoDocumento
         /** Eleven digits, when the value could be a CPF at all. */
         public readonly ?string $cpf,
         /** The value as it would be stored in documento_estrangeiro. */
-        public readonly ?string $estrangeiro
+        public readonly ?string $estrangeiro,
+        /** Which column the operator said this came from, if they said. */
+        public readonly string $coluna = self::COLUNA_QUALQUER
     ) {
     }
 
-    public static function de(string $raw): self
+    /**
+     * @param string $coluna which column the value came from, when the
+     *                       operator said. A sheet with separate CPF and
+     *                       passaporte columns is stating something the value
+     *                       alone cannot: that a digits-only passport is a
+     *                       passport, and not a CPF that fails its check
+     *                       digits. Without it, a passport column full of the
+     *                       digits-only numbers this system spent years
+     *                       recording would raise a warning on every row.
+     */
+    public static function de(string $raw, string $coluna = self::COLUNA_QUALQUER): self
     {
         $valor = Texto::limpar($raw);
+
+        if ($coluna === self::COLUNA_AMBAS) {
+            return new self(self::DOIS_DOCUMENTOS, $valor, null, null);
+        }
 
         if ($valor === '') {
             return new self(self::VAZIO, $valor, null, null);
         }
 
-        // Before the letter rule, and this order is the whole point: the E in
-        // 1.23457E+10 is a letter, so the rule below would file it as a
+        // Before every other rule, including the column's. The digits in
+        // 1.23457E+10 are gone whichever column it was pasted into, and the E
+        // in it is a letter, so the rules below would otherwise file it as a
         // passport and store it.
         if (preg_match(self::NOTACAO_CIENTIFICA_RE, $valor) === 1) {
             return new self(self::NOTACAO_CIENTIFICA, $valor, null, null);
         }
 
-        // Any letter means it is not a CPF, whatever else it is.
-        if (preg_match('/\p{L}/u', $valor) === 1) {
+        // The operator said this column holds foreign documents. That is the
+        // one thing the value cannot say for itself, so it is taken at its
+        // word: no check digits, no ambiguity, stored verbatim.
+        if ($coluna === self::COLUNA_ESTRANGEIRA) {
             return new self(self::ESTRANGEIRO, $valor, null, $valor);
+        }
+
+        // Any letter means it is not a CPF, whatever else it is — and if the
+        // column said CPF, the two statements disagree and neither is ours to
+        // overrule.
+        if (preg_match('/\p{L}/u', $valor) === 1) {
+            return $coluna === self::COLUNA_CPF
+                ? new self(self::CONTRADIZ_COLUNA, $valor, null, $valor)
+                : new self(self::ESTRANGEIRO, $valor, null, $valor);
         }
 
         $digits = Documento::digits($valor);
@@ -102,7 +143,7 @@ final class ClassificacaoDocumento
         // $cpf is null when there are more than eleven digits, which is not a
         // CPF under any padding — the caller offers only the resolutions that
         // are actually available.
-        return new self(self::AMBIGUO, $valor, $cpf, $valor);
+        return new self(self::AMBIGUO, $valor, $cpf, $valor, $coluna);
     }
 
     public function ehResolvida(): bool

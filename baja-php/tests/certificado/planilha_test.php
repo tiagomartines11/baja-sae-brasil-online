@@ -77,7 +77,7 @@ T::same([], $padrao->faltando(), 'nothing is missing from it');
 
 $linha = ['22BR', 'João Silva', 'competidor', '52998224725'];
 T::same(
-    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'competidor', 'documento' => '52998224725'],
+    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'competidor', 'documento' => '52998224725', 'documento_coluna' => ''],
     $padrao->aplicar($linha),
     'the default mapping reads a row'
 );
@@ -86,7 +86,7 @@ T::same(
 $reordenado = new Mapeamento([0 => 'nome', 1 => 'documento', 2 => 'evento'], ['funcao' => 'comite']);
 T::ok('a reordered mapping with a page-level funcao is complete', $reordenado->valido());
 T::same(
-    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'comite', 'documento' => '529'],
+    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'comite', 'documento' => '529', 'documento_coluna' => ''],
     $reordenado->aplicar(['João Silva', '529', '22BR']),
     'columns are read in the order given and the fixed value fills the gap'
 );
@@ -94,7 +94,7 @@ T::same(
 // An ignored column in the middle.
 $comIgnorada = new Mapeamento([0 => 'evento', 1 => '', 2 => 'nome', 3 => 'funcao', 4 => 'documento']);
 T::same(
-    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'juiz', 'documento' => '529'],
+    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'juiz', 'documento' => '529', 'documento_coluna' => ''],
     $comIgnorada->aplicar(['22BR', 'lixo', 'João Silva', 'juiz', '529']),
     'an ignored column is skipped'
 );
@@ -133,3 +133,63 @@ T::ok('a long row is not short', !$padrao->ehIrregular(['22BR', 'A B', 'juiz', '
 $curto = new Mapeamento([0 => 'nome', 3 => 'documento'], ['evento' => '22BR', 'funcao' => 'juiz']);
 T::same(4, $curto->colunasEsperadas(), 'expectation follows the highest mapped column');
 T::ok('a row that stops before it is irregular', $curto->ehIrregular(['A B', 'x', 'y']));
+
+// --- separate CPF and passport columns ------------------------------------------
+//
+// A real sheet is as likely to have one column for each, filled one per
+// person, as a single mixed one. Mapping them says which kind a value is —
+// the one thing a digits-only passport cannot say for itself.
+
+$duasColunas = new Mapeamento([0 => 'evento', 1 => 'nome', 2 => 'funcao', 3 => 'cpf', 4 => 'passaporte']);
+T::ok('a sheet with both document columns is a complete mapping', $duasColunas->valido());
+T::same([], $duasColunas->faltando(), 'and nothing is missing from it');
+
+T::same(
+    ['evento' => '22BR', 'nome' => 'A B', 'funcao' => 'juiz', 'documento' => '52998224725', 'documento_coluna' => 'cpf'],
+    $duasColunas->aplicar(['22BR', 'A B', 'juiz', '52998224725', '']),
+    'a filled CPF cell is read as a CPF'
+);
+T::same(
+    ['evento' => '22BR', 'nome' => 'A B', 'funcao' => 'juiz', 'documento' => '00987654', 'documento_coluna' => 'estrangeiro'],
+    $duasColunas->aplicar(['22BR', 'A B', 'juiz', '', '00987654']),
+    'a filled passport cell is read as a foreign document'
+);
+T::same(
+    'ambos',
+    $duasColunas->aplicar(['22BR', 'A B', 'juiz', '52998224725', 'AB1234'])['documento_coluna'],
+    'both filled is flagged, not resolved by preference'
+);
+T::same(
+    '',
+    $duasColunas->aplicar(['22BR', 'A B', 'juiz', '', ''])['documento'],
+    'neither filled leaves no document'
+);
+
+// Only one of the two is enough: plenty of sheets are all foreign participants.
+$soPassaporte = new Mapeamento([0 => 'nome', 1 => 'passaporte'], ['evento' => '22BR', 'funcao' => 'juiz']);
+T::ok('a sheet with only a passport column is complete', $soPassaporte->valido());
+T::same('estrangeiro', $soPassaporte->aplicar(['A B', '00987654'])['documento_coluna'], 'and its column is honoured');
+
+// A generic column alongside a specific one is contradictory: "Documento"
+// says work it out, "CPF" says it is one.
+$misturado = new Mapeamento([0 => 'evento', 1 => 'nome', 2 => 'funcao', 3 => 'documento', 4 => 'cpf']);
+T::ok('a generic and a specific document column conflict', $misturado->documentosConflitantes());
+T::ok('and that mapping is not usable', !$misturado->valido());
+
+$soGenerico = new Mapeamento([0 => 'evento', 1 => 'nome', 2 => 'funcao', 3 => 'documento']);
+T::ok('a generic column alone is fine', !$soGenerico->documentosConflitantes() && $soGenerico->valido());
+
+// No document column of any kind is still a missing document.
+$semDocumento = new Mapeamento([0 => 'evento', 1 => 'nome', 2 => 'funcao']);
+T::same(['documento'], $semDocumento->faltando(), 'a sheet with no document column at all is incomplete');
+
+// The default mapping must not reach for the new fields. A six-column sheet
+// defaulting its last two to cpf and passaporte would map a document three
+// ways and open on an error.
+$largo = Mapeamento::padrao(6);
+T::same(
+    ['evento', 'nome', 'funcao', 'documento', '', ''],
+    array_values($largo->colunas()),
+    'the default stops at the four-column shape'
+);
+T::ok('so a wide sheet opens on a usable mapping', $largo->valido());

@@ -272,6 +272,11 @@ $e = fn(string $v): string => Template::e($v);
             </tbody>
         </table>
         <p class="muted">
+            Se a planilha tiver colunas separadas de CPF e passaporte, marque cada
+            uma como tal — é isso que faz um passaporte só com números não ser
+            confundido com um CPF que não passa na verificação. Se houver uma
+            coluna só, misturando os dois, marque-a como <em>Documento</em>.
+            <br />
             <?= count($planilha->linhas) > 5 ? 'Cinco primeiras linhas.' : '' ?>
             Se a primeira linha for o cabeçalho da planilha, apague-a da colagem:
             ela seria lida como um participante chamado "Nome".
@@ -280,7 +285,8 @@ $e = fn(string $v): string => Template::e($v);
         <h2 style="margin-top: 24px;">Valores para a planilha inteira</h2>
         <p class="muted">
             Para os campos que não têm coluna própria. O normal é uma planilha ser
-            de um evento só.
+            de um evento só. Se houver coluna de evento, ela aceita o código
+            (<code>22BR</code>) ou o nome do evento por extenso.
         </p>
         <div class="campos">
             <div class="field">
@@ -315,6 +321,15 @@ $e = fn(string $v): string => Template::e($v);
             <div class="alerta erro">
                 <?= $e(implode(', ', array_map([Mapeamento::class, 'rotulo'], $duplicados))) ?>
                 está em mais de uma coluna. Escolha qual.
+            </div>
+        <?php endif; ?>
+
+        <?php if ($mapeamento->documentosConflitantes()): ?>
+            <div class="alerta erro">
+                Você marcou uma coluna como <em>Documento</em> e outra como
+                <em>CPF</em> ou <em>Passaporte</em>. Use um jeito ou o outro:
+                <em>Documento</em> quer dizer "descubra o que é isto", e as outras
+                duas dizem o que a coluna é.
             </div>
         <?php endif; ?>
 

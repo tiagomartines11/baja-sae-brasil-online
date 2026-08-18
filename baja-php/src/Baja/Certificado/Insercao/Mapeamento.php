@@ -15,10 +15,35 @@ namespace Baja\Certificado\Insercao;
  */
 final class Mapeamento
 {
-    public const CAMPOS = ['evento', 'nome', 'funcao', 'documento'];
+    /**
+     * Every field a column can be mapped to.
+     *
+     * Three of them are documents, because a real sheet is as likely to have
+     * separate CPF and Passaporte columns — one filled per person — as a
+     * single mixed one. Mapping the specific columns is not just convenience:
+     * it states which kind a value is, which is the one thing the value
+     * cannot always state for itself.
+     */
+    public const CAMPOS = ['evento', 'nome', 'funcao', 'documento', 'cpf', 'passaporte'];
+
+    /** The three that all answer "which document", of which at least one is needed. */
+    public const CAMPOS_DOCUMENTO = ['documento', 'cpf', 'passaporte'];
 
     /** Fields that may be supplied once for the whole paste instead of per row. */
     public const FIXAVEIS = ['evento', 'funcao'];
+
+    /** Fields every row needs, one way or another. */
+    private const OBRIGATORIOS = ['evento', 'nome', 'funcao'];
+
+    /**
+     * The order the page starts on, which is not the same list as CAMPOS.
+     *
+     * CAMPOS gained cpf and passaporte, and defaulting a six-column sheet's
+     * last two columns to them would map a document three ways at once and
+     * open on an error. The starting guess stays the four-column shape a
+     * sheet exported from here has; anything wider starts ignored.
+     */
+    private const PADRAO = ['evento', 'nome', 'funcao', 'documento'];
 
     /** @var array<int, string> column index => field name, '' meaning ignore */
     private array $colunas;
@@ -54,7 +79,7 @@ final class Mapeamento
     {
         $colunas = [];
         foreach (range(0, max(0, $largura - 1)) as $indice) {
-            $colunas[$indice] = self::CAMPOS[$indice] ?? '';
+            $colunas[$indice] = self::PADRAO[$indice] ?? '';
         }
 
         return new self($colunas);
@@ -85,13 +110,38 @@ final class Mapeamento
     /**
      * Fields that no column supplies and no page-level value covers.
      *
+     * A document counts as covered by any of the three columns that can carry
+     * one, so a sheet with only a Passaporte column is complete.
+     *
      * @return array<int, string>
      */
     public function faltando(): array
     {
         $cobertos = array_merge(array_values($this->colunas), array_keys($this->fixos));
 
-        return array_values(array_diff(self::CAMPOS, $cobertos));
+        $faltando = array_values(array_diff(self::OBRIGATORIOS, $cobertos));
+
+        if (array_intersect(self::CAMPOS_DOCUMENTO, $cobertos) === []) {
+            $faltando[] = 'documento';
+        }
+
+        return $faltando;
+    }
+
+    /**
+     * A generic document column mapped alongside a specific one.
+     *
+     * Refused rather than resolved. "Documento" says "work out what this is"
+     * and "CPF" says "this is a CPF"; a sheet asserting both about the same
+     * person is a mapping mistake, and picking one would quietly ignore a
+     * column of real values.
+     */
+    public function documentosConflitantes(): bool
+    {
+        $usados = array_values($this->colunas);
+
+        return in_array('documento', $usados, true)
+            && array_intersect(['cpf', 'passaporte'], $usados) !== [];
     }
 
     /**
@@ -111,7 +161,9 @@ final class Mapeamento
 
     public function valido(): bool
     {
-        return $this->faltando() === [] && $this->duplicados() === [];
+        return $this->faltando() === []
+            && $this->duplicados() === []
+            && !$this->documentosConflitantes();
     }
 
     /** How many columns a row is expected to have. */
@@ -125,12 +177,24 @@ final class Mapeamento
     /**
      * One parsed row, as the validator wants it.
      *
+     * The three document columns collapse into one value plus a note saying
+     * which column it came from, because a participante has one document and
+     * the question downstream is only ever "which column does it belong in".
+     *
      * @param array<int, string> $celulas
-     * @return array{evento: string, nome: string, funcao: string, documento: string}
+     * @return array{evento: string, nome: string, funcao: string, documento: string, documento_coluna: string}
      */
     public function aplicar(array $celulas): array
     {
-        $valores = ['evento' => '', 'nome' => '', 'funcao' => '', 'documento' => ''];
+        $valores = [
+            'evento'           => '',
+            'nome'             => '',
+            'funcao'           => '',
+            'documento'        => '',
+            'cpf'              => '',
+            'passaporte'       => '',
+            'documento_coluna' => ClassificacaoDocumento::COLUNA_QUALQUER,
+        ];
 
         foreach ($this->colunas as $indice => $campo) {
             if ($campo !== '' && isset($celulas[$indice])) {
@@ -147,6 +211,25 @@ final class Mapeamento
                 $valores[$campo] = $valor;
             }
         }
+
+        $cpf        = Texto::limpar($valores['cpf']);
+        $passaporte = Texto::limpar($valores['passaporte']);
+
+        if ($cpf !== '' && $passaporte !== '') {
+            // A person has one identity document. Two filled cells is a row
+            // to look at, not a preference to resolve — and choosing either
+            // would discard the other silently.
+            $valores['documento']        = $cpf;
+            $valores['documento_coluna'] = ClassificacaoDocumento::COLUNA_AMBAS;
+        } elseif ($cpf !== '') {
+            $valores['documento']        = $cpf;
+            $valores['documento_coluna'] = ClassificacaoDocumento::COLUNA_CPF;
+        } elseif ($passaporte !== '') {
+            $valores['documento']        = $passaporte;
+            $valores['documento_coluna'] = ClassificacaoDocumento::COLUNA_ESTRANGEIRA;
+        }
+
+        unset($valores['cpf'], $valores['passaporte']);
 
         return $valores;
     }
@@ -172,8 +255,10 @@ final class Mapeamento
             'evento'    => 'Evento',
             'nome'      => 'Nome',
             'funcao'    => 'Função',
-            'documento' => 'Documento',
-            default     => 'Ignorar',
+            'documento'  => 'Documento (CPF ou passaporte)',
+            'cpf'        => 'CPF',
+            'passaporte' => 'Passaporte / documento estrangeiro',
+            default      => 'Ignorar',
         };
     }
 }
