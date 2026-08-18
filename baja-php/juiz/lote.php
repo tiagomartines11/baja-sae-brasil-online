@@ -7,6 +7,7 @@ use Baja\Certificado\Insercao\Acesso;
 use Baja\Certificado\Insercao\Csrf;
 use Baja\Certificado\Insercao\Gravador;
 use Baja\Certificado\Insercao\Template;
+use Baja\Certificado\Insercao\Texto;
 use Baja\Certificado\Token;
 use Baja\Model\EventoQuery;
 
@@ -30,15 +31,15 @@ $usuario = Acesso::exigir();
 
 const FORMULARIO = 'certificado-lote-apagar';
 
-$id          = (string) ($_GET['id'] ?? $_POST['id'] ?? '');
+$id          = Texto::escalar($_GET['id'] ?? $_POST['id'] ?? '');
 $apagado     = 0;
 $erroCsrf    = false;
 $semConfirmar = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'apagar') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && Texto::escalar($_POST['acao'] ?? '') === 'apagar') {
     if (!Csrf::postValido(FORMULARIO)) {
         $erroCsrf = true;
-    } elseif ((string) ($_POST['confirmo'] ?? '') === '') {
+    } elseif (Texto::escalar($_POST['confirmo'] ?? '') === '') {
         // The checkbox is `required`, which is a hint to a browser and nothing
         // to a request. The deliberate act has to be checked where it matters.
         $semConfirmar = true;

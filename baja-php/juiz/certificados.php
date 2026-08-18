@@ -10,6 +10,7 @@ use Baja\Certificado\Insercao\Linha;
 use Baja\Certificado\Insercao\Problema;
 use Baja\Certificado\Insercao\Resultado;
 use Baja\Certificado\Insercao\Template;
+use Baja\Certificado\Insercao\Texto;
 use Baja\Certificado\Insercao\Validador;
 use Baja\Model\EventoQuery;
 
@@ -33,10 +34,10 @@ $resultado = null;
 $erroCsrf  = false;
 
 $enviado = [
-    'evento'    => (string) ($_POST['evento'] ?? ''),
-    'nome'      => (string) ($_POST['nome'] ?? ''),
-    'funcao'    => (string) ($_POST['funcao'] ?? ''),
-    'documento' => (string) ($_POST['documento'] ?? ''),
+    'evento'    => Texto::escalar($_POST['evento'] ?? ''),
+    'nome'      => Texto::escalar($_POST['nome'] ?? ''),
+    'funcao'    => Texto::escalar($_POST['funcao'] ?? ''),
+    'documento' => Texto::escalar($_POST['documento'] ?? ''),
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -50,15 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // trusted from the form: nothing about the row's state survives the
         // round trip except the answers, and the answers are checked against
         // the problems this pass actually found.
-        $escolhas = [];
-        foreach ((array) ($_POST['resolucao'] ?? []) as $codigo => $escolha) {
-            $escolhas[(string) $codigo] = (string) $escolha;
-        }
+        $escolhas = Texto::mapaDeTexto($_POST['resolucao'] ?? []);
 
         $validador = new Validador();
         $linha     = $validador->validar([$enviado], [1 => $escolhas])[0];
 
-        if ($linha->podeGravar() && ($_POST['confirmar'] ?? '') === '1') {
+        if ($linha->podeGravar() && Texto::escalar($_POST['confirmar'] ?? '') === '1') {
             $gravador  = new Gravador((int) $usuario->getUserId());
             $resultado = $gravador->gravar([$linha]);
             $linha     = null;

@@ -11,6 +11,7 @@ use Baja\Certificado\Insercao\Planilha;
 use Baja\Certificado\Insercao\Problema;
 use Baja\Certificado\Insercao\Revisao;
 use Baja\Certificado\Insercao\Template;
+use Baja\Certificado\Insercao\Texto;
 use Baja\Certificado\Insercao\Validador;
 use Baja\Model\EventoQuery;
 
@@ -51,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
     if (!Csrf::postValido(FORMULARIO)) {
         $erroCsrf = true;
     } else {
-        $colado   = (string) ($_POST['colado'] ?? '');
+        $colado   = Texto::escalar($_POST['colado'] ?? '');
         $planilha = Planilha::analisar($colado);
 
         if (!$planilha->vazia()) {
@@ -59,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
 
             if (isset($_POST['colunas']) || isset($_POST['fixos'])) {
                 $mapeamento = new Mapeamento(
-                    (array) ($_POST['colunas'] ?? []),
-                    (array) ($_POST['fixos'] ?? [])
+                    Texto::mapaDeTexto($_POST['colunas'] ?? []),
+                    Texto::mapaDeTexto($_POST['fixos'] ?? [])
                 );
             } else {
                 $mapeamento = Mapeamento::padrao($planilha->largura());
@@ -76,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
             // this paste does not have the shape the mapping says it has. It
             // is refused here rather than carried into the review, where it
             // would show up as four unrelated errors about the wrong fields.
-            $pedido = (string) ($_POST['etapa'] ?? '');
+            $pedido = Texto::escalar($_POST['etapa'] ?? '');
 
             if (in_array($pedido, ['revisar', 'gravar'], true) && $mapeamento->valido() && $irregulares === []) {
                 $etapa = 'revisar';
@@ -90,22 +91,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
                 // than overriding: a radio the operator actually clicked is a
                 // statement about that row, and a group answer applied on top
                 // of it would silently discard the more specific one.
-                $emLote = [];
-                foreach ((array) ($_POST['lote'] ?? []) as $codigo => $escolha) {
-                    if ((string) $escolha !== '') {
-                        $emLote[(string) $codigo] = (string) $escolha;
-                    }
-                }
+                $emLote = array_filter(
+                    Texto::mapaDeTexto($_POST['lote'] ?? []),
+                    static fn (string $escolha): bool => $escolha !== ''
+                );
 
                 $escolhas = [];
                 foreach ($brutas as $i => $_bruta) {
                     $numero = $i + 1;
-                    $daLinha = [];
-                    foreach ((array) ($_POST['resolucao'][$numero] ?? []) as $codigo => $escolha) {
-                        if ((string) $escolha !== '') {
-                            $daLinha[(string) $codigo] = (string) $escolha;
-                        }
-                    }
+                    $daLinha = array_filter(
+                        Texto::mapaDeTexto(($_POST['resolucao'] ?? [])[$numero] ?? []),
+                        static fn (string $escolha): bool => $escolha !== ''
+                    );
                     $escolhas[$numero] = $daLinha + $emLote;
                 }
 

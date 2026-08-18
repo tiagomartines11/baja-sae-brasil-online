@@ -32,9 +32,9 @@ $usuario = Acesso::exigir();
 
 const FORMULARIO = 'certificado-nome';
 
-$documento = Texto::limpar((string) ($_POST['documento'] ?? $_GET['documento'] ?? ''));
-$novoNome  = Texto::limpar((string) ($_POST['nome'] ?? ''));
-$acao      = (string) ($_POST['acao'] ?? '');
+$documento = Texto::limpar(Texto::escalar($_POST['documento'] ?? $_GET['documento'] ?? ''));
+$novoNome  = Texto::limpar(Texto::escalar($_POST['nome'] ?? ''));
+$acao      = Texto::escalar($_POST['acao'] ?? '');
 
 $linhas    = [];
 $erros     = [];
@@ -110,7 +110,7 @@ if ($novoNome !== '' && $acao !== '') {
 // catches the case where the rows changed between seeing the number and
 // clicking: another operator adding a certificate for this person in between
 // would otherwise have it renamed without anybody having seen it.
-$visto = (string) ($_POST['visto'] ?? '');
+$visto = Texto::escalar($_POST['visto'] ?? '');
 $conferido = $visto !== '' && (int) $visto === count($afetadas);
 
 if ($acao === 'aplicar' && !$conferido && $erros === []) {

@@ -79,6 +79,41 @@ final class Texto
         return array_keys($ruins);
     }
 
+    /**
+     * One request value, as a string.
+     *
+     * Nothing stops a request sending `nome[]=x` where the page expects
+     * `nome=x`, and casting the array that arrives raises "Array to string
+     * conversion" for every field — warnings in the log at best, and part of
+     * the response wherever display_errors is on. An array is not a value the
+     * form can have produced, so it is read as absent.
+     */
+    public static function escalar(mixed $valor): string
+    {
+        return is_scalar($valor) ? (string) $valor : '';
+    }
+
+    /**
+     * One request value that should be an array of strings.
+     *
+     * @return array<string|int, string>
+     */
+    public static function mapaDeTexto(mixed $valor): array
+    {
+        if (!is_array($valor)) {
+            return [];
+        }
+
+        $saida = [];
+        foreach ($valor as $chave => $item) {
+            if (is_scalar($item)) {
+                $saida[$chave] = (string) $item;
+            }
+        }
+
+        return $saida;
+    }
+
     public static function utf8Valido(string $valor): bool
     {
         return mb_check_encoding($valor, 'UTF-8');
