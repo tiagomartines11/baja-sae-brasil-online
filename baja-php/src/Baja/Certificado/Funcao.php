@@ -156,14 +156,14 @@ final class Funcao
     }
 
     /**
-     * Folded and with runs of whitespace collapsed.
+     * The comparison key, shared with everything else matching a whole pasted
+     * string against a stored one.
      *
-     * Nome::fold() leaves spacing alone because a name's token split depends
-     * on it. Here the whole string is the key, so "Comissão  Técnica" pasted
-     * with two spaces has to reach the same place as one.
+     * Nome::chave() rather than a rule of this class's own: a second folding
+     * scheme that has to agree with the first is one that eventually will not.
      */
     private static function foldKey(string $value): string
     {
-        return trim(preg_replace('/\s+/', ' ', Nome::fold($value)));
+        return Nome::chave($value);
     }
 }
