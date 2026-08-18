@@ -86,7 +86,7 @@ final class Pdf
 				Este documento eletrônico dispensa carimbo e assinatura.<br>Sua autenticidade pode ser comprovada acessando a seguinte página: <br>
 				<a href=\"" . $url . "\">" . $url . "</a>
 			</div>
-			<div style = 'position: absolute; left: 60px; bottom: 55px; text-align: center;'>
+			<div style = 'position: absolute; left: 60px; bottom: 100px; text-align: center;'>
 				<img src=\"" . $qr . "\" style='width: 90pt; height: 90pt;' alt='' />
 			</div>
 		</div>
