@@ -159,6 +159,21 @@ ok "certificate page sends Cache-Control: no-store" \
 ok "certificate page carries no Google Analytics tag" \
    "$(grep -qi 'googletagmanager\|gtag(\|google-analytics' <<<"$page" && echo 0 || echo 1)"
 
+# --- SAE BRASIL identity, not Baja -------------------------------------------
+#
+# The system issues certificates for several SAE BRASIL student programmes.
+# Event names legitimately contain "Baja" — that is what the event is called —
+# but no Baja mark or asset belongs in the page's own furniture.
+
+ok "page carries the SAE BRASIL wordmark" \
+   "$(grep -q 'sae-brasil-wordmark' <<<"$page" && echo 1 || echo 0)"
+ok "wordmark asset is served" \
+   "$([[ $(status_of "$BASE/img/sae-brasil-wordmark.png") == 200 ]] && echo 1 || echo 0)"
+ok "no Baja logo asset in the page furniture" \
+   "$(grep -qi 'baja_grande\|img/baja\.' <<<"$page" && echo 0 || echo 1)"
+ok "page title is SAE BRASIL" \
+   "$(grep -qi '<title>[^<]*SAE BRASIL' <<<"$page" && echo 1 || echo 0)"
+
 # --- the page is not the PDF -------------------------------------------------
 
 ok "certificate page is HTML, not a PDF" \

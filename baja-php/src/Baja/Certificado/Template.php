@@ -29,9 +29,18 @@ final class Template
     <meta name="referrer" content="no-referrer">
     <title><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></title>
     <style>
+        /*
+         * Sampled from certificado/img/certificado.png rather than chosen.
+         * The mask came from SAE BRASIL and is not ours to reinterpret, so the
+         * pages that sit around it use its own colours: #004185 is the frame
+         * and the "Certificado" script, #003E7C the wordmark, #C4C6CB the
+         * stripe motif down both edges. No new assets, no Baja marks.
+         */
         :root {
-            --sae-navy: #0b2b5b;
-            --sae-grey: #5b6770;
+            --sae-navy: #004185;
+            --sae-navy-deep: #003E7C;
+            --sae-grey: #6a7078;
+            --sae-rule: #C4C6CB;
             --sae-light: #f4f5f7;
             --sae-border: #d7dbe0;
         }
@@ -46,6 +55,20 @@ final class Template
             line-height: 1.5;
         }
         .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+        .brand { padding: 4px 0 20px; border-bottom: 3px solid var(--sae-navy); margin-bottom: 20px; }
+        .brand img { display: block; width: 100%; max-width: 291px; height: auto; }
+        /* The stripe motif runs down both edges of the certificate itself. */
+        .wrap::before {
+            content: "";
+            display: block;
+            height: 6px;
+            margin-bottom: 18px;
+            background: repeating-linear-gradient(
+                100deg,
+                var(--sae-rule) 0 22px,
+                transparent 22px 30px
+            );
+        }
         .card {
             background: #fff;
             border: 1px solid var(--sae-border);
@@ -53,8 +76,8 @@ final class Template
             padding: 24px;
             margin-bottom: 16px;
         }
-        h1 { font-size: 22px; margin: 0 0 4px; color: var(--sae-navy); }
-        h2 { font-size: 18px; margin: 0 0 12px; color: var(--sae-navy); }
+        h1 { font-size: 22px; margin: 0 0 4px; color: var(--sae-navy-deep); }
+        h2 { font-size: 18px; margin: 0 0 12px; color: var(--sae-navy-deep); }
         p { margin: 0 0 12px; }
         .muted { color: var(--sae-grey); font-size: 14px; }
         label { display: block; font-weight: bold; margin-bottom: 4px; }
@@ -97,6 +120,9 @@ final class Template
 </head>
 <body>
 <div class="wrap">
+    <header class="brand">
+        <img src="/img/sae-brasil-wordmark.png" alt="SAE BRASIL — A casa do conhecimento da mobilidade brasileira" />
+    </header>
         <?php
     }
 
