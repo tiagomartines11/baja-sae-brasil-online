@@ -135,35 +135,37 @@ final class Validador
             return;
         }
 
-        $linha->nome = $nome;
-
-        // A sheet arrives ALL CAPS more often than not, and the stored name is
-        // what the certificate prints — so without this, an export from a
-        // registration system becomes two hundred certificates shouting.
+        // A name in one uniform case is recased, and nobody is asked.
         //
-        // Offered, never applied on its own. Title casing a name is a guess
-        // about a person, and the guesses it gets wrong are the ones people
-        // mind most: a McDonald becomes a Mcdonald, and an ALL CAPS sheet has
-        // usually lost its accents, which this does not invent. So the
-        // suggestion is shown next to the original and somebody says which.
-        $caixa = Texto::caixaUniforme($nome);
-        if ($caixa !== null) {
-            $sugerido = Texto::caixaDeNome($nome);
+        // The stored name is what the certificate prints, and sheets arrive
+        // ALL CAPS more often than not — so left alone this produces a couple
+        // of hundred certificates shouting every time somebody exports from a
+        // registration system. That outcome is certain; what the rule costs
+        // is occasional and small.
+        //
+        // It does get some names wrong. A McDonald becomes a Mcdonald, and an
+        // ALL CAPS sheet has usually lost its accents, which this does not
+        // invent — JOAO becomes Joao, not João. Every adjustment is shown on
+        // the review screen, and certificados_nome.php stores a name exactly
+        // as it is typed, which is where a name this rule spoils gets fixed.
+        //
+        // Only uniform case is touched. Anything mixed is somebody's own
+        // spelling, including a deliberately capitalised surname, and is left
+        // alone.
+        if (Texto::caixaUniforme($nome) !== null) {
+            $recase = Texto::caixaDeNome($nome);
 
-            if ($sugerido !== $nome) {
-                $linha->adicionar(Problema::aviso(
-                    Problema::NOME_CAIXA,
-                    sprintf(
-                        'O nome está todo em %s. O certificado imprime o nome exatamente '
-                        . 'como estiver aqui. Sugestão: "%s".',
-                        $caixa === 'alta' ? 'maiúsculas' : 'minúsculas',
-                        $sugerido
-                    ),
-                    [Problema::CORRIGIR_CAIXA, Problema::MANTER_CAIXA],
-                    ['sugerido' => $sugerido, 'caixa' => $caixa]
-                ));
+            if ($recase !== $nome) {
+                $nome = $recase;
+                $linha->caixaAjustada = true;
             }
         }
+
+        // Assigned after the recasing, so that everything downstream compares
+        // and writes the corrected name. That also removes a class of
+        // warnings that were never worth raising: "ANA PAULA" against a
+        // stored "Ana Paula" is no longer a name conflict.
+        $linha->nome = $nome;
 
         // A single-part name cannot be found again. /buscar requires two name
         // parts in common before it returns anything — that minimum is what
@@ -716,14 +718,6 @@ final class Validador
             } else {
                 $linha->documentoEstrangeiro = $linha->documento->estrangeiro;
             }
-        }
-
-        // Casing first: "use the existing name" below overrules it, because
-        // the name already on file is a stronger statement about how this
-        // person writes their name than any rule about capitals.
-        if ($linha->resolucao(Problema::NOME_CAIXA) === Problema::CORRIGIR_CAIXA
-            && $linha->nome !== null) {
-            $linha->nome = Texto::caixaDeNome($linha->nome);
         }
 
         foreach ([Problema::NOME_DIVERGENTE_LEVE, Problema::NOME_DIVERGENTE] as $codigo) {

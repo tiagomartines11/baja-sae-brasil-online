@@ -93,6 +93,25 @@ final class Revisao
         return $n;
     }
 
+    /**
+     * Rows whose name was recased on the way in.
+     *
+     * Counted so the review can say so once at the top. The rule needs no
+     * answer, but it changes what a certificate prints, and a change nobody
+     * was told about is the kind that surfaces months later as a complaint.
+     */
+    public function caixaAjustada(): int
+    {
+        $n = 0;
+        foreach ($this->linhas as $linha) {
+            if ($linha->caixaAjustada) {
+                $n++;
+            }
+        }
+
+        return $n;
+    }
+
     public function aIgnorar(): int
     {
         $n = 0;
@@ -146,7 +165,6 @@ final class Revisao
             Problema::NOME_DIVERGENTE_LEVE => 'Nome escrito de outro jeito',
             Problema::NOME_DIVERGENTE      => 'Nome que não parece a mesma pessoa',
             Problema::NOME_UNICO           => 'Nome com uma parte só',
-            Problema::NOME_CAIXA           => 'Nome todo em maiúsculas ou minúsculas',
             default                        => $codigo,
         };
     }

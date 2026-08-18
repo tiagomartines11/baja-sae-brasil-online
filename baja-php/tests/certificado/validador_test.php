@@ -345,38 +345,60 @@ $typoNaColuna = $validador->validar([[
 ]])[0];
 T::ok('a failing checksum in a CPF column still asks', in_array(Problema::DOCUMENTO_AMBIGUO, $codigos($typoNaColuna), true));
 
-// --- name casing -----------------------------------------------------------------------
+// --- name casing is a rule, not a question -------------------------------------------
+//
+// The stored name is what the certificate prints, and sheets arrive ALL CAPS
+// more often than not. That outcome is certain; what the rule costs is
+// occasional and small, and every adjustment is shown on the review screen.
 
 $gritando = $uma(['evento' => $evA, 'nome' => 'ANA PAULA FERREIRA LIMA', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
-T::ok('an ALL CAPS name warns', in_array(Problema::NOME_CAIXA, $codigos($gritando), true));
-T::same(Linha::AVISO, $gritando->situacao(), 'as a warning, not an error');
-T::ok('and blocks the commit until answered', !$gritando->podeGravar());
+T::same('Ana Paula Ferreira Lima', $gritando->nome, 'an ALL CAPS name is recased without being asked about');
+T::ok('and it is recorded as adjusted', $gritando->caixaAjustada);
+T::same([], $codigos($gritando), 'raising no problem of any kind');
+T::same(Linha::OK, $gritando->situacao(), 'the row is simply OK');
+T::ok('and needs no answer before it can be written', $gritando->podeGravar());
 
-$aviso = null;
-foreach ($gritando->avisos() as $p) {
-    if ($p->codigo === Problema::NOME_CAIXA) { $aviso = $p; }
-}
-T::same('Ana Paula Ferreira Lima', $aviso->contexto['sugerido'], 'the suggestion is carried on the warning');
-T::ok('and shown in the message', str_contains($aviso->mensagem, 'Ana Paula Ferreira Lima'));
+$baixa = $uma(['evento' => $evA, 'nome' => 'joao da silva santos', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same('Joao da Silva Santos', $baixa->nome, 'all-lowercase is recased too, connectives intact');
+T::ok('and is also marked adjusted', $baixa->caixaAjustada);
 
-// Taking the suggestion changes what would be written.
-$corrigido = $validador->validar(
-    [['evento' => $evA, 'nome' => 'ANA PAULA FERREIRA LIMA', 'funcao' => 'competidor', 'documento' => $cpfLivre]],
-    [1 => [Problema::NOME_CAIXA => Problema::CORRIGIR_CAIXA]]
-)[0];
-T::same('Ana Paula Ferreira Lima', $corrigido->nome, 'the corrected name is what would be written');
-T::ok('and the row is ready', $corrigido->podeGravar());
+// The paste is kept, so the review can show what changed.
+T::same('ANA PAULA FERREIRA LIMA', $gritando->nomeBruto, 'the pasted name is still available to show');
 
-// Declining it keeps exactly what was pasted. Somebody may want the capitals.
-$mantido = $validador->validar(
-    [['evento' => $evA, 'nome' => 'ANA PAULA FERREIRA LIMA', 'funcao' => 'competidor', 'documento' => $cpfLivre]],
-    [1 => [Problema::NOME_CAIXA => Problema::MANTER_CAIXA]]
-)[0];
-T::same('ANA PAULA FERREIRA LIMA', $mantido->nome, 'declining keeps the name exactly as pasted');
-T::ok('and the row is ready that way too', $mantido->podeGravar());
-
-// A name already in ordinary case says nothing.
+// Anything mixed is somebody's own spelling and is left alone.
 $normal = $uma(['evento' => $evA, 'nome' => 'Ana Paula Ferreira Lima', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
-T::ok('an ordinary name raises no casing warning', !in_array(Problema::NOME_CAIXA, $codigos($normal), true));
+T::same('Ana Paula Ferreira Lima', $normal->nome, 'an ordinary name is untouched');
+T::ok('and is not marked adjusted', !$normal->caixaAjustada);
+
+$deliberado = $uma(['evento' => $evA, 'nome' => 'Ana Paula MACHADO Lima', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same('Ana Paula MACHADO Lima', $deliberado->nome, 'a deliberately capitalised surname survives');
+T::ok('and counts as nothing to report', !$deliberado->caixaAjustada);
+
+// Accents are not invented, which is the rule's known cost.
+$semAcentos = $uma(['evento' => $evA, 'nome' => 'JOAO GONCALVES SOUZA', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same('Joao Goncalves Souza', $semAcentos->nome, 'a name that lost its accents does not get them back');
+
+// The recasing happens before the name is compared to what is on file, which
+// removes a class of warnings that were never worth raising.
+// The fixture prefix is stored in the case the rule produces, so that the
+// only thing this check is comparing is the participant's own name. The
+// cleanup still finds it: LIKE on this column is case-insensitive.
+$cpfCaixa   = synthetic_cpf('909876543');
+$nomeCaixa  = \Baja\Certificado\Insercao\Texto::caixaDeNome($prefix . ' Marcelo Antunes Prado');
+$p = new Participante();
+$p->setNome($nomeCaixa);
+$p->setFuncao('competidor');
+$p->setCpf($cpfCaixa);
+$p->setEventoId($evA);
+$p->setCriadoPor(test_user_id());
+$p->save();
+
+$mesmoNome = $uma(['evento' => $evB, 'nome' => mb_strtoupper($nomeCaixa, 'UTF-8'), 'funcao' => 'competidor', 'documento' => $cpfCaixa]);
+T::same($nomeCaixa, $mesmoNome->nome, 'the ALL CAPS paste recases back to the stored spelling');
+T::ok(
+    'an ALL CAPS spelling of a stored name is not a name conflict',
+    !in_array(Problema::NOME_DIVERGENTE_LEVE, $codigos($mesmoNome), true)
+        && !in_array(Problema::NOME_DIVERGENTE, $codigos($mesmoNome), true)
+);
 
 $cleanup();

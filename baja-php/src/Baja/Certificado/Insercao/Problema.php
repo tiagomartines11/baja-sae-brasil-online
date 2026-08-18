@@ -40,14 +40,10 @@ final class Problema
     public const NOME_DIVERGENTE_LEVE   = 'nome_divergente_leve';
     public const NOME_DIVERGENTE        = 'nome_divergente';
     public const NOME_UNICO             = 'nome_unico';
-    public const NOME_CAIXA             = 'nome_caixa';
 
     // --- resolutions ---------------------------------------------------------
     /** Yes, I meant that. Used where there is nothing to choose between. */
     public const CONFIRMAR        = 'confirmar';
-    /** A name in one uniform case: take the suggested casing, or keep it. */
-    public const CORRIGIR_CAIXA   = 'corrigir_caixa';
-    public const MANTER_CAIXA     = 'manter_caixa';
     /** An ambiguous document: read it as one column or the other. */
     public const LER_COMO_CPF     = 'cpf';
     public const LER_COMO_ESTRANGEIRO = 'estrangeiro';
@@ -138,8 +134,6 @@ final class Problema
     {
         return match ($resolucao) {
             self::CONFIRMAR             => 'Confirmar assim mesmo',
-            self::CORRIGIR_CAIXA        => 'Usar a grafia sugerida',
-            self::MANTER_CAIXA          => 'Manter exatamente como está',
             self::LER_COMO_CPF          => 'É um CPF',
             self::LER_COMO_ESTRANGEIRO  => 'É um passaporte ou documento estrangeiro',
             self::IGNORAR               => 'Não criar esta linha',

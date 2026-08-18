@@ -367,10 +367,19 @@ $e = fn(string $v): string => Template::e($v);
 
     /** Renders the four submitted values of one row, as pasted. */
     $celulasDa = function ($linha) use ($e): string {
+        // The name as it would be written, not as it was pasted, with the
+        // original underneath wherever the recasing rule changed it. Showing
+        // only the paste would hide what actually lands in the certificate.
+        $nome = $e($linha->caixaAjustada && $linha->nome !== null ? $linha->nome : $linha->nomeBruto);
+        if ($linha->caixaAjustada) {
+            $nome .= '<div class="muted" style="font-size: 12px;">colado como '
+                . $e($linha->nomeBruto) . '</div>';
+        }
+
         return sprintf(
             '<td>%s</td><td>%s</td><td>%s</td><td>%s</td>',
             $e($linha->eventoBruto),
-            $e($linha->nomeBruto),
+            $nome,
             $e($linha->funcaoBruta),
             $e($linha->documentoBruto)
         );
@@ -385,6 +394,23 @@ $e = fn(string $v): string => Template::e($v);
         <?= count($revisao->avisos) ?> pedindo decisão,
         <?= count($revisao->ok) ?> sem pendência.
     </p>
+
+    <?php if ($revisao->caixaAjustada() > 0): ?>
+        <div class="alerta">
+            <?= $revisao->caixaAjustada() ?>
+            nome<?= $revisao->caixaAjustada() === 1 ? '' : 's' ?>
+            <?= $revisao->caixaAjustada() === 1 ? 'estava' : 'estavam' ?>
+            todo<?= $revisao->caixaAjustada() === 1 ? '' : 's' ?> em maiúsculas ou
+            minúsculas e <?= $revisao->caixaAjustada() === 1 ? 'foi ajustado' : 'foram ajustados' ?>,
+            porque é assim que o nome sai impresso no certificado. O nome colado
+            aparece abaixo do ajustado nas tabelas.
+            <div class="muted" style="margin-top: 6px;">
+                Acentos não são inventados: uma planilha em maiúsculas costuma ter
+                perdido os dele. Para gravar um nome exatamente como está escrito,
+                use <a href="certificados_nome.php">Corrigir um nome</a> depois.
+            </div>
+        </div>
+    <?php endif; ?>
 
     <form method="post" action="certificados_lote.php">
         <?= Csrf::campo(FORMULARIO) ?>

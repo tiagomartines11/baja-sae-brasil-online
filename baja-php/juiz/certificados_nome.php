@@ -210,6 +210,11 @@ $e = fn(string $v): string => Template::e($v);
                 <label for="nome">Nome correto</label>
                 <input type="text" id="nome" name="nome" required maxlength="300"
                        value="<?= $e($novoNome) ?>" />
+                <p class="muted">
+                    Gravado exatamente como digitado. A inserção ajusta nomes que
+                    chegam todos em maiúsculas ou minúsculas; aqui não — é este o
+                    lugar de acertar um acento ou uma grafia que a regra errou.
+                </p>
             </div>
 
             <?php foreach ($erros as $erro): ?>

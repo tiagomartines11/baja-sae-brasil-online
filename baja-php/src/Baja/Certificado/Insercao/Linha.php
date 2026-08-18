@@ -36,6 +36,16 @@ final class Linha
     /** The name that would be written, which is not always the one submitted. */
     public ?string $nome = null;
 
+    /**
+     * Whether the name was recased on the way in.
+     *
+     * Not a problem and not a decision — the rule applies without asking. It
+     * is here so the review screen can show what changed, because a name that
+     * differs from the sheet without a word said about it is worse than the
+     * ALL CAPS it replaced.
+     */
+    public bool $caixaAjustada = false;
+
     public ?ClassificacaoDocumento $documento = null;
 
     /** The row this one duplicates, when it duplicates one. */

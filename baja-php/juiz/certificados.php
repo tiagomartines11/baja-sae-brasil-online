@@ -189,6 +189,18 @@ if ($erroCsrf): ?>
         // "created" next to a warning they had not answered.
         $pronta = $linha !== null && $linha->podeGravar();
         ?>
+        <?php if ($linha !== null && $linha->caixaAjustada): ?>
+            <div class="alerta">
+                O nome será gravado como <strong><?= $e((string) $linha->nome) ?></strong>.
+                Estava todo em maiúsculas ou minúsculas, e é assim que sai impresso
+                no certificado.
+                <div class="muted" style="margin-top: 6px;">
+                    Acentos não são inventados. Para gravar exatamente como digitado,
+                    use <a href="certificados_nome.php">Corrigir um nome</a> depois.
+                </div>
+            </div>
+        <?php endif; ?>
+
         <?php if ($pronta): ?>
             <div class="alerta ok">
                 <?= $linha->problemas() === []
