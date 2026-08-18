@@ -362,29 +362,35 @@ final class Validador
                 return;
 
             case ClassificacaoDocumento::AMBIGUO:
-                $leituras = $classificacao->leiturasPossiveis();
+                // One resolution, never two. A CPF failing its check digits is
+                // not recorded as a CPF — see leiturasPossiveis(). Either it is
+                // a passport kept as digits, which this confirms, or it is a
+                // typo, which is fixed in the sheet.
                 $linha->adicionar(Problema::aviso(
                     Problema::DOCUMENTO_AMBIGUO,
-                    $classificacao->coluna === ClassificacaoDocumento::COLUNA_CPF
+                    $classificacao->cpf === null
                         ? sprintf(
-                            '"%s" está na coluna de CPF e não passa na verificação. Pode '
-                            . 'ser um CPF digitado errado no cadastro, que continua sendo '
-                            . 'um CPF, ou um documento que foi parar na coluna errada.',
+                            '"%s" tem dígitos demais para ser um CPF. Se for um passaporte '
+                            . 'ou documento estrangeiro, confirme abaixo.',
                             $classificacao->original
                         )
-                        : (count($leituras) === 1
+                        : ($classificacao->coluna === ClassificacaoDocumento::COLUNA_CPF
                         ? sprintf(
-                            '"%s" tem dígitos demais para ser um CPF, então só pode ser um '
-                            . 'documento estrangeiro. Confirme.',
+                            '"%s" está na coluna de CPF e não passa na verificação dos '
+                            . 'dígitos verificadores, então não pode ser gravado como CPF. '
+                            . 'Se estiver digitado errado, corrija na planilha. Se for um '
+                            . 'passaporte que foi parar nesta coluna, confirme abaixo.',
                             $classificacao->original
                         )
                         : sprintf(
-                            '"%s" não passa na verificação de CPF. Pode ser um CPF digitado '
-                            . 'errado no cadastro ou um passaporte registrado só com números — '
-                            . 'daqui não dá para saber qual.',
+                            '"%s" não passa na verificação dos dígitos verificadores de um '
+                            . 'CPF, então não pode ser gravado como CPF — é quase sempre '
+                            . 'erro de digitação, e nesse caso precisa ser corrigido na '
+                            . 'planilha. Se for um passaporte registrado só com números, '
+                            . 'confirme abaixo.',
                             $classificacao->original
                         )),
-                    $leituras,
+                    [Problema::LER_COMO_ESTRANGEIRO],
                     ['documento' => $classificacao->original]
                 ));
 
@@ -722,16 +728,13 @@ final class Validador
      */
     private function aplicarResolucoes(Linha $linha): void
     {
-        $leitura = $linha->resolucao(Problema::DOCUMENTO_AMBIGUO);
-        if ($leitura !== null && $linha->documento !== null) {
+        // The only reading on offer is the foreign one, so there is no branch
+        // here: confirming sends the value to documento_estrangeiro, never to
+        // cpf.
+        if ($linha->resolucao(Problema::DOCUMENTO_AMBIGUO) === Problema::LER_COMO_ESTRANGEIRO
+            && $linha->documento !== null) {
             $linha->cpf = null;
-            $linha->documentoEstrangeiro = null;
-
-            if ($leitura === Problema::LER_COMO_CPF) {
-                $linha->cpf = $linha->documento->cpf;
-            } else {
-                $linha->documentoEstrangeiro = $linha->documento->estrangeiro;
-            }
+            $linha->documentoEstrangeiro = $linha->documento->estrangeiro;
         }
 
         foreach ([Problema::NOME_DIVERGENTE_LEVE, Problema::NOME_DIVERGENTE] as $codigo) {

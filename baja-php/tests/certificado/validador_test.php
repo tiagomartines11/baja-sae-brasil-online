@@ -439,3 +439,63 @@ T::ok(
 );
 
 $cleanup();
+
+// --- an invalid CPF cannot be forced into the CPF column ---------------------------
+//
+// The check digits exist to catch transcription errors, so digits that fail
+// them are a typo with near certainty. Recording one as a CPF would create a
+// person nobody can find by their real number — including themselves — so the
+// option is not offered. What is offered is the reading that is actually
+// possible: a passport kept as digits.
+
+$typoLivre = substr($cpfLivre, 0, 10) . (substr($cpfLivre, 10, 1) === '9' ? '8' : '9');
+T::ok('the fixture really is an invalid CPF', !\Baja\Certificado\Documento::isValidCpf($typoLivre));
+
+$ruim = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $typoLivre]);
+
+$avisoDoc = null;
+foreach ($ruim->avisos() as $p) {
+    if ($p->codigo === Problema::DOCUMENTO_AMBIGUO) { $avisoDoc = $p; }
+}
+T::ok('a failing checksum still raises the document warning', $avisoDoc !== null);
+T::same([Problema::LER_COMO_ESTRANGEIRO], $avisoDoc->resolucoes, 'with exactly one resolution offered');
+T::ok('and it is not "it is a CPF"', !in_array('cpf', $avisoDoc->resolucoes, true));
+T::ok('the message says it cannot be recorded as a CPF', str_contains($avisoDoc->mensagem, 'não pode ser gravado como CPF'));
+
+// Confirming sends it to the foreign column, and never to cpf.
+$confirmado = $validador->validar(
+    [['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $typoLivre]],
+    [1 => [Problema::DOCUMENTO_AMBIGUO => Problema::LER_COMO_ESTRANGEIRO]]
+)[0];
+T::same(null, $confirmado->cpf, 'confirming never fills the CPF column');
+T::same($typoLivre, $confirmado->documentoEstrangeiro, 'it fills the foreign one');
+T::ok('and the row can then be written', $confirmado->podeGravar());
+
+// A resolution the form no longer offers is refused even if posted by hand.
+$forcado = $validador->validar(
+    [['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $typoLivre]],
+    [1 => [Problema::DOCUMENTO_AMBIGUO => 'cpf']]
+)[0];
+T::same(null, $forcado->resolucao(Problema::DOCUMENTO_AMBIGUO), 'posting the old value by hand is refused');
+T::same(null, $forcado->cpf, 'and writes nothing to the CPF column');
+T::ok('so the row still cannot be written', !$forcado->podeGravar());
+
+// The same holds when the operator mapped a column as CPF: their say-so about
+// the column does not make the digits right.
+$naColunaCpf = $validador->validar([[
+    'evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor',
+    'documento' => $typoLivre, 'documento_coluna' => 'cpf',
+]])[0];
+$avisoColuna = null;
+foreach ($naColunaCpf->avisos() as $p) {
+    if ($p->codigo === Problema::DOCUMENTO_AMBIGUO) { $avisoColuna = $p; }
+}
+T::same([Problema::LER_COMO_ESTRANGEIRO], $avisoColuna->resolucoes, 'a CPF column gets the same single resolution');
+T::ok('and is told to fix the sheet', str_contains($avisoColuna->mensagem, 'corrija na planilha'));
+
+// A valid CPF is unaffected: no warning, straight into the CPF column.
+$bom = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same($cpfLivre, $bom->cpf, 'a valid CPF still goes to the CPF column');
+T::same([], $codigos($bom), 'with nothing to answer');
+
+$cleanup();

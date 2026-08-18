@@ -48,8 +48,9 @@ $planilha   = null;
 $mapeamento = null;
 $revisao     = null;
 $resultado   = null;
-$pendentes   = [];
-$jaGravado   = null;
+$pendentes    = [];
+$jaGravado    = null;
+$tentouGravar = false;
 $irregulares = [];
 $loteAlvo    = '';
 
@@ -125,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
                 }
 
                 $gravando = in_array($pedido, ['gravar', 'gravar_parcial'], true);
+                $tentouGravar = $gravando;
 
                 if ($gravando && Gravador::loteExiste($loteAlvo)) {
                     // Already done. Saying so beats the alternative, which is
@@ -450,6 +452,12 @@ $e = fn(string $v): string => Template::e($v);
                 Falta dizer de onde vem:
                 <?= $e(implode(', ', array_map([Mapeamento::class, 'rotulo'], $faltando))) ?>.
             </div>
+        <?php elseif (($_POST['etapa'] ?? '') === 'revisar' && $irregulares !== []): ?>
+            <div class="alerta erro">
+                Não dá para conferir enquanto houver linha com menos colunas que o
+                esperado: os campos ficam deslocados e a conferência seria sobre os
+                valores errados.
+            </div>
         <?php endif; ?>
 
         <?php if ($irregulares !== []): ?>
@@ -467,7 +475,7 @@ $e = fn(string $v): string => Template::e($v);
         <?php endif; ?>
 
         <button type="submit" name="etapa" value="mapear" class="secundario">Reler com este mapeamento</button>
-        <button type="submit" name="etapa" value="revisar" <?= $mapeamento->valido() && $irregulares === [] ? '' : 'disabled' ?>>
+        <button type="submit" name="etapa" value="revisar">
             Conferir <?= count($planilha->linhas) ?> linha<?= count($planilha->linhas) === 1 ? '' : 's' ?>
         </button>
     </form>
@@ -652,15 +660,17 @@ $e = fn(string $v): string => Template::e($v);
         <div style="margin-top: 28px;">
             <?php if ($revisao->erros !== []): ?>
                 <div class="alerta erro">
+                    <?php if ($tentouGravar): ?><strong>Nada foi criado.</strong><?php endif; ?>
                     Corrija <?= count($revisao->erros) ?>
                     linha<?= count($revisao->erros) === 1 ? '' : 's' ?> na planilha
-                    e cole de novo. Nada foi criado.
+                    e cole de novo — ou crie agora só as que já estão resolvidas.
                 </div>
             <?php elseif ($revisao->pendentes() !== []): ?>
                 <div class="alerta aviso">
-                    Faltam <?= count($revisao->pendentes()) ?>
-                    decis<?= count($revisao->pendentes()) === 1 ? 'ão' : 'ões' ?>.
-                    Responda acima e confira de novo.
+                    <?php if ($tentouGravar): ?><strong>Nada foi criado.</strong><?php endif; ?>
+                    <?php $n = count($revisao->pendentes()); ?>
+                    <?= $n === 1 ? 'Falta 1 decisão destacada' : "Faltam $n decisões destacadas" ?>
+                    acima. Responda e envie de novo.
                 </div>
             <?php else: ?>
                 <div class="alerta ok">
@@ -694,7 +704,15 @@ $e = fn(string $v): string => Template::e($v);
                 </button>
             <?php endif; ?>
 
-            <button type="submit" name="etapa" value="gravar" <?= $revisao->podeGravar() ? '' : 'disabled' ?>>
+            <?php
+            // Never disabled. A disabled button is the one control that cannot
+            // tell you why it will not work: choosing a radio does not
+            // re-enable it, there is no script here to do so, and pressing it
+            // does nothing at all — which is exactly how somebody answers a
+            // question and then finds the page ignoring them. It submits, and
+            // the server, which re-validates anyway, says what is missing.
+            ?>
+            <button type="submit" name="etapa" value="gravar">
                 Criar <?= $revisao->aCriar() ?> certificado<?= $revisao->aCriar() === 1 ? '' : 's' ?>
             </button>
         </div>

@@ -262,6 +262,16 @@ lote_post() { # etapa lote_alvo
 
 revisao=$(lote_post revisar "")
 contains "the review offers to commit only the resolved rows" 'value="gravar_parcial"' "$revisao"
+
+# The primary button is never disabled. A disabled button is the one control
+# that cannot say why it will not work: choosing a radio does not re-enable it,
+# there is no script to do so, and pressing it does nothing at all — which is
+# how somebody answers a question and then finds the page ignoring them.
+lacks "the commit button is never rendered inert" 'value="gravar" disabled' "$revisao"
+
+recusado=$(lote_post gravar "")
+contains "pressing it unanswered says nothing was created" "Nada foi criado" "$recusado"
+contains "and says a decision is missing" "decis" "$recusado"
 alvo=$(printf '%s' "$revisao" | grep -o 'name="lote_alvo" value="[A-Za-z0-9_-]\{22\}"' | head -1 | sed 's/.*value="//; s/"//')
 if [[ -n "$alvo" ]]; then ok "the review carries a batch id"; else bad "the review carries a batch id"; fi
 

@@ -154,16 +154,31 @@ final class ClassificacaoDocumento
     /**
      * The readings a person may choose between for an ambiguous value.
      *
+     * One, and deliberately: a foreign document. There is no "record it as a
+     * CPF anyway".
+     *
+     * Digits that fail the check are a transcription error with near
+     * certainty — catching exactly that is what check digits are for — and
+     * writing them into `cpf` would create a person nobody can find by their
+     * real number, including themselves. The two things it can actually be
+     * are both reachable without that: a passport recorded as digits, which
+     * this confirms, or a mistyped CPF, which is fixed in the sheet.
+     *
+     * Nothing is lost by refusing. /buscar compares foreign documents by
+     * their digits, so somebody who registered under a mistyped number still
+     * finds their certificate by typing that same number — verified against
+     * the running system rather than assumed. What the old "É um CPF" option
+     * bought was the ability to put a known-wrong value in the column
+     * reserved for right ones.
+     *
+     * This governs creating records. Historical rows holding invalid CPFs are
+     * untouched and still resolve: the CHECK constraint deliberately does not
+     * test the check digits, because those rows must stay valid rows.
+     *
      * @return array<int, string>
      */
     public function leiturasPossiveis(): array
     {
-        if ($this->tipo !== self::AMBIGUO) {
-            return [];
-        }
-
-        return $this->cpf === null
-            ? [self::ESTRANGEIRO]
-            : [self::CPF, self::ESTRANGEIRO];
+        return $this->tipo === self::AMBIGUO ? [self::ESTRANGEIRO] : [];
     }
 }

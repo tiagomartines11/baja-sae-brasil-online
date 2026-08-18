@@ -39,15 +39,26 @@ T::same(C::ESTRANGEIRO, C::de('AB' . $cpf)->tipo, 'a letter beats the check digi
 $comTypo = substr($cpf, 0, 10) . (substr($cpf, 10, 1) === '9' ? '8' : '9');
 T::same(C::AMBIGUO, C::de($comTypo)->tipo, 'digits failing the checksum are ambiguous');
 T::ok('an ambiguous value is not resolved', !C::de($comTypo)->ehResolvida());
-T::same([C::CPF, C::ESTRANGEIRO], C::de($comTypo)->leiturasPossiveis(), 'and both readings are offered');
-T::same($comTypo, C::de($comTypo)->cpf, 'the CPF reading is carried, not chosen');
+// One reading, and only one. There is no "record it as a CPF anyway": digits
+// failing the check are a transcription error with near certainty, and writing
+// them to `cpf` would create a person nobody can find by their real number.
+// The two things the value can actually be are still both reachable — a
+// passport kept as digits, which this confirms, or a typo, which is fixed in
+// the sheet.
+T::same([C::ESTRANGEIRO], C::de($comTypo)->leiturasPossiveis(), 'the only reading offered is the foreign one');
+T::ok('never the CPF one', !in_array(C::CPF, C::de($comTypo)->leiturasPossiveis(), true));
+
+// The CPF candidate is still carried on the classification — the padding is
+// what tells the message how many digits it had — but carrying it is not
+// offering it.
+T::same($comTypo, C::de($comTypo)->cpf, 'the padded CPF candidate is still carried');
 T::same($comTypo, C::de($comTypo)->estrangeiro, 'and so is the foreign one');
 
 T::same(C::AMBIGUO, C::de('123456789012')->tipo, 'twelve digits are ambiguous, not a CPF');
 T::same(
     [C::ESTRANGEIRO],
     C::de('123456789012')->leiturasPossiveis(),
-    'and only the foreign reading is possible for them'
+    'and the foreign reading is the only one there too'
 );
 T::same(null, C::de('123456789012')->cpf, 'twelve digits carry no CPF reading');
 

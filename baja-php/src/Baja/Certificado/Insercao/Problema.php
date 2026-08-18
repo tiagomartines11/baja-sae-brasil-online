@@ -44,8 +44,12 @@ final class Problema
     // --- resolutions ---------------------------------------------------------
     /** Yes, I meant that. Used where there is nothing to choose between. */
     public const CONFIRMAR        = 'confirmar';
-    /** An ambiguous document: read it as one column or the other. */
-    public const LER_COMO_CPF     = 'cpf';
+    /**
+     * A document that cannot be a CPF: confirm it is a foreign one.
+     *
+     * There is no companion "read it as a CPF". A value failing the check
+     * digits is not written to that column at all.
+     */
     public const LER_COMO_ESTRANGEIRO = 'estrangeiro';
     /** A duplicate: leave the existing row alone, or overwrite its name. */
     public const IGNORAR          = 'ignorar';
@@ -134,7 +138,6 @@ final class Problema
     {
         return match ($resolucao) {
             self::CONFIRMAR             => 'Confirmar assim mesmo',
-            self::LER_COMO_CPF          => 'É um CPF',
             self::LER_COMO_ESTRANGEIRO  => 'É um passaporte ou documento estrangeiro',
             self::IGNORAR               => 'Não criar esta linha',
             self::ATUALIZAR             => 'Atualizar o registro existente',
