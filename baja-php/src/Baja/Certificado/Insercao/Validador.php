@@ -199,10 +199,10 @@ final class Validador
             return;
         }
 
-        // The code, or the event's name. A sheet exported from this system
-        // carries codes; one somebody built by hand carries names, because
-        // "27ª Competição Baja SAE BRASIL" is what the event is called
-        // everywhere except in this database.
+        // The code, or either of the two names the event goes by. A sheet
+        // exported from this system carries codes; one built by hand carries
+        // the formal `nome` a certificate prints or the short `titulo` with
+        // the year in it, depending on where it came from.
         $codigo = $this->eventos()->resolve($linha->eventoBruto);
 
         if ($codigo === null) {
@@ -215,7 +215,7 @@ final class Validador
                 $linha->adicionar(Problema::erro(
                     Problema::EVENTO_AMBIGUO,
                     sprintf(
-                        '"%s" é o nome de mais de um evento (%s). Use o código do evento.',
+                        '"%s" serve para mais de um evento (%s). Use o código do evento.',
                         $linha->eventoBruto,
                         implode(', ', $ambiguos)
                     ),
@@ -228,7 +228,7 @@ final class Validador
             $linha->adicionar(Problema::erro(
                 Problema::EVENTO_DESCONHECIDO,
                 sprintf(
-                    'Não existe evento com código nem nome "%s".',
+                    'Não existe evento com código, nome ou título "%s".',
                     $linha->eventoBruto
                 ),
                 ['campo' => 'evento']

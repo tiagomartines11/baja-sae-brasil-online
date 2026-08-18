@@ -396,7 +396,9 @@ $e = fn(string $v): string => Template::e($v);
         <p class="muted">
             Para os campos que não têm coluna própria. O normal é uma planilha ser
             de um evento só. Se houver coluna de evento, ela aceita o código
-            (<code>22BR</code>) ou o nome do evento por extenso.
+            (<code>22BR</code>), o nome por extenso
+            (<code>22ª Competição Baja SAE BRASIL - Etapa Sul</code>) ou o título
+            curto (<code>Baja SAE BRASIL - Etapa Sul 2025</code>).
         </p>
         <div class="campos">
             <div class="field">

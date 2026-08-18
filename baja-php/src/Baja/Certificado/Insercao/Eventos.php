@@ -9,25 +9,30 @@ use Baja\Model\EventoQuery;
  * Turning whatever the evento column says into an event code.
  *
  * A sheet exported from this system carries codes. A sheet somebody built by
- * hand carries names — "27ª Competição Baja SAE BRASIL" — because that is
- * what the event is called everywhere except in this database. Both have to
- * work, and neither may be guessed at.
+ * hand carries one of the two names the event actually goes by, because a
+ * code is what the event is called nowhere except in this database.
+ *
+ * There are two names because the table holds two. `nome` is the formal one
+ * that a certificate prints — "22ª Competição Baja SAE BRASIL - Etapa Sul" —
+ * and `titulo` is the short one with the year in it, "Baja SAE BRASIL - Etapa
+ * Sul 2025". Which one a sheet carries depends on where it was built, and
+ * neither is more correct than the other. Both resolve; nothing is guessed at.
  */
 final class Eventos
 {
     /** @var array<string, string>|null code => name, loaded once */
     private ?array $porCodigo = null;
 
-    /** @var array<string, array<int, string>>|null key => codes sharing it */
-    private ?array $porNome = null;
+    /** @var array<string, array<int, string>>|null key => codes answering to it */
+    private ?array $porChave = null;
 
     /**
      * The code for a submitted value, or null if it is not exactly one event.
      *
-     * Code first, then name. Both are matched on the shared comparison key,
-     * so case, accents and punctuation do not matter — and nothing looser
-     * than that. "Etapa Sul" and "Etapa Sudeste" share a prefix, and two
-     * events an hour apart in the calendar are worth exactly as much care as
+     * Code first, then either name. All three are matched on the shared
+     * comparison key, so case, accents and punctuation do not matter — and
+     * nothing looser than that. "Etapa Sul" and "Etapa Sudeste" share a
+     * prefix, and two events a season apart are worth exactly as much care as
      * two roles that read alike.
      */
     public function resolve(string $raw): ?string
@@ -44,16 +49,17 @@ final class Eventos
             }
         }
 
-        $candidatos = $this->porNome()[$chave] ?? [];
+        $candidatos = $this->porChave()[$chave] ?? [];
 
-        // Exactly one, or nothing. Event names are free text and nothing stops
-        // two of them being identical; picking one would file a batch of
-        // certificates under whichever event happened to sort first.
+        // Exactly one, or nothing. Both name columns are free text and nothing
+        // stops two events sharing a value, or one event's titulo reading like
+        // another's nome; picking one would file a batch of certificates under
+        // whichever happened to sort first.
         return count($candidatos) === 1 ? $candidatos[0] : null;
     }
 
     /**
-     * Codes whose name matches, when more than one does.
+     * Codes answering to this value, when more than one does.
      *
      * Lets the caller say "that name belongs to two events, which one" rather
      * than "no such event", which would be both wrong and unactionable.
@@ -68,7 +74,7 @@ final class Eventos
             return [];
         }
 
-        $candidatos = $this->porNome()[$chave] ?? [];
+        $candidatos = $this->porChave()[$chave] ?? [];
 
         return count($candidatos) > 1 ? $candidatos : [];
     }
@@ -92,35 +98,56 @@ final class Eventos
 
         $this->porCodigo = [];
         foreach (EventoQuery::create()->orderByEventoId('desc')->find() as $evento) {
-            // Stored names carry HTML entities as literal text — "Baja
-            // SAE&nbsp;BRASIL" holds those six characters. Decoding here is
-            // what makes the pasted name, which has a real space or a real
-            // non-breaking space in it, reach this row.
-            $this->porCodigo[(string) $evento->getEventoId()] = html_entity_decode(
-                (string) $evento->getNome(),
-                ENT_QUOTES | ENT_HTML5,
-                'UTF-8'
+            $this->porCodigo[(string) $evento->getEventoId()] = self::decodificar(
+                (string) $evento->getNome()
             );
         }
 
         return $this->porCodigo;
     }
 
-    /** @return array<string, array<int, string>> */
-    private function porNome(): array
+    /**
+     * Stored names carry HTML entities as literal text — "Baja SAE&nbsp;BRASIL"
+     * holds those six characters. Decoding is what lets a pasted name, which
+     * has a real space or a real non-breaking space in it, reach the row.
+     */
+    private static function decodificar(string $valor): string
     {
-        if ($this->porNome !== null) {
-            return $this->porNome;
+        return html_entity_decode($valor, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * Every written form an event answers to, mapped to the events answering.
+     *
+     * A code can appear under more than one key — its own nome and its own
+     * titulo — but only once per key, so an event whose two names happen to
+     * fold alike does not look like two candidates and trip the ambiguity
+     * check against itself.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function porChave(): array
+    {
+        if ($this->porChave !== null) {
+            return $this->porChave;
         }
 
-        $this->porNome = [];
-        foreach ($this->porCodigo() as $codigo => $nome) {
-            $chave = Nome::chave($nome);
-            if ($chave !== '') {
-                $this->porNome[$chave][] = $codigo;
+        $this->porChave = [];
+
+        foreach (EventoQuery::create()->orderByEventoId('desc')->find() as $evento) {
+            $codigo = (string) $evento->getEventoId();
+
+            foreach ([$evento->getNome(), $evento->getTitulo()] as $escrito) {
+                $chave = Nome::chave(self::decodificar((string) $escrito));
+
+                if ($chave === '' || in_array($codigo, $this->porChave[$chave] ?? [], true)) {
+                    continue;
+                }
+
+                $this->porChave[$chave][] = $codigo;
             }
         }
 
-        return $this->porNome;
+        return $this->porChave;
     }
 }

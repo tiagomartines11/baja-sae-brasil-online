@@ -267,13 +267,15 @@ T::ok('and the row still cannot be written', !$naoOferecida->podeGravar());
 
 $cleanup();
 
-// --- events by name as well as by code --------------------------------------------
+// --- events by either name, as well as by code -------------------------------------
 //
-// A sheet exported from this system carries codes. One somebody built by hand
-// carries names, because that is what the event is called everywhere except
-// in this database.
+// A sheet exported from this system carries codes. One built by hand carries
+// one of the two names the event actually goes by: the formal `nome` a
+// certificate prints, or the short `titulo` with the year in it. Which one
+// depends on where the sheet came from, and neither is more correct.
 
-$nomeDoEvento = html_entity_decode((string) $eventos[0]->getNome(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+$nomeDoEvento   = html_entity_decode((string) $eventos[0]->getNome(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+$tituloDoEvento = html_entity_decode((string) $eventos[0]->getTitulo(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
 $porNome = $uma(['evento' => $nomeDoEvento, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
 T::same($evA, $porNome->eventoId, 'the full event name resolves to its code');
@@ -296,8 +298,43 @@ T::ok(
 $codigoAinda = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
 T::same($evA, $codigoAinda->eventoId, 'the code still works');
 
+// The short title, which is a different string from the formal name and is
+// what a sheet built off the site's own menus tends to carry.
+if ($tituloDoEvento !== '') {
+    T::notSame($nomeDoEvento, $tituloDoEvento, 'the two names really are different strings');
+
+    $porTitulo = $uma(['evento' => $tituloDoEvento, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+    T::same($evA, $porTitulo->eventoId, 'the short title resolves to the same code');
+    T::same([], $codigos($porTitulo), 'and raises nothing');
+
+    $tituloFolded = $uma(['evento' => \Baja\Certificado\Nome::chave($tituloDoEvento), 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+    T::same($evA, $tituloFolded->eventoId, 'unaccented and lowercase, the title still resolves');
+
+    // Both readings of the same event must not look like two candidates and
+    // trip the ambiguity check against the event itself.
+    T::same([], (new \Baja\Certificado\Insercao\Eventos())->ambiguos($tituloDoEvento), 'one event is never ambiguous with itself');
+    T::same([], (new \Baja\Certificado\Insercao\Eventos())->ambiguos($nomeDoEvento), 'by either of its names');
+}
+
+// A title belonging to a different event resolves to that one, not this one —
+// which is the whole reason the year in the title matters.
+$outroTitulo = html_entity_decode((string) $eventos[1]->getTitulo(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+if ($outroTitulo !== '' && $outroTitulo !== $tituloDoEvento) {
+    $porOutro = $uma(['evento' => $outroTitulo, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+    T::same($evB, $porOutro->eventoId, "another event's title resolves to that event");
+    T::notSame($evA, $porOutro->eventoId, 'and never to this one');
+}
+
 $quase = $uma(['evento' => substr($nomeDoEvento, 0, 12), 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
 T::ok('half an event name is an error, not a nearest match', in_array(Problema::EVENTO_DESCONHECIDO, $codigos($quase), true));
+
+$meioTitulo = $uma(['evento' => 'Baja SAE BRASIL', 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::ok(
+    'a title without its year is an error, not a guess at the latest event',
+    in_array(Problema::EVENTO_DESCONHECIDO, $codigos($meioTitulo), true)
+        || in_array(Problema::EVENTO_AMBIGUO, $codigos($meioTitulo), true)
+);
+T::same(null, $meioTitulo->eventoId, 'and resolves to nothing');
 T::same(null, $quase->eventoId, 'and resolves to nothing');
 
 // --- separate CPF and passport columns ----------------------------------------------
