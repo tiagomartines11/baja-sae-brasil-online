@@ -77,7 +77,7 @@ T::same([], $padrao->faltando(), 'nothing is missing from it');
 
 $linha = ['22BR', 'João Silva', 'competidor', '52998224725'];
 T::same(
-    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'competidor', 'documento' => '52998224725', 'documento_coluna' => ''],
+    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'competidor', 'documento' => '52998224725', 'documento_secundario' => '', 'documento_coluna' => ''],
     $padrao->aplicar($linha),
     'the default mapping reads a row'
 );
@@ -86,7 +86,7 @@ T::same(
 $reordenado = new Mapeamento([0 => 'nome', 1 => 'documento', 2 => 'evento'], ['funcao' => 'comite']);
 T::ok('a reordered mapping with a page-level funcao is complete', $reordenado->valido());
 T::same(
-    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'comite', 'documento' => '529', 'documento_coluna' => ''],
+    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'comite', 'documento' => '529', 'documento_secundario' => '', 'documento_coluna' => ''],
     $reordenado->aplicar(['João Silva', '529', '22BR']),
     'columns are read in the order given and the fixed value fills the gap'
 );
@@ -94,7 +94,7 @@ T::same(
 // An ignored column in the middle.
 $comIgnorada = new Mapeamento([0 => 'evento', 1 => '', 2 => 'nome', 3 => 'funcao', 4 => 'documento']);
 T::same(
-    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'juiz', 'documento' => '529', 'documento_coluna' => ''],
+    ['evento' => '22BR', 'nome' => 'João Silva', 'funcao' => 'juiz', 'documento' => '529', 'documento_secundario' => '', 'documento_coluna' => ''],
     $comIgnorada->aplicar(['22BR', 'lixo', 'João Silva', 'juiz', '529']),
     'an ignored column is skipped'
 );
@@ -145,12 +145,12 @@ T::ok('a sheet with both document columns is a complete mapping', $duasColunas->
 T::same([], $duasColunas->faltando(), 'and nothing is missing from it');
 
 T::same(
-    ['evento' => '22BR', 'nome' => 'A B', 'funcao' => 'juiz', 'documento' => '52998224725', 'documento_coluna' => 'cpf'],
+    ['evento' => '22BR', 'nome' => 'A B', 'funcao' => 'juiz', 'documento' => '52998224725', 'documento_secundario' => '', 'documento_coluna' => 'cpf'],
     $duasColunas->aplicar(['22BR', 'A B', 'juiz', '52998224725', '']),
     'a filled CPF cell is read as a CPF'
 );
 T::same(
-    ['evento' => '22BR', 'nome' => 'A B', 'funcao' => 'juiz', 'documento' => '00987654', 'documento_coluna' => 'estrangeiro'],
+    ['evento' => '22BR', 'nome' => 'A B', 'funcao' => 'juiz', 'documento' => '00987654', 'documento_secundario' => '', 'documento_coluna' => 'estrangeiro'],
     $duasColunas->aplicar(['22BR', 'A B', 'juiz', '', '00987654']),
     'a filled passport cell is read as a foreign document'
 );

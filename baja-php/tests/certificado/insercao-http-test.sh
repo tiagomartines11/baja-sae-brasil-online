@@ -239,6 +239,60 @@ auditoria=$(docker exec "$APP" php -r '
 same "and the row it created carries its whole audit trail" "completo" "$auditoria"
 
 echo
+echo "--- a batch committed in part ---"
+lote_csrf=$(docker exec "$APP" php -r 'echo hash_hmac("sha256", "certificado-lote", "'"$PREFIX_COM"'");')
+
+# Two rows that are ready and two that are not: a deprecated funcao nobody has
+# confirmed, and a funcao that does not exist.
+# Documents of their own. Reusing one that another fixture already holds makes
+# these rows name conflicts instead, which is correct behaviour and not what
+# this section is testing. Check digits derived, never real.
+colagem=$(printf '22BR\tZZHttp Parcial Um Testeson\tcompetidor\t81818181800\t\n22BR\tZZHttp Parcial Dois Testeson\tjuiz\t\tZZ777888\n22BR\tZZHttp Parcial Tres Testeson\tfiscal\t82828282899\t\n22BR\tZZHttp Parcial Quatro Testeson\tnaoexiste\t\tZZ777999\n')
+
+lote_post() { # etapa lote_alvo
+    curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baja_u=2" -X POST \
+        --data-urlencode "_csrf=$lote_csrf" \
+        --data-urlencode "colado=$colagem" \
+        --data-urlencode "colunas[0]=evento" --data-urlencode "colunas[1]=nome" \
+        --data-urlencode "colunas[2]=funcao" --data-urlencode "colunas[3]=cpf" \
+        --data-urlencode "colunas[4]=passaporte" \
+        --data-urlencode "etapa=$1" --data-urlencode "lote_alvo=${2:-}" \
+        "$BASE/certificados_lote.php"
+}
+
+revisao=$(lote_post revisar "")
+contains "the review offers to commit only the resolved rows" 'value="gravar_parcial"' "$revisao"
+alvo=$(printf '%s' "$revisao" | grep -o 'name="lote_alvo" value="[A-Za-z0-9_-]\{22\}"' | head -1 | sed 's/.*value="//; s/"//')
+if [[ -n "$alvo" ]]; then ok "the review carries a batch id"; else bad "the review carries a batch id"; fi
+
+parcial=$(lote_post gravar_parcial "$alvo")
+contains "a partial commit reports the batch" "Lote criado" "$parcial"
+contains "and says what was left behind" "de fora" "$parcial"
+contains "handing the leftovers back as a sheet" 'name="colado"' "$parcial"
+contains "with a button to carry on with them" 'Continuar com' "$parcial"
+contains "the leftover sheet names the deprecated row" "ZZHttp Parcial Tres Testeson" "$parcial"
+lacks "and does not include a row that was created" "ZZHttp Parcial Um Testeson<" "$parcial"
+
+criadas=$(docker exec "$APP" php -r '
+    require "/var/www/html/vendor/autoload.php"; require "/var/www/html/src/config.php";
+    echo \Baja\Model\ParticipanteQuery::create()
+        ->filterByNome("ZZHttp Parcial%", \Propel\Runtime\ActiveQuery\Criteria::LIKE)->count();
+')
+same "only the resolved rows were created" 2 "$criadas"
+
+# What a browser sends when somebody presses F5 on that result.
+repetido=$(lote_post gravar_parcial "$alvo")
+contains "resending the commit is recognised, not repeated" "já foi criado" "$repetido"
+lacks "and does not claim to have created anything" "Lote criado" "$repetido"
+
+aindaCriadas=$(docker exec "$APP" php -r '
+    require "/var/www/html/vendor/autoload.php"; require "/var/www/html/src/config.php";
+    echo \Baja\Model\ParticipanteQuery::create()
+        ->filterByNome("ZZHttp Parcial%", \Propel\Runtime\ActiveQuery\Criteria::LIKE)->count();
+')
+same "so the row count is unchanged" 2 "$aindaCriadas"
+
+echo
 echo "--- the lookup page ---"
 consulta=$(body "$PREFIX_COM" /certificados_busca.php)
 contains "the lookup page offers an event filter" 'name="eventos[]"' "$consulta"

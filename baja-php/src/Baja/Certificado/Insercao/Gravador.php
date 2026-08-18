@@ -36,7 +36,7 @@ final class Gravador
      *                         not fully resolved is the failure this whole
      *                         review flow exists to prevent
      */
-    public function gravar(array $linhas): Resultado
+    public function gravar(array $linhas, ?string $lote = null): Resultado
     {
         foreach ($linhas as $linha) {
             if (!$linha->podeGravar()) {
@@ -48,7 +48,11 @@ final class Gravador
             }
         }
 
-        $lote     = Token::generate();
+        // The caller may name the batch in advance. The paste page does, and
+        // uses it to recognise a resubmitted form: if rows already exist under
+        // the id its form carries, the commit already happened and doing it
+        // again would create a second copy of the whole batch.
+        $lote     = $lote !== null && Token::isWellFormed($lote) ? $lote : Token::generate();
         $agora    = new DateTimeImmutable();
         $criadas  = 0;
         $atualizadas = 0;
@@ -200,6 +204,20 @@ final class Gravador
         }
 
         return ParticipanteQuery::create()->filterByLoteId($lote)->delete();
+    }
+
+    /**
+     * Whether a batch id has already been used.
+     *
+     * What makes a resubmitted commit form recognisable. Content cannot answer
+     * this — an operator may legitimately paste the same sheet twice for two
+     * different events — but a batch id can, because it belongs to one
+     * rendering of one form.
+     */
+    public static function loteExiste(string $lote): bool
+    {
+        return Token::isWellFormed($lote)
+            && ParticipanteQuery::create()->filterByLoteId($lote)->count() > 0;
     }
 
     /** @return array<int, Participante> */

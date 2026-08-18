@@ -5,6 +5,7 @@ namespace Baja\Juiz;
 use Baja\Certificado\Funcao;
 use Baja\Certificado\Insercao\Acesso;
 use Baja\Certificado\Insercao\Csrf;
+use Baja\Certificado\Insercao\Exportacao;
 use Baja\Certificado\Insercao\Gravador;
 use Baja\Certificado\Insercao\Mapeamento;
 use Baja\Certificado\Insercao\Planilha;
@@ -13,6 +14,7 @@ use Baja\Certificado\Insercao\Revisao;
 use Baja\Certificado\Insercao\Template;
 use Baja\Certificado\Insercao\Texto;
 use Baja\Certificado\Insercao\Validador;
+use Baja\Certificado\Token;
 use Baja\Model\EventoQuery;
 
 /**
@@ -44,9 +46,12 @@ $erroCsrf   = false;
 $colado     = '';
 $planilha   = null;
 $mapeamento = null;
-$revisao    = null;
-$resultado  = null;
+$revisao     = null;
+$resultado   = null;
+$pendentes   = [];
+$jaGravado   = null;
 $irregulares = [];
+$loteAlvo    = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
     if (!Csrf::postValido(FORMULARIO)) {
@@ -79,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
             // would show up as four unrelated errors about the wrong fields.
             $pedido = Texto::escalar($_POST['etapa'] ?? '');
 
-            if (in_array($pedido, ['revisar', 'gravar'], true) && $mapeamento->valido() && $irregulares === []) {
+            if (in_array($pedido, ['revisar', 'gravar', 'gravar_parcial'], true) && $mapeamento->valido() && $irregulares === []) {
                 $etapa = 'revisar';
 
                 $brutas = [];
@@ -108,14 +113,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$estourouPost) {
 
                 $revisao = new Revisao((new Validador())->validar($brutas, $escolhas));
 
-                // podeGravar() is re-checked here against this pass's
-                // validation, not against what the previous page rendered. The
-                // browser can post 'gravar' whenever it likes; what decides is
-                // whether the rows, re-read and re-validated a moment ago, are
-                // all ready.
-                if ($pedido === 'gravar' && $revisao->podeGravar()) {
-                    $resultado = (new Gravador((int) $usuario->getUserId()))->gravar($revisao->linhas);
-                    $etapa     = 'gravado';
+                // The batch id is decided when the review is rendered and
+                // travels with the form, so that a resubmitted commit — which
+                // is what a browser sends when somebody presses F5 on the
+                // result — is recognisable as the same commit rather than a
+                // new one. Content cannot tell us that: pasting the same sheet
+                // twice for two different events is a legitimate thing to do.
+                $loteAlvo = Texto::escalar($_POST['lote_alvo'] ?? '');
+                if (!Token::isWellFormed($loteAlvo)) {
+                    $loteAlvo = Token::generate();
+                }
+
+                $gravando = in_array($pedido, ['gravar', 'gravar_parcial'], true);
+
+                if ($gravando && Gravador::loteExiste($loteAlvo)) {
+                    // Already done. Saying so beats the alternative, which is
+                    // what happened before this check: the rows now exist, so
+                    // every one of them comes back flagged as a duplicate and
+                    // the operator is left wondering whether anything landed.
+                    $jaGravado = $loteAlvo;
+                    $etapa     = 'ja_gravado';
+                } elseif ($gravando) {
+                    // podeGravar() is re-checked here against this pass's
+                    // validation, not against what the previous page rendered.
+                    // The browser can post 'gravar' whenever it likes; what
+                    // decides is whether the rows, re-read and re-validated a
+                    // moment ago, are ready.
+                    $aGravar = $pedido === 'gravar_parcial'
+                        ? $revisao->prontas()
+                        : ($revisao->podeGravar() ? $revisao->linhas : []);
+
+                    if ($aGravar !== []) {
+                        $resultado = (new Gravador((int) $usuario->getUserId()))
+                            ->gravar($aGravar, $loteAlvo);
+                        $etapa     = 'gravado';
+
+                        // What was left behind, so the summary can hand it
+                        // back. Only meaningful for a partial commit; a whole
+                        // one leaves nothing.
+                        $pendentes = $pedido === 'gravar_parcial' ? $revisao->naoProntas() : [];
+                    }
                 }
             }
         }
@@ -143,7 +180,26 @@ $e = fn(string $v): string => Template::e($v);
     </div>
 <?php endif; ?>
 
-<?php if ($etapa === 'gravado' && $resultado !== null): ?>
+<?php if ($etapa === 'ja_gravado' && $jaGravado !== null): ?>
+
+<div class="card">
+    <h1>Este lote já foi criado</h1>
+    <p>
+        O formulário foi enviado duas vezes — normalmente é o F5 depois de criar.
+        Nada foi criado de novo.
+    </p>
+    <p class="muted">
+        Lote <code><?= $e($jaGravado) ?></code>, com
+        <?= count(Gravador::linhasDoLote($jaGravado)) ?> certificado<?=
+            count(Gravador::linhasDoLote($jaGravado)) === 1 ? '' : 's' ?>.
+    </p>
+    <p>
+        <a class="btn" href="lote.php?id=<?= urlencode($jaGravado) ?>">Ver o lote</a>
+        <a class="btn btn-secondary" href="certificados_lote.php">Colar outra planilha</a>
+    </p>
+</div>
+
+<?php elseif ($etapa === 'gravado' && $resultado !== null): ?>
 
 <div class="card">
     <h1>Lote criado</h1>
@@ -188,6 +244,60 @@ $e = fn(string $v): string => Template::e($v);
         ser encontrado — e desfeito — se tiver saído errado.
     </p>
 </div>
+
+<?php if ($pendentes !== []): ?>
+<div class="card">
+    <h2><?= count($pendentes) ?>
+        linha<?= count($pendentes) === 1 ? '' : 's' ?>
+        <?= count($pendentes) === 1 ? 'ficou' : 'ficaram' ?> de fora</h2>
+    <p>
+        <?= count($pendentes) === 1 ? 'Ela' : 'Elas' ?> não foram criadas e não estão
+        guardadas em nenhum lugar. Continue agora, ou copie as linhas abaixo para
+        resolver depois — é uma planilha como a que você colou, e pode ser colada de
+        volta aqui ou enviada para quem souber responder.
+    </p>
+
+    <form method="post" action="certificados_lote.php">
+        <?= Csrf::campo(FORMULARIO) ?>
+        <textarea name="colado" rows="<?= min(12, max(3, count($pendentes) + 1)) ?>"
+                  readonly onclick="this.select()"><?= $e(Exportacao::tsv($pendentes)) ?></textarea>
+        <?php foreach (Exportacao::mapeamento() as $indice => $campo): ?>
+            <input type="hidden" name="colunas[<?= (int) $indice ?>]" value="<?= $e($campo) ?>" />
+        <?php endforeach; ?>
+        <p class="muted">
+            Colunas: <?= $e(implode(', ', array_map([Mapeamento::class, 'rotulo'], Exportacao::mapeamento()))) ?>.
+            O botão abaixo já vem com esse mapeamento; se você colar em outra hora,
+            marque as colunas nessa ordem.
+        </p>
+        <button type="submit" name="etapa" value="revisar">
+            Continuar com <?= count($pendentes) ?>
+            linha<?= count($pendentes) === 1 ? '' : 's' ?>
+        </button>
+    </form>
+
+    <table style="margin-top: 20px;">
+        <thead><tr><th>#</th><th>Nome</th><th>Por que ficou de fora</th></tr></thead>
+        <tbody>
+            <?php foreach ($pendentes as $linha): ?>
+                <tr>
+                    <td><?= $linha->numero ?></td>
+                    <td><?= $e($linha->nomeBruto) ?></td>
+                    <td class="muted">
+                        <?php foreach ($linha->erros() as $problema): ?>
+                            <div style="color: var(--erro);"><?= $e($problema->mensagem) ?></div>
+                        <?php endforeach; ?>
+                        <?php foreach ($linha->avisos() as $problema): ?>
+                            <?php if ($linha->resolucao($problema->codigo) === null): ?>
+                                <div style="color: var(--aviso);"><?= $e($problema->mensagem) ?></div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?php endif; ?>
 
 <?php elseif ($etapa === 'colar'): ?>
 
@@ -415,6 +525,7 @@ $e = fn(string $v): string => Template::e($v);
     <form method="post" action="certificados_lote.php">
         <?= Csrf::campo(FORMULARIO) ?>
         <input type="hidden" name="colado" value="<?= $e($colado) ?>" />
+        <input type="hidden" name="lote_alvo" value="<?= $e($loteAlvo) ?>" />
         <?php foreach ($mapeamento->colunas() as $indice => $campo): ?>
             <input type="hidden" name="colunas[<?= (int) $indice ?>]" value="<?= $e($campo) ?>" />
         <?php endforeach; ?>
@@ -563,6 +674,24 @@ $e = fn(string $v): string => Template::e($v);
             <?php endif; ?>
 
             <button type="submit" name="etapa" value="revisar" class="secundario">Conferir de novo</button>
+
+            <?php if ($revisao->podeGravarParcial()): ?>
+                <?php
+                // Committing part of a batch is offered because the alternative
+                // is worse: an answer nobody has yet — "is this the same
+                // Maria?" — holds up every other row in the sheet, and the
+                // operator's way out is to edit the paste by hand. The rows
+                // that go in are still one transaction with one lote_id, so
+                // what landed is as identifiable as ever; the rest come back
+                // as a sheet.
+                ?>
+                <button type="submit" name="etapa" value="gravar_parcial">
+                    Criar <?= $revisao->aCriarProntas() ?>
+                    resolvida<?= $revisao->aCriarProntas() === 1 ? '' : 's' ?>
+                    e deixar <?= count($revisao->naoProntas()) ?> para depois
+                </button>
+            <?php endif; ?>
+
             <button type="submit" name="etapa" value="gravar" <?= $revisao->podeGravar() ? '' : 'disabled' ?>>
                 Criar <?= $revisao->aCriar() ?> certificado<?= $revisao->aCriar() === 1 ? '' : 's' ?>
             </button>

@@ -64,6 +64,62 @@ final class Revisao
         return true;
     }
 
+    /**
+     * The rows that could be written right now.
+     *
+     * @return array<int, Linha>
+     */
+    public function prontas(): array
+    {
+        return array_values(array_filter(
+            $this->linhas,
+            static fn (Linha $linha): bool => $linha->podeGravar()
+        ));
+    }
+
+    /**
+     * The rows that could not — an error, or a decision nobody has made.
+     *
+     * These are what a partial commit leaves behind, and what comes back out
+     * as a sheet. Errors and unanswered warnings end up in the same pile on
+     * purpose: from the operator's side both mean "I cannot deal with this
+     * one now", whether because the sheet is wrong or because the answer is
+     * in somebody else's head.
+     *
+     * @return array<int, Linha>
+     */
+    public function naoProntas(): array
+    {
+        return array_values(array_filter(
+            $this->linhas,
+            static fn (Linha $linha): bool => !$linha->podeGravar()
+        ));
+    }
+
+    /** How many rows a partial commit would actually create. */
+    public function aCriarProntas(): int
+    {
+        $n = 0;
+        foreach ($this->prontas() as $linha) {
+            if (!$linha->ehIgnorada()) {
+                $n++;
+            }
+        }
+
+        return $n;
+    }
+
+    /**
+     * Whether committing part of this batch is a meaningful thing to offer.
+     *
+     * Not when everything is ready — the ordinary button covers that — and not
+     * when nothing is, which would be a button that writes nothing.
+     */
+    public function podeGravarParcial(): bool
+    {
+        return $this->naoProntas() !== [] && $this->aCriarProntas() > 0;
+    }
+
     /** @return array<int, Linha> warnings still waiting for an answer */
     public function pendentes(): array
     {

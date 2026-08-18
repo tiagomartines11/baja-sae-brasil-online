@@ -53,7 +53,8 @@ final class Validador
                 Texto::limpar((string) ($bruta['nome'] ?? '')),
                 Texto::limpar((string) ($bruta['funcao'] ?? '')),
                 Texto::limpar((string) ($bruta['documento'] ?? '')),
-                (string) ($bruta['documento_coluna'] ?? ClassificacaoDocumento::COLUNA_QUALQUER)
+                (string) ($bruta['documento_coluna'] ?? ClassificacaoDocumento::COLUNA_QUALQUER),
+                Texto::limpar((string) ($bruta['documento_secundario'] ?? ''))
             );
         }
 
@@ -336,8 +337,12 @@ final class Validador
             case ClassificacaoDocumento::DOIS_DOCUMENTOS:
                 $linha->adicionar(Problema::erro(
                     Problema::DOIS_DOCUMENTOS,
-                    'Esta linha tem CPF e passaporte preenchidos. Uma pessoa tem um '
-                    . 'documento de identidade: apague o que não valer.',
+                    sprintf(
+                        'Esta linha tem CPF (%s) e passaporte (%s) preenchidos. Uma pessoa '
+                        . 'tem um documento de identidade: apague o que não valer.',
+                        $classificacao->original,
+                        $linha->documentoSecundario
+                    ),
                     ['campo' => 'documento']
                 ));
 

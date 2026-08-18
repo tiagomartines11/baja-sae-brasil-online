@@ -62,7 +62,13 @@ final class Linha
          * Which document column the operator said this came from, when they
          * said. Empty means "work it out from the value".
          */
-        public readonly string $colunaDocumento = ClassificacaoDocumento::COLUNA_QUALQUER
+        public readonly string $colunaDocumento = ClassificacaoDocumento::COLUNA_QUALQUER,
+        /**
+         * The other document value, when the row filled both columns. Kept so
+         * that a row handed back to the operator carries everything they
+         * pasted into it.
+         */
+        public readonly string $documentoSecundario = ''
     ) {
     }
 

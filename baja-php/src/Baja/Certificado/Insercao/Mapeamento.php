@@ -182,7 +182,7 @@ final class Mapeamento
      * the question downstream is only ever "which column does it belong in".
      *
      * @param array<int, string> $celulas
-     * @return array{evento: string, nome: string, funcao: string, documento: string, documento_coluna: string}
+     * @return array{evento: string, nome: string, funcao: string, documento: string, documento_secundario: string, documento_coluna: string}
      */
     public function aplicar(array $celulas): array
     {
@@ -190,10 +190,11 @@ final class Mapeamento
             'evento'           => '',
             'nome'             => '',
             'funcao'           => '',
-            'documento'        => '',
-            'cpf'              => '',
-            'passaporte'       => '',
-            'documento_coluna' => ClassificacaoDocumento::COLUNA_QUALQUER,
+            'documento'            => '',
+            'cpf'                  => '',
+            'passaporte'           => '',
+            'documento_secundario' => '',
+            'documento_coluna'     => ClassificacaoDocumento::COLUNA_QUALQUER,
         ];
 
         foreach ($this->colunas as $indice => $campo) {
@@ -219,8 +220,14 @@ final class Mapeamento
             // A person has one identity document. Two filled cells is a row
             // to look at, not a preference to resolve — and choosing either
             // would discard the other silently.
-            $valores['documento']        = $cpf;
-            $valores['documento_coluna'] = ClassificacaoDocumento::COLUNA_AMBAS;
+            //
+            // The second value is carried rather than dropped. This row gets
+            // left behind for the operator to sort out, and the sheet they get
+            // back has to hold everything they pasted, or fixing it means
+            // going to find the original again.
+            $valores['documento']            = $cpf;
+            $valores['documento_secundario'] = $passaporte;
+            $valores['documento_coluna']     = ClassificacaoDocumento::COLUNA_AMBAS;
         } elseif ($cpf !== '') {
             $valores['documento']        = $cpf;
             $valores['documento_coluna'] = ClassificacaoDocumento::COLUNA_CPF;
