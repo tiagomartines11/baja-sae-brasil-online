@@ -252,3 +252,61 @@ T::same(
 );
 
 $cleanup();
+
+// --- the blast radius, before it happens ----------------------------------------
+//
+// "Correct the stored name" is the resolution an operator reaches for
+// constantly, and it rewrites certificates that are already out in the world.
+// The warning has to carry the count and the events so the choice can say so
+// where it is offered, not after it is taken.
+
+$cleanup();
+$cpfAlcance = synthetic_cpf('112131415');
+foreach ([$evA, $evB, $evA] as $i => $ev) {
+    $p = new Participante();
+    $p->setNome($prefix . ' Marcos Vinicius Testeson');
+    $p->setFuncao(['competidor', 'juiz', 'orientador'][$i]);
+    $p->setCpf($cpfAlcance);
+    $p->setEventoId($ev);
+    $p->setCriadoPor(test_user_id());
+    $p->save();
+}
+
+$conflito = $validador->validar([
+    ['evento' => $evB, 'nome' => $prefix . ' Marcos Vinícius Testeson', 'funcao' => 'comite', 'documento' => $cpfAlcance],
+])[0];
+
+$aviso = null;
+foreach ($conflito->avisos() as $problema) {
+    if ($problema->codigo === Problema::NOME_DIVERGENTE_LEVE) {
+        $aviso = $problema;
+    }
+}
+
+T::ok('an accented correction raises the minor conflict', $aviso !== null);
+T::same(3, $aviso->contexto['linhas_afetadas'], 'the warning counts every row it would rewrite');
+T::same([$evB, $evA], $aviso->contexto['eventos_afetados'], 'and names every event, newest first');
+T::ok('the reach is stated in words', str_contains($aviso->alcance(), '3 certificados já emitidos'));
+T::ok('naming the events', str_contains($aviso->alcance(), $evA) && str_contains($aviso->alcance(), $evB));
+
+// A row that already holds the new name is not counted — the number shown has
+// to be the number that happens.
+$jaCorreto = $validador->validar([
+    ['evento' => $evB, 'nome' => $prefix . ' Marcos Vinicius Testeson', 'funcao' => 'comite', 'documento' => $cpfAlcance],
+])[0];
+$semConflito = true;
+foreach ($jaCorreto->avisos() as $problema) {
+    if ($problema->codigo === Problema::NOME_DIVERGENTE_LEVE) {
+        $semConflito = false;
+    }
+}
+T::ok('an identical name raises no conflict at all', $semConflito);
+
+// And what it says is what it does.
+$aplicar = $validador->validar([
+    ['evento' => $evB, 'nome' => $prefix . ' Marcos Vinícius Testeson', 'funcao' => 'comite', 'documento' => $cpfAlcance],
+], [1 => [Problema::NOME_DIVERGENTE_LEVE => Problema::ATUALIZAR_NOME]]);
+$r = $gravador->gravar($aplicar);
+T::same(3, $r->nomesCorrigidos, 'applying rewrites exactly the rows the warning counted');
+
+$cleanup();

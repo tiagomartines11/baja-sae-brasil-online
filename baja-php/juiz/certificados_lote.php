@@ -465,6 +465,9 @@ $e = fn(string $v): string => Template::e($v);
                                                        value="<?= $e($resolucao) ?>"
                                                        <?= (($_POST['resolucao'][$linha->numero][$problema->codigo] ?? '') === $resolucao) ? 'checked' : '' ?> />
                                                 <?= $e(Problema::rotuloResolucao($resolucao)) ?>
+    <?php if ($resolucao === Problema::ATUALIZAR_NOME && $problema->alcance() !== ''): ?>
+                                                <span class="muted">— <?= $e($problema->alcance()) ?></span>
+                                            <?php endif; ?>
                                             </label>
                                         <?php endforeach; ?>
                                     </div>

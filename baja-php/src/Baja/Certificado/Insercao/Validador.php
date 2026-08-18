@@ -537,6 +537,14 @@ final class Validador
         $identico = false;
         $parecido = false;
 
+        // What "correct the stored name" would actually rewrite. Collected
+        // here so the warning can say so where the choice is offered: the
+        // resolution is the one an operator reaches for constantly, and a
+        // name correction that silently rewrites six certificates across four
+        // years is not what they thought they were clicking.
+        $eventosAfetados = [];
+        $linhasAfetadas  = 0;
+
         foreach ($existentes as $row) {
             $armazenado = trim((string) $row->getNome());
             if ($armazenado === '') {
@@ -544,6 +552,11 @@ final class Validador
             }
 
             $nomes[$armazenado] = true;
+
+            if ($armazenado !== $linha->nome) {
+                $linhasAfetadas++;
+                $eventosAfetados[(string) $row->getEventoId()] = true;
+            }
 
             if ($armazenado === $linha->nome) {
                 $identico = true;
@@ -574,7 +587,11 @@ final class Validador
                     $lista
                 ),
                 [Problema::USAR_EXISTENTE, Problema::ATUALIZAR_NOME, Problema::MANTER_AMBOS],
-                ['nomes' => array_keys($nomes)]
+                [
+                    'nomes'            => array_keys($nomes),
+                    'eventos_afetados' => array_keys($eventosAfetados),
+                    'linhas_afetadas'  => $linhasAfetadas,
+                ]
             ));
 
             return;
@@ -591,7 +608,11 @@ final class Validador
                 $lista
             ),
             [Problema::USAR_EXISTENTE, Problema::ATUALIZAR_NOME, Problema::MANTER_AMBOS],
-            ['nomes' => array_keys($nomes)]
+            [
+                'nomes'            => array_keys($nomes),
+                'eventos_afetados' => array_keys($eventosAfetados),
+                'linhas_afetadas'  => $linhasAfetadas,
+            ]
         ));
     }
 

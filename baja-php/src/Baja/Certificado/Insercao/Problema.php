@@ -96,6 +96,36 @@ final class Problema
         return in_array($resolucao, $this->resolucoes, true);
     }
 
+    /**
+     * What choosing "correct the stored name" would actually rewrite.
+     *
+     * Empty when nothing would change. Shown beside the option rather than
+     * after it is taken, because this is the resolution an operator reaches
+     * for constantly — fixing "Joao" to "João" is exactly what it is for —
+     * and a name correction that silently rewrites six certificates across
+     * four years is not what they thought they were clicking. Those rows are
+     * what already-issued certificates render when re-downloaded, and what a
+     * verifier sees on /verificar.
+     */
+    public function alcance(): string
+    {
+        $linhas = (int) ($this->contexto['linhas_afetadas'] ?? 0);
+
+        if ($linhas === 0) {
+            return '';
+        }
+
+        $eventos = (array) ($this->contexto['eventos_afetados'] ?? []);
+
+        return sprintf(
+            'reescreve %d certificado%s já emitido%s%s',
+            $linhas,
+            $linhas === 1 ? '' : 's',
+            $linhas === 1 ? '' : 's',
+            $eventos === [] ? '' : ' (' . implode(', ', $eventos) . ')'
+        );
+    }
+
     /** How a resolution is offered to the user, in Portuguese. */
     public static function rotuloResolucao(string $resolucao): string
     {

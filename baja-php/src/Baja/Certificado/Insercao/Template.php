@@ -164,7 +164,15 @@ final class Template
         </div>
         <?php endif; ?>
     </header>
-    <div class="voltar"><a href="index.php">&larr; Voltar para a entrada de dados</a></div>
+    <nav class="voltar">
+        <a href="index.php">&larr; Entrada de dados</a>
+        &emsp;&middot;&emsp;
+        <a href="certificados.php">Novo certificado</a>
+        &emsp;&middot;&emsp;
+        <a href="certificados_lote.php">Inserção em lote</a>
+        &emsp;&middot;&emsp;
+        <a href="certificados_nome.php">Corrigir um nome</a>
+    </nav>
         <?php
     }
 
