@@ -74,8 +74,15 @@ Template::printHeader('Certificados - SAE BRASIL');
 
         <form method="post" action="/buscar" autocomplete="off">
             <div class="field">
-                <label for="documento">CPF ou documento estrangeiro</label>
-                <?php /* type="text", never type="number": a number input drops the
+                <label for="documento">CPF ou passaporte</label>
+                <?php /* "Passaporte", not "documento estrangeiro". The broader
+                         wording invited foreign participants to enter their national
+                         ID, which is not what is on file for them. The column behind
+                         this stays permissive and the search is unchanged — this
+                         narrows what is asked for, not what is accepted, so anyone
+                         already on file under something else still resolves.
+
+                         type="text", never type="number": a number input drops the
                          leading zero of a CPF that begins with one, and refuses the
                          punctuation people naturally type. Both forms are accepted
                          and normalized server-side. */ ?>
