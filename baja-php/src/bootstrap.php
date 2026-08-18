@@ -1,14 +1,28 @@
 <?php
-if (getenv('SKIP_AUTH')) {
+// Error display is decided twice, and the two decisions must agree: once here,
+// before the autoloader, so that a failure inside vendor/autoload.php or
+// config.php cannot leak a stack trace, and again below once Baja\Util\Env is
+// loadable. Only the second can use Env, hence the raw getenv() here.
+//
+// Deliberately keyed on ENV alone, not on SKIP_AUTH. Those are unrelated
+// questions — SKIP_AUTH says "this endpoint has no phpBB session", not "this
+// endpoint is safe to print filesystem paths to". Tying them together is what
+// left display_errors on in production for every vhost except the one
+// resultados location that happens to set the flag.
+ini_set('log_errors', '1');
+if (getenv('ENV') === 'prod') {
     ini_set('display_errors', 'Off');
-    error_reporting(0);
 }
 
 $_REQUEST = array_merge($_GET, $_POST);
 require_once(__DIR__ . "/../vendor/autoload.php");
 require_once(__DIR__ . "/config.php");
+
+// error_reporting stays at E_ALL in every environment: production still needs
+// notices in the log, it just must not render them into the response. In dev
+// they render, which is the point of dev.
 error_reporting(E_ALL);
-ini_set('display_errors', 'On');
+ini_set('display_errors', \Baja\Util\Env::isProduction() ? 'Off' : 'On');
 
 // Rate-limit API endpoints. Deliberately ahead of phpbb_login.php so a
 // throttled request is rejected before paying for session setup.
@@ -49,9 +63,10 @@ if (!getenv('SKIP_AUTH')) {
     require_once(__DIR__ . "/phpbb_login.php");
     $_DEV_MODE = $user->data["username"] == "Tiago" || $user->data["username"] == "jbresolin";
 } else {
+    // No error-reporting changes here on purpose. Whether a request renders
+    // errors is decided at the top of this file, from ENV alone; a SKIP_AUTH
+    // endpoint in dev should behave like every other dev endpoint.
     $_DEV_MODE = false;
-    ini_set('display_errors', 'Off');
-    error_reporting(0);
 }
 date_default_timezone_set('America/Sao_Paulo');
 
