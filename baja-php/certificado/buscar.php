@@ -13,6 +13,7 @@
  * event and every programme, so the event selector is gone.
  */
 
+use Baja\Certificado\Backoff;
 use Baja\Certificado\Busca;
 use Baja\Certificado\Config;
 use Baja\Certificado\Http;
@@ -37,8 +38,29 @@ $certificados = [];
 $failed       = false;
 
 if ($isPost) {
-    $certificados = Busca::run($documento, $nome);
-    $failed       = $certificados === [];
+    /*
+     * Count failures against the document rather than the caller. nginx limits
+     * by IP; this limits guessing at the name behind one CPF, which is the
+     * attack the design leaves open now that the CPF is out of the URL.
+     *
+     * A locked-out document takes the same path as a failed lookup and returns
+     * the same bytes. Saying "too many attempts" would confirm that somebody
+     * has been trying this document, which is the kind of answer this form
+     * exists not to give.
+     */
+    if (Backoff::allows($documento)) {
+        $certificados = Busca::run($documento, $nome);
+    }
+
+    $failed = $certificados === [];
+
+    if ($failed) {
+        Backoff::recordFailure($documento);
+    } else {
+        // Otherwise somebody who mistyped their name five times stays locked
+        // out for fifteen minutes after finally getting it right.
+        Backoff::clear($documento);
+    }
 }
 
 Template::printHeader('Certificados - SAE BRASIL');

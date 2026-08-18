@@ -128,6 +128,29 @@ root_headers=$(header_of "$BASE/")
 ok "the site root no longer serves an event selector" \
    "$(grep -qi '^Location:.*\/buscar' <<<"$root_headers" && echo 1 || echo 0)"
 
+# --- POST /buscar is rate limited, reads are not -----------------------------
+#
+# nginx cannot select a location by method, and the internal rewrite to
+# buscar.php restarts location matching, so the limit is keyed on
+# "$request_method:$uri" after the rewrite. If that key ever stops matching,
+# every POST goes through unlimited and nothing else looks wrong — hence this.
+
+limited=0
+for _ in $(seq 1 12); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+        --data-urlencode 'documento=99988877766' --data-urlencode 'nome=Teste Limite' "$BASE/buscar")
+    [[ "$code" == 429 ]] && limited=$((limited + 1))
+done
+ok "POST /buscar is rate limited" "$([[ "$limited" -gt 0 ]] && echo 1 || echo 0)" \
+   "$limited of 12 rejected"
+
+read_limited=0
+for _ in $(seq 1 12); do
+    [[ $(status_of "$BASE/buscar") == 429 ]] && read_limited=$((read_limited + 1))
+done
+ok "GET /buscar is not rate limited" "$([[ "$read_limited" -eq 0 ]] && echo 1 || echo 0)" \
+   "$read_limited of 12 rejected"
+
 # --- headers -----------------------------------------------------------------
 
 headers=$(header_of "$BASE/verificar/AAAAAAAAAAAAAAAAAAAAAA")
