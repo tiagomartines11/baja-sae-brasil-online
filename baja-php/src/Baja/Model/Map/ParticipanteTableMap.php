@@ -63,7 +63,7 @@ class ParticipanteTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 7;
+    public const NUM_COLUMNS = 6;
 
     /**
      * The number of lazy-loaded columns
@@ -73,12 +73,7 @@ class ParticipanteTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 7;
-
-    /**
-     * the column name for the idparticipantes field
-     */
-    public const COL_IDPARTICIPANTES = 'participantes.idparticipantes';
+    public const NUM_HYDRATE_COLUMNS = 6;
 
     /**
      * the column name for the nome field
@@ -124,11 +119,11 @@ class ParticipanteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['ParticipanteId', 'Nome', 'Funcao', 'Cpf', 'DocumentoEstrangeiro', 'EventoId', 'Token', ],
-        self::TYPE_CAMELNAME     => ['participanteId', 'nome', 'funcao', 'cpf', 'documentoEstrangeiro', 'eventoId', 'token', ],
-        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_IDPARTICIPANTES, ParticipanteTableMap::COL_NOME, ParticipanteTableMap::COL_FUNCAO, ParticipanteTableMap::COL_CPF, ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO, ParticipanteTableMap::COL_EVENTO, ParticipanteTableMap::COL_TOKEN, ],
-        self::TYPE_FIELDNAME     => ['idparticipantes', 'nome', 'funcao', 'cpf', 'documento_estrangeiro', 'evento', 'token', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, ]
+        self::TYPE_PHPNAME       => ['Nome', 'Funcao', 'Cpf', 'DocumentoEstrangeiro', 'EventoId', 'Token', ],
+        self::TYPE_CAMELNAME     => ['nome', 'funcao', 'cpf', 'documentoEstrangeiro', 'eventoId', 'token', ],
+        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_NOME, ParticipanteTableMap::COL_FUNCAO, ParticipanteTableMap::COL_CPF, ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO, ParticipanteTableMap::COL_EVENTO, ParticipanteTableMap::COL_TOKEN, ],
+        self::TYPE_FIELDNAME     => ['nome', 'funcao', 'cpf', 'documento_estrangeiro', 'evento', 'token', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, ]
     ];
 
     /**
@@ -140,11 +135,11 @@ class ParticipanteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['ParticipanteId' => 0, 'Nome' => 1, 'Funcao' => 2, 'Cpf' => 3, 'DocumentoEstrangeiro' => 4, 'EventoId' => 5, 'Token' => 6, ],
-        self::TYPE_CAMELNAME     => ['participanteId' => 0, 'nome' => 1, 'funcao' => 2, 'cpf' => 3, 'documentoEstrangeiro' => 4, 'eventoId' => 5, 'token' => 6, ],
-        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_IDPARTICIPANTES => 0, ParticipanteTableMap::COL_NOME => 1, ParticipanteTableMap::COL_FUNCAO => 2, ParticipanteTableMap::COL_CPF => 3, ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO => 4, ParticipanteTableMap::COL_EVENTO => 5, ParticipanteTableMap::COL_TOKEN => 6, ],
-        self::TYPE_FIELDNAME     => ['idparticipantes' => 0, 'nome' => 1, 'funcao' => 2, 'cpf' => 3, 'documento_estrangeiro' => 4, 'evento' => 5, 'token' => 6, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, ]
+        self::TYPE_PHPNAME       => ['Nome' => 0, 'Funcao' => 1, 'Cpf' => 2, 'DocumentoEstrangeiro' => 3, 'EventoId' => 4, 'Token' => 5, ],
+        self::TYPE_CAMELNAME     => ['nome' => 0, 'funcao' => 1, 'cpf' => 2, 'documentoEstrangeiro' => 3, 'eventoId' => 4, 'token' => 5, ],
+        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_NOME => 0, ParticipanteTableMap::COL_FUNCAO => 1, ParticipanteTableMap::COL_CPF => 2, ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO => 3, ParticipanteTableMap::COL_EVENTO => 4, ParticipanteTableMap::COL_TOKEN => 5, ],
+        self::TYPE_FIELDNAME     => ['nome' => 0, 'funcao' => 1, 'cpf' => 2, 'documento_estrangeiro' => 3, 'evento' => 4, 'token' => 5, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, ]
     ];
 
     /**
@@ -153,14 +148,6 @@ class ParticipanteTableMap extends TableMap
      * @var array<string>
      */
     protected $normalizedColumnNameMap = [
-        'ParticipanteId' => 'IDPARTICIPANTES',
-        'Participante.ParticipanteId' => 'IDPARTICIPANTES',
-        'participanteId' => 'IDPARTICIPANTES',
-        'participante.participanteId' => 'IDPARTICIPANTES',
-        'ParticipanteTableMap::COL_IDPARTICIPANTES' => 'IDPARTICIPANTES',
-        'COL_IDPARTICIPANTES' => 'IDPARTICIPANTES',
-        'idparticipantes' => 'IDPARTICIPANTES',
-        'participantes.idparticipantes' => 'IDPARTICIPANTES',
         'Nome' => 'NOME',
         'Participante.Nome' => 'NOME',
         'nome' => 'NOME',
@@ -222,15 +209,14 @@ class ParticipanteTableMap extends TableMap
         $this->setIdentifierQuoting(false);
         $this->setClassName('\\Baja\\Model\\Participante');
         $this->setPackage('Baja.Model');
-        $this->setUseIdGenerator(true);
+        $this->setUseIdGenerator(false);
         // columns
-        $this->addPrimaryKey('idparticipantes', 'ParticipanteId', 'INTEGER', true, null, null);
         $this->addColumn('nome', 'Nome', 'VARCHAR', false, 300, null);
         $this->addColumn('funcao', 'Funcao', 'VARCHAR', false, 45, null);
         $this->addColumn('cpf', 'Cpf', 'CHAR', false, 11, null);
         $this->addColumn('documento_estrangeiro', 'DocumentoEstrangeiro', 'VARCHAR', false, 32, null);
-        $this->addForeignPrimaryKey('evento', 'EventoId', 'CHAR' , 'evento', 'evento_id', true, 4, null);
-        $this->addColumn('token', 'Token', 'CHAR', false, 22, null);
+        $this->addForeignKey('evento', 'EventoId', 'CHAR', 'evento', 'evento_id', true, 4, null);
+        $this->addPrimaryKey('token', 'Token', 'CHAR', true, 22, null);
     }
 
     /**
@@ -250,63 +236,6 @@ class ParticipanteTableMap extends TableMap
     }
 
     /**
-     * Adds an object to the instance pool.
-     *
-     * Propel keeps cached copies of objects in an instance pool when they are retrieved
-     * from the database. In some cases you may need to explicitly add objects
-     * to the cache in order to ensure that the same objects are always returned by find*()
-     * and findPk*() calls.
-     *
-     * @param \Baja\Model\Participante $obj A \Baja\Model\Participante object.
-     * @param string|null $key Key (optional) to use for instance map (for performance boost if key was already calculated externally).
-     *
-     * @return void
-     */
-    public static function addInstanceToPool(Participante $obj, ?string $key = null): void
-    {
-        if (Propel::isInstancePoolingEnabled()) {
-            if (null === $key) {
-                $key = serialize([(null === $obj->getParticipanteId() || is_scalar($obj->getParticipanteId()) || is_callable([$obj->getParticipanteId(), '__toString']) ? (string) $obj->getParticipanteId() : $obj->getParticipanteId()), (null === $obj->getEventoId() || is_scalar($obj->getEventoId()) || is_callable([$obj->getEventoId(), '__toString']) ? (string) $obj->getEventoId() : $obj->getEventoId())]);
-            } // if key === null
-            self::$instances[$key] = $obj;
-        }
-    }
-
-    /**
-     * Removes an object from the instance pool.
-     *
-     * Propel keeps cached copies of objects in an instance pool when they are retrieved
-     * from the database.  In some cases -- especially when you override doDelete
-     * methods in your stub classes -- you may need to explicitly remove objects
-     * from the cache in order to prevent returning objects that no longer exist.
-     *
-     * @param mixed $value A \Baja\Model\Participante object or a primary key value.
-     *
-     * @return void
-     */
-    public static function removeInstanceFromPool($value): void
-    {
-        if (Propel::isInstancePoolingEnabled() && null !== $value) {
-            if (is_object($value) && $value instanceof \Baja\Model\Participante) {
-                $key = serialize([(null === $value->getParticipanteId() || is_scalar($value->getParticipanteId()) || is_callable([$value->getParticipanteId(), '__toString']) ? (string) $value->getParticipanteId() : $value->getParticipanteId()), (null === $value->getEventoId() || is_scalar($value->getEventoId()) || is_callable([$value->getEventoId(), '__toString']) ? (string) $value->getEventoId() : $value->getEventoId())]);
-
-            } elseif (is_array($value) && count($value) === 2) {
-                // assume we've been passed a primary key";
-                $key = serialize([(null === $value[0] || is_scalar($value[0]) || is_callable([$value[0], '__toString']) ? (string) $value[0] : $value[0]), (null === $value[1] || is_scalar($value[1]) || is_callable([$value[1], '__toString']) ? (string) $value[1] : $value[1])]);
-            } elseif ($value instanceof Criteria) {
-                self::$instances = [];
-
-                return;
-            } else {
-                $e = new PropelException("Invalid value passed to removeInstanceFromPool().  Expected primary key or \Baja\Model\Participante object; got " . (is_object($value) ? get_class($value) . ' object.' : var_export($value, true)));
-                throw $e;
-            }
-
-            unset(self::$instances[$key]);
-        }
-    }
-
-    /**
      * Retrieves a string version of the primary key from the DB resultset row that can be used to uniquely identify a row in this table.
      *
      * For tables with a single-column primary key, that simple pkey value will be returned.  For tables with
@@ -322,11 +251,11 @@ class ParticipanteTableMap extends TableMap
     public static function getPrimaryKeyHashFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM): ?string
     {
         // If the PK cannot be derived from the row, return NULL.
-        if ($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('ParticipanteId', TableMap::TYPE_PHPNAME, $indexType)] === null && $row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)] === null) {
+        if ($row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)] === null) {
             return null;
         }
 
-        return serialize([(null === $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('ParticipanteId', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('ParticipanteId', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('ParticipanteId', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('ParticipanteId', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 0 + $offset : static::translateFieldName('ParticipanteId', TableMap::TYPE_PHPNAME, $indexType)]), (null === $row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)])]);
+        return null === $row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)] || is_scalar($row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)]) || is_callable([$row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)], '__toString']) ? (string) $row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)] : $row[TableMap::TYPE_NUM == $indexType ? 5 + $offset : static::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)];
     }
 
     /**
@@ -343,20 +272,11 @@ class ParticipanteTableMap extends TableMap
      */
     public static function getPrimaryKeyFromRow(array $row, int $offset = 0, string $indexType = TableMap::TYPE_NUM)
     {
-            $pks = [];
-
-        $pks[] = (int) $row[
-            $indexType == TableMap::TYPE_NUM
-                ? 0 + $offset
-                : self::translateFieldName('ParticipanteId', TableMap::TYPE_PHPNAME, $indexType)
-        ];
-        $pks[] = (string) $row[
+        return (string) $row[
             $indexType == TableMap::TYPE_NUM
                 ? 5 + $offset
-                : self::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)
+                : self::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)
         ];
-
-        return $pks;
     }
 
     /**
@@ -457,7 +377,6 @@ class ParticipanteTableMap extends TableMap
     public static function addSelectColumns(Criteria $criteria, ?string $alias = null): void
     {
         if (null === $alias) {
-            $criteria->addSelectColumn(ParticipanteTableMap::COL_IDPARTICIPANTES);
             $criteria->addSelectColumn(ParticipanteTableMap::COL_NOME);
             $criteria->addSelectColumn(ParticipanteTableMap::COL_FUNCAO);
             $criteria->addSelectColumn(ParticipanteTableMap::COL_CPF);
@@ -465,7 +384,6 @@ class ParticipanteTableMap extends TableMap
             $criteria->addSelectColumn(ParticipanteTableMap::COL_EVENTO);
             $criteria->addSelectColumn(ParticipanteTableMap::COL_TOKEN);
         } else {
-            $criteria->addSelectColumn($alias . '.idparticipantes');
             $criteria->addSelectColumn($alias . '.nome');
             $criteria->addSelectColumn($alias . '.funcao');
             $criteria->addSelectColumn($alias . '.cpf');
@@ -490,7 +408,6 @@ class ParticipanteTableMap extends TableMap
     public static function removeSelectColumns(Criteria $criteria, ?string $alias = null): void
     {
         if (null === $alias) {
-            $criteria->removeSelectColumn(ParticipanteTableMap::COL_IDPARTICIPANTES);
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_NOME);
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_FUNCAO);
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_CPF);
@@ -498,7 +415,6 @@ class ParticipanteTableMap extends TableMap
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_EVENTO);
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_TOKEN);
         } else {
-            $criteria->removeSelectColumn($alias . '.idparticipantes');
             $criteria->removeSelectColumn($alias . '.nome');
             $criteria->removeSelectColumn($alias . '.funcao');
             $criteria->removeSelectColumn($alias . '.cpf');
@@ -545,17 +461,7 @@ class ParticipanteTableMap extends TableMap
             $criteria = $values->buildPkeyCriteria();
         } else { // it's a primary key, or an array of pks
             $criteria = new Criteria(ParticipanteTableMap::DATABASE_NAME);
-            // primary key is composite; we therefore, expect
-            // the primary key passed to be an array of pkey values
-            if (count($values) == count($values, COUNT_RECURSIVE)) {
-                // array is not multi-dimensional
-                $values = [$values];
-            }
-            foreach ($values as $value) {
-                $criterion = $criteria->getNewCriterion(ParticipanteTableMap::COL_IDPARTICIPANTES, $value[0]);
-                $criterion->addAnd($criteria->getNewCriterion(ParticipanteTableMap::COL_EVENTO, $value[1]));
-                $criteria->addOr($criterion);
-            }
+            $criteria->add(ParticipanteTableMap::COL_TOKEN, (array) $values, Criteria::IN);
         }
 
         $query = ParticipanteQuery::create()->mergeWith($criteria);
@@ -601,10 +507,6 @@ class ParticipanteTableMap extends TableMap
             $criteria = clone $criteria; // rename for clarity
         } else {
             $criteria = $criteria->buildCriteria(); // build Criteria from Participante object
-        }
-
-        if ($criteria->containsKey(ParticipanteTableMap::COL_IDPARTICIPANTES) && $criteria->keyContainsValue(ParticipanteTableMap::COL_IDPARTICIPANTES) ) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key ('.ParticipanteTableMap::COL_IDPARTICIPANTES.')');
         }
 
 

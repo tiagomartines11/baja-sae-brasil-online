@@ -2809,10 +2809,7 @@ abstract class Evento implements ActiveRecordInterface
         $participantesToDelete = $this->getParticipantes(new Criteria(), $con)->diff($participantes);
 
 
-        //since at least one column in the foreign key is at the same time a PK
-        //we can not just set a PK to NULL in the lines below. We have to store
-        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
-        $this->participantesScheduledForDeletion = clone $participantesToDelete;
+        $this->participantesScheduledForDeletion = $participantesToDelete;
 
         foreach ($participantesToDelete as $participanteRemoved) {
             $participanteRemoved->setEvento(null);
