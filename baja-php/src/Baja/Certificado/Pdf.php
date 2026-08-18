@@ -53,6 +53,12 @@ final class Pdf
         // no change to become true.
         $url = htmlspecialchars($certificado->getVerificationUrl(), ENT_QUOTES, 'UTF-8');
 
+        // Bottom left, in the empty region opposite the SAE International
+        // seal, where it balances the layout instead of crowding it. Rendered
+        // at ten pixels per module and scaled to 90pt here, so the module
+        // edges stay hard when the sheet is printed.
+        $qr = QrCode::dataUri($certificado->getVerificationUrl());
+
         return "<html>
 	<head>
 		<meta charset='utf-8' />
@@ -79,6 +85,9 @@ final class Pdf
 			<div style = 'font-size:16px; margin: 0 250px'>
 				Este documento eletrônico dispensa carimbo e assinatura.<br>Sua autenticidade pode ser comprovada acessando a seguinte página: <br>
 				<a href=\"" . $url . "\">" . $url . "</a>
+			</div>
+			<div style = 'position: absolute; left: 60px; bottom: 55px; text-align: center;'>
+				<img src=\"" . $qr . "\" style='width: 90pt; height: 90pt;' alt='' />
 			</div>
 		</div>
 	</body>
