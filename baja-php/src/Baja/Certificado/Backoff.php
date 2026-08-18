@@ -38,17 +38,39 @@ final class Backoff
      */
     public static function allows(string $documento): bool
     {
+        return self::retryAfterSeconds($documento) === null;
+    }
+
+    /**
+     * Seconds until this document may be tried again, or null if it may now.
+     *
+     * Exists so the page can say why it is refusing. That does not leak
+     * whether the document is on file: failures are counted for any value
+     * submitted, real or invented, so a made-up CPF reaches this state after
+     * five attempts exactly as a real one does. What it reveals is the
+     * caller's own recent history, which they already know.
+     */
+    public static function retryAfterSeconds(string $documento): ?int
+    {
         $redis = self::redis();
         if ($redis === null) {
-            return true;
+            return null;
         }
 
         try {
-            return (int) $redis->get(self::key($documento)) < self::MAX_FAILURES;
+            $key = self::key($documento);
+            if ((int) $redis->get($key) < self::MAX_FAILURES) {
+                return null;
+            }
+
+            $ttl = (int) $redis->ttl($key);
+
+            // A key with no expiry set yet counts as a full window.
+            return $ttl > 0 ? $ttl : self::WINDOW_SECONDS;
         } catch (\Throwable $e) {
             error_log('Certificado\Backoff: read failed; allowing: ' . $e->getMessage());
 
-            return true;
+            return null;
         }
     }
 
@@ -107,9 +129,21 @@ final class Backoff
      */
     private static function key(string $documento): string
     {
-        $normalized = Documento::digits($documento);
+        /*
+         * The same canonical form the lookup compares on, or the counter is
+         * bypassable by rewriting the same document. Stripping punctuation
+         * alone was not enough: leading zeros are insignificant to the search
+         * — an integer column dropped them years ago — so 123456, 0123456 and
+         * 00123456 all reach the same rows while hashing to different keys,
+         * and each spelling handed out another five attempts. There is no
+         * limit to how many zeros somebody can prepend.
+         *
+         * Letters come off for the same reason: AB123456 and 123456 are one
+         * document as far as /buscar is concerned, so they are one bucket.
+         */
+        $normalized = Documento::comparableEstrangeiro($documento);
         if ($normalized === '') {
-            $normalized = strtoupper(trim($documento));
+            $normalized = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $documento));
         }
 
         $secret = Env::get('CERT_BACKOFF_SECRET');

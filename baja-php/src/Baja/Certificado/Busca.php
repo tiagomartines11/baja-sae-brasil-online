@@ -75,6 +75,23 @@ final class Busca
     }
 
     /**
+     * A wait, in words a person can act on.
+     *
+     * Rounded up, so the page never tells somebody to come back sooner than
+     * it will actually let them.
+     */
+    public static function describeWait(int $seconds): string
+    {
+        if ($seconds < 60) {
+            return 'alguns segundos';
+        }
+
+        $minutes = (int) ceil($seconds / 60);
+
+        return $minutes === 1 ? '1 minuto' : $minutes . ' minutos';
+    }
+
+    /**
      * Every row filed under this document, in either column.
      *
      * Both are searched, and the person is never asked which kind of document

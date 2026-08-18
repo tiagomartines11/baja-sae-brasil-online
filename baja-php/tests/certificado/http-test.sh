@@ -84,9 +84,15 @@ ok "junk under /verificar/ returns the same body" \
 
 post_buscar() { curl -s "${CURL_ARGS[@]}" -X POST --data-urlencode "documento=$1" --data-urlencode "nome=$2" "$BASE/buscar"; }
 
-unknown_doc=$(post_buscar "98765432100" "Alguem Improvavel Inexistente")
-wrong_name=$(post_buscar "00012345678" "Nome Que Nao Confere")
-bare_first=$(post_buscar "00012345678" "Joao")
+# Fresh documents each run. Failures accumulate against a document, so fixed
+# ones drift into the throttled state after a few runs and start comparing a
+# different pair of responses than intended.
+doc_a="9${RANDOM}${RANDOM}0000"
+doc_b="8${RANDOM}${RANDOM}0000"
+
+unknown_doc=$(post_buscar "${doc_a:0:11}" "Alguem Improvavel Inexistente")
+wrong_name=$(post_buscar "${doc_b:0:11}" "Nome Que Nao Confere")
+bare_first=$(post_buscar "${doc_b:0:11}" "Joao")
 
 ok "unknown document and wrong name give byte-identical bodies" \
    "$([[ "$unknown_doc" == "$wrong_name" ]] && echo 1 || echo 0)" \
@@ -94,8 +100,13 @@ ok "unknown document and wrong name give byte-identical bodies" \
 ok "a rejected bare first name gives the same body too" \
    "$([[ "$unknown_doc" == "$bare_first" ]] && echo 1 || echo 0)"
 
-buscar_headers=$(header_of "$BASE/buscar")
-ok "/buscar sends Cache-Control: no-store" \
+# The per-document throttle is deliberately not exercised here. Reaching it
+# needs five failed lookups against one document, and nginx's per-address
+# limit refuses the sixth request of any kind long before that — which is
+# itself worth knowing: from a single address the address limit is always the
+# one that bites, and the document counter is what covers an attacker spread
+# across many. Its behaviour, including that a throttled invented document is
+# indistinguishable from a throttled real one, is tested in backoff_test.php.
    "$(grep -qi '^Cache-Control:.*no-store' <<<"$buscar_headers" && echo 1 || echo 0)"
 ok "/buscar sends X-Robots-Tag: noindex" \
    "$(grep -qi '^X-Robots-Tag: noindex' <<<"$buscar_headers" && echo 1 || echo 0)"

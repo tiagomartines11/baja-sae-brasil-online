@@ -36,6 +36,7 @@ $nome      = $isPost ? (string) ($_POST['nome'] ?? '') : '';
 
 $certificados = [];
 $failed       = false;
+$retryAfter   = null;
 
 if ($isPost) {
     /*
@@ -48,7 +49,9 @@ if ($isPost) {
      * has been trying this document, which is the kind of answer this form
      * exists not to give.
      */
-    if (Backoff::allows($documento)) {
+    $retryAfter = Backoff::retryAfterSeconds($documento);
+
+    if ($retryAfter === null) {
         $certificados = Busca::run($documento, $nome);
     }
 
@@ -101,7 +104,22 @@ Template::printHeader('Certificados - SAE BRASIL');
         </form>
     </div>
 
-<?php if ($isPost && $failed): ?>
+<?php if ($isPost && $failed && $retryAfter !== null): ?>
+    <div class="card">
+        <h2>Muitas tentativas</h2>
+        <p>
+            <?= htmlspecialchars(
+                sprintf(Config::THROTTLED_MESSAGE, Busca::describeWait($retryAfter)),
+                ENT_QUOTES,
+                'UTF-8'
+            ) ?>
+        </p>
+        <p class="muted">
+            Enquanto isso, confira se o nome informado está completo e igual ao
+            usado na inscrição do evento.
+        </p>
+    </div>
+<?php elseif ($isPost && $failed): ?>
     <div class="card">
         <h2>Nenhum certificado encontrado</h2>
         <p><?= htmlspecialchars(Config::FAILURE_MESSAGE, ENT_QUOTES, 'UTF-8') ?></p>

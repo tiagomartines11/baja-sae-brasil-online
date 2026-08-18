@@ -35,4 +35,20 @@ final class Config
      * person competed, which is itself personal data.
      */
     public const FAILURE_MESSAGE = 'Não foi possível localizar um certificado com os dados informados.';
+
+    /**
+     * Shown once a document has been tried and failed too many times.
+     *
+     * A third state rather than a variation on the message above, and it does
+     * not reopen the oracle that one exists to close: failures are counted for
+     * any value submitted, so an invented CPF reaches this state after five
+     * attempts exactly as a real one does. It reports the caller's own recent
+     * history, which they already know.
+     *
+     * Saying nothing was worse than a small disclosure here. Somebody who
+     * mistypes their name a few times, works out the right spelling and is
+     * then told their certificate does not exist has been given a false
+     * answer, with no way to tell that waiting would fix it.
+     */
+    public const THROTTLED_MESSAGE = 'Muitas tentativas com este documento. Aguarde %s e tente novamente.';
 }
