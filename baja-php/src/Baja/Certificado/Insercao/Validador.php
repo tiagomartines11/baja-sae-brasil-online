@@ -509,7 +509,15 @@ final class Validador
 
         $porCpf = [];
         if ($cpfs !== []) {
-            foreach (ParticipanteQuery::create()->filterByCpf(array_keys($cpfs))->find() as $row) {
+            $rows = ParticipanteQuery::create()
+                ->filterByCpf(array_keys($cpfs))
+                // Same exclusion Busca applies: a voided certificate is not a
+                // duplicate of the one being created, and its name is not a
+                // conflict with it.
+                ->filterByAnuladoEm(null, Criteria::ISNULL)
+                ->find();
+
+            foreach ($rows as $row) {
                 $porCpf[(string) $row->getCpf()][] = $row;
             }
         }
@@ -519,6 +527,7 @@ final class Validador
             $rows = ParticipanteQuery::create()
                 ->filterByDocumentoEstrangeiro(null, Criteria::ISNOTNULL)
                 ->filterByDocumentoEstrangeiro('', Criteria::NOT_EQUAL)
+                ->filterByAnuladoEm(null, Criteria::ISNULL)
                 ->find();
             $estrangeiras = iterator_to_array($rows, false);
         }

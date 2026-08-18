@@ -59,6 +59,11 @@ final class Consulta
     public const DOC_PASSAPORTE = 'passaporte';
     public const DOC_AMBOS      = 'ambos';
 
+    /** Valid certificates only, which is what somebody usually means. */
+    public const ESTADO_VALIDOS  = 'validos';
+    public const ESTADO_ANULADOS = 'anulados';
+    public const ESTADO_TODOS    = 'todos';
+
     public function __construct(
         /** @var array<int, string> event codes; empty means every event */
         private array $eventos = [],
@@ -66,7 +71,16 @@ final class Consulta
         private array $funcoes = [],
         private string $nome = '',
         private string $documento = '',
-        private string $tipoDocumento = self::DOC_AMBOS
+        private string $tipoDocumento = self::DOC_AMBOS,
+        /**
+         * Voided certificates are excluded by default.
+         *
+         * This is the one page that can see them at all, and it still should
+         * not show them mixed in unasked: a voided row looks like a valid
+         * certificate in a table, and somebody reading a list to answer "does
+         * this person have one" would get the wrong answer.
+         */
+        private string $estado = self::ESTADO_VALIDOS
     ) {
     }
 
@@ -96,7 +110,8 @@ final class Consulta
      */
     public function temFiltro(): bool
     {
-        return $this->eventos !== []
+        return $this->estado !== self::ESTADO_VALIDOS
+            || $this->eventos !== []
             || $this->funcoes !== []
             || Padrao::paraNome($this->nome) !== null
             || $this->padraoDocumento() !== []
@@ -112,6 +127,26 @@ final class Consulta
     public function tipoDocumento(): string
     {
         return $this->tipoDocumento;
+    }
+
+    public function estado(): string
+    {
+        return $this->estado;
+    }
+
+    /** @return array<int, string> */
+    public static function estados(): array
+    {
+        return [self::ESTADO_VALIDOS, self::ESTADO_ANULADOS, self::ESTADO_TODOS];
+    }
+
+    public static function rotuloEstado(string $estado): string
+    {
+        return match ($estado) {
+            self::ESTADO_ANULADOS => 'Só anulados',
+            self::ESTADO_TODOS    => 'Válidos e anulados',
+            default               => 'Só válidos',
+        };
     }
 
     public function total(): int
@@ -150,6 +185,12 @@ final class Consulta
         // becoming no filter at all. The page says why.
         if ($this->documentoImpossivel()) {
             return $query->where('1 = 0');
+        }
+
+        if ($this->estado === self::ESTADO_VALIDOS) {
+            $query->filterByAnuladoEm(null, Criteria::ISNULL);
+        } elseif ($this->estado === self::ESTADO_ANULADOS) {
+            $query->filterByAnuladoEm(null, Criteria::ISNOTNULL);
         }
 
         if ($this->eventos !== []) {

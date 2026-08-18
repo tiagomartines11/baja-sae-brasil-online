@@ -133,8 +133,17 @@ $e = fn(string $v): string => Template::e($v);
             </thead>
             <tbody>
                 <?php foreach ($linhas as $linha): ?>
-                    <tr>
-                        <td><?= $e((string) $linha->getNome()) ?></td>
+                    <tr<?= $linha->getAnuladoEm() !== null ? ' style="background: #fbf3f3;"' : '' ?>>
+                        <td>
+                            <?= $e((string) $linha->getNome()) ?>
+                            <?php if ($linha->getAnuladoEm() !== null): ?>
+                                <div style="font-size: 12px; color: var(--erro);">
+                                    anulado em <?= $e($linha->getAnuladoEm()->format('d/m/Y')) ?><?php
+                                        if ($linha->getAnuladoMotivo() !== null): ?> —
+                                        <?= $e((string) $linha->getAnuladoMotivo()) ?><?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </td>
                         <td><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
                         <td><?= $e((string) ($linha->getCpf() ?: $linha->getDocumentoEstrangeiro())) ?></td>
                         <td><?= $e((string) $linha->getEventoId()) ?></td>

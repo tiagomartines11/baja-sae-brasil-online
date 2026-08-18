@@ -37,15 +37,25 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildUserQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildUserQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
  *
- * @method     ChildUserQuery leftJoinParticipante($relationAlias = null) Adds a LEFT JOIN clause to the query using the Participante relation
- * @method     ChildUserQuery rightJoinParticipante($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Participante relation
- * @method     ChildUserQuery innerJoinParticipante($relationAlias = null) Adds a INNER JOIN clause to the query using the Participante relation
+ * @method     ChildUserQuery leftJoinParticipanteRelatedByCriadoPor($relationAlias = null) Adds a LEFT JOIN clause to the query using the ParticipanteRelatedByCriadoPor relation
+ * @method     ChildUserQuery rightJoinParticipanteRelatedByCriadoPor($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ParticipanteRelatedByCriadoPor relation
+ * @method     ChildUserQuery innerJoinParticipanteRelatedByCriadoPor($relationAlias = null) Adds a INNER JOIN clause to the query using the ParticipanteRelatedByCriadoPor relation
  *
- * @method     ChildUserQuery joinWithParticipante($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Participante relation
+ * @method     ChildUserQuery joinWithParticipanteRelatedByCriadoPor($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ParticipanteRelatedByCriadoPor relation
  *
- * @method     ChildUserQuery leftJoinWithParticipante() Adds a LEFT JOIN clause and with to the query using the Participante relation
- * @method     ChildUserQuery rightJoinWithParticipante() Adds a RIGHT JOIN clause and with to the query using the Participante relation
- * @method     ChildUserQuery innerJoinWithParticipante() Adds a INNER JOIN clause and with to the query using the Participante relation
+ * @method     ChildUserQuery leftJoinWithParticipanteRelatedByCriadoPor() Adds a LEFT JOIN clause and with to the query using the ParticipanteRelatedByCriadoPor relation
+ * @method     ChildUserQuery rightJoinWithParticipanteRelatedByCriadoPor() Adds a RIGHT JOIN clause and with to the query using the ParticipanteRelatedByCriadoPor relation
+ * @method     ChildUserQuery innerJoinWithParticipanteRelatedByCriadoPor() Adds a INNER JOIN clause and with to the query using the ParticipanteRelatedByCriadoPor relation
+ *
+ * @method     ChildUserQuery leftJoinParticipanteRelatedByAnuladoPor($relationAlias = null) Adds a LEFT JOIN clause to the query using the ParticipanteRelatedByAnuladoPor relation
+ * @method     ChildUserQuery rightJoinParticipanteRelatedByAnuladoPor($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ParticipanteRelatedByAnuladoPor relation
+ * @method     ChildUserQuery innerJoinParticipanteRelatedByAnuladoPor($relationAlias = null) Adds a INNER JOIN clause to the query using the ParticipanteRelatedByAnuladoPor relation
+ *
+ * @method     ChildUserQuery joinWithParticipanteRelatedByAnuladoPor($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ParticipanteRelatedByAnuladoPor relation
+ *
+ * @method     ChildUserQuery leftJoinWithParticipanteRelatedByAnuladoPor() Adds a LEFT JOIN clause and with to the query using the ParticipanteRelatedByAnuladoPor relation
+ * @method     ChildUserQuery rightJoinWithParticipanteRelatedByAnuladoPor() Adds a RIGHT JOIN clause and with to the query using the ParticipanteRelatedByAnuladoPor relation
+ * @method     ChildUserQuery innerJoinWithParticipanteRelatedByAnuladoPor() Adds a INNER JOIN clause and with to the query using the ParticipanteRelatedByAnuladoPor relation
  *
  * @method     ChildUserQuery leftJoinConfig($relationAlias = null) Adds a LEFT JOIN clause to the query using the Config relation
  * @method     ChildUserQuery rightJoinConfig($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Config relation
@@ -57,7 +67,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildUserQuery rightJoinWithConfig() Adds a RIGHT JOIN clause and with to the query using the Config relation
  * @method     ChildUserQuery innerJoinWithConfig() Adds a INNER JOIN clause and with to the query using the Config relation
  *
- * @method     \Baja\Model\ParticipanteQuery|\Baja\Model\ConfigQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \Baja\Model\ParticipanteQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ConfigQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildUser|null findOne(?ConnectionInterface $con = null) Return the first ChildUser matching the query
  * @method     ChildUser findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildUser matching the query, or a new ChildUser object populated from the query conditions when no match is found
@@ -488,7 +498,7 @@ abstract class UserQuery extends ModelCriteria
      *
      * @return $this The current query, for fluid interface
      */
-    public function filterByParticipante($participante, ?string $comparison = null)
+    public function filterByParticipanteRelatedByCriadoPor($participante, ?string $comparison = null)
     {
         if ($participante instanceof \Baja\Model\Participante) {
             $this
@@ -497,28 +507,28 @@ abstract class UserQuery extends ModelCriteria
             return $this;
         } elseif ($participante instanceof ObjectCollection) {
             $this
-                ->useParticipanteQuery()
+                ->useParticipanteRelatedByCriadoPorQuery()
                 ->filterByPrimaryKeys($participante->getPrimaryKeys())
                 ->endUse();
 
             return $this;
         } else {
-            throw new PropelException('filterByParticipante() only accepts arguments of type \Baja\Model\Participante or Collection');
+            throw new PropelException('filterByParticipanteRelatedByCriadoPor() only accepts arguments of type \Baja\Model\Participante or Collection');
         }
     }
 
     /**
-     * Adds a JOIN clause to the query using the Participante relation
+     * Adds a JOIN clause to the query using the ParticipanteRelatedByCriadoPor relation
      *
      * @param string|null $relationAlias Optional alias for the relation
      * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
      *
      * @return $this The current query, for fluid interface
      */
-    public function joinParticipante(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
+    public function joinParticipanteRelatedByCriadoPor(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
     {
         $tableMap = $this->getTableMap();
-        $relationMap = $tableMap->getRelation('Participante');
+        $relationMap = $tableMap->getRelation('ParticipanteRelatedByCriadoPor');
 
         // create a ModelJoin object for this join
         $join = new ModelJoin();
@@ -533,14 +543,14 @@ abstract class UserQuery extends ModelCriteria
             $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
             $this->addJoinObject($join, $relationAlias);
         } else {
-            $this->addJoinObject($join, 'Participante');
+            $this->addJoinObject($join, 'ParticipanteRelatedByCriadoPor');
         }
 
         return $this;
     }
 
     /**
-     * Use the Participante relation Participante object
+     * Use the ParticipanteRelatedByCriadoPor relation Participante object
      *
      * @see useQuery()
      *
@@ -550,15 +560,15 @@ abstract class UserQuery extends ModelCriteria
      *
      * @return \Baja\Model\ParticipanteQuery A secondary query class using the current class as primary query
      */
-    public function useParticipanteQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    public function useParticipanteRelatedByCriadoPorQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
     {
         return $this
-            ->joinParticipante($relationAlias, $joinType)
-            ->useQuery($relationAlias ? $relationAlias : 'Participante', '\Baja\Model\ParticipanteQuery');
+            ->joinParticipanteRelatedByCriadoPor($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ParticipanteRelatedByCriadoPor', '\Baja\Model\ParticipanteQuery');
     }
 
     /**
-     * Use the Participante relation Participante object
+     * Use the ParticipanteRelatedByCriadoPor relation Participante object
      *
      * @param callable(\Baja\Model\ParticipanteQuery):\Baja\Model\ParticipanteQuery $callable A function working on the related query
      *
@@ -568,12 +578,12 @@ abstract class UserQuery extends ModelCriteria
      *
      * @return $this
      */
-    public function withParticipanteQuery(
+    public function withParticipanteRelatedByCriadoPorQuery(
         callable $callable,
         string $relationAlias = null,
         ?string $joinType = Criteria::LEFT_JOIN
     ) {
-        $relatedQuery = $this->useParticipanteQuery(
+        $relatedQuery = $this->useParticipanteRelatedByCriadoPorQuery(
             $relationAlias,
             $joinType
         );
@@ -584,7 +594,7 @@ abstract class UserQuery extends ModelCriteria
     }
 
     /**
-     * Use the relation to Participante table for an EXISTS query.
+     * Use the ParticipanteRelatedByCriadoPor relation to the Participante table for an EXISTS query.
      *
      * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
      *
@@ -594,32 +604,32 @@ abstract class UserQuery extends ModelCriteria
      *
      * @return \Baja\Model\ParticipanteQuery The inner query object of the EXISTS statement
      */
-    public function useParticipanteExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    public function useParticipanteRelatedByCriadoPorExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
     {
         /** @var $q \Baja\Model\ParticipanteQuery */
-        $q = $this->useExistsQuery('Participante', $modelAlias, $queryClass, $typeOfExists);
+        $q = $this->useExistsQuery('ParticipanteRelatedByCriadoPor', $modelAlias, $queryClass, $typeOfExists);
         return $q;
     }
 
     /**
-     * Use the relation to Participante table for a NOT EXISTS query.
+     * Use the ParticipanteRelatedByCriadoPor relation to the Participante table for a NOT EXISTS query.
      *
-     * @see useParticipanteExistsQuery()
+     * @see useParticipanteRelatedByCriadoPorExistsQuery()
      *
      * @param string|null $modelAlias sets an alias for the nested query
      * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
      *
      * @return \Baja\Model\ParticipanteQuery The inner query object of the NOT EXISTS statement
      */
-    public function useParticipanteNotExistsQuery($modelAlias = null, $queryClass = null)
+    public function useParticipanteRelatedByCriadoPorNotExistsQuery($modelAlias = null, $queryClass = null)
     {
         /** @var $q \Baja\Model\ParticipanteQuery */
-        $q = $this->useExistsQuery('Participante', $modelAlias, $queryClass, 'NOT EXISTS');
+        $q = $this->useExistsQuery('ParticipanteRelatedByCriadoPor', $modelAlias, $queryClass, 'NOT EXISTS');
         return $q;
     }
 
     /**
-     * Use the relation to Participante table for an IN query.
+     * Use the ParticipanteRelatedByCriadoPor relation to the Participante table for an IN query.
      *
      * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
      *
@@ -629,27 +639,200 @@ abstract class UserQuery extends ModelCriteria
      *
      * @return \Baja\Model\ParticipanteQuery The inner query object of the IN statement
      */
-    public function useInParticipanteQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    public function useInParticipanteRelatedByCriadoPorQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
     {
         /** @var $q \Baja\Model\ParticipanteQuery */
-        $q = $this->useInQuery('Participante', $modelAlias, $queryClass, $typeOfIn);
+        $q = $this->useInQuery('ParticipanteRelatedByCriadoPor', $modelAlias, $queryClass, $typeOfIn);
         return $q;
     }
 
     /**
-     * Use the relation to Participante table for a NOT IN query.
+     * Use the ParticipanteRelatedByCriadoPor relation to the Participante table for a NOT IN query.
      *
-     * @see useParticipanteInQuery()
+     * @see useParticipanteRelatedByCriadoPorInQuery()
      *
      * @param string|null $modelAlias sets an alias for the nested query
      * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
      *
      * @return \Baja\Model\ParticipanteQuery The inner query object of the NOT IN statement
      */
-    public function useNotInParticipanteQuery($modelAlias = null, $queryClass = null)
+    public function useNotInParticipanteRelatedByCriadoPorQuery($modelAlias = null, $queryClass = null)
     {
         /** @var $q \Baja\Model\ParticipanteQuery */
-        $q = $this->useInQuery('Participante', $modelAlias, $queryClass, 'NOT IN');
+        $q = $this->useInQuery('ParticipanteRelatedByCriadoPor', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Participante object
+     *
+     * @param \Baja\Model\Participante|ObjectCollection $participante the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByParticipanteRelatedByAnuladoPor($participante, ?string $comparison = null)
+    {
+        if ($participante instanceof \Baja\Model\Participante) {
+            $this
+                ->addUsingAlias(UserTableMap::COL_USER_ID, $participante->getAnuladoPor(), $comparison);
+
+            return $this;
+        } elseif ($participante instanceof ObjectCollection) {
+            $this
+                ->useParticipanteRelatedByAnuladoPorQuery()
+                ->filterByPrimaryKeys($participante->getPrimaryKeys())
+                ->endUse();
+
+            return $this;
+        } else {
+            throw new PropelException('filterByParticipanteRelatedByAnuladoPor() only accepts arguments of type \Baja\Model\Participante or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the ParticipanteRelatedByAnuladoPor relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinParticipanteRelatedByAnuladoPor(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('ParticipanteRelatedByAnuladoPor');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'ParticipanteRelatedByAnuladoPor');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the ParticipanteRelatedByAnuladoPor relation Participante object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\ParticipanteQuery A secondary query class using the current class as primary query
+     */
+    public function useParticipanteRelatedByAnuladoPorQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinParticipanteRelatedByAnuladoPor($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ParticipanteRelatedByAnuladoPor', '\Baja\Model\ParticipanteQuery');
+    }
+
+    /**
+     * Use the ParticipanteRelatedByAnuladoPor relation Participante object
+     *
+     * @param callable(\Baja\Model\ParticipanteQuery):\Baja\Model\ParticipanteQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withParticipanteRelatedByAnuladoPorQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::LEFT_JOIN
+    ) {
+        $relatedQuery = $this->useParticipanteRelatedByAnuladoPorQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the ParticipanteRelatedByAnuladoPor relation to the Participante table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ParticipanteQuery The inner query object of the EXISTS statement
+     */
+    public function useParticipanteRelatedByAnuladoPorExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ParticipanteQuery */
+        $q = $this->useExistsQuery('ParticipanteRelatedByAnuladoPor', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the ParticipanteRelatedByAnuladoPor relation to the Participante table for a NOT EXISTS query.
+     *
+     * @see useParticipanteRelatedByAnuladoPorExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ParticipanteQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useParticipanteRelatedByAnuladoPorNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ParticipanteQuery */
+        $q = $this->useExistsQuery('ParticipanteRelatedByAnuladoPor', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the ParticipanteRelatedByAnuladoPor relation to the Participante table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ParticipanteQuery The inner query object of the IN statement
+     */
+    public function useInParticipanteRelatedByAnuladoPorQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ParticipanteQuery */
+        $q = $this->useInQuery('ParticipanteRelatedByAnuladoPor', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the ParticipanteRelatedByAnuladoPor relation to the Participante table for a NOT IN query.
+     *
+     * @see useParticipanteRelatedByAnuladoPorInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ParticipanteQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInParticipanteRelatedByAnuladoPorQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ParticipanteQuery */
+        $q = $this->useInQuery('ParticipanteRelatedByAnuladoPor', $modelAlias, $queryClass, 'NOT IN');
         return $q;
     }
 

@@ -198,13 +198,20 @@ class UserTableMap extends TableMap
      */
     public function buildRelations(): void
     {
-        $this->addRelation('Participante', '\\Baja\\Model\\Participante', RelationMap::ONE_TO_MANY, array (
+        $this->addRelation('ParticipanteRelatedByCriadoPor', '\\Baja\\Model\\Participante', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (
     0 => ':criado_por',
     1 => ':user_id',
   ),
-), 'SET NULL', 'CASCADE', 'Participantes', false);
+), 'SET NULL', 'CASCADE', 'ParticipantesRelatedByCriadoPor', false);
+        $this->addRelation('ParticipanteRelatedByAnuladoPor', '\\Baja\\Model\\Participante', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':anulado_por',
+    1 => ':user_id',
+  ),
+), 'SET NULL', 'CASCADE', 'ParticipantesRelatedByAnuladoPor', false);
         $this->addRelation('Config', '\\Baja\\Model\\Config', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (

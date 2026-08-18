@@ -178,6 +178,27 @@
         <parameter name="Collate" value="ascii_bin"/>
       </vendor>
     </column>
+    <!-- Voiding. A certificate issued in error stops being valid without the
+         row being destroyed, because destroying it would take the audit trail
+         with it — and this action reaches certificates issued years ago, which
+         somebody may already hold. Whoever voided it and why are the first two
+         questions anybody asks afterwards, so they are on the record rather
+         than in a log that rotates.
+
+         Distinct from deleting a lote, which really does remove rows: that
+         exists to undo a paste minutes old, where nothing has been issued to
+         anybody yet. These two are different actions with different meanings
+         and the interface names them differently.
+
+         A voided row is excluded from /verificar, from /buscar, and from
+         duplicate detection — so the same certificate can be issued again
+         afterwards, which is usually the point of voiding one. -->
+    <column name="anulado_em" phpName="AnuladoEm" type="TIMESTAMP" sqlType="DATETIME"/>
+    <column name="anulado_por" phpName="AnuladoPor" type="INTEGER"/>
+    <!-- Required by the interface, nullable in the schema: existing rows have
+         no reason because they are not voided. latin1 like every other text
+         column here, so the same character-set check applies to it. -->
+    <column name="anulado_motivo" phpName="AnuladoMotivo" type="VARCHAR" size="255"/>
     <foreign-key foreignTable="evento" name="participantes_evento_id" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="evento" foreign="evento_id"/>
     </foreign-key>
@@ -189,6 +210,9 @@
     <foreign-key foreignTable="user" name="participantes_criado_por" onDelete="SETNULL" onUpdate="CASCADE">
       <reference local="criado_por" foreign="user_id"/>
     </foreign-key>
+    <foreign-key foreignTable="user" name="participantes_anulado_por" onDelete="SETNULL" onUpdate="CASCADE">
+      <reference local="anulado_por" foreign="user_id"/>
+    </foreign-key>
     <index name="participantes_evento_id_idx">
       <index-column name="evento"/>
     </index>
@@ -199,6 +223,16 @@
     <index name="participantes_criado_por_idx">
       <index-column name="criado_por"/>
     </index>
+    <!-- Declared rather than left to Propel, which needs an index on a foreign
+         key column and otherwise invents one called `fi_ticipantes_anulado_por`
+         — a truncation, and not a name anybody would look for. -->
+    <index name="participantes_anulado_por_idx">
+      <index-column name="anulado_por"/>
+    </index>
+    <!-- No index on anulado_em, deliberately. Every query filtering on it
+         either resolves a single row by primary key first (/verificar) or is
+         already a scan for want of an index on the searchable columns
+         (/buscar, the admin lookup), so one here would earn nothing. -->
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>
     </vendor>

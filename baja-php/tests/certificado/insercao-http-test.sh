@@ -321,5 +321,81 @@ semToken=$(curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baj
 lacks "a search without a token returns nothing" "ZZHttp Fulano de Tal Testeson" "$semToken"
 
 echo
+echo "--- voiding a certificate ---"
+busca_csrf2=$(docker exec "$APP" php -r 'echo hash_hmac("sha256", "certificado-busca", "'"$PREFIX_COM"'");')
+
+alvoToken=$(docker exec "$APP" php -r '
+    require "/var/www/html/vendor/autoload.php"; require "/var/www/html/src/config.php";
+    $row = \Baja\Model\ParticipanteQuery::create()
+        ->filterByNome("ZZHttp Fulano%", \Propel\Runtime\ActiveQuery\Criteria::LIKE)->findOne();
+    echo $row ? $row->getToken() : "";
+')
+
+if [[ -z "$alvoToken" ]]; then
+    skip "voiding tests (no row to void)"
+else
+    anular() { # acao vistos motivo
+        curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baja_u=2" -X POST \
+            --data-urlencode "_csrf=$busca_csrf2" \
+            --data-urlencode "tokens[]=$alvoToken" \
+            --data-urlencode "acao=$1" \
+            --data-urlencode "vistos=$2" \
+            --data-urlencode "motivo=$3" \
+            --data-urlencode "estado=todos" \
+            "$BASE/certificados_busca.php"
+    }
+
+    previa=$(anular anular "" "")
+    contains "voiding shows what it will change first" "ZZHttp Fulano de Tal Testeson" "$previa"
+    contains "and names the certificate" "$alvoToken" "$previa"
+    contains "and asks for a reason" 'name="motivo"' "$previa"
+    contains "and says the row is not deleted" "não é apagada" "$previa"
+
+    semMotivo=$(anular anular_confirmado 1 "")
+    contains "a confirmation with no reason is refused" "Diga por que" "$semMotivo"
+
+    aindaValido=$(curl -s "${CURL_ARGS[@]}" -o /dev/null -w '%{http_code}' \
+        "$(docker exec "$APP" php -r '
+            require "/var/www/html/vendor/autoload.php";
+            echo \Baja\Url::subdomain("certificado", "/verificar/'"$alvoToken"'");
+        ')" 2>/dev/null || echo "000")
+    grey "      (public check of $alvoToken before voiding: $aindaValido)"
+
+    desatualizado=$(anular anular_confirmado 9 "motivo qualquer")
+    contains "a stale count is refused" "A lista mudou" "$desatualizado"
+
+    feito=$(anular anular_confirmado 1 "anulado pelo teste automatizado")
+    contains "voiding with a reason succeeds" "anulado" "$feito"
+
+    estadoRow=$(docker exec "$APP" php -r '
+        require "/var/www/html/vendor/autoload.php"; require "/var/www/html/src/config.php";
+        $row = \Baja\Model\ParticipanteQuery::create()->filterByToken("'"$alvoToken"'")->findOne();
+        if (!$row) { echo "linha apagada"; exit; }
+        echo ($row->getAnuladoEm() && $row->getAnuladoPor() && $row->getAnuladoMotivo())
+            ? "anulado com registro" : "sem registro";
+    ')
+    same "the row survives, carrying who voided it and why" "anulado com registro" "$estadoRow"
+
+    naoResolve=$(docker exec "$APP" php -r '
+        require "/var/www/html/vendor/autoload.php"; require "/var/www/html/src/config.php";
+        echo \Baja\Certificado\Certificado::fromToken("'"$alvoToken"'") === null ? "nao resolve" : "ainda resolve";
+    ')
+    same "and the certificate no longer resolves for /verificar" "nao resolve" "$naoResolve"
+
+    escondido=$(curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baja_u=2" -X POST \
+        --data-urlencode "_csrf=$busca_csrf2" --data-urlencode "nome=ZZHttp*Testeson" \
+        --data-urlencode "tipo_documento=ambos" --data-urlencode "estado=validos" \
+        "$BASE/certificados_busca.php")
+    lacks "a voided certificate is out of the default lookup" "$alvoToken" "$escondido"
+
+    visivel=$(curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baja_u=2" -X POST \
+        --data-urlencode "_csrf=$busca_csrf2" --data-urlencode "nome=ZZHttp*Testeson" \
+        --data-urlencode "tipo_documento=ambos" --data-urlencode "estado=anulados" \
+        "$BASE/certificados_busca.php")
+    contains "but is listed when they ask for voided ones" "$alvoToken" "$visivel"
+    contains "with the reason on show" "anulado pelo teste automatizado" "$visivel"
+fi
+
+echo
 echo "$PASS passed, $FAIL failed, $SKIP skipped"
 [[ $FAIL -eq 0 ]]

@@ -4,6 +4,7 @@ namespace Baja\Juiz;
 
 use Baja\Certificado\Funcao;
 use Baja\Certificado\Insercao\Acesso;
+use Baja\Certificado\Insercao\Anulacao;
 use Baja\Certificado\Insercao\Consulta;
 use Baja\Certificado\Insercao\Csrf;
 use Baja\Certificado\Insercao\Eventos;
@@ -37,12 +38,22 @@ $funcoesSel  = [];
 $nome        = '';
 $documento   = '';
 $tipoDoc     = Consulta::DOC_AMBOS;
+$estado      = Consulta::ESTADO_VALIDOS;
 $pagina      = 1;
 $erroCsrf    = false;
 $erroNome    = '';
 $consulta    = null;
 $linhas      = [];
 $total       = 0;
+
+$acao          = '';
+$selecionados  = [];
+$aAnular       = [];
+$motivo        = '';
+$errosMotivo   = [];
+$anuladas      = null;
+$restauradas   = null;
+$listaMudou    = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!Csrf::postValido(FORMULARIO)) {
@@ -57,6 +68,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (Funcao::exists($codigo)) {
                 $funcoesSel[] = $codigo;
             }
+        }
+
+        $acao   = Texto::escalar($_POST['acao'] ?? '');
+        $motivo = Texto::limpar(Texto::escalar($_POST['motivo'] ?? ''));
+
+        foreach (Texto::mapaDeTexto($_POST['tokens'] ?? []) as $token) {
+            $selecionados[] = $token;
+        }
+
+        $estado = Texto::escalar($_POST['estado'] ?? Consulta::ESTADO_VALIDOS);
+        if (!in_array($estado, Consulta::estados(), true)) {
+            $estado = Consulta::ESTADO_VALIDOS;
         }
 
         $nome      = Texto::limpar(Texto::escalar($_POST['nome'] ?? ''));
@@ -78,7 +101,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $erroNome = 'O nome buscado tem caracteres que não existem em nenhum nome registrado: '
                 . implode(', ', array_map([Texto::class, 'descrever'], $ruins)) . '.';
         } else {
-            $consulta = new Consulta($eventosSel, $funcoesSel, $nome, $documento, $tipoDoc);
+            // --- voiding, and undoing it -----------------------------------
+            //
+            // Two steps on purpose. 'anular'/'restaurar' only ever renders the
+            // list about to change; the write happens on the confirmation,
+            // which echoes back the count it displayed. That both enforces the
+            // preview and catches a list that moved underneath — somebody else
+            // voiding one of these in between would otherwise be silently
+            // included in a number the operator never saw.
+            if (in_array($acao, ['anular', 'restaurar', 'anular_confirmado', 'restaurar_confirmado'], true)) {
+                $aAnular = Anulacao::linhas($selecionados);
+            }
+
+            if ($acao === 'anular' || $acao === 'anular_confirmado') {
+                $errosMotivo = Anulacao::problemasDoMotivo($motivo);
+            }
+
+            $confirmado = (int) Texto::escalar($_POST['vistos'] ?? '-1');
+            $listaMudou = str_ends_with($acao, '_confirmado') && $confirmado !== count($aAnular);
+
+            if ($acao === 'anular_confirmado' && $errosMotivo === [] && !$listaMudou && $aAnular !== []) {
+                $anuladas = (new Anulacao((int) $usuario->getUserId()))->anular($selecionados, $motivo);
+            }
+
+            if ($acao === 'restaurar_confirmado' && !$listaMudou && $aAnular !== []) {
+                $restauradas = (new Anulacao((int) $usuario->getUserId()))->restaurar($selecionados);
+            }
+
+            $consulta = new Consulta($eventosSel, $funcoesSel, $nome, $documento, $tipoDoc, $estado);
             $total    = $consulta->total();
             $linhas   = $consulta->pagina($pagina);
         }
@@ -103,6 +153,138 @@ $resumo = function (array $selecionados, string $vazio) use ($e): string {
 
 <?php if ($erroCsrf): ?>
     <div class="alerta erro">A sessão do formulário expirou. Faça a busca de novo.</div>
+<?php endif; ?>
+
+<?php if ($anuladas !== null): ?>
+    <div class="alerta ok">
+        <strong><?= (int) $anuladas ?> certificado<?= $anuladas === 1 ? '' : 's' ?>
+        anulado<?= $anuladas === 1 ? '' : 's' ?>.</strong>
+        <?= $anuladas === 1 ? 'Ele deixa' : 'Eles deixam' ?> de ser confirmado<?= $anuladas === 1 ? '' : 's' ?>
+        em <code>/verificar</code> e de aparecer na busca pública. O registro
+        continua aqui, com o motivo e quem anulou.
+    </div>
+<?php endif; ?>
+
+<?php if ($restauradas !== null): ?>
+    <div class="alerta ok">
+        <strong><?= (int) $restauradas ?> certificado<?= $restauradas === 1 ? '' : 's' ?>
+        restaurado<?= $restauradas === 1 ? '' : 's' ?>.</strong>
+        <?= $restauradas === 1 ? 'Ele volta' : 'Eles voltam' ?> a ser confirmado<?= $restauradas === 1 ? '' : 's' ?>.
+        O registro da anulação anterior não fica guardado.
+    </div>
+<?php endif; ?>
+
+<?php if ($listaMudou): ?>
+    <div class="alerta erro">
+        A lista mudou desde a conferência e nada foi alterado. Confira de novo.
+    </div>
+<?php endif; ?>
+
+<?php
+// The confirmation step: exactly what is about to change, and nothing else on
+// the page competing for attention.
+// Also on a confirmation that did not go through — a missing or unusable
+// reason, or a list that moved. Without this the error has nowhere to render
+// and the operator sees the search results again as though they had never
+// pressed the button.
+$falhou = str_ends_with($acao, '_confirmado') && $anuladas === null && $restauradas === null;
+
+$confirmando = in_array($acao, ['anular', 'restaurar'], true) || $falhou;
+$restaurando = str_starts_with($acao, 'restaurar');
+?>
+
+<?php if ($confirmando && $aAnular !== []): ?>
+<div class="card">
+    <h1><?= $restaurando ? 'Restaurar' : 'Anular' ?>
+        <?= count($aAnular) ?> certificado<?= count($aAnular) === 1 ? '' : 's' ?></h1>
+
+    <?php if ($restaurando): ?>
+        <p>
+            <?= count($aAnular) === 1 ? 'Este certificado volta' : 'Estes certificados voltam' ?>
+            a ser confirmado<?= count($aAnular) === 1 ? '' : 's' ?> em <code>/verificar</code>.
+        </p>
+        <p class="muted">
+            O registro da anulação — motivo, data e quem anulou — não fica guardado.
+            Guardá-lo exigiria um histórico de mudanças, que este sistema não tem.
+        </p>
+    <?php else: ?>
+        <p>
+            <?= count($aAnular) === 1 ? 'Este certificado deixa' : 'Estes certificados deixam' ?>
+            de ser confirmado<?= count($aAnular) === 1 ? '' : 's' ?> em <code>/verificar</code>
+            e de aparecer na busca pública. Quem já tiver baixado o PDF continua com
+            uma cópia; o endereço de verificação impresso nele passa a responder que
+            não encontrou nada.
+        </p>
+        <p class="muted">
+            A linha não é apagada: o nome, o documento, quem emitiu e agora quem
+            anulou continuam registrados. Para desfazer uma colagem inteira que saiu
+            errada, use <a href="certificados_lote.php">a página do lote</a> — lá as
+            linhas são realmente removidas, e isso só faz sentido para uma colagem
+            recém-feita.
+        </p>
+    <?php endif; ?>
+
+    <table>
+        <thead><tr><th>Nome</th><th>Evento</th><th>Função</th><th>Certificado</th><th>Estado</th></tr></thead>
+        <tbody>
+            <?php foreach ($aAnular as $linha): ?>
+                <tr>
+                    <td><?= $e(trim((string) $linha->getNome())) ?></td>
+                    <td><?= $e((string) $linha->getEventoId()) ?></td>
+                    <td><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
+                    <td><code><?= $e((string) $linha->getToken()) ?></code></td>
+                    <td class="muted">
+                        <?php if ($linha->getAnuladoEm() !== null): ?>
+                            já anulado em <?= $e($linha->getAnuladoEm()->format('d/m/Y')) ?>
+                        <?php else: ?>
+                            válido
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <form method="post" action="certificados_busca.php" style="margin-top: 20px;">
+        <?= Csrf::campo(FORMULARIO) ?>
+        <?php foreach ($aAnular as $linha): ?>
+            <input type="hidden" name="tokens[]" value="<?= $e((string) $linha->getToken()) ?>" />
+        <?php endforeach; ?>
+        <input type="hidden" name="vistos" value="<?= count($aAnular) ?>" />
+        <input type="hidden" name="estado" value="<?= $e($estado) ?>" />
+        <input type="hidden" name="nome" value="<?= $e($nome) ?>" />
+        <input type="hidden" name="documento" value="<?= $e($documento) ?>" />
+        <input type="hidden" name="tipo_documento" value="<?= $e($tipoDoc) ?>" />
+        <?php foreach ($eventosSel as $codigo): ?>
+            <input type="hidden" name="eventos[]" value="<?= $e($codigo) ?>" />
+        <?php endforeach; ?>
+        <?php foreach ($funcoesSel as $codigo): ?>
+            <input type="hidden" name="funcoes[]" value="<?= $e($codigo) ?>" />
+        <?php endforeach; ?>
+
+        <?php if (!$restaurando): ?>
+            <div class="field">
+                <label for="motivo">Motivo</label>
+                <input type="text" id="motivo" name="motivo" required
+                       maxlength="<?= Anulacao::MOTIVO_MAX ?>" value="<?= $e($motivo) ?>"
+                       placeholder="ex.: emitido em duplicidade para o mesmo participante" />
+                <p class="muted">
+                    Fica no registro. É a única parte que ninguém consegue reconstruir depois.
+                </p>
+            </div>
+            <?php foreach ($errosMotivo as $erro): ?>
+                <div class="alerta erro"><?= $e($erro) ?></div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <button type="submit" name="acao" value="<?= $restaurando ? 'restaurar_confirmado' : 'anular_confirmado' ?>"
+                class="<?= $restaurando ? '' : 'perigo' ?>">
+            <?= $restaurando ? 'Restaurar' : 'Anular' ?> <?= count($aAnular) ?>
+            certificado<?= count($aAnular) === 1 ? '' : 's' ?>
+        </button>
+        <a class="btn btn-secondary" href="certificados_busca.php">Cancelar</a>
+    </form>
+</div>
 <?php endif; ?>
 
 <div class="card">
@@ -188,6 +370,22 @@ $resumo = function (array $selecionados, string $vazio) use ($e): string {
             </div>
         </div>
 
+        <div class="field">
+            <label for="estado">Situação</label>
+            <select id="estado" name="estado">
+                <?php foreach (Consulta::estados() as $opcao): ?>
+                    <option value="<?= $e($opcao) ?>" <?= $estado === $opcao ? 'selected' : '' ?>>
+                        <?= $e(Consulta::rotuloEstado($opcao)) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <p class="muted">
+                Certificados anulados ficam fora por padrão. Eles não aparecem em
+                <code>/verificar</code> nem na busca pública, mas continuam registrados
+                aqui — com o motivo e quem anulou.
+            </p>
+        </div>
+
         <?php if ($erroNome !== ''): ?>
             <div class="alerta erro"><?= $e($erroNome) ?></div>
         <?php endif; ?>
@@ -235,20 +433,48 @@ $resumo = function (array $selecionados, string $vazio) use ($e): string {
                 <p class="muted">Página <?= $pagina ?> de <?= $paginas ?>.</p>
             <?php endif; ?>
 
+            <form method="post" action="certificados_busca.php" id="acoes">
+            <?= Csrf::campo(FORMULARIO) ?>
+            <input type="hidden" name="estado" value="<?= $e($estado) ?>" />
+            <input type="hidden" name="nome" value="<?= $e($nome) ?>" />
+            <input type="hidden" name="documento" value="<?= $e($documento) ?>" />
+            <input type="hidden" name="tipo_documento" value="<?= $e($tipoDoc) ?>" />
+            <?php foreach ($eventosSel as $codigo): ?>
+                <input type="hidden" name="eventos[]" value="<?= $e($codigo) ?>" />
+            <?php endforeach; ?>
+            <?php foreach ($funcoesSel as $codigo): ?>
+                <input type="hidden" name="funcoes[]" value="<?= $e($codigo) ?>" />
+            <?php endforeach; ?>
+
             <table>
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Nome</th><th>Evento</th><th>Função</th><th>Documento</th>
                         <th>Certificado</th><th>Origem</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($linhas as $linha):
-                        $token = (string) $linha->getToken();
-                        $doc   = (string) ($linha->getCpf() ?: $linha->getDocumentoEstrangeiro());
+                        $token   = (string) $linha->getToken();
+                        $doc     = (string) ($linha->getCpf() ?: $linha->getDocumentoEstrangeiro());
+                        $anulado = $linha->getAnuladoEm() !== null;
                     ?>
-                        <tr>
-                            <td><?= $e(trim((string) $linha->getNome())) ?></td>
+                        <tr<?= $anulado ? ' style="background: #fbf3f3;"' : '' ?>>
+                            <td>
+                                <input type="checkbox" name="tokens[]" value="<?= $e($token) ?>"
+                                       aria-label="selecionar" />
+                            </td>
+                            <td>
+                                <?= $e(trim((string) $linha->getNome())) ?>
+                                <?php if ($anulado): ?>
+                                    <div class="muted" style="font-size: 12px; color: var(--erro);">
+                                        anulado em <?= $e($linha->getAnuladoEm()->format('d/m/Y')) ?><?php
+                                            if ($linha->getAnuladoMotivo() !== null): ?> —
+                                            <?= $e((string) $linha->getAnuladoMotivo()) ?><?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td><?= $e((string) $linha->getEventoId()) ?></td>
                             <td><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
                             <td>
@@ -275,6 +501,21 @@ $resumo = function (array $selecionados, string $vazio) use ($e): string {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <div style="margin-top: 16px;">
+                <button type="submit" name="acao" value="anular" class="secundario">
+                    Anular selecionados&hellip;
+                </button>
+                <?php if ($estado !== Consulta::ESTADO_VALIDOS): ?>
+                    <button type="submit" name="acao" value="restaurar" class="secundario">
+                        Restaurar selecionados&hellip;
+                    </button>
+                <?php endif; ?>
+                <span class="muted" style="margin-left: 8px;">
+                    Anular não apaga a linha — ela continua registrada, com o motivo.
+                </span>
+            </div>
+            </form>
 
             <?php if ($paginas > 1): ?>
                 <form method="post" action="certificados_busca.php" style="margin-top: 16px;">
