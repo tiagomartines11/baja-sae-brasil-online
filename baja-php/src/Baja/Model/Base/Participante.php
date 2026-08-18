@@ -92,6 +92,13 @@ abstract class Participante implements ActiveRecordInterface
     protected $cpf;
 
     /**
+     * The value for the documento_estrangeiro field.
+     *
+     * @var        string|null
+     */
+    protected $documento_estrangeiro;
+
+    /**
      * The value for the evento field.
      *
      * @var        string
@@ -385,6 +392,16 @@ abstract class Participante implements ActiveRecordInterface
     }
 
     /**
+     * Get the [documento_estrangeiro] column value.
+     *
+     * @return string|null
+     */
+    public function getDocumentoEstrangeiro()
+    {
+        return $this->documento_estrangeiro;
+    }
+
+    /**
      * Get the [evento] column value.
      *
      * @return string
@@ -485,6 +502,26 @@ abstract class Participante implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [documento_estrangeiro] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setDocumentoEstrangeiro($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->documento_estrangeiro !== $v) {
+            $this->documento_estrangeiro = $v;
+            $this->modifiedColumns[ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Set the value of [evento] column.
      *
      * @param string $v New value
@@ -576,10 +613,13 @@ abstract class Participante implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ParticipanteTableMap::translateFieldName('Cpf', TableMap::TYPE_PHPNAME, $indexType)];
             $this->cpf = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ParticipanteTableMap::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ParticipanteTableMap::translateFieldName('DocumentoEstrangeiro', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->documento_estrangeiro = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ParticipanteTableMap::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->evento = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ParticipanteTableMap::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ParticipanteTableMap::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)];
             $this->token = (null !== $col) ? (string) $col : null;
 
             $this->resetModified();
@@ -589,7 +629,7 @@ abstract class Participante implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 6; // 6 = ParticipanteTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 7; // 7 = ParticipanteTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Participante'), 0, $e);
@@ -819,6 +859,9 @@ abstract class Participante implements ActiveRecordInterface
         if ($this->isColumnModified(ParticipanteTableMap::COL_CPF)) {
             $modifiedColumns[':p' . $index++]  = 'cpf';
         }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO)) {
+            $modifiedColumns[':p' . $index++]  = 'documento_estrangeiro';
+        }
         if ($this->isColumnModified(ParticipanteTableMap::COL_EVENTO)) {
             $modifiedColumns[':p' . $index++]  = 'evento';
         }
@@ -849,7 +892,11 @@ abstract class Participante implements ActiveRecordInterface
 
                         break;
                     case 'cpf':
-                        $stmt->bindValue($identifier, $this->cpf, PDO::PARAM_INT);
+                        $stmt->bindValue($identifier, $this->cpf, PDO::PARAM_STR);
+
+                        break;
+                    case 'documento_estrangeiro':
+                        $stmt->bindValue($identifier, $this->documento_estrangeiro, PDO::PARAM_STR);
 
                         break;
                     case 'evento':
@@ -935,9 +982,12 @@ abstract class Participante implements ActiveRecordInterface
                 return $this->getCpf();
 
             case 4:
-                return $this->getEventoId();
+                return $this->getDocumentoEstrangeiro();
 
             case 5:
+                return $this->getEventoId();
+
+            case 6:
                 return $this->getToken();
 
             default:
@@ -972,8 +1022,9 @@ abstract class Participante implements ActiveRecordInterface
             $keys[1] => $this->getNome(),
             $keys[2] => $this->getFuncao(),
             $keys[3] => $this->getCpf(),
-            $keys[4] => $this->getEventoId(),
-            $keys[5] => $this->getToken(),
+            $keys[4] => $this->getDocumentoEstrangeiro(),
+            $keys[5] => $this->getEventoId(),
+            $keys[6] => $this->getToken(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1045,9 +1096,12 @@ abstract class Participante implements ActiveRecordInterface
                 $this->setCpf($value);
                 break;
             case 4:
-                $this->setEventoId($value);
+                $this->setDocumentoEstrangeiro($value);
                 break;
             case 5:
+                $this->setEventoId($value);
+                break;
+            case 6:
                 $this->setToken($value);
                 break;
         } // switch()
@@ -1089,10 +1143,13 @@ abstract class Participante implements ActiveRecordInterface
             $this->setCpf($arr[$keys[3]]);
         }
         if (array_key_exists($keys[4], $arr)) {
-            $this->setEventoId($arr[$keys[4]]);
+            $this->setDocumentoEstrangeiro($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setToken($arr[$keys[5]]);
+            $this->setEventoId($arr[$keys[5]]);
+        }
+        if (array_key_exists($keys[6], $arr)) {
+            $this->setToken($arr[$keys[6]]);
         }
 
         return $this;
@@ -1148,6 +1205,9 @@ abstract class Participante implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ParticipanteTableMap::COL_CPF)) {
             $criteria->add(ParticipanteTableMap::COL_CPF, $this->cpf);
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO)) {
+            $criteria->add(ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO, $this->documento_estrangeiro);
         }
         if ($this->isColumnModified(ParticipanteTableMap::COL_EVENTO)) {
             $criteria->add(ParticipanteTableMap::COL_EVENTO, $this->evento);
@@ -1261,6 +1321,7 @@ abstract class Participante implements ActiveRecordInterface
         $copyObj->setNome($this->getNome());
         $copyObj->setFuncao($this->getFuncao());
         $copyObj->setCpf($this->getCpf());
+        $copyObj->setDocumentoEstrangeiro($this->getDocumentoEstrangeiro());
         $copyObj->setEventoId($this->getEventoId());
         $copyObj->setToken($this->getToken());
         if ($makeNew) {
@@ -1358,6 +1419,7 @@ abstract class Participante implements ActiveRecordInterface
         $this->nome = null;
         $this->funcao = null;
         $this->cpf = null;
+        $this->documento_estrangeiro = null;
         $this->evento = null;
         $this->token = null;
         $this->alreadyInSave = false;

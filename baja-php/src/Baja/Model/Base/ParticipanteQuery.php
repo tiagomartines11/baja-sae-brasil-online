@@ -23,6 +23,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipanteQuery orderByNome($order = Criteria::ASC) Order by the nome column
  * @method     ChildParticipanteQuery orderByFuncao($order = Criteria::ASC) Order by the funcao column
  * @method     ChildParticipanteQuery orderByCpf($order = Criteria::ASC) Order by the cpf column
+ * @method     ChildParticipanteQuery orderByDocumentoEstrangeiro($order = Criteria::ASC) Order by the documento_estrangeiro column
  * @method     ChildParticipanteQuery orderByEventoId($order = Criteria::ASC) Order by the evento column
  * @method     ChildParticipanteQuery orderByToken($order = Criteria::ASC) Order by the token column
  *
@@ -30,6 +31,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipanteQuery groupByNome() Group by the nome column
  * @method     ChildParticipanteQuery groupByFuncao() Group by the funcao column
  * @method     ChildParticipanteQuery groupByCpf() Group by the cpf column
+ * @method     ChildParticipanteQuery groupByDocumentoEstrangeiro() Group by the documento_estrangeiro column
  * @method     ChildParticipanteQuery groupByEventoId() Group by the evento column
  * @method     ChildParticipanteQuery groupByToken() Group by the token column
  *
@@ -60,6 +62,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipante|null findOneByNome(string $nome) Return the first ChildParticipante filtered by the nome column
  * @method     ChildParticipante|null findOneByFuncao(string $funcao) Return the first ChildParticipante filtered by the funcao column
  * @method     ChildParticipante|null findOneByCpf(string $cpf) Return the first ChildParticipante filtered by the cpf column
+ * @method     ChildParticipante|null findOneByDocumentoEstrangeiro(string $documento_estrangeiro) Return the first ChildParticipante filtered by the documento_estrangeiro column
  * @method     ChildParticipante|null findOneByEventoId(string $evento) Return the first ChildParticipante filtered by the evento column
  * @method     ChildParticipante|null findOneByToken(string $token) Return the first ChildParticipante filtered by the token column
  *
@@ -70,6 +73,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipante requireOneByNome(string $nome) Return the first ChildParticipante filtered by the nome column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByFuncao(string $funcao) Return the first ChildParticipante filtered by the funcao column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByCpf(string $cpf) Return the first ChildParticipante filtered by the cpf column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildParticipante requireOneByDocumentoEstrangeiro(string $documento_estrangeiro) Return the first ChildParticipante filtered by the documento_estrangeiro column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByEventoId(string $evento) Return the first ChildParticipante filtered by the evento column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByToken(string $token) Return the first ChildParticipante filtered by the token column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
@@ -84,6 +88,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildParticipante> findByFuncao(string|array<string> $funcao) Return ChildParticipante objects filtered by the funcao column
  * @method     ChildParticipante[]|Collection findByCpf(string|array<string> $cpf) Return ChildParticipante objects filtered by the cpf column
  * @psalm-method Collection&\Traversable<ChildParticipante> findByCpf(string|array<string> $cpf) Return ChildParticipante objects filtered by the cpf column
+ * @method     ChildParticipante[]|Collection findByDocumentoEstrangeiro(string|array<string> $documento_estrangeiro) Return ChildParticipante objects filtered by the documento_estrangeiro column
+ * @psalm-method Collection&\Traversable<ChildParticipante> findByDocumentoEstrangeiro(string|array<string> $documento_estrangeiro) Return ChildParticipante objects filtered by the documento_estrangeiro column
  * @method     ChildParticipante[]|Collection findByEventoId(string|array<string> $evento) Return ChildParticipante objects filtered by the evento column
  * @psalm-method Collection&\Traversable<ChildParticipante> findByEventoId(string|array<string> $evento) Return ChildParticipante objects filtered by the evento column
  * @method     ChildParticipante[]|Collection findByToken(string|array<string> $token) Return ChildParticipante objects filtered by the token column
@@ -187,7 +193,7 @@ abstract class ParticipanteQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT idparticipantes, nome, funcao, cpf, evento, token FROM participantes WHERE idparticipantes = :p0 AND evento = :p1';
+        $sql = 'SELECT idparticipantes, nome, funcao, cpf, documento_estrangeiro, evento, token FROM participantes WHERE idparticipantes = :p0 AND evento = :p1';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key[0], PDO::PARAM_INT);
@@ -395,40 +401,53 @@ abstract class ParticipanteQuery extends ModelCriteria
      *
      * Example usage:
      * <code>
-     * $query->filterByCpf(1234); // WHERE cpf = 1234
-     * $query->filterByCpf(array(12, 34)); // WHERE cpf IN (12, 34)
-     * $query->filterByCpf(array('min' => 12)); // WHERE cpf > 12
+     * $query->filterByCpf('fooValue');   // WHERE cpf = 'fooValue'
+     * $query->filterByCpf('%fooValue%', Criteria::LIKE); // WHERE cpf LIKE '%fooValue%'
+     * $query->filterByCpf(['foo', 'bar']); // WHERE cpf IN ('foo', 'bar')
      * </code>
      *
-     * @param mixed $cpf The value to use as filter.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|string[] $cpf The value to use as filter.
      * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this The current query, for fluid interface
      */
     public function filterByCpf($cpf = null, ?string $comparison = null)
     {
-        if (is_array($cpf)) {
-            $useMinMax = false;
-            if (isset($cpf['min'])) {
-                $this->addUsingAlias(ParticipanteTableMap::COL_CPF, $cpf['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($cpf['max'])) {
-                $this->addUsingAlias(ParticipanteTableMap::COL_CPF, $cpf['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
+        if (null === $comparison) {
+            if (is_array($cpf)) {
                 $comparison = Criteria::IN;
             }
         }
 
         $this->addUsingAlias(ParticipanteTableMap::COL_CPF, $cpf, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the documento_estrangeiro column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByDocumentoEstrangeiro('fooValue');   // WHERE documento_estrangeiro = 'fooValue'
+     * $query->filterByDocumentoEstrangeiro('%fooValue%', Criteria::LIKE); // WHERE documento_estrangeiro LIKE '%fooValue%'
+     * $query->filterByDocumentoEstrangeiro(['foo', 'bar']); // WHERE documento_estrangeiro IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $documentoEstrangeiro The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByDocumentoEstrangeiro($documentoEstrangeiro = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($documentoEstrangeiro)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO, $documentoEstrangeiro, $comparison);
 
         return $this;
     }

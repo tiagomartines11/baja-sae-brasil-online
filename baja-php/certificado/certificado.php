@@ -1,5 +1,6 @@
 <?php
 
+use Baja\Certificado\Documento;
 use Baja\Model\EventoQuery;
 use Baja\Model\ParticipanteQuery;
 use Dompdf\Dompdf;
@@ -18,7 +19,17 @@ if (!empty($_POST['cpf'])) {
     $cpf = hexdec($cpfRaw);
 }
 
-$participante = ParticipanteQuery::create()
+// `cpf` is CHAR(11) as of this commit, so the comparison is a string one and
+// the hex path's integer needs its leading zeros back before it can match.
+// This also fixes punctuated input, which used to reach the numeric column as
+// '529.982.247-25' and be silently coerced to 529.
+//
+// Temporary. Phase 5 stops this file resolving certificates at all, and takes
+// the whole block with it; it is here so that this commit is deployable by
+// itself rather than only alongside that one.
+$cpf = Documento::normalizeCpf((string) $cpf);
+
+$participante = $cpf === null ? null : ParticipanteQuery::create()
     ->filterByEventoId($evt)
     ->filterByCpf($cpf)
     ->findOne();
