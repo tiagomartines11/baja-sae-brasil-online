@@ -37,7 +37,6 @@ final class Busca
         $isDecoy   = $rows === [];
         $storedSet = $isDecoy ? self::decoyRows() : $rows;
 
-        $submitted = Nome::normalize($nome);
 
         /*
          * Match each row on its own, then keep everything if any one matched.
@@ -55,7 +54,7 @@ final class Busca
          */
         $matched = false;
         foreach ($storedSet as $row) {
-            if (Nome::matches($submitted, Nome::normalize(self::storedName($row)))) {
+            if (Nome::matches($nome, self::storedName($row))) {
                 $matched = true;
             }
         }

@@ -46,60 +46,88 @@ T::same(
 
 // --- the per-row match rule --------------------------------------------------
 
-$stored = Nome::normalize('João Pedro Bresolin Silva');
+$stored = 'João Pedro Bresolin Silva';
 
-T::ok('exact full name matches', Nome::matches(Nome::normalize('João Pedro Bresolin Silva'), $stored));
-T::ok('a dropped middle name matches', Nome::matches(Nome::normalize('João Bresolin'), $stored));
-T::ok('first and last name match', Nome::matches(Nome::normalize('João Silva'), $stored));
-T::ok('reordered tokens match', Nome::matches(Nome::normalize('Silva João'), $stored));
-T::ok('unaccented spelling matches', Nome::matches(Nome::normalize('Joao Silva'), $stored));
-T::ok('case and punctuation do not matter', Nome::matches(Nome::normalize('joão, silva.'), $stored));
+T::ok('exact full name matches', Nome::matches('João Pedro Bresolin Silva', $stored));
+T::ok('a dropped middle name matches', Nome::matches('João Bresolin', $stored));
+T::ok('first and last name match', Nome::matches('João Silva', $stored));
+T::ok('reordered tokens match', Nome::matches('Silva João', $stored));
+T::ok('unaccented spelling matches', Nome::matches('Joao Silva', $stored));
+T::ok('case and punctuation do not matter', Nome::matches('joão, silva.', $stored));
 
 // The record is the incomplete side. Names were entered per event, by hand,
 // and get truncated; somebody typing their full name must not be told their
 // certificate does not exist.
-$truncated = Nome::normalize('Fulano da Silva Testeson');
+$truncated = 'Fulano da Silva Testeson';
 T::ok(
     'a fuller name than the record holds still matches',
-    Nome::matches(Nome::normalize('Fulano da Silva Testeson dos Santos'), $truncated)
+    Nome::matches('Fulano da Silva Testeson dos Santos', $truncated)
 );
 T::ok(
     'two extra names are still tolerated',
-    Nome::matches(Nome::normalize('Fulano da Silva Testeson dos Santos Junior'), $truncated)
+    Nome::matches('Fulano da Silva Testeson dos Santos Junior', $truncated)
 );
 T::ok(
     'three extra names are not',
-    !Nome::matches(Nome::normalize('Fulano Silva Testeson Santos Junior Neto'), $truncated)
+    !Nome::matches('Fulano Silva Testeson Santos Junior Neto', $truncated)
 );
 T::ok(
     'a pile of common surnames does not cover a short record',
     !Nome::matches(
-        Nome::normalize('Maria Silva Santos Souza Oliveira Pereira Costa Lima'),
-        Nome::normalize('Maria Silva')
+        'Maria Silva Santos Souza Oliveira Pereira Costa Lima',
+        'Maria Silva'
     ),
     'coverage attack: knowing nothing but guessing widely must not match'
 );
 T::ok(
     'a record of one token cannot be matched at all',
-    !Nome::matches(Nome::normalize('Fulano Silva'), Nome::normalize('Fulano'))
+    !Nome::matches('Fulano Silva', 'Fulano')
 );
 
-T::ok('a bare first name is rejected', !Nome::matches(Nome::normalize('João'), $stored));
-T::ok('a bare surname is rejected', !Nome::matches(Nome::normalize('Silva'), $stored));
-T::ok('an empty name is rejected', !Nome::matches(Nome::normalize(''), $stored));
+T::ok('a bare first name is rejected', !Nome::matches('João', $stored));
+T::ok('a bare surname is rejected', !Nome::matches('Silva', $stored));
+T::ok('an empty name is rejected', !Nome::matches('', $stored));
 T::ok(
     'a repeated single token does not satisfy the two-token minimum',
-    !Nome::matches(Nome::normalize('Silva Silva'), $stored)
+    !Nome::matches('Silva Silva', $stored)
 );
 T::ok(
     'a name with an extra token the row lacks is rejected',
-    !Nome::matches(Nome::normalize('João Bresolin Ferreira'), $stored)
+    !Nome::matches('João Bresolin Ferreira', $stored)
 );
 T::ok(
     'a different person with a shared surname is rejected',
-    !Nome::matches(Nome::normalize('Maria Silva'), $stored)
+    !Nome::matches('Maria Silva', $stored)
 );
 T::ok(
     'connectives alone cannot make up the two tokens',
-    !Nome::matches(Nome::normalize('de da'), $stored)
+    !Nome::matches('de da', $stored)
+);
+
+// --- punctuation inside a name ------------------------------------------------
+//
+// D'Ângelo, D'Ávila, Sant'Ana. The same person writes these three ways on
+// three different days, and the record holds whichever they used that time.
+// Splitting on the apostrophe alone made "Dangelo" unreachable from a stored
+// "D'Àngelo"; removing it alone would make "D Angelo" unreachable.
+
+$dangelo = "Adroaldo Pelepo dos Santos D'Àngelo";
+
+T::ok('apostrophe name matches when typed without it', Nome::matches('Adroaldo Dangelo', $dangelo));
+T::ok('apostrophe name matches when typed with it', Nome::matches("Adroaldo D'Angelo", $dangelo));
+T::ok('apostrophe name matches when typed with a space', Nome::matches('Adroaldo D Angelo', $dangelo));
+T::ok('apostrophe name matches when typed with the accent', Nome::matches("Adroaldo D'Àngelo", $dangelo));
+T::ok('and in the other direction too', Nome::matches($dangelo, 'Adroaldo Dangelo'));
+
+T::ok(
+    'a bare apostrophe surname is still one name, and rejected',
+    !Nome::matches("D'Angelo", $dangelo),
+    'splitting on the apostrophe used to make this clear the two-name minimum'
+);
+T::same(['dangelo'], Nome::parts("D'Àngelo"), 'an apostrophe name is a single part');
+T::same(['santana', 'silva'], Nome::parts("Sant'Ana Silva"), 'Sant\'Ana is one part');
+T::ok(
+    'hyphenated surnames work either way',
+    Nome::matches('Ana Bresolin Silva', 'Ana Bresolin-Silva')
+        && Nome::matches('Ana Bresolin-Silva', 'Ana Bresolin Silva')
 );

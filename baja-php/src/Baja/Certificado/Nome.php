@@ -10,7 +10,8 @@ use Normalizer;
  * Both sides go through the same normalization, and the comparison is on token
  * sets rather than strings, because the stored names are user-provided, were
  * entered per event, and are inconsistent in every way a name can be:
- * accented or not, with or without middle names, with trailing spaces.
+ * accented or not, punctuated or not, with or without middle names, with
+ * trailing spaces.
  */
 final class Nome
 {
@@ -24,7 +25,7 @@ final class Nome
 
     /**
      * Letters with no canonical decomposition, so NFD leaves them intact and
-     * the ASCII filter below would turn them into spaces.
+     * the ASCII filter would otherwise turn them into spaces.
      *
      * Only relevant for foreign participants, who are exactly the people this
      * system is worst at already.
@@ -38,106 +39,112 @@ final class Nome
     ];
 
     /**
-     * A name reduced to a set of comparable tokens.
+     * How many tokens the person may have that the record does not.
      *
-     * Two deviations from the specification, both because the specified
-     * version was verified to do the opposite of what it says on this stack:
-     *
-     * 1. It called iconv('ISO-8859-1', 'UTF-8', ...) on the stored name first.
-     *    The `nome` column is latin1, but the connection runs SET NAMES
-     *    utf8mb4, so MySQL has already converted it and Propel hands back
-     *    valid UTF-8. Converting again mangles exactly the accented names the
-     *    step was meant to protect. There is a guard below for the case where
-     *    a value really is not UTF-8.
-     *
-     * 2. It transliterated with iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE').
-     *    Under musl, which is what the php:8.3-fpm-alpine image uses, that
-     *    does not fold accents — it decomposes them into ASCII punctuation, so
-     *    "João" becomes "Jo~ao" and then, once non-letters become spaces,
-     *    the two tokens "jo" and "ao". Every accented name would fail to match
-     *    its unaccented spelling, and a bare first name would satisfy the
-     *    two-token minimum that exists to reject bare first names. Normalizer
-     *    (ext-intl, already in the image) decomposes properly and behaves the
-     *    same on any libc.
+     * This is the whole security budget of the second matching direction, so
+     * it is small on purpose. Requiring every stored part to be present
+     * already means an attacker must know the recorded name in full; the
+     * allowance only lets somebody add names the record is missing. Raising it
+     * turns the form into a coverage attack — submit a first name plus twenty
+     * common surnames and match anyone whose record is a subset of the pile.
      */
-    public static function normalize(string $name): array
+    private const MAX_PARTS_ABSENT_FROM_RECORD = 2;
+
+    /**
+     * The parts of a name: what a person would call the individual names.
+     *
+     * Punctuation is removed rather than split on, so "D'Àngelo" is one part,
+     * "dangelo" — the same part somebody gets by typing it without the
+     * apostrophe. This is the set that decides how many names were supplied.
+     *
+     * @return array<int, string>
+     */
+    public static function parts(string $name): array
     {
-        // Defensive: if a value really did arrive as latin1 bytes, salvage it
-        // rather than dropping every accented character in the filter below.
-        if (!mb_check_encoding($name, 'UTF-8')) {
-            $name = mb_convert_encoding($name, 'UTF-8', 'ISO-8859-1');
-        }
-
-        $name = strtr($name, self::NON_DECOMPOSABLE);
-
-        // NFD splits "ã" into "a" + combining tilde; dropping the combining
-        // marks leaves the base letters.
-        $decomposed = Normalizer::normalize($name, Normalizer::FORM_D);
-        if ($decomposed !== false) {
-            $name = preg_replace('/\p{Mn}/u', '', $decomposed);
-        }
-
-        $name   = strtolower(preg_replace('/[^a-zA-Z ]/', ' ', $name));
-        $tokens = preg_split('/\s+/', $name, -1, PREG_SPLIT_NO_EMPTY);
-
-        return array_values(array_diff($tokens, self::CONNECTIVES));
+        return self::tokenize(self::fold($name), true);
     }
 
     /**
-     * How many tokens the person may have that the record does not.
+     * Everything a name could reasonably be written as, for membership tests.
      *
-     * This is the whole security budget of the second rule below, so it is
-     * small on purpose. Requiring every stored token to be present already
-     * means an attacker must know the recorded name in full; the allowance
-     * only lets somebody add names the record is missing. Raising it turns
-     * the form into a coverage attack — submit a first name plus twenty
-     * common surnames and match anyone whose record is a subset of the pile.
+     * The union of two readings: punctuation removed ("dangelo") and
+     * punctuation split on ("d", "angelo"). Apostrophes in Brazilian names —
+     * D'Ângelo, D'Ávila, Sant'Ana — are used inconsistently by the same person
+     * on different days, and whichever way the record went, the search must
+     * reach it from any of "D'Ângelo", "D Angelo" and "Dangelo".
+     *
+     * Union rather than one or the other because the choice cannot be made
+     * correctly in isolation: joining alone misses a record typed with a
+     * space, splitting alone misses one typed without the apostrophe.
+     *
+     * @return array<int, string>
      */
-    private const MAX_TOKENS_ABSENT_FROM_RECORD = 2;
+    public static function normalize(string $name): array
+    {
+        $folded = self::fold($name);
+
+        return array_values(array_unique(array_merge(
+            self::tokenize($folded, false),
+            self::tokenize($folded, true)
+        )));
+    }
 
     /**
      * Whether a submitted name matches one stored name.
      *
-     * Two ways to match, because the two names can be incomplete in either
-     * direction and neither party knows which:
+     * Takes the raw strings rather than token sets so that the two-name
+     * minimum below can be counted in parts. Counting tokens instead would
+     * let a bare "D'Angelo" through, since punctuation splits it into two.
      *
-     * 1. Every submitted token appears in the record. This is the person
+     * Two ways to match, because either name can be the incomplete one and
+     * neither party knows which:
+     *
+     * 1. Every submitted part is somewhere in the record. This is the person
      *    typing less than is on file — "João Bresolin" or "João Silva"
      *    against a stored "João Pedro Bresolin Silva".
      *
-     * 2. Every stored token appears in the submission, with at most a couple
-     *    of extras. This is the record being the incomplete one, which is
-     *    just as common: names were entered per event, by hand, and get
+     * 2. Every stored part is somewhere in the submission, with at most a
+     *    couple of extras. This is the record being the incomplete one, which
+     *    is just as common: names were entered per event, by hand, and get
      *    truncated. Somebody on file as "Fulano da Silva Testeson" typing
      *    their full "Fulano da Silva Testeson dos Santos" should not be told
      *    their certificate does not exist.
      *
-     * Both directions need at least two distinct tokens in common. That is
-     * what rejects a bare first name — the name is the only credential here
-     * and first names are not secret — and it also means a record holding a
-     * single token cannot be matched at all, which is correct: one word is
-     * not a credential either.
+     * Both directions need at least two parts in common. That is what rejects
+     * a bare first name — the name is the only credential here, and first
+     * names are not secret — and it also means a record holding a single part
+     * cannot be matched at all, which is correct: one word is not a credential
+     * either.
      *
      * Note what case 2 deliberately does not accept: a submission that is
-     * missing stored tokens *and* adds its own. "João Bresolin Ferreira"
+     * missing stored parts *and* adds its own. "João Bresolin Ferreira"
      * against "João Pedro Bresolin Silva" stays a non-match, because nothing
      * about it suggests a truncated record rather than a different person.
      */
-    public static function matches(array $submitted, array $stored): bool
+    public static function matches(string $submittedName, string $storedName): bool
     {
-        $submitted = array_values(array_unique($submitted));
-        $stored    = array_values(array_unique($stored));
+        $submittedParts = self::parts($submittedName);
+        $storedParts    = self::parts($storedName);
 
-        if (count($submitted) < 2) {
+        if (count($submittedParts) < 2) {
             return false;
         }
 
-        $inCommon = array_intersect($submitted, $stored);
-        if (count($inCommon) < 2) {
+        // Membership is tested against the union, so that a part written one
+        // way reaches a record written the other.
+        $submittedAny = self::normalize($submittedName);
+        $storedAny    = self::normalize($storedName);
+
+        // Both sides as unions here, so that "Bresolin-Silva" and "Bresolin
+        // Silva" recognise each other whichever one the record holds. The
+        // two-name minimum is already enforced on parts above, so widening
+        // this cannot let a single name through.
+        $recognised = array_intersect($submittedAny, $storedAny);
+        if (count($recognised) < 2) {
             return false;
         }
 
-        $absentFromRecord = array_diff($submitted, $stored);
+        $absentFromRecord = array_diff($submittedParts, $storedAny);
 
         // 1. The submission is contained in the record.
         if (count($absentFromRecord) === 0) {
@@ -145,9 +152,61 @@ final class Nome
         }
 
         // 2. The record is contained in the submission, give or take.
-        $absentFromSubmission = array_diff($stored, $submitted);
+        $absentFromSubmission = array_diff($storedParts, $submittedAny);
 
         return count($absentFromSubmission) === 0
-            && count($absentFromRecord) <= self::MAX_TOKENS_ABSENT_FROM_RECORD;
+            && count($absentFromRecord) <= self::MAX_PARTS_ABSENT_FROM_RECORD;
+    }
+
+    /**
+     * Lowercase ASCII, accents folded, punctuation still in place.
+     *
+     * Two things here were specified differently and verified to do the
+     * opposite of what they claimed on this stack:
+     *
+     * 1. iconv('ISO-8859-1', 'UTF-8', ...) on the stored name. The `nome`
+     *    column is latin1, but the connection runs SET NAMES utf8mb4, so MySQL
+     *    has already converted it and Propel hands back valid UTF-8.
+     *    Converting again mangles exactly the accented names the step was
+     *    meant to protect. The guard below covers a value that genuinely is
+     *    not UTF-8.
+     *
+     * 2. iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE') for the accents. Under
+     *    musl, which is what the php:8.3-fpm-alpine image uses, that does not
+     *    fold them — it decomposes them into ASCII punctuation, so "João"
+     *    becomes "Jo~ao" and then the two tokens "jo" and "ao". Every accented
+     *    name would fail to match its unaccented spelling, and a bare first
+     *    name would satisfy the two-part minimum. Normalizer (ext-intl,
+     *    already in the image) decomposes properly on any libc.
+     */
+    private static function fold(string $name): string
+    {
+        if (!mb_check_encoding($name, 'UTF-8')) {
+            $name = mb_convert_encoding($name, 'UTF-8', 'ISO-8859-1');
+        }
+
+        $name = strtr($name, self::NON_DECOMPOSABLE);
+
+        // NFD splits "ã" into "a" plus a combining tilde; dropping the
+        // combining marks leaves the base letters.
+        $decomposed = Normalizer::normalize($name, Normalizer::FORM_D);
+        if ($decomposed !== false) {
+            $name = preg_replace('/\p{Mn}/u', '', $decomposed);
+        }
+
+        return mb_strtolower($name, 'UTF-8');
+    }
+
+    /**
+     * @param bool $joinPunctuation true removes punctuation, false splits on it
+     *
+     * @return array<int, string>
+     */
+    private static function tokenize(string $folded, bool $joinPunctuation): array
+    {
+        $folded = preg_replace('/[^a-z ]/', $joinPunctuation ? '' : ' ', $folded);
+        $tokens = preg_split('/\s+/', $folded, -1, PREG_SPLIT_NO_EMPTY);
+
+        return array_values(array_unique(array_diff($tokens, self::CONNECTIVES)));
     }
 }
