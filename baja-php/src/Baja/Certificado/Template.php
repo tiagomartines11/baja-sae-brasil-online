@@ -24,7 +24,7 @@ final class Template
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="Content-Language" content="pt-br">
-    <!-- Belt and braces with the X-Robots-Tag header sent by Http. -->
+    <?php /* Belt and braces with the X-Robots-Tag header sent by Http. */ ?>
     <meta name="robots" content="noindex, nofollow">
     <meta name="referrer" content="no-referrer">
     <title><?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8') ?></title>
@@ -106,6 +106,10 @@ final class Template
     <p class="muted">
         Se algum dado exibido estiver incorreto, escreva para
         <a href="mailto:<?= Config::CONTACT_EMAIL ?>"><?= Config::CONTACT_EMAIL ?></a>.
+        <?php if (Config::PRIVACY_NOTICE_URL !== ''): ?>
+            Consulte também o
+            <a href="<?= htmlspecialchars(Config::PRIVACY_NOTICE_URL, ENT_QUOTES, 'UTF-8') ?>">Aviso de Privacidade</a>.
+        <?php endif; ?>
     </p>
 </div>
 </body>

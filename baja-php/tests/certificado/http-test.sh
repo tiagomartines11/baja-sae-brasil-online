@@ -65,6 +65,34 @@ ok "unknown and malformed tokens return byte-identical bodies" \
 ok "junk under /verificar/ returns the same body" \
    "$([[ "$unknown" == "$junk" ]] && echo 1 || echo 0)"
 
+# --- /buscar tells nobody whether a document exists --------------------------
+#
+# The body for "no such document" and for "document found, but no row's name
+# matched" must be identical to the byte. Any difference — a count, a word, a
+# whitespace change — answers "did this person compete?" to anyone who asks.
+
+post_buscar() { curl -s -X POST --data-urlencode "documento=$1" --data-urlencode "nome=$2" "$BASE/buscar"; }
+
+unknown_doc=$(post_buscar "98765432100" "Alguem Improvavel Inexistente")
+wrong_name=$(post_buscar "00012345678" "Nome Que Nao Confere")
+bare_first=$(post_buscar "00012345678" "Joao")
+
+ok "unknown document and wrong name give byte-identical bodies" \
+   "$([[ "$unknown_doc" == "$wrong_name" ]] && echo 1 || echo 0)" \
+   "${#unknown_doc} vs ${#wrong_name} bytes"
+ok "a rejected bare first name gives the same body too" \
+   "$([[ "$unknown_doc" == "$bare_first" ]] && echo 1 || echo 0)"
+
+buscar_headers=$(header_of "$BASE/buscar")
+ok "/buscar sends Cache-Control: no-store" \
+   "$(grep -qi '^Cache-Control:.*no-store' <<<"$buscar_headers" && echo 1 || echo 0)"
+ok "/buscar sends X-Robots-Tag: noindex" \
+   "$(grep -qi '^X-Robots-Tag: noindex' <<<"$buscar_headers" && echo 1 || echo 0)"
+ok "/buscar carries no Google Analytics tag" \
+   "$(grep -qi 'googletagmanager\|gtag(\|google-analytics' <<<"$(body_of "$BASE/buscar")" && echo 0 || echo 1)"
+ok "/buscar does not use a number input, which would eat a leading zero" \
+   "$(grep -qi 'type="number"' <<<"$(body_of "$BASE/buscar")" && echo 0 || echo 1)"
+
 # --- headers -----------------------------------------------------------------
 
 headers=$(header_of "$BASE/verificar/AAAAAAAAAAAAAAAAAAAAAA")

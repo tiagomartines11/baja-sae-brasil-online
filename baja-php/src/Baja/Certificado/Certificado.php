@@ -84,17 +84,32 @@ final class Certificado
 
     public function getEventoNome(): string
     {
-        return (string) $this->evento->getNome();
+        return self::decodeEntities((string) $this->evento->getNome());
     }
 
     public function getLocal(): string
     {
-        return (string) $this->evento->getLocal();
+        return self::decodeEntities((string) $this->evento->getLocal());
     }
 
     public function getData(): string
     {
-        return (string) $this->evento->getData();
+        return self::decodeEntities((string) $this->evento->getData());
+    }
+
+    /**
+     * Event names carry HTML entities as literal text — "Baja SAE&nbsp;BRASIL"
+     * is stored with those six characters in it.
+     *
+     * That went unnoticed because the only consumer was the PDF template,
+     * which interpolated the value into HTML without escaping, so dompdf
+     * resolved the entity. The web pages escape their output, as they must,
+     * which would render the entity visibly. Decoding first and escaping after
+     * keeps both correct and is not a way around the escaping.
+     */
+    private static function decodeEntities(string $value): string
+    {
+        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     /** Public URL of the verification page. Printed on the certificate. */
