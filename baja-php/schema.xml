@@ -107,12 +107,26 @@
     <column name="funcao" phpName="Funcao" type="VARCHAR" size="45"/>
     <column name="cpf" phpName="Cpf" type="BIGINT" size="11"/>
     <column name="evento" phpName="EventoId" type="CHAR" size="4" primaryKey="true"/>
+    <!-- Public certificate identifier: 16 random bytes, base64url, unpadded.
+         ascii_bin is load-bearing, not tidiness. base64url is case-sensitive,
+         and the table default is latin1_swedish_ci, under which the unique
+         index below would treat "aB" and "Ab" as the same token and a lookup
+         would resolve to the wrong participant's certificate. -->
+    <column name="token" phpName="Token" type="CHAR" size="22">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
     <foreign-key foreignTable="evento" name="participantes_evento_id" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="evento" foreign="evento_id"/>
     </foreign-key>
     <index name="participantes_evento_id_idx">
       <index-column name="evento"/>
     </index>
+    <unique name="participantes_token_unq">
+      <unique-column name="token"/>
+    </unique>
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>
     </vendor>

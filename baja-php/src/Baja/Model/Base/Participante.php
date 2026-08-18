@@ -99,6 +99,13 @@ abstract class Participante implements ActiveRecordInterface
     protected $evento;
 
     /**
+     * The value for the token field.
+     *
+     * @var        string|null
+     */
+    protected $token;
+
+    /**
      * @var        ChildEvento
      */
     protected $aEvento;
@@ -388,6 +395,16 @@ abstract class Participante implements ActiveRecordInterface
     }
 
     /**
+     * Get the [token] column value.
+     *
+     * @return string|null
+     */
+    public function getToken()
+    {
+        return $this->token;
+    }
+
+    /**
      * Set the value of [idparticipantes] column.
      *
      * @param int $v New value
@@ -492,6 +509,26 @@ abstract class Participante implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [token] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setToken($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->token !== $v) {
+            $this->token = $v;
+            $this->modifiedColumns[ParticipanteTableMap::COL_TOKEN] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -542,6 +579,9 @@ abstract class Participante implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ParticipanteTableMap::translateFieldName('EventoId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->evento = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ParticipanteTableMap::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->token = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -549,7 +589,7 @@ abstract class Participante implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 5; // 5 = ParticipanteTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 6; // 6 = ParticipanteTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Participante'), 0, $e);
@@ -782,6 +822,9 @@ abstract class Participante implements ActiveRecordInterface
         if ($this->isColumnModified(ParticipanteTableMap::COL_EVENTO)) {
             $modifiedColumns[':p' . $index++]  = 'evento';
         }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_TOKEN)) {
+            $modifiedColumns[':p' . $index++]  = 'token';
+        }
 
         $sql = sprintf(
             'INSERT INTO participantes (%s) VALUES (%s)',
@@ -811,6 +854,10 @@ abstract class Participante implements ActiveRecordInterface
                         break;
                     case 'evento':
                         $stmt->bindValue($identifier, $this->evento, PDO::PARAM_STR);
+
+                        break;
+                    case 'token':
+                        $stmt->bindValue($identifier, $this->token, PDO::PARAM_STR);
 
                         break;
                 }
@@ -890,6 +937,9 @@ abstract class Participante implements ActiveRecordInterface
             case 4:
                 return $this->getEventoId();
 
+            case 5:
+                return $this->getToken();
+
             default:
                 return null;
         } // switch()
@@ -923,6 +973,7 @@ abstract class Participante implements ActiveRecordInterface
             $keys[2] => $this->getFuncao(),
             $keys[3] => $this->getCpf(),
             $keys[4] => $this->getEventoId(),
+            $keys[5] => $this->getToken(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -996,6 +1047,9 @@ abstract class Participante implements ActiveRecordInterface
             case 4:
                 $this->setEventoId($value);
                 break;
+            case 5:
+                $this->setToken($value);
+                break;
         } // switch()
 
         return $this;
@@ -1036,6 +1090,9 @@ abstract class Participante implements ActiveRecordInterface
         }
         if (array_key_exists($keys[4], $arr)) {
             $this->setEventoId($arr[$keys[4]]);
+        }
+        if (array_key_exists($keys[5], $arr)) {
+            $this->setToken($arr[$keys[5]]);
         }
 
         return $this;
@@ -1094,6 +1151,9 @@ abstract class Participante implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ParticipanteTableMap::COL_EVENTO)) {
             $criteria->add(ParticipanteTableMap::COL_EVENTO, $this->evento);
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_TOKEN)) {
+            $criteria->add(ParticipanteTableMap::COL_TOKEN, $this->token);
         }
 
         return $criteria;
@@ -1202,6 +1262,7 @@ abstract class Participante implements ActiveRecordInterface
         $copyObj->setFuncao($this->getFuncao());
         $copyObj->setCpf($this->getCpf());
         $copyObj->setEventoId($this->getEventoId());
+        $copyObj->setToken($this->getToken());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setParticipanteId(NULL); // this is a auto-increment column, so set to default value
@@ -1298,6 +1359,7 @@ abstract class Participante implements ActiveRecordInterface
         $this->funcao = null;
         $this->cpf = null;
         $this->evento = null;
+        $this->token = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();

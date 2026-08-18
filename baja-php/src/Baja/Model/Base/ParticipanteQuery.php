@@ -24,12 +24,14 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipanteQuery orderByFuncao($order = Criteria::ASC) Order by the funcao column
  * @method     ChildParticipanteQuery orderByCpf($order = Criteria::ASC) Order by the cpf column
  * @method     ChildParticipanteQuery orderByEventoId($order = Criteria::ASC) Order by the evento column
+ * @method     ChildParticipanteQuery orderByToken($order = Criteria::ASC) Order by the token column
  *
  * @method     ChildParticipanteQuery groupByParticipanteId() Group by the idparticipantes column
  * @method     ChildParticipanteQuery groupByNome() Group by the nome column
  * @method     ChildParticipanteQuery groupByFuncao() Group by the funcao column
  * @method     ChildParticipanteQuery groupByCpf() Group by the cpf column
  * @method     ChildParticipanteQuery groupByEventoId() Group by the evento column
+ * @method     ChildParticipanteQuery groupByToken() Group by the token column
  *
  * @method     ChildParticipanteQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildParticipanteQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -59,6 +61,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipante|null findOneByFuncao(string $funcao) Return the first ChildParticipante filtered by the funcao column
  * @method     ChildParticipante|null findOneByCpf(string $cpf) Return the first ChildParticipante filtered by the cpf column
  * @method     ChildParticipante|null findOneByEventoId(string $evento) Return the first ChildParticipante filtered by the evento column
+ * @method     ChildParticipante|null findOneByToken(string $token) Return the first ChildParticipante filtered by the token column
  *
  * @method     ChildParticipante requirePk($key, ?ConnectionInterface $con = null) Return the ChildParticipante by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOne(?ConnectionInterface $con = null) Return the first ChildParticipante matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -68,6 +71,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipante requireOneByFuncao(string $funcao) Return the first ChildParticipante filtered by the funcao column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByCpf(string $cpf) Return the first ChildParticipante filtered by the cpf column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByEventoId(string $evento) Return the first ChildParticipante filtered by the evento column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildParticipante requireOneByToken(string $token) Return the first ChildParticipante filtered by the token column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildParticipante[]|Collection find(?ConnectionInterface $con = null) Return ChildParticipante objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildParticipante> find(?ConnectionInterface $con = null) Return ChildParticipante objects based on current ModelCriteria
@@ -82,6 +86,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildParticipante> findByCpf(string|array<string> $cpf) Return ChildParticipante objects filtered by the cpf column
  * @method     ChildParticipante[]|Collection findByEventoId(string|array<string> $evento) Return ChildParticipante objects filtered by the evento column
  * @psalm-method Collection&\Traversable<ChildParticipante> findByEventoId(string|array<string> $evento) Return ChildParticipante objects filtered by the evento column
+ * @method     ChildParticipante[]|Collection findByToken(string|array<string> $token) Return ChildParticipante objects filtered by the token column
+ * @psalm-method Collection&\Traversable<ChildParticipante> findByToken(string|array<string> $token) Return ChildParticipante objects filtered by the token column
  *
  * @method     ChildParticipante[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildParticipante> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -181,7 +187,7 @@ abstract class ParticipanteQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT idparticipantes, nome, funcao, cpf, evento FROM participantes WHERE idparticipantes = :p0 AND evento = :p1';
+        $sql = 'SELECT idparticipantes, nome, funcao, cpf, evento, token FROM participantes WHERE idparticipantes = :p0 AND evento = :p1';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key[0], PDO::PARAM_INT);
@@ -451,6 +457,34 @@ abstract class ParticipanteQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ParticipanteTableMap::COL_EVENTO, $eventoId, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the token column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByToken('fooValue');   // WHERE token = 'fooValue'
+     * $query->filterByToken('%fooValue%', Criteria::LIKE); // WHERE token LIKE '%fooValue%'
+     * $query->filterByToken(['foo', 'bar']); // WHERE token IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $token The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByToken($token = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($token)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ParticipanteTableMap::COL_TOKEN, $token, $comparison);
 
         return $this;
     }

@@ -63,7 +63,7 @@ class ParticipanteTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 5;
+    public const NUM_COLUMNS = 6;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ParticipanteTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 5;
+    public const NUM_HYDRATE_COLUMNS = 6;
 
     /**
      * the column name for the idparticipantes field
@@ -101,6 +101,11 @@ class ParticipanteTableMap extends TableMap
     public const COL_EVENTO = 'participantes.evento';
 
     /**
+     * the column name for the token field
+     */
+    public const COL_TOKEN = 'participantes.token';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -114,11 +119,11 @@ class ParticipanteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['ParticipanteId', 'Nome', 'Funcao', 'Cpf', 'EventoId', ],
-        self::TYPE_CAMELNAME     => ['participanteId', 'nome', 'funcao', 'cpf', 'eventoId', ],
-        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_IDPARTICIPANTES, ParticipanteTableMap::COL_NOME, ParticipanteTableMap::COL_FUNCAO, ParticipanteTableMap::COL_CPF, ParticipanteTableMap::COL_EVENTO, ],
-        self::TYPE_FIELDNAME     => ['idparticipantes', 'nome', 'funcao', 'cpf', 'evento', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, ]
+        self::TYPE_PHPNAME       => ['ParticipanteId', 'Nome', 'Funcao', 'Cpf', 'EventoId', 'Token', ],
+        self::TYPE_CAMELNAME     => ['participanteId', 'nome', 'funcao', 'cpf', 'eventoId', 'token', ],
+        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_IDPARTICIPANTES, ParticipanteTableMap::COL_NOME, ParticipanteTableMap::COL_FUNCAO, ParticipanteTableMap::COL_CPF, ParticipanteTableMap::COL_EVENTO, ParticipanteTableMap::COL_TOKEN, ],
+        self::TYPE_FIELDNAME     => ['idparticipantes', 'nome', 'funcao', 'cpf', 'evento', 'token', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, ]
     ];
 
     /**
@@ -130,11 +135,11 @@ class ParticipanteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['ParticipanteId' => 0, 'Nome' => 1, 'Funcao' => 2, 'Cpf' => 3, 'EventoId' => 4, ],
-        self::TYPE_CAMELNAME     => ['participanteId' => 0, 'nome' => 1, 'funcao' => 2, 'cpf' => 3, 'eventoId' => 4, ],
-        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_IDPARTICIPANTES => 0, ParticipanteTableMap::COL_NOME => 1, ParticipanteTableMap::COL_FUNCAO => 2, ParticipanteTableMap::COL_CPF => 3, ParticipanteTableMap::COL_EVENTO => 4, ],
-        self::TYPE_FIELDNAME     => ['idparticipantes' => 0, 'nome' => 1, 'funcao' => 2, 'cpf' => 3, 'evento' => 4, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, ]
+        self::TYPE_PHPNAME       => ['ParticipanteId' => 0, 'Nome' => 1, 'Funcao' => 2, 'Cpf' => 3, 'EventoId' => 4, 'Token' => 5, ],
+        self::TYPE_CAMELNAME     => ['participanteId' => 0, 'nome' => 1, 'funcao' => 2, 'cpf' => 3, 'eventoId' => 4, 'token' => 5, ],
+        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_IDPARTICIPANTES => 0, ParticipanteTableMap::COL_NOME => 1, ParticipanteTableMap::COL_FUNCAO => 2, ParticipanteTableMap::COL_CPF => 3, ParticipanteTableMap::COL_EVENTO => 4, ParticipanteTableMap::COL_TOKEN => 5, ],
+        self::TYPE_FIELDNAME     => ['idparticipantes' => 0, 'nome' => 1, 'funcao' => 2, 'cpf' => 3, 'evento' => 4, 'token' => 5, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, ]
     ];
 
     /**
@@ -180,6 +185,13 @@ class ParticipanteTableMap extends TableMap
         'COL_EVENTO' => 'EVENTO',
         'evento' => 'EVENTO',
         'participantes.evento' => 'EVENTO',
+        'Token' => 'TOKEN',
+        'Participante.Token' => 'TOKEN',
+        'token' => 'TOKEN',
+        'participante.token' => 'TOKEN',
+        'ParticipanteTableMap::COL_TOKEN' => 'TOKEN',
+        'COL_TOKEN' => 'TOKEN',
+        'participantes.token' => 'TOKEN',
     ];
 
     /**
@@ -204,6 +216,7 @@ class ParticipanteTableMap extends TableMap
         $this->addColumn('funcao', 'Funcao', 'VARCHAR', false, 45, null);
         $this->addColumn('cpf', 'Cpf', 'BIGINT', false, 11, null);
         $this->addForeignPrimaryKey('evento', 'EventoId', 'CHAR' , 'evento', 'evento_id', true, 4, null);
+        $this->addColumn('token', 'Token', 'CHAR', false, 22, null);
     }
 
     /**
@@ -435,12 +448,14 @@ class ParticipanteTableMap extends TableMap
             $criteria->addSelectColumn(ParticipanteTableMap::COL_FUNCAO);
             $criteria->addSelectColumn(ParticipanteTableMap::COL_CPF);
             $criteria->addSelectColumn(ParticipanteTableMap::COL_EVENTO);
+            $criteria->addSelectColumn(ParticipanteTableMap::COL_TOKEN);
         } else {
             $criteria->addSelectColumn($alias . '.idparticipantes');
             $criteria->addSelectColumn($alias . '.nome');
             $criteria->addSelectColumn($alias . '.funcao');
             $criteria->addSelectColumn($alias . '.cpf');
             $criteria->addSelectColumn($alias . '.evento');
+            $criteria->addSelectColumn($alias . '.token');
         }
     }
 
@@ -464,12 +479,14 @@ class ParticipanteTableMap extends TableMap
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_FUNCAO);
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_CPF);
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_EVENTO);
+            $criteria->removeSelectColumn(ParticipanteTableMap::COL_TOKEN);
         } else {
             $criteria->removeSelectColumn($alias . '.idparticipantes');
             $criteria->removeSelectColumn($alias . '.nome');
             $criteria->removeSelectColumn($alias . '.funcao');
             $criteria->removeSelectColumn($alias . '.cpf');
             $criteria->removeSelectColumn($alias . '.evento');
+            $criteria->removeSelectColumn($alias . '.token');
         }
     }
 
