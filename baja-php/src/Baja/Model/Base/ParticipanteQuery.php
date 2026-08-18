@@ -25,6 +25,9 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipanteQuery orderByDocumentoEstrangeiro($order = Criteria::ASC) Order by the documento_estrangeiro column
  * @method     ChildParticipanteQuery orderByEventoId($order = Criteria::ASC) Order by the evento column
  * @method     ChildParticipanteQuery orderByToken($order = Criteria::ASC) Order by the token column
+ * @method     ChildParticipanteQuery orderByCriadoPor($order = Criteria::ASC) Order by the criado_por column
+ * @method     ChildParticipanteQuery orderByCriadoEm($order = Criteria::ASC) Order by the criado_em column
+ * @method     ChildParticipanteQuery orderByLoteId($order = Criteria::ASC) Order by the lote_id column
  *
  * @method     ChildParticipanteQuery groupByNome() Group by the nome column
  * @method     ChildParticipanteQuery groupByFuncao() Group by the funcao column
@@ -32,6 +35,9 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipanteQuery groupByDocumentoEstrangeiro() Group by the documento_estrangeiro column
  * @method     ChildParticipanteQuery groupByEventoId() Group by the evento column
  * @method     ChildParticipanteQuery groupByToken() Group by the token column
+ * @method     ChildParticipanteQuery groupByCriadoPor() Group by the criado_por column
+ * @method     ChildParticipanteQuery groupByCriadoEm() Group by the criado_em column
+ * @method     ChildParticipanteQuery groupByLoteId() Group by the lote_id column
  *
  * @method     ChildParticipanteQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildParticipanteQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -51,7 +57,17 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipanteQuery rightJoinWithEvento() Adds a RIGHT JOIN clause and with to the query using the Evento relation
  * @method     ChildParticipanteQuery innerJoinWithEvento() Adds a INNER JOIN clause and with to the query using the Evento relation
  *
- * @method     \Baja\Model\EventoQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildParticipanteQuery leftJoinUser($relationAlias = null) Adds a LEFT JOIN clause to the query using the User relation
+ * @method     ChildParticipanteQuery rightJoinUser($relationAlias = null) Adds a RIGHT JOIN clause to the query using the User relation
+ * @method     ChildParticipanteQuery innerJoinUser($relationAlias = null) Adds a INNER JOIN clause to the query using the User relation
+ *
+ * @method     ChildParticipanteQuery joinWithUser($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the User relation
+ *
+ * @method     ChildParticipanteQuery leftJoinWithUser() Adds a LEFT JOIN clause and with to the query using the User relation
+ * @method     ChildParticipanteQuery rightJoinWithUser() Adds a RIGHT JOIN clause and with to the query using the User relation
+ * @method     ChildParticipanteQuery innerJoinWithUser() Adds a INNER JOIN clause and with to the query using the User relation
+ *
+ * @method     \Baja\Model\EventoQuery|\Baja\Model\UserQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildParticipante|null findOne(?ConnectionInterface $con = null) Return the first ChildParticipante matching the query
  * @method     ChildParticipante findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildParticipante matching the query, or a new ChildParticipante object populated from the query conditions when no match is found
@@ -62,6 +78,9 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipante|null findOneByDocumentoEstrangeiro(string $documento_estrangeiro) Return the first ChildParticipante filtered by the documento_estrangeiro column
  * @method     ChildParticipante|null findOneByEventoId(string $evento) Return the first ChildParticipante filtered by the evento column
  * @method     ChildParticipante|null findOneByToken(string $token) Return the first ChildParticipante filtered by the token column
+ * @method     ChildParticipante|null findOneByCriadoPor(int $criado_por) Return the first ChildParticipante filtered by the criado_por column
+ * @method     ChildParticipante|null findOneByCriadoEm(string $criado_em) Return the first ChildParticipante filtered by the criado_em column
+ * @method     ChildParticipante|null findOneByLoteId(string $lote_id) Return the first ChildParticipante filtered by the lote_id column
  *
  * @method     ChildParticipante requirePk($key, ?ConnectionInterface $con = null) Return the ChildParticipante by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOne(?ConnectionInterface $con = null) Return the first ChildParticipante matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -72,6 +91,9 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipante requireOneByDocumentoEstrangeiro(string $documento_estrangeiro) Return the first ChildParticipante filtered by the documento_estrangeiro column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByEventoId(string $evento) Return the first ChildParticipante filtered by the evento column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByToken(string $token) Return the first ChildParticipante filtered by the token column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildParticipante requireOneByCriadoPor(int $criado_por) Return the first ChildParticipante filtered by the criado_por column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildParticipante requireOneByCriadoEm(string $criado_em) Return the first ChildParticipante filtered by the criado_em column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildParticipante requireOneByLoteId(string $lote_id) Return the first ChildParticipante filtered by the lote_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildParticipante[]|Collection find(?ConnectionInterface $con = null) Return ChildParticipante objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildParticipante> find(?ConnectionInterface $con = null) Return ChildParticipante objects based on current ModelCriteria
@@ -88,6 +110,12 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildParticipante> findByEventoId(string|array<string> $evento) Return ChildParticipante objects filtered by the evento column
  * @method     ChildParticipante[]|Collection findByToken(string|array<string> $token) Return ChildParticipante objects filtered by the token column
  * @psalm-method Collection&\Traversable<ChildParticipante> findByToken(string|array<string> $token) Return ChildParticipante objects filtered by the token column
+ * @method     ChildParticipante[]|Collection findByCriadoPor(int|array<int> $criado_por) Return ChildParticipante objects filtered by the criado_por column
+ * @psalm-method Collection&\Traversable<ChildParticipante> findByCriadoPor(int|array<int> $criado_por) Return ChildParticipante objects filtered by the criado_por column
+ * @method     ChildParticipante[]|Collection findByCriadoEm(string|array<string> $criado_em) Return ChildParticipante objects filtered by the criado_em column
+ * @psalm-method Collection&\Traversable<ChildParticipante> findByCriadoEm(string|array<string> $criado_em) Return ChildParticipante objects filtered by the criado_em column
+ * @method     ChildParticipante[]|Collection findByLoteId(string|array<string> $lote_id) Return ChildParticipante objects filtered by the lote_id column
+ * @psalm-method Collection&\Traversable<ChildParticipante> findByLoteId(string|array<string> $lote_id) Return ChildParticipante objects filtered by the lote_id column
  *
  * @method     ChildParticipante[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildParticipante> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -187,7 +215,7 @@ abstract class ParticipanteQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT nome, funcao, cpf, documento_estrangeiro, evento, token FROM participantes WHERE token = :p0';
+        $sql = 'SELECT nome, funcao, cpf, documento_estrangeiro, evento, token, criado_por, criado_em, lote_id FROM participantes WHERE token = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
@@ -450,6 +478,124 @@ abstract class ParticipanteQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query on the criado_por column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByCriadoPor(1234); // WHERE criado_por = 1234
+     * $query->filterByCriadoPor(array(12, 34)); // WHERE criado_por IN (12, 34)
+     * $query->filterByCriadoPor(array('min' => 12)); // WHERE criado_por > 12
+     * </code>
+     *
+     * @see       filterByUser()
+     *
+     * @param mixed $criadoPor The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByCriadoPor($criadoPor = null, ?string $comparison = null)
+    {
+        if (is_array($criadoPor)) {
+            $useMinMax = false;
+            if (isset($criadoPor['min'])) {
+                $this->addUsingAlias(ParticipanteTableMap::COL_CRIADO_POR, $criadoPor['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($criadoPor['max'])) {
+                $this->addUsingAlias(ParticipanteTableMap::COL_CRIADO_POR, $criadoPor['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ParticipanteTableMap::COL_CRIADO_POR, $criadoPor, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the criado_em column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByCriadoEm('2011-03-14'); // WHERE criado_em = '2011-03-14'
+     * $query->filterByCriadoEm('now'); // WHERE criado_em = '2011-03-14'
+     * $query->filterByCriadoEm(array('max' => 'yesterday')); // WHERE criado_em > '2011-03-13'
+     * </code>
+     *
+     * @param mixed $criadoEm The value to use as filter.
+     *              Values can be integers (unix timestamps), DateTime objects, or strings.
+     *              Empty strings are treated as NULL.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByCriadoEm($criadoEm = null, ?string $comparison = null)
+    {
+        if (is_array($criadoEm)) {
+            $useMinMax = false;
+            if (isset($criadoEm['min'])) {
+                $this->addUsingAlias(ParticipanteTableMap::COL_CRIADO_EM, $criadoEm['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($criadoEm['max'])) {
+                $this->addUsingAlias(ParticipanteTableMap::COL_CRIADO_EM, $criadoEm['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ParticipanteTableMap::COL_CRIADO_EM, $criadoEm, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the lote_id column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByLoteId('fooValue');   // WHERE lote_id = 'fooValue'
+     * $query->filterByLoteId('%fooValue%', Criteria::LIKE); // WHERE lote_id LIKE '%fooValue%'
+     * $query->filterByLoteId(['foo', 'bar']); // WHERE lote_id IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $loteId The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByLoteId($loteId = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($loteId)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ParticipanteTableMap::COL_LOTE_ID, $loteId, $comparison);
+
+        return $this;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\Evento object
      *
      * @param \Baja\Model\Evento|ObjectCollection $evento The related object(s) to use as filter
@@ -621,6 +767,181 @@ abstract class ParticipanteQuery extends ModelCriteria
     {
         /** @var $q \Baja\Model\EventoQuery */
         $q = $this->useInQuery('Evento', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\User object
+     *
+     * @param \Baja\Model\User|ObjectCollection $user The related object(s) to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByUser($user, ?string $comparison = null)
+    {
+        if ($user instanceof \Baja\Model\User) {
+            return $this
+                ->addUsingAlias(ParticipanteTableMap::COL_CRIADO_POR, $user->getUserId(), $comparison);
+        } elseif ($user instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            $this
+                ->addUsingAlias(ParticipanteTableMap::COL_CRIADO_POR, $user->toKeyValue('PrimaryKey', 'UserId'), $comparison);
+
+            return $this;
+        } else {
+            throw new PropelException('filterByUser() only accepts arguments of type \Baja\Model\User or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the User relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinUser(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('User');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'User');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the User relation User object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\UserQuery A secondary query class using the current class as primary query
+     */
+    public function useUserQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinUser($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'User', '\Baja\Model\UserQuery');
+    }
+
+    /**
+     * Use the User relation User object
+     *
+     * @param callable(\Baja\Model\UserQuery):\Baja\Model\UserQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withUserQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::LEFT_JOIN
+    ) {
+        $relatedQuery = $this->useUserQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to User table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\UserQuery The inner query object of the EXISTS statement
+     */
+    public function useUserExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\UserQuery */
+        $q = $this->useExistsQuery('User', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to User table for a NOT EXISTS query.
+     *
+     * @see useUserExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\UserQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useUserNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\UserQuery */
+        $q = $this->useExistsQuery('User', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to User table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\UserQuery The inner query object of the IN statement
+     */
+    public function useInUserQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\UserQuery */
+        $q = $this->useInQuery('User', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to User table for a NOT IN query.
+     *
+     * @see useUserInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\UserQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInUserQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\UserQuery */
+        $q = $this->useInQuery('User', $modelAlias, $queryClass, 'NOT IN');
         return $q;
     }
 

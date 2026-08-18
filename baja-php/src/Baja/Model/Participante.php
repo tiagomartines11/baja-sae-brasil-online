@@ -5,6 +5,7 @@ namespace Baja\Model;
 use Baja\Certificado\Documento;
 use Baja\Certificado\Token;
 use Baja\Model\Base\Participante as BaseParticipante;
+use DateTimeImmutable;
 use Propel\Runtime\Connection\ConnectionInterface;
 
 /**
@@ -29,6 +30,39 @@ class Participante extends BaseParticipante
     {
         if ($this->getToken() === null || $this->getToken() === '') {
             $this->setToken(Token::generate());
+        }
+
+        // A batch of one is still a batch. Generating an id here rather than
+        // only in the paste flow means every row created through the
+        // application belongs to exactly one identifiable batch, so the
+        // question "what else came in with this?" has an answer for a
+        // single-entry mistake as much as for a pasted one.
+        if ($this->getLoteId() === null || $this->getLoteId() === '') {
+            $this->setLoteId(Token::generate());
+        }
+
+        if ($this->getCriadoEm() === null) {
+            $this->setCriadoEm(new DateTimeImmutable());
+        }
+
+        // The one field that cannot be filled in for the caller. Throwing is
+        // the point: a certificate is a claim SAE makes about a person, and
+        // the row is the only place the claim's author survives — the access
+        // logs that would otherwise hold it rotate long before the
+        // certificate does.
+        //
+        // Historical rows keep NULL and are untouched by this; the constraint
+        // is on creating rows, not on holding them. Nothing inserted
+        // participants through this model before this branch, so there is no
+        // existing caller to grandfather. If an unattended importer ever
+        // needs one, the answer is a user row that says so, not a NULL that
+        // says nothing.
+        if ($this->getCriadoPor() === null) {
+            throw new \LogicException(
+                'A participante cannot be created without criado_por. Whoever is '
+                . 'asserting this certificate has to be recorded on the row, because '
+                . 'the row outlives every log that would otherwise say.'
+            );
         }
 
         return parent::preInsert($con);

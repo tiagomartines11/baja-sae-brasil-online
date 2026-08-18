@@ -113,3 +113,39 @@ function test_db_available(): bool
 {
     return getenv('BAJA_TEST_DB') === '1';
 }
+
+/**
+ * The user id that fixtures record as the author of the rows they create.
+ *
+ * Every insert now needs one — Participante::preInsert() refuses a row with
+ * no criado_por, because a certificate's author is the one thing that cannot
+ * be reconstructed later. Fixtures are no exception, so they get a user of
+ * their own rather than borrowing a real person's id.
+ *
+ * Found or created, and deliberately left behind afterwards: the fixture
+ * participants are deleted by name prefix at the end of each file, and the FK
+ * is ON DELETE SET NULL, so deleting this row would quietly blank criado_por
+ * on anything that outlived a crashed run. One row in `user` is cheaper than
+ * that. The username is prefixed like every other fixture so it is obvious
+ * what it is.
+ */
+function test_user_id(): int
+{
+    static $id = null;
+
+    if ($id !== null) {
+        return $id;
+    }
+
+    $username = 'ZZFixtureUser';
+
+    $user = \Baja\Model\UserQuery::create()->findOneByUsername($username);
+    if ($user === null) {
+        $user = new \Baja\Model\User();
+        $user->setUsername($username);
+        $user->setPermissions(['index']);
+        $user->save();
+    }
+
+    return $id = (int) $user->getUserId();
+}

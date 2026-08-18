@@ -146,11 +146,58 @@
         <parameter name="Collate" value="ascii_bin"/>
       </vendor>
     </column>
+    <!-- Audit trail. Who asserted this record, when, and as part of which
+         paste. Existing rows carry NULL in all three and are not backfilled:
+         there is nothing to backfill from.
+
+         In the table rather than the access log because the two have
+         different lifetimes. Logs rotate on a deliberately short schedule
+         under the retention principle this system already adopted, while
+         certificate rows are kept indefinitely — and an audit trail that
+         expires before the artifact it describes is not an audit trail. A
+         certificate is a claim SAE makes about a person; when one is
+         disputed the question is who made the claim, and that is a property
+         of the record. LGPD Art. 37. -->
+    <column name="criado_por" phpName="CriadoPor" type="INTEGER"/>
+    <!-- DATETIME, not TIMESTAMP. TIMESTAMP is stored as an offset from the
+         epoch and rendered through the session timezone, so the same row
+         reads as a different instant if the server's timezone is ever
+         changed — and it runs out in 2038, which is inside the period these
+         rows are kept for. Neither is acceptable for a record whose whole
+         purpose is to say when something was asserted. -->
+    <column name="criado_em" phpName="CriadoEm" type="TIMESTAMP" sqlType="DATETIME"/>
+    <!-- Batch identifier, shared by every row of one paste. Same generator as
+         `token`, and so the same collation reasoning: base64url is
+         case-sensitive, and under the table default (latin1_swedish_ci) two
+         batches whose ids differ only in case would be one batch to a
+         WHERE clause — which is how a deletion by lote_id would take rows it
+         was not meant to. -->
+    <column name="lote_id" phpName="LoteId" type="CHAR" size="22">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
     <foreign-key foreignTable="evento" name="participantes_evento_id" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="evento" foreign="evento_id"/>
     </foreign-key>
+    <!-- SET NULL, never CASCADE. admin_usuario.php deletes the user row when
+         a user is left with no meaningful permissions, so CASCADE here would
+         mean that de-permissioning somebody deletes every certificate they
+         ever issued. Losing the attribution is bad; losing the certificates
+         is unrecoverable. -->
+    <foreign-key foreignTable="user" name="participantes_criado_por" onDelete="SETNULL" onUpdate="CASCADE">
+      <reference local="criado_por" foreign="user_id"/>
+    </foreign-key>
     <index name="participantes_evento_id_idx">
       <index-column name="evento"/>
+    </index>
+    <!-- What makes a bad paste identifiable, and deletable, afterwards. -->
+    <index name="participantes_lote_id_idx">
+      <index-column name="lote_id"/>
+    </index>
+    <index name="participantes_criado_por_idx">
+      <index-column name="criado_por"/>
     </index>
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>

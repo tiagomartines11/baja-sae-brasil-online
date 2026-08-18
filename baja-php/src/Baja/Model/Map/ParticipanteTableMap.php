@@ -63,7 +63,7 @@ class ParticipanteTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 6;
+    public const NUM_COLUMNS = 9;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ParticipanteTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 6;
+    public const NUM_HYDRATE_COLUMNS = 9;
 
     /**
      * the column name for the nome field
@@ -106,6 +106,21 @@ class ParticipanteTableMap extends TableMap
     public const COL_TOKEN = 'participantes.token';
 
     /**
+     * the column name for the criado_por field
+     */
+    public const COL_CRIADO_POR = 'participantes.criado_por';
+
+    /**
+     * the column name for the criado_em field
+     */
+    public const COL_CRIADO_EM = 'participantes.criado_em';
+
+    /**
+     * the column name for the lote_id field
+     */
+    public const COL_LOTE_ID = 'participantes.lote_id';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -119,11 +134,11 @@ class ParticipanteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['Nome', 'Funcao', 'Cpf', 'DocumentoEstrangeiro', 'EventoId', 'Token', ],
-        self::TYPE_CAMELNAME     => ['nome', 'funcao', 'cpf', 'documentoEstrangeiro', 'eventoId', 'token', ],
-        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_NOME, ParticipanteTableMap::COL_FUNCAO, ParticipanteTableMap::COL_CPF, ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO, ParticipanteTableMap::COL_EVENTO, ParticipanteTableMap::COL_TOKEN, ],
-        self::TYPE_FIELDNAME     => ['nome', 'funcao', 'cpf', 'documento_estrangeiro', 'evento', 'token', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, ]
+        self::TYPE_PHPNAME       => ['Nome', 'Funcao', 'Cpf', 'DocumentoEstrangeiro', 'EventoId', 'Token', 'CriadoPor', 'CriadoEm', 'LoteId', ],
+        self::TYPE_CAMELNAME     => ['nome', 'funcao', 'cpf', 'documentoEstrangeiro', 'eventoId', 'token', 'criadoPor', 'criadoEm', 'loteId', ],
+        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_NOME, ParticipanteTableMap::COL_FUNCAO, ParticipanteTableMap::COL_CPF, ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO, ParticipanteTableMap::COL_EVENTO, ParticipanteTableMap::COL_TOKEN, ParticipanteTableMap::COL_CRIADO_POR, ParticipanteTableMap::COL_CRIADO_EM, ParticipanteTableMap::COL_LOTE_ID, ],
+        self::TYPE_FIELDNAME     => ['nome', 'funcao', 'cpf', 'documento_estrangeiro', 'evento', 'token', 'criado_por', 'criado_em', 'lote_id', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, ]
     ];
 
     /**
@@ -135,11 +150,11 @@ class ParticipanteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['Nome' => 0, 'Funcao' => 1, 'Cpf' => 2, 'DocumentoEstrangeiro' => 3, 'EventoId' => 4, 'Token' => 5, ],
-        self::TYPE_CAMELNAME     => ['nome' => 0, 'funcao' => 1, 'cpf' => 2, 'documentoEstrangeiro' => 3, 'eventoId' => 4, 'token' => 5, ],
-        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_NOME => 0, ParticipanteTableMap::COL_FUNCAO => 1, ParticipanteTableMap::COL_CPF => 2, ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO => 3, ParticipanteTableMap::COL_EVENTO => 4, ParticipanteTableMap::COL_TOKEN => 5, ],
-        self::TYPE_FIELDNAME     => ['nome' => 0, 'funcao' => 1, 'cpf' => 2, 'documento_estrangeiro' => 3, 'evento' => 4, 'token' => 5, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, ]
+        self::TYPE_PHPNAME       => ['Nome' => 0, 'Funcao' => 1, 'Cpf' => 2, 'DocumentoEstrangeiro' => 3, 'EventoId' => 4, 'Token' => 5, 'CriadoPor' => 6, 'CriadoEm' => 7, 'LoteId' => 8, ],
+        self::TYPE_CAMELNAME     => ['nome' => 0, 'funcao' => 1, 'cpf' => 2, 'documentoEstrangeiro' => 3, 'eventoId' => 4, 'token' => 5, 'criadoPor' => 6, 'criadoEm' => 7, 'loteId' => 8, ],
+        self::TYPE_COLNAME       => [ParticipanteTableMap::COL_NOME => 0, ParticipanteTableMap::COL_FUNCAO => 1, ParticipanteTableMap::COL_CPF => 2, ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO => 3, ParticipanteTableMap::COL_EVENTO => 4, ParticipanteTableMap::COL_TOKEN => 5, ParticipanteTableMap::COL_CRIADO_POR => 6, ParticipanteTableMap::COL_CRIADO_EM => 7, ParticipanteTableMap::COL_LOTE_ID => 8, ],
+        self::TYPE_FIELDNAME     => ['nome' => 0, 'funcao' => 1, 'cpf' => 2, 'documento_estrangeiro' => 3, 'evento' => 4, 'token' => 5, 'criado_por' => 6, 'criado_em' => 7, 'lote_id' => 8, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, ]
     ];
 
     /**
@@ -192,6 +207,30 @@ class ParticipanteTableMap extends TableMap
         'ParticipanteTableMap::COL_TOKEN' => 'TOKEN',
         'COL_TOKEN' => 'TOKEN',
         'participantes.token' => 'TOKEN',
+        'CriadoPor' => 'CRIADO_POR',
+        'Participante.CriadoPor' => 'CRIADO_POR',
+        'criadoPor' => 'CRIADO_POR',
+        'participante.criadoPor' => 'CRIADO_POR',
+        'ParticipanteTableMap::COL_CRIADO_POR' => 'CRIADO_POR',
+        'COL_CRIADO_POR' => 'CRIADO_POR',
+        'criado_por' => 'CRIADO_POR',
+        'participantes.criado_por' => 'CRIADO_POR',
+        'CriadoEm' => 'CRIADO_EM',
+        'Participante.CriadoEm' => 'CRIADO_EM',
+        'criadoEm' => 'CRIADO_EM',
+        'participante.criadoEm' => 'CRIADO_EM',
+        'ParticipanteTableMap::COL_CRIADO_EM' => 'CRIADO_EM',
+        'COL_CRIADO_EM' => 'CRIADO_EM',
+        'criado_em' => 'CRIADO_EM',
+        'participantes.criado_em' => 'CRIADO_EM',
+        'LoteId' => 'LOTE_ID',
+        'Participante.LoteId' => 'LOTE_ID',
+        'loteId' => 'LOTE_ID',
+        'participante.loteId' => 'LOTE_ID',
+        'ParticipanteTableMap::COL_LOTE_ID' => 'LOTE_ID',
+        'COL_LOTE_ID' => 'LOTE_ID',
+        'lote_id' => 'LOTE_ID',
+        'participantes.lote_id' => 'LOTE_ID',
     ];
 
     /**
@@ -217,6 +256,9 @@ class ParticipanteTableMap extends TableMap
         $this->addColumn('documento_estrangeiro', 'DocumentoEstrangeiro', 'VARCHAR', false, 32, null);
         $this->addForeignKey('evento', 'EventoId', 'CHAR', 'evento', 'evento_id', true, 4, null);
         $this->addPrimaryKey('token', 'Token', 'CHAR', true, 22, null);
+        $this->addForeignKey('criado_por', 'CriadoPor', 'INTEGER', 'user', 'user_id', false, null, null);
+        $this->addColumn('criado_em', 'CriadoEm', 'TIMESTAMP', false, null, null);
+        $this->addColumn('lote_id', 'LoteId', 'CHAR', false, 22, null);
     }
 
     /**
@@ -233,6 +275,13 @@ class ParticipanteTableMap extends TableMap
     1 => ':evento_id',
   ),
 ), 'CASCADE', 'CASCADE', null, false);
+        $this->addRelation('User', '\\Baja\\Model\\User', RelationMap::MANY_TO_ONE, array (
+  0 =>
+  array (
+    0 => ':criado_por',
+    1 => ':user_id',
+  ),
+), 'SET NULL', 'CASCADE', null, false);
     }
 
     /**
@@ -383,6 +432,9 @@ class ParticipanteTableMap extends TableMap
             $criteria->addSelectColumn(ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO);
             $criteria->addSelectColumn(ParticipanteTableMap::COL_EVENTO);
             $criteria->addSelectColumn(ParticipanteTableMap::COL_TOKEN);
+            $criteria->addSelectColumn(ParticipanteTableMap::COL_CRIADO_POR);
+            $criteria->addSelectColumn(ParticipanteTableMap::COL_CRIADO_EM);
+            $criteria->addSelectColumn(ParticipanteTableMap::COL_LOTE_ID);
         } else {
             $criteria->addSelectColumn($alias . '.nome');
             $criteria->addSelectColumn($alias . '.funcao');
@@ -390,6 +442,9 @@ class ParticipanteTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.documento_estrangeiro');
             $criteria->addSelectColumn($alias . '.evento');
             $criteria->addSelectColumn($alias . '.token');
+            $criteria->addSelectColumn($alias . '.criado_por');
+            $criteria->addSelectColumn($alias . '.criado_em');
+            $criteria->addSelectColumn($alias . '.lote_id');
         }
     }
 
@@ -414,6 +469,9 @@ class ParticipanteTableMap extends TableMap
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO);
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_EVENTO);
             $criteria->removeSelectColumn(ParticipanteTableMap::COL_TOKEN);
+            $criteria->removeSelectColumn(ParticipanteTableMap::COL_CRIADO_POR);
+            $criteria->removeSelectColumn(ParticipanteTableMap::COL_CRIADO_EM);
+            $criteria->removeSelectColumn(ParticipanteTableMap::COL_LOTE_ID);
         } else {
             $criteria->removeSelectColumn($alias . '.nome');
             $criteria->removeSelectColumn($alias . '.funcao');
@@ -421,6 +479,9 @@ class ParticipanteTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.documento_estrangeiro');
             $criteria->removeSelectColumn($alias . '.evento');
             $criteria->removeSelectColumn($alias . '.token');
+            $criteria->removeSelectColumn($alias . '.criado_por');
+            $criteria->removeSelectColumn($alias . '.criado_em');
+            $criteria->removeSelectColumn($alias . '.lote_id');
         }
     }
 

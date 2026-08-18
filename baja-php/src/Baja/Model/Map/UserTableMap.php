@@ -198,6 +198,13 @@ class UserTableMap extends TableMap
      */
     public function buildRelations(): void
     {
+        $this->addRelation('Participante', '\\Baja\\Model\\Participante', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':criado_por',
+    1 => ':user_id',
+  ),
+), 'SET NULL', 'CASCADE', 'Participantes', false);
         $this->addRelation('Config', '\\Baja\\Model\\Config', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (
@@ -214,6 +221,7 @@ class UserTableMap extends TableMap
     {
         // Invalidate objects in related instance pools,
         // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
+        ParticipanteTableMap::clearInstancePool();
         ConfigTableMap::clearInstancePool();
     }
 
