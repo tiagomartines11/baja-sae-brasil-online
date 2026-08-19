@@ -115,8 +115,33 @@ T::same(1, (new Lotes([], 0, substr($loteGrande, 0, 8)))->total(), 'and so does 
 T::same(0, (new Lotes([], 0, 'zzzzzzzz'))->total(), 'a fragment matching nothing finds nothing');
 
 // LIKE metacharacters must not widen the search, here as anywhere else.
+//
+// A percent never appears in a batch id, so searching one finds nothing. An
+// underscore is a different matter: base64url uses it, so some ids contain one
+// and searching it legitimately finds those. What must not happen is `_`
+// behaving as LIKE's single-character wildcard and matching every batch —
+// which is what an earlier version of this check mistook for a failure when it
+// asserted a flat zero and the generated ids happened to contain an
+// underscore.
 T::same(0, (new Lotes([], 0, '%'))->total(), 'a literal percent is not a wildcard');
-T::same(0, (new Lotes([], 0, '_'))->total(), 'nor an underscore');
+
+// Deterministic, and built from an id this test owns: take the batch's own
+// identifier and replace one character with an underscore. Matched literally
+// that string belongs to no batch and finds nothing; treated as LIKE's
+// single-character wildcard it would match the batch it came from.
+$posicao = null;
+for ($i = 0; $i < strlen($loteGrande); $i++) {
+    if ($loteGrande[$i] !== '_') {
+        $posicao = $i;
+        break;
+    }
+}
+T::ok('the batch id has a character to disguise', $posicao !== null);
+
+$disfarcado = substr_replace($loteGrande, '_', $posicao, 1);
+T::notSame($loteGrande, $disfarcado, 'the disguised id differs from the real one');
+T::same(1, (new Lotes([], 0, $loteGrande))->total(), 'the real id still finds its batch');
+T::same(0, (new Lotes([], 0, $disfarcado))->total(), 'an underscore matches literally, not as a wildcard');
 
 // Filters narrow rather than widen when combined.
 T::same(0, (new Lotes([$evA], 0, $lotePequeno))->total(), 'combined filters intersect');
