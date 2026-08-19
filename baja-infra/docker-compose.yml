@@ -95,8 +95,11 @@ services:
       ENV: ${ENV}
       # Keys the /buscar per-document backoff. See .env.example.
       CERT_BACKOFF_SECRET: ${CERT_BACKOFF_SECRET}
-      BAJA_PUBLIC_DOMAIN: ${BAJA_PUBLIC_DOMAIN}
-      BAJA_PUBLIC_SCHEME: ${BAJA_PUBLIC_SCHEME}
+      # Baja\Url builds every public-facing link from these — the same two
+      # variables the nginx templates render server_name and the listen block
+      # from, so a link can never name a host or scheme nginx is not serving.
+      BAJA_DOMAIN: ${BAJA_DOMAIN}
+      LISTEN_MODE: ${LISTEN_MODE}
       # phpBB session shim — see baja-php/src/Baja/Auth/SessionStore.php.
       # The shim connects as the `resultados` MySQL user (full grants on
       # baja_resultados, SELECT on phpbb_baja). One MySQL account, two
