@@ -90,7 +90,13 @@ vendor/
 # generated-classes/ and generated-conf/ are Propel's defaults for that tree:
 # they only appear if a propel command runs without picking up the config, and
 # ignoring them stops a stray duplicate model tree being committed by accident.
-generated-migrations/
+# generated-migrations/ is deliberately NOT ignored. Unlike the rest of this
+# list it is not regenerable output: `migration:diff` compares schema.xml
+# against whatever database it is pointed at, so a migration deleted from the
+# tree cannot be reproduced once the schema has moved on, and Propel tracks
+# which migrations have been applied by their timestamps. It is a historical
+# record, and reviewing it is already a step in the develop -> master checklist
+# in docs/dev-workflow.md.
 generated-sql/
 generated-reversed-database/
 generated-classes/
@@ -143,6 +149,9 @@ dist/
 
 # Backup files
 *.bak
+
+# Local scratch notes
+.scratch/
 
 # --- WP9: migration script secrets / dump files ---
 baja-infra/scripts/migration.env

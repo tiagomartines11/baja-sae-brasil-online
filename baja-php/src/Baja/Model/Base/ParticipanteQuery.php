@@ -19,17 +19,19 @@ use Propel\Runtime\Exception\PropelException;
 /**
  * Base class that represents a query for the `participantes` table.
  *
- * @method     ChildParticipanteQuery orderByParticipanteId($order = Criteria::ASC) Order by the idparticipantes column
  * @method     ChildParticipanteQuery orderByNome($order = Criteria::ASC) Order by the nome column
  * @method     ChildParticipanteQuery orderByFuncao($order = Criteria::ASC) Order by the funcao column
  * @method     ChildParticipanteQuery orderByCpf($order = Criteria::ASC) Order by the cpf column
+ * @method     ChildParticipanteQuery orderByDocumentoEstrangeiro($order = Criteria::ASC) Order by the documento_estrangeiro column
  * @method     ChildParticipanteQuery orderByEventoId($order = Criteria::ASC) Order by the evento column
+ * @method     ChildParticipanteQuery orderByToken($order = Criteria::ASC) Order by the token column
  *
- * @method     ChildParticipanteQuery groupByParticipanteId() Group by the idparticipantes column
  * @method     ChildParticipanteQuery groupByNome() Group by the nome column
  * @method     ChildParticipanteQuery groupByFuncao() Group by the funcao column
  * @method     ChildParticipanteQuery groupByCpf() Group by the cpf column
+ * @method     ChildParticipanteQuery groupByDocumentoEstrangeiro() Group by the documento_estrangeiro column
  * @method     ChildParticipanteQuery groupByEventoId() Group by the evento column
+ * @method     ChildParticipanteQuery groupByToken() Group by the token column
  *
  * @method     ChildParticipanteQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildParticipanteQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -54,34 +56,38 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildParticipante|null findOne(?ConnectionInterface $con = null) Return the first ChildParticipante matching the query
  * @method     ChildParticipante findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildParticipante matching the query, or a new ChildParticipante object populated from the query conditions when no match is found
  *
- * @method     ChildParticipante|null findOneByParticipanteId(int $idparticipantes) Return the first ChildParticipante filtered by the idparticipantes column
  * @method     ChildParticipante|null findOneByNome(string $nome) Return the first ChildParticipante filtered by the nome column
  * @method     ChildParticipante|null findOneByFuncao(string $funcao) Return the first ChildParticipante filtered by the funcao column
  * @method     ChildParticipante|null findOneByCpf(string $cpf) Return the first ChildParticipante filtered by the cpf column
+ * @method     ChildParticipante|null findOneByDocumentoEstrangeiro(string $documento_estrangeiro) Return the first ChildParticipante filtered by the documento_estrangeiro column
  * @method     ChildParticipante|null findOneByEventoId(string $evento) Return the first ChildParticipante filtered by the evento column
+ * @method     ChildParticipante|null findOneByToken(string $token) Return the first ChildParticipante filtered by the token column
  *
  * @method     ChildParticipante requirePk($key, ?ConnectionInterface $con = null) Return the ChildParticipante by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOne(?ConnectionInterface $con = null) Return the first ChildParticipante matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
- * @method     ChildParticipante requireOneByParticipanteId(int $idparticipantes) Return the first ChildParticipante filtered by the idparticipantes column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByNome(string $nome) Return the first ChildParticipante filtered by the nome column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByFuncao(string $funcao) Return the first ChildParticipante filtered by the funcao column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByCpf(string $cpf) Return the first ChildParticipante filtered by the cpf column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildParticipante requireOneByDocumentoEstrangeiro(string $documento_estrangeiro) Return the first ChildParticipante filtered by the documento_estrangeiro column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildParticipante requireOneByEventoId(string $evento) Return the first ChildParticipante filtered by the evento column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildParticipante requireOneByToken(string $token) Return the first ChildParticipante filtered by the token column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildParticipante[]|Collection find(?ConnectionInterface $con = null) Return ChildParticipante objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildParticipante> find(?ConnectionInterface $con = null) Return ChildParticipante objects based on current ModelCriteria
  *
- * @method     ChildParticipante[]|Collection findByParticipanteId(int|array<int> $idparticipantes) Return ChildParticipante objects filtered by the idparticipantes column
- * @psalm-method Collection&\Traversable<ChildParticipante> findByParticipanteId(int|array<int> $idparticipantes) Return ChildParticipante objects filtered by the idparticipantes column
  * @method     ChildParticipante[]|Collection findByNome(string|array<string> $nome) Return ChildParticipante objects filtered by the nome column
  * @psalm-method Collection&\Traversable<ChildParticipante> findByNome(string|array<string> $nome) Return ChildParticipante objects filtered by the nome column
  * @method     ChildParticipante[]|Collection findByFuncao(string|array<string> $funcao) Return ChildParticipante objects filtered by the funcao column
  * @psalm-method Collection&\Traversable<ChildParticipante> findByFuncao(string|array<string> $funcao) Return ChildParticipante objects filtered by the funcao column
  * @method     ChildParticipante[]|Collection findByCpf(string|array<string> $cpf) Return ChildParticipante objects filtered by the cpf column
  * @psalm-method Collection&\Traversable<ChildParticipante> findByCpf(string|array<string> $cpf) Return ChildParticipante objects filtered by the cpf column
+ * @method     ChildParticipante[]|Collection findByDocumentoEstrangeiro(string|array<string> $documento_estrangeiro) Return ChildParticipante objects filtered by the documento_estrangeiro column
+ * @psalm-method Collection&\Traversable<ChildParticipante> findByDocumentoEstrangeiro(string|array<string> $documento_estrangeiro) Return ChildParticipante objects filtered by the documento_estrangeiro column
  * @method     ChildParticipante[]|Collection findByEventoId(string|array<string> $evento) Return ChildParticipante objects filtered by the evento column
  * @psalm-method Collection&\Traversable<ChildParticipante> findByEventoId(string|array<string> $evento) Return ChildParticipante objects filtered by the evento column
+ * @method     ChildParticipante[]|Collection findByToken(string|array<string> $token) Return ChildParticipante objects filtered by the token column
+ * @psalm-method Collection&\Traversable<ChildParticipante> findByToken(string|array<string> $token) Return ChildParticipante objects filtered by the token column
  *
  * @method     ChildParticipante[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildParticipante> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -132,10 +138,10 @@ abstract class ParticipanteQuery extends ModelCriteria
      * Go fast if the query is untouched.
      *
      * <code>
-     * $obj = $c->findPk(array(12, 34), $con);
+     * $obj  = $c->findPk(12, $con);
      * </code>
      *
-     * @param array[$idparticipantes, $evento] $key Primary key to use for the query
+     * @param mixed $key Primary key to use for the query
      * @param ConnectionInterface $con an optional connection object
      *
      * @return ChildParticipante|array|mixed the result, formatted by the current formatter
@@ -160,7 +166,7 @@ abstract class ParticipanteQuery extends ModelCriteria
             return $this->findPkComplex($key, $con);
         }
 
-        if ((null !== ($obj = ParticipanteTableMap::getInstanceFromPool(serialize([(null === $key[0] || is_scalar($key[0]) || is_callable([$key[0], '__toString']) ? (string) $key[0] : $key[0]), (null === $key[1] || is_scalar($key[1]) || is_callable([$key[1], '__toString']) ? (string) $key[1] : $key[1])]))))) {
+        if ((null !== ($obj = ParticipanteTableMap::getInstanceFromPool(null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key)))) {
             // the object is already in the instance pool
             return $obj;
         }
@@ -181,11 +187,10 @@ abstract class ParticipanteQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT idparticipantes, nome, funcao, cpf, evento FROM participantes WHERE idparticipantes = :p0 AND evento = :p1';
+        $sql = 'SELECT nome, funcao, cpf, documento_estrangeiro, evento, token FROM participantes WHERE token = :p0';
         try {
             $stmt = $con->prepare($sql);
-            $stmt->bindValue(':p0', $key[0], PDO::PARAM_INT);
-            $stmt->bindValue(':p1', $key[1], PDO::PARAM_STR);
+            $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
             $stmt->execute();
         } catch (Exception $e) {
             Propel::log($e->getMessage(), Propel::LOG_ERR);
@@ -196,7 +201,7 @@ abstract class ParticipanteQuery extends ModelCriteria
             /** @var ChildParticipante $obj */
             $obj = new ChildParticipante();
             $obj->hydrate($row);
-            ParticipanteTableMap::addInstanceToPool($obj, serialize([(null === $key[0] || is_scalar($key[0]) || is_callable([$key[0], '__toString']) ? (string) $key[0] : $key[0]), (null === $key[1] || is_scalar($key[1]) || is_callable([$key[1], '__toString']) ? (string) $key[1] : $key[1])]));
+            ParticipanteTableMap::addInstanceToPool($obj, null === $key || is_scalar($key) || is_callable([$key, '__toString']) ? (string) $key : $key);
         }
         $stmt->closeCursor();
 
@@ -225,7 +230,7 @@ abstract class ParticipanteQuery extends ModelCriteria
     /**
      * Find objects by primary key
      * <code>
-     * $objs = $c->findPks(array(array(12, 56), array(832, 123), array(123, 456)), $con);
+     * $objs = $c->findPks(array(12, 56, 832), $con);
      * </code>
      * @param array $keys Primary keys to use for the query
      * @param ConnectionInterface $con an optional connection object
@@ -255,8 +260,8 @@ abstract class ParticipanteQuery extends ModelCriteria
      */
     public function filterByPrimaryKey($key)
     {
-        $this->addUsingAlias(ParticipanteTableMap::COL_IDPARTICIPANTES, $key[0], Criteria::EQUAL);
-        $this->addUsingAlias(ParticipanteTableMap::COL_EVENTO, $key[1], Criteria::EQUAL);
+
+        $this->addUsingAlias(ParticipanteTableMap::COL_TOKEN, $key, Criteria::EQUAL);
 
         return $this;
     }
@@ -270,60 +275,8 @@ abstract class ParticipanteQuery extends ModelCriteria
      */
     public function filterByPrimaryKeys($keys)
     {
-        if (empty($keys)) {
-            $this->add(null, '1<>1', Criteria::CUSTOM);
 
-            return $this;
-        }
-        foreach ($keys as $key) {
-            $cton0 = $this->getNewCriterion(ParticipanteTableMap::COL_IDPARTICIPANTES, $key[0], Criteria::EQUAL);
-            $cton1 = $this->getNewCriterion(ParticipanteTableMap::COL_EVENTO, $key[1], Criteria::EQUAL);
-            $cton0->addAnd($cton1);
-            $this->addOr($cton0);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Filter the query on the idparticipantes column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByParticipanteId(1234); // WHERE idparticipantes = 1234
-     * $query->filterByParticipanteId(array(12, 34)); // WHERE idparticipantes IN (12, 34)
-     * $query->filterByParticipanteId(array('min' => 12)); // WHERE idparticipantes > 12
-     * </code>
-     *
-     * @param mixed $participanteId The value to use as filter.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this The current query, for fluid interface
-     */
-    public function filterByParticipanteId($participanteId = null, ?string $comparison = null)
-    {
-        if (is_array($participanteId)) {
-            $useMinMax = false;
-            if (isset($participanteId['min'])) {
-                $this->addUsingAlias(ParticipanteTableMap::COL_IDPARTICIPANTES, $participanteId['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($participanteId['max'])) {
-                $this->addUsingAlias(ParticipanteTableMap::COL_IDPARTICIPANTES, $participanteId['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        $this->addUsingAlias(ParticipanteTableMap::COL_IDPARTICIPANTES, $participanteId, $comparison);
+        $this->addUsingAlias(ParticipanteTableMap::COL_TOKEN, $keys, Criteria::IN);
 
         return $this;
     }
@@ -389,40 +342,53 @@ abstract class ParticipanteQuery extends ModelCriteria
      *
      * Example usage:
      * <code>
-     * $query->filterByCpf(1234); // WHERE cpf = 1234
-     * $query->filterByCpf(array(12, 34)); // WHERE cpf IN (12, 34)
-     * $query->filterByCpf(array('min' => 12)); // WHERE cpf > 12
+     * $query->filterByCpf('fooValue');   // WHERE cpf = 'fooValue'
+     * $query->filterByCpf('%fooValue%', Criteria::LIKE); // WHERE cpf LIKE '%fooValue%'
+     * $query->filterByCpf(['foo', 'bar']); // WHERE cpf IN ('foo', 'bar')
      * </code>
      *
-     * @param mixed $cpf The value to use as filter.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|string[] $cpf The value to use as filter.
      * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
      *
      * @return $this The current query, for fluid interface
      */
     public function filterByCpf($cpf = null, ?string $comparison = null)
     {
-        if (is_array($cpf)) {
-            $useMinMax = false;
-            if (isset($cpf['min'])) {
-                $this->addUsingAlias(ParticipanteTableMap::COL_CPF, $cpf['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($cpf['max'])) {
-                $this->addUsingAlias(ParticipanteTableMap::COL_CPF, $cpf['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
+        if (null === $comparison) {
+            if (is_array($cpf)) {
                 $comparison = Criteria::IN;
             }
         }
 
         $this->addUsingAlias(ParticipanteTableMap::COL_CPF, $cpf, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the documento_estrangeiro column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByDocumentoEstrangeiro('fooValue');   // WHERE documento_estrangeiro = 'fooValue'
+     * $query->filterByDocumentoEstrangeiro('%fooValue%', Criteria::LIKE); // WHERE documento_estrangeiro LIKE '%fooValue%'
+     * $query->filterByDocumentoEstrangeiro(['foo', 'bar']); // WHERE documento_estrangeiro IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $documentoEstrangeiro The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByDocumentoEstrangeiro($documentoEstrangeiro = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($documentoEstrangeiro)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ParticipanteTableMap::COL_DOCUMENTO_ESTRANGEIRO, $documentoEstrangeiro, $comparison);
 
         return $this;
     }
@@ -451,6 +417,34 @@ abstract class ParticipanteQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ParticipanteTableMap::COL_EVENTO, $eventoId, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the token column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByToken('fooValue');   // WHERE token = 'fooValue'
+     * $query->filterByToken('%fooValue%', Criteria::LIKE); // WHERE token LIKE '%fooValue%'
+     * $query->filterByToken(['foo', 'bar']); // WHERE token IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $token The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByToken($token = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($token)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ParticipanteTableMap::COL_TOKEN, $token, $comparison);
 
         return $this;
     }
@@ -640,9 +634,7 @@ abstract class ParticipanteQuery extends ModelCriteria
     public function prune($participante = null)
     {
         if ($participante) {
-            $this->addCond('pruneCond0', $this->getAliasedColName(ParticipanteTableMap::COL_IDPARTICIPANTES), $participante->getParticipanteId(), Criteria::NOT_EQUAL);
-            $this->addCond('pruneCond1', $this->getAliasedColName(ParticipanteTableMap::COL_EVENTO), $participante->getEventoId(), Criteria::NOT_EQUAL);
-            $this->combine(array('pruneCond0', 'pruneCond1'), Criteria::LOGICAL_OR);
+            $this->addUsingAlias(ParticipanteTableMap::COL_TOKEN, $participante->getToken(), Criteria::NOT_EQUAL);
         }
 
         return $this;

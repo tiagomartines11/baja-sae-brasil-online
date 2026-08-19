@@ -93,6 +93,8 @@ services:
     environment:
       TZ: America/Sao_Paulo
       ENV: ${ENV}
+      # Keys the /buscar per-document backoff. See .env.example.
+      CERT_BACKOFF_SECRET: ${CERT_BACKOFF_SECRET}
       BAJA_PUBLIC_DOMAIN: ${BAJA_PUBLIC_DOMAIN}
       BAJA_PUBLIC_SCHEME: ${BAJA_PUBLIC_SCHEME}
       # phpBB session shim — see baja-php/src/Baja/Auth/SessionStore.php.

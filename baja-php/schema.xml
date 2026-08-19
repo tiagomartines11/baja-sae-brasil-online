@@ -102,11 +102,50 @@
     </vendor>
   </table>
   <table name="participantes" idMethod="native" phpName="Participante">
-    <column name="idparticipantes" phpName="ParticipanteId" type="INTEGER" primaryKey="true" autoIncrement="true" required="true"/>
     <column name="nome" phpName="Nome" type="VARCHAR" size="300"/>
     <column name="funcao" phpName="Funcao" type="VARCHAR" size="45"/>
-    <column name="cpf" phpName="Cpf" type="BIGINT" size="11"/>
-    <column name="evento" phpName="EventoId" type="CHAR" size="4" primaryKey="true"/>
+    <!-- CPF, zero-padded to 11. A string, not a number: a CPF is an
+         identifier, and storing it as BIGINT is what made dechex() the
+         obvious way to build a URL out of one and produced this whole work
+         package. It also destroyed every leading zero on the way in, and
+         made "no document on record" indistinguishable from the value 0.
+         Format is enforced by a CHECK constraint added in the migration —
+         Propel's schema has no element for one — and deliberately not the
+         check digits: historical rows include CPFs mistyped at registration
+         and they must stay valid rows. -->
+    <column name="cpf" phpName="Cpf" type="CHAR" size="11">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+      </vendor>
+    </column>
+    <!-- Passport or other non-CPF document, stored verbatim. Never padded:
+         padding is only reversible when the length is known, which is true
+         of a CPF and false of a passport, so a padded passport number can
+         never be told from one with a real leading zero.
+         Permissive on purpose — Brazilian passports are two letters and six
+         digits, and the digits-only convention this column exists to end is
+         a data-entry habit, not a fact about passports. utf8mb4 so that a
+         future document form needs no further migration, and because it
+         matches the connection charset. -->
+    <column name="documento_estrangeiro" phpName="DocumentoEstrangeiro" type="VARCHAR" size="32">
+      <vendor type="mysql">
+        <parameter name="Charset" value="utf8mb4"/>
+        <parameter name="Collate" value="utf8mb4_unicode_ci"/>
+      </vendor>
+    </column>
+    <column name="evento" phpName="EventoId" type="CHAR" size="4" required="true"/>
+    <!-- Public certificate identifier: 16 random bytes, base64url, unpadded,
+         and the primary key.
+         ascii_bin is load-bearing, not tidiness. base64url is case-sensitive,
+         and the table default is latin1_swedish_ci, under which the key would
+         treat "aB" and "Ab" as the same token and a lookup would resolve to
+         the wrong participant's certificate. -->
+    <column name="token" phpName="Token" type="CHAR" size="22" primaryKey="true" required="true">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
     <foreign-key foreignTable="evento" name="participantes_evento_id" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="evento" foreign="evento_id"/>
     </foreign-key>

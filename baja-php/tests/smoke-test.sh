@@ -47,9 +47,15 @@ check_in() {
 status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_BAJA/prova.php")
 check_in "anonymous /prova.php (SKIP_AUTH path reaches app code)" "$status" 200 302 500
 
-# 2. Anonymous can hit certificado root (no auth required, no DB needed for the form)
+# 2. Anonymous can hit certificado root. It used to render an event selector
+# and a CPF field; since the certificate rewrite it redirects to /buscar, which
+# searches every event at once. 302 is the healthy answer now.
 status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_CERT/")
-check_in "anonymous /certificado/" "$status" 200
+check_in "anonymous /certificado/ redirects to the search form" "$status" 302
+
+# 2b. And the form it redirects to renders for an anonymous visitor.
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_CERT/buscar")
+check_in "anonymous /buscar renders" "$status" 200
 
 # 3. Anonymous hitting juiz/login.php (the login form itself) should render.
 status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/login.php")

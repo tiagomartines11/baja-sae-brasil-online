@@ -36,6 +36,26 @@ Before requesting review:
 - [ ] Lint passes locally: (`baja-js`: `cd baja-js && npm run lint`; baja-php: TBD, `php -l` for syntax, not enforced linter yet).
 - [ ] Smoke test passes: `baja-php/tests/smoke-test.sh` against a
       running local stack.
+- [ ] If you touched anything under `baja-php/src/Baja/Certificado/`,
+      `baja-php/certificado/`, or the certificate vhost, both certificate
+      suites pass:
+
+      ```
+      docker compose exec --user "$(id -u):$(id -g)" \
+          -e BAJA_TEST_DB=1 baja-app php tests/certificado/run.php
+      baja-php/tests/certificado/http-test.sh http://certificado.baja.local <token> <cpf>
+      ```
+
+      The first covers the lookup rules and needs `BAJA_TEST_DB=1`, which
+      is what lets it write synthetic participants — never set it against
+      production. The second covers what only exists once nginx and PHP
+      are both in the path: routing, headers, rate limiting, and whether
+      a document number can be found anywhere in a response. Pass it a
+      token from your local database and that participant's CPF.
+
+      Both use synthetic documents with derived check digits. This
+      repository is public: no real CPF, name, or dump belongs in a
+      fixture.
 - [ ] If you edited `baja-php/schema.xml`, the generated `Base*` classes,
       table maps and `src/loadDatabase.php` were regenerated and committed:
       `docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build`.
