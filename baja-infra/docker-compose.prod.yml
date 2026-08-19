@@ -74,5 +74,8 @@ services:
     ports:
       - "443:443"
     volumes:
-      - ./nginx/conf.d-prod:/etc/nginx/conf.d:ro   # same target as base → supersedes dev conf.d
+      # The config itself is no longer swapped here: base mounts one template
+      # set for every environment and LISTEN_MODE=listen-tls in .env selects
+      # the TLS listen blocks. All this overlay still adds is the port and the
+      # certificates the templates point at.
       - /etc/letsencrypt:/etc/letsencrypt:ro

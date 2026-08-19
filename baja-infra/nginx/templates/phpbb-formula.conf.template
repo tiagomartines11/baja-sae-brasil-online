@@ -1,11 +1,13 @@
+# Formula SAE Brasil. A separate registrable domain from Baja, with its own
+# certificate lineage — so FORMULA_DOMAIN holds the whole hostname rather than
+# a subdomain label. Its shape differs per environment (a forum.* subdomain in
+# dev, its own apex in production); the template renders whatever the variable
+# holds and does not care which.
 server {
-    listen 443 ssl;
-    server_name forum.bajasaebrasil.net;
+    include /etc/nginx/conf.d/snippets/${LISTEN_MODE}-formula.conf;
+    server_name ${FORMULA_DOMAIN};
 
-    ssl_certificate     /etc/letsencrypt/live/bajasaebrasil.net/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/bajasaebrasil.net/privkey.pem;
-
-    root /var/www/phpbb-baja;
+    root /var/www/phpbb-formula;
     index index.php index.html;
 
     location ~ /(config\.php|common\.php|cache|files|images/avatars/upload|includes|(?<!ext/)phpbb(?!\w)|store|vendor) {
@@ -23,7 +25,7 @@ server {
 
     location ~ \.php(/|$) {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
-        fastcgi_pass phpbb-baja:9000;
+        fastcgi_pass phpbb-formula:9000;
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME /var/www/html$fastcgi_script_name;

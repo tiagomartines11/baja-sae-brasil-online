@@ -7,6 +7,13 @@
 # invalidates the session on nearly every page load and bounces the user back
 # to login. This also makes access logs, rate limiting, and bans meaningful.
 #
+# Loaded in every environment, not just production. It carries no domain
+# names, and set_real_ip_from only trusts requests that actually arrive from
+# a Cloudflare range — so in dev, and on a direct-origin staging VM, it is
+# inert. Making it universal costs nothing and means it is no longer a file
+# that exists only in production, which is what it was when its absence
+# invalidated every forum session at the last cutover.
+#
 # The 00- prefix is load-bearing: nginx includes conf.d/*.conf alphabetically
 # inside the http block, and these directives must be parsed before the server
 # blocks that inherit them.

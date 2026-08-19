@@ -1,6 +1,6 @@
 server {
-    listen 80;
-    server_name fila.baja.local;
+    include /etc/nginx/conf.d/snippets/${LISTEN_MODE}.conf;
+    server_name fila.${BAJA_DOMAIN};
 
     root /var/www/baja-app/fila;
     index index.php index.html;

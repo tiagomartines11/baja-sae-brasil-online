@@ -1,13 +1,13 @@
-# PHP API vhost (dev). Serves baja-php/api/.
+# PHP API vhost. Serves baja-php/api/.
 #
-# Follows the repo convention: *.baja.local is PHP, baja.local/* is Next.js.
-# Because the frontend on baja.local calls this on a different origin, every
-# request is cross-origin and needs CORS — configured via API_CORS_ORIGINS,
-# handled in PHP by Baja\Api\Cors. The dev origins are pre-seeded in
-# .env.example so this works straight after `docker compose up`.
+# Follows the repo convention: *.${BAJA_DOMAIN} is PHP, ${BAJA_DOMAIN}/* is
+# Next.js. Because the frontend on the apex calls this on a different origin,
+# every request is cross-origin and needs CORS — configured via
+# API_CORS_ORIGINS, handled in PHP by Baja\Api\Cors. The dev origins are
+# pre-seeded in .env.example so this works straight after `docker compose up`.
 server {
-    listen 80;
-    server_name api.baja.local;
+    include /etc/nginx/conf.d/snippets/${LISTEN_MODE}.conf;
+    server_name api.${BAJA_DOMAIN};
 
     root /var/www/baja-app/api;
     index index.php;
@@ -33,14 +33,25 @@ server {
         fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_param PHP_VALUE "auto_prepend_file=/var/www/html/src/bootstrap.php";
 
+        # No explicit HTTPS param: the stock fastcgi_params included above
+        # already carries "HTTPS $https if_not_empty", which sets it to "on"
+        # over TLS and omits it entirely otherwise. conf.d-prod used to add a
+        # hardcoded "HTTPS on" on top of that, which was redundant there and
+        # would have been wrong here — one template serves a plain-HTTP dev.
+
         # Tells bootstrap.php this request is on the API vhost, where the URI
         # has no /api/ prefix to detect.
         fastcgi_param BAJA_API_VHOST 1;
 
         # The rate limiter keys on REMOTE_ADDR. Blank these so a client cannot
         # smuggle its own forwarding headers into PHP and mint a fresh bucket
-        # per request. In dev the peer address is already the real client, so
-        # there is no realip module here — that is prod-only (Cloudflare).
+        # per request.
+        #
+        # Behind Cloudflare, 00-cloudflare-realip.conf has already rewritten
+        # $remote_addr — and therefore REMOTE_ADDR — to the true client, so
+        # PHP needs no header handling and stays identical everywhere. That
+        # file used to carry a duplicate copy of these ranges inside this
+        # vhost; it is loaded at http scope now and every server inherits it.
         fastcgi_param HTTP_X_FORWARDED_FOR "";
         fastcgi_param HTTP_X_REAL_IP "";
         fastcgi_param HTTP_CF_CONNECTING_IP "";

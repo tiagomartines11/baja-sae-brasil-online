@@ -67,11 +67,8 @@ log_format certificado_redacted
     '$status $body_bytes_sent "$cert_referer_redacted" "$http_user_agent"';
 
 server {
-    listen 443 ssl;
-    server_name certificado.bajasaebrasil.net;
-
-    ssl_certificate     /etc/letsencrypt/live/bajasaebrasil.net/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/bajasaebrasil.net/privkey.pem;
+    include /etc/nginx/conf.d/snippets/${LISTEN_MODE}.conf;
+    server_name certificado.${BAJA_DOMAIN};
 
     # Emit relative Location headers. The legacy redirect is the only one
     # that matters here, and an absolute URL built from $scheme and $host
@@ -83,6 +80,7 @@ server {
     root /var/www/baja-app/certificado;
     index index.php index.html;
 
+    # Shared css js and img folders
     location /css/ {
         alias /var/www/baja-app/default/css/;
         expires 30d;

@@ -1,8 +1,11 @@
 # Catch any plain-HTTP request that reaches the origin (Cloudflare "Always
 # Use HTTPS" should handle this first; this is belt-and-suspenders for
 # direct-to-origin or grey-clouded requests). Redirects every host to HTTPS.
+#
+# This is the only server block on port 80 in a TLS environment, so it owns
+# default_server outright and takes no listen snippet of its own.
 server {
     listen 80 default_server;
-    server_name _;
+    server_name ${BAJA_DOMAIN};
     return 301 https://$host$request_uri;
 }

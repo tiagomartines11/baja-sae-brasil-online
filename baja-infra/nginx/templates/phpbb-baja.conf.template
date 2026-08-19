@@ -1,11 +1,8 @@
 server {
-    listen 443 ssl;
-    server_name fsaebrasil.net;
+    include /etc/nginx/conf.d/snippets/${LISTEN_MODE}.conf;
+    server_name forum.${BAJA_DOMAIN};
 
-    ssl_certificate     /etc/letsencrypt/live/fsaebrasil.net/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/fsaebrasil.net/privkey.pem;
-
-    root /var/www/phpbb-formula;
+    root /var/www/phpbb-baja;
     index index.php index.html;
 
     location ~ /(config\.php|common\.php|cache|files|images/avatars/upload|includes|(?<!ext/)phpbb(?!\w)|store|vendor) {
@@ -23,7 +20,7 @@ server {
 
     location ~ \.php(/|$) {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
-        fastcgi_pass phpbb-formula:9000;
+        fastcgi_pass phpbb-baja:9000;
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME /var/www/html$fastcgi_script_name;

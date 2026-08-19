@@ -1,0 +1,12 @@
+# HTTP-to-HTTPS redirect, present only where there is TLS to redirect to.
+#
+# The server block lives in a snippet rather than here because it must be
+# absent in dev entirely, and envsubst renders every template in the directory.
+# Selecting it through ${LISTEN_MODE} keeps that choice in the same variable
+# that decides every other listen block, instead of a compose-level file swap.
+#
+# (A bind mount of this file into the templates directory only in the prod
+# overlay was the other option; it cannot work, because the templates directory
+# is mounted read-only and Docker cannot create the nested mountpoint inside
+# it.)
+include /etc/nginx/conf.d/snippets/${LISTEN_MODE}-redirect.conf;

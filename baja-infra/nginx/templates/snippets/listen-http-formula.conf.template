@@ -1,0 +1,4 @@
+# Plain HTTP. Identical to listen-http.conf.template — the Formula vhost needs
+# its own snippet name only so the TLS variant can point at its own
+# certificate lineage. See listen-tls-formula.conf.template.
+listen 80;

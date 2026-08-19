@@ -147,10 +147,28 @@ services:
     image: nginx:1.27-alpine
     container_name: baja-nginx
     restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+      # One config set for every environment; these pick the domain and the
+      # listen block. See nginx/templates/ and .env.example.
+      BAJA_DOMAIN: ${BAJA_DOMAIN}
+      FORMULA_DOMAIN: ${FORMULA_DOMAIN}
+      LISTEN_MODE: ${LISTEN_MODE}
+      # The image's 20-envsubst-on-templates.sh substitutes EVERY $VAR it
+      # finds unless filtered — which would blank $host, $remote_addr,
+      # $request_uri and the rest of nginx's own runtime variables, silently
+      # breaking the Cloudflare real-IP restoration and every proxy header
+      # while still starting cleanly. Restrict it to exactly our three.
+      # The $$ is Compose escaping for a literal $.
+      NGINX_ENVSUBST_FILTER: "^(BAJA_DOMAIN|FORMULA_DOMAIN|LISTEN_MODE)$$"
     ports:
       - "80:80"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # Rendered to /etc/nginx/conf.d/ at container start. Subdirectories are
+      # preserved, so templates/snippets/ lands at conf.d/snippets/ — outside
+      # the conf.d/*.conf glob nginx auto-includes, which is what keeps the
+      # listen snippets from being loaded as configs in their own right.
+      - ./nginx/templates:/etc/nginx/templates:ro
       - phpbb_baja_html:/var/www/phpbb-baja:ro
       - phpbb_formula_html:/var/www/phpbb-formula:ro
       - ${BAJA_APP_PATH}:/var/www/baja-app:ro
