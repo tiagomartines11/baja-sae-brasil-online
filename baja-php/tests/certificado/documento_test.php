@@ -57,6 +57,7 @@ $make = static function (string $nome) use ($evento, &$fixtures): Participante {
     $p->setNome($nome);
     $p->setFuncao('competidor');
     $p->setEventoId($evento->getEventoId());
+    $p->setCriadoPor(test_user_id());
 
     return $p;
 };

@@ -156,6 +156,12 @@ final class Busca
             $query->filterByDocumentoEstrangeiro('%' . $digits, Criteria::LIKE);
         }
 
+        // Voided certificates are not returned to anybody: not to /buscar, and
+        // not to the insertion pages that ask this the same question. Leaving
+        // them out of duplicate detection is deliberate — issuing the
+        // certificate again is usually the reason one was voided.
+        $query->filterByAnuladoEm(null, Criteria::ISNULL);
+
         $rows = iterator_to_array($query->orderByEventoId(Criteria::DESC)->find());
 
         return array_values(array_filter(

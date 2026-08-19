@@ -1,5 +1,6 @@
 <?php
 namespace Baja;
+use Baja\Auth\NaoProvisionado;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
 
@@ -10,13 +11,29 @@ class Session
 
     static function initSession() {
         global $user;
-        Session::$_currentUser = UserQuery::create()->findOneByUsername($user->data["username"]);
-        if (!Session::$_currentUser) {
-            if ($_SERVER["SCRIPT_NAME"] != "/login.php") {
-                header("Location: login.php");
-                exit();
-            }
+        $username = (string) ($user->data["username"] ?? '');
+        Session::$_currentUser = UserQuery::create()->findOneByUsername($username);
+
+        if (Session::$_currentUser || $_SERVER["SCRIPT_NAME"] == "/login.php") {
+            return;
         }
+
+        // Two different things end up here and they need different answers.
+        //
+        // No username means no forum session: the login page is the right
+        // place to send them, and it is where they were already going.
+        //
+        // A username with no row here means the forum knows them and this
+        // system does not — every new forum member is in that state. Sending
+        // them to login made the loop that reads as a broken site: the login
+        // succeeds, redirects back, and bounces again, with nothing said at
+        // any point. Say it instead.
+        if ($username !== '') {
+            NaoProvisionado::render($username);
+        }
+
+        header("Location: login.php");
+        exit();
     }
 
     /**
@@ -77,11 +94,35 @@ class Session
     }
 
     /**
+     * Permissions that are not scoped to an event.
+     *
+     * Every other code is prefixed with the event below, which is what makes
+     * "judge of prova ve1 at 26BR" expressible. Two codes are not about an
+     * event at all:
+     *
+     * - 'index' grants the juiz landing page and has always been here.
+     * - 'certificados' grants the certificate insertion pages, which are
+     *   cross-event by construction: the operator picks the event on the
+     *   form, and one pasted sheet may carry several. Scoping it would mean
+     *   gating those pages on $_SERVER['REDIRECT_EVENT'], which on a URL with
+     *   no event prefix is whatever bootstrap.php inferred from which event
+     *   is currently em_andamento — so the permission being checked would
+     *   change on its own as events roll over.
+     *
+     * Note this list is not User::SENTINEL_PERMISSIONS, which answers a
+     * different question: that one is about codes granting nothing
+     * meaningful, and 'certificados' grants a great deal.
+     */
+    private const GLOBAL_PERMISSIONS = ['index', 'certificados'];
+
+    /**
      * @param string $permissionCode
      * @return bool
      */
     public static function hasPermission($permissionCode) {
-        if ($permissionCode != "index") $permissionCode = $_SERVER['REDIRECT_EVENT']."_".$permissionCode;
+        if (!in_array($permissionCode, self::GLOBAL_PERMISSIONS, true)) {
+            $permissionCode = $_SERVER['REDIRECT_EVENT']."_".$permissionCode;
+        }
         return self::getCurrentUser()->hasPermission($permissionCode) || self::getCurrentUser()->hasPermission('admin');
     }
 }

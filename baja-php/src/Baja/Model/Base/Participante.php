@@ -2,11 +2,14 @@
 
 namespace Baja\Model\Base;
 
+use \DateTime;
 use \Exception;
 use \PDO;
 use Baja\Model\Evento as ChildEvento;
 use Baja\Model\EventoQuery as ChildEventoQuery;
 use Baja\Model\ParticipanteQuery as ChildParticipanteQuery;
+use Baja\Model\User as ChildUser;
+use Baja\Model\UserQuery as ChildUserQuery;
 use Baja\Model\Map\ParticipanteTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -19,6 +22,7 @@ use Propel\Runtime\Exception\LogicException;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Parser\AbstractParser;
+use Propel\Runtime\Util\PropelDateTime;
 
 /**
  * Base class that represents a row from the 'participantes' table.
@@ -106,9 +110,61 @@ abstract class Participante implements ActiveRecordInterface
     protected $token;
 
     /**
+     * The value for the criado_por field.
+     *
+     * @var        int|null
+     */
+    protected $criado_por;
+
+    /**
+     * The value for the criado_em field.
+     *
+     * @var        DateTime|null
+     */
+    protected $criado_em;
+
+    /**
+     * The value for the lote_id field.
+     *
+     * @var        string|null
+     */
+    protected $lote_id;
+
+    /**
+     * The value for the anulado_em field.
+     *
+     * @var        DateTime|null
+     */
+    protected $anulado_em;
+
+    /**
+     * The value for the anulado_por field.
+     *
+     * @var        int|null
+     */
+    protected $anulado_por;
+
+    /**
+     * The value for the anulado_motivo field.
+     *
+     * @var        string|null
+     */
+    protected $anulado_motivo;
+
+    /**
      * @var        ChildEvento
      */
     protected $aEvento;
+
+    /**
+     * @var        ChildUser
+     */
+    protected $aUserRelatedByCriadoPor;
+
+    /**
+     * @var        ChildUser
+     */
+    protected $aUserRelatedByAnuladoPor;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -405,6 +461,90 @@ abstract class Participante implements ActiveRecordInterface
     }
 
     /**
+     * Get the [criado_por] column value.
+     *
+     * @return int|null
+     */
+    public function getCriadoPor()
+    {
+        return $this->criado_por;
+    }
+
+    /**
+     * Get the [optionally formatted] temporal [criado_em] column value.
+     *
+     *
+     * @param string|null $format The date/time format string (either date()-style or strftime()-style).
+     *   If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime|null Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL, and 0 if column value is 0000-00-00 00:00:00.
+     *
+     * @throws \Propel\Runtime\Exception\PropelException - if unable to parse/validate the date/time value.
+     *
+     * @psalm-return ($format is null ? DateTime|null : string|null)
+     */
+    public function getCriadoEm($format = null)
+    {
+        if ($format === null) {
+            return $this->criado_em;
+        } else {
+            return $this->criado_em instanceof \DateTimeInterface ? $this->criado_em->format($format) : null;
+        }
+    }
+
+    /**
+     * Get the [lote_id] column value.
+     *
+     * @return string|null
+     */
+    public function getLoteId()
+    {
+        return $this->lote_id;
+    }
+
+    /**
+     * Get the [optionally formatted] temporal [anulado_em] column value.
+     *
+     *
+     * @param string|null $format The date/time format string (either date()-style or strftime()-style).
+     *   If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime|null Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL, and 0 if column value is 0000-00-00 00:00:00.
+     *
+     * @throws \Propel\Runtime\Exception\PropelException - if unable to parse/validate the date/time value.
+     *
+     * @psalm-return ($format is null ? DateTime|null : string|null)
+     */
+    public function getAnuladoEm($format = null)
+    {
+        if ($format === null) {
+            return $this->anulado_em;
+        } else {
+            return $this->anulado_em instanceof \DateTimeInterface ? $this->anulado_em->format($format) : null;
+        }
+    }
+
+    /**
+     * Get the [anulado_por] column value.
+     *
+     * @return int|null
+     */
+    public function getAnuladoPor()
+    {
+        return $this->anulado_por;
+    }
+
+    /**
+     * Get the [anulado_motivo] column value.
+     *
+     * @return string|null
+     */
+    public function getAnuladoMotivo()
+    {
+        return $this->anulado_motivo;
+    }
+
+    /**
      * Set the value of [nome] column.
      *
      * @param string|null $v New value
@@ -529,6 +669,134 @@ abstract class Participante implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [criado_por] column.
+     *
+     * @param int|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setCriadoPor($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->criado_por !== $v) {
+            $this->criado_por = $v;
+            $this->modifiedColumns[ParticipanteTableMap::COL_CRIADO_POR] = true;
+        }
+
+        if ($this->aUserRelatedByCriadoPor !== null && $this->aUserRelatedByCriadoPor->getUserId() !== $v) {
+            $this->aUserRelatedByCriadoPor = null;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Sets the value of [criado_em] column to a normalized version of the date/time value specified.
+     *
+     * @param string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this The current object (for fluent API support)
+     */
+    public function setCriadoEm($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->criado_em !== null || $dt !== null) {
+            if ($this->criado_em === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->criado_em->format("Y-m-d H:i:s.u")) {
+                $this->criado_em = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[ParticipanteTableMap::COL_CRIADO_EM] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [lote_id] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setLoteId($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->lote_id !== $v) {
+            $this->lote_id = $v;
+            $this->modifiedColumns[ParticipanteTableMap::COL_LOTE_ID] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Sets the value of [anulado_em] column to a normalized version of the date/time value specified.
+     *
+     * @param string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this The current object (for fluent API support)
+     */
+    public function setAnuladoEm($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->anulado_em !== null || $dt !== null) {
+            if ($this->anulado_em === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->anulado_em->format("Y-m-d H:i:s.u")) {
+                $this->anulado_em = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[ParticipanteTableMap::COL_ANULADO_EM] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [anulado_por] column.
+     *
+     * @param int|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setAnuladoPor($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->anulado_por !== $v) {
+            $this->anulado_por = $v;
+            $this->modifiedColumns[ParticipanteTableMap::COL_ANULADO_POR] = true;
+        }
+
+        if ($this->aUserRelatedByAnuladoPor !== null && $this->aUserRelatedByAnuladoPor->getUserId() !== $v) {
+            $this->aUserRelatedByAnuladoPor = null;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [anulado_motivo] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setAnuladoMotivo($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->anulado_motivo !== $v) {
+            $this->anulado_motivo = $v;
+            $this->modifiedColumns[ParticipanteTableMap::COL_ANULADO_MOTIVO] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -582,6 +850,30 @@ abstract class Participante implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ParticipanteTableMap::translateFieldName('Token', TableMap::TYPE_PHPNAME, $indexType)];
             $this->token = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ParticipanteTableMap::translateFieldName('CriadoPor', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->criado_por = (null !== $col) ? (int) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ParticipanteTableMap::translateFieldName('CriadoEm', TableMap::TYPE_PHPNAME, $indexType)];
+            if ($col === '0000-00-00 00:00:00') {
+                $col = null;
+            }
+            $this->criado_em = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ParticipanteTableMap::translateFieldName('LoteId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->lote_id = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ParticipanteTableMap::translateFieldName('AnuladoEm', TableMap::TYPE_PHPNAME, $indexType)];
+            if ($col === '0000-00-00 00:00:00') {
+                $col = null;
+            }
+            $this->anulado_em = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ParticipanteTableMap::translateFieldName('AnuladoPor', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->anulado_por = (null !== $col) ? (int) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : ParticipanteTableMap::translateFieldName('AnuladoMotivo', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->anulado_motivo = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -589,7 +881,7 @@ abstract class Participante implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 6; // 6 = ParticipanteTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 12; // 12 = ParticipanteTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Participante'), 0, $e);
@@ -614,6 +906,12 @@ abstract class Participante implements ActiveRecordInterface
     {
         if ($this->aEvento !== null && $this->evento !== $this->aEvento->getEventoId()) {
             $this->aEvento = null;
+        }
+        if ($this->aUserRelatedByCriadoPor !== null && $this->criado_por !== $this->aUserRelatedByCriadoPor->getUserId()) {
+            $this->aUserRelatedByCriadoPor = null;
+        }
+        if ($this->aUserRelatedByAnuladoPor !== null && $this->anulado_por !== $this->aUserRelatedByAnuladoPor->getUserId()) {
+            $this->aUserRelatedByAnuladoPor = null;
         }
     }
 
@@ -655,6 +953,8 @@ abstract class Participante implements ActiveRecordInterface
         if ($deep) {  // also de-associate any related objects?
 
             $this->aEvento = null;
+            $this->aUserRelatedByCriadoPor = null;
+            $this->aUserRelatedByAnuladoPor = null;
         } // if (deep)
     }
 
@@ -770,6 +1070,20 @@ abstract class Participante implements ActiveRecordInterface
                 $this->setEvento($this->aEvento);
             }
 
+            if ($this->aUserRelatedByCriadoPor !== null) {
+                if ($this->aUserRelatedByCriadoPor->isModified() || $this->aUserRelatedByCriadoPor->isNew()) {
+                    $affectedRows += $this->aUserRelatedByCriadoPor->save($con);
+                }
+                $this->setUserRelatedByCriadoPor($this->aUserRelatedByCriadoPor);
+            }
+
+            if ($this->aUserRelatedByAnuladoPor !== null) {
+                if ($this->aUserRelatedByAnuladoPor->isModified() || $this->aUserRelatedByAnuladoPor->isNew()) {
+                    $affectedRows += $this->aUserRelatedByAnuladoPor->save($con);
+                }
+                $this->setUserRelatedByAnuladoPor($this->aUserRelatedByAnuladoPor);
+            }
+
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -821,6 +1135,24 @@ abstract class Participante implements ActiveRecordInterface
         if ($this->isColumnModified(ParticipanteTableMap::COL_TOKEN)) {
             $modifiedColumns[':p' . $index++]  = 'token';
         }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_CRIADO_POR)) {
+            $modifiedColumns[':p' . $index++]  = 'criado_por';
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_CRIADO_EM)) {
+            $modifiedColumns[':p' . $index++]  = 'criado_em';
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_LOTE_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'lote_id';
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_ANULADO_EM)) {
+            $modifiedColumns[':p' . $index++]  = 'anulado_em';
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_ANULADO_POR)) {
+            $modifiedColumns[':p' . $index++]  = 'anulado_por';
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_ANULADO_MOTIVO)) {
+            $modifiedColumns[':p' . $index++]  = 'anulado_motivo';
+        }
 
         $sql = sprintf(
             'INSERT INTO participantes (%s) VALUES (%s)',
@@ -854,6 +1186,30 @@ abstract class Participante implements ActiveRecordInterface
                         break;
                     case 'token':
                         $stmt->bindValue($identifier, $this->token, PDO::PARAM_STR);
+
+                        break;
+                    case 'criado_por':
+                        $stmt->bindValue($identifier, $this->criado_por, PDO::PARAM_INT);
+
+                        break;
+                    case 'criado_em':
+                        $stmt->bindValue($identifier, $this->criado_em ? $this->criado_em->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
+
+                        break;
+                    case 'lote_id':
+                        $stmt->bindValue($identifier, $this->lote_id, PDO::PARAM_STR);
+
+                        break;
+                    case 'anulado_em':
+                        $stmt->bindValue($identifier, $this->anulado_em ? $this->anulado_em->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
+
+                        break;
+                    case 'anulado_por':
+                        $stmt->bindValue($identifier, $this->anulado_por, PDO::PARAM_INT);
+
+                        break;
+                    case 'anulado_motivo':
+                        $stmt->bindValue($identifier, $this->anulado_motivo, PDO::PARAM_STR);
 
                         break;
                 }
@@ -929,6 +1285,24 @@ abstract class Participante implements ActiveRecordInterface
             case 5:
                 return $this->getToken();
 
+            case 6:
+                return $this->getCriadoPor();
+
+            case 7:
+                return $this->getCriadoEm();
+
+            case 8:
+                return $this->getLoteId();
+
+            case 9:
+                return $this->getAnuladoEm();
+
+            case 10:
+                return $this->getAnuladoPor();
+
+            case 11:
+                return $this->getAnuladoMotivo();
+
             default:
                 return null;
         } // switch()
@@ -963,7 +1337,21 @@ abstract class Participante implements ActiveRecordInterface
             $keys[3] => $this->getDocumentoEstrangeiro(),
             $keys[4] => $this->getEventoId(),
             $keys[5] => $this->getToken(),
+            $keys[6] => $this->getCriadoPor(),
+            $keys[7] => $this->getCriadoEm(),
+            $keys[8] => $this->getLoteId(),
+            $keys[9] => $this->getAnuladoEm(),
+            $keys[10] => $this->getAnuladoPor(),
+            $keys[11] => $this->getAnuladoMotivo(),
         ];
+        if ($result[$keys[7]] instanceof \DateTimeInterface) {
+            $result[$keys[7]] = $result[$keys[7]]->format('Y-m-d H:i:s.u');
+        }
+
+        if ($result[$keys[9]] instanceof \DateTimeInterface) {
+            $result[$keys[9]] = $result[$keys[9]]->format('Y-m-d H:i:s.u');
+        }
+
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
             $result[$key] = $virtualColumn;
@@ -984,6 +1372,36 @@ abstract class Participante implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->aEvento->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aUserRelatedByCriadoPor) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'user';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'user';
+                        break;
+                    default:
+                        $key = 'User';
+                }
+
+                $result[$key] = $this->aUserRelatedByCriadoPor->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aUserRelatedByAnuladoPor) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'user';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'user';
+                        break;
+                    default:
+                        $key = 'User';
+                }
+
+                $result[$key] = $this->aUserRelatedByAnuladoPor->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
             }
         }
 
@@ -1039,6 +1457,24 @@ abstract class Participante implements ActiveRecordInterface
             case 5:
                 $this->setToken($value);
                 break;
+            case 6:
+                $this->setCriadoPor($value);
+                break;
+            case 7:
+                $this->setCriadoEm($value);
+                break;
+            case 8:
+                $this->setLoteId($value);
+                break;
+            case 9:
+                $this->setAnuladoEm($value);
+                break;
+            case 10:
+                $this->setAnuladoPor($value);
+                break;
+            case 11:
+                $this->setAnuladoMotivo($value);
+                break;
         } // switch()
 
         return $this;
@@ -1082,6 +1518,24 @@ abstract class Participante implements ActiveRecordInterface
         }
         if (array_key_exists($keys[5], $arr)) {
             $this->setToken($arr[$keys[5]]);
+        }
+        if (array_key_exists($keys[6], $arr)) {
+            $this->setCriadoPor($arr[$keys[6]]);
+        }
+        if (array_key_exists($keys[7], $arr)) {
+            $this->setCriadoEm($arr[$keys[7]]);
+        }
+        if (array_key_exists($keys[8], $arr)) {
+            $this->setLoteId($arr[$keys[8]]);
+        }
+        if (array_key_exists($keys[9], $arr)) {
+            $this->setAnuladoEm($arr[$keys[9]]);
+        }
+        if (array_key_exists($keys[10], $arr)) {
+            $this->setAnuladoPor($arr[$keys[10]]);
+        }
+        if (array_key_exists($keys[11], $arr)) {
+            $this->setAnuladoMotivo($arr[$keys[11]]);
         }
 
         return $this;
@@ -1143,6 +1597,24 @@ abstract class Participante implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ParticipanteTableMap::COL_TOKEN)) {
             $criteria->add(ParticipanteTableMap::COL_TOKEN, $this->token);
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_CRIADO_POR)) {
+            $criteria->add(ParticipanteTableMap::COL_CRIADO_POR, $this->criado_por);
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_CRIADO_EM)) {
+            $criteria->add(ParticipanteTableMap::COL_CRIADO_EM, $this->criado_em);
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_LOTE_ID)) {
+            $criteria->add(ParticipanteTableMap::COL_LOTE_ID, $this->lote_id);
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_ANULADO_EM)) {
+            $criteria->add(ParticipanteTableMap::COL_ANULADO_EM, $this->anulado_em);
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_ANULADO_POR)) {
+            $criteria->add(ParticipanteTableMap::COL_ANULADO_POR, $this->anulado_por);
+        }
+        if ($this->isColumnModified(ParticipanteTableMap::COL_ANULADO_MOTIVO)) {
+            $criteria->add(ParticipanteTableMap::COL_ANULADO_MOTIVO, $this->anulado_motivo);
         }
 
         return $criteria;
@@ -1238,6 +1710,12 @@ abstract class Participante implements ActiveRecordInterface
         $copyObj->setDocumentoEstrangeiro($this->getDocumentoEstrangeiro());
         $copyObj->setEventoId($this->getEventoId());
         $copyObj->setToken($this->getToken());
+        $copyObj->setCriadoPor($this->getCriadoPor());
+        $copyObj->setCriadoEm($this->getCriadoEm());
+        $copyObj->setLoteId($this->getLoteId());
+        $copyObj->setAnuladoEm($this->getAnuladoEm());
+        $copyObj->setAnuladoPor($this->getAnuladoPor());
+        $copyObj->setAnuladoMotivo($this->getAnuladoMotivo());
         if ($makeNew) {
             $copyObj->setNew(true);
         }
@@ -1317,6 +1795,108 @@ abstract class Participante implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildUser object.
+     *
+     * @param ChildUser|null $v
+     * @return $this The current object (for fluent API support)
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function setUserRelatedByCriadoPor(ChildUser $v = null)
+    {
+        if ($v === null) {
+            $this->setCriadoPor(NULL);
+        } else {
+            $this->setCriadoPor($v->getUserId());
+        }
+
+        $this->aUserRelatedByCriadoPor = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildUser object, it will not be re-added.
+        if ($v !== null) {
+            $v->addParticipanteRelatedByCriadoPor($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildUser object
+     *
+     * @param ConnectionInterface $con Optional Connection object.
+     * @return ChildUser|null The associated ChildUser object.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getUserRelatedByCriadoPor(?ConnectionInterface $con = null)
+    {
+        if ($this->aUserRelatedByCriadoPor === null && ($this->criado_por != 0)) {
+            $this->aUserRelatedByCriadoPor = ChildUserQuery::create()->findPk($this->criado_por, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aUserRelatedByCriadoPor->addParticipantesRelatedByCriadoPor($this);
+             */
+        }
+
+        return $this->aUserRelatedByCriadoPor;
+    }
+
+    /**
+     * Declares an association between this object and a ChildUser object.
+     *
+     * @param ChildUser|null $v
+     * @return $this The current object (for fluent API support)
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function setUserRelatedByAnuladoPor(ChildUser $v = null)
+    {
+        if ($v === null) {
+            $this->setAnuladoPor(NULL);
+        } else {
+            $this->setAnuladoPor($v->getUserId());
+        }
+
+        $this->aUserRelatedByAnuladoPor = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildUser object, it will not be re-added.
+        if ($v !== null) {
+            $v->addParticipanteRelatedByAnuladoPor($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildUser object
+     *
+     * @param ConnectionInterface $con Optional Connection object.
+     * @return ChildUser|null The associated ChildUser object.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getUserRelatedByAnuladoPor(?ConnectionInterface $con = null)
+    {
+        if ($this->aUserRelatedByAnuladoPor === null && ($this->anulado_por != 0)) {
+            $this->aUserRelatedByAnuladoPor = ChildUserQuery::create()->findPk($this->anulado_por, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aUserRelatedByAnuladoPor->addParticipantesRelatedByAnuladoPor($this);
+             */
+        }
+
+        return $this->aUserRelatedByAnuladoPor;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -1328,12 +1908,24 @@ abstract class Participante implements ActiveRecordInterface
         if (null !== $this->aEvento) {
             $this->aEvento->removeParticipante($this);
         }
+        if (null !== $this->aUserRelatedByCriadoPor) {
+            $this->aUserRelatedByCriadoPor->removeParticipanteRelatedByCriadoPor($this);
+        }
+        if (null !== $this->aUserRelatedByAnuladoPor) {
+            $this->aUserRelatedByAnuladoPor->removeParticipanteRelatedByAnuladoPor($this);
+        }
         $this->nome = null;
         $this->funcao = null;
         $this->cpf = null;
         $this->documento_estrangeiro = null;
         $this->evento = null;
         $this->token = null;
+        $this->criado_por = null;
+        $this->criado_em = null;
+        $this->lote_id = null;
+        $this->anulado_em = null;
+        $this->anulado_por = null;
+        $this->anulado_motivo = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();
@@ -1358,6 +1950,8 @@ abstract class Participante implements ActiveRecordInterface
         } // if ($deep)
 
         $this->aEvento = null;
+        $this->aUserRelatedByCriadoPor = null;
+        $this->aUserRelatedByAnuladoPor = null;
         return $this;
     }
 

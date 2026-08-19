@@ -64,6 +64,7 @@ foreach ($roles as $role => $expected) {
     $participante->setNome($fixtureName);
     $participante->setFuncao($role);
     $participante->setEventoId($evento->getEventoId());
+    $participante->setCriadoPor(test_user_id());
     $participante->save();
 
     $certificado = Certificado::fromParticipante($participante);
@@ -82,6 +83,7 @@ $participante = new Participante();
 $participante->setNome($fixtureName);
 $participante->setFuncao('papel-desconhecido');
 $participante->setEventoId($evento->getEventoId());
+$participante->setCriadoPor(test_user_id());
 $participante->save();
 $certificado = Certificado::fromParticipante($participante);
 T::same('', $certificado->getTexto(), 'an unknown role produces no body copy');

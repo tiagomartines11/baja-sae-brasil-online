@@ -6,6 +6,7 @@ use Baja\Model\Evento;
 use Baja\Model\Participante;
 use Baja\Model\ParticipanteQuery;
 use Baja\Url;
+use Propel\Runtime\ActiveQuery\Criteria;
 
 /**
  * One certificate: a participantes row and the event it belongs to.
@@ -37,6 +38,12 @@ final class Certificado
 
         $participante = ParticipanteQuery::create()
             ->filterByToken($token)
+            // A voided certificate resolves to nothing, so /verificar answers
+            // it with the same not-found page an unknown token gets. The three
+            // failures already looked alike and this is a fourth; a verifier
+            // learns that the certificate does not confirm, which is the
+            // question they came with.
+            ->filterByAnuladoEm(null, Criteria::ISNULL)
             ->findOne();
 
         if ($participante === null) {

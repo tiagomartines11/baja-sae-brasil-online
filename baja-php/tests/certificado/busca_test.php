@@ -31,6 +31,7 @@ $make = static function (string $nome, ?string $cpf, ?string $estrangeiro, strin
     $p->setCpf($cpf);
     $p->setDocumentoEstrangeiro($estrangeiro);
     $p->setEventoId($eventoId);
+    $p->setCriadoPor(test_user_id());
     $p->save();
     $fixtures[] = $p->getToken();
 };
