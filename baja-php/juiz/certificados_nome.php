@@ -33,7 +33,7 @@ $usuario = Acesso::exigir();
 const FORMULARIO = 'certificado-nome';
 
 $documento = Texto::limpar(Texto::escalar($_POST['documento'] ?? $_GET['documento'] ?? ''));
-$novoNome  = Texto::limpar(Texto::escalar($_POST['nome'] ?? ''));
+$novoNome  = Texto::normalizarEspacos(Texto::limpar(Texto::escalar($_POST['nome'] ?? '')));
 $acao      = Texto::escalar($_POST['acao'] ?? '');
 
 $linhas    = [];

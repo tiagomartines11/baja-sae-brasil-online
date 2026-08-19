@@ -31,6 +31,29 @@ final class Texto
     }
 
     /**
+     * Runs of whitespace inside a value, reduced to one space.
+     *
+     * limpar() only takes the ends, which is what the specification asked for
+     * and is not enough on its own: "Kauan  Rocha Mendes" pasted with two
+     * spaces is stored with two and printed on the certificate with two. Real
+     * imports carry these — a cell edited by hand, or a name assembled from
+     * two columns with a separator on both sides.
+     *
+     * Separate from limpar() rather than folded into it, because the paste
+     * parser uses limpar() and its job is to reproduce the cell faithfully. A
+     * cell that really does contain a tab should still read that way when
+     * Planilha hands it over; deciding that a name has no use for one is a
+     * question about names, and belongs where the other name rules live.
+     *
+     * Takes tabs and line breaks too, which reach a name through a quoted
+     * spreadsheet cell and would otherwise go into the column as themselves.
+     */
+    public static function normalizarEspacos(string $valor): string
+    {
+        return (string) preg_replace('/[\s\x{00A0}\x{200B}]+/u', ' ', $valor);
+    }
+
+    /**
      * Characters in this value that the table cannot hold, if any.
      *
      * `participantes` is latin1, and MySQL's latin1 is cp1252 — which is

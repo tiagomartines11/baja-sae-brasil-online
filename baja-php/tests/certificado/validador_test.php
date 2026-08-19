@@ -499,3 +499,52 @@ T::same($cpfLivre, $bom->cpf, 'a valid CPF still goes to the CPF column');
 T::same([], $codigos($bom), 'with nothing to answer');
 
 $cleanup();
+
+// --- whitespace, at the ends and inside --------------------------------------------
+//
+// The ends are trimmed when the row is built, and that covers the invisible
+// ones a paste actually carries. The inside is collapsed here, because a
+// double space survives into the certificate and prints there — and because
+// the stored name is compared with === against what is on file, so "Ana  Paula"
+// and "Ana Paula" would otherwise read as two different people.
+
+$espacos = [
+    'espaços comuns nas pontas'   => ['  Joao Pedro Silva  ',                'Joao Pedro Silva'],
+    'tabulação e quebra de linha' => ["\tJoao Pedro Silva\n",                'Joao Pedro Silva'],
+    'espaço não separável'        => ["\u{00A0}Joao Pedro Silva\u{00A0}",    'Joao Pedro Silva'],
+    'BOM de área de transferência'=> ["\u{FEFF}Joao Pedro Silva",            'Joao Pedro Silva'],
+    'espaço de largura zero'      => ["\u{200B}Joao Pedro Silva\u{200B}",    'Joao Pedro Silva'],
+    'espaço duplo interno'        => ['Kauan  Rocha Mendes',                 'Kauan Rocha Mendes'],
+    'vários espaços internos'     => ['Joao   Pedro    Silva',               'Joao Pedro Silva'],
+    'tabulação interna'           => ["Joao\tPedro Silva",                   'Joao Pedro Silva'],
+    'quebra de linha interna'     => ["Ana\nPaula Lima",                     'Ana Paula Lima'],
+    'mistura de invisíveis'       => ["Joao \u{00A0} Pedro",                 'Joao Pedro'],
+];
+
+foreach ($espacos as $rotulo => [$entrada, $esperado]) {
+    $l = $uma(['evento' => $evA, 'nome' => $entrada, 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+    T::same($esperado, $l->nome, $rotulo);
+}
+
+// A name that needed no cleaning is untouched, and single spaces survive.
+$intacto = $uma(['evento' => $evA, 'nome' => 'Ana Paula Ferreira Lima', 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::same('Ana Paula Ferreira Lima', $intacto->nome, 'an already-clean name is unchanged');
+
+// Whitespace alone is still an absent name, not a name made of one space.
+$soEspacos = $uma(['evento' => $evA, 'nome' => "  \u{00A0}\t ", 'funcao' => 'competidor', 'documento' => $cpfLivre]);
+T::ok('whitespace alone is a missing name', in_array(Problema::CAMPO_OBRIGATORIO, $codigos($soEspacos), true));
+T::same(null, $soEspacos->nome, 'and carries no name forward');
+
+// The collapse happens before the name is compared to what is on file, so a
+// double space is not a name conflict with the single-spaced row.
+$cpfEspaco = synthetic_cpf('818273645');
+$gravar('Renata Alves Prado', $cpfEspaco, null, $evA, 'competidor');
+$comEspacoDuplo = $uma(['evento' => $evB, 'nome' => $prefix . '  Renata  Alves Prado', 'funcao' => 'competidor', 'documento' => $cpfEspaco]);
+T::same($prefix . ' Renata Alves Prado', $comEspacoDuplo->nome, 'the pasted double spaces collapse');
+T::ok(
+    'so it is not a name conflict with the stored row',
+    !in_array(Problema::NOME_DIVERGENTE_LEVE, $codigos($comEspacoDuplo), true)
+        && !in_array(Problema::NOME_DIVERGENTE, $codigos($comEspacoDuplo), true)
+);
+
+$cleanup();

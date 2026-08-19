@@ -91,7 +91,11 @@ final class Validador
 
     private function validarNome(Linha $linha): void
     {
-        $nome = $linha->nomeBruto;
+        // Ends first — done when the Linha was built — and now the inside. A
+        // double space survives to the certificate and prints there, and the
+        // stored name is compared with === against what is already on file, so
+        // "Ana  Paula" and "Ana Paula" would read as two different people.
+        $nome = Texto::normalizarEspacos($linha->nomeBruto);
 
         if ($nome === '') {
             $linha->adicionar(Problema::erro(
