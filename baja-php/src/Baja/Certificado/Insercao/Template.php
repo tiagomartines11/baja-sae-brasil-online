@@ -178,6 +178,191 @@ final class Template
         .multi-acoes button { padding: 2px 8px; font-size: 13px; }
         .doc-composto { display: flex; gap: 8px; }
         .doc-composto select { width: auto; flex: 0 0 auto; }
+
+        /*
+         * Tables on a phone.
+         *
+         * These pages are used on a paddock as often as at a desk, and the
+         * screenshots that prompted this came from somebody's Android. A table
+         * of identity data does not fit 360px, and the failure is the worst
+         * kind: the last column runs off the right edge with no way to reach
+         * it, because the page does not scroll sideways and the table has no
+         * scroller of its own.
+         *
+         * Three treatments, because there are three kinds of content here and
+         * one rule for all of them gets at least two wrong. Which one a table
+         * gets is a decision about what the table is, so it is spelled on the
+         * table: .cartoes, .blocos, or a .rolagem wrapper.
+         *
+         * What none of them do is shrink the type. Staff are reading names and
+         * document numbers off this, sometimes outdoors, and a layout that
+         * only fits at 11px does not fit. If a card is still too long the
+         * answer is fewer rows per page, not smaller text.
+         */
+        /*
+         * 1. Genuinely tabular and genuinely wide: the pasted spreadsheet on
+         *    the column-assignment step. Reshaping it would defeat its
+         *    purpose — the operator is matching what is here against what is
+         *    open in Excel — so it scrolls sideways inside its own box, and
+         *    only inside it.
+         *
+         * The gradients are the scroll affordance. The two white ones are
+         * painted with background-attachment: local so they travel with the
+         * content; the two shadows are attached to the box and stay put. A
+         * shadow is therefore covered by its white neighbour exactly when
+         * there is nothing more to see in that direction, which is what makes
+         * "there is more to the right" visible without a script measuring
+         * anything.
+         */
+        .rolagem {
+            overflow-x: auto;
+            overflow-y: hidden;
+            background:
+                linear-gradient(to right, #fff 30%, rgba(255, 255, 255, 0)) left center,
+                linear-gradient(to left,  #fff 30%, rgba(255, 255, 255, 0)) right center,
+                radial-gradient(farthest-side at 0    50%, rgba(0, 0, 0, 0.20), rgba(0, 0, 0, 0)) left center,
+                radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.20), rgba(0, 0, 0, 0)) right center;
+            background-repeat: no-repeat;
+            background-size: 44px 100%, 44px 100%, 16px 100%, 16px 100%;
+            background-attachment: local, local, scroll, scroll;
+        }
+        /* Wider than the box when it needs to be — that is the point of it. */
+        .rolagem > table { width: auto; min-width: 100%; }
+        /*
+         * The one interactive control on that page. Left to the column widths
+         * it truncates to "E˅", "Nor˅", "Funçã˅", which is unreadable, and it
+         * is the field the whole step exists to fill in. Wide enough for
+         * "Passaporte" and the "— ignorar —" placeholder.
+         */
+        .rolagem select { min-width: 11rem; }
+
+        /*
+         * 2. Not tabular at all: the review rows, where the last column is a
+         *    set of radio buttons with a sentence explaining each. Squeezed
+         *    into a fifth of the width that renders as a one-word-wide ribbon
+         *    of text several screens tall. The problem is not the column
+         *    width — a form is not tabular data — so on a narrow screen each
+         *    row becomes a block: the identity fields run together as one
+         *    summary line, and the decision gets the whole width underneath.
+         */
+        @media (max-width: 760px) {
+            table.blocos, table.blocos tbody { display: block; }
+            table.blocos thead { display: none; }
+            table.blocos tr {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: baseline;
+                gap: 0 10px;
+                background: #fff;
+                border: 1px solid var(--sae-border);
+                border-radius: 6px;
+                padding: 12px 14px;
+                margin-bottom: 10px;
+            }
+            table.blocos td {
+                display: block;
+                border: 0;
+                padding: 0;
+                overflow-wrap: anywhere;
+            }
+            table.blocos td.bloco-num { color: var(--sae-grey); font-weight: bold; }
+            table.blocos td.bloco-num::before { content: "#"; }
+            table.blocos td.bloco-nome { font-weight: bold; color: var(--sae-navy-deep); }
+            /*
+             * The fields ran under their own headings while this was a table.
+             * On one line they need something between them, or "AB25 Fulano de
+             * Tal competidor" reads as one string.
+             */
+            table.blocos td + td:not(.bloco-decisao)::before {
+                content: "·";
+                color: var(--sae-rule);
+                margin-right: 8px;
+            }
+            /* Full width, on its own, under a rule that separates it from the
+               row it is about. */
+            table.blocos td.bloco-decisao {
+                flex: 1 0 100%;
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 1px solid var(--sae-border);
+            }
+            table.blocos td.bloco-decisao label { padding: 4px 0; }
+            table.blocos td.bloco-decisao input[type=radio] { width: 18px; height: 18px; }
+        }
+
+        /*
+         * 3. A list of records: the search results. One card per certificate,
+         *    the name as its heading, the rest as label/value pairs. The
+         *    labels come from data-rotulo rather than a second copy of the
+         *    markup, so the header row and the card labels cannot drift.
+         *
+         * Cards are taller than rows, and that is the trade being made:
+         * vertical scrolling is what a phone is for and horizontal overflow is
+         * a dead end.
+         */
+        @media (max-width: 760px) {
+            table.cartoes, table.cartoes tbody { display: block; }
+            table.cartoes thead { display: none; }
+            /*
+             * Two columns for one row of the grid, so the checkbox sits at the
+             * top-left with the name beside it and everything else runs full
+             * width beneath. Bulk selection is the reason this page has
+             * checkboxes at all, so the checkbox has to stay where a thumb
+             * finds it.
+             */
+            table.cartoes tr {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                align-items: start;
+                gap: 0 10px;
+                background: #fff;
+                border: 1px solid var(--sae-border);
+                border-radius: 6px;
+                padding: 12px 14px;
+                margin-bottom: 10px;
+            }
+            table.cartoes td {
+                display: block;
+                grid-column: 1 / -1;
+                border: 0;
+                padding: 6px 0 0;
+                overflow-wrap: anywhere;
+            }
+            table.cartoes td[data-rotulo]::before {
+                content: attr(data-rotulo);
+                display: block;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: var(--sae-grey);
+            }
+            table.cartoes td.cartao-marcar { grid-column: 1; grid-row: 1; padding-top: 0; }
+            table.cartoes td.cartao-titulo {
+                grid-column: 2;
+                grid-row: 1;
+                padding-top: 0;
+                font-size: 17px;
+                font-weight: bold;
+                color: var(--sae-navy-deep);
+            }
+            table.cartoes input[type=checkbox] { width: 20px; height: 20px; margin: 3px 0 0; }
+        }
+
+        /*
+         * The document number, short and long.
+         *
+         * Both forms are in the markup and the viewport picks one. Not a
+         * privacy control — the page needs the `certificados` permission and
+         * the full number is one rotation away — but a phone held at arm's
+         * length in a public place is read by more people than a laptop at a
+         * desk, and the last three digits are enough to tell one row from the
+         * next.
+         */
+        .doc-curto { display: none; }
+        @media (max-width: 760px) {
+            .doc-longo { display: none; }
+            .doc-curto { display: inline; letter-spacing: 0.04em; }
+        }
     </style>
 </head>
 <body>

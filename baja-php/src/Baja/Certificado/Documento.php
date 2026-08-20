@@ -87,6 +87,38 @@ final class Documento
         return ltrim(self::digits($raw), '0');
     }
 
+    /** How many characters of a document number stay readable when it is masked. */
+    private const VISIVEIS = 3;
+
+    /**
+     * A document number with all but its last few characters masked.
+     *
+     * For the narrow layout of the staff search, where the result rows become
+     * cards. The page is permission-gated, so this is not a privacy control
+     * and nothing depends on it: the full number is a keystroke away in the
+     * same card on a wider screen, and the search still matches on it. It is
+     * about the room the phone is in. A laptop screen is read by whoever is
+     * sitting at it; a phone held at arm's length in a paddock is read by
+     * whoever is standing behind the person holding it.
+     *
+     * The mask keeps one character per hidden character rather than eliding
+     * them, because the length is what tells a reader at a glance whether they
+     * are looking at a CPF or a passport, and the length is not the part worth
+     * hiding. The last few stay readable so a row can still be told from the
+     * one under it.
+     */
+    public static function mascarar(string $valor): string
+    {
+        $comprimento = mb_strlen($valor, 'UTF-8');
+
+        if ($comprimento <= self::VISIVEIS) {
+            return $valor;
+        }
+
+        return str_repeat('•', $comprimento - self::VISIVEIS)
+            . mb_substr($valor, -self::VISIVEIS, null, 'UTF-8');
+    }
+
     /**
      * Whether the eleven digits carry a valid CPF check digit pair.
      *

@@ -2,6 +2,7 @@
 
 namespace Baja\Juiz;
 
+use Baja\Certificado\Documento;
 use Baja\Certificado\Funcao;
 use Baja\Certificado\Insercao\Acesso;
 use Baja\Certificado\Insercao\Anulacao;
@@ -224,16 +225,17 @@ $restaurando = str_starts_with($acao, 'restaurar');
         </p>
     <?php endif; ?>
 
-    <table>
+    <?php /* One card per certificate below 760px — see .cartoes in Template. */ ?>
+    <table class="cartoes">
         <thead><tr><th>Nome</th><th>Evento</th><th>Função</th><th>Certificado</th><th>Estado</th></tr></thead>
         <tbody>
             <?php foreach ($aAnular as $linha): ?>
                 <tr>
-                    <td><?= $e(trim((string) $linha->getNome())) ?></td>
-                    <td><?= $e((string) $linha->getEventoId()) ?></td>
-                    <td><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
-                    <td><code><?= $e((string) $linha->getToken()) ?></code></td>
-                    <td class="muted">
+                    <td class="cartao-titulo"><?= $e(trim((string) $linha->getNome())) ?></td>
+                    <td data-rotulo="Evento"><?= $e((string) $linha->getEventoId()) ?></td>
+                    <td data-rotulo="Função"><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
+                    <td data-rotulo="Certificado"><code><?= $e((string) $linha->getToken()) ?></code></td>
+                    <td class="muted" data-rotulo="Estado">
                         <?php if ($linha->getAnuladoEm() !== null): ?>
                             já anulado em <?= $e($linha->getAnuladoEm()->format('d/m/Y')) ?>
                         <?php else: ?>
@@ -446,7 +448,13 @@ $restaurando = str_starts_with($acao, 'restaurar');
                 <input type="hidden" name="funcoes[]" value="<?= $e($codigo) ?>" />
             <?php endforeach; ?>
 
-            <table>
+            <?php /*
+                A table on a desktop and one card per certificate below 760px,
+                which is the same markup either way: the labels come from
+                data-rotulo, so the header row above and the labels on the
+                cards cannot drift apart. See .cartoes in Template.
+            */ ?>
+            <table class="cartoes">
                 <thead>
                     <tr>
                         <th></th>
@@ -461,11 +469,11 @@ $restaurando = str_starts_with($acao, 'restaurar');
                         $anulado = $linha->getAnuladoEm() !== null;
                     ?>
                         <tr<?= $anulado ? ' style="background: #fbf3f3;"' : '' ?>>
-                            <td>
+                            <td class="cartao-marcar">
                                 <input type="checkbox" name="tokens[]" value="<?= $e($token) ?>"
                                        aria-label="selecionar" />
                             </td>
-                            <td>
+                            <td class="cartao-titulo">
                                 <?= $e(trim((string) $linha->getNome())) ?>
                                 <?php if ($anulado): ?>
                                     <div class="muted" style="font-size: 12px; color: var(--erro);">
@@ -475,19 +483,28 @@ $restaurando = str_starts_with($acao, 'restaurar');
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td><?= $e((string) $linha->getEventoId()) ?></td>
-                            <td><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
-                            <td>
-                                <?= $e($doc) ?>
+                            <td data-rotulo="Evento"><?= $e((string) $linha->getEventoId()) ?></td>
+                            <td data-rotulo="Função"><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
+                            <td data-rotulo="Documento">
+                                <?php /*
+                                    Both spellings are here and the viewport
+                                    picks one; see .doc-curto in Template. Not
+                                    a privacy control — this page needs the
+                                    `certificados` permission — but a phone
+                                    held at arm's length in a paddock is read
+                                    by more people than a laptop at a desk.
+                                */ ?>
+                                <span class="doc-longo"><?= $e($doc) ?></span>
+                                <span class="doc-curto"><?= $e(Documento::mascarar($doc)) ?></span>
                                 <?php if ($linha->getCpf() === null && $doc !== ''): ?>
                                     <span class="muted">(passaporte)</span>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-rotulo="Certificado">
                                 <a href="<?= $e(Url::subdomain('certificado', '/verificar/' . $token)) ?>"
                                    target="_blank" rel="noreferrer"><code><?= $e($token) ?></code></a>
                             </td>
-                            <td class="muted">
+                            <td class="muted" data-rotulo="Origem">
                                 <?php if ($linha->getLoteId() !== null): ?>
                                     <a href="lote.php?id=<?= urlencode((string) $linha->getLoteId()) ?>">lote</a>
                                 <?php endif; ?>

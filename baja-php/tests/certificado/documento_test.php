@@ -44,6 +44,19 @@ T::same('AB123456', Documento::normalizeEstrangeiro('ab-123456'), 'foreign docum
 T::same('AB123456', Documento::normalizeEstrangeiro('00AB123456'), 'leading zeros stripped for comparison');
 T::same('123456', Documento::normalizeEstrangeiro('000123456'), 'digits-only foreign document strips zeros');
 
+// --- masking for a phone screen ----------------------------------------------
+
+T::same('••••••••725', Documento::mascarar($cpf), 'a CPF keeps its last three digits');
+T::same('••••••••890', Documento::mascarar($zeroCpf), 'and so does one that begins with zeros');
+T::same(
+    11,
+    mb_strlen(Documento::mascarar($cpf), 'UTF-8'),
+    'the mask is as long as the number, so a CPF still reads as a CPF'
+);
+T::same('•••••456', Documento::mascarar('AB123456'), 'a passport is masked the same way');
+T::same('12', Documento::mascarar('12'), 'a value with nothing to hide is returned as it is');
+T::same('', Documento::mascarar(''), 'and so is an absent document');
+
 if (!test_db_available()) {
     T::skip('database-backed document tests', 'BAJA_TEST_DB is not 1');
     return;
