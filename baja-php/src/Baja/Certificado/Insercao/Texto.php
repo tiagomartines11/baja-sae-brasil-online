@@ -2,6 +2,8 @@
 
 namespace Baja\Certificado\Insercao;
 
+use Baja\Certificado\Nome;
+
 /**
  * Text on its way into a latin1 table, from a spreadsheet.
  *
@@ -143,15 +145,6 @@ final class Texto
     }
 
     /**
-     * Portuguese connectives, which stay lowercase inside a name.
-     *
-     * "João da Silva", never "João Da Silva". The same list Nome uses to drop
-     * them from a comparison — there because they carry no identity, here
-     * because they carry no capital.
-     */
-    private const CONECTIVOS = ['de', 'da', 'do', 'dos', 'das', 'e', 'du', 'del', 'della', 'van', 'von', 'y'];
-
-    /**
      * Whether a name is uniformly one case, and which.
      *
      * Returns 'alta', 'baixa', or null for anything mixed. Only the uniform
@@ -213,11 +206,42 @@ final class Texto
         return implode('', $partes);
     }
 
+    /**
+     * Whether two spellings of a name are the same name to this system.
+     *
+     * Both sides through caixaDeNome() before the comparison, so that a
+     * discrepancy the save pipeline would erase never becomes a question for
+     * the operator. "Fulano de Tal" against a stored "Fulano De Tal" is not a
+     * difference: it is the same name with a particle somebody capitalised,
+     * and asking which one is right when the answer is already decided is
+     * noise on a review screen that has real decisions on it.
+     *
+     * Deliberately narrow. It folds case and nothing else — no accents, no
+     * missing middle names, no punctuation. "Joao" and "João" stay different,
+     * because saving one does not turn it into the other and the operator is
+     * the only one who knows which spelling the person uses.
+     */
+    public static function mesmoNome(string $a, string $b): bool
+    {
+        return $a === $b || self::caixaDeNome($a) === self::caixaDeNome($b);
+    }
+
     private static function capitalizarParte(string $parte, bool $primeira): string
     {
         $baixa = mb_strtolower($parte, 'UTF-8');
 
-        if (!$primeira && in_array($baixa, self::CONECTIVOS, true)) {
+        // "João da Silva", never "João Da Silva". Nome::CONNECTIVES rather
+        // than a list of its own: it is the same set the search strips as
+        // stopwords, and the two rules have to name the same words — a name
+        // proper-cased here is compared against a stored one there. Two lists
+        // that must agree eventually do not.
+        //
+        // That costs the foreign particles a private copy used to carry: du,
+        // del, della, van, von, y. A "VAN GOGH" pasted in capitals now comes
+        // out "Van Gogh" rather than "van Gogh", a small wrong answer on a
+        // rare name. If they are wanted back they belong in
+        // Nome::CONNECTIVES, where the search will also learn to ignore them.
+        if (!$primeira && in_array($baixa, Nome::CONNECTIVES, true)) {
             return $baixa;
         }
 

@@ -2,6 +2,7 @@
 
 use Baja\Certificado\Insercao\ClassificacaoDocumento as C;
 use Baja\Certificado\Insercao\Texto;
+use Baja\Certificado\Nome;
 
 T::group('classificacao');
 
@@ -187,3 +188,86 @@ T::same('João Pedro Silva', Texto::caixaDeNome('João Pedro Silva'), 'an alread
 // than correcting its case — which is the whole reason this is a suggestion.
 T::same('Joao Goncalves', Texto::caixaDeNome('JOAO GONCALVES'), 'missing accents are not invented');
 T::same('João Gonçalves', Texto::caixaDeNome('JOÃO GONÇALVES'), 'but present ones survive');
+
+// The particle list is Nome::CONNECTIVES, not a copy of it. Brazilian
+// orthography puts these in lowercase inside a name, and the certificate is a
+// formal document over the president's signature: "Marques de Britto" is what
+// a Brazilian reader expects to see, and "Marques De Britto" reads as wrong.
+T::same(
+    'Breno José Erasmi Marques de Britto',
+    Texto::caixaDeNome('Breno José Erasmi Marques De Britto'),
+    'a capitalised particle is put back in lowercase'
+);
+foreach (Nome::CONNECTIVES as $conectivo) {
+    T::same(
+        'Silva ' . $conectivo . ' Souza',
+        Texto::caixaDeNome('SILVA ' . mb_strtoupper($conectivo, 'UTF-8') . ' SOUZA'),
+        sprintf('"%s" is one of the words that stays lowercase', $conectivo)
+    );
+}
+
+// The edge cases the review screen actually meets.
+T::same(
+    'João Guilherme Bresolin',
+    Texto::caixaDeNome('JOÃO GUILHERME BRESOLIN'),
+    'an ALL CAPS name with accents proper-cases without losing them'
+);
+T::same(
+    "D'Ângelo Silva",
+    Texto::caixaDeNome("D'ÂNGELO SILVA"),
+    'the accented letter after an apostrophe is capitalised, not left as d\'ângelo'
+);
+T::same(
+    'J. P. Silva',
+    Texto::caixaDeNome('J. P. Silva'),
+    'single-letter initials keep their capital and their full stop'
+);
+T::same(
+    'Ana-Maria da Costa-Lima',
+    Texto::caixaDeNome('ANA-MARIA DA COSTA-LIMA'),
+    'both halves of a hyphenated surname are capitalised'
+);
+T::same(
+    'De Souza da Silva',
+    Texto::caixaDeNome('DE SOUZA DA SILVA'),
+    'a particle in first position is capitalised — a name does not begin lowercase'
+);
+
+// --- the same name, differently cased -----------------------------------------------
+//
+// What the review screen asks about. A discrepancy the save pipeline would
+// erase is not a discrepancy: surfacing it costs the operator a decision on
+// something already decided, and buries the rows that need one.
+
+T::ok(
+    'a capitalised particle is not a difference',
+    Texto::mesmoNome('Fulano de Tal', 'Fulano De Tal')
+);
+T::ok(
+    'and neither is an ALL CAPS spelling of the same name',
+    Texto::mesmoNome('FULANO DE TAL', 'Fulano de Tal')
+);
+T::ok(
+    'nor an all-lowercase one',
+    Texto::mesmoNome('Ana Paula Ferreira', 'ana paula ferreira')
+);
+T::ok(
+    'an identical name is trivially the same name',
+    Texto::mesmoNome('José da Silva', 'José da Silva')
+);
+
+// Narrow on purpose. Everything the save pipeline would *not* erase stays a
+// difference, because the operator is the only one who knows which spelling
+// the person uses.
+T::ok(
+    'an accent is still a difference — saving one does not turn it into the other',
+    !Texto::mesmoNome('Joao Pedro Bresolin', 'João Pedro Bresolin')
+);
+T::ok(
+    'a dropped middle name is still a difference',
+    !Texto::mesmoNome('Ana Paula Ferreira', 'Ana Ferreira')
+);
+T::ok(
+    'and so is a different first name',
+    !Texto::mesmoNome('Ana Paula Ferreira', 'Maria Paula Ferreira')
+);
