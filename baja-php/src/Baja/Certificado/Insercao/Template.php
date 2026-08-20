@@ -150,6 +150,16 @@ final class Template
         th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--sae-border); vertical-align: top; }
         th { font-size: 12px; text-transform: uppercase; color: var(--sae-grey); }
         code { font-family: monospace; font-size: 13px; background: var(--sae-light); padding: 1px 4px; border-radius: 3px; }
+        /*
+         * The batch page states what a batch is as a description list, and
+         * without these it renders on the browser's defaults — a 40px indent
+         * and no label styling — in the middle of a page that has neither.
+         * Same rules as the public pages, so a dt reads as a label there and
+         * here.
+         */
+        dl { margin: 0; }
+        dt { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sae-grey); margin-top: 12px; }
+        dd { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
 
         /*
          * Multi-select with a filter box, built out of <details> so that it
@@ -314,7 +324,6 @@ final class Template
                 display: grid;
                 grid-template-columns: auto 1fr;
                 align-items: start;
-                gap: 0 10px;
                 background: #fff;
                 border: 1px solid var(--sae-border);
                 border-radius: 6px;
@@ -336,7 +345,13 @@ final class Template
                 letter-spacing: 0.04em;
                 color: var(--sae-grey);
             }
-            table.cartoes td.cartao-marcar { grid-column: 1; grid-row: 1; padding-top: 0; }
+            /*
+             * The gutter belongs to the checkbox, not to the grid. Most of
+             * these tables have no checkbox column at all, and a column-gap
+             * would indent their heading by 10px against the fields under it,
+             * because the empty first track still takes its gap.
+             */
+            table.cartoes td.cartao-marcar { grid-column: 1; grid-row: 1; padding: 0 10px 0 0; }
             table.cartoes td.cartao-titulo {
                 grid-column: 2;
                 grid-row: 1;

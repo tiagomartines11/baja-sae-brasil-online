@@ -187,17 +187,18 @@ $e = fn(string $v): string => Template::e($v);
 <?php elseif ($linhas !== []): ?>
     <div class="card">
         <h2><?= count($linhas) ?> certificado<?= count($linhas) === 1 ? '' : 's' ?> neste documento</h2>
-        <table>
+        <?php /* One card per certificate below 760px — see .cartoes in Template. */ ?>
+        <table class="cartoes">
             <thead>
                 <tr><th>Nome registrado</th><th>Evento</th><th>Função</th><th>Certificado</th></tr>
             </thead>
             <tbody>
                 <?php foreach ($linhas as $linha): ?>
                     <tr>
-                        <td><?= $e(trim((string) $linha->getNome())) ?></td>
-                        <td><?= $e((string) $linha->getEventoId()) ?></td>
-                        <td><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
-                        <td><code><?= $e((string) $linha->getToken()) ?></code></td>
+                        <td class="cartao-titulo"><?= $e(trim((string) $linha->getNome())) ?></td>
+                        <td data-rotulo="Evento"><?= $e((string) $linha->getEventoId()) ?></td>
+                        <td data-rotulo="Função"><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
+                        <td data-rotulo="Certificado"><code><?= $e((string) $linha->getToken()) ?></code></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -241,14 +242,23 @@ $e = fn(string $v): string => Template::e($v);
                             antigo; a partir de agora o mesmo endereço de verificação
                             mostra o nome novo. O token de cada certificado não muda.
                         </p>
-                        <table style="margin-top: 12px;">
+                        <?php /*
+                            Three columns of names do not fit a phone, and this
+                            is the table that says what is about to be
+                            rewritten — the one place on the page where a
+                            column running off the edge would matter most. Each
+                            row becomes a labelled card below 760px; no field
+                            leads, because "De" and "Para" only mean anything
+                            next to their labels.
+                        */ ?>
+                        <table class="cartoes" style="margin-top: 12px;">
                             <thead><tr><th>De</th><th>Para</th><th>Evento</th></tr></thead>
                             <tbody>
                                 <?php foreach ($afetadas as $linha): ?>
                                     <tr>
-                                        <td><?= $e(trim((string) $linha->getNome())) ?></td>
-                                        <td><?= $e($novoNome) ?></td>
-                                        <td><?= $e((string) $linha->getEventoId()) ?></td>
+                                        <td data-rotulo="De"><?= $e(trim((string) $linha->getNome())) ?></td>
+                                        <td data-rotulo="Para"><?= $e($novoNome) ?></td>
+                                        <td data-rotulo="Evento"><?= $e((string) $linha->getEventoId()) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
