@@ -1,0 +1,5 @@
+# Plain HTTP, and the fallback for any request whose Host header doesn't match
+# a server_name in any conf — e.g. http://localhost/. Without a default_server
+# nginx falls back to the alphabetically-first conf (baja-app-certificado),
+# which is surprising during local dev.
+listen 80 default_server;

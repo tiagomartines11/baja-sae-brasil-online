@@ -1,14 +1,16 @@
 server {
-    # default_server claims the fallback for any request whose Host header
-    # doesn't match a server_name in any conf — e.g., http://localhost/.
-    # Without this, nginx falls back to the alphabetically-first conf
+    # The -default snippet claims the fallback for any request whose Host
+    # header doesn't match a server_name in any conf — e.g. http://localhost/.
+    # Without it nginx falls back to the alphabetically-first conf
     # (baja-app-certificado.conf), which is surprising during local dev.
-    listen 80 default_server;
-    server_name baja.local;
+    # In a TLS environment this is the default_server on 443; the one on 80 is
+    # the redirect. Exactly one per port, which is why the snippet is separate.
+    include /etc/nginx/conf.d/snippets/${LISTEN_MODE}-default.conf;
+    server_name ${BAJA_DOMAIN};
 
     # The PHP API lives on its own vhost (baja-app-api.conf), per the
-    # convention that *.baja.local is PHP and baja.local/* is Next.js.
-    # /api/ here stays free for Next.js route handlers.
+    # convention that *.${BAJA_DOMAIN} is PHP and the apex path space is
+    # Next.js. /api/ here stays free for Next.js route handlers.
 
     # Everything else: proxy to Next.js (baja-js container, port 3000).
     # The /css /js /img location blocks above must remain BEFORE this one —

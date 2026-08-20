@@ -1,0 +1,4 @@
+# Dev has no TLS to redirect to, so there is deliberately no server block here.
+# 00-redirect.conf includes this file and gets nothing, which is the point:
+# a :80 redirect server in dev would claim default_server and bounce every
+# request to an https:// URL nothing is listening on.

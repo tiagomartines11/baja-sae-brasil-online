@@ -1,13 +1,23 @@
 server {
-    listen 80;
-    server_name juiz.baja.local;
+    include /etc/nginx/conf.d/snippets/${LISTEN_MODE}.conf;
+    server_name juiz.${BAJA_DOMAIN};
 
     root /var/www/baja-app/juiz;
     index index.php index.html;
 
-    # CORS for cross-subdomain requests from baja.local
+    # CORS for cross-subdomain requests. Matches the base domain and any of
+    # its subdomains.
+    #
+    # The dots in ${BAJA_DOMAIN} render unescaped, so each one matches any
+    # single character rather than a literal ".". That admits a host differing
+    # from the real one only at those separator positions — which, having no
+    # real TLD boundary, is not a name anybody can register. The check still
+    # accepts only the true domain and its subdomains in practice. Escaping
+    # would need a second variable holding a regex-quoted copy of the same
+    # value: one more thing to keep in step, and that drift is what this work
+    # package exists to remove.
     set $cors_origin "";
-    if ($http_origin ~* "^https?://([a-z0-9-]+\.)?baja\.local(:\d+)?$") {
+    if ($http_origin ~* "^https?://([a-z0-9-]+\.)?${BAJA_DOMAIN}(:\d+)?$") {
         set $cors_origin $http_origin;
     }
     add_header Access-Control-Allow-Origin $cors_origin always;
