@@ -12,7 +12,23 @@ class Session
     static function initSession() {
         global $user;
         $username = (string) ($user->data["username"] ?? '');
-        Session::$_currentUser = UserQuery::create()->findOneByUsername($username);
+
+        // Never look a user up by the empty string.
+        //
+        // PhpbbSessionShim represents "no session" as username => '', and
+        // findOneByUsername does no empty-value special-casing — it compiles to
+        // a plain WHERE username = ''. So if a row with an empty username ever
+        // existed, every unauthenticated visitor would match it and be silently
+        // logged in as that row, with whatever permissions it carries.
+        //
+        // Such a row is creatable: Fila::addPermissaoFila and juiz's user admin
+        // both do setUsername($input)->save() without checking for empty. Those
+        // are guarded now, but this is the seam every request crosses, so it is
+        // the one place the invariant has to hold no matter what any writer does
+        // later. Anonymous must never match a row.
+        if ($username !== '') {
+            Session::$_currentUser = UserQuery::create()->findOneByUsername($username);
+        }
 
         if (Session::$_currentUser || $_SERVER["SCRIPT_NAME"] == "/login.php") {
             return;
@@ -43,9 +59,12 @@ class Session
         //
         // Whitelisted to the controller's own code shape so nothing
         // attacker-influenced reaches the Location header.
+        // is_string first: ?error[]=x makes this an array, and casting one to
+        // string emits an "Array to string conversion" warning before the
+        // regex rejects it anyway.
         $error  = $_GET['error'] ?? '';
-        $suffix = preg_match('/^[a-z_]{1,32}$/', (string) $error)
-            ? '?error=' . urlencode((string) $error)
+        $suffix = (is_string($error) && preg_match('/^[a-z_]{1,32}$/', $error) === 1)
+            ? '?error=' . urlencode($error)
             : '';
         header("Location: login.php" . $suffix);
         exit();

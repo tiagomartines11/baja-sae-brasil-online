@@ -19,6 +19,7 @@ namespace baja\auth\controller;
 use phpbb\auth\auth;
 use phpbb\config\config;
 use phpbb\request\request;
+use phpbb\request\request_interface;
 use phpbb\user;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -81,9 +82,15 @@ class main
             return new RedirectResponse($this->appendError($target, 'challenge'));
         }
 
-        $username = $this->request->variable('username', '', true);
-        $password = $this->request->variable('password', '', true);
-        $autologin = (bool) $this->request->variable('autologin', 0);
+        // POST scope explicitly. request->variable() defaults to REQUEST, which
+        // merges the query string — so without this a password could be sourced
+        // from a URL (landing it in access logs and Referer headers), and
+        // autologin could be switched on by a query parameter neither login
+        // form offers. `redirect` above deliberately stays on REQUEST: it has
+        // to survive a Cloudflare challenge replay, which keeps only the URL.
+        $username  = $this->request->variable('username', '', true, request_interface::POST);
+        $password  = $this->request->variable('password', '', true, request_interface::POST);
+        $autologin = (bool) $this->request->variable('autologin', 0, false, request_interface::POST);
 
         if ($username === '' || $password === '') {
             return new RedirectResponse($this->appendError($target, 'missing'));
@@ -136,6 +143,26 @@ class main
         }
 
         if ($url === null || $url === '') {
+            return $default !== '' ? $default : '/';
+        }
+        // Backslashes and control characters are rejected before anything else
+        // because browsers rewrite them and this validator does not.
+        //
+        // Per the WHATWG URL spec a backslash is treated as a forward slash in
+        // special-scheme URLs, so "/\evil.com" satisfies the "starts with /
+        // but not //" test below, is returned verbatim, and then navigates the
+        // browser to http://evil.com/. Browsers also strip tab, newline and
+        // other C0 controls before parsing, which can smuggle a second slash
+        // past that same test.
+        //
+        // Neither ever appears in a target we generate, so reject outright
+        // rather than trying to normalise the way each browser would.
+        // str_contains for the backslash and a POSIX class for the controls,
+        // rather than one regex with \\ and \x escapes: in a single-quoted PHP
+        // string those compose into something PCRE rejects outright, and a
+        // failed preg_match returns false, so the guard would silently fail
+        // open. Both checks below are unambiguous at a glance.
+        if (str_contains($url, '\\') || preg_match('/[[:cntrl:]]/', $url) === 1) {
             return $default !== '' ? $default : '/';
         }
         // Allow site-relative paths but reject protocol-relative ("//evil.com/x").

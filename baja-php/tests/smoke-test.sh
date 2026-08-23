@@ -288,6 +288,65 @@ else
     FAIL=$((FAIL + 1))
 fi
 
+# ---------------------------------------------------------------------------
+# 18-19. Security regressions from the login-shim review.
+# ---------------------------------------------------------------------------
+
+# 18. Open redirect via backslash. Browsers treat "\" as "/" in special-scheme
+# URLs (WHATWG URL), so "/\evil.com" satisfied validateRedirect's "starts with
+# / but not //" test, was echoed back verbatim, and navigated to
+# http://evil.com/. Control characters are stripped by browsers before parsing
+# and could smuggle a second slash past the same test. Checked on warmup — the
+# cleanest vector, being unauthenticated and GET — and on login.
+#
+# Assert on the HOST the browser would end up on, not on whether the string
+# contains "evil.com". A same-origin path that merely mentions the name (e.g.
+# /%09/evil.com, where the % is literal) is harmless, and a substring check
+# reports it as a failure.
+for payload in '/\evil.com' '/\/evil.com' "/$(printf '\t')/evil.com" "/$(printf '\r')/evil.com"; do
+    for route in warmup login; do
+        location=$(curl -s -o /dev/null -w "%{redirect_url}" \
+            --get --data-urlencode "redirect=$payload" \
+            "$BASE_FORUM/app.php/baja/$route")
+        # Strip scheme, then take everything before the first / — the authority.
+        host=${location#*://}
+        host=${host%%/*}
+        printable=$(printf '%s' "$payload" | cat -v)
+        if [[ "$host" == *evil.com ]]; then
+            red "FAIL  $route sent the browser off-domain for '$printable' -> '$location'"
+            FAIL=$((FAIL + 1))
+        else
+            green "PASS  $route kept '$printable' on-domain (host=$host)"
+            PASS=$((PASS + 1))
+        fi
+    done
+done
+
+# 19. Anonymous must never match a user row. The shim represents "no session"
+# as username => '', and findOneByUsername('') is a plain WHERE username = ''.
+# A row with an empty username would therefore authenticate every
+# unauthenticated visitor as that row. Create one directly in the DB — bypassing
+# the application guards, which is the point: this asserts the seam holds even
+# when a row exists — then confirm anonymous access is still refused.
+if command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -q '^baja-mysql$'; then
+    docker exec baja-mysql mysql -uroot -p"${MYSQL_ROOT_PASSWORD:-devrootpass}" -N -e \
+        "INSERT INTO baja_resultados.user (username, permissions) VALUES ('', '| index | admin |');" 2>/dev/null
+
+    body=$(curl -s "$BASE_JUIZ/index.php")
+    if echo "$body" | grep -q 'login.php?act=logout'; then
+        red "FAIL  anonymous authenticated as the empty-username row (auth bypass)"
+        FAIL=$((FAIL + 1))
+    else
+        green "PASS  anonymous does not match the empty-username row"
+        PASS=$((PASS + 1))
+    fi
+
+    docker exec baja-mysql mysql -uroot -p"${MYSQL_ROOT_PASSWORD:-devrootpass}" -N -e \
+        "DELETE FROM baja_resultados.user WHERE username = '';" 2>/dev/null
+else
+    echo "SKIP  empty-username check (needs the baja-mysql container)"
+fi
+
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"
 [[ $FAIL -eq 0 ]] || exit 1

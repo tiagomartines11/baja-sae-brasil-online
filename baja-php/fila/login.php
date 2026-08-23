@@ -22,7 +22,16 @@ $errorMessages = [
     'missing'           => 'Preencha usuário e senha',
     'unknown_user'      => 'Usuário desconhecido',
     'bad_password'      => 'Senha incorreta',
-    'too_many_attempts' => 'Muitas tentativas. Tente novamente em alguns minutos',
+    // NOT "try again in a few minutes" — that was false. phpBB gates
+    // $auth->login() behind a CAPTCHA once user_login_attempts hits
+    // max_login_attempts, and that counter has no time-based expiry: it is
+    // cleared only by a successful login or a password reset. This form cannot
+    // present the CAPTCHA, so waiting never helps and the correct password is
+    // refused indefinitely. The forum's own login form can show it, and
+    // succeeding there resets the counter — so that is the actual way out.
+    'too_many_attempts' => 'Muitas tentativas de login. Por segurança o fórum bloqueou sua conta, e só um login no fórum (com verificação de imagem) desbloqueia — esperar não resolve. <a href="'
+        . htmlspecialchars(Url::forum('/ucp.php?mode=login'), ENT_QUOTES, 'UTF-8')
+        . '">Entrar pelo fórum</a>',
     'challenge'         => 'A verificação de segurança interrompeu o envio. Entre novamente.',
     'unknown'           => 'Erro de autenticação',
 ];
