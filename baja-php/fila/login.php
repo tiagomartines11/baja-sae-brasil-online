@@ -100,7 +100,7 @@ echo '<form action="'.htmlspecialchars($loginAction, ENT_QUOTES, 'UTF-8').'" met
         <br /><br />
         <input type="submit" value="Entrar"/>
         <br /><br /><br />
-        <a href="https://forum.bajasaebrasil.net/ucp.php?mode=sendpassword">Esqueci minha senha</a>
+        <a href="'.htmlspecialchars(Url::forum('/ucp.php?mode=sendpassword'), ENT_QUOTES, 'UTF-8').'">Esqueci minha senha</a>
     </form>';
 
 echo '<br /></td></tr></table></div>';
