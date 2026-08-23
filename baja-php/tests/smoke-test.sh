@@ -241,13 +241,27 @@ fi
 # NOT bounce to the warm-up again — a browser that refuses cookies can never
 # set the marker, and re-bouncing would trap it in an infinite redirect loop
 # between juiz and forum. Assert a terminal 200 with no Location at all.
-status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/login.php?warmed=1")
-location=$(curl -s -o /dev/null -w "%{redirect_url}" "$BASE_JUIZ/login.php?warmed=1")
-if [[ "$status" == "200" && -z "$location" ]]; then
-    green "PASS  login.php?warmed=1 renders without re-bouncing (no loop)"
+for warmed in 1 challenge; do
+    status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/login.php?warmed=$warmed")
+    location=$(curl -s -o /dev/null -w "%{redirect_url}" "$BASE_JUIZ/login.php?warmed=$warmed")
+    if [[ "$status" == "200" && -z "$location" ]]; then
+        green "PASS  login.php?warmed=$warmed renders without re-bouncing (no loop)"
+        PASS=$((PASS + 1))
+    else
+        red "FAIL  login.php?warmed=$warmed should render terminally; got status=$status location='$location'"
+        FAIL=$((FAIL + 1))
+    fi
+done
+
+# 17. warmed=challenge is how a lapsed-clearance bounce reports itself (a
+# single value rather than an extra &error= pair, because phpBB html-escapes
+# the '&' inside a redirect target). The form must actually show the message.
+body=$(curl -s "$BASE_JUIZ/login.php?warmed=challenge")
+if echo "$body" | grep -q 'verificação de segurança'; then
+    green "PASS  warmed=challenge renders the pt-BR challenge message"
     PASS=$((PASS + 1))
 else
-    red "FAIL  login.php?warmed=1 should render terminally; got status=$status location='$location'"
+    red "FAIL  warmed=challenge did not render the challenge message"
     FAIL=$((FAIL + 1))
 fi
 

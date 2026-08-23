@@ -64,6 +64,17 @@ final class ChallengeWarmup
         // require to proceed.
         if (isset($_GET['warmed'])) {
             self::mark();
+
+            // Surface why we bounced, through the channel the login pages
+            // already read. This rides in the `warmed` value itself rather
+            // than as a second &error= pair because phpBB runs string request
+            // variables through htmlspecialchars: an '&' inside the redirect
+            // target comes back as '&amp;' and the browser would parse it as
+            // a junk 'amp;error' parameter, silently dropping the message.
+            if (($_GET['warmed'] ?? '') === 'challenge') {
+                $_GET['error'] = 'challenge';
+            }
+
             return;
         }
 
@@ -77,10 +88,11 @@ final class ChallengeWarmup
             return;
         }
 
-        // Carry the error code through the bounce so the user still gets told
-        // why their attempt was dropped, rather than silently facing a blank
-        // form with their credentials gone.
-        $back = Url::subdomain($subdomain, $loginPath . '?warmed=1' . ($lapsed ? '&error=challenge' : ''));
+        // Carry the reason through the bounce so the user still gets told why
+        // their attempt was dropped, rather than silently facing a blank form
+        // with their credentials gone. Single parameter, no '&' — see the
+        // note in the warmed branch above.
+        $back = Url::subdomain($subdomain, $loginPath . '?warmed=' . ($lapsed ? 'challenge' : '1'));
 
         header('Location: ' . Url::forum('/app.php/baja/warmup?redirect=' . urlencode($back)));
         exit();
