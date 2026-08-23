@@ -5,13 +5,22 @@ use Baja\Auth\ChallengeWarmup;
 use Baja\Session;
 use Baja\Url;
 
+// Logout is handled FIRST, before the already-logged-in redirect below.
+//
+// Every user who clicks "Logout" is by definition logged in, so the redirect
+// below matches them too. It used to fall through into this branch by accident
+// — it set a Location header but did not exit, and endSession() then replaced
+// that header with its own. Adding the exit() (needed so the warm-up bounce
+// cannot overwrite it) turned that accident into a bug: the redirect swallowed
+// act=logout and logging out silently bounced the user back to index.php,
+// still logged in. Ordering makes it explicit instead of accidental.
+if (@$_REQUEST['act'] == 'logout') {
+    Session::endSession();
+}
+
 if (Session::getCurrentUser() && @$_REQUEST['act'] != 'change_pass') {
     header("Location: index.php");
     exit();
-}
-
-if (@$_REQUEST['act'] == 'logout') {
-    Session::endSession();
 }
 
 // Must run before any output: may redirect through the forum so the browser
@@ -20,8 +29,13 @@ ChallengeWarmup::ensure('fila');
 
 $errorMessages = [
     'missing'           => 'Preencha usuário e senha',
-    'unknown_user'      => 'Usuário desconhecido',
-    'bad_password'      => 'Senha incorreta',
+    // One message for both "no such user" and "wrong password". Telling
+    // them apart lets an attacker enumerate valid usernames without ever
+    // guessing a password — and the lockout is still reachable, so an
+    // enumerated name can then be locked out in three requests. The
+    // controller collapses the two statuses to one code, so this map has
+    // nothing to distinguish even if someone wanted to.
+    'bad_credentials'   => 'Usuário ou senha incorretos',
     // NOT "try again in a few minutes" — that was false. phpBB gates
     // $auth->login() behind a CAPTCHA once user_login_attempts hits
     // max_login_attempts, and that counter has no time-based expiry: it is

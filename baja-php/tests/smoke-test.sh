@@ -473,6 +473,41 @@ else
 fi
 rm -f "$REALJAR"
 
+# 25. Logout through the link a judge actually clicks.
+#
+# Everything above exercises /app.php/baja/logout directly. Nothing covered
+# juiz/login.php?act=logout, which is the only path in the UI — and that gap
+# let a regression through: the already-logged-in redirect at the top of
+# login.php matches a logged-in user clicking Logout, so once it grew an
+# exit() it swallowed act=logout and the click silently returned the user to
+# index.php, still logged in. Drive the link, not the endpoint.
+REALJAR2=$(mktemp -t shim-logout.XXXXXX)
+curl -s -L -c "$REALJAR2" -b "$REALJAR2" -o /tmp/lo-login.html "$BASE_JUIZ/login.php"
+lo_token=$(grep -o 'name="csrf" value="[a-f0-9]*"' /tmp/lo-login.html | sed 's/.*value="//;s/"//')
+curl -s -o /dev/null -c "$REALJAR2" -b "$REALJAR2" -X POST \
+    "${ORIGIN_HDR[@]}" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$lo_token" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php"
+
+body=$(curl -s -b "$REALJAR2" "$BASE_JUIZ/index.php")
+if ! echo "$body" | grep -q 'login.php?act=logout'; then
+    red "FAIL  could not log in, so the logout link check is inconclusive"
+    FAIL=$((FAIL + 1))
+else
+    # Follow the link exactly as the browser would, redirects and all.
+    curl -s -L -c "$REALJAR2" -b "$REALJAR2" -o /dev/null "$BASE_JUIZ/login.php?act=logout"
+    after=$(curl -s -b "$REALJAR2" "$BASE_JUIZ/index.php")
+    if echo "$after" | grep -q 'login.php?act=logout'; then
+        red "FAIL  login.php?act=logout left the user logged in (logout link is dead)"
+        FAIL=$((FAIL + 1))
+    else
+        green "PASS  login.php?act=logout actually ends the session"
+        PASS=$((PASS + 1))
+    fi
+fi
+rm -f "$REALJAR2"
+
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"
 [[ $FAIL -eq 0 ]] || exit 1

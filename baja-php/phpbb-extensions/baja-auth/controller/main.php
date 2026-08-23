@@ -302,9 +302,24 @@ class main
 
     private function mapLoginError(int $status): string
     {
+        // "No such user" and "wrong password" deliberately collapse to one
+        // code. Distinguishing them is a username oracle: an attacker learns
+        // which names are real by reading the redirect URL, without ever
+        // guessing a password. That composes badly with the lockout, which is
+        // still reachable — enumerate first, then lock those accounts out with
+        // three requests each.
+        //
+        // Collapsed HERE rather than in the login pages' message map, so the
+        // distinction is absent from the ?error= code in the URL too. Mapping
+        // two codes to one string would still leak it to anyone reading the
+        // address bar.
+        //
+        // Note this only closes the oracle on OUR form; phpBB's own login page
+        // still distinguishes the two, so an attacker willing to use the forum
+        // directly can still enumerate. Closing that means changing phpBB.
         return match ($status) {
-            LOGIN_ERROR_USERNAME => 'unknown_user',
-            LOGIN_ERROR_PASSWORD => 'bad_password',
+            LOGIN_ERROR_USERNAME,
+            LOGIN_ERROR_PASSWORD => 'bad_credentials',
             LOGIN_ERROR_ATTEMPTS => 'too_many_attempts',
             default              => 'unknown',
         };
