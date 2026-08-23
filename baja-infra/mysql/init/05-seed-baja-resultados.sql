@@ -197,15 +197,17 @@ DROP TABLE IF EXISTS `participantes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `participantes` (
-  `idparticipantes` int NOT NULL AUTO_INCREMENT,
   `nome` varchar(300) DEFAULT NULL,
   `funcao` varchar(45) DEFAULT NULL,
-  `cpf` bigint DEFAULT NULL,
+  `cpf` char(11) CHARACTER SET ascii COLLATE ascii_general_ci DEFAULT NULL,
+  `documento_estrangeiro` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `evento` char(4) NOT NULL,
-  PRIMARY KEY (`idparticipantes`,`evento`),
+  `token` char(22) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  PRIMARY KEY (`token`),
   KEY `participantes_evento_id_idx` (`evento`),
-  CONSTRAINT `participantes_evento_id` FOREIGN KEY (`evento`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=41817 DEFAULT CHARSET=latin1;
+  CONSTRAINT `participantes_evento_id` FOREIGN KEY (`evento`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `participantes_cpf_formato` CHECK (((`cpf` is null) or regexp_like(`cpf`,_ascii'^[0-9]{11}$')))
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -214,7 +216,7 @@ CREATE TABLE `participantes` (
 
 LOCK TABLES `participantes` WRITE;
 /*!40000 ALTER TABLE `participantes` DISABLE KEYS */;
-INSERT INTO `participantes` VALUES (1,'Fulano da Silva Testeson','competidor',0,'26BR');
+INSERT INTO `participantes` VALUES ('Fulano da Silva Testeson','competidor','00000000191',NULL,'26BR','SeedFixture00000000001');
 /*!40000 ALTER TABLE `participantes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -257,6 +259,7 @@ DROP TABLE IF EXISTS `propel_migration`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `propel_migration` (
+  `execution_datetime` datetime DEFAULT NULL,
   `version` int DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -267,6 +270,21 @@ CREATE TABLE `propel_migration` (
 
 LOCK TABLES `propel_migration` WRITE;
 /*!40000 ALTER TABLE `propel_migration` DISABLE KEYS */;
+-- The participantes DDL above already includes every migration listed here, so
+-- they are recorded as applied. Without this, `propel migration:migrate` on a
+-- fresh dev database replays migrations whose effects are already in the dump
+-- and fails partway through.
+--
+-- One row per migration, not just the newest: Propel computes what is pending
+-- by subtracting the recorded versions from the files on disk, so a single
+-- highest-version row would leave the earlier ones looking unapplied.
+--
+-- Add a row here whenever a migration lands and its effect is folded into the
+-- DDL above.
+INSERT INTO `propel_migration` (`execution_datetime`, `version`) VALUES
+  (NULL, 1787014964),
+  (NULL, 1787015631),
+  (NULL, 1787017208);
 /*!40000 ALTER TABLE `propel_migration` ENABLE KEYS */;
 UNLOCK TABLES;
 

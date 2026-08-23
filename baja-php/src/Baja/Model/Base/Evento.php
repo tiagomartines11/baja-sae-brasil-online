@@ -2809,10 +2809,7 @@ abstract class Evento implements ActiveRecordInterface
         $participantesToDelete = $this->getParticipantes(new Criteria(), $con)->diff($participantes);
 
 
-        //since at least one column in the foreign key is at the same time a PK
-        //we can not just set a PK to NULL in the lines below. We have to store
-        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
-        $this->participantesScheduledForDeletion = clone $participantesToDelete;
+        $this->participantesScheduledForDeletion = $participantesToDelete;
 
         foreach ($participantesToDelete as $participanteRemoved) {
             $participanteRemoved->setEvento(null);
@@ -2915,6 +2912,58 @@ abstract class Evento implements ActiveRecordInterface
         }
 
         return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Evento is new, it will return
+     * an empty collection; or if this Evento has previously
+     * been saved, it will retrieve related Participantes from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Evento.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @param string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildParticipante[] List of ChildParticipante objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildParticipante}> List of ChildParticipante objects
+     */
+    public function getParticipantesJoinUserRelatedByCriadoPor(?Criteria $criteria = null, ?ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildParticipanteQuery::create(null, $criteria);
+        $query->joinWith('UserRelatedByCriadoPor', $joinBehavior);
+
+        return $this->getParticipantes($query, $con);
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this Evento is new, it will return
+     * an empty collection; or if this Evento has previously
+     * been saved, it will retrieve related Participantes from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in Evento.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @param string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildParticipante[] List of ChildParticipante objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildParticipante}> List of ChildParticipante objects
+     */
+    public function getParticipantesJoinUserRelatedByAnuladoPor(?Criteria $criteria = null, ?ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildParticipanteQuery::create(null, $criteria);
+        $query->joinWith('UserRelatedByAnuladoPor', $joinBehavior);
+
+        return $this->getParticipantes($query, $con);
     }
 
     /**

@@ -8,14 +8,26 @@ namespace Baja;
  */
 class Url
 {
+    /**
+     * Derived from LISTEN_MODE — the same variable that picks nginx's listen
+     * block in baja-infra/nginx/templates/. It is the environment's "does
+     * nginx terminate TLS" switch, so the scheme follows from it and cannot
+     * disagree with what is actually being served. A separate scheme variable
+     * could, and that class of drift is what the nginx templating removed.
+     */
     public static function scheme(): string
     {
-        return getenv('BAJA_PUBLIC_SCHEME') ?: 'http';
+        return getenv('LISTEN_MODE') === 'listen-tls' ? 'https' : 'http';
     }
 
+    /**
+     * The same BAJA_DOMAIN the nginx templates render every Baja server_name
+     * from, so the links this class builds always point at hostnames nginx is
+     * actually configured to answer on.
+     */
     public static function domain(): string
     {
-        return getenv('BAJA_PUBLIC_DOMAIN') ?: 'baja.local';
+        return getenv('BAJA_DOMAIN') ?: 'baja.local';
     }
 
     /**

@@ -5,13 +5,21 @@ namespace Baja\Model\Base;
 use \DateTime;
 use \Exception;
 use \PDO;
+use Baja\Model\Config as ChildConfig;
+use Baja\Model\ConfigQuery as ChildConfigQuery;
+use Baja\Model\Participante as ChildParticipante;
+use Baja\Model\ParticipanteQuery as ChildParticipanteQuery;
+use Baja\Model\User as ChildUser;
 use Baja\Model\UserQuery as ChildUserQuery;
+use Baja\Model\Map\ConfigTableMap;
+use Baja\Model\Map\ParticipanteTableMap;
 use Baja\Model\Map\UserTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -99,12 +107,54 @@ abstract class User implements ActiveRecordInterface
     protected $last_login;
 
     /**
+     * @var        ObjectCollection|ChildParticipante[] Collection to store aggregation of ChildParticipante objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildParticipante> Collection to store aggregation of ChildParticipante objects.
+     */
+    protected $collParticipantesRelatedByCriadoPor;
+    protected $collParticipantesRelatedByCriadoPorPartial;
+
+    /**
+     * @var        ObjectCollection|ChildParticipante[] Collection to store aggregation of ChildParticipante objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildParticipante> Collection to store aggregation of ChildParticipante objects.
+     */
+    protected $collParticipantesRelatedByAnuladoPor;
+    protected $collParticipantesRelatedByAnuladoPorPartial;
+
+    /**
+     * @var        ObjectCollection|ChildConfig[] Collection to store aggregation of ChildConfig objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildConfig> Collection to store aggregation of ChildConfig objects.
+     */
+    protected $collConfigs;
+    protected $collConfigsPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
      * @var bool
      */
     protected $alreadyInSave = false;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildParticipante[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildParticipante>
+     */
+    protected $participantesRelatedByCriadoPorScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildParticipante[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildParticipante>
+     */
+    protected $participantesRelatedByAnuladoPorScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildConfig[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildConfig>
+     */
+    protected $configsScheduledForDeletion = null;
 
     /**
      * Initializes internal state of Baja\Model\Base\User object.
@@ -635,6 +685,12 @@ abstract class User implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collParticipantesRelatedByCriadoPor = null;
+
+            $this->collParticipantesRelatedByAnuladoPor = null;
+
+            $this->collConfigs = null;
+
         } // if (deep)
     }
 
@@ -747,6 +803,60 @@ abstract class User implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->participantesRelatedByCriadoPorScheduledForDeletion !== null) {
+                if (!$this->participantesRelatedByCriadoPorScheduledForDeletion->isEmpty()) {
+                    foreach ($this->participantesRelatedByCriadoPorScheduledForDeletion as $participanteRelatedByCriadoPor) {
+                        // need to save related object because we set the relation to null
+                        $participanteRelatedByCriadoPor->save($con);
+                    }
+                    $this->participantesRelatedByCriadoPorScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collParticipantesRelatedByCriadoPor !== null) {
+                foreach ($this->collParticipantesRelatedByCriadoPor as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->participantesRelatedByAnuladoPorScheduledForDeletion !== null) {
+                if (!$this->participantesRelatedByAnuladoPorScheduledForDeletion->isEmpty()) {
+                    foreach ($this->participantesRelatedByAnuladoPorScheduledForDeletion as $participanteRelatedByAnuladoPor) {
+                        // need to save related object because we set the relation to null
+                        $participanteRelatedByAnuladoPor->save($con);
+                    }
+                    $this->participantesRelatedByAnuladoPorScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collParticipantesRelatedByAnuladoPor !== null) {
+                foreach ($this->collParticipantesRelatedByAnuladoPor as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->configsScheduledForDeletion !== null) {
+                if (!$this->configsScheduledForDeletion->isEmpty()) {
+                    foreach ($this->configsScheduledForDeletion as $config) {
+                        // need to save related object because we set the relation to null
+                        $config->save($con);
+                    }
+                    $this->configsScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collConfigs !== null) {
+                foreach ($this->collConfigs as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -904,10 +1014,11 @@ abstract class User implements ActiveRecordInterface
      *                    Defaults to TableMap::TYPE_PHPNAME.
      * @param bool $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to TRUE.
      * @param array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param bool $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array An associative array containing the field names (as keys) and field values
      */
-    public function toArray(string $keyType = TableMap::TYPE_PHPNAME, bool $includeLazyLoadColumns = true, array $alreadyDumpedObjects = []): array
+    public function toArray(string $keyType = TableMap::TYPE_PHPNAME, bool $includeLazyLoadColumns = true, array $alreadyDumpedObjects = [], bool $includeForeignObjects = false): array
     {
         if (isset($alreadyDumpedObjects['User'][$this->hashCode()])) {
             return ['*RECURSION*'];
@@ -929,6 +1040,53 @@ abstract class User implements ActiveRecordInterface
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collParticipantesRelatedByCriadoPor) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'participantes';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'participantess';
+                        break;
+                    default:
+                        $key = 'Participantes';
+                }
+
+                $result[$key] = $this->collParticipantesRelatedByCriadoPor->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collParticipantesRelatedByAnuladoPor) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'participantes';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'participantess';
+                        break;
+                    default:
+                        $key = 'Participantes';
+                }
+
+                $result[$key] = $this->collParticipantesRelatedByAnuladoPor->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collConfigs) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'configs';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'configs';
+                        break;
+                    default:
+                        $key = 'Configs';
+                }
+
+                $result[$key] = $this->collConfigs->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -1164,6 +1322,32 @@ abstract class User implements ActiveRecordInterface
         $copyObj->setUsername($this->getUsername());
         $copyObj->setPermissions($this->getPermissions());
         $copyObj->setLastLogin($this->getLastLogin());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getParticipantesRelatedByCriadoPor() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addParticipanteRelatedByCriadoPor($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getParticipantesRelatedByAnuladoPor() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addParticipanteRelatedByAnuladoPor($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getConfigs() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addConfig($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setUserId(NULL); // this is a auto-increment column, so set to default value
@@ -1190,6 +1374,800 @@ abstract class User implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName): void
+    {
+        if ('ParticipanteRelatedByCriadoPor' === $relationName) {
+            $this->initParticipantesRelatedByCriadoPor();
+            return;
+        }
+        if ('ParticipanteRelatedByAnuladoPor' === $relationName) {
+            $this->initParticipantesRelatedByAnuladoPor();
+            return;
+        }
+        if ('Config' === $relationName) {
+            $this->initConfigs();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collParticipantesRelatedByCriadoPor collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addParticipantesRelatedByCriadoPor()
+     */
+    public function clearParticipantesRelatedByCriadoPor()
+    {
+        $this->collParticipantesRelatedByCriadoPor = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collParticipantesRelatedByCriadoPor collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialParticipantesRelatedByCriadoPor($v = true): void
+    {
+        $this->collParticipantesRelatedByCriadoPorPartial = $v;
+    }
+
+    /**
+     * Initializes the collParticipantesRelatedByCriadoPor collection.
+     *
+     * By default this just sets the collParticipantesRelatedByCriadoPor collection to an empty array (like clearcollParticipantesRelatedByCriadoPor());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initParticipantesRelatedByCriadoPor(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collParticipantesRelatedByCriadoPor && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ParticipanteTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collParticipantesRelatedByCriadoPor = new $collectionClassName;
+        $this->collParticipantesRelatedByCriadoPor->setModel('\Baja\Model\Participante');
+    }
+
+    /**
+     * Gets an array of ChildParticipante objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildUser is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildParticipante[] List of ChildParticipante objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildParticipante> List of ChildParticipante objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getParticipantesRelatedByCriadoPor(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collParticipantesRelatedByCriadoPorPartial && !$this->isNew();
+        if (null === $this->collParticipantesRelatedByCriadoPor || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collParticipantesRelatedByCriadoPor) {
+                    $this->initParticipantesRelatedByCriadoPor();
+                } else {
+                    $collectionClassName = ParticipanteTableMap::getTableMap()->getCollectionClassName();
+
+                    $collParticipantesRelatedByCriadoPor = new $collectionClassName;
+                    $collParticipantesRelatedByCriadoPor->setModel('\Baja\Model\Participante');
+
+                    return $collParticipantesRelatedByCriadoPor;
+                }
+            } else {
+                $collParticipantesRelatedByCriadoPor = ChildParticipanteQuery::create(null, $criteria)
+                    ->filterByUserRelatedByCriadoPor($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collParticipantesRelatedByCriadoPorPartial && count($collParticipantesRelatedByCriadoPor)) {
+                        $this->initParticipantesRelatedByCriadoPor(false);
+
+                        foreach ($collParticipantesRelatedByCriadoPor as $obj) {
+                            if (false == $this->collParticipantesRelatedByCriadoPor->contains($obj)) {
+                                $this->collParticipantesRelatedByCriadoPor->append($obj);
+                            }
+                        }
+
+                        $this->collParticipantesRelatedByCriadoPorPartial = true;
+                    }
+
+                    return $collParticipantesRelatedByCriadoPor;
+                }
+
+                if ($partial && $this->collParticipantesRelatedByCriadoPor) {
+                    foreach ($this->collParticipantesRelatedByCriadoPor as $obj) {
+                        if ($obj->isNew()) {
+                            $collParticipantesRelatedByCriadoPor[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collParticipantesRelatedByCriadoPor = $collParticipantesRelatedByCriadoPor;
+                $this->collParticipantesRelatedByCriadoPorPartial = false;
+            }
+        }
+
+        return $this->collParticipantesRelatedByCriadoPor;
+    }
+
+    /**
+     * Sets a collection of ChildParticipante objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $participantesRelatedByCriadoPor A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setParticipantesRelatedByCriadoPor(Collection $participantesRelatedByCriadoPor, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildParticipante[] $participantesRelatedByCriadoPorToDelete */
+        $participantesRelatedByCriadoPorToDelete = $this->getParticipantesRelatedByCriadoPor(new Criteria(), $con)->diff($participantesRelatedByCriadoPor);
+
+
+        $this->participantesRelatedByCriadoPorScheduledForDeletion = $participantesRelatedByCriadoPorToDelete;
+
+        foreach ($participantesRelatedByCriadoPorToDelete as $participanteRelatedByCriadoPorRemoved) {
+            $participanteRelatedByCriadoPorRemoved->setUserRelatedByCriadoPor(null);
+        }
+
+        $this->collParticipantesRelatedByCriadoPor = null;
+        foreach ($participantesRelatedByCriadoPor as $participanteRelatedByCriadoPor) {
+            $this->addParticipanteRelatedByCriadoPor($participanteRelatedByCriadoPor);
+        }
+
+        $this->collParticipantesRelatedByCriadoPor = $participantesRelatedByCriadoPor;
+        $this->collParticipantesRelatedByCriadoPorPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Participante objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related Participante objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countParticipantesRelatedByCriadoPor(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collParticipantesRelatedByCriadoPorPartial && !$this->isNew();
+        if (null === $this->collParticipantesRelatedByCriadoPor || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collParticipantesRelatedByCriadoPor) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getParticipantesRelatedByCriadoPor());
+            }
+
+            $query = ChildParticipanteQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByUserRelatedByCriadoPor($this)
+                ->count($con);
+        }
+
+        return count($this->collParticipantesRelatedByCriadoPor);
+    }
+
+    /**
+     * Method called to associate a ChildParticipante object to this object
+     * through the ChildParticipante foreign key attribute.
+     *
+     * @param ChildParticipante $l ChildParticipante
+     * @return $this The current object (for fluent API support)
+     */
+    public function addParticipanteRelatedByCriadoPor(ChildParticipante $l)
+    {
+        if ($this->collParticipantesRelatedByCriadoPor === null) {
+            $this->initParticipantesRelatedByCriadoPor();
+            $this->collParticipantesRelatedByCriadoPorPartial = true;
+        }
+
+        if (!$this->collParticipantesRelatedByCriadoPor->contains($l)) {
+            $this->doAddParticipanteRelatedByCriadoPor($l);
+
+            if ($this->participantesRelatedByCriadoPorScheduledForDeletion and $this->participantesRelatedByCriadoPorScheduledForDeletion->contains($l)) {
+                $this->participantesRelatedByCriadoPorScheduledForDeletion->remove($this->participantesRelatedByCriadoPorScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildParticipante $participanteRelatedByCriadoPor The ChildParticipante object to add.
+     */
+    protected function doAddParticipanteRelatedByCriadoPor(ChildParticipante $participanteRelatedByCriadoPor): void
+    {
+        $this->collParticipantesRelatedByCriadoPor[]= $participanteRelatedByCriadoPor;
+        $participanteRelatedByCriadoPor->setUserRelatedByCriadoPor($this);
+    }
+
+    /**
+     * @param ChildParticipante $participanteRelatedByCriadoPor The ChildParticipante object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeParticipanteRelatedByCriadoPor(ChildParticipante $participanteRelatedByCriadoPor)
+    {
+        if ($this->getParticipantesRelatedByCriadoPor()->contains($participanteRelatedByCriadoPor)) {
+            $pos = $this->collParticipantesRelatedByCriadoPor->search($participanteRelatedByCriadoPor);
+            $this->collParticipantesRelatedByCriadoPor->remove($pos);
+            if (null === $this->participantesRelatedByCriadoPorScheduledForDeletion) {
+                $this->participantesRelatedByCriadoPorScheduledForDeletion = clone $this->collParticipantesRelatedByCriadoPor;
+                $this->participantesRelatedByCriadoPorScheduledForDeletion->clear();
+            }
+            $this->participantesRelatedByCriadoPorScheduledForDeletion[]= $participanteRelatedByCriadoPor;
+            $participanteRelatedByCriadoPor->setUserRelatedByCriadoPor(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this User is new, it will return
+     * an empty collection; or if this User has previously
+     * been saved, it will retrieve related ParticipantesRelatedByCriadoPor from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in User.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @param string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildParticipante[] List of ChildParticipante objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildParticipante}> List of ChildParticipante objects
+     */
+    public function getParticipantesRelatedByCriadoPorJoinEvento(?Criteria $criteria = null, ?ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildParticipanteQuery::create(null, $criteria);
+        $query->joinWith('Evento', $joinBehavior);
+
+        return $this->getParticipantesRelatedByCriadoPor($query, $con);
+    }
+
+    /**
+     * Clears out the collParticipantesRelatedByAnuladoPor collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addParticipantesRelatedByAnuladoPor()
+     */
+    public function clearParticipantesRelatedByAnuladoPor()
+    {
+        $this->collParticipantesRelatedByAnuladoPor = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collParticipantesRelatedByAnuladoPor collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialParticipantesRelatedByAnuladoPor($v = true): void
+    {
+        $this->collParticipantesRelatedByAnuladoPorPartial = $v;
+    }
+
+    /**
+     * Initializes the collParticipantesRelatedByAnuladoPor collection.
+     *
+     * By default this just sets the collParticipantesRelatedByAnuladoPor collection to an empty array (like clearcollParticipantesRelatedByAnuladoPor());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initParticipantesRelatedByAnuladoPor(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collParticipantesRelatedByAnuladoPor && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ParticipanteTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collParticipantesRelatedByAnuladoPor = new $collectionClassName;
+        $this->collParticipantesRelatedByAnuladoPor->setModel('\Baja\Model\Participante');
+    }
+
+    /**
+     * Gets an array of ChildParticipante objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildUser is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildParticipante[] List of ChildParticipante objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildParticipante> List of ChildParticipante objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getParticipantesRelatedByAnuladoPor(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collParticipantesRelatedByAnuladoPorPartial && !$this->isNew();
+        if (null === $this->collParticipantesRelatedByAnuladoPor || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collParticipantesRelatedByAnuladoPor) {
+                    $this->initParticipantesRelatedByAnuladoPor();
+                } else {
+                    $collectionClassName = ParticipanteTableMap::getTableMap()->getCollectionClassName();
+
+                    $collParticipantesRelatedByAnuladoPor = new $collectionClassName;
+                    $collParticipantesRelatedByAnuladoPor->setModel('\Baja\Model\Participante');
+
+                    return $collParticipantesRelatedByAnuladoPor;
+                }
+            } else {
+                $collParticipantesRelatedByAnuladoPor = ChildParticipanteQuery::create(null, $criteria)
+                    ->filterByUserRelatedByAnuladoPor($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collParticipantesRelatedByAnuladoPorPartial && count($collParticipantesRelatedByAnuladoPor)) {
+                        $this->initParticipantesRelatedByAnuladoPor(false);
+
+                        foreach ($collParticipantesRelatedByAnuladoPor as $obj) {
+                            if (false == $this->collParticipantesRelatedByAnuladoPor->contains($obj)) {
+                                $this->collParticipantesRelatedByAnuladoPor->append($obj);
+                            }
+                        }
+
+                        $this->collParticipantesRelatedByAnuladoPorPartial = true;
+                    }
+
+                    return $collParticipantesRelatedByAnuladoPor;
+                }
+
+                if ($partial && $this->collParticipantesRelatedByAnuladoPor) {
+                    foreach ($this->collParticipantesRelatedByAnuladoPor as $obj) {
+                        if ($obj->isNew()) {
+                            $collParticipantesRelatedByAnuladoPor[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collParticipantesRelatedByAnuladoPor = $collParticipantesRelatedByAnuladoPor;
+                $this->collParticipantesRelatedByAnuladoPorPartial = false;
+            }
+        }
+
+        return $this->collParticipantesRelatedByAnuladoPor;
+    }
+
+    /**
+     * Sets a collection of ChildParticipante objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $participantesRelatedByAnuladoPor A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setParticipantesRelatedByAnuladoPor(Collection $participantesRelatedByAnuladoPor, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildParticipante[] $participantesRelatedByAnuladoPorToDelete */
+        $participantesRelatedByAnuladoPorToDelete = $this->getParticipantesRelatedByAnuladoPor(new Criteria(), $con)->diff($participantesRelatedByAnuladoPor);
+
+
+        $this->participantesRelatedByAnuladoPorScheduledForDeletion = $participantesRelatedByAnuladoPorToDelete;
+
+        foreach ($participantesRelatedByAnuladoPorToDelete as $participanteRelatedByAnuladoPorRemoved) {
+            $participanteRelatedByAnuladoPorRemoved->setUserRelatedByAnuladoPor(null);
+        }
+
+        $this->collParticipantesRelatedByAnuladoPor = null;
+        foreach ($participantesRelatedByAnuladoPor as $participanteRelatedByAnuladoPor) {
+            $this->addParticipanteRelatedByAnuladoPor($participanteRelatedByAnuladoPor);
+        }
+
+        $this->collParticipantesRelatedByAnuladoPor = $participantesRelatedByAnuladoPor;
+        $this->collParticipantesRelatedByAnuladoPorPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Participante objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related Participante objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countParticipantesRelatedByAnuladoPor(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collParticipantesRelatedByAnuladoPorPartial && !$this->isNew();
+        if (null === $this->collParticipantesRelatedByAnuladoPor || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collParticipantesRelatedByAnuladoPor) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getParticipantesRelatedByAnuladoPor());
+            }
+
+            $query = ChildParticipanteQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByUserRelatedByAnuladoPor($this)
+                ->count($con);
+        }
+
+        return count($this->collParticipantesRelatedByAnuladoPor);
+    }
+
+    /**
+     * Method called to associate a ChildParticipante object to this object
+     * through the ChildParticipante foreign key attribute.
+     *
+     * @param ChildParticipante $l ChildParticipante
+     * @return $this The current object (for fluent API support)
+     */
+    public function addParticipanteRelatedByAnuladoPor(ChildParticipante $l)
+    {
+        if ($this->collParticipantesRelatedByAnuladoPor === null) {
+            $this->initParticipantesRelatedByAnuladoPor();
+            $this->collParticipantesRelatedByAnuladoPorPartial = true;
+        }
+
+        if (!$this->collParticipantesRelatedByAnuladoPor->contains($l)) {
+            $this->doAddParticipanteRelatedByAnuladoPor($l);
+
+            if ($this->participantesRelatedByAnuladoPorScheduledForDeletion and $this->participantesRelatedByAnuladoPorScheduledForDeletion->contains($l)) {
+                $this->participantesRelatedByAnuladoPorScheduledForDeletion->remove($this->participantesRelatedByAnuladoPorScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildParticipante $participanteRelatedByAnuladoPor The ChildParticipante object to add.
+     */
+    protected function doAddParticipanteRelatedByAnuladoPor(ChildParticipante $participanteRelatedByAnuladoPor): void
+    {
+        $this->collParticipantesRelatedByAnuladoPor[]= $participanteRelatedByAnuladoPor;
+        $participanteRelatedByAnuladoPor->setUserRelatedByAnuladoPor($this);
+    }
+
+    /**
+     * @param ChildParticipante $participanteRelatedByAnuladoPor The ChildParticipante object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeParticipanteRelatedByAnuladoPor(ChildParticipante $participanteRelatedByAnuladoPor)
+    {
+        if ($this->getParticipantesRelatedByAnuladoPor()->contains($participanteRelatedByAnuladoPor)) {
+            $pos = $this->collParticipantesRelatedByAnuladoPor->search($participanteRelatedByAnuladoPor);
+            $this->collParticipantesRelatedByAnuladoPor->remove($pos);
+            if (null === $this->participantesRelatedByAnuladoPorScheduledForDeletion) {
+                $this->participantesRelatedByAnuladoPorScheduledForDeletion = clone $this->collParticipantesRelatedByAnuladoPor;
+                $this->participantesRelatedByAnuladoPorScheduledForDeletion->clear();
+            }
+            $this->participantesRelatedByAnuladoPorScheduledForDeletion[]= $participanteRelatedByAnuladoPor;
+            $participanteRelatedByAnuladoPor->setUserRelatedByAnuladoPor(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this User is new, it will return
+     * an empty collection; or if this User has previously
+     * been saved, it will retrieve related ParticipantesRelatedByAnuladoPor from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in User.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @param string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildParticipante[] List of ChildParticipante objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildParticipante}> List of ChildParticipante objects
+     */
+    public function getParticipantesRelatedByAnuladoPorJoinEvento(?Criteria $criteria = null, ?ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildParticipanteQuery::create(null, $criteria);
+        $query->joinWith('Evento', $joinBehavior);
+
+        return $this->getParticipantesRelatedByAnuladoPor($query, $con);
+    }
+
+    /**
+     * Clears out the collConfigs collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addConfigs()
+     */
+    public function clearConfigs()
+    {
+        $this->collConfigs = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collConfigs collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialConfigs($v = true): void
+    {
+        $this->collConfigsPartial = $v;
+    }
+
+    /**
+     * Initializes the collConfigs collection.
+     *
+     * By default this just sets the collConfigs collection to an empty array (like clearcollConfigs());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initConfigs(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collConfigs && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ConfigTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collConfigs = new $collectionClassName;
+        $this->collConfigs->setModel('\Baja\Model\Config');
+    }
+
+    /**
+     * Gets an array of ChildConfig objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildUser is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildConfig[] List of ChildConfig objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildConfig> List of ChildConfig objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getConfigs(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collConfigsPartial && !$this->isNew();
+        if (null === $this->collConfigs || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collConfigs) {
+                    $this->initConfigs();
+                } else {
+                    $collectionClassName = ConfigTableMap::getTableMap()->getCollectionClassName();
+
+                    $collConfigs = new $collectionClassName;
+                    $collConfigs->setModel('\Baja\Model\Config');
+
+                    return $collConfigs;
+                }
+            } else {
+                $collConfigs = ChildConfigQuery::create(null, $criteria)
+                    ->filterByUser($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collConfigsPartial && count($collConfigs)) {
+                        $this->initConfigs(false);
+
+                        foreach ($collConfigs as $obj) {
+                            if (false == $this->collConfigs->contains($obj)) {
+                                $this->collConfigs->append($obj);
+                            }
+                        }
+
+                        $this->collConfigsPartial = true;
+                    }
+
+                    return $collConfigs;
+                }
+
+                if ($partial && $this->collConfigs) {
+                    foreach ($this->collConfigs as $obj) {
+                        if ($obj->isNew()) {
+                            $collConfigs[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collConfigs = $collConfigs;
+                $this->collConfigsPartial = false;
+            }
+        }
+
+        return $this->collConfigs;
+    }
+
+    /**
+     * Sets a collection of ChildConfig objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $configs A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setConfigs(Collection $configs, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildConfig[] $configsToDelete */
+        $configsToDelete = $this->getConfigs(new Criteria(), $con)->diff($configs);
+
+
+        $this->configsScheduledForDeletion = $configsToDelete;
+
+        foreach ($configsToDelete as $configRemoved) {
+            $configRemoved->setUser(null);
+        }
+
+        $this->collConfigs = null;
+        foreach ($configs as $config) {
+            $this->addConfig($config);
+        }
+
+        $this->collConfigs = $configs;
+        $this->collConfigsPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Config objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related Config objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countConfigs(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collConfigsPartial && !$this->isNew();
+        if (null === $this->collConfigs || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collConfigs) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getConfigs());
+            }
+
+            $query = ChildConfigQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByUser($this)
+                ->count($con);
+        }
+
+        return count($this->collConfigs);
+    }
+
+    /**
+     * Method called to associate a ChildConfig object to this object
+     * through the ChildConfig foreign key attribute.
+     *
+     * @param ChildConfig $l ChildConfig
+     * @return $this The current object (for fluent API support)
+     */
+    public function addConfig(ChildConfig $l)
+    {
+        if ($this->collConfigs === null) {
+            $this->initConfigs();
+            $this->collConfigsPartial = true;
+        }
+
+        if (!$this->collConfigs->contains($l)) {
+            $this->doAddConfig($l);
+
+            if ($this->configsScheduledForDeletion and $this->configsScheduledForDeletion->contains($l)) {
+                $this->configsScheduledForDeletion->remove($this->configsScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildConfig $config The ChildConfig object to add.
+     */
+    protected function doAddConfig(ChildConfig $config): void
+    {
+        $this->collConfigs[]= $config;
+        $config->setUser($this);
+    }
+
+    /**
+     * @param ChildConfig $config The ChildConfig object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeConfig(ChildConfig $config)
+    {
+        if ($this->getConfigs()->contains($config)) {
+            $pos = $this->collConfigs->search($config);
+            $this->collConfigs->remove($pos);
+            if (null === $this->configsScheduledForDeletion) {
+                $this->configsScheduledForDeletion = clone $this->collConfigs;
+                $this->configsScheduledForDeletion->clear();
+            }
+            $this->configsScheduledForDeletion[]= $config;
+            $config->setUser(null);
+        }
+
+        return $this;
     }
 
     /**
@@ -1227,8 +2205,26 @@ abstract class User implements ActiveRecordInterface
     public function clearAllReferences(bool $deep = false)
     {
         if ($deep) {
+            if ($this->collParticipantesRelatedByCriadoPor) {
+                foreach ($this->collParticipantesRelatedByCriadoPor as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collParticipantesRelatedByAnuladoPor) {
+                foreach ($this->collParticipantesRelatedByAnuladoPor as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collConfigs) {
+                foreach ($this->collConfigs as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collParticipantesRelatedByCriadoPor = null;
+        $this->collParticipantesRelatedByAnuladoPor = null;
+        $this->collConfigs = null;
         return $this;
     }
 

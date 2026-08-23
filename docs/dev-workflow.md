@@ -36,9 +36,48 @@ Before requesting review:
 - [ ] Lint passes locally: (`baja-js`: `cd baja-js && npm run lint`; baja-php: TBD, `php -l` for syntax, not enforced linter yet).
 - [ ] Smoke test passes: `baja-php/tests/smoke-test.sh` against a
       running local stack.
-- [ ] If you touched `baja-php/src/` Propel models, the generated
-      `Base*` classes were regenerated and committed
-      (`./baja-php/propel om`).
+- [ ] If you touched anything under `baja-php/src/Baja/Certificado/`,
+      `baja-php/certificado/`, `baja-php/juiz/certificados*`, or either
+      the certificate or juiz vhost, all three certificate suites pass:
+
+      ```
+      docker compose exec --user "$(id -u):$(id -g)" \
+          -e BAJA_TEST_DB=1 baja-app php tests/certificado/run.php
+      baja-php/tests/certificado/http-test.sh http://certificado.baja.local <token> <cpf>
+      baja-php/tests/certificado/insercao-http-test.sh http://juiz.baja.local
+      ```
+
+      The first covers the lookup and validation rules and needs
+      `BAJA_TEST_DB=1`, which is what lets it write synthetic
+      participants — never set it against production. The second covers
+      what only exists once nginx and PHP are both in the path: routing,
+      headers, rate limiting, and whether a document number can be found
+      anywhere in a response. Pass it a token from your local database
+      and that participant's CPF.
+
+      The third covers the insertion pages, which are the only
+      state-changing surface here: who is turned away and how, and that
+      a POST without a valid CSRF token creates nothing. It seeds its
+      own sessions through `docker exec` into the app container, so
+      set `APP_CONTAINER` if yours is not called `baja-app`, and it
+      skips rather than fails when it cannot reach one.
+
+      All three use synthetic documents with derived check digits, and
+      remove their own fixtures. This repository is public: no real CPF,
+      name, or dump belongs in a fixture.
+- [ ] If you edited `baja-php/schema.xml`, the generated `Base*` classes,
+      table maps and `src/loadDatabase.php` were regenerated and committed:
+      `docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build`.
+      (Was documented as `propel om` — that is Propel 1 syntax and the
+      command does not exist in Propel 2.) Generator settings come from the
+      committed `baja-php/propel.yaml.dist`; codegen needs no database.
+
+      **Do not drop the `--user` flag.** The container runs as root, and the
+      source tree is bind-mounted, so without it every generated file lands
+      on your host owned by `root:root` — git won't notice (it doesn't track
+      ownership) but you won't be able to edit them afterwards without
+      `sudo`. The same applies to any command that writes into the tree,
+      e.g. `sql:build` or generating `ApiDocs.json`.
 - [ ] If you touched `baja-php/phpbb-extensions/baja-auth/`, you
       rebuilt phpbb-baja and verified the auth flow:
       `cd baja-infra && docker compose down -v && docker compose up -d`

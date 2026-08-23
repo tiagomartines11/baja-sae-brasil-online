@@ -1,0 +1,9 @@
+# TLS, and the fallback for any request whose Host header matches no
+# server_name. Exactly one server block per port may carry default_server;
+# on 443 that is baja-root, on 80 it is the redirect in
+# listen-tls-redirect.conf.template.
+listen 443 ssl default_server;
+http2 on;
+
+ssl_certificate     /etc/letsencrypt/live/${BAJA_DOMAIN}/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/${BAJA_DOMAIN}/privkey.pem;

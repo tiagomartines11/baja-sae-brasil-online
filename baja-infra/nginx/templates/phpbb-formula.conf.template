@@ -1,0 +1,39 @@
+# Formula SAE Brasil. A separate registrable domain from Baja, with its own
+# certificate lineage — so FORMULA_DOMAIN holds the whole hostname rather than
+# a subdomain label. Its shape differs per environment (a forum.* subdomain in
+# dev, its own apex in production); the template renders whatever the variable
+# holds and does not care which.
+server {
+    include /etc/nginx/conf.d/snippets/${LISTEN_MODE}-formula.conf;
+    server_name ${FORMULA_DOMAIN};
+
+    root /var/www/phpbb-formula;
+    index index.php index.html;
+
+    location ~ /(config\.php|common\.php|cache|files|images/avatars/upload|includes|(?<!ext/)phpbb(?!\w)|store|vendor) {
+        deny all;
+        internal;
+    }
+
+    location / {
+        try_files $uri $uri/ @rewriteapp;
+    }
+
+    location @rewriteapp {
+        rewrite ^(.*)$ /app.php/$1 last;
+    }
+
+    location ~ \.php(/|$) {
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        fastcgi_pass phpbb-formula:9000;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /var/www/html$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+    }
+
+    location ~* \.(jpg|jpeg|gif|png|css|js|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+}
