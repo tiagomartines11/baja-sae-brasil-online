@@ -1,7 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
-use Baja\Auth\ChallengeWarmup;
+use Baja\Auth\LoginCsrf;
 use Baja\Model\EventoQuery;
 use Baja\Session;
 use Baja\Url;
@@ -24,9 +24,9 @@ if (Session::getCurrentUser() && @$_REQUEST['act'] != 'change_pass') {
     exit();
 }
 
-// Must run before any output: may redirect through the forum so the browser
-// picks up Cloudflare clearance before it POSTs credentials there.
-ChallengeWarmup::ensure('juiz');
+// Must run before any output: setcookie() is a no-op once headers are sent,
+// and a form whose token has no matching cookie is refused as a forgery.
+LoginCsrf::start();
 
 $errorMessages = [
     'missing'           => 'Preencha usuário e senha',
@@ -47,7 +47,6 @@ $errorMessages = [
     'too_many_attempts' => 'Muitas tentativas de login. Por segurança o fórum bloqueou sua conta, e só um login no fórum (com verificação de imagem) desbloqueia — esperar não resolve. <a href="'
         . htmlspecialchars(Url::forum('/ucp.php?mode=login'), ENT_QUOTES, 'UTF-8')
         . '">Entrar pelo fórum</a>',
-    'challenge'         => 'A verificação de segurança interrompeu o envio. Entre novamente.',
     // The form was submitted from somewhere we don't serve it from, or
     // without the double-submit token. Almost always a stale form left open
     // across a browser restart; reloading mints a fresh token.
@@ -59,10 +58,12 @@ if (isset($_GET['error']) && isset($errorMessages[$_GET['error']])) {
 }
 
 $loginRedirect = Url::subdomain('juiz', '/index.php');
-// redirect rides in the query string rather than a hidden POST field so it
-// survives a Cloudflare challenge replay, which keeps the URL but discards
-// the body. Browsers preserve an action's query string on a POST, so the
-// normal path is unaffected.
+// redirect rides in the query string rather than a hidden POST field. It was
+// put there on the theory that a Cloudflare challenge replayed the POST as a
+// bodyless GET; production logs later showed the POST arriving intact, so that
+// reason was wrong. Kept because it is the better place for it regardless: the
+// target is not user input, it belongs to the URL rather than the form body,
+// and a browser preserves an action's query string on a POST.
 $loginAction   = Url::forum('/app.php/baja/login?redirect=' . urlencode($loginRedirect));
 
 Template::printHeader("Login", false);
@@ -90,7 +91,7 @@ echo '
 <br /><br /> ';
 
 echo '<form action="'.htmlspecialchars($loginAction, ENT_QUOTES, 'UTF-8').'" method="post">
-        <input type="hidden" name="csrf" value="'.htmlspecialchars(ChallengeWarmup::csrfToken(), ENT_QUOTES, 'UTF-8').'">
+        '.LoginCsrf::field().'
         <span style="color: red">'.(isset($msg) ? $msg . '<br /><br />' : '').'</span>
         <label for="username">Username</label><br />
         <input type="text" id="username" name="username" size="30" />

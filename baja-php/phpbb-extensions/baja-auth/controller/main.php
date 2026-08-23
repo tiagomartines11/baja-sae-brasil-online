@@ -9,7 +9,9 @@
  *     cd baja-infra && docker compose down -v && docker compose build phpbb-baja && docker compose up -d
  *
  * The down -v is required: the phpbb_baja_html volume retains its initial
- * content, and rebuilding the image alone won't propagate changes. See
+ * content, and rebuilding the image alone won't propagate changes. Changing a
+ * ROUTE additionally needs phpBB's compiled router rebuilt — see the note in
+ * config/routing.yml. Both traps have bitten production. See
  * baja-php/docs/baja-auth-extension.md "Operating notes" for context.
  * ============================================================================
  */
@@ -26,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class main
 {
-    /** Must match ChallengeWarmup::CSRF_COOKIE on the baja-app side. */
+    /** Must match Baja\Auth\LoginCsrf::COOKIE on the baja-app side. */
     private const CSRF_COOKIE = 'baja_csrf';
 
     private auth $auth;
@@ -43,18 +45,10 @@ class main
     }
 
     /**
-     * Cloudflare challenge warm-up. Deliberately does nothing but validate
-     * and bounce.
-     *
-     * Its value is entirely in being a plain GET on the forum origin. The
-     * forum is behind a Managed Challenge, and Cloudflare cannot replay a
-     * POST body through one — but it replays a GET intact. Sending the user
-     * here first means any captcha is solved BEFORE they type a password, and
-     * they return to the login form holding cf_clearance, so the credential
-     * -carrying POST is never challenged. See
-     * baja-php/src/Baja/Auth/ChallengeWarmup.php.
+     * Validated no-op redirect. Exists only so forumLoginUrl() has a
+     * board-relative target to hand phpBB; see the note in routing.yml.
      */
-    public function warmup(): Response
+    public function returnTo(): Response
     {
         return new RedirectResponse(
             $this->validateRedirect($this->request->variable('redirect', ''))
@@ -63,35 +57,16 @@ class main
 
     public function login(): Response
     {
-        // `redirect` travels in the QUERY STRING of the form action, not as a
-        // POST field, precisely so it survives a Cloudflare challenge replay
-        // (which discards the body but keeps the URL). Resolve the target
-        // first so the no-credentials path below has somewhere to send the
-        // user. request->variable() reads GET and POST alike.
+        // `redirect` lives in the query string of the form action rather than
+        // the POST body, so read it from the merged scope. It is not user
+        // input — the login pages build it — and validateRedirect() gates it
+        // regardless.
         $redirect = $this->request->variable('redirect', '');
         $target   = $this->validateRedirect($redirect);
 
-        // No POSTed username means this is not a real submission. In practice
-        // it is Cloudflare replaying a challenged login POST as a bodyless
-        // GET. This used to be an unstyled 405 — and before the route
-        // accepted GET at all, it was phpBB's 404 page on the forum domain,
-        // which is what stranded users mid-login.
-        //
-        // Bounce back to the form instead. cf_clearance exists by now, so the
-        // retry goes straight through. Note this checks is_set_post, not the
-        // merged value: a genuine POST with an empty username still has the
-        // key present and correctly falls through to the 'missing' branch.
-        if (!$this->request->is_set_post('username')) {
-            return new RedirectResponse($this->appendError($target, 'challenge'));
-        }
-
-        // Two independent CSRF checks, both applied only to real submissions —
-        // the credential-less GET above is a Cloudflare replay, carries no
-        // Origin and authenticates nothing, so it must not be gated here.
-        //
-        // Without them an attacker's page can auto-submit THEIR credentials and
-        // silently log a judge into the attacker's account; results are then
-        // entered under attacker control.
+        // Two independent CSRF checks. Without them an attacker's page can
+        // auto-submit THEIR credentials and silently log a judge into the
+        // attacker's account; results are then entered under attacker control.
         //
         // Origin first, because it is the cheap one and needs nothing from the
         // form. This POST is always cross-origin (juiz./fila. -> forum.), so
@@ -102,10 +77,10 @@ class main
         }
 
         // Then the double-submit token, which does not depend on a header at
-        // all. Planted as a cookie on the parent domain by ChallengeWarmup and
-        // echoed in the form; an attacker can neither read the cookie nor guess
-        // the value, so it cannot produce a matching pair. hash_equals to keep
-        // the comparison constant-time.
+        // all. Planted as a cookie on the parent domain by Baja\Auth\LoginCsrf
+        // and echoed in the form; an attacker can neither read the cookie nor
+        // guess the value, so it cannot produce a matching pair. hash_equals
+        // keeps the comparison constant-time.
         $cookieToken = $this->request->variable(self::CSRF_COOKIE, '', false, request_interface::COOKIE);
         $formToken   = $this->request->variable('csrf', '', false, request_interface::POST);
         if ($cookieToken === '' || !hash_equals($cookieToken, $formToken)) {
@@ -116,8 +91,8 @@ class main
         // merges the query string — so without this a password could be sourced
         // from a URL (landing it in access logs and Referer headers), and
         // autologin could be switched on by a query parameter neither login
-        // form offers. `redirect` above deliberately stays on REQUEST: it has
-        // to survive a Cloudflare challenge replay, which keeps only the URL.
+        // form offers. `redirect` above deliberately stays on REQUEST, since
+        // the form action carries it in the query string.
         $username  = $this->request->variable('username', '', true, request_interface::POST);
         $password  = $this->request->variable('password', '', true, request_interface::POST);
         $autologin = (bool) $this->request->variable('autologin', 0, false, request_interface::POST);
@@ -283,13 +258,15 @@ class main
      * Relative on purpose: this controller runs on the forum host, and phpBB's
      * redirect() rejects off-board targets, so an absolute juiz./fila. URL in
      * its `redirect` parameter would be discarded and the user dumped on the
-     * board index. Pointing it at our own warmup route keeps it board-relative
-     * — which phpBB accepts — and warmup then revalidates $target through
+     * board index — which is what a judge clearing a lockout would hit.
+     *
+     * Pointing it at our own /baja/return keeps the target board-relative,
+     * which phpBB accepts, and that route revalidates $target through
      * validateRedirect() and bounces there.
      */
     private function forumLoginUrl(string $target): string
     {
-        $back = './app.php/baja/warmup?redirect=' . urlencode($target);
+        $back = './app.php/baja/return?redirect=' . urlencode($target);
 
         return '/ucp.php?mode=login&redirect=' . urlencode($back);
     }

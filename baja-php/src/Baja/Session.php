@@ -1,6 +1,6 @@
 <?php
 namespace Baja;
-use Baja\Auth\ChallengeWarmup;
+use Baja\Auth\LoginCsrf;
 use Baja\Auth\NaoProvisionado;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
@@ -50,19 +50,15 @@ class Session
         }
 
         // Anonymous, so carry any login error code across this bounce. The
-        // baja/auth controller appends ?error=<code> to the post-login
-        // redirect target — which is index.php, not login.php — so without
-        // this the code died here and every failed login landed on a blank
-        // form. That made the Cloudflare-challenge case especially baffling:
-        // captcha, then a login page with no explanation. A challenge replay
-        // arrives here specifically, because the credentials never reached
-        // the forum and no session was created — hence no username.
+        // baja/auth controller appends ?error=<code> to the post-login redirect
+        // target — which is index.php, not login.php — so without this the code
+        // died here and every failed login landed on a blank form with no
+        // explanation at all.
         //
         // Whitelisted to the controller's own code shape so nothing
-        // attacker-influenced reaches the Location header.
-        // is_string first: ?error[]=x makes this an array, and casting one to
-        // string emits an "Array to string conversion" warning before the
-        // regex rejects it anyway.
+        // attacker-influenced reaches the Location header. is_string first:
+        // ?error[]=x makes this an array, and casting one to string emits an
+        // "Array to string conversion" warning before the regex rejects it.
         $error  = $_GET['error'] ?? '';
         $suffix = (is_string($error) && preg_match('/^[a-z_]{1,32}$/', $error) === 1)
             ? '?error=' . urlencode($error)
@@ -108,7 +104,7 @@ class Session
         // html-escape.
         $logoutUrl = Url::forum(
             '/app.php/baja/logout?redirect=' . urlencode($loginUrl)
-            . '&csrf=' . urlencode(ChallengeWarmup::csrfToken())
+            . '&csrf=' . urlencode(LoginCsrf::token())
         );
         header("Location: $logoutUrl");
         exit();

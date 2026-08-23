@@ -6,24 +6,19 @@
 # To apply changes:
 #     cd baja-infra && docker compose down -v && docker compose build phpbb-baja && docker compose up -d
 #
-# The down -v is required: the phpbb_baja_html volume retains its initial
-# content, and rebuilding the image alone won't propagate changes. See
-# baja-php/docs/baja-auth-extension.md "Operating notes" for context.
+# Changing routes ALSO requires phpBB's compiled router to be regenerated.
+# phpBB caches it in cache/production/url_matcher.php, and `extension:enable`
+# is a no-op once the extension is already enabled — so a plain restart will
+# not pick up a new route here. The entrypoint runs `cache:purge` for exactly
+# this reason. Production spent weeks 404-ing both routes below because that
+# cache was compiled before the extension was enabled and never rebuilt.
 # ============================================================================
 
-# GET is accepted alongside POST on purpose. The forum sits behind a
-# Cloudflare Managed Challenge, and a challenge cannot replay a POST body —
-# it re-issues the original request as a bodyless GET once the captcha is
-# solved. While this route was POST-only that replay matched no route, so
-# phpBB's router fell through to its own 404 page ("A página solicitada não
-# foi encontrada") on the forum domain, stranding the user with their
-# credentials silently discarded. The controller now detects the
-# credential-less request and bounces the user back to the login form.
 baja_auth_login:
     path: /baja/login
     defaults:
         _controller: baja.auth.controller.main:login
-    methods: [GET, POST]
+    methods: [POST]
 
 baja_auth_logout:
     path: /baja/logout
@@ -31,14 +26,19 @@ baja_auth_logout:
         _controller: baja.auth.controller.main:logout
     methods: [GET, POST]
 
-# Cloudflare challenge warm-up. A no-op redirect whose only job is to be a
-# plain GET navigation on the forum origin: Cloudflare replays a GET intact
-# (URL and query string survive), so the user solves any captcha HERE, before
-# typing a password, and returns to the login form already holding
-# cf_clearance. The subsequent cross-origin login POST is then never
-# challenged. See baja-php/src/Baja/Auth/ChallengeWarmup.php for the caller.
-baja_auth_warmup:
-    path: /baja/warmup
+# A validated no-op redirect, used only as a return hop out of phpBB's own
+# login form (see main::forumLoginUrl). phpBB's redirect() discards off-board
+# targets, so handing it an absolute juiz./fila. URL would strand the user on
+# the board index after they clear a lockout. A board-relative path pointing
+# here is accepted, and this then bounces to the real target.
+#
+# This is what remains of the former /baja/warmup route. That existed to absorb
+# a Cloudflare challenge before the login POST, on the theory that a challenge
+# destroyed the POST body; production logs later showed the POST arriving
+# intact, so the warm-up was removed. This hop is kept for the phpBB redirect
+# problem above, which is real and unrelated.
+baja_auth_return:
+    path: /baja/return
     defaults:
-        _controller: baja.auth.controller.main:warmup
+        _controller: baja.auth.controller.main:returnTo
     methods: [GET]

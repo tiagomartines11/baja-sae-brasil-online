@@ -10,9 +10,9 @@ through phpBB's own auth pipeline:
 
 | Route | Method | Purpose |
 |---|---|---|
-| `/baja/login` | GET, POST | Authenticate via `$auth->login()`. On success, phpBB sets session cookies on `.baja.local`; the baja-app shim picks them up on the next request. GET is accepted only to catch Cloudflare challenge replays — see below. |
+| `/baja/login` | POST | Authenticate via `$auth->login()`. On success, phpBB sets session cookies on `.baja.local`; the baja-app shim picks them up on the next request. |
 | `/baja/logout` | GET, POST | `$user->session_kill()` followed by `session_begin()` (anonymous re-init), then redirect. Requires the CSRF token. |
-| `/baja/warmup` | GET | No-op validated redirect. Exists purely to absorb a Cloudflare challenge on a GET, before the user types a password. |
+| `/baja/return` | GET | Validated no-op redirect. A return hop out of phpBB's own login form, which discards off-board redirect targets. |
 
 Both accept an optional `redirect` parameter validated against a
 configured allowed-domain suffix; off-domain targets are replaced with a
@@ -35,10 +35,10 @@ controllers keeps a single source of truth for session lifecycle.
 |---|---|
 | [composer.json](../phpbb-extensions/baja-auth/composer.json) | Standard phpBB extension manifest. |
 | [ext.php](../phpbb-extensions/baja-auth/ext.php) | Empty extension class — default lifecycle hooks are sufficient. |
-| [config/routing.yml](../phpbb-extensions/baja-auth/config/routing.yml) | Symfony route definitions for `/baja/login`, `/baja/logout` and `/baja/warmup`. |
+| [config/routing.yml](../phpbb-extensions/baja-auth/config/routing.yml) | Symfony route definitions for `/baja/login`, `/baja/logout` and `/baja/return`. |
 | [config/services.yml](../phpbb-extensions/baja-auth/config/services.yml) | DI wiring for the controller (`@auth`, `@user`, `@config`, `@request`). |
 | [controller/main.php](../phpbb-extensions/baja-auth/controller/main.php) | All three endpoints + `validateRedirect()` + `mapLoginError()`. |
-| [../src/Baja/Auth/ChallengeWarmup.php](../src/Baja/Auth/ChallengeWarmup.php) | baja-app side of the warm-up: decides when to bounce a login page through `/baja/warmup`, and holds the loop guard. |
+| [../src/Baja/Auth/LoginCsrf.php](../src/Baja/Auth/LoginCsrf.php) | baja-app side of the CSRF pair: plants the `baja_csrf` cookie before output and renders the matching hidden field. |
 | [migrations/v100/install_baja_auth_config.php](../phpbb-extensions/baja-auth/migrations/v100/install_baja_auth_config.php) | Declares the two `phpbb_config` rows the controller reads (cleaned up on extension purge). Initial values come from env vars at install time. |
 | [language/en/common.php](../phpbb-extensions/baja-auth/language/en/common.php) | Required-but-empty stub. The controller never renders translatable strings. |
 
@@ -75,18 +75,11 @@ links that look legitimate.
 
 ```
 juiz.baja.local/login.php
-        |  ChallengeWarmup::ensure() — no warm marker? bounce (GET)
-        v
-forum.baja.local/app.php/baja/warmup?redirect=…/login.php%3Fwarmed%3D1
-        |  Cloudflare presents any captcha HERE (prod only)
-        |  solved → cf_clearance issued → CF replays the GET intact
-        v
-juiz.baja.local/login.php?warmed=1
-        |  sets baja_cf_warm marker, renders the form
-        |  user submits form (POST); cf_clearance rides along
+        |  LoginCsrf::start() plants the CSRF cookie, form embeds the token
+        |  user submits form (POST)
         v
 forum.baja.local/app.php/baja/login?redirect=…    <-- baja/auth controller
-        |  not challenged — clearance already held
+        |  Origin checked, CSRF token checked
         |  $auth->login(user, pass) → LOGIN_SUCCESS
         |  phpBB writes phpbb_sessions row,
         |  Set-Cookie phpbb3_baja_{sid,u,k} domain=.baja.local
@@ -100,85 +93,34 @@ juiz.baja.local/index.php
 authenticated request
 ```
 
-In dev there is no Cloudflare, so the warm-up is just two extra redirects.
+## Cloudflare, and a wrong turn worth recording
 
-## Cloudflare interaction
+The forum sits behind a Cloudflare Managed Challenge in production. When
+login broke with *"A página solicitada não foi encontrada"* after a captcha,
+the challenge looked like the culprit: the theory was that Cloudflare
+cannot replay a POST body, so it re-issued the login POST as a bodyless
+GET, which matched no route and fell through to phpBB's 404.
 
-In production the forum is served through Cloudflare with a Managed
-Challenge. That interacts badly with a cross-origin login POST, and the
-failure is silent and confusing, so it is worth stating plainly:
+**That was wrong**, and it is recorded here because the wrong answer was
+plausible enough to survive a while. Production access logs showed the
+request arriving as a `POST`, not a GET, and the 404 coming from phpBB's
+*router* — a registered route would have answered a bodyless POST with a
+405 or a redirect, never a 404.
 
-**Cloudflare cannot replay a POST body through a challenge.** It serves
-the interstitial, and once the captcha is solved it re-issues the
-*original* request as a bodyless **GET**. Username and password are
-discarded in transit.
+The real cause was a stale compiled router: `cache/production/url_matcher.php`
+had been built before the extension was enabled and never regenerated, so
+**both** routes 404'd for months. `extension:show` reported the extension as
+enabled because that reads the database, not the cache. Users quietly fell
+back to logging in through phpBB's own form, which sets the same cookies, so
+nobody reported it. See "Operating notes" for the entrypoint fix.
 
-While `/baja/login` was POST-only, that replayed GET matched no route, so
-phpBB's router fell through to its own 404 page — *"A página solicitada
-não foi encontrada"* — rendered on the forum domain. From the user's
-side: captcha, then dumped into the forum, never logged in, nothing in
-the app logs, because phpBB rejected the request before any baja code
-ran.
+A `/baja/warmup` route and a pre-login redirect existed for a while to work
+around the imagined POST-body loss. Both were removed once the logs
+disproved the premise. `/baja/return` is what remains, kept for an unrelated
+and real reason: phpBB's own `redirect()` discards off-board targets.
 
-Three changes make the flow survive this:
-
-1. **`/baja/warmup`** — the user passes any challenge on a plain GET,
-   *before* typing a password. Cloudflare replays a GET intact, so
-   nothing is lost. They come back holding `cf_clearance`.
-2. **`redirect` moved into the query string** of the form action rather
-   than a hidden POST field, so the target survives a replay. Browsers
-   preserve an action's query string on POST, so the normal path is
-   unchanged.
-3. **`/baja/login` accepts GET** and treats a credential-less request as
-   a challenge replay, redirecting to the form with `?error=challenge`
-   instead of 404ing. This still matters with warm-up in place, because
-   `cf_clearance` can lapse while a login form sits open.
-
-The clearance carries across subdomains because `juiz.`, `fila.` and
-`forum.` share a registrable domain: the login POST is cross-origin but
-**same-site**, so `cf_clearance` is sent even under `SameSite=Lax`. The
-`baja_cf_warm` marker is therefore set on the parent domain — one
-warm-up covers every baja subdomain — with a 20-minute TTL, deliberately
-under Cloudflare's 30-minute `cf_clearance` default.
-
-Optionally, a Cloudflare WAF **Skip** rule on
-`forum.<domain>/app.php/baja/*` removes the captcha for these endpoints
-entirely. It is not required — the flow above works with the challenge
-fully enabled — but it removes the extra round trip. The code must keep
-working without it, since WAF state is dashboard-managed and invisible
-to this repo.
-
-On failure the controller redirects back to the validated target with
-`?error=<code>`. Codes: `missing`, `unknown_user`, `bad_password`,
-`too_many_attempts`, `unknown`. The login pages
-([baja-php/juiz/login.php](https://github.com/baja-sae-brasil/baja-sae-brasil-online/blob/main/baja-php/juiz/login.php),
-[baja-php/fila/login.php](https://github.com/baja-sae-brasil/baja-sae-brasil-online/blob/main/baja-php/fila/login.php))
-map these to Portuguese error messages.
-
-## Logout flow
-
-```
-juiz.baja.local/index.php — "Logout" link
-        v
-juiz.baja.local/login.php?act=logout → Baja\Session::endSession()
-        v
-forum.baja.local/app.php/baja/logout?redirect=...
-        |  $user->session_kill()
-        |  Set-Cookie phpbb3_baja_{sid,u,k} cleared domain=.baja.local
-        |  $user->session_begin() — anonymous re-init
-        v
-HTTP 302 to validateRedirect(...) → juiz.baja.local/login.php
-        |  browser follows
-        v
-anonymous request lands on login form
-```
-
-The shim's `session_kill()` is no longer called from
-`Baja\Session::endSession()` — the round-trip through the forum is what
-actually clears the cookies in the browser. Cookies set with
-`domain=.baja.local` from `forum.baja.local` cannot be cleared by code
-running on `juiz.baja.local` due to cookie-path semantics; the cleanest
-fix is to do the cookie work on the same origin that set them.
+Cloudflare does still challenge the hostname, and that is fine — a solved
+challenge replays the POST intact.
 
 ## CSRF protection
 
@@ -193,7 +135,7 @@ Both endpoints require proof the request came from our own login form.
    header safe here, where it would not be for a same-origin form. Checked
    against the same `baja_auth_allowed_domain_suffix` the redirect
    validator uses, deliberately, so the two cannot drift apart.
-2. **A double-submit token.** `ChallengeWarmup` writes a random 32-byte
+2. **A double-submit token.** `LoginCsrf` writes a random 32-byte
    value to the `baja_csrf` cookie on the parent domain, and the login form
    embeds the same value. The controller requires them to match
    (`hash_equals`). An attacker's page can neither read our cookie nor guess
@@ -205,14 +147,15 @@ a judge visits would end their session mid-event. `Origin` is no help there
 defence, and `Session::endSession()` puts it in the query string. A forged
 logout is a no-op redirect rather than a loud refusal.
 
-**The token must be minted before any output.** `ChallengeWarmup::ensure()`
-does it at the top of the login page for exactly this reason: the form
+**The token must be minted before any output.** `LoginCsrf::start()` is
+called at the top of each login page for exactly this reason: the form
 embeds the value long after `printHeader()` has flushed, and `setcookie()`
 is a silent no-op once headers are sent. Getting this wrong produces a form
 carrying a token whose cookie was never sent — every genuine login refused
-as a forgery, with nothing in the logs. Smoke test #24 drives the real page
-specifically to catch that; the tests that supply both halves themselves
-cannot.
+as a forgery, with nothing in the logs. It happened once and reached a fully
+green suite, so `token()` now returns `''` rather than inventing a value it
+cannot back with a cookie, and a smoke test drives the real page to catch
+it; the tests that supply both halves themselves cannot.
 
 ## Lockout recovery
 
@@ -229,10 +172,10 @@ own login form, which *can* show the CAPTCHA (`includes/functions.php`,
 same session cookies the shim reads.
 
 The `redirect` handed to phpBB is **board-relative** on purpose
-(`./app.php/baja/warmup?redirect=…`): phpBB's `redirect()` discards
+(`./app.php/baja/return?redirect=…`): phpBB's `redirect()` discards
 off-board targets, so an absolute `juiz.` URL would be dropped and the user
-stranded on the board index. Pointing it at our own warmup route keeps it
-board-relative, and warmup revalidates the real target through
+stranded on the board index. Pointing it at our own return hop keeps it
+board-relative, and that route revalidates the real target through
 `validateRedirect()`.
 
 Note this makes the lockout *recoverable*, not impossible. An attacker who
@@ -247,6 +190,16 @@ user now has a way back in rather than a dead end. Closing that would need
   initial content; subsequent image rebuilds don't propagate into an
   existing volume. (This is a known docker volume gotcha, not specific
   to this extension.)
+- **Changing a route needs phpBB's compiled router rebuilt.** phpBB caches
+  it in `cache/production/url_matcher.php` and does not notice a changed
+  `routing.yml`. `extension:enable` would purge it, but it is a no-op once
+  the extension is already enabled — the steady state on every restart — so
+  nothing regenerated it. Production 404'd `/baja/login` and `/baja/logout`
+  for months this way, with `extension:show` reporting the extension enabled
+  the whole time (it reads the database, not the cache). The entrypoint now
+  runs `cache:purge` on every boot. Run it as `www-data`: php-fpm runs as
+  `www-data`, and a cache purged as root leaves root-owned files it cannot
+  rewrite, making the staleness permanent.
 - **Disabling the extension** via `php bin/phpbbcli.php extension:disable
   baja/auth` immediately stops the routes from resolving. The
   `phpbb_config` rows persist until `extension:purge baja/auth`, which
