@@ -11,14 +11,34 @@
 # baja-php/docs/baja-auth-extension.md "Operating notes" for context.
 # ============================================================================
 
+# GET is accepted alongside POST on purpose. The forum sits behind a
+# Cloudflare Managed Challenge, and a challenge cannot replay a POST body —
+# it re-issues the original request as a bodyless GET once the captcha is
+# solved. While this route was POST-only that replay matched no route, so
+# phpBB's router fell through to its own 404 page ("A página solicitada não
+# foi encontrada") on the forum domain, stranding the user with their
+# credentials silently discarded. The controller now detects the
+# credential-less request and bounces the user back to the login form.
 baja_auth_login:
     path: /baja/login
     defaults:
         _controller: baja.auth.controller.main:login
-    methods: [POST]
+    methods: [GET, POST]
 
 baja_auth_logout:
     path: /baja/logout
     defaults:
         _controller: baja.auth.controller.main:logout
     methods: [GET, POST]
+
+# Cloudflare challenge warm-up. A no-op redirect whose only job is to be a
+# plain GET navigation on the forum origin: Cloudflare replays a GET intact
+# (URL and query string survive), so the user solves any captcha HERE, before
+# typing a password, and returns to the login form already holding
+# cf_clearance. The subsequent cross-origin login POST is then never
+# challenged. See baja-php/src/Baja/Auth/ChallengeWarmup.php for the caller.
+baja_auth_warmup:
+    path: /baja/warmup
+    defaults:
+        _controller: baja.auth.controller.main:warmup
+    methods: [GET]

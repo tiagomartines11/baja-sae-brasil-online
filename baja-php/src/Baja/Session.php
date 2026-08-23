@@ -13,7 +13,20 @@ class Session
         Session::$_currentUser = UserQuery::create()->findOneByUsername($user->data["username"]);
         if (!Session::$_currentUser) {
             if ($_SERVER["SCRIPT_NAME"] != "/login.php") {
-                header("Location: login.php");
+                // Carry a login error code across this bounce. The baja/auth
+                // controller appends ?error=<code> to the post-login redirect
+                // target — which is index.php, not login.php — so without this
+                // the code died here and every failed login landed on a blank
+                // form. That made the Cloudflare-challenge case especially
+                // baffling: captcha, then a login page with no explanation.
+                //
+                // Whitelisted to the controller's own code shape so nothing
+                // attacker-influenced reaches the Location header.
+                $error  = $_GET['error'] ?? '';
+                $suffix = preg_match('/^[a-z_]{1,32}$/', (string) $error)
+                    ? '?error=' . urlencode((string) $error)
+                    : '';
+                header("Location: login.php" . $suffix);
                 exit();
             }
         }

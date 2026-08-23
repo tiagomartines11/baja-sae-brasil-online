@@ -38,18 +38,52 @@ class main
         $this->request = $request;
     }
 
+    /**
+     * Cloudflare challenge warm-up. Deliberately does nothing but validate
+     * and bounce.
+     *
+     * Its value is entirely in being a plain GET on the forum origin. The
+     * forum is behind a Managed Challenge, and Cloudflare cannot replay a
+     * POST body through one — but it replays a GET intact. Sending the user
+     * here first means any captcha is solved BEFORE they type a password, and
+     * they return to the login form holding cf_clearance, so the credential
+     * -carrying POST is never challenged. See
+     * baja-php/src/Baja/Auth/ChallengeWarmup.php.
+     */
+    public function warmup(): Response
+    {
+        return new RedirectResponse(
+            $this->validateRedirect($this->request->variable('redirect', ''))
+        );
+    }
+
     public function login(): Response
     {
+        // `redirect` travels in the QUERY STRING of the form action, not as a
+        // POST field, precisely so it survives a Cloudflare challenge replay
+        // (which discards the body but keeps the URL). Resolve the target
+        // first so the no-credentials path below has somewhere to send the
+        // user. request->variable() reads GET and POST alike.
+        $redirect = $this->request->variable('redirect', '');
+        $target   = $this->validateRedirect($redirect);
+
+        // No POSTed username means this is not a real submission. In practice
+        // it is Cloudflare replaying a challenged login POST as a bodyless
+        // GET. This used to be an unstyled 405 — and before the route
+        // accepted GET at all, it was phpBB's 404 page on the forum domain,
+        // which is what stranded users mid-login.
+        //
+        // Bounce back to the form instead. cf_clearance exists by now, so the
+        // retry goes straight through. Note this checks is_set_post, not the
+        // merged value: a genuine POST with an empty username still has the
+        // key present and correctly falls through to the 'missing' branch.
         if (!$this->request->is_set_post('username')) {
-            return new Response('Method not allowed', 405);
+            return new RedirectResponse($this->appendError($target, 'challenge'));
         }
 
         $username = $this->request->variable('username', '', true);
         $password = $this->request->variable('password', '', true);
-        $redirect = $this->request->variable('redirect', '');
         $autologin = (bool) $this->request->variable('autologin', 0);
-
-        $target = $this->validateRedirect($redirect);
 
         if ($username === '' || $password === '') {
             return new RedirectResponse($this->appendError($target, 'missing'));

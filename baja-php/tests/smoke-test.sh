@@ -52,7 +52,10 @@ status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_CERT/")
 check_in "anonymous /certificado/" "$status" 200
 
 # 3. Anonymous hitting juiz/login.php (the login form itself) should render.
-status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/login.php")
+# A cold browser is first bounced through the forum's Cloudflare warm-up
+# (ChallengeWarmup::ensure), so the form only renders after following that
+# round trip — hence -L. The bounce itself is asserted separately in #13.
+status=$(curl -s -o /dev/null -w "%{http_code}" -L "$BASE_JUIZ/login.php")
 check_in "anonymous /juiz/login.php form renders" "$status" 200
 
 # 4. Anonymous hitting juiz/index.php — Session::initSession redirects to
@@ -113,12 +116,15 @@ check_in "forum-logout simulation: anonymous after _u=1" "$status" 200
 # create a session row and Set-Cookie headers with domain=.baja.local
 # (per phpbb_config.cookie_domain). Response is a 302/303 to the validated
 # redirect target.
+#
+# redirect travels in the query string, matching what the login forms now
+# emit — it has to survive a Cloudflare challenge replay, which keeps the URL
+# but discards the body.
 : > "$COOKIES"
 status=$(curl -s -o /dev/null -w "%{http_code}" -c "$COOKIES" -X POST \
     --data-urlencode "username=juiz1" \
     --data-urlencode "password=123456" \
-    --data-urlencode "redirect=$BASE_JUIZ/index.php" \
-    "$BASE_FORUM/app.php/baja/login")
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
 check_in "POST /app.php/baja/login returns redirect" "$status" 302 303
 
 # Cookie jar in Netscape format: domain<TAB>flag<TAB>path<TAB>secure<TAB>exp<TAB>name<TAB>value
@@ -169,14 +175,80 @@ fi
 location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
     --data-urlencode "username=juiz1" \
     --data-urlencode "password=123456" \
-    --data-urlencode "redirect=https://evil.com/steal" \
-    "$BASE_FORUM/app.php/baja/login")
+    "$BASE_FORUM/app.php/baja/login?redirect=https://evil.com/steal")
 if echo "$location" | grep -q 'evil.com'; then
     red "FAIL  open-redirect honored: Location='$location'"
     FAIL=$((FAIL + 1))
 else
     green "PASS  open-redirect rejected (Location='$location')"
     PASS=$((PASS + 1))
+fi
+
+# ---------------------------------------------------------------------------
+# 13-16. Cloudflare challenge resilience.
+#
+# Dev has no Cloudflare in front of it, so these cannot reproduce a real
+# challenge. What they pin down is the contract the challenge depends on:
+# a GET must never fall through to phpBB's 404 page, and the warm-up route
+# must behave like a validated no-op redirect. Those are the two properties
+# that broke in production.
+# ---------------------------------------------------------------------------
+
+# 13. The warm-up endpoint: a plain GET that bounces back to the validated
+# target. In production this is the request that absorbs the captcha, so it
+# must be reachable by GET and must preserve its redirect target.
+location=$(curl -s -o /dev/null -w "%{redirect_url}" \
+    "$BASE_FORUM/app.php/baja/warmup?redirect=$BASE_JUIZ/login.php%3Fwarmed%3D1")
+if [[ "$location" == "$BASE_JUIZ/login.php?warmed=1" ]]; then
+    green "PASS  warmup redirects to validated target ('$location')"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  warmup target wrong: expected '$BASE_JUIZ/login.php?warmed=1', got '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+# 14. Warm-up honours the same open-redirect guard as login/logout.
+location=$(curl -s -o /dev/null -w "%{redirect_url}" \
+    "$BASE_FORUM/app.php/baja/warmup?redirect=https://evil.com/steal")
+if echo "$location" | grep -q 'evil.com'; then
+    red "FAIL  warmup open-redirect honored: Location='$location'"
+    FAIL=$((FAIL + 1))
+else
+    green "PASS  warmup open-redirect rejected (Location='$location')"
+    PASS=$((PASS + 1))
+fi
+
+# 15. THE REGRESSION TEST. A bodyless GET on /baja/login is exactly what
+# Cloudflare produces when it replays a challenged login POST. This used to
+# match no route, so phpBB rendered its own 404 ("A página solicitada não foi
+# encontrada") on the forum domain and the user was stranded. It must now be
+# a redirect carrying ?error=challenge, never a 404.
+status=$(curl -s -o /dev/null -w "%{http_code}" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+check_in "GET /app.php/baja/login is not a 404" "$status" 302 303
+
+location=$(curl -s -o /dev/null -w "%{redirect_url}" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if echo "$location" | grep -q 'error=challenge'; then
+    green "PASS  bodyless GET login redirects with error=challenge ('$location')"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  expected error=challenge on bodyless GET login; got '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+# 16. Loop guard. login.php?warmed=1 must render the form directly and must
+# NOT bounce to the warm-up again — a browser that refuses cookies can never
+# set the marker, and re-bouncing would trap it in an infinite redirect loop
+# between juiz and forum. Assert a terminal 200 with no Location at all.
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/login.php?warmed=1")
+location=$(curl -s -o /dev/null -w "%{redirect_url}" "$BASE_JUIZ/login.php?warmed=1")
+if [[ "$status" == "200" && -z "$location" ]]; then
+    green "PASS  login.php?warmed=1 renders without re-bouncing (no loop)"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login.php?warmed=1 should render terminally; got status=$status location='$location'"
+    FAIL=$((FAIL + 1))
 fi
 
 echo
