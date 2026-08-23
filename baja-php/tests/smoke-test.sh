@@ -80,6 +80,18 @@ check_in "anonymous /juiz/remote.php degrades gracefully" "$status" 200 400 403
 # the act=login query-string parameter is what triggers the auth branch).
 # All seeded test users share password '123456'.
 COOKIES=$(mktemp -t shim-cookies.XXXXXX)
+
+# Double-submit CSRF token. The controller holds no server-side state — it only
+# checks that the cookie and the form field match — so a fixed value works here.
+# That is the mechanism rather than a weakness: the protection comes from an
+# attacker's page being unable to read or set a cookie on our domain.
+CSRF=smoketestcsrftoken0000000000000000000000000000000000000000000000
+# Real submissions also require Origin. Browsers always send it on a
+# cross-origin POST; curl does not, so pass it explicitly.
+ORIGIN_HDR=(-H "Origin: $BASE_JUIZ")
+# For calls needing both the phpBB session cookies and the token, append the
+# token to the jar curl already wrote.
+csrf_into_jar() { printf '.baja.local\tTRUE\t/\tFALSE\t0\tbaja_csrf\t%s\n' "$CSRF" >> "$1"; }
 trap "rm -f \"$COOKIES\" \"$COOKIES.bak\"" EXIT
 
 # Fetch the login form first so any cookies the page sets are captured.
@@ -128,8 +140,10 @@ check_in "forum-logout simulation: anonymous after _u=1" "$status" 200
 # but discards the body.
 : > "$COOKIES"
 status=$(curl -s -o /dev/null -w "%{http_code}" -c "$COOKIES" -X POST \
+    "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
     --data-urlencode "username=juiz1" \
     --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$CSRF" \
     "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
 check_in "POST /app.php/baja/login returns redirect" "$status" 302 303
 
@@ -177,8 +191,9 @@ fi
 # 11. Logout endpoint. phpBB's session_kill clears the session row and
 # rotates the cookies (_u → 1 anonymous, _sid → cleared). After the
 # round-trip, the jar should reflect that.
+csrf_into_jar "$COOKIES"
 status=$(curl -s -o /dev/null -w "%{http_code}" -c "$COOKIES" -b "$COOKIES" \
-    "$BASE_FORUM/app.php/baja/logout?redirect=$BASE_JUIZ/login.php")
+    "$BASE_FORUM/app.php/baja/logout?redirect=$BASE_JUIZ/login.php&csrf=$CSRF")
 check_in "GET /app.php/baja/logout returns redirect" "$status" 302 303
 
 u_value=$(awk '$6 == "phpbb3_baja_u" { print $7 }' "$COOKIES")
@@ -196,8 +211,10 @@ fi
 # Location header from the 302 response without following it.
 : > "$COOKIES"
 location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
+    "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
     --data-urlencode "username=juiz1" \
     --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$CSRF" \
     "$BASE_FORUM/app.php/baja/login?redirect=https://evil.com/steal")
 if echo "$location" | grep -q 'evil.com'; then
     red "FAIL  open-redirect honored: Location='$location'"
@@ -346,6 +363,115 @@ if command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -
 else
     echo "SKIP  empty-username check (needs the baja-mysql container)"
 fi
+
+# ---------------------------------------------------------------------------
+# 20-23. CSRF. A forged login must not authenticate, and a forged logout must
+# not end a session. Each case below omits exactly one of the two required
+# proofs, so a pass means that proof is genuinely load-bearing.
+# ---------------------------------------------------------------------------
+
+# 20. Right token, wrong Origin — the attacker's page.
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
+    -H "Origin: https://evil.com" -b "baja_csrf=$CSRF" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$CSRF" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if echo "$location" | grep -q 'error=csrf'; then
+    green "PASS  login rejected off-domain Origin"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login accepted Origin https://evil.com -> '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+# 21. Right Origin, no token — a forged form cannot read our cookie, so it
+# cannot produce the pair even if it spoofs everything else.
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
+    "${ORIGIN_HDR[@]}" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if echo "$location" | grep -q 'error=csrf'; then
+    green "PASS  login rejected missing CSRF token"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login accepted a request with no CSRF token -> '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+# 22. Cookie and form field present but different — guards against a
+# comparison that only checks both are non-empty.
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
+    "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=not-the-same-value" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if echo "$location" | grep -q 'error=csrf'; then
+    green "PASS  login rejected mismatched CSRF token"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login accepted a mismatched CSRF token -> '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+# 23. Forced logout. /baja/logout answers to GET, so <img src> on any page a
+# judge visits would end their session mid-event. Log in, fire a token-less
+# logout, and confirm the session still works. Origin cannot help here — a
+# top-level GET navigation carries none — so the token is the whole defence.
+: > "$COOKIES"
+curl -s -o /dev/null -c "$COOKIES" -X POST \
+    "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$CSRF" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php"
+
+curl -s -o /dev/null -c "$COOKIES" -b "$COOKIES" \
+    "$BASE_FORUM/app.php/baja/logout?redirect=$BASE_JUIZ/login.php"
+
+body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/index.php")
+if echo "$body" | grep -q 'login.php?act=logout'; then
+    green "PASS  token-less logout did not end the session"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  token-less logout ended the session (forced-logout CSRF)"
+    FAIL=$((FAIL + 1))
+fi
+
+# 24. The token the real page mints must actually work.
+#
+# Every check above supplies both halves of the pair itself, which proves the
+# comparison works but says nothing about whether the login page produces a
+# usable token. It did not: the form embedded a value while setcookie() was a
+# silent no-op — printHeader() had already flushed output — so the cookie was
+# never sent and every genuine login was refused as a forgery, with the suite
+# fully green. So drive the real flow: render the page, take the token from the
+# HTML and the cookie from the jar, and require both that they agree and that
+# logging in with them succeeds.
+REALJAR=$(mktemp -t shim-real.XXXXXX)
+curl -s -L -c "$REALJAR" -b "$REALJAR" -o /tmp/real-login.html "$BASE_JUIZ/login.php"
+form_token=$(grep -o 'name="csrf" value="[a-f0-9]*"' /tmp/real-login.html | sed 's/.*value="//;s/"//')
+jar_token=$(awk '$6 == "baja_csrf" { print $7 }' "$REALJAR")
+
+if [[ -n "$form_token" && "$form_token" == "$jar_token" ]]; then
+    green "PASS  login page mints a CSRF token into both the form and the cookie"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  form token '${form_token:0:12}…' vs cookie '${jar_token:0:12}…' (empty cookie = setcookie ran after output)"
+    FAIL=$((FAIL + 1))
+fi
+
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -c "$REALJAR" -b "$REALJAR" -X POST \
+    "${ORIGIN_HDR[@]}" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$form_token" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if [[ "$location" == "$BASE_JUIZ/index.php" ]]; then
+    green "PASS  login with the page's own token succeeds"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login with the page's own token was refused -> '$location'"
+    FAIL=$((FAIL + 1))
+fi
+rm -f "$REALJAR"
 
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"

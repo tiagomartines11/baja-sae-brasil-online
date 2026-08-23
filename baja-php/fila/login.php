@@ -33,6 +33,10 @@ $errorMessages = [
         . htmlspecialchars(Url::forum('/ucp.php?mode=login'), ENT_QUOTES, 'UTF-8')
         . '">Entrar pelo fórum</a>',
     'challenge'         => 'A verificação de segurança interrompeu o envio. Entre novamente.',
+    // The form was submitted from somewhere we don't serve it from, or
+    // without the double-submit token. Almost always a stale form left open
+    // across a browser restart; reloading mints a fresh token.
+    'csrf'              => 'Sessão de login expirada. Recarregue a página e tente novamente.',
     'unknown'           => 'Erro de autenticação',
 ];
 if (isset($_GET['error']) && isset($errorMessages[$_GET['error']])) {
@@ -71,6 +75,7 @@ echo '
 <br /><br /> ';
 
 echo '<form action="'.htmlspecialchars($loginAction, ENT_QUOTES, 'UTF-8').'" method="post">
+        <input type="hidden" name="csrf" value="'.htmlspecialchars(ChallengeWarmup::csrfToken(), ENT_QUOTES, 'UTF-8').'">
         <span style="color: red">'.(isset($msg) ? $msg . '<br /><br />' : '').'</span>
         <label for="username">Username</label><br />
         <input type="text" id="username" name="username" size="30" />

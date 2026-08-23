@@ -11,7 +11,7 @@ through phpBB's own auth pipeline:
 | Route | Method | Purpose |
 |---|---|---|
 | `/baja/login` | GET, POST | Authenticate via `$auth->login()`. On success, phpBB sets session cookies on `.baja.local`; the baja-app shim picks them up on the next request. GET is accepted only to catch Cloudflare challenge replays — see below. |
-| `/baja/logout` | GET, POST | `$user->session_kill()` followed by `session_begin()` (anonymous re-init), then redirect. |
+| `/baja/logout` | GET, POST | `$user->session_kill()` followed by `session_begin()` (anonymous re-init), then redirect. Requires the CSRF token. |
 | `/baja/warmup` | GET | No-op validated redirect. Exists purely to absorb a Cloudflare challenge on a GET, before the user types a password. |
 
 Both accept an optional `redirect` parameter validated against a
@@ -179,6 +179,66 @@ actually clears the cookies in the browser. Cookies set with
 `domain=.baja.local` from `forum.baja.local` cannot be cleared by code
 running on `juiz.baja.local` due to cookie-path semantics; the cleanest
 fix is to do the cookie work on the same origin that set them.
+
+## CSRF protection
+
+Both endpoints require proof the request came from our own login form.
+
+`/baja/login` demands **two** independent things, and rejects with
+`?error=csrf` if either is missing:
+
+1. **An `Origin` on the allowed domain.** This POST is always cross-origin
+   (`juiz.`/`fila.` → `forum.`), and browsers always send `Origin` on a
+   cross-origin POST — which is what makes failing closed on a missing
+   header safe here, where it would not be for a same-origin form. Checked
+   against the same `baja_auth_allowed_domain_suffix` the redirect
+   validator uses, deliberately, so the two cannot drift apart.
+2. **A double-submit token.** `ChallengeWarmup` writes a random 32-byte
+   value to the `baja_csrf` cookie on the parent domain, and the login form
+   embeds the same value. The controller requires them to match
+   (`hash_equals`). An attacker's page can neither read our cookie nor guess
+   the value, so it cannot produce a matching pair.
+
+`/baja/logout` answers to GET, so `<img src=".../baja/logout">` on any page
+a judge visits would end their session mid-event. `Origin` is no help there
+— a top-level GET navigation carries none — so the token is the whole
+defence, and `Session::endSession()` puts it in the query string. A forged
+logout is a no-op redirect rather than a loud refusal.
+
+**The token must be minted before any output.** `ChallengeWarmup::ensure()`
+does it at the top of the login page for exactly this reason: the form
+embeds the value long after `printHeader()` has flushed, and `setcookie()`
+is a silent no-op once headers are sent. Getting this wrong produces a form
+carrying a token whose cookie was never sent — every genuine login refused
+as a forgery, with nothing in the logs. Smoke test #24 drives the real page
+specifically to catch that; the tests that supply both halves themselves
+cannot.
+
+## Lockout recovery
+
+phpBB gates `$auth->login()` behind a CAPTCHA once `user_login_attempts`
+reaches `max_login_attempts` (3), and that gate runs *before* the password
+check — so the correct password is refused too. The counter has no
+time-based expiry: it clears only on a successful login or a password
+reset. This route cannot present a CAPTCHA, so a locked user could never
+get back in through it.
+
+On `LOGIN_ERROR_ATTEMPTS` the controller therefore redirects to the forum's
+own login form, which *can* show the CAPTCHA (`includes/functions.php`,
+`case LOGIN_ERROR_ATTEMPTS`) and resets the counter on success — setting the
+same session cookies the shim reads.
+
+The `redirect` handed to phpBB is **board-relative** on purpose
+(`./app.php/baja/warmup?redirect=…`): phpBB's `redirect()` discards
+off-board targets, so an absolute `juiz.` URL would be dropped and the user
+stranded on the board index. Pointing it at our own warmup route keeps it
+board-relative, and warmup revalidates the real target through
+`validateRedirect()`.
+
+Note this makes the lockout *recoverable*, not impossible. An attacker who
+knows a username can still lock that account with three failed POSTs; the
+user now has a way back in rather than a dead end. Closing that would need
+`max_login_attempts = 0` or a CAPTCHA on the baja form.
 
 ## Operating notes
 

@@ -1,5 +1,6 @@
 <?php
 namespace Baja;
+use Baja\Auth\ChallengeWarmup;
 use Baja\Auth\NaoProvisionado;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
@@ -100,7 +101,15 @@ class Session
         $scheme = $_SERVER['REQUEST_SCHEME'] ?? Url::scheme();
         $host   = $_SERVER['HTTP_HOST']      ?? Url::domain();
         $loginUrl = $scheme . '://' . $host . '/login.php';
-        $logoutUrl = Url::forum('/app.php/baja/logout?redirect=' . urlencode($loginUrl));
+        // The csrf token is what distinguishes this from a forged logout —
+        // /baja/logout answers to GET, so without it any <img src> on a page
+        // the judge visits would log them out mid-event. Separate top-level
+        // parameters, so the '&' here is not inside a value phpBB would
+        // html-escape.
+        $logoutUrl = Url::forum(
+            '/app.php/baja/logout?redirect=' . urlencode($loginUrl)
+            . '&csrf=' . urlencode(ChallengeWarmup::csrfToken())
+        );
         header("Location: $logoutUrl");
         exit();
     }
