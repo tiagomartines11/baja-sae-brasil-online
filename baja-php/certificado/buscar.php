@@ -17,6 +17,7 @@ use Baja\Certificado\Backoff;
 use Baja\Certificado\Busca;
 use Baja\Certificado\Config;
 use Baja\Certificado\Http;
+use Baja\Certificado\Requerimento\Caso;
 use Baja\Certificado\Template;
 
 Http::sendPrivateHeaders();
@@ -102,6 +103,19 @@ Template::printHeader('Certificados - SAE BRASIL');
 
             <button type="submit">Buscar certificados</button>
         </form>
+
+        <?php /*
+         * The other entry to /requerimento, and the only one that does not start
+         * from a result — a certificate that is not there cannot be linked
+         * from. It sits on the search card rather than only on the empty
+         * result, because somebody who has already searched twice knows what
+         * they will find and should not have to search a third time to be
+         * offered the form.
+         */ ?>
+        <p class="muted" style="margin:20px 0 0">
+            Participou de um evento e o certificado não aparece?
+            <a href="<?= htmlspecialchars('/requerimento?caso=' . Caso::AUSENTE, ENT_QUOTES, 'UTF-8') ?>">Solicite a emissão</a>.
+        </p>
     </div>
 
 <?php if ($isPost && $failed && $retryAfter !== null): ?>
@@ -126,6 +140,9 @@ Template::printHeader('Certificados - SAE BRASIL');
         <p class="muted">
             Confira se o nome informado está completo e igual ao usado na
             inscrição do evento.
+        </p>
+        <p>
+            <a class="btn btn-secondary" href="<?= htmlspecialchars('/requerimento?caso=' . Caso::AUSENTE, ENT_QUOTES, 'UTF-8') ?>">Solicitar a emissão de um certificado</a>
         </p>
     </div>
 <?php endif; ?>
@@ -166,6 +183,22 @@ Template::printHeader('Certificados - SAE BRASIL');
                 <?php /* Whoever reaches this page wants their file; the download leads. */ ?>
                 <a class="btn" href="<?= htmlspecialchars('/verificar/' . $certificado->getToken() . '/pdf', ENT_QUOTES, 'UTF-8') ?>">Baixar em PDF</a>
                 <a class="btn btn-secondary" href="<?= htmlspecialchars('/verificar/' . $certificado->getToken(), ENT_QUOTES, 'UTF-8') ?>">Página de verificação</a>
+            </p>
+
+            <?php /*
+             * Where a correction starts, and why it starts here rather than
+             * on a blank form. The token is the row: with it, staff open the
+             * exact certificate the person is looking at, and the person
+             * re-types neither the event nor the search they have already
+             * done. It is the same identifier /verificar already puts in a
+             * URL, so nothing new is exposed by carrying it in this one — and
+             * the CPF, which is the thing that must not be, stays out of it.
+             */ ?>
+            <p class="muted" style="margin:12px 0 0">
+                Algum dado aqui está errado?
+                <a href="<?= htmlspecialchars('/requerimento?caso=' . Caso::INCORRETO . '&t=' . $certificado->getToken(), ENT_QUOTES, 'UTF-8') ?>">Corrigir estes dados</a>
+                &middot;
+                <a href="<?= htmlspecialchars('/requerimento?caso=' . Caso::INDEVIDO . '&t=' . $certificado->getToken(), ENT_QUOTES, 'UTF-8') ?>">Este certificado não deveria existir</a>
             </p>
         </div>
     <?php endforeach; ?>

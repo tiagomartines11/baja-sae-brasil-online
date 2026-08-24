@@ -42,6 +42,37 @@ services:
     networks:
       - baja
 
+  # Mailpit — a throwaway SMTP server with a web inbox, for development.
+  #
+  # /requerimento sends two messages per submission and there is no other
+  # contact route on the certificate pages, so "does the mail actually go out,
+  # and does it read right" is not a question to leave until production. Mailpit
+  # accepts anything on 1025 and shows it at http://localhost:8025; nothing it
+  # receives is ever delivered anywhere.
+  #
+  # Profile-gated, and that is what keeps it out of production: the prod
+  # overlay is additive (it cannot remove a service) so the switch has to live
+  # in this file. .env sets COMPOSE_PROFILES from ENV, so ENV=dev starts this
+  # and ENV=prod does not, and `docker compose up -d` stays the command in both
+  # environments.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: baja-mailpit
+    profiles: ["dev"]
+    restart: unless-stopped
+    environment:
+      TZ: America/Sao_Paulo
+      MP_MAX_MESSAGES: "500"
+      # No volume and no database file: it holds whatever personal data you
+      # typed into the form while testing, and that should not outlive the
+      # container.
+      MP_DATABASE: ""
+    ports:
+      # The inbox. Loopback only, like every other published port here.
+      - "127.0.0.1:8025:8025"
+    networks:
+      - baja
+
   phpbb-baja:
     build:
       context: ..
@@ -95,6 +126,24 @@ services:
       ENV: ${ENV}
       # Keys the /buscar per-document backoff. See .env.example.
       CERT_BACKOFF_SECRET: ${CERT_BACKOFF_SECRET}
+      # /requerimento, the participant-facing correction form. See
+      # .env.example; the notification recipients are derived from the
+      # `certificados` permission, and this list is added to them.
+      CERT_REPORT_EMAILS: ${CERT_REPORT_EMAILS}
+      # Cloudflare Turnstile, the anti-robot check on that form. Unset means
+      # the check is skipped and said to be skipped, not that the form breaks.
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
+      # Outbound SMTP for Baja\Util\Mailer. The image has no sendmail, so this
+      # is the only mail path. With SMTP_HOST unset the form still works and
+      # says plainly that no confirmation is coming.
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_SECURITY: ${SMTP_SECURITY}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME}
       # Baja\Url builds every public-facing link from these — the same two
       # variables the nginx templates render server_name and the listen block
       # from, so a link can never name a host or scheme nginx is not serving.

@@ -115,7 +115,7 @@ body() { # sid path
     curl -s "${CURL_ARGS[@]}" "${jar[@]}" "$BASE$2"
 }
 
-PAGINAS=(/certificados.php /certificados_lote.php /certificados_nome.php /certificados_busca.php /lotes.php /lote.php)
+PAGINAS=(/certificados.php /certificados_lote.php /certificados_nome.php /certificados_busca.php /certificados_requerimentos.php /lotes.php /lote.php)
 
 echo
 echo "--- anonymous ---"

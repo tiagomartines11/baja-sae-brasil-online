@@ -3,24 +3,33 @@
 # These are http-context directives, and conf.d files are included inside
 # http{}, so they live at the top of this file rather than in nginx.conf.
 
-# Limit POSTs to /buscar only. nginx cannot select a location by method, and an
-# empty key is skipped by limit_req, so mapping GET to "" leaves reads
-# unlimited while POSTs are keyed by address.
+# Limit POSTs to the two forms this vhost has. nginx cannot select a location
+# by method, and an empty key is skipped by limit_req, so mapping GET to ""
+# leaves reads unlimited while POSTs are keyed by address.
 #
-# What this defends changed with the redesign. There is no CPF in a URL to
-# enumerate any more; what is left is guessing names against a CPF somebody
-# already has. Per-document backoff in Redis covers that dimension — see
-# Baja\Certificado\Backoff — and this covers the address dimension. An
+# What this defends on /buscar changed with the redesign. There is no CPF in a
+# URL to enumerate any more; what is left is guessing names against a CPF
+# somebody already has. Per-document backoff in Redis covers that dimension —
+# see Baja\Certificado\Backoff — and this covers the address dimension. An
 # attacker with a pool of addresses defeats this one and not that one.
-# Keyed on method and URI together, and matched after the internal rewrite —
-# "rewrite ... last" restarts location matching, so a limit_req sitting in the
-# "location = /buscar" block would never be reached. Hence POST:/buscar.php.
-# An empty key is skipped by limit_req, so every other request is unlimited.
-map "$request_method:$uri" $buscar_limit_key {
-    default          "";
-    "~^POST:/buscar" $binary_remote_addr;
+#
+# /requerimento is here for a different reason. Every submission sends mail — one
+# alert to staff and one receipt to whatever address was typed in, which
+# nothing proves belongs to the person typing. Baja\Certificado\Requerimento\Limite
+# caps that per address and per email in Redis and is the finer control; this
+# is the one that still works when Redis is the thing that is down.
+#
+# One zone for both. They are the same defence against the same actor, the
+# rate is generous for a human filling in either form, and a second zone would
+# be a second thing to size. Keyed on method and URI together, and matched
+# after the internal rewrite — "rewrite ... last" restarts location matching,
+# so a limit_req sitting in the "location = /buscar" block would never be
+# reached. Hence the .php suffixes being tolerated by the prefix match.
+map "$request_method:$uri" $cert_post_limit_key {
+    default                      "";
+    "~^POST:/(buscar|requerimento)"  $binary_remote_addr;
 }
-limit_req_zone $buscar_limit_key zone=cert_buscar:1m rate=10r/m;
+limit_req_zone $cert_post_limit_key zone=cert_post:1m rate=10r/m;
 limit_req_status 429;
 
 # --- access log redaction ---------------------------------------------------
@@ -93,11 +102,23 @@ server {
         add_header Cache-Control "public, no-transform";
     }
 
-    # /buscar — the lookup form, and the only place a document number is ever
-    # accepted. GET renders it, POST answers in the same response; there is no
-    # redirect, because the document number cannot go in a URL.
+    # /buscar — the lookup form, and one of the two places a document number is
+    # ever accepted. GET renders it, POST answers in the same response; there
+    # is no redirect, because the document number cannot go in a URL.
     location = /buscar {
         rewrite ^ /buscar.php last;
+    }
+
+    # /requerimento — the form for saying that something about a certificate is
+    # wrong. The other place a document number is accepted, and answered the
+    # same way for the same reason: GET renders, POST answers in place, and
+    # nothing about a submission reaches a URL.
+    #
+    # A query string is allowed here and carries only ?caso= and ?t=, the
+    # certificate token — the same identifier /verificar already puts in a
+    # path. Neither is redacted below because neither identifies a person.
+    location = /requerimento {
+        rewrite ^ /requerimento.php last;
     }
 
     # /verificar/{token}      -> confirmation page
@@ -147,11 +168,13 @@ server {
     }
 
     location ~ \.php$ {
-        # Only bites on POST /buscar; $buscar_limit_key is empty for everything
-        # else, and limit_req skips empty keys. 10/min per address with a small
-        # burst is generous for a human filling in a form and useless for
-        # grinding names against a document somebody already holds.
-        limit_req zone=cert_buscar burst=5 nodelay;
+        # Only bites on POST /buscar and POST /requerimento;
+        # $cert_post_limit_key is empty for everything else, and limit_req
+        # skips empty keys. 10/min per address with a small burst is generous
+        # for a human filling in a form and useless for grinding names against
+        # a document somebody already holds, or for using the report form as a
+        # mail generator.
+        limit_req zone=cert_post burst=5 nodelay;
 
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         fastcgi_pass baja-app:9000;

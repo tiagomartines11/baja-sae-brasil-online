@@ -43,6 +43,11 @@ final class Template
             --sae-rule: #C4C6CB;
             --sae-light: #f4f5f7;
             --sae-border: #d7dbe0;
+            /* Same three as the insertion pages, so a message that means
+               "wrong", "careful" or "done" looks the same on both surfaces. */
+            --erro: #a3231d;
+            --aviso: #8a5a00;
+            --ok: #1a7f45;
         }
         * { box-sizing: border-box; }
         body {
@@ -81,14 +86,79 @@ final class Template
         p { margin: 0 0 12px; }
         .muted { color: var(--sae-grey); font-size: 14px; }
         label { display: block; font-weight: bold; margin-bottom: 4px; }
-        input[type=text] {
+        input[type=text], input[type=email], input[type=tel], select, textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid var(--sae-border);
             border-radius: 4px;
             font-size: 16px;
+            font-family: inherit;
+            background: #fff;
+            color: inherit;
         }
+        textarea { min-height: 140px; resize: vertical; line-height: 1.45; }
         .field { margin-bottom: 16px; }
+        /* The sentence under a label that says what the field is for. Printed
+           before the input, not after: it is part of the question. */
+        .dica { font-weight: normal; color: var(--sae-grey); font-size: 14px; display: block; margin: -2px 0 6px; }
+        .contador { font-weight: normal; color: var(--sae-grey); font-size: 13px; float: right; }
+
+        /*
+         * A field that failed validation. Colour is not the only signal —
+         * every one of these also carries a sentence saying what is wrong,
+         * and the input gets aria-invalid, because a red border is nothing to
+         * a screen reader and little to a colour-blind reader.
+         */
+        .campo-erro input, .campo-erro select, .campo-erro textarea { border-color: var(--erro); }
+        .erro-msg { color: var(--erro); font-size: 14px; margin: 6px 0 0; }
+        .alerta { border-left: 4px solid var(--sae-navy); padding: 12px 14px; margin-bottom: 16px; background: #fff; }
+        .alerta.erro { border-color: var(--erro); color: var(--erro); }
+        .alerta.aviso { border-color: var(--aviso); }
+        .alerta.ok { border-color: var(--ok); color: var(--ok); }
+
+        /*
+         * The radio group choosing what is being reported, and the agreement
+         * checkbox. Each option is a whole tappable block with its
+         * explanation inside it, rather than a bare radio next to a phrase —
+         * the explanations are what actually distinguish the three cases, and
+         * a 20px hit area on a phone is not enough for a choice that decides
+         * which form you get.
+         */
+        .escolhas { display: grid; gap: 10px; margin-bottom: 4px; }
+        .escolha {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 10px;
+            align-items: start;
+            border: 1px solid var(--sae-border);
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-weight: normal;
+            margin: 0;
+            cursor: pointer;
+        }
+        .escolha:hover { background: var(--sae-light); }
+        .escolha input { margin: 3px 0 0; width: 18px; height: 18px; }
+        .escolha strong { font-weight: bold; color: var(--sae-navy-deep); }
+        .escolha span { grid-column: 2; color: var(--sae-grey); font-size: 14px; }
+        .escolha:has(input:checked) { border-color: var(--sae-navy); box-shadow: inset 0 0 0 1px var(--sae-navy); }
+        .concordo {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            align-items: start;
+            font-weight: normal;
+        }
+        .concordo input { margin: 3px 0 0; width: 18px; height: 18px; }
+
+        /*
+         * What the report form is about, restated above it. Not a decoration:
+         * somebody arriving from a certificate needs to see which certificate
+         * before they describe what is wrong with it.
+         */
+        .contexto { background: var(--sae-light); border-radius: 6px; padding: 14px 16px; margin-bottom: 20px; }
+        .contexto dt { margin-top: 8px; }
+        .contexto dt:first-child { margin-top: 0; }
         button {
             background: var(--sae-navy);
             color: #fff;
@@ -126,12 +196,30 @@ final class Template
         <?php
     }
 
+    /**
+     * The footer, and the one route out of these pages.
+     *
+     * This used to be a mailto: and nothing else, which put the whole burden
+     * of the report on the person least equipped to carry it. What arrived
+     * was "meu certificado está errado" with no event, no document, and no
+     * indication of which of three quite different things had happened — so
+     * the first reply was always a request for the same four facts, and the
+     * thread took a week to reach the point a form reaches in one submission.
+     *
+     * The address is gone rather than kept as a fallback, deliberately. Two
+     * channels means two queues, one of which has no protocol number, no
+     * status, no record of who answered and no retention policy — and the
+     * unstructured one is the one people pick, because it asks nothing of
+     * them. The form is the contact route; /requerimento is written so that a
+     * server with no working relay still accepts a report rather than sending
+     * anybody back here looking for an address.
+     */
     public static function printFooter(): void
     {
         ?>
     <p class="muted">
-        Se algum dado exibido estiver incorreto, escreva para
-        <a href="mailto:<?= Config::CONTACT_EMAIL ?>"><?= Config::CONTACT_EMAIL ?></a>.
+        Encontrou algum problema com um certificado?
+        <a href="/requerimento">Abra um requerimento</a>.
         <?php if (Config::PRIVACY_NOTICE_URL !== ''): ?>
             Consulte também o
             <a href="<?= htmlspecialchars(Config::PRIVACY_NOTICE_URL, ENT_QUOTES, 'UTF-8') ?>">Aviso de Privacidade</a>.
@@ -141,6 +229,19 @@ final class Template
 </body>
 </html>
         <?php
+    }
+
+    /**
+     * Escape for HTML, as one short name.
+     *
+     * The same helper the insertion pages have, added here for the same
+     * reason: /requerimento prints a form back to the person who filled it in,
+     * every value in it came from a request, and htmlspecialchars with three
+     * arguments repeated forty times is forty chances to leave one out.
+     */
+    public static function e(string $valor): string
+    {
+        return htmlspecialchars($valor, ENT_QUOTES, 'UTF-8');
     }
 
     /**

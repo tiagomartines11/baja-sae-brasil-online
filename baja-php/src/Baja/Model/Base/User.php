@@ -5,12 +5,15 @@ namespace Baja\Model\Base;
 use \DateTime;
 use \Exception;
 use \PDO;
+use Baja\Model\CertificadoRequerimento as ChildCertificadoRequerimento;
+use Baja\Model\CertificadoRequerimentoQuery as ChildCertificadoRequerimentoQuery;
 use Baja\Model\Config as ChildConfig;
 use Baja\Model\ConfigQuery as ChildConfigQuery;
 use Baja\Model\Participante as ChildParticipante;
 use Baja\Model\ParticipanteQuery as ChildParticipanteQuery;
 use Baja\Model\User as ChildUser;
 use Baja\Model\UserQuery as ChildUserQuery;
+use Baja\Model\Map\CertificadoRequerimentoTableMap;
 use Baja\Model\Map\ConfigTableMap;
 use Baja\Model\Map\ParticipanteTableMap;
 use Baja\Model\Map\UserTableMap;
@@ -121,6 +124,13 @@ abstract class User implements ActiveRecordInterface
     protected $collParticipantesRelatedByAnuladoPorPartial;
 
     /**
+     * @var        ObjectCollection|ChildCertificadoRequerimento[] Collection to store aggregation of ChildCertificadoRequerimento objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildCertificadoRequerimento> Collection to store aggregation of ChildCertificadoRequerimento objects.
+     */
+    protected $collCertificadoRequerimentos;
+    protected $collCertificadoRequerimentosPartial;
+
+    /**
      * @var        ObjectCollection|ChildConfig[] Collection to store aggregation of ChildConfig objects.
      * @phpstan-var ObjectCollection&\Traversable<ChildConfig> Collection to store aggregation of ChildConfig objects.
      */
@@ -148,6 +158,13 @@ abstract class User implements ActiveRecordInterface
      * @phpstan-var ObjectCollection&\Traversable<ChildParticipante>
      */
     protected $participantesRelatedByAnuladoPorScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildCertificadoRequerimento[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildCertificadoRequerimento>
+     */
+    protected $certificadoRequerimentosScheduledForDeletion = null;
 
     /**
      * An array of objects scheduled for deletion.
@@ -689,6 +706,8 @@ abstract class User implements ActiveRecordInterface
 
             $this->collParticipantesRelatedByAnuladoPor = null;
 
+            $this->collCertificadoRequerimentos = null;
+
             $this->collConfigs = null;
 
         } // if (deep)
@@ -835,6 +854,24 @@ abstract class User implements ActiveRecordInterface
 
             if ($this->collParticipantesRelatedByAnuladoPor !== null) {
                 foreach ($this->collParticipantesRelatedByAnuladoPor as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->certificadoRequerimentosScheduledForDeletion !== null) {
+                if (!$this->certificadoRequerimentosScheduledForDeletion->isEmpty()) {
+                    foreach ($this->certificadoRequerimentosScheduledForDeletion as $certificadoRequerimento) {
+                        // need to save related object because we set the relation to null
+                        $certificadoRequerimento->save($con);
+                    }
+                    $this->certificadoRequerimentosScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collCertificadoRequerimentos !== null) {
+                foreach ($this->collCertificadoRequerimentos as $referrerFK) {
                     if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
                         $affectedRows += $referrerFK->save($con);
                     }
@@ -1070,6 +1107,21 @@ abstract class User implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collParticipantesRelatedByAnuladoPor->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collCertificadoRequerimentos) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'certificadoRequerimentos';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'certificado_requerimentos';
+                        break;
+                    default:
+                        $key = 'CertificadoRequerimentos';
+                }
+
+                $result[$key] = $this->collCertificadoRequerimentos->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
             if (null !== $this->collConfigs) {
 
@@ -1340,6 +1392,12 @@ abstract class User implements ActiveRecordInterface
                 }
             }
 
+            foreach ($this->getCertificadoRequerimentos() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addCertificadoRequerimento($relObj->copy($deepCopy));
+                }
+            }
+
             foreach ($this->getConfigs() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addConfig($relObj->copy($deepCopy));
@@ -1393,6 +1451,10 @@ abstract class User implements ActiveRecordInterface
         }
         if ('ParticipanteRelatedByAnuladoPor' === $relationName) {
             $this->initParticipantesRelatedByAnuladoPor();
+            return;
+        }
+        if ('CertificadoRequerimento' === $relationName) {
+            $this->initCertificadoRequerimentos();
             return;
         }
         if ('Config' === $relationName) {
@@ -1932,6 +1994,245 @@ abstract class User implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collCertificadoRequerimentos collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addCertificadoRequerimentos()
+     */
+    public function clearCertificadoRequerimentos()
+    {
+        $this->collCertificadoRequerimentos = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collCertificadoRequerimentos collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialCertificadoRequerimentos($v = true): void
+    {
+        $this->collCertificadoRequerimentosPartial = $v;
+    }
+
+    /**
+     * Initializes the collCertificadoRequerimentos collection.
+     *
+     * By default this just sets the collCertificadoRequerimentos collection to an empty array (like clearcollCertificadoRequerimentos());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initCertificadoRequerimentos(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collCertificadoRequerimentos && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = CertificadoRequerimentoTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collCertificadoRequerimentos = new $collectionClassName;
+        $this->collCertificadoRequerimentos->setModel('\Baja\Model\CertificadoRequerimento');
+    }
+
+    /**
+     * Gets an array of ChildCertificadoRequerimento objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildUser is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildCertificadoRequerimento[] List of ChildCertificadoRequerimento objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildCertificadoRequerimento> List of ChildCertificadoRequerimento objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getCertificadoRequerimentos(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collCertificadoRequerimentosPartial && !$this->isNew();
+        if (null === $this->collCertificadoRequerimentos || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collCertificadoRequerimentos) {
+                    $this->initCertificadoRequerimentos();
+                } else {
+                    $collectionClassName = CertificadoRequerimentoTableMap::getTableMap()->getCollectionClassName();
+
+                    $collCertificadoRequerimentos = new $collectionClassName;
+                    $collCertificadoRequerimentos->setModel('\Baja\Model\CertificadoRequerimento');
+
+                    return $collCertificadoRequerimentos;
+                }
+            } else {
+                $collCertificadoRequerimentos = ChildCertificadoRequerimentoQuery::create(null, $criteria)
+                    ->filterByUser($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collCertificadoRequerimentosPartial && count($collCertificadoRequerimentos)) {
+                        $this->initCertificadoRequerimentos(false);
+
+                        foreach ($collCertificadoRequerimentos as $obj) {
+                            if (false == $this->collCertificadoRequerimentos->contains($obj)) {
+                                $this->collCertificadoRequerimentos->append($obj);
+                            }
+                        }
+
+                        $this->collCertificadoRequerimentosPartial = true;
+                    }
+
+                    return $collCertificadoRequerimentos;
+                }
+
+                if ($partial && $this->collCertificadoRequerimentos) {
+                    foreach ($this->collCertificadoRequerimentos as $obj) {
+                        if ($obj->isNew()) {
+                            $collCertificadoRequerimentos[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collCertificadoRequerimentos = $collCertificadoRequerimentos;
+                $this->collCertificadoRequerimentosPartial = false;
+            }
+        }
+
+        return $this->collCertificadoRequerimentos;
+    }
+
+    /**
+     * Sets a collection of ChildCertificadoRequerimento objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $certificadoRequerimentos A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setCertificadoRequerimentos(Collection $certificadoRequerimentos, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildCertificadoRequerimento[] $certificadoRequerimentosToDelete */
+        $certificadoRequerimentosToDelete = $this->getCertificadoRequerimentos(new Criteria(), $con)->diff($certificadoRequerimentos);
+
+
+        $this->certificadoRequerimentosScheduledForDeletion = $certificadoRequerimentosToDelete;
+
+        foreach ($certificadoRequerimentosToDelete as $certificadoRequerimentoRemoved) {
+            $certificadoRequerimentoRemoved->setUser(null);
+        }
+
+        $this->collCertificadoRequerimentos = null;
+        foreach ($certificadoRequerimentos as $certificadoRequerimento) {
+            $this->addCertificadoRequerimento($certificadoRequerimento);
+        }
+
+        $this->collCertificadoRequerimentos = $certificadoRequerimentos;
+        $this->collCertificadoRequerimentosPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related CertificadoRequerimento objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related CertificadoRequerimento objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countCertificadoRequerimentos(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collCertificadoRequerimentosPartial && !$this->isNew();
+        if (null === $this->collCertificadoRequerimentos || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collCertificadoRequerimentos) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getCertificadoRequerimentos());
+            }
+
+            $query = ChildCertificadoRequerimentoQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByUser($this)
+                ->count($con);
+        }
+
+        return count($this->collCertificadoRequerimentos);
+    }
+
+    /**
+     * Method called to associate a ChildCertificadoRequerimento object to this object
+     * through the ChildCertificadoRequerimento foreign key attribute.
+     *
+     * @param ChildCertificadoRequerimento $l ChildCertificadoRequerimento
+     * @return $this The current object (for fluent API support)
+     */
+    public function addCertificadoRequerimento(ChildCertificadoRequerimento $l)
+    {
+        if ($this->collCertificadoRequerimentos === null) {
+            $this->initCertificadoRequerimentos();
+            $this->collCertificadoRequerimentosPartial = true;
+        }
+
+        if (!$this->collCertificadoRequerimentos->contains($l)) {
+            $this->doAddCertificadoRequerimento($l);
+
+            if ($this->certificadoRequerimentosScheduledForDeletion and $this->certificadoRequerimentosScheduledForDeletion->contains($l)) {
+                $this->certificadoRequerimentosScheduledForDeletion->remove($this->certificadoRequerimentosScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildCertificadoRequerimento $certificadoRequerimento The ChildCertificadoRequerimento object to add.
+     */
+    protected function doAddCertificadoRequerimento(ChildCertificadoRequerimento $certificadoRequerimento): void
+    {
+        $this->collCertificadoRequerimentos[]= $certificadoRequerimento;
+        $certificadoRequerimento->setUser($this);
+    }
+
+    /**
+     * @param ChildCertificadoRequerimento $certificadoRequerimento The ChildCertificadoRequerimento object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeCertificadoRequerimento(ChildCertificadoRequerimento $certificadoRequerimento)
+    {
+        if ($this->getCertificadoRequerimentos()->contains($certificadoRequerimento)) {
+            $pos = $this->collCertificadoRequerimentos->search($certificadoRequerimento);
+            $this->collCertificadoRequerimentos->remove($pos);
+            if (null === $this->certificadoRequerimentosScheduledForDeletion) {
+                $this->certificadoRequerimentosScheduledForDeletion = clone $this->collCertificadoRequerimentos;
+                $this->certificadoRequerimentosScheduledForDeletion->clear();
+            }
+            $this->certificadoRequerimentosScheduledForDeletion[]= $certificadoRequerimento;
+            $certificadoRequerimento->setUser(null);
+        }
+
+        return $this;
+    }
+
+    /**
      * Clears out the collConfigs collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
@@ -2215,6 +2516,11 @@ abstract class User implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collCertificadoRequerimentos) {
+                foreach ($this->collCertificadoRequerimentos as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
             if ($this->collConfigs) {
                 foreach ($this->collConfigs as $o) {
                     $o->clearAllReferences($deep);
@@ -2224,6 +2530,7 @@ abstract class User implements ActiveRecordInterface
 
         $this->collParticipantesRelatedByCriadoPor = null;
         $this->collParticipantesRelatedByAnuladoPor = null;
+        $this->collCertificadoRequerimentos = null;
         $this->collConfigs = null;
         return $this;
     }

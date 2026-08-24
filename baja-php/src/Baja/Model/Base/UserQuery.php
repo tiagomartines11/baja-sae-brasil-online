@@ -57,6 +57,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildUserQuery rightJoinWithParticipanteRelatedByAnuladoPor() Adds a RIGHT JOIN clause and with to the query using the ParticipanteRelatedByAnuladoPor relation
  * @method     ChildUserQuery innerJoinWithParticipanteRelatedByAnuladoPor() Adds a INNER JOIN clause and with to the query using the ParticipanteRelatedByAnuladoPor relation
  *
+ * @method     ChildUserQuery leftJoinCertificadoRequerimento($relationAlias = null) Adds a LEFT JOIN clause to the query using the CertificadoRequerimento relation
+ * @method     ChildUserQuery rightJoinCertificadoRequerimento($relationAlias = null) Adds a RIGHT JOIN clause to the query using the CertificadoRequerimento relation
+ * @method     ChildUserQuery innerJoinCertificadoRequerimento($relationAlias = null) Adds a INNER JOIN clause to the query using the CertificadoRequerimento relation
+ *
+ * @method     ChildUserQuery joinWithCertificadoRequerimento($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the CertificadoRequerimento relation
+ *
+ * @method     ChildUserQuery leftJoinWithCertificadoRequerimento() Adds a LEFT JOIN clause and with to the query using the CertificadoRequerimento relation
+ * @method     ChildUserQuery rightJoinWithCertificadoRequerimento() Adds a RIGHT JOIN clause and with to the query using the CertificadoRequerimento relation
+ * @method     ChildUserQuery innerJoinWithCertificadoRequerimento() Adds a INNER JOIN clause and with to the query using the CertificadoRequerimento relation
+ *
  * @method     ChildUserQuery leftJoinConfig($relationAlias = null) Adds a LEFT JOIN clause to the query using the Config relation
  * @method     ChildUserQuery rightJoinConfig($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Config relation
  * @method     ChildUserQuery innerJoinConfig($relationAlias = null) Adds a INNER JOIN clause to the query using the Config relation
@@ -67,7 +77,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildUserQuery rightJoinWithConfig() Adds a RIGHT JOIN clause and with to the query using the Config relation
  * @method     ChildUserQuery innerJoinWithConfig() Adds a INNER JOIN clause and with to the query using the Config relation
  *
- * @method     \Baja\Model\ParticipanteQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ConfigQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \Baja\Model\ParticipanteQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\CertificadoRequerimentoQuery|\Baja\Model\ConfigQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildUser|null findOne(?ConnectionInterface $con = null) Return the first ChildUser matching the query
  * @method     ChildUser findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildUser matching the query, or a new ChildUser object populated from the query conditions when no match is found
@@ -833,6 +843,179 @@ abstract class UserQuery extends ModelCriteria
     {
         /** @var $q \Baja\Model\ParticipanteQuery */
         $q = $this->useInQuery('ParticipanteRelatedByAnuladoPor', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\CertificadoRequerimento object
+     *
+     * @param \Baja\Model\CertificadoRequerimento|ObjectCollection $certificadoRequerimento the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByCertificadoRequerimento($certificadoRequerimento, ?string $comparison = null)
+    {
+        if ($certificadoRequerimento instanceof \Baja\Model\CertificadoRequerimento) {
+            $this
+                ->addUsingAlias(UserTableMap::COL_USER_ID, $certificadoRequerimento->getResolvidoPor(), $comparison);
+
+            return $this;
+        } elseif ($certificadoRequerimento instanceof ObjectCollection) {
+            $this
+                ->useCertificadoRequerimentoQuery()
+                ->filterByPrimaryKeys($certificadoRequerimento->getPrimaryKeys())
+                ->endUse();
+
+            return $this;
+        } else {
+            throw new PropelException('filterByCertificadoRequerimento() only accepts arguments of type \Baja\Model\CertificadoRequerimento or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the CertificadoRequerimento relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinCertificadoRequerimento(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('CertificadoRequerimento');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'CertificadoRequerimento');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the CertificadoRequerimento relation CertificadoRequerimento object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery A secondary query class using the current class as primary query
+     */
+    public function useCertificadoRequerimentoQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinCertificadoRequerimento($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'CertificadoRequerimento', '\Baja\Model\CertificadoRequerimentoQuery');
+    }
+
+    /**
+     * Use the CertificadoRequerimento relation CertificadoRequerimento object
+     *
+     * @param callable(\Baja\Model\CertificadoRequerimentoQuery):\Baja\Model\CertificadoRequerimentoQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withCertificadoRequerimentoQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::LEFT_JOIN
+    ) {
+        $relatedQuery = $this->useCertificadoRequerimentoQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to CertificadoRequerimento table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the EXISTS statement
+     */
+    public function useCertificadoRequerimentoExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useExistsQuery('CertificadoRequerimento', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to CertificadoRequerimento table for a NOT EXISTS query.
+     *
+     * @see useCertificadoRequerimentoExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useCertificadoRequerimentoNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useExistsQuery('CertificadoRequerimento', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to CertificadoRequerimento table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the IN statement
+     */
+    public function useInCertificadoRequerimentoQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useInQuery('CertificadoRequerimento', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to CertificadoRequerimento table for a NOT IN query.
+     *
+     * @see useCertificadoRequerimentoInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInCertificadoRequerimentoQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useInQuery('CertificadoRequerimento', $modelAlias, $queryClass, 'NOT IN');
         return $q;
     }
 

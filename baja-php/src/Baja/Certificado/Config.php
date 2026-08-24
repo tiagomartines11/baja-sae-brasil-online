@@ -7,14 +7,20 @@ namespace Baja\Certificado;
  */
 final class Config
 {
-    /**
-     * Where a participant is told to write when their details are wrong.
+    /*
+     * There is deliberately no CONTACT_EMAIL here any more.
      *
-     * Provisional: this may become a dedicated LGPD data-subject channel
-     * instead. It is a constant, and every template prints it from here, so
-     * that decision is a one-line edit rather than a grep.
+     * These pages used to print comite@bajasaebrasil.net as the way to report
+     * a wrong certificate. /requerimento replaced it, and the address was removed
+     * rather than kept beside it: two channels means two queues, and the
+     * unstructured one — no protocol number, no status, no record of who
+     * answered, no retention policy, and a CPF sitting in a mailbox forever —
+     * is the one people pick, because it asks nothing of them.
+     *
+     * What replaces it as the reply-able end of the conversation is the
+     * confirmation /requerimento sends, so SMTP_FROM_EMAIL has to be a mailbox
+     * somebody reads. See Baja\Certificado\Requerimento\Aviso.
      */
-    public const CONTACT_EMAIL = 'comite@bajasaebrasil.net';
 
     /**
      * Where the Aviso de Privacidade lives.

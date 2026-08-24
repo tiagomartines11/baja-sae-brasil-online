@@ -404,6 +404,8 @@ final class Template
         <a href="certificados_lote.php">Inserção em lote</a>
         &emsp;&middot;&emsp;
         <a href="certificados_nome.php">Corrigir um nome</a>
+        &emsp;&middot;&emsp;
+        <a href="certificados_requerimentos.php">Reportes</a>
     </nav>
         <?php
     }

@@ -312,12 +312,71 @@ ok "certificate page is much cheaper than the PDF it links to" \
    "$([[ "${page_ms:-0}" -lt "${pdf_ms:-1}" ]] && echo 1 || echo 0)" \
    "page ${page_ms}, pdf ${pdf_ms} (microseconds)"
 
+# --- /requerimento exists, and gives nothing away --------------------------------
+#
+# The form where somebody says a certificate is wrong. Reached by two routes
+# from /buscar — a result's "corrigir" link and the empty-result page — so the
+# checks here are that nginx routes it at all, that it carries the same
+# private headers every other page on this vhost does, and that the query
+# string it accepts carries nothing about a person.
+
+requerimento_code=$(status_of "$BASE/requerimento")
+ok "GET /requerimento is served" "$([[ "$requerimento_code" == 200 ]] && echo 1 || echo 0)" "HTTP $requerimento_code"
+
+requerimento_headers=$(header_of "$BASE/requerimento")
+ok "/requerimento sends Cache-Control: no-store" \
+   "$(grep -qi '^Cache-Control:.*no-store' <<<"$requerimento_headers" && echo 1 || echo 0)"
+ok "/requerimento sends X-Robots-Tag: noindex" \
+   "$(grep -qi '^X-Robots-Tag: noindex' <<<"$requerimento_headers" && echo 1 || echo 0)"
+ok "/requerimento sends Referrer-Policy: no-referrer" \
+   "$(grep -qi '^Referrer-Policy: no-referrer' <<<"$requerimento_headers" && echo 1 || echo 0)"
+
+requerimento_body=$(body_of "$BASE/requerimento")
+ok "/requerimento carries no Google Analytics tag" \
+   "$(grep -qi 'googletagmanager\|gtag(\|google-analytics' <<<"$requerimento_body" && echo 0 || echo 1)"
+ok "/requerimento does not use a number input for the document" \
+   "$(grep -qi 'type="number"' <<<"$requerimento_body" && echo 0 || echo 1)"
+ok "/requerimento offers all three cases" \
+   "$(grep -q 'value="incorreto"' <<<"$requerimento_body" \
+      && grep -q 'value="ausente"' <<<"$requerimento_body" \
+      && grep -q 'value="indevido"' <<<"$requerimento_body" && echo 1 || echo 0)"
+ok "/requerimento says a valid certificate stays verifiable" \
+   "$(grep -qi 'continua verific' <<<"$requerimento_body" && echo 1 || echo 0)"
+
+# A malformed token in the query string must not become an error page. It is
+# simply not a certificate, and the page says nothing about it until the form
+# is submitted.
+bad_token_code=$(status_of "$BASE/requerimento?caso=incorreto&t=nao-e-um-token")
+ok "/requerimento tolerates a malformed token in the URL" \
+   "$([[ "$bad_token_code" == 200 ]] && echo 1 || echo 0)" "HTTP $bad_token_code"
+
+# The document number must never reach a URL, which is the rule the whole
+# certificate work package exists to enforce. The form posts, so a GET
+# carrying a document parameter must not be answered as though it were a
+# submission, and must not print the value back.
+doc_probe=$(random_document)
+echo_body=$(body_of "$BASE/requerimento?documento=$doc_probe")
+ok "/requerimento does not echo a document handed to it in the query string" \
+   "$(grep -q "$doc_probe" <<<"$echo_body" && echo 0 || echo 1)"
+
+# --- /buscar links to /requerimento ----------------------------------------------
+#
+# The entry point for a certificate that is not there. If it disappears the
+# form still works and nobody can find it, which is the failure that looks
+# like nothing at all.
+ok "/buscar offers the missing-certificate route" \
+   "$(grep -q '/requerimento?caso=ausente' <<<"$(body_of "$BASE/buscar")" && echo 1 || echo 0)"
+
 # --- POST /buscar is rate limited, reads are not -----------------------------
 #
 # nginx cannot select a location by method, and the internal rewrite to
 # buscar.php restarts location matching, so the limit is keyed on
 # "$request_method:$uri" after the rewrite. If that key ever stops matching,
 # every POST goes through unlimited and nothing else looks wrong — hence this.
+#
+# Kept last, with the /requerimento limit check beside it, because both forms
+# share one limit_req zone: whichever runs first spends the other's budget,
+# and anything after them measures the wrong thing.
 
 limited=0
 for _ in $(seq 1 12); do
@@ -334,6 +393,24 @@ for _ in $(seq 1 12); do
 done
 ok "GET /buscar is not rate limited" "$([[ "$read_limited" -eq 0 ]] && echo 1 || echo 0)" \
    "$read_limited of 12 rejected"
+
+# The same key has to match /requerimento, or the form that sends two emails per
+# submission is the one endpoint on this vhost with no limit in front of it.
+requerimento_limited=0
+for _ in $(seq 1 12); do
+    code=$(curl -s "${CURL_ARGS[@]}" -o /dev/null -w '%{http_code}' -X POST \
+        --data-urlencode 'caso=ausente' --data-urlencode 'nome=Teste Limite' "$BASE/requerimento")
+    [[ "$code" == 429 ]] && requerimento_limited=$((requerimento_limited + 1))
+done
+ok "POST /requerimento is rate limited" "$([[ "$requerimento_limited" -gt 0 ]] && echo 1 || echo 0)" \
+   "$requerimento_limited of 12 rejected"
+
+requerimento_read_limited=0
+for _ in $(seq 1 12); do
+    [[ $(status_of "$BASE/requerimento") == 429 ]] && requerimento_read_limited=$((requerimento_read_limited + 1))
+done
+ok "GET /requerimento is not rate limited" "$([[ "$requerimento_read_limited" -eq 0 ]] && echo 1 || echo 0)" \
+   "$requerimento_read_limited of 12 rejected"
 
 printf '\n%d passed, %d failed, %d skipped\n' "$PASS" "$FAIL" "$SKIP"
 [[ "$FAIL" -eq 0 ]] || exit 1

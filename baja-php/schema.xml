@@ -237,6 +237,129 @@
       <parameter name="Engine" value="InnoDB"/>
     </vendor>
   </table>
+  <!-- A participant's report that something about their certificates is wrong.
+
+       Submitted from /requerimento, which is public and unauthenticated. It is a
+       queue of claims, not a source of truth: nothing here changes a
+       certificate. A person with the `certificados` permission reads the row,
+       decides, and acts through the insertion pages, which keep their own
+       audit trail in `participantes`.
+
+       Stored rather than only emailed, for three reasons. Email has no
+       retention: a CPF sent to a distribution list sits in mailboxes forever
+       and is forwarded by hand, which is exactly the processing this system
+       spent a work package removing from URLs and access logs. Email has no
+       state, so two people answer the same report or nobody does. And email
+       has no record of who decided what, which is the first question anybody
+       asks about a certificate that was changed or withdrawn. LGPD Art. 37,
+       and the same reasoning that put `criado_por` on `participantes`. -->
+  <table name="certificado_requerimento" idMethod="native" phpName="CertificadoRequerimento">
+    <!-- Same generator and same collation reasoning as `participantes.token`:
+         16 random bytes, base64url, and ascii_bin because base64url is
+         case-sensitive. It is the primary key and it is also what the
+         notification email links to, so it must not be guessable — the staff
+         page is permission-gated regardless, but a sequential id in an email
+         subject line is an invitation. -->
+    <column name="requerimento_id" phpName="RequerimentoId" type="CHAR" size="22" primaryKey="true" required="true">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
+    <!-- Which of the three things the person is reporting. See
+         Baja\Certificado\Requerimento\Caso, which owns the labels and the rule
+         about which cases need a certificate to point at.
+
+         Propel stores an ENUM as a TINYINT holding the index into valueSet,
+         not the label — every other enum in this database is the same, and
+         `evento`.`tipo` is a TINYINT on the live server. So the ORDER here is
+         permanent: appending a value is free, inserting one in the middle
+         silently relabels every existing row. Same for `status` below. -->
+    <column name="caso" phpName="Caso" type="ENUM" valueSet="incorreto,ausente,indevido" required="true"/>
+    <!-- The certificate this is about, for the two cases that start from a
+         /buscar result. Null for `ausente`, which is a report that no such
+         row exists.
+
+         No foreign key, deliberately. A FK would have to cascade or restrict,
+         and both are wrong: deleting a bad lote must not silently destroy the
+         reports that prompted it, and a report must not block the deletion.
+         The staff page resolves the token when it can and says so when it
+         cannot, which is the honest rendering of a row that outlived its
+         subject. -->
+    <column name="token" phpName="Token" type="CHAR" size="22">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
+    <!-- The event, when the person picked one from the list. Null when they
+         picked "not listed", which is not an edge case: this system does not
+         hold every event SAE BRASIL has ever run, and the people most likely
+         to be missing a certificate are exactly the ones whose event predates
+         it. No foreign key, for the reason above. -->
+    <column name="evento" phpName="EventoId" type="CHAR" size="4"/>
+    <!-- What they typed when the event was not on the list. Free text because
+         there is nothing to validate it against. -->
+    <column name="evento_texto" phpName="EventoTexto" type="VARCHAR" size="160"/>
+    <!-- As submitted, in one column. Unlike `participantes`, which splits CPF
+         from passport because it has to store a canonical form for lookup,
+         this is a claim under review by a person: normalizing it here would
+         throw away the spelling that may itself be the thing being reported. -->
+    <column name="documento" phpName="Documento" type="VARCHAR" size="32" required="true"/>
+    <!-- The name the person says is correct, which for a `incorreto` report
+         is the whole point and is not the name on file. -->
+    <column name="nome" phpName="Nome" type="VARCHAR" size="300" required="true"/>
+    <column name="email" phpName="Email" type="VARCHAR" size="254" required="true"/>
+    <column name="telefone" phpName="Telefone" type="VARCHAR" size="40"/>
+    <!-- Their description of the problem. The form asks them not to put
+         anything sensitive here and says why; there is no way to enforce
+         that, so the field is length-capped and the staff page carries the
+         same warning to whoever reads it. -->
+    <column name="descricao" phpName="Descricao" type="VARCHAR" size="2000" required="true"/>
+    <!-- No IP column, deliberately. An address is personal data under LGPD
+         Art. 5 I, nginx already logs it with a rotation policy, and nothing
+         on the staff page would be decided differently for having it. Abuse
+         is handled before the row exists — Turnstile, and the per-address
+         limit in Redis. -->
+    <column name="criado_em" phpName="CriadoEm" type="TIMESTAMP" sqlType="DATETIME" required="true"/>
+    <!-- Whether the notification email actually went out. A report that was
+         saved but never announced is the failure mode worth being able to
+         find: the person has been told it was received, and it was. -->
+    <column name="avisado_em" phpName="AvisadoEm" type="TIMESTAMP" sqlType="DATETIME"/>
+    <column name="status" phpName="Status" type="ENUM" valueSet="aberto,em_analise,resolvido,recusado" required="true" default="aberto"/>
+    <column name="resolvido_por" phpName="ResolvidoPor" type="INTEGER"/>
+    <column name="resolvido_em" phpName="ResolvidoEm" type="TIMESTAMP" sqlType="DATETIME"/>
+    <!-- What was decided and why. Required by the interface when a report
+         leaves `aberto`, nullable in the schema because an open one has no
+         answer yet. -->
+    <column name="resolucao" phpName="Resolucao" type="VARCHAR" size="1000"/>
+    <!-- SET NULL for the same reason as participantes.criado_por:
+         admin_usuario.php deletes the user row when somebody is left with no
+         meaningful permissions, and losing the attribution is better than
+         losing the report. -->
+    <foreign-key foreignTable="user" name="certificado_requerimento_resolvido_por" onDelete="SETNULL" onUpdate="CASCADE">
+      <reference local="resolvido_por" foreign="user_id"/>
+    </foreign-key>
+    <!-- The queue view is "open reports, oldest first", which is the only
+         query this table serves often enough to index for. -->
+    <index name="certificado_requerimento_status_idx">
+      <index-column name="status"/>
+      <index-column name="criado_em"/>
+    </index>
+    <!-- "Is there already a report about this certificate" — asked on every
+         submission to avoid mailing staff four times about one row. -->
+    <index name="certificado_requerimento_token_idx">
+      <index-column name="token"/>
+    </index>
+    <index name="certificado_requerimento_resolvido_por_idx">
+      <index-column name="resolvido_por"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+      <parameter name="Charset" value="utf8mb4"/>
+      <parameter name="Collate" value="utf8mb4_unicode_ci"/>
+    </vendor>
+  </table>
   <table name="prova" idMethod="native" phpName="Prova">
     <column name="evento_id" phpName="EventoId" type="CHAR" size="4" primaryKey="true" required="true"/>
     <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" primaryKey="true" required="true"/>
