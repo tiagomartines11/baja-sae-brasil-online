@@ -72,6 +72,9 @@ switch ($funcao) {
     case "assessor":
         $texto = "Realizou trabalho voluntário na organização da " . $cabecalho . " na função de <b>ASSESSOR TÉCNICO</b>.";
         break;
+    case "fiscal":
+        $texto = "Realizou trabalho voluntário na organização da " . $cabecalho . " na função de <b>FISCAL</b>.";
+        break;
     default:
         $texto = "";
 }
