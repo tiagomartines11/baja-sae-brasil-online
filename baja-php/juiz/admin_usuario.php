@@ -4,6 +4,7 @@ namespace Baja\Juiz;
 use Baja\Model\EventoQuery;
 use Baja\Model\FilaQuery;
 use Baja\Model\ProvaQuery;
+use Baja\Model\TimerQuery;
 use Baja\Model\UserQuery;
 use Baja\Session;
 
@@ -48,6 +49,9 @@ foreach (ProvaQuery::create()->find() as $p) $provasByEvent[$p->getEventoId()][]
 $filasByEvent = [];
 foreach (FilaQuery::create()->find() as $f) $filasByEvent[$f->getEventoId()][] = $f;
 
+$timersByEvent = [];
+foreach (TimerQuery::create()->orderByTimerId()->find() as $t) $timersByEvent[$t->getEventoId()][] = $t;
+
 // Compact data model handed to the client so it can build event sections and the
 // fila helper without a round-trip.
 $eventsData = [];
@@ -57,7 +61,9 @@ foreach ($eventos as $ev) {
     foreach ($provasByEvent[$evId] ?? [] as $p) $provas[] = ['code' => $p->getFullCode(), 'label' => strtoupper($p->getProvaId())];
     $filas = [];
     foreach ($filasByEvent[$evId] ?? [] as $f) $filas[] = ['id' => (string)$f->getFilaId(), 'nome' => $f->getNome()];
-    $eventsData[$evId] = ['nome' => $ev->getNome(), 'provas' => $provas, 'filas' => $filas];
+    $timers = [['code' => $evId.'_TIMER_ADMIN', 'label' => 'TIMER_ADMIN']];
+    foreach ($timersByEvent[$evId] ?? [] as $t) $timers[] = ['code' => $evId.'_TIMER_'.$t->getTimerId(), 'label' => 'TIMER '.$t->getTimerId().' ('.$t->getNome().')'];
+    $eventsData[$evId] = ['nome' => $ev->getNome(), 'provas' => $provas, 'filas' => $filas, 'timers' => $timers];
 }
 
 // Split the user's permissions: global sentinels/flags, per-event buckets, and
@@ -141,13 +147,14 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
                     <div id="eventSections">
 <?php foreach ($eventsData as $evId => $d) {
         if (!isset($permsByEvent[$evId])) continue;
-        $provaCodes = array_column($d['provas'], 'code');
+        $provaCodes = array_merge(array_column($d['provas'], 'code'), array_column($d['timers'], 'code'));
         $premiacao = $evId.'_PREMIACAO';
 ?>
                         <div class="event-section" data-ev="<?= $h($evId) ?>" style="padding: 8px 8px 12px; border-top: 1px solid #ddd;">
                             <strong><?= $h($evId) ?></strong> &mdash; <?= $h($d['nome']) ?><br />
 <?php foreach ($d['provas'] as $pr) echo $cb($pr['code'], $pr['label'], in_array($pr['code'], $perms, true)); ?>
                             <?= $cb($premiacao, 'PREMIACAO', in_array($premiacao, $perms, true)) ?>
+<?php foreach ($d['timers'] as $tm) echo $cb($tm['code'], $tm['label'], in_array($tm['code'], $perms, true)); ?>
                             <div class="outras">
 <?php foreach ($permsByEvent[$evId] as $p) {
           if (in_array($p, $provaCodes, true) || $p === $premiacao) continue;
@@ -202,6 +209,7 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
         $s.append($('<strong></strong>').text(evId)).append(document.createTextNode(' — ' + d.nome)).append('<br />');
         d.provas.forEach(function (p) { $s.append(cb(p.code, p.label, false)); });
         $s.append(cb(evId + '_PREMIACAO', 'PREMIACAO', false));
+        d.timers.forEach(function (t) { $s.append(cb(t.code, t.label, false)); });
         $s.append('<div class="outras"></div>');
         $('#eventSections').append($s);
         return $s;

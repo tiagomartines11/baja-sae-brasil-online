@@ -108,6 +108,15 @@ COPY baja-infra/phpbb-formula/config.php.template /var/www/html/config.php.templ
 # entrypoint then leaves phpBB's stock logo alone.
 COPY baja-infra/phpbb-formula/branding/ /usr/local/share/baja/branding/
 
+# Attachment upload limits. The base image's stock upload_max_filesize
+# (2M) is below this board's phpBB attachment limit, so PHP rejected
+# uploads phpBB would have accepted. Dropped into conf.d/ rather than
+# edited into php.ini so it layers over the base image's defaults and
+# survives a base-image bump. Paired with client_max_body_size in the
+# nginx server block for phpbb-formula — the file's header comment carries
+# the full layer ordering and the invariant between them.
+COPY baja-infra/phpbb-formula/php-uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
+
 # Single entrypoint: handles dir perms, branding install, and config.php
 # seeding, then exec's php-fpm. Formula has no custom extension, so the
 # entrypoint is simpler than phpbb-baja's.

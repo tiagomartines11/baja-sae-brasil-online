@@ -383,6 +383,37 @@ INSERT INTO `senha` VALUES ('23SE',1,20,11,4,1697800047834,1697800047834,NULL),(
 UNLOCK TABLES;
 
 --
+-- Table structure for table `timer`
+--
+
+DROP TABLE IF EXISTS `timer`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `timer` (
+  `evento_id` char(4) NOT NULL,
+  `timer_id` int NOT NULL,
+  `config` json DEFAULT NULL,
+  `config_backup` json DEFAULT NULL,
+  `state` json DEFAULT NULL,
+  `log` json DEFAULT NULL,
+  `access_key` char(6) NOT NULL,
+  PRIMARY KEY (`evento_id`,`timer_id`),
+  UNIQUE KEY `timer_access_key_UNIQUE` (`access_key`),
+  CONSTRAINT `timer_evento_id` FOREIGN KEY (`evento_id`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `timer`
+--
+
+LOCK TABLES `timer` WRITE;
+/*!40000 ALTER TABLE `timer` DISABLE KEYS */;
+INSERT INTO `timer` VALUES ('26BR',1,'{\"nome\": \"Apresentações (2 carros)\", \"loop\": true, \"etapas\": [{\"nome\": \"Apresentação\", \"tempo\": 240, \"som_inicio\": \"Apresentacao.wav\", \"som_fim\": null}, {\"nome\": \"1 Minuto\", \"tempo\": 60, \"som_inicio\": \"01 minuto.wav\", \"som_fim\": null}, {\"nome\": \"Perguntas\", \"tempo\": 300, \"som_inicio\": \"Perguntas.wav\", \"som_fim\": null}, {\"nome\": \"Feedback\", \"tempo\": 180, \"som_inicio\": \"Feedback.wav\", \"som_fim\": null}, {\"nome\": \"Troca carros\", \"tempo\": 180, \"som_inicio\": \"Troca de Carros.wav\", \"som_fim\": null}, {\"nome\": \"Apresentação\", \"tempo\": 240, \"som_inicio\": \"Apresentacao.wav\", \"som_fim\": null}, {\"nome\": \"1 Minuto\", \"tempo\": 60, \"som_inicio\": \"01 minuto.wav\", \"som_fim\": null}, {\"nome\": \"Perguntas\", \"tempo\": 300, \"som_inicio\": \"Perguntas.wav\", \"som_fim\": null}, {\"nome\": \"Feedback\", \"tempo\": 180, \"som_inicio\": \"Feedback.wav\", \"som_fim\": null}, {\"nome\": \"Troca equipe\", \"tempo\": 300, \"som_inicio\": \"Troca de Equipe.wav\", \"som_fim\": null}]}',NULL,NULL,NULL,'DEVTM2'),('26BR',2,'{\"nome\": \"Apresentações (1 carro)\", \"loop\": true, \"etapas\": [{\"nome\": \"Apresentação\", \"tempo\": 240, \"som_inicio\": \"Apresentacao.wav\", \"som_fim\": null}, {\"nome\": \"1 Minuto\", \"tempo\": 60, \"som_inicio\": \"01 minuto.wav\", \"som_fim\": null}, {\"nome\": \"Feedback\", \"tempo\": 300, \"som_inicio\": \"Feedback.wav\", \"som_fim\": null}, {\"nome\": \"Troca carro\", \"tempo\": 300, \"som_inicio\": \"Troca de Carros.wav\", \"som_fim\": null}]}',NULL,NULL,NULL,'DEVTM3');
+/*!40000 ALTER TABLE `timer` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `tournament`
 --
 

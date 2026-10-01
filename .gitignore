@@ -156,3 +156,6 @@ dist/
 # --- WP9: migration script secrets / dump files ---
 baja-infra/scripts/migration.env
 baja-infra/scripts/*.sql
+
+# Timer sounds generated on the server (text to speech)
+baja-php/juiz/sons/gerados/
