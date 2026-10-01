@@ -121,6 +121,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery rightJoinWithPremiacao() Adds a RIGHT JOIN clause and with to the query using the Premiacao relation
  * @method     ChildEventoQuery innerJoinWithPremiacao() Adds a INNER JOIN clause and with to the query using the Premiacao relation
  *
+ * @method     ChildEventoQuery leftJoinTimer($relationAlias = null) Adds a LEFT JOIN clause to the query using the Timer relation
+ * @method     ChildEventoQuery rightJoinTimer($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Timer relation
+ * @method     ChildEventoQuery innerJoinTimer($relationAlias = null) Adds a INNER JOIN clause to the query using the Timer relation
+ *
+ * @method     ChildEventoQuery joinWithTimer($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Timer relation
+ *
+ * @method     ChildEventoQuery leftJoinWithTimer() Adds a LEFT JOIN clause and with to the query using the Timer relation
+ * @method     ChildEventoQuery rightJoinWithTimer() Adds a RIGHT JOIN clause and with to the query using the Timer relation
+ * @method     ChildEventoQuery innerJoinWithTimer() Adds a INNER JOIN clause and with to the query using the Timer relation
+ *
  * @method     ChildEventoQuery leftJoinSenha($relationAlias = null) Adds a LEFT JOIN clause to the query using the Senha relation
  * @method     ChildEventoQuery rightJoinSenha($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Senha relation
  * @method     ChildEventoQuery innerJoinSenha($relationAlias = null) Adds a INNER JOIN clause to the query using the Senha relation
@@ -131,7 +141,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery rightJoinWithSenha() Adds a RIGHT JOIN clause and with to the query using the Senha relation
  * @method     ChildEventoQuery innerJoinWithSenha() Adds a INNER JOIN clause and with to the query using the Senha relation
  *
- * @method     \Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery|\Baja\Model\FilaQuery|\Baja\Model\PremiacaoQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery|\Baja\Model\FilaQuery|\Baja\Model\PremiacaoQuery|\Baja\Model\TimerQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildEvento|null findOne(?ConnectionInterface $con = null) Return the first ChildEvento matching the query
  * @method     ChildEvento findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildEvento matching the query, or a new ChildEvento object populated from the query conditions when no match is found
@@ -1926,6 +1936,179 @@ abstract class EventoQuery extends ModelCriteria
     {
         /** @var $q \Baja\Model\PremiacaoQuery */
         $q = $this->useInQuery('Premiacao', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Timer object
+     *
+     * @param \Baja\Model\Timer|ObjectCollection $timer the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByTimer($timer, ?string $comparison = null)
+    {
+        if ($timer instanceof \Baja\Model\Timer) {
+            $this
+                ->addUsingAlias(EventoTableMap::COL_EVENTO_ID, $timer->getEventoId(), $comparison);
+
+            return $this;
+        } elseif ($timer instanceof ObjectCollection) {
+            $this
+                ->useTimerQuery()
+                ->filterByPrimaryKeys($timer->getPrimaryKeys())
+                ->endUse();
+
+            return $this;
+        } else {
+            throw new PropelException('filterByTimer() only accepts arguments of type \Baja\Model\Timer or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Timer relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinTimer(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Timer');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Timer');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Timer relation Timer object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\TimerQuery A secondary query class using the current class as primary query
+     */
+    public function useTimerQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinTimer($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Timer', '\Baja\Model\TimerQuery');
+    }
+
+    /**
+     * Use the Timer relation Timer object
+     *
+     * @param callable(\Baja\Model\TimerQuery):\Baja\Model\TimerQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withTimerQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useTimerQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Timer table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\TimerQuery The inner query object of the EXISTS statement
+     */
+    public function useTimerExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\TimerQuery */
+        $q = $this->useExistsQuery('Timer', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Timer table for a NOT EXISTS query.
+     *
+     * @see useTimerExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\TimerQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useTimerNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\TimerQuery */
+        $q = $this->useExistsQuery('Timer', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Timer table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\TimerQuery The inner query object of the IN statement
+     */
+    public function useInTimerQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\TimerQuery */
+        $q = $this->useInQuery('Timer', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Timer table for a NOT IN query.
+     *
+     * @see useTimerInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\TimerQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInTimerQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\TimerQuery */
+        $q = $this->useInQuery('Timer', $modelAlias, $queryClass, 'NOT IN');
         return $q;
     }
 

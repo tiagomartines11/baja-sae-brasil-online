@@ -113,6 +113,8 @@ services:
       RECAPTCHA_KEY: ${RECAPTCHA_KEY}
       SYSADMIN_1_EMAIL: ${SYSADMIN_1_EMAIL}
       SYSADMIN_2_EMAIL: ${SYSADMIN_2_EMAIL}
+      # Text-to-speech for timer sounds. Unset hides the feature.
+      TTS_URL: http://tts:5000
     volumes:
       - ${BAJA_APP_PATH}:/var/www/html
     depends_on:
@@ -120,6 +122,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - baja
+
+  # Only baja-app talks to this; no port is published.
+  tts:
+    build:
+      context: ./tts
+    image: baja-tts:latest
+    container_name: baja-tts
+    restart: unless-stopped
     networks:
       - baja
 

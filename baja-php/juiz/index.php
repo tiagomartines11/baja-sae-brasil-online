@@ -44,6 +44,15 @@ if (Session::hasPermission('PREMIACAO')) {
     echo '<tr style="height: 40px"><td><a href="premiacoes.php">Premia&ccedil;&otilde;es</a></td></tr>';
 }
 
+$timerPrefix = EventoQuery::getCurrentEvent()->getEventoId() . '_TIMER_';
+$temTimer = Session::hasPermission('TIMER_ADMIN');
+foreach (Session::getCurrentUser()->getPermissions() as $perm) {
+    if (strpos($perm, $timerPrefix) === 0) $temTimer = true;
+}
+if ($temTimer) {
+    echo '<tr style="height: 40px"><td><a href="timer.php">Timers</a></td></tr>';
+}
+
 echo '
 <tfoot>
 <tr>

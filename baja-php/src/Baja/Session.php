@@ -65,6 +65,21 @@ class Session
     }
 
     /**
+     * Like getCurrentUser(), but an anonymous visitor gets null instead of a
+     * redirect to login. For pages that also work without a session.
+     * @return User|null
+     */
+    public static function getCurrentUserOrNull()
+    {
+        global $user;
+        if (!Session::$_currentUser) {
+            $username = (string) ($user->data["username"] ?? '');
+            if ($username !== '') Session::$_currentUser = UserQuery::create()->findOneByUsername($username);
+        }
+        return Session::$_currentUser;
+    }
+
+    /**
      * This function should be called on every page to prevent access
      * to specific modules/actions based on the users access level.
      * @param string $permissionCode
