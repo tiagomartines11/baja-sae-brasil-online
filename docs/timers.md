@@ -78,5 +78,9 @@ CREATE TABLE `timer` (
   PRIMARY KEY (`evento_id`,`timer_id`),
   UNIQUE KEY `timer_access_key_UNIQUE` (`access_key`),
   CONSTRAINT `timer_evento_id` FOREIGN KEY (`evento_id`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 ```
+
+The charset has to match the `evento` table's, or MySQL rejects the foreign
+key (error 3780). The databases that came from the production dump are
+`latin1`; check with `SHOW CREATE TABLE evento` if in doubt.
