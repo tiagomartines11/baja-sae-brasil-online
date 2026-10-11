@@ -66,9 +66,15 @@ async function login(username) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ username, password: '123456', redirect: `${JUIZ}index.php` }),
     });
-    const cookies = response.headers.getSetCookie().map((line) => line.split(';')[0]);
-    if (cookies.length === 0) throw new Error(`Could not log in as ${username}`);
-    return cookies.join('; ');
+    // The forum may set the same cookie twice in one answer (first to clear
+    // it, then with its value). A browser keeps the last; so does this.
+    const cookieByName = new Map();
+    for (const line of response.headers.getSetCookie()) {
+        const pair = line.split(';')[0];
+        cookieByName.set(pair.slice(0, pair.indexOf('=')), pair);
+    }
+    if (cookieByName.size === 0) throw new Error(`Could not log in as ${username}`);
+    return [...cookieByName.values()].join('; ');
 }
 
 /** What a count page does when it opens: asks for a device token for its source. */
@@ -102,8 +108,11 @@ async function everyInterval(untilMs, intervalMs, action) {
 console.log(`Load test: ${MINUTES} min against ${JUIZ} (prova ${PROVA})`);
 const counters = [['equipe1', 1], ['equipe2', 2], ['capitao1', 3]];
 const reliefs = [['capitao2', 1], ['equipe2', 2], ['capitao1', 3]];
-const primaryDevices = await Promise.all(counters.map(([user, source]) => openDevice(user, source)));
-const reliefDevices = await Promise.all(reliefs.map(([user, source]) => openDevice(user, source)));
+// One at a time: the forum does not like several logins in the same instant.
+const primaryDevices = [];
+for (const [user, source] of counters) primaryDevices.push(await openDevice(user, source));
+const reliefDevices = [];
+for (const [user, source] of reliefs) reliefDevices.push(await openDevice(user, source));
 const reviewerCookie = await login('juiz1');
 
 const firstAnswer = JSON.parse(await sync(primaryDevices[0], []));

@@ -92,12 +92,16 @@ final class RaceReset
             }
 
             // The devices' "synced through" marks describe data that is now
-            // gone. Clearing them makes every source prove again that it is
-            // up to date before its silence is trusted.
+            // gone, so they are cleared. The devices are also marked closed:
+            // the phones of a rehearsal are often not the phones of the
+            // race, and a device left "open" with no mark would make its
+            // source look unknown, holding every review flag back until it
+            // had been silent for ten minutes. A phone that is still in use
+            // reopens itself with its next heartbeat, seconds later.
             $connection->prepare(
-                'UPDATE contagem_dispositivo SET sincronizado_ate_ms = NULL
+                'UPDATE contagem_dispositivo SET sincronizado_ate_ms = NULL, fechado_em_ms = :agora
                   WHERE fonte_id IN (SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova)'
-            )->execute($prova);
+            )->execute($prova + [':agora' => $nowMs]);
 
             $connection->commit();
         } catch (\Throwable $error) {

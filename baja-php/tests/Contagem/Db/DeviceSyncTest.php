@@ -157,6 +157,32 @@ final class DeviceSyncTest extends DbTestCase
     }
 
     /**
+     * SITUATION: the day before the race the counters rehearsed on a couple
+     * of phones. The controller wipes the rehearsal ("Zerar corrida"). On
+     * race day, Contagem 1 is counted on a different phone; the rehearsal
+     * phone stays in a bag.
+     *
+     * EXPECTED: the rehearsal phone is not waited for. Wiping a race also
+     * closes its devices, so the source is immediately synced through the
+     * race-day phone's mark. (Otherwise the forgotten phone would keep the
+     * source "unknown", and every review flag hidden, for the first ten
+     * minutes of the real race.)
+     */
+    public function testAfterWipingARehearsalItsPhonesAreNotWaitedFor(): void
+    {
+        $rehearsalPhone = $this->issueToken($this->fontes[0], 'zzt_ana');
+        $this->heartbeatAt($rehearsalPhone, 300);
+
+        $this->newRequest();
+        $this->service->resetRace('zzt_controlador');
+        $this->startRace($this->at(400));
+        $raceDayPhone = $this->issueToken($this->fontes[0], 'zzt_bruno');
+        $this->heartbeatAt($raceDayPhone, 600);
+
+        $this->assertSame($this->at(600), $this->markOfSource1());
+    }
+
+    /**
      * SITUATION: nobody has ever opened Contagem 1 on any phone.
      *
      * EXPECTED: there is nobody whose upload could still arrive, so the
