@@ -20,7 +20,9 @@ export function limitesDaJanela(janela) {
   }
   const momentos = [];
   for (const raia of janela.raias ?? []) {
-    for (const entrada of raia.entradas ?? []) {
+    // An entry of unknown time carries whatever its phone's clock said,
+    // possibly days off; it must not stretch the timeline to there.
+    for (const entrada of comHorarioConhecido(raia.entradas ?? [])) {
       momentos.push(entrada.ts_ms);
     }
   }
@@ -31,6 +33,55 @@ export function limitesDaJanela(janela) {
     return null;
   }
   return { de: Math.min(...momentos) - MARGEM_MS, ate: Math.max(...momentos) + MARGEM_MS };
+}
+
+// Entries of unknown time ("desconhecido": the phone had no usable anchor)
+// have no place on a time axis. The lanes draw the others; these are
+// listed apart, under the lanes, so they can still be clicked.
+export const temHorarioDesconhecido = (entrada) => entrada.qualidade_tempo === 'desconhecido';
+
+export function comHorarioConhecido(entradas) {
+  return entradas.filter((entrada) => !temHorarioDesconhecido(entrada));
+}
+
+// Every entry of unknown time of a window, with the name of its lane.
+export function entradasDeHorarioDesconhecido(janela) {
+  const lista = [];
+  for (const raia of janela?.raias ?? []) {
+    for (const entrada of raia.entradas ?? []) {
+      if (temHorarioDesconhecido(entrada)) {
+        lista.push({ ...entrada, raia: raia.nome });
+      }
+    }
+  }
+  return lista;
+}
+
+// The lanes under the counters': race control, the pit lane and (when the
+// prova uses it, or something was logged there anyway) the fueling station.
+// Each is {nome, classe, marcas, estadias}:
+//   marcas    the events of that lane, in time order; a pit or fueling
+//             event the engine could not pair is marked `sem_par`
+//   estadias  the stays that were paired: {carro, de_ms, ate_ms}, ate_ms
+//             null while the car is still inside
+export function raiasDeOcorrencias(janela) {
+  const ocorrencias = janela?.ocorrencias ?? [];
+  const estadias = janela?.estadias ?? [];
+  // An answer from before "area" existed only says `box`.
+  const areaDe = (ocorrencia) => ocorrencia.area ?? (ocorrencia.box ? 'box' : null);
+  const raia = (nome, classe, area) => ({
+    nome,
+    classe,
+    marcas: ocorrencias.filter((ocorrencia) => areaDe(ocorrencia) === area),
+    estadias: estadias.filter((estadia) => estadia.area === area),
+  });
+
+  const raias = [raia('Direção de prova', 'raia-direcao', null), raia('Box', 'raia-box', 'box')];
+  const abastecimento = raia('Abastecimento', 'raia-abastecimento', 'abastecimento');
+  if (janela?.abastecimento || abastecimento.marcas.length > 0 || abastecimento.estadias.length > 0) {
+    raias.push(abastecimento);
+  }
+  return raias;
 }
 
 // Horizontal position of a moment, in pixels from the left edge.
@@ -99,10 +150,17 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
   const papel = entrada.grupo?.papel;
   if (papel === 'inicial') {
     classes.push('passagem-zero');
+  } else if (papel === 'antes_da_largada') {
+    classes.push('antes-da-largada');
   } else if (papel === 'janela_largada') {
     classes.push('janela-largada');
   } else if (papel === 'apos_encerramento') {
     classes.push('apos-encerramento');
+  }
+  if (entrada.qualidade_tempo === 'estimado') {
+    classes.push('tempo-estimado');
+  } else if (temHorarioDesconhecido(entrada)) {
+    classes.push('tempo-desconhecido');
   }
   if (idsEmDestaque.includes(entrada.id)) {
     classes.push('em-destaque');
@@ -117,6 +175,7 @@ const MOTIVOS_FORA_DE_USO = {
   antes_da_largada: 'fora de uso: registrado antes da largada',
   fonte_inativa: 'fora de uso: a fonte estava desativada',
   fonte_excluida: 'fora de uso: a fonte foi excluída neste período',
+  tempo_desconhecido: 'horário desconhecido: o aparelho não tinha o horário oficial; não entra na contagem sozinho',
 };
 
 // What the pass group of an entry is to the count, in words.
@@ -124,6 +183,10 @@ export function descricaoDoPapel(grupo) {
   switch (grupo.papel) {
     case 'inicial':
       return 'passagem zero (primeira passagem do carro; não é volta)';
+    case 'antes_da_largada':
+      return grupo.contado
+        ? 'antes da largada, confirmada pelo revisor como passagem zero'
+        : 'antes da largada (não conta; se foi a passagem inicial do carro, confirme para valer como passagem zero)';
     case 'janela_largada':
       return 'dentro da janela de largada (não conta volta)';
     case 'apos_encerramento':
@@ -151,6 +214,9 @@ export function descricaoDoChip(entrada) {
   } else if (entrada.fora_de_uso) {
     partes.push(MOTIVOS_FORA_DE_USO[entrada.motivo_fora_de_uso]
       ?? 'fora de uso (fonte excluída ou inativa, ou registro anterior à largada)');
+  }
+  if (entrada.qualidade_tempo === 'estimado') {
+    partes.push('horário estimado (digitado sem conexão e carimbado depois de recarregar a página)');
   }
   if (entrada.grupo) {
     partes.push(descricaoDoPapel(entrada.grupo));

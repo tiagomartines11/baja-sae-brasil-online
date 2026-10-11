@@ -13,7 +13,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  NOMES_DE_ALERTA, duracao, idade, interpretarTempoDeProva, relogio, relogioDaCorrida, tempoDeProva,
+  AVISO_TEMPO_DE_VOLTA, NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, idade, interpretarTempoDeProva, relogio, relogioDaCorrida,
+  tempoDeProva,
 } from '../../default/js/contagem/revisao-formato.js';
 
 const SEGUNDO = 1000;
@@ -113,4 +114,15 @@ test('every kind of flag the engine raises has a name in Portuguese', () => {
   for (const tipo of ['troca_provavel', 'solitaria', 'repetida', 'carro_desconhecido', 'no_box', 'volta_curta', 'divergencia_total']) {
     assert.ok(NOMES_DE_ALERTA[tipo], `${tipo} has a name`);
   }
+});
+
+// Round 3 added six kinds of flag and one car status. A kind without a name
+// would show its internal code ("tempo_desconhecido") in the queue.
+test('the flags and the car status added in round 3 have names too', () => {
+  for (const tipo of ['antes_da_largada', 'no_encerramento', 'tempo_estimado', 'tempo_desconhecido', 'carro_nao_classificado', 'no_abastecimento']) {
+    assert.ok(NOMES_DE_ALERTA[tipo], `${tipo} has a name`);
+  }
+  assert.equal(NOMES_DE_STATUS.abastecendo, 'abastecendo');
+  // The accepted difference between a lap time and its two pass times is explained where lap times are shown.
+  assert.match(AVISO_TEMPO_DE_VOLTA, /não é exatamente a diferença/);
 });

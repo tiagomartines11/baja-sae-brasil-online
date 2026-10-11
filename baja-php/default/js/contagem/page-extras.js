@@ -6,18 +6,31 @@
 import { endShift, resumeShift, closingBeaconBody, TURNO } from './shift-control.js';
 import { storedUsableToken } from './device-token.js';
 import { describeDeviceStatus, readOfflineCopy, readStorageProtection } from './device-status.js';
+import { ABA } from './single-tab.js';
 
 const DEVICE_STATUS_REFRESH_MS = 10000;
 
 const TEXTO_ENCERRANDO = 'Enviando o que falta e avisando o servidor…';
 
+// Asked before anything is sent: the button sits beside "Exportar", and a
+// counter who ends the shift by mistake stops being waited for by the server.
+const PERGUNTA_ENCERRAR = 'Encerrar o seu turno neste aparelho?\n\n'
+    + 'Ele envia o que falta e avisa o servidor que você parou de contar. '
+    + 'Use só quando você realmente parar.';
+
 function textAfterEndShift(result, pendingCount) {
     if (result === TURNO.PENDENTE) {
-        return 'O turno NÃO foi encerrado: ainda há ' + pendingCount + ' registro(s) na fila. '
-            + 'Tente de novo quando houver conexão.';
+        const what = pendingCount > 0
+            ? 'ainda há ' + pendingCount + ' registro(s) na fila'
+            : 'um registro ainda estava sendo gravado';
+        return 'O turno NÃO foi encerrado: ' + what + '. Tente de novo quando houver conexão.';
     }
     if (result === TURNO.SEM_CONEXAO) {
         return 'O turno NÃO foi encerrado: sem conexão para avisar o servidor. Tente de novo.';
+    }
+    if (result === TURNO.SEM_CONFIRMACAO) {
+        return 'O turno NÃO foi encerrado: o servidor respondeu, mas não confirmou o encerramento. '
+            + 'Tente de novo; se continuar, avise o responsável pela prova.';
     }
     if (result === TURNO.BLOQUEADO) {
         return 'O turno NÃO foi encerrado: este aparelho está com o envio bloqueado. '
@@ -46,6 +59,9 @@ export function wireShiftButtons({ windowRef, documentRef, queue, store, syncUrl
     }
 
     endButton.addEventListener('click', async () => {
+        if (!windowRef.confirm(PERGUNTA_ENCERRAR)) {
+            return;
+        }
         endButton.disabled = true;
         showMessage(TEXTO_ENCERRANDO);
         let result;
@@ -99,16 +115,19 @@ export function wireShiftButtons({ windowRef, documentRef, queue, store, syncUrl
  *
  * @param {object}    options
  * @param {string}    options.armazenamento one of ARMAZENAMENTO.*
+ * @param {string}    options.abaUnica      one of ABA.*: how the one-tab check ended
  * @param {Promise[]} options.refreshAfter  things whose completion may change
  *        the answer (the storage request, the service worker registration)
  */
-export function wireDeviceStatus({ windowRef, documentRef, armazenamento, refreshAfter }) {
+export function wireDeviceStatus({ windowRef, documentRef, armazenamento, abaUnica, refreshAfter }) {
     const storageLine = documentRef.getElementById('st-armazenamento');
     const offlineLine = documentRef.getElementById('st-copia-offline');
+    const singleTabLine = documentRef.getElementById('st-aba-unica');
 
     async function refresh() {
         const description = describeDeviceStatus({
             armazenamento,
+            semTravaDeAba: abaUnica === ABA.SEM_TRAVA,
             protegido: await readStorageProtection(windowRef.navigator),
             copiaOffline: await readOfflineCopy({
                 navigatorRef: windowRef.navigator,
@@ -119,6 +138,8 @@ export function wireDeviceStatus({ windowRef, documentRef, armazenamento, refres
         });
         storageLine.textContent = description.armazenamento;
         offlineLine.textContent = description.copiaOffline;
+        singleTabLine.textContent = description.abaUnica || '';
+        singleTabLine.hidden = description.abaUnica === null;
         storageLine.parentElement.classList.toggle('estado-aparelho-ok', description.tudoCerto);
     }
 

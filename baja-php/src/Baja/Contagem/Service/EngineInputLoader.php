@@ -28,11 +28,13 @@ use Propel\Runtime\Propel;
  */
 final class EngineInputLoader
 {
+    private Prova $prova;
     private string $eventoId;
     private string $provaId;
 
     public function __construct(Prova $prova)
     {
+        $this->prova = $prova;
         $this->eventoId = (string) $prova->getEventoId();
         $this->provaId = (string) $prova->getProvaId();
     }
@@ -122,16 +124,17 @@ final class EngineInputLoader
         $input->sources = (new SourceLoader($this->eventoId, $this->provaId))->load($settings, $input->nowMs);
         $input->decisions = $this->loadDecisions();
         $input->ocorrencias = $this->loadOcorrencias();
-        $input->validCars = array_keys($this->loadTeams(true));
+
+        $roster = CarRoster::forProva($this->prova);
+        $input->validCars = array_keys($roster->classified());
+        $input->unclassifiedCars = array_keys($roster->unclassified());
         return $input;
     }
 
     /**
-     * Raw entries with their effective time.
-     *
-     * An entry typed before its device knew any clock offset is stored with
-     * ts_ms NULL. Its time is worked out here, from the first offset the
-     * device reported later, so that contagem_passagem never needs an UPDATE.
+     * Raw entries, each with the time it was stored with. That time is
+     * final: it was worked out by the page that recorded the entry and is
+     * never adjusted here or anywhere else.
      *
      * @param int[]|null $cars only entries typed with these numbers; null for all
      * @param int[] $alsoEntryIds entries to include whatever number they were typed with
@@ -139,11 +142,9 @@ final class EngineInputLoader
      */
     private function loadEntries(?array $cars, array $alsoEntryIds): array
     {
-        $sql = 'SELECT p.passagem_id, p.fonte_id, p.dispositivo_id, p.equipe_numero,
-                       COALESCE(p.ts_ms, p.ts_dispositivo_ms + COALESCE(d.primeiro_desvio_ms, 0)) AS ts_efetivo_ms
+        $sql = 'SELECT p.passagem_id, p.fonte_id, p.dispositivo_id, p.equipe_numero, p.ts_ms, p.qualidade_tempo
                   FROM contagem_passagem p
                   JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
-                  JOIN contagem_dispositivo d ON d.dispositivo_id = p.dispositivo_id
                  WHERE f.evento_id = ? AND f.prova_id = ?';
         $params = [$this->eventoId, $this->provaId];
 
@@ -165,13 +166,15 @@ final class EngineInputLoader
 
         $entries = [];
         foreach ($this->fetchAll($sql, $params) as $row) {
-            $entries[] = new Entry(
+            $entry = new Entry(
                 (int) $row['passagem_id'],
                 (int) $row['fonte_id'],
                 (int) $row['dispositivo_id'],
                 (int) $row['equipe_numero'],
-                (int) $row['ts_efetivo_ms']
+                (int) $row['ts_ms']
             );
+            $entry->qualidadeTempo = (string) $row['qualidade_tempo'];
+            $entries[] = $entry;
         }
         return $entries;
     }

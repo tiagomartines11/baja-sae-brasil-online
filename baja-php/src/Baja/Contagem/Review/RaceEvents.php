@@ -20,9 +20,16 @@ use Baja\Model\Prova;
  *   - a row of type "cancelamento" CANCELS it (the button was pressed by
  *     mistake, there was no such event).
  *
- * Either way the row pointed at stops counting. The engine applies the same
- * rule (RaceTimeline::fromOcorrencias); this class exists so that the race
- * control page can show it and check an action before storing it.
+ * Either way the row pointed at stops counting, FOR AS LONG AS the row that
+ * points at it counts itself. A correction that is cancelled gives the
+ * original back; a cancellation that is cancelled ("restaurar") gives back
+ * what it had removed. That is the rule of undoing a decision, and it is
+ * applied the same way: newest row first (see resolve()).
+ *
+ * The engine applies the same rule (RaceTimeline::fromOcorrencias); this
+ * class exists so that the race control page can show what became of each
+ * row and check an action before storing it. The checks themselves are in
+ * RaceEventRules.
  */
 final class RaceEvents
 {
@@ -37,6 +44,8 @@ final class RaceEvents
     public const SUPERADA = 'superada';
     /** The row is itself a cancellation: it is a record of who cancelled what. */
     public const CANCELAMENTO = 'cancelamento';
+    /** A cancellation that was cancelled in turn: what it removed is back. */
+    public const CANCELAMENTO_DESFEITO = 'cancelamento_desfeito';
 
     /** Race events, with the label shown for each. Pit events are not race control's. */
     public const LABELS = [
@@ -58,18 +67,18 @@ final class RaceEvents
             ->orderByOcorrenciaId()
             ->find();
 
-        $raceEventIds = [];
+        // Ids of race-control rows seen so far, cancellations included: a
+        // cancellation may point at an event or at another cancellation.
+        $raceControlIds = [];
         $kept = [];
         foreach ($rows as $row) {
             $isCancellation = $row->getTipo() === Ocorrencia::CANCELAMENTO;
             // The pit log may cancel its own events the same way; those
             // cancellations are not race control's business.
-            if ($isCancellation && !isset($raceEventIds[(int) $row->getSubstituiId()])) {
+            if ($isCancellation && !isset($raceControlIds[(int) $row->getSubstituiId()])) {
                 continue;
             }
-            if (!$isCancellation) {
-                $raceEventIds[(int) $row->getOcorrenciaId()] = true;
-            }
+            $raceControlIds[(int) $row->getOcorrenciaId()] = true;
             $kept[] = $row;
         }
         return $kept;
@@ -104,6 +113,34 @@ final class RaceEvents
     }
 
     /**
+     * For every row that does not count: the row that took it out.
+     *
+     * Rows are visited from the newest to the oldest. By the time a row is
+     * reached, everything that could have taken IT out has been seen, so a
+     * row that is out takes nothing out itself. That one rule gives:
+     * cancelling a correction brings the original back, and cancelling a
+     * cancellation restores the event.
+     *
+     * @param Ocorrencia[] $ocorrencias
+     * @return array<int, Ocorrencia> id of a row that is out => the row that took it out
+     */
+    public static function resolve(array $ocorrencias): array
+    {
+        $newestFirst = $ocorrencias;
+        usort($newestFirst, fn(Ocorrencia $a, Ocorrencia $b) => $b->id <=> $a->id);
+
+        $takenOutBy = [];
+        foreach ($newestFirst as $ocorrencia) {
+            if (isset($takenOutBy[$ocorrencia->id]) || $ocorrencia->substituiId === null) {
+                continue;
+            }
+            // The newest row pointing at a target is the one that decides.
+            $takenOutBy[$ocorrencia->substituiId] ??= $ocorrencia;
+        }
+        return $takenOutBy;
+    }
+
+    /**
      * What became of each row: still in force, corrected, cancelled,
      * overtaken by a later start or finish, or a cancellation itself.
      *
@@ -112,25 +149,17 @@ final class RaceEvents
      */
     public static function situations(array $ocorrencias): array
     {
-        // What a row was replaced by decides whether it reads "corrigida"
-        // or "cancelada". When both happened, the cancellation is the news.
-        $replacedBy = [];
-        foreach ($ocorrencias as $ocorrencia) {
-            if ($ocorrencia->substituiId === null) {
-                continue;
-            }
-            $isCancellation = $ocorrencia->tipo === Ocorrencia::CANCELAMENTO;
-            if ($isCancellation || !isset($replacedBy[$ocorrencia->substituiId])) {
-                $replacedBy[$ocorrencia->substituiId] = $isCancellation ? self::CANCELADA : self::CORRIGIDA;
-            }
-        }
+        $takenOutBy = self::resolve($ocorrencias);
 
         $situations = [];
         foreach ($ocorrencias as $ocorrencia) {
+            $killer = $takenOutBy[$ocorrencia->id] ?? null;
             if ($ocorrencia->tipo === Ocorrencia::CANCELAMENTO) {
-                $situations[$ocorrencia->id] = self::CANCELAMENTO;
+                $situations[$ocorrencia->id] = $killer === null ? self::CANCELAMENTO : self::CANCELAMENTO_DESFEITO;
+            } elseif ($killer === null) {
+                $situations[$ocorrencia->id] = self::EM_VIGOR;
             } else {
-                $situations[$ocorrencia->id] = $replacedBy[$ocorrencia->id] ?? self::EM_VIGOR;
+                $situations[$ocorrencia->id] = $killer->tipo === Ocorrencia::CANCELAMENTO ? self::CANCELADA : self::CORRIGIDA;
             }
         }
 
@@ -154,44 +183,34 @@ final class RaceEvents
 
     /**
      * @param Ocorrencia[] $ocorrencias
-     * @return Ocorrencia[] the events that count
+     * @return Ocorrencia[] the events that count, oldest row first
      */
     public static function inForce(array $ocorrencias): array
     {
         $situations = self::situations($ocorrencias);
-        return array_values(array_filter(
+        $inForce = array_values(array_filter(
             $ocorrencias,
             fn(Ocorrencia $ocorrencia) => $situations[$ocorrencia->id] === self::EM_VIGOR
         ));
+        usort($inForce, fn(Ocorrencia $a, Ocorrencia $b) => $a->id <=> $b->id);
+        return $inForce;
     }
 
     /**
-     * Would the race still make sense with these events? Null when it
-     * would; otherwise the reason, in Portuguese.
+     * The cancellation that currently keeps a row out, or null when the row
+     * is not cancelled. "Restaurar" cancels that cancellation.
      *
-     * The one rule: nothing can happen in a race before its start. So while
-     * a red flag, a restart or a finish stands, there must be a start, and
-     * it must not be later than any of them.
-     *
-     * @param Ocorrencia[] $ocorrencias every event, including the one about to be stored
+     * @param Ocorrencia[] $ocorrencias
      */
+    public static function cancellationOf(array $ocorrencias, int $ocorrenciaId): ?Ocorrencia
+    {
+        $killer = self::resolve($ocorrencias)[$ocorrenciaId] ?? null;
+        return $killer !== null && $killer->tipo === Ocorrencia::CANCELAMENTO ? $killer : null;
+    }
+
+    /** Kept for callers of the old name; see RaceEventRules::inconsistency(). */
     public static function inconsistency(array $ocorrencias): ?string
     {
-        $startMs = RaceTimeline::fromOcorrencias($ocorrencias)->largadaMs;
-
-        foreach (self::inForce($ocorrencias) as $ocorrencia) {
-            if ($ocorrencia->tipo === Ocorrencia::LARGADA) {
-                continue;
-            }
-            $label = mb_strtolower(self::LABELS[$ocorrencia->tipo] ?? $ocorrencia->tipo);
-            $when = Pagina::formatClock($ocorrencia->tsMs);
-            if ($startMs === null) {
-                return 'Existe ' . $label . ' registrada (' . $when . ') e a corrida ficaria sem largada. Cancele essa ocorrência primeiro.';
-            }
-            if ($ocorrencia->tsMs < $startMs) {
-                return 'A largada ficaria depois de ' . $label . ' já registrada (' . $when . '). Corrija ou cancele essa ocorrência primeiro.';
-            }
-        }
-        return null;
+        return RaceEventRules::inconsistency($ocorrencias);
     }
 }

@@ -23,11 +23,13 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonteUsuarioQuery orderByUsuario($order = Criteria::ASC) Order by the usuario column
  * @method     ChildContagemFonteUsuarioQuery orderByAdicionadoPor($order = Criteria::ASC) Order by the adicionado_por column
  * @method     ChildContagemFonteUsuarioQuery orderByCriadoEmMs($order = Criteria::ASC) Order by the criado_em_ms column
+ * @method     ChildContagemFonteUsuarioQuery orderByLiberadoEmMs($order = Criteria::ASC) Order by the liberado_em_ms column
  *
  * @method     ChildContagemFonteUsuarioQuery groupByFonteId() Group by the fonte_id column
  * @method     ChildContagemFonteUsuarioQuery groupByUsuario() Group by the usuario column
  * @method     ChildContagemFonteUsuarioQuery groupByAdicionadoPor() Group by the adicionado_por column
  * @method     ChildContagemFonteUsuarioQuery groupByCriadoEmMs() Group by the criado_em_ms column
+ * @method     ChildContagemFonteUsuarioQuery groupByLiberadoEmMs() Group by the liberado_em_ms column
  *
  * @method     ChildContagemFonteUsuarioQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildContagemFonteUsuarioQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -56,6 +58,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonteUsuario|null findOneByUsuario(string $usuario) Return the first ChildContagemFonteUsuario filtered by the usuario column
  * @method     ChildContagemFonteUsuario|null findOneByAdicionadoPor(string $adicionado_por) Return the first ChildContagemFonteUsuario filtered by the adicionado_por column
  * @method     ChildContagemFonteUsuario|null findOneByCriadoEmMs(string $criado_em_ms) Return the first ChildContagemFonteUsuario filtered by the criado_em_ms column
+ * @method     ChildContagemFonteUsuario|null findOneByLiberadoEmMs(string $liberado_em_ms) Return the first ChildContagemFonteUsuario filtered by the liberado_em_ms column
  *
  * @method     ChildContagemFonteUsuario requirePk($key, ?ConnectionInterface $con = null) Return the ChildContagemFonteUsuario by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonteUsuario requireOne(?ConnectionInterface $con = null) Return the first ChildContagemFonteUsuario matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -64,6 +67,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonteUsuario requireOneByUsuario(string $usuario) Return the first ChildContagemFonteUsuario filtered by the usuario column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonteUsuario requireOneByAdicionadoPor(string $adicionado_por) Return the first ChildContagemFonteUsuario filtered by the adicionado_por column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonteUsuario requireOneByCriadoEmMs(string $criado_em_ms) Return the first ChildContagemFonteUsuario filtered by the criado_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemFonteUsuario requireOneByLiberadoEmMs(string $liberado_em_ms) Return the first ChildContagemFonteUsuario filtered by the liberado_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildContagemFonteUsuario[]|Collection find(?ConnectionInterface $con = null) Return ChildContagemFonteUsuario objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildContagemFonteUsuario> find(?ConnectionInterface $con = null) Return ChildContagemFonteUsuario objects based on current ModelCriteria
@@ -76,6 +80,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemFonteUsuario> findByAdicionadoPor(string|array<string> $adicionado_por) Return ChildContagemFonteUsuario objects filtered by the adicionado_por column
  * @method     ChildContagemFonteUsuario[]|Collection findByCriadoEmMs(string|array<string> $criado_em_ms) Return ChildContagemFonteUsuario objects filtered by the criado_em_ms column
  * @psalm-method Collection&\Traversable<ChildContagemFonteUsuario> findByCriadoEmMs(string|array<string> $criado_em_ms) Return ChildContagemFonteUsuario objects filtered by the criado_em_ms column
+ * @method     ChildContagemFonteUsuario[]|Collection findByLiberadoEmMs(string|array<string> $liberado_em_ms) Return ChildContagemFonteUsuario objects filtered by the liberado_em_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemFonteUsuario> findByLiberadoEmMs(string|array<string> $liberado_em_ms) Return ChildContagemFonteUsuario objects filtered by the liberado_em_ms column
  *
  * @method     ChildContagemFonteUsuario[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildContagemFonteUsuario> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -175,7 +181,7 @@ abstract class ContagemFonteUsuarioQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT fonte_id, usuario, adicionado_por, criado_em_ms FROM contagem_fonte_usuario WHERE fonte_id = :p0 AND usuario = :p1';
+        $sql = 'SELECT fonte_id, usuario, adicionado_por, criado_em_ms, liberado_em_ms FROM contagem_fonte_usuario WHERE fonte_id = :p0 AND usuario = :p1';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key[0], PDO::PARAM_INT);
@@ -419,6 +425,49 @@ abstract class ContagemFonteUsuarioQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS, $criadoEmMs, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the liberado_em_ms column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByLiberadoEmMs(1234); // WHERE liberado_em_ms = 1234
+     * $query->filterByLiberadoEmMs(array(12, 34)); // WHERE liberado_em_ms IN (12, 34)
+     * $query->filterByLiberadoEmMs(array('min' => 12)); // WHERE liberado_em_ms > 12
+     * </code>
+     *
+     * @param mixed $liberadoEmMs The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByLiberadoEmMs($liberadoEmMs = null, ?string $comparison = null)
+    {
+        if (is_array($liberadoEmMs)) {
+            $useMinMax = false;
+            if (isset($liberadoEmMs['min'])) {
+                $this->addUsingAlias(ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS, $liberadoEmMs['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($liberadoEmMs['max'])) {
+                $this->addUsingAlias(ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS, $liberadoEmMs['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS, $liberadoEmMs, $comparison);
 
         return $this;
     }

@@ -238,7 +238,7 @@ test('closing the page with an empty queue sends the goodbye, with the token in 
     assert.deepEqual(body.voids, []);
     assert.deepEqual(body.pit_events, []);
     assert.equal(body.queue_empty, true);
-    assert.equal(typeof body.device_now_ms, 'number');
+    assert.equal(body.now_ms, device.clock.serverNow());
 });
 
 test('closing the page with entries still waiting sends no goodbye', async () => {
@@ -271,4 +271,71 @@ test('no goodbye on closing without a token, after a goodbye, or when shut out',
     shutOut.server.behaviour = 'revoked';
     await shutOut.queue.syncOnce();
     assert.equal(closingBeaconBody(shutOut.queue, 'token-abc'), null);
+});
+
+// ---------------------------------------------------------------------------
+// Brief 2.3: "Turno encerrado" only on the server's own word
+// ---------------------------------------------------------------------------
+
+test('a 200 answer is not enough: the shift ends only when the server says "encerrado"', async () => {
+    // SITUATION: the counter taps "Encerrar meu turno". The goodbye request
+    // gets a proper 200, but the server did NOT close the device (an older
+    // server, or one that declined for a reason of its own).
+    //
+    // WHAT WENT WRONG: the page took "my request carried `encerrando` and
+    // got a 200" as proof. It showed "Turno encerrado" and went silent,
+    // while the server went on waiting for this phone: alerts held back for
+    // ten minutes for a counter who had gone home.
+    const device = await createDevice();
+    device.server.closesWhenAsked = false;
+
+    const result = await endShift(device.queue);
+
+    // EXPECTED: not ended, with a result of its own (the page then says
+    // "o servidor não confirmou", not "sem conexão"). The page keeps working
+    // and keeps sending heartbeats; the counter is told to try again.
+    assert.equal(result, TURNO.SEM_CONFIRMACAO);
+    assert.equal(device.queue.getState().turnoEncerrado, false);
+    assert.equal(goodbyes(device).length > 0, true, 'it did ask');
+});
+
+test('when the server says "encerrado", the shift is ended', async () => {
+    const device = await createDevice();
+    await device.type(41);
+
+    const result = await endShift(device.queue);
+
+    assert.equal(result, TURNO.ENCERRADO);
+    assert.equal(device.queue.getState().turnoEncerrado, true);
+    assert.deepEqual(device.server.storedCars(), [41]);
+});
+
+test('a pass typed while the goodbye is in the air is uploaded before "Turno encerrado" is shown', async () => {
+    // SITUATION: the counter taps "Encerrar meu turno" and, while the
+    // goodbye request is travelling, one more car crosses and gets typed
+    // (the entry controls are still on the screen at that moment).
+    //
+    // WHAT WENT WRONG: the server answered "closed", the page showed "Turno
+    // encerrado" and went quiet, with that last pass still in the queue. It
+    // reached nobody until the page was opened again.
+    const device = await createDevice();
+    const originalSend = device.server.send;
+    let typedDuringGoodbye = false;
+    device.server.send = async (body) => {
+        if (body.encerrando && !typedDuringGoodbye) {
+            typedDuringGoodbye = true;
+            await device.type(41);
+        }
+        return originalSend(body);
+    };
+
+    const result = await endShift(device.queue);
+
+    // EXPECTED: before saying "ended" the page looks at the queue once
+    // more, finds the pass, uploads it (which also tells the server this
+    // phone is counting again) and only then says goodbye anew.
+    assert.equal(result, TURNO.ENCERRADO);
+    assert.deepEqual(device.server.storedCars(), [41]);
+    assert.equal(device.queue.getState().pendentes, 0);
+    assert.equal(goodbyes(device).length, 2, 'one goodbye that came too early, one that counts');
 });

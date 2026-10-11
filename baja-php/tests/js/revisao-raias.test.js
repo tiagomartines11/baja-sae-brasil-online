@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 
 import {
   classesDoChip, descricaoDoChip, distribuirEmLinhas, encontrarEntrada, limitesDaJanela, marcasDeTempo, posicaoPx,
+  entradasDeHorarioDesconhecido, raiasDeOcorrencias,
 } from '../../default/js/contagem/revisao-raias-logica.js';
 
 test('a moment is placed in proportion to the time since the left edge', () => {
@@ -164,4 +165,101 @@ test('an entry that is not in use says why', () => {
   const excluida = { id: 6, fora_de_uso: true, motivo_fora_de_uso: 'fonte_excluida', grupo: null };
   assert.match(descricaoDoChip(antes), /antes da largada/);
   assert.match(descricaoDoChip(excluida), /fonte foi excluída/);
+});
+
+// SITUATION: a counter's phone was offline, was restarted, and had no saved
+// idea of the official time. The entry it typed for car 41 is uploaded with
+// whatever the phone's own clock said: here, three days before the race.
+// The engine never counts such an entry by itself.
+//
+// WHAT WOULD GO WRONG: placed on the time axis like the others, that one
+// chip would stretch the car's timeline over three days (the whole race a
+// few pixels wide at the far end) and sit where nothing happened.
+//
+// EXPECTED: the timeline covers only the entries whose time is known. The
+// one of unknown time is listed apart, still clickable, with its lane's
+// name, and its chip and tooltip say what it is.
+test('an entry of unknown time does not stretch the timeline and is listed apart', () => {
+  const tresDias = 3 * 24 * 3600 * 1000;
+  const janela = {
+    de_ms: null,
+    ate_ms: null,
+    raias: [
+      { nome: 'Contagem 1', entradas: [{ id: 1, carro: 41, ts_ms: 1_000_000 }, { id: 2, carro: 41, ts_ms: 1_200_000 }] },
+      { nome: 'Contagem 2', entradas: [{ id: 3, carro: 41, ts_ms: 1_000_000 - tresDias, qualidade_tempo: 'desconhecido', fora_de_uso: true, motivo_fora_de_uso: 'tempo_desconhecido' }] },
+    ],
+    ocorrencias: [],
+  };
+
+  assert.deepEqual(limitesDaJanela(janela), { de: 990_000, ate: 1_210_000 });
+
+  const soltas = entradasDeHorarioDesconhecido(janela);
+  assert.deepEqual(soltas.map((entrada) => [entrada.id, entrada.raia]), [[3, 'Contagem 2']]);
+  assert.ok(classesDoChip(soltas[0], [], null).includes('tempo-desconhecido'));
+  assert.match(descricaoDoChip(soltas[0]), /horário desconhecido/);
+});
+
+test('an entry whose time was estimated stays on the timeline and is marked', () => {
+  // Typed offline and stamped after the page was reloaded: close to right,
+  // matched like any other, and shown with a "~".
+  const entrada = { id: 7, carro: 41, ts_ms: 1000, qualidade_tempo: 'estimado', grupo: { papel: 'volta', numero_volta: 3, contado: true } };
+  assert.ok(classesDoChip(entrada, [], null).includes('tempo-estimado'));
+  assert.match(descricaoDoChip(entrada), /horário estimado/);
+});
+
+// SITUATION: the start was recorded a few seconds late (the button was
+// pressed after the cars had gone). Car 12's first crossing, typed by all
+// three counters, is now two seconds BEFORE the start.
+//
+// WHAT WENT WRONG: entries before the start simply vanished from every
+// screen. Car 12 lost a lap and nothing anywhere said why.
+//
+// EXPECTED: the pass stays on the timeline, drawn as not counting and
+// described as "antes da largada", with what to do about it. Once a
+// reviewer confirms it, it is the car's pass zero and is drawn as counted.
+test('a pass typed just before the start stays visible and says what it is', () => {
+  const antes = { id: 1, carro: 12, ts_ms: 998, grupo: { papel: 'antes_da_largada', contado: false, numero_volta: null } };
+  assert.ok(classesDoChip(antes, [], null).includes('antes-da-largada'));
+  assert.ok(!classesDoChip(antes, [], null).includes('contada'));
+  assert.match(descricaoDoChip(antes), /antes da largada \(não conta/);
+
+  const confirmada = { ...antes, grupo: { papel: 'antes_da_largada', contado: true, numero_volta: 0 } };
+  assert.ok(classesDoChip(confirmada, [], null).includes('contada'));
+  assert.match(descricaoDoChip(confirmada), /confirmada pelo revisor como passagem zero/);
+});
+
+// SITUATION: the pit lane and the fueling station are each logged by two
+// people, one at the way in and one at the way out. Car 12 went through the
+// pit lane normally. Car 40 left the fueling station, but whoever stood at
+// its entrance never logged the car going in.
+//
+// EXPECTED: below the counters' lanes there is one lane for race control,
+// one for the pit lane and one for the fueling station. A stay with both
+// ends is a bar; the exit with no entry is kept, shown, and marked as
+// unpaired. It blocks nothing.
+test('race control, the pit lane and the fueling station each get a lane, and an unpaired event is shown as unpaired', () => {
+  const janela = {
+    abastecimento: true,
+    ocorrencias: [
+      { id: 1, tipo: 'largada', carro: null, ts_ms: 0, area: null, sem_par: false },
+      { id: 2, tipo: 'box_entrada', carro: 12, ts_ms: 1000, area: 'box', sem_par: false },
+      { id: 3, tipo: 'box_saida', carro: 12, ts_ms: 4000, area: 'box', sem_par: false },
+      { id: 4, tipo: 'abastecimento_saida', carro: 40, ts_ms: 5000, area: 'abastecimento', sem_par: true },
+    ],
+    estadias: [{ area: 'box', carro: 12, de_ms: 1000, ate_ms: 4000 }],
+  };
+
+  const [direcao, box, abastecimento] = raiasDeOcorrencias(janela);
+
+  assert.deepEqual(direcao.marcas.map((marca) => marca.tipo), ['largada']);
+  assert.deepEqual(box.marcas.map((marca) => marca.id), [2, 3]);
+  assert.deepEqual(box.estadias, [{ area: 'box', carro: 12, de_ms: 1000, ate_ms: 4000 }]);
+  assert.equal(abastecimento.nome, 'Abastecimento');
+  assert.deepEqual(abastecimento.marcas.map((marca) => [marca.carro, marca.sem_par]), [[40, true]]);
+  assert.deepEqual(abastecimento.estadias, [], 'an exit with no entry is not a stay');
+});
+
+test('with the fueling area switched off and nothing logged there, its lane is not drawn', () => {
+  const raias = raiasDeOcorrencias({ abastecimento: false, ocorrencias: [], estadias: [] });
+  assert.deepEqual(raias.map((raia) => raia.nome), ['Direção de prova', 'Box']);
 });

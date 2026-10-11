@@ -131,6 +131,182 @@ final class LapTimeTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: counter 3 is always three seconds late, as above. Car 7
+     * crosses every three minutes from 03:00. At the fourth crossing
+     * (12:00) counters 1 and 2 both miss it: only counter 3 has it, typed
+     * at 12:03 as is its habit, and a reviewer confirms the pass. Between
+     * that crossing and the next, counter 3 also types forty stray numbers
+     * that nobody else has (forty lone entries). Car 7 crosses again at
+     * 15:00, recorded by everybody.
+     *
+     * EXPECTED, for a pass that rests on a SINGLE entry:
+     * - its pass time is the entry as typed (12:03), there being nothing
+     *   else to go by;
+     * - for lap durations the counter's habit is removed all the same:
+     *   12:00, so both laps around it last exactly 180 s, not 183 and 177;
+     * - a single entry has no spread;
+     * - and a single entry teaches nothing about its counter: there is
+     *   nothing to compare it with. If the forty lone entries were taken as
+     *   "counter 3 was exactly on time forty times", its habit would drop
+     *   to zero and the crossing at 15:00 would show a 3-second
+     *   disagreement. It shows none, and the habit is still 3000 ms.
+     */
+    public function testAPassWithASingleEntryHasItsCountersHabitRemovedAndTeachesNothing(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        foreach ([180, 360, 540] as $seconds) {
+            $race->pass(7, RaceScenario::clock($seconds), [1, 2]);
+            $race->entry(3, 7, RaceScenario::clock($seconds + 3));
+        }
+        $onlyCounter3 = $race->entry(3, 7, '12:03');
+        $race->confirm($onlyCounter3);
+        for ($stray = 0; $stray < 40; $stray++) {
+            $race->entry(3, 100 + $stray, RaceScenario::clock(730 + $stray));
+        }
+        $race->pass(7, '15:00', [1, 2]);
+        $race->entry(3, 7, '15:03');
+
+        $result = $race->run('16:00');
+
+        $lapsOfCar7 = array_values(array_filter($result->laps, fn(Lap $lap) => $lap->carro === 7));
+        $this->assertCount(5, $lapsOfCar7);
+        $single = $lapsOfCar7[3];
+        $this->assertSame(1, $single->fontes);
+        $this->assertSame(RaceScenario::ms('12:03'), $single->tsMs, 'The pass time is the entry as typed.');
+        $this->assertSame(RaceScenario::ms('12:00'), $single->grupo->tsAjustadoMs, 'For durations, the habit is removed.');
+        $this->assertSame(0, $single->dispersaoMs);
+        $this->assertSame(180000, $single->tempoVoltaMs, 'The lap ending at the single entry.');
+        $this->assertSame(180000, $lapsOfCar7[4]->tempoVoltaMs, 'The lap starting from it.');
+        $this->assertSame(0, $lapsOfCar7[4]->dispersaoMs, 'At 15:00 the three counters still agree once the habit is removed.');
+        $this->assertSame(3000, $result->sourceStats[3]->desvioMedianoMs, 'Forty lone entries did not dilute the habit.');
+    }
+
+    /**
+     * SITUATION: counter 3 is three seconds late by habit (learnt over five
+     * crossings of car 7). Then car 8 crosses at 20:00: counter 1 types it
+     * at 20:00, counter 2 at 20:01 and counter 3, for once quicker than its
+     * habit, at 20:02.
+     *
+     * EXPECTED: as typed, the order is 1, 2, 3 and the middle time is
+     * 20:01, which is the pass time. With the habit removed, counter 3's
+     * entry becomes 19:59 and is now the EARLIEST of the three: the order
+     * changed, so the corrected times must be put in order again before
+     * the middle one is taken. Corrected time 20:00; spread 2 s (19:59 to
+     * 20:01), not 1 s and not negative.
+     */
+    public function testRemovingAHabitCanChangeTheOrderOfTheThreeTimes(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        for ($crossing = 1; $crossing <= 5; $crossing++) {
+            $race->pass(7, RaceScenario::clock($crossing * 180), [1, 2]);
+            $race->entry(3, 7, RaceScenario::clock($crossing * 180 + 3));
+        }
+        $race->entry(1, 8, '20:00');
+        $race->entry(2, 8, '20:01');
+        $lastTyped = $race->entry(3, 8, '20:02');
+
+        $group = $race->run('21:00')->groupOfEntry($lastTyped);
+
+        $this->assertSame(RaceScenario::ms('20:01'), $group->tsMs);
+        $this->assertSame(RaceScenario::ms('20:00'), $group->tsAjustadoMs);
+        $this->assertSame(2000, $group->dispersaoMs);
+    }
+
+    /**
+     * SITUATION: a race with FOUR counters. Car 7 crosses and they type it
+     * at 03:00, 03:01, 03:02 and 03:04. (Nothing is known about anybody's
+     * habit yet, so the corrected times are the times as typed.)
+     *
+     * EXPECTED: with an even number of times there is no middle one; the
+     * median is halfway between the two in the middle: 03:01.5, for the
+     * pass time and for the corrected time alike. The spread is the full
+     * four seconds.
+     */
+    public function testWithFourCountersTheMedianIsHalfwayBetweenTheMiddleTwo(): void
+    {
+        $race = RaceScenario::withCounters(4);
+        $race->start('00:00');
+        $first = $race->entry(1, 7, '03:00');
+        $race->entry(2, 7, '03:01');
+        $race->entry(3, 7, '03:02');
+        $race->entry(4, 7, '03:04');
+
+        $group = $race->run('04:00')->groupOfEntry($first);
+
+        $this->assertCount(4, $group->entries);
+        $this->assertSame(RaceScenario::ms('03:01.5'), $group->tsMs);
+        $this->assertSame(RaceScenario::ms('03:01.5'), $group->tsAjustadoMs);
+        $this->assertSame(4000, $group->dispersaoMs);
+    }
+
+    /**
+     * SITUATION: an automated timing system (a "precisa" source, id 4)
+     * times car 7 exactly, and counter 1 habitually types three seconds
+     * after it (learnt over five crossings). At 20:00 the system records
+     * the car and counter 1 types it at 20:01, quicker than usual. Counter
+     * 1 then types the car AGAIN at 20:02 and a reviewer keeps that second
+     * entry ("keep both"), so it is a pass of its own.
+     *
+     * WHY IT MATTERS: for durations, counter 1's habit is removed: its
+     * lone second entry is placed at 19:59, one second BEFORE the pass at
+     * 20:00 that it follows. Taken literally the lap between the two would
+     * last minus one second.
+     *
+     * EXPECTED: a lap time is never negative. That lap lasts 0.
+     */
+    public function testALapTimeIsNeverNegative(): void
+    {
+        $race = RaceScenario::withCounters(1);
+        $race->addSource(4, 'Cronometragem', \Baja\Contagem\Engine\Data\Source::TIPO_AUTOMATICA, \Baja\Contagem\Engine\Data\Source::TEMPO_PRECISA);
+        $race->start('00:00');
+        for ($crossing = 1; $crossing <= 5; $crossing++) {
+            $race->entry(4, 7, RaceScenario::clock($crossing * 180));
+            $race->entry(1, 7, RaceScenario::clock($crossing * 180 + 3));
+        }
+        $race->entry(4, 7, '20:00');
+        $race->entry(1, 7, '20:01');
+        $again = $race->entry(1, 7, '20:02');
+        $race->confirm($again);
+
+        $result = $race->run('21:00');
+
+        $group = $result->groupOfEntry($again);
+        $this->assertSame(3000, $result->sourceStats[1]->desvioMedianoMs);
+        $this->assertSame(RaceScenario::ms('19:59'), $group->tsAjustadoMs);
+        $lapEndingThere = array_values(array_filter($result->laps, fn(Lap $lap) => $lap->grupo === $group))[0];
+        $this->assertSame(0, $lapEndingThere->tempoVoltaMs);
+    }
+
+    /**
+     * SITUATION: an automated timing system (a "precisa" source, id 4)
+     * records car 7 at 03:00.000 with nobody else, and the three human
+     * counters are switched off.
+     *
+     * EXPECTED: a precise source's single entry is taken exactly as it is,
+     * for the pass time and for lap durations alike; the group is marked as
+     * precisely timed.
+     */
+    public function testASingleEntryFromAPreciseSourceIsTakenAsItIs(): void
+    {
+        $race = RaceScenario::withCounters(1);
+        $race->addSource(4, 'Cronometragem', \Baja\Contagem\Engine\Data\Source::TIPO_AUTOMATICA, \Baja\Contagem\Engine\Data\Source::TEMPO_PRECISA);
+        $race->deactivateSource(1, null);
+        $race->start('00:00');
+        $first = $race->entry(4, 7, '00:20');
+        $race->entry(4, 7, '03:00');
+
+        $result = $race->run('04:00');
+
+        $this->assertLapCounts([7 => 1], $result);
+        $this->assertTrue($result->groupOfEntry($first)->tempoPreciso);
+        $this->assertSame(RaceScenario::ms('03:00'), $result->laps[1]->grupo->tsMs);
+        $this->assertSame(RaceScenario::ms('03:00'), $result->laps[1]->grupo->tsAjustadoMs);
+        $this->assertSame(160000, $result->laps[1]->tempoVoltaMs);
+    }
+
+    /**
      * SITUATION: car 7 crosses the line four times:
      *
      *   pass 0  02:00            first crossing, completes no lap

@@ -21,6 +21,23 @@ final class Flag
     public const DIVERGENCIA_TOTAL = 'divergencia_total';
     /** A car's first pass came much later than the field's: its pass zero was probably missed. */
     public const PRIMEIRA_PASSAGEM_TARDIA = 'primeira_passagem_tardia';
+    /** A pass typed shortly before the start: probably the car's initial pass, with the start recorded a little late. */
+    public const ANTES_DA_LARGADA = 'antes_da_largada';
+    /** The entries of one pass lie on both sides of the finish: the median alone decided which side it counts on. */
+    public const NO_ENCERRAMENTO = 'no_encerramento';
+    /** A pass group holds an entry whose time was estimated by the phone (typed offline, stamped after a reload). */
+    public const TEMPO_ESTIMADO = 'tempo_estimado';
+    /** An entry whose time is unknown. One flag per entry; it is in no pass group. */
+    public const TEMPO_DESCONHECIDO = 'tempo_desconhecido';
+    /** A pass typed for a car that is present but not classified. It never counts unless confirmed. */
+    public const CARRO_NAO_CLASSIFICADO = 'carro_nao_classificado';
+    /** A pass at the line while the car was logged as inside the fueling station. */
+    public const NO_ABASTECIMENTO = 'no_abastecimento';
+
+    /** Confirming the flag only silences it: the count stays as it is. */
+    public const EFEITO_NENHUM = 'nenhum';
+    /** Confirming the flag gives the car one more official pass. */
+    public const EFEITO_MAIS_UMA_PASSAGEM = 'mais_uma_passagem';
 
     public string $id;
     public string $tipo;
@@ -62,6 +79,21 @@ final class Flag
     public int $prioridade = PHP_INT_MAX;
 
     /**
+     * What a reviewer's "confirmar" on this flag would do to the count: one
+     * of the EFEITO_* constants. The review screen words its button from it
+     * ("está correto, parar de avisar" or "contar esta passagem (+1 volta)").
+     */
+    public string $efeitoDeConfirmar = self::EFEITO_NENHUM;
+
+    /**
+     * Only with EFEITO_MAIS_UMA_PASSAGEM: the shortest lap the new pass
+     * would create (racing time, in ms), so the screen can ask "are you
+     * sure?" when it is impossibly short. Null when the car has no other
+     * pass to measure a lap from.
+     */
+    public ?int $voltaResultanteMs = null;
+
+    /**
      * @param int[] $carros
      * @param int[] $passagemIds
      */
@@ -87,6 +119,8 @@ final class Flag
             'motivo' => $this->motivo,
             'auto_resolvido' => $this->autoResolvido,
             'prioridade' => $this->prioridade === PHP_INT_MAX ? null : $this->prioridade,
+            'efeito_de_confirmar' => $this->efeitoDeConfirmar,
+            'volta_resultante_ms' => $this->voltaResultanteMs,
         ];
     }
 }

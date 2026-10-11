@@ -268,3 +268,65 @@ test('the offline copy counts as installed only with a worker in charge AND the 
     assert.equal(await read({}, undefined, false), COPIA_OFFLINE.PRECISA_HTTPS);
     assert.equal(await read(workerInCharge, pageIsCached, false), COPIA_OFFLINE.PRECISA_HTTPS);
 });
+
+// ---------------------------------------------------------------------------
+// Brief 2.4 and 2.5: a blocked device, and a browser without Web Locks
+// ---------------------------------------------------------------------------
+
+test('a device blocked by the controller says who can unblock it, and keeps the data message', () => {
+    // SITUATION: a controller revoked this counter's phone. The token
+    // endpoint answers 403 "dispositivo_revogado" (see device-token tests).
+    const banner = describeBanner(
+        queueState({ conexao: CONEXAO.REVOGADO }),
+        { tokenProblem: 'dispositivo_revogado', armazenamento: ARMAZENAMENTO.DISCO },
+    );
+
+    // EXPECTED: plain words: blocked, by whom, nothing lost, what has to
+    // happen ("vincular de novo" or "liberar"), and that the page recovers
+    // by itself. "Tentar de novo" is offered for the impatient.
+    assert.equal(banner.avisos.length, 1);
+    assert.match(banner.avisos[0], /bloqueado nesta contagem pelo responsável pela prova/);
+    assert.match(banner.avisos[0], /continua guardado aqui/);
+    assert.match(banner.avisos[0], /liberar/);
+    assert.match(banner.avisos[0], /volta sozinho/);
+    assert.equal(banner.oferecerNovaTentativa, true);
+});
+
+test('the same text is shown when the page OPENS blocked, before any upload was refused', () => {
+    // Situation: the blocked counter reloads the page (or opens it on a
+    // phone with no stored token). The queue is not in the "revogado" state:
+    // it never got as far as an upload.
+    const banner = describeBanner(
+        queueState({ conexao: CONEXAO.OFFLINE }),
+        { tokenProblem: 'dispositivo_revogado', armazenamento: ARMAZENAMENTO.DISCO },
+    );
+
+    assert.match(banner.avisos[0], /bloqueado nesta contagem/);
+});
+
+test('where the browser has no Web Locks, the footer says the one-tab protection is off', () => {
+    // SITUATION: an old browser, or the page served over plain http: there
+    // is no `navigator.locks`, so nothing stops this count from being open
+    // in two tabs at once (each uploading and reporting on its own).
+    //
+    // WHAT WENT WRONG: the page carried on without the protection and said
+    // nothing, while the documentation promised "já aberto em outra aba".
+    const lines = describeDeviceStatus({
+        protegido: true, armazenamento: ARMAZENAMENTO.DISCO, copiaOffline: COPIA_OFFLINE.INSTALADA,
+        semTravaDeAba: true,
+    });
+
+    // EXPECTED: a third line that says so and what to do, and the device no
+    // longer counts as "all fine".
+    assert.equal(lines.abaUnica, 'Proteção contra duas abas: desligada neste navegador. Abra esta contagem em UMA aba só.');
+    assert.equal(lines.tudoCerto, false);
+});
+
+test('where the protection works, there is no third line', () => {
+    const lines = describeDeviceStatus({
+        protegido: true, armazenamento: ARMAZENAMENTO.DISCO, copiaOffline: COPIA_OFFLINE.INSTALADA,
+    });
+
+    assert.equal(lines.abaUnica, null);
+    assert.equal(lines.tudoCerto, true);
+});

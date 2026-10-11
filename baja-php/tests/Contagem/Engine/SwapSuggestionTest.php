@@ -194,4 +194,29 @@ final class SwapSuggestionTest extends EngineTestCase
             $this->assertSingleOpenFlag($race->run('05:00'), $expectedFlag);
         }
     }
+
+    /**
+     * SITUATION: counter 1 alone types 14 at 03:00. Around that moment car
+     * 41 has a pass that rests on ONE counter's entry (counter 2) plus a
+     * pass a reviewer added for it by hand.
+     *
+     * EXPECTED: to explain a stray entry as a typo, the other car's pass
+     * must have been seen by two COUNTERS. A reviewer's added pass is not a
+     * counter. So no swap is suggested towards car 41; the stray 14 is an
+     * ordinary lone entry.
+     */
+    public function testAPassAReviewerAddedDoesNotCountAsASecondCounter(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([14, 41]);
+        $race->entry(2, 41, '03:00');
+        $race->addPass(41, '03:01');
+        $stray = $race->entry(1, 14, '03:00');
+
+        $result = $race->run('05:00');
+
+        $flag = $this->assertSingleOpenFlag($result, Flag::SOLITARIA);
+        $this->assertSame([$stray], $flag->passagemIds);
+    }
 }

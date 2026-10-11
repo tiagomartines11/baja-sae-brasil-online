@@ -155,9 +155,15 @@ final class MatchingTest extends EngineTestCase
      * thirty seconds before the start, then twenty seconds after it, then
      * three minutes after it.
      *
-     * EXPECTED: what was typed before the start does not exist for the
-     * count. It is not even the car's pass zero: pass zero is the crossing
-     * at 00:20, and the crossing at 03:00 completes lap 1.
+     * EXPECTED: what was typed before the start does not count. It is not
+     * even the car's pass zero: pass zero is the crossing at 00:20, and the
+     * crossing at 03:00 completes lap 1.
+     *
+     * The entries are not thrown away, though: they stay visible as a pass
+     * group marked "antes da largada" (so that a protest can be answered),
+     * with no number, no row in the lap table and, being a full half minute
+     * before the start, no flag. (Entries only SECONDS before the start are
+     * another matter; see BeforeTheStartTest.)
      */
     public function testEntriesTypedBeforeTheStartAreNeitherLapsNorPassZero(): void
     {
@@ -171,7 +177,13 @@ final class MatchingTest extends EngineTestCase
 
         $this->assertLapCounts([5 => 1], $result);
         $this->assertSame(RaceScenario::ms('00:20'), $result->laps[0]->tsMs, 'Pass zero is the first crossing AFTER the start.');
-        $this->assertNull($result->groupOfEntry($beforeTheStart[1]));
+        $this->assertCount(2, $result->laps, 'The group before the start is not a row of the lap table.');
+        $warmUp = $result->groupOfEntry($beforeTheStart[1]);
+        $this->assertTrue($warmUp->antesDaLargada);
+        $this->assertFalse($warmUp->contado);
+        $this->assertNull($warmUp->numeroVolta);
+        $this->assertNoOpenFlags($result);
+        $this->assertSame(2, $this->sourceCount($result, 5, 1), 'Warm-up entries are not among a counter\'s passes of the race.');
     }
 
     /**
@@ -180,7 +192,8 @@ final class MatchingTest extends EngineTestCase
      * car, 6, one millisecond before it.
      *
      * EXPECTED: "after the start" includes the start instant itself. Car
-     * 5's entry is its pass zero; car 6's does not exist for the count.
+     * 5's entry is its pass zero; car 6's is before the start and is not an
+     * official pass (it is kept, marked, and a reviewer is asked about it).
      */
     public function testAnEntryAtTheExactInstantOfTheStartBelongsToTheRace(): void
     {
@@ -192,7 +205,10 @@ final class MatchingTest extends EngineTestCase
         $result = $race->run('02:00');
 
         $this->assertSame(0, $result->groupOfEntry($atTheStart[1])->numeroVolta);
-        $this->assertNull($result->groupOfEntry($justBefore[1]));
+        $this->assertFalse($result->groupOfEntry($atTheStart[1])->antesDaLargada);
+        $this->assertTrue($result->groupOfEntry($justBefore[1])->antesDaLargada);
+        $this->assertNull($result->groupOfEntry($justBefore[1])->numeroVolta);
+        $this->assertNull($result->cars[6]->ultimaPassagemMs ?? null, 'Car 6 has no official pass.');
     }
 
     /**
@@ -296,5 +312,32 @@ final class MatchingTest extends EngineTestCase
 
             $this->assertLapCounts([9 => $expectedLaps], $race->run('05:00'), "With a window of $janelaMs ms.");
         }
+    }
+
+    /**
+     * SITUATION: whoever shows a result asks "which pass group is this
+     * entry in?" (`groupOfEntry`). The answer is looked up in an index
+     * that is only built when first asked for. Here a result is asked,
+     * then given a different set of groups, then asked again.
+     *
+     * EXPECTED: the second answer is about the second set of groups, not a
+     * leftover of the first.
+     */
+    public function testTheGroupOfAnEntryFollowsTheGroupsTheResultHolds(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $car5 = $race->pass(5, '00:20');
+        $car6 = $race->pass(6, '00:25');
+        $result = $race->run('01:00');
+        $groupOfCar5 = $result->groupOfEntry($car5[1]);
+        $groupOfCar6 = $result->groupOfEntry($car6[1]);
+        $this->assertSame(5, $groupOfCar5->carro);
+        $this->assertNull($result->groupOfEntry(999), 'An entry the result does not hold.');
+
+        $result->setGroups([$groupOfCar6]);
+
+        $this->assertNull($result->groupOfEntry($car5[1]));
+        $this->assertSame($groupOfCar6, $result->groupOfEntry($car6[1]));
     }
 }

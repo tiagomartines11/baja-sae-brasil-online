@@ -53,6 +53,8 @@ final class RaceScenario
     private array $totals = [];
     /** @var int[] */
     private array $validCars = [];
+    /** @var int[] */
+    private array $unclassifiedCars = [];
     /** @var array<int, true> sources whose "last seen" time the test set by hand */
     private array $lastSeenSetByTest = [];
 
@@ -114,6 +116,20 @@ final class RaceScenario
         $id = $this->nextEntryId++;
         // By default each counter uses a single device, numbered after the source.
         $this->entries[] = new Entry($id, $source, $device ?? $source * 10, $car, self::ms($at));
+        return $id;
+    }
+
+    /**
+     * One counter records one car on a phone that could not take its time
+     * from the server: typed offline, and the page was reloaded before it
+     * got a connection. $quality says how good the time is:
+     * Entry::TEMPO_ESTIMADO (worked out from an older sync, roughly right)
+     * or Entry::TEMPO_DESCONHECIDO (whatever the phone's clock said).
+     */
+    public function entryWithTimeQuality(int $source, int $car, string $at, string $quality): int
+    {
+        $id = $this->entry($source, $car, $at);
+        $this->entries[count($this->entries) - 1]->qualidadeTempo = $quality;
         return $id;
     }
 
@@ -201,6 +217,49 @@ final class RaceScenario
         return $this->ocorrencia(Ocorrencia::BOX_SAIDA, $at, $car);
     }
 
+    /** The fueling station log: the car went in. */
+    public function fuelIn(int $car, string $at): int
+    {
+        return $this->ocorrencia(Ocorrencia::ABASTECIMENTO_ENTRADA, $at, $car);
+    }
+
+    /** The fueling station log: the car came out. */
+    public function fuelOut(int $car, string $at): int
+    {
+        return $this->ocorrencia(Ocorrencia::ABASTECIMENTO_SAIDA, $at, $car);
+    }
+
+    public function redFlag(string $at): int
+    {
+        return $this->ocorrencia(Ocorrencia::BANDEIRA_VERMELHA, $at);
+    }
+
+    public function restart(string $at): int
+    {
+        return $this->ocorrencia(Ocorrencia::RELARGADA, $at);
+    }
+
+    /**
+     * Race control presses "cancelar" on an event (or "restaurar" on a
+     * cancellation, which is cancelling the cancellation). Nothing is
+     * deleted: a new row says the other one no longer holds.
+     */
+    public function cancel(int $ocorrenciaId): int
+    {
+        return $this->ocorrencia(Ocorrencia::CANCELAMENTO, '00:00', null, $ocorrenciaId);
+    }
+
+    /** Race control presses "corrigir" on an event: the same event at another time. */
+    public function correct(int $ocorrenciaId, string $newTime): int
+    {
+        foreach ($this->ocorrencias as $ocorrencia) {
+            if ($ocorrencia->id === $ocorrenciaId) {
+                return $this->ocorrencia($ocorrencia->tipo, $newTime, $ocorrencia->carro, $ocorrenciaId);
+            }
+        }
+        throw new \LogicException('There is no event ' . $ocorrenciaId . ' to correct.');
+    }
+
     /** Race control ends the race. */
     public function finish(string $at): int
     {
@@ -239,10 +298,19 @@ final class RaceScenario
         $this->lastSeenSetByTest[$source] = true;
     }
 
-    /** @param int[] $cars the car numbers of the teams present at the event */
+    /** @param int[] $cars the car numbers of the teams present at the event (and classified, when the prova asks for that) */
     public function teamsPresent(array $cars): void
     {
         $this->validCars = $cars;
+    }
+
+    /**
+     * @param int[] $cars teams that are present at the event but NOT classified
+     *   (the prova names a classification field and theirs does not say "SIM")
+     */
+    public function teamsNotClassified(array $cars): void
+    {
+        $this->unclassifiedCars = $cars;
     }
 
     /** @param array<int, int> $lapsByCar a paper count typed in after the race */
@@ -284,6 +352,7 @@ final class RaceScenario
         $input->ocorrencias = $this->ocorrencias;
         $input->totals = $this->totals;
         $input->validCars = $this->validCars;
+        $input->unclassifiedCars = $this->unclassifiedCars;
         $input->nowMs = $nowMs;
         return $input;
     }

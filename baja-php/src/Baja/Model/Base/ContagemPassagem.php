@@ -101,6 +101,21 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     protected $equipe_numero;
 
     /**
+     * The value for the ts_ms field.
+     *
+     * @var        string
+     */
+    protected $ts_ms;
+
+    /**
+     * The value for the qualidade_tempo field.
+     *
+     * Note: this column has a database default value of: 'exato'
+     * @var        string
+     */
+    protected $qualidade_tempo;
+
+    /**
      * The value for the ts_dispositivo_ms field.
      *
      * @var        string
@@ -108,18 +123,25 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     protected $ts_dispositivo_ms;
 
     /**
-     * The value for the desvio_relogio_ms field.
+     * The value for the ancora_servidor_ms field.
      *
      * @var        string|null
      */
-    protected $desvio_relogio_ms;
+    protected $ancora_servidor_ms;
 
     /**
-     * The value for the ts_ms field.
+     * The value for the ancora_rtt_ms field.
+     *
+     * @var        int|null
+     */
+    protected $ancora_rtt_ms;
+
+    /**
+     * The value for the ancora_idade_ms field.
      *
      * @var        string|null
      */
-    protected $ts_ms;
+    protected $ancora_idade_ms;
 
     /**
      * The value for the digitacao_ms field.
@@ -161,10 +183,23 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     protected $alreadyInSave = false;
 
     /**
+     * Applies default values to this object.
+     * This method should be called from the object's constructor (or
+     * equivalent initialization method).
+     * @see __construct()
+     */
+    public function applyDefaultValues(): void
+    {
+        $this->qualidade_tempo = 'exato';
+    }
+
+    /**
      * Initializes internal state of Baja\Model\Base\ContagemPassagem object.
+     * @see applyDefaults()
      */
     public function __construct()
     {
+        $this->applyDefaultValues();
     }
 
     /**
@@ -437,6 +472,26 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     }
 
     /**
+     * Get the [ts_ms] column value.
+     *
+     * @return string
+     */
+    public function getTsMs()
+    {
+        return $this->ts_ms;
+    }
+
+    /**
+     * Get the [qualidade_tempo] column value.
+     *
+     * @return string
+     */
+    public function getQualidadeTempo()
+    {
+        return $this->qualidade_tempo;
+    }
+
+    /**
      * Get the [ts_dispositivo_ms] column value.
      *
      * @return string
@@ -447,23 +502,33 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     }
 
     /**
-     * Get the [desvio_relogio_ms] column value.
+     * Get the [ancora_servidor_ms] column value.
      *
      * @return string|null
      */
-    public function getDesvioRelogioMs()
+    public function getAncoraServidorMs()
     {
-        return $this->desvio_relogio_ms;
+        return $this->ancora_servidor_ms;
     }
 
     /**
-     * Get the [ts_ms] column value.
+     * Get the [ancora_rtt_ms] column value.
+     *
+     * @return int|null
+     */
+    public function getAncoraRttMs()
+    {
+        return $this->ancora_rtt_ms;
+    }
+
+    /**
+     * Get the [ancora_idade_ms] column value.
      *
      * @return string|null
      */
-    public function getTsMs()
+    public function getAncoraIdadeMs()
     {
-        return $this->ts_ms;
+        return $this->ancora_idade_ms;
     }
 
     /**
@@ -605,6 +670,46 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [ts_ms] column.
+     *
+     * @param string $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setTsMs($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->ts_ms !== $v) {
+            $this->ts_ms = $v;
+            $this->modifiedColumns[ContagemPassagemTableMap::COL_TS_MS] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [qualidade_tempo] column.
+     *
+     * @param string $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setQualidadeTempo($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->qualidade_tempo !== $v) {
+            $this->qualidade_tempo = $v;
+            $this->modifiedColumns[ContagemPassagemTableMap::COL_QUALIDADE_TEMPO] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Set the value of [ts_dispositivo_ms] column.
      *
      * @param string $v New value
@@ -625,40 +730,60 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     }
 
     /**
-     * Set the value of [desvio_relogio_ms] column.
+     * Set the value of [ancora_servidor_ms] column.
      *
      * @param string|null $v New value
      * @return $this The current object (for fluent API support)
      */
-    public function setDesvioRelogioMs($v)
+    public function setAncoraServidorMs($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->desvio_relogio_ms !== $v) {
-            $this->desvio_relogio_ms = $v;
-            $this->modifiedColumns[ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS] = true;
+        if ($this->ancora_servidor_ms !== $v) {
+            $this->ancora_servidor_ms = $v;
+            $this->modifiedColumns[ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS] = true;
         }
 
         return $this;
     }
 
     /**
-     * Set the value of [ts_ms] column.
+     * Set the value of [ancora_rtt_ms] column.
+     *
+     * @param int|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setAncoraRttMs($v)
+    {
+        if ($v !== null) {
+            $v = (int) $v;
+        }
+
+        if ($this->ancora_rtt_ms !== $v) {
+            $this->ancora_rtt_ms = $v;
+            $this->modifiedColumns[ContagemPassagemTableMap::COL_ANCORA_RTT_MS] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [ancora_idade_ms] column.
      *
      * @param string|null $v New value
      * @return $this The current object (for fluent API support)
      */
-    public function setTsMs($v)
+    public function setAncoraIdadeMs($v)
     {
         if ($v !== null) {
             $v = (string) $v;
         }
 
-        if ($this->ts_ms !== $v) {
-            $this->ts_ms = $v;
-            $this->modifiedColumns[ContagemPassagemTableMap::COL_TS_MS] = true;
+        if ($this->ancora_idade_ms !== $v) {
+            $this->ancora_idade_ms = $v;
+            $this->modifiedColumns[ContagemPassagemTableMap::COL_ANCORA_IDADE_MS] = true;
         }
 
         return $this;
@@ -734,6 +859,10 @@ abstract class ContagemPassagem implements ActiveRecordInterface
      */
     public function hasOnlyDefaultValues(): bool
     {
+            if ($this->qualidade_tempo !== 'exato') {
+                return false;
+            }
+
         // otherwise, everything was equal, so return TRUE
         return true;
     }
@@ -775,22 +904,31 @@ abstract class ContagemPassagem implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ContagemPassagemTableMap::translateFieldName('EquipeNumero', TableMap::TYPE_PHPNAME, $indexType)];
             $this->equipe_numero = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ContagemPassagemTableMap::translateFieldName('TsDispositivoMs', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->ts_dispositivo_ms = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ContagemPassagemTableMap::translateFieldName('DesvioRelogioMs', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->desvio_relogio_ms = (null !== $col) ? (string) $col : null;
-
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ContagemPassagemTableMap::translateFieldName('TsMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ContagemPassagemTableMap::translateFieldName('TsMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->ts_ms = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ContagemPassagemTableMap::translateFieldName('DigitacaoMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ContagemPassagemTableMap::translateFieldName('QualidadeTempo', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->qualidade_tempo = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ContagemPassagemTableMap::translateFieldName('TsDispositivoMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->ts_dispositivo_ms = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ContagemPassagemTableMap::translateFieldName('AncoraServidorMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->ancora_servidor_ms = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemPassagemTableMap::translateFieldName('AncoraRttMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->ancora_rtt_ms = (null !== $col) ? (int) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ContagemPassagemTableMap::translateFieldName('AncoraIdadeMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->ancora_idade_ms = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : ContagemPassagemTableMap::translateFieldName('DigitacaoMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->digitacao_ms = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemPassagemTableMap::translateFieldName('ModoEntrada', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : ContagemPassagemTableMap::translateFieldName('ModoEntrada', TableMap::TYPE_PHPNAME, $indexType)];
             $this->modo_entrada = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ContagemPassagemTableMap::translateFieldName('RecebidoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : ContagemPassagemTableMap::translateFieldName('RecebidoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->recebido_em_ms = (null !== $col) ? (string) $col : null;
 
             $this->resetModified();
@@ -800,7 +938,7 @@ abstract class ContagemPassagem implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 11; // 11 = ContagemPassagemTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 14; // 14 = ContagemPassagemTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemPassagem'), 0, $e);
@@ -1044,14 +1182,23 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemPassagemTableMap::COL_EQUIPE_NUMERO)) {
             $modifiedColumns[':p' . $index++]  = 'equipe_numero';
         }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_TS_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'ts_ms';
+        }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_QUALIDADE_TEMPO)) {
+            $modifiedColumns[':p' . $index++]  = 'qualidade_tempo';
+        }
         if ($this->isColumnModified(ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS)) {
             $modifiedColumns[':p' . $index++]  = 'ts_dispositivo_ms';
         }
-        if ($this->isColumnModified(ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS)) {
-            $modifiedColumns[':p' . $index++]  = 'desvio_relogio_ms';
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'ancora_servidor_ms';
         }
-        if ($this->isColumnModified(ContagemPassagemTableMap::COL_TS_MS)) {
-            $modifiedColumns[':p' . $index++]  = 'ts_ms';
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_ANCORA_RTT_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'ancora_rtt_ms';
+        }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_ANCORA_IDADE_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'ancora_idade_ms';
         }
         if ($this->isColumnModified(ContagemPassagemTableMap::COL_DIGITACAO_MS)) {
             $modifiedColumns[':p' . $index++]  = 'digitacao_ms';
@@ -1093,16 +1240,28 @@ abstract class ContagemPassagem implements ActiveRecordInterface
                         $stmt->bindValue($identifier, $this->equipe_numero, PDO::PARAM_INT);
 
                         break;
+                    case 'ts_ms':
+                        $stmt->bindValue($identifier, $this->ts_ms, PDO::PARAM_INT);
+
+                        break;
+                    case 'qualidade_tempo':
+                        $stmt->bindValue($identifier, $this->qualidade_tempo, PDO::PARAM_STR);
+
+                        break;
                     case 'ts_dispositivo_ms':
                         $stmt->bindValue($identifier, $this->ts_dispositivo_ms, PDO::PARAM_INT);
 
                         break;
-                    case 'desvio_relogio_ms':
-                        $stmt->bindValue($identifier, $this->desvio_relogio_ms, PDO::PARAM_INT);
+                    case 'ancora_servidor_ms':
+                        $stmt->bindValue($identifier, $this->ancora_servidor_ms, PDO::PARAM_INT);
 
                         break;
-                    case 'ts_ms':
-                        $stmt->bindValue($identifier, $this->ts_ms, PDO::PARAM_INT);
+                    case 'ancora_rtt_ms':
+                        $stmt->bindValue($identifier, $this->ancora_rtt_ms, PDO::PARAM_INT);
+
+                        break;
+                    case 'ancora_idade_ms':
+                        $stmt->bindValue($identifier, $this->ancora_idade_ms, PDO::PARAM_INT);
 
                         break;
                     case 'digitacao_ms':
@@ -1195,21 +1354,30 @@ abstract class ContagemPassagem implements ActiveRecordInterface
                 return $this->getEquipeNumero();
 
             case 5:
-                return $this->getTsDispositivoMs();
-
-            case 6:
-                return $this->getDesvioRelogioMs();
-
-            case 7:
                 return $this->getTsMs();
 
+            case 6:
+                return $this->getQualidadeTempo();
+
+            case 7:
+                return $this->getTsDispositivoMs();
+
             case 8:
-                return $this->getDigitacaoMs();
+                return $this->getAncoraServidorMs();
 
             case 9:
-                return $this->getModoEntrada();
+                return $this->getAncoraRttMs();
 
             case 10:
+                return $this->getAncoraIdadeMs();
+
+            case 11:
+                return $this->getDigitacaoMs();
+
+            case 12:
+                return $this->getModoEntrada();
+
+            case 13:
                 return $this->getRecebidoEmMs();
 
             default:
@@ -1245,12 +1413,15 @@ abstract class ContagemPassagem implements ActiveRecordInterface
             $keys[2] => $this->getDispositivoId(),
             $keys[3] => $this->getUuidCliente(),
             $keys[4] => $this->getEquipeNumero(),
-            $keys[5] => $this->getTsDispositivoMs(),
-            $keys[6] => $this->getDesvioRelogioMs(),
-            $keys[7] => $this->getTsMs(),
-            $keys[8] => $this->getDigitacaoMs(),
-            $keys[9] => $this->getModoEntrada(),
-            $keys[10] => $this->getRecebidoEmMs(),
+            $keys[5] => $this->getTsMs(),
+            $keys[6] => $this->getQualidadeTempo(),
+            $keys[7] => $this->getTsDispositivoMs(),
+            $keys[8] => $this->getAncoraServidorMs(),
+            $keys[9] => $this->getAncoraRttMs(),
+            $keys[10] => $this->getAncoraIdadeMs(),
+            $keys[11] => $this->getDigitacaoMs(),
+            $keys[12] => $this->getModoEntrada(),
+            $keys[13] => $this->getRecebidoEmMs(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1340,21 +1511,30 @@ abstract class ContagemPassagem implements ActiveRecordInterface
                 $this->setEquipeNumero($value);
                 break;
             case 5:
-                $this->setTsDispositivoMs($value);
-                break;
-            case 6:
-                $this->setDesvioRelogioMs($value);
-                break;
-            case 7:
                 $this->setTsMs($value);
                 break;
+            case 6:
+                $this->setQualidadeTempo($value);
+                break;
+            case 7:
+                $this->setTsDispositivoMs($value);
+                break;
             case 8:
-                $this->setDigitacaoMs($value);
+                $this->setAncoraServidorMs($value);
                 break;
             case 9:
-                $this->setModoEntrada($value);
+                $this->setAncoraRttMs($value);
                 break;
             case 10:
+                $this->setAncoraIdadeMs($value);
+                break;
+            case 11:
+                $this->setDigitacaoMs($value);
+                break;
+            case 12:
+                $this->setModoEntrada($value);
+                break;
+            case 13:
                 $this->setRecebidoEmMs($value);
                 break;
         } // switch()
@@ -1399,22 +1579,31 @@ abstract class ContagemPassagem implements ActiveRecordInterface
             $this->setEquipeNumero($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setTsDispositivoMs($arr[$keys[5]]);
+            $this->setTsMs($arr[$keys[5]]);
         }
         if (array_key_exists($keys[6], $arr)) {
-            $this->setDesvioRelogioMs($arr[$keys[6]]);
+            $this->setQualidadeTempo($arr[$keys[6]]);
         }
         if (array_key_exists($keys[7], $arr)) {
-            $this->setTsMs($arr[$keys[7]]);
+            $this->setTsDispositivoMs($arr[$keys[7]]);
         }
         if (array_key_exists($keys[8], $arr)) {
-            $this->setDigitacaoMs($arr[$keys[8]]);
+            $this->setAncoraServidorMs($arr[$keys[8]]);
         }
         if (array_key_exists($keys[9], $arr)) {
-            $this->setModoEntrada($arr[$keys[9]]);
+            $this->setAncoraRttMs($arr[$keys[9]]);
         }
         if (array_key_exists($keys[10], $arr)) {
-            $this->setRecebidoEmMs($arr[$keys[10]]);
+            $this->setAncoraIdadeMs($arr[$keys[10]]);
+        }
+        if (array_key_exists($keys[11], $arr)) {
+            $this->setDigitacaoMs($arr[$keys[11]]);
+        }
+        if (array_key_exists($keys[12], $arr)) {
+            $this->setModoEntrada($arr[$keys[12]]);
+        }
+        if (array_key_exists($keys[13], $arr)) {
+            $this->setRecebidoEmMs($arr[$keys[13]]);
         }
 
         return $this;
@@ -1474,14 +1663,23 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemPassagemTableMap::COL_EQUIPE_NUMERO)) {
             $criteria->add(ContagemPassagemTableMap::COL_EQUIPE_NUMERO, $this->equipe_numero);
         }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_TS_MS)) {
+            $criteria->add(ContagemPassagemTableMap::COL_TS_MS, $this->ts_ms);
+        }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_QUALIDADE_TEMPO)) {
+            $criteria->add(ContagemPassagemTableMap::COL_QUALIDADE_TEMPO, $this->qualidade_tempo);
+        }
         if ($this->isColumnModified(ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS)) {
             $criteria->add(ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS, $this->ts_dispositivo_ms);
         }
-        if ($this->isColumnModified(ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS)) {
-            $criteria->add(ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS, $this->desvio_relogio_ms);
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS)) {
+            $criteria->add(ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS, $this->ancora_servidor_ms);
         }
-        if ($this->isColumnModified(ContagemPassagemTableMap::COL_TS_MS)) {
-            $criteria->add(ContagemPassagemTableMap::COL_TS_MS, $this->ts_ms);
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_ANCORA_RTT_MS)) {
+            $criteria->add(ContagemPassagemTableMap::COL_ANCORA_RTT_MS, $this->ancora_rtt_ms);
+        }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_ANCORA_IDADE_MS)) {
+            $criteria->add(ContagemPassagemTableMap::COL_ANCORA_IDADE_MS, $this->ancora_idade_ms);
         }
         if ($this->isColumnModified(ContagemPassagemTableMap::COL_DIGITACAO_MS)) {
             $criteria->add(ContagemPassagemTableMap::COL_DIGITACAO_MS, $this->digitacao_ms);
@@ -1584,9 +1782,12 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         $copyObj->setDispositivoId($this->getDispositivoId());
         $copyObj->setUuidCliente($this->getUuidCliente());
         $copyObj->setEquipeNumero($this->getEquipeNumero());
-        $copyObj->setTsDispositivoMs($this->getTsDispositivoMs());
-        $copyObj->setDesvioRelogioMs($this->getDesvioRelogioMs());
         $copyObj->setTsMs($this->getTsMs());
+        $copyObj->setQualidadeTempo($this->getQualidadeTempo());
+        $copyObj->setTsDispositivoMs($this->getTsDispositivoMs());
+        $copyObj->setAncoraServidorMs($this->getAncoraServidorMs());
+        $copyObj->setAncoraRttMs($this->getAncoraRttMs());
+        $copyObj->setAncoraIdadeMs($this->getAncoraIdadeMs());
         $copyObj->setDigitacaoMs($this->getDigitacaoMs());
         $copyObj->setModoEntrada($this->getModoEntrada());
         $copyObj->setRecebidoEmMs($this->getRecebidoEmMs());
@@ -1740,14 +1941,18 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         $this->dispositivo_id = null;
         $this->uuid_cliente = null;
         $this->equipe_numero = null;
-        $this->ts_dispositivo_ms = null;
-        $this->desvio_relogio_ms = null;
         $this->ts_ms = null;
+        $this->qualidade_tempo = null;
+        $this->ts_dispositivo_ms = null;
+        $this->ancora_servidor_ms = null;
+        $this->ancora_rtt_ms = null;
+        $this->ancora_idade_ms = null;
         $this->digitacao_ms = null;
         $this->modo_entrada = null;
         $this->recebido_em_ms = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
+        $this->applyDefaultValues();
         $this->resetModified();
         $this->setNew(true);
         $this->setDeleted(false);

@@ -2,7 +2,9 @@
 // (with "excluir esta fonte") and the decision history.
 
 import { el, substituir } from './revisao-dom.js';
-import { NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, idade, relogio, tempoDeProva } from './revisao-formato.js';
+import {
+  AVISO_TEMPO_DE_VOLTA, NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, idade, relogio, tempoDeProva,
+} from './revisao-formato.js';
 import { NOMES_DE_SITUACAO, dispositivosDaFonte, fontesDivergentes } from './revisao-fila.js';
 import { descreverDecisao, exclusoesAbertas } from './revisao-decisoes.js';
 
@@ -18,9 +20,18 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
         ? 'total de voltas importado'
         : 'passagens registradas por esta fonte (inclui a passagem zero); destacado quando difere das passagens oficiais',
     }, fonte.nome)),
-    el('th', {}, 'Última passagem'), el('th', {}, 'Última volta'), el('th', {}, 'Melhor volta'), el('th', {}, 'Situação')));
+    el('th', {}, 'Última passagem'),
+    el('th', { class: 'com-dica', title: AVISO_TEMPO_DE_VOLTA }, 'Última volta'),
+    el('th', { class: 'com-dica', title: AVISO_TEMPO_DE_VOLTA }, 'Melhor volta'),
+    el('th', {}, 'Situação')));
 
-  const linhas = (estado.carros ?? []).map((carro) => {
+  // Classified cars first, in standings order as the server sent them. A
+  // car that is not classified (or not at the event at all) is only in the
+  // list because somebody typed its number; it goes to the end, marked.
+  const carros = estado.carros ?? [];
+  const emOrdem = [...carros.filter((carro) => carro.classificado !== false), ...carros.filter((carro) => carro.classificado === false)];
+
+  const linhas = emOrdem.map((carro) => {
     const divergentes = fontesDivergentes(carro, fontes);
     const celulasDasFontes = fontes.map((fonte) => {
       const valor = fonte.tipo === 'totais'
@@ -30,8 +41,11 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
     });
     const passagemZero = (carro.passagens ?? 0) > carro.voltas;
 
+    const foraDaProva = carro.classificado === false;
+
     return el('tr', {
-      class: carro.carro === carroSelecionado ? `selecionado status-${carro.status}` : `status-${carro.status}`,
+      class: [carro.carro === carroSelecionado ? 'selecionado' : '', `status-${carro.status}`, foraDaProva ? 'nao-classificado' : '']
+        .filter(Boolean).join(' '),
       tabindex: 0,
       onclick: () => aoEscolherCarro(carro.carro),
       onkeydown: (evento) => {
@@ -42,15 +56,16 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
     },
     el('td', { class: 'num' }, carro.posicao ?? SEM_VALOR),
     el('td', { class: 'num carro' }, carro.carro),
-    el('td', { title: carro.escola ?? '' }, carro.equipe ?? ''),
+    el('td', { title: carro.escola ?? '' }, carro.equipe ?? '',
+      foraDaProva ? el('span', { class: 'etiqueta-fora' }, carro.presente ? ' não classificado' : ' número desconhecido') : null),
     el('td', {
       class: 'num voltas',
       title: passagemZero ? `${carro.voltas} voltas + a passagem zero = ${carro.passagens} passagens oficiais` : '',
     }, carro.voltas),
     celulasDasFontes,
     el('td', { class: 'num' }, tempoDeProva(carro.ultima_passagem_ms, largada)),
-    el('td', { class: 'num' }, duracao(carro.ultima_volta_ms)),
-    el('td', { class: 'num' }, duracao(carro.melhor_volta_ms)),
+    el('td', { class: 'num', title: AVISO_TEMPO_DE_VOLTA }, duracao(carro.ultima_volta_ms)),
+    el('td', { class: 'num', title: AVISO_TEMPO_DE_VOLTA }, duracao(carro.melhor_volta_ms)),
     el('td', { class: 'situacao' }, NOMES_DE_STATUS[carro.status] ?? carro.status ?? '',
       carro.status_desde_ms ? ` desde ${tempoDeProva(carro.status_desde_ms, largada)}` : ''));
   });
@@ -83,6 +98,34 @@ function listaDeDispositivos(dispositivos) {
   }));
 }
 
+// An exclusion with no end, shown first and loud: while it stands, nothing
+// this source records counts. Two ways out, and they are not the same:
+//   "Encerrar exclusão em"  the counter is back: what it recorded while
+//                           excluded stays out, what it records from that
+//                           moment counts again;
+//   "Desfazer a exclusão"   it was a mistake: everything counts, as if the
+//                           source had never been excluded (and every pass
+//                           it did not record in the gap becomes a miss).
+function exclusaoAberta(decisao, largada, ocupado, acoes) {
+  const fim = el('input', { type: 'text', size: 8, required: true, placeholder: 'h:mm:ss', 'aria-label': 'fim da exclusão, em tempo de prova' });
+  return el('div', { class: 'exclusao-aberta', role: 'alert' },
+    el('strong', {}, `EXCLUÍDA desde ${tempoDeProva(decisao.ts_ms, largada)} até segunda ordem`),
+    ` por ${decisao.usuario ?? SEM_VALOR}${decisao.motivo ? ` — ${decisao.motivo}` : ''}. `,
+    'Os registros desta fonte não estão contando. ',
+    el('form', {
+      class: 'em-linha',
+      onsubmit: (evento) => {
+        evento.preventDefault();
+        acoes.encerrarExclusao(decisao, fim.value);
+      },
+    }, 'Encerrar exclusão em ', fim, el('button', { type: 'submit', disabled: ocupado }, 'Encerrar')),
+    ' ',
+    el('button', {
+      type: 'button', disabled: ocupado, onclick: () => acoes.desfazer(decisao),
+      title: 'Como se a fonte nunca tivesse sido excluída: o período inteiro volta a contar',
+    }, 'Desfazer a exclusão'));
+}
+
 function blocoDaFonte(fonte, estado, ocupado, acoes) {
   const stats = fonte.stats;
   const largada = estado.corrida.largada_ms;
@@ -96,11 +139,7 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
   return el('div', { class: fonte.ativa ? 'bloco-fonte' : 'bloco-fonte inativa' },
     el('h3', {}, fonte.nome, fonte.principal ? ' ★' : '', fonte.ativa ? '' : ' (inativa)'),
     // Shown first and loud: while this stands, nothing this source records counts.
-    abertas.map((decisao) => el('p', { class: 'exclusao-aberta', role: 'alert' },
-      el('strong', {}, `EXCLUÍDA desde ${tempoDeProva(decisao.ts_ms, largada)} até segunda ordem`),
-      ` por ${decisao.usuario ?? SEM_VALOR}${decisao.motivo ? ` — ${decisao.motivo}` : ''}. `,
-      'Os registros desta fonte não estão contando. ',
-      el('button', { type: 'button', disabled: ocupado, onclick: () => acoes.desfazer(decisao) }, 'Desfazer a exclusão'))),
+    abertas.map((decisao) => exclusaoAberta(decisao, largada, ocupado, acoes)),
     stats
       ? el('dl', {},
         el('dt', {}, 'registros em uso'), el('dd', {}, numero(stats.entradas)),
@@ -125,9 +164,33 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
       : null);
 }
 
-// acoes: {excluirFonte(fonte, de, ate, motivo), desfazer(decisao)}
+const NOMES_DE_PARADA = {
+  box_entrada: 'entrada no box sem saída',
+  box_saida: 'saída do box sem entrada',
+  abastecimento_entrada: 'entrada no abastecimento sem saída',
+  abastecimento_saida: 'saída do abastecimento sem entrada',
+};
+
+// Pit and fueling events the engine could not pair up, for the whole race.
+// They block nothing; the list is here so a hole in the log is noticed.
+function blocoDeParadasSemPar(estado) {
+  const semPar = estado.paradas_sem_par ?? [];
+  if (semPar.length === 0) {
+    return null;
+  }
+  return el('div', { class: 'bloco-fonte paradas-sem-par' },
+    el('h3', {}, `Box e abastecimento: ${semPar.length} registro(s) sem par`),
+    el('ul', { class: 'dispositivos' }, semPar.map((parada) => el('li', {},
+      el('strong', {}, `carro ${parada.carro}`), ` · ${NOMES_DE_PARADA[parada.tipo] ?? parada.tipo}`,
+      ` · ${tempoDeProva(parada.ts_ms, estado.corrida.largada_ms)}`))),
+    el('p', { class: 'vazio' }, 'Não entram como parada nas estatísticas até terem as duas pontas.'));
+}
+
+// acoes: {excluirFonte(fonte, de, ate, motivo), encerrarExclusao(decisao, ate), desfazer(decisao)}
 export function desenharFontes(container, estado, ocupado, acoes) {
-  substituir(container, (estado.fontes ?? []).map((fonte) => blocoDaFonte(fonte, estado, ocupado, acoes)));
+  substituir(container,
+    (estado.fontes ?? []).map((fonte) => blocoDaFonte(fonte, estado, ocupado, acoes)),
+    blocoDeParadasSemPar(estado));
 }
 
 function linhaDoHistorico(decisao, estado, ocupado, aoDesfazer, classeExtra = '') {

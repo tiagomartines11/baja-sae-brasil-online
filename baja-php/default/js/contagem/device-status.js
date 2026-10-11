@@ -1,11 +1,13 @@
-// Two facts about this device that decide whether a counter's work is safe,
-// and that nobody can see from the outside. The page shows both in plain
-// words so that they can be checked during the rehearsal, with time to fix:
+// Facts about this device that decide whether a counter's work is safe, and
+// that nobody can see from the outside. The page shows them in plain words so
+// that they can be checked during the rehearsal, with time to fix:
 //
 //   "Armazenamento protegido"  the browser promised not to throw this site's
 //                              records away when the phone runs low on space.
 //   "Cópia offline"            the page itself is stored on the device, so it
 //                              can be reopened with no network at all.
+//   one-tab protection         shown only when it is OFF: this browser cannot
+//                              stop the same count from running in two tabs.
 
 import { ARMAZENAMENTO } from './storage-open.js';
 
@@ -72,9 +74,12 @@ export async function readOfflineCopy({ navigatorRef, cachesRef, pageUrl, isSecu
  * @param {?boolean} status.protegido     from readStorageProtection()
  * @param {string}   status.armazenamento one of ARMAZENAMENTO.*
  * @param {string}   status.copiaOffline  one of COPIA_OFFLINE.*
- * @returns {{armazenamento: string, copiaOffline: string, tudoCerto: boolean}}
+ * @param {boolean}  [status.semTravaDeAba] true when the browser has no Web
+ *        Locks (old browsers, pages not on https): see single-tab.js
+ * @returns {{armazenamento: string, copiaOffline: string, abaUnica: ?string, tudoCerto: boolean}}
+ *          `abaUnica` is null when the protection works (nothing to say)
  */
-export function describeDeviceStatus({ protegido, armazenamento, copiaOffline }) {
+export function describeDeviceStatus({ protegido, armazenamento, copiaOffline, semTravaDeAba = false }) {
     let storageText;
     if (armazenamento !== ARMAZENAMENTO.DISCO) {
         // "Protected: yes" next to a memory-only log would be a lie even if
@@ -97,7 +102,10 @@ export function describeDeviceStatus({ protegido, armazenamento, copiaOffline })
     return {
         armazenamento: storageText,
         copiaOffline: offlineText,
+        abaUnica: semTravaDeAba
+            ? 'Proteção contra duas abas: desligada neste navegador. Abra esta contagem em UMA aba só.'
+            : null,
         tudoCerto: armazenamento === ARMAZENAMENTO.DISCO && protegido === true
-            && copiaOffline === COPIA_OFFLINE.INSTALADA,
+            && copiaOffline === COPIA_OFFLINE.INSTALADA && !semTravaDeAba,
     };
 }

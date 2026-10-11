@@ -10,6 +10,7 @@ use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\LockBusy;
 use Baja\Contagem\Service\ProvaLock;
 use Baja\Contagem\Service\RaceContext;
+use Baja\Contagem\Service\SnapshotStore;
 use Baja\Model\ProvaQuery;
 use Propel\Runtime\Propel;
 
@@ -35,6 +36,10 @@ use Propel\Runtime\Propel;
  * stores them, recounts only the cars it touched and publishes them, all
  * before answering: when the phone hears "stored", the results page is
  * already right.
+ *
+ * Either kind may, AFTER its answer has been sent, start the whole-race
+ * recalculation if it is due. That keeps flags and best laps fresh even
+ * when nobody has the review screen open.
  */
 final class SyncHandler
 {
@@ -46,9 +51,9 @@ final class SyncHandler
      */
     public static function handle(?string $authorizationHeader, string $rawBody, ?int $receivedAtMs = null): array
     {
-        // The time is taken on entry, not after the work: the phone works
-        // out its clock offset from this value and the round trip, and time
-        // spent processing here would look like network delay one way only.
+        // The time is taken on entry, not after the work: the phone anchors
+        // its clock to this value and the round trip, and time spent
+        // processing here would look like network delay one way only.
         $nowMs = $receivedAtMs ?? Clock::nowMs();
 
         $request = json_decode($rawBody, true);
@@ -72,10 +77,12 @@ final class SyncHandler
 
         if (!$upload->carriesData()) {
             $heartbeat->save();
-            if ($heartbeat->changedWhatIsKnown()) {
+            if ($heartbeat->changedWhatTheEngineSees()) {
                 (new ChangeCounter($device['evento_id'], $device['prova_id']))->markChanged();
             }
-            return self::answer($device, $nowMs, [], []);
+            $answer = self::answer($device, $nowMs, $heartbeat, [], [], []);
+            $answer['after'] = fn() => self::recalculateIfDue($device['evento_id'], $device['prova_id']);
+            return $answer;
         }
 
         return self::storeAndCount($device, $upload, $heartbeat, $token, $nowMs);
@@ -94,16 +101,19 @@ final class SyncHandler
         $service = ContagemService::forProva($prova);
 
         try {
-            $stored = $service->withLock(function () use ($service, $device, $upload, $heartbeat, $token, $nowMs): ?array {
-                // Looked up again now that we hold the lock: a controller may
-                // have revoked this device while we were waiting for it, and
-                // a revoked device must not add entries.
+            $stored = $service->withLock(function () use ($service, $prova, $device, $upload, $heartbeat, $token, $nowMs): ?array {
+                // Everything read before this point may be out of date: we
+                // may have waited for the lock while a controller revoked
+                // this device or switched publishing off. Both are read
+                // again now that nobody else can change the race.
                 $current = DeviceTokens::describeByToken($token);
                 if ($current === null || $current['revogado_em_ms'] !== null) {
                     return null;
                 }
-                $stored = self::store($current, $upload, $heartbeat, $nowMs);
-                if ($stored['pit_events_stored']) {
+                $prova->reload();
+
+                $stored = self::store($current, $upload, $heartbeat, $nowMs, $service->getSettings()->permitirSimulacao);
+                if ($stored['stop_events_stored']) {
                     $service->markChanged(true);
                 }
                 $service->recountCars($stored['cars']);
@@ -118,9 +128,7 @@ final class SyncHandler
             return self::error(401, 'token_invalido');
         }
 
-        $answer = self::answer($device, $nowMs, $stored['stored_uuids'], $stored['voided_uuids']);
-        // Flags, lap times and best laps need the whole race. That is done
-        // after the phone has its answer, and only if it is due.
+        $answer = self::answer($device, $nowMs, $heartbeat, $stored['stored_uuids'], $stored['voided_uuids'], $stored['refused']);
         $answer['after'] = fn() => $service->refreshSnapshotIfStale();
         return $answer;
     }
@@ -130,9 +138,9 @@ final class SyncHandler
      * transaction.
      *
      * @param array<string, mixed> $device
-     * @return array{stored_uuids: string[], voided_uuids: string[], cars: int[], pit_events_stored: bool}
+     * @return array{stored_uuids: string[], voided_uuids: string[], cars: int[], stop_events_stored: bool, refused: array}
      */
-    private static function store(array $device, UploadContents $upload, DeviceHeartbeat $heartbeat, int $nowMs): array
+    private static function store(array $device, UploadContents $upload, DeviceHeartbeat $heartbeat, int $nowMs, bool $simulationAllowed): array
     {
         $writer = new EntryWriter(
             $device['fonte_id'],
@@ -140,9 +148,10 @@ final class SyncHandler
             $device['evento_id'],
             $device['prova_id'],
             $device['usuario'],
-            $nowMs
+            $nowMs,
+            $simulationAllowed
         );
-        $result = ['stored_uuids' => [], 'voided_uuids' => [], 'cars' => [], 'pit_events_stored' => false];
+        $result = ['stored_uuids' => [], 'voided_uuids' => [], 'cars' => [], 'stop_events_stored' => false, 'refused' => []];
 
         $connection = Propel::getWriteConnection('resultados');
         $connection->beginTransaction();
@@ -151,9 +160,9 @@ final class SyncHandler
             // to: a pit-log phone cannot add passes, a counter cannot log
             // pit stops. Anything else in the request is ignored.
             if ($device['fonte_tipo'] === Source::TIPO_BOX) {
-                $written = $writer->storePitEvents($upload->pitEvents, $heartbeat->bestKnownOffsetMs());
+                $written = $writer->storeStopEvents($upload->pitEvents);
                 $result['stored_uuids'] = $written['uuids'];
-                $result['pit_events_stored'] = $written['new'] > 0;
+                $result['stop_events_stored'] = $written['new'] > 0;
             } elseif (in_array($device['fonte_tipo'], [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA], true)) {
                 $entries = $writer->storeEntries($upload->entries);
                 $voids = $writer->storeVoids($upload->voids);
@@ -161,6 +170,7 @@ final class SyncHandler
                 $result['voided_uuids'] = $voids['uuids'];
                 $result['cars'] = array_values(array_unique(array_merge($entries['cars'], $voids['cars'])));
             }
+            $result['refused'] = $writer->refused;
             $heartbeat->save();
             $connection->commit();
         } catch (\Throwable $error) {
@@ -171,22 +181,41 @@ final class SyncHandler
     }
 
     /**
+     * The whole-race recalculation, when a heartbeat finds it due. Checked
+     * first against a few bytes in Redis, so that the five-second heartbeat
+     * of every phone does not load the prova, let alone the snapshot.
+     */
+    private static function recalculateIfDue(string $eventoId, string $provaId): void
+    {
+        $changes = (new ChangeCounter($eventoId, $provaId))->current();
+        if (!SnapshotStore::mayBeStale($eventoId, $provaId, $changes, Clock::nowMs())) {
+            return;
+        }
+        $prova = ProvaQuery::create()->findPk([$eventoId, $provaId]);
+        if ($prova !== null) {
+            ContagemService::forProva($prova)->refreshSnapshotIfStale();
+        }
+    }
+
+    /**
      * @param array<string, mixed> $device
      * @param string[] $storedUuids
      * @param string[] $voidedUuids
+     * @param array<int, array{uuid: string, motivo: string}> $refused
      * @return array{status: int, body: array<string, mixed>}
      */
-    private static function answer(array $device, int $nowMs, array $storedUuids, array $voidedUuids): array
+    private static function answer(array $device, int $nowMs, DeviceHeartbeat $heartbeat, array $storedUuids, array $voidedUuids, array $refused): array
     {
         $context = (new RaceContext($device['evento_id'], $device['prova_id']))->get();
         $timeline = RaceContext::timelineOf($context);
-        $isBoxDevice = $device['fonte_tipo'] === Source::TIPO_BOX;
+        $isStopLogDevice = $device['fonte_tipo'] === Source::TIPO_BOX;
 
         return [
             'status' => 200,
             'body' => [
                 'stored_uuids' => $storedUuids,
                 'voided_uuids' => $voidedUuids,
+                'refused' => $refused,
                 'server_now_ms' => $nowMs,
                 'race' => [
                     'largada_ms' => $timeline->largadaMs,
@@ -199,9 +228,14 @@ final class SyncHandler
                     'tipo' => $device['fonte_tipo'],
                 ],
                 'valid_cars' => $context['valid_cars'] ?? [],
+                'unclassified_cars' => $context['unclassified_cars'] ?? [],
                 'janela_ms' => $context['janela_ms'] ?? null,
+                'abastecimento' => (bool) ($context['abastecimento'] ?? false),
+                'simulacao' => (bool) ($context['simulacao'] ?? false),
+                'encerrado' => $heartbeat->closedTheDevice(),
                 'outros_usuarios' => SourcePresence::noteAndListOthers($device['fonte_id'], $device['dispositivo_id'], $device['usuario'], $nowMs),
-                'cars_in_pit' => $isBoxDevice ? $timeline->carsInPitAt($nowMs) : [],
+                'cars_in_pit' => $isStopLogDevice ? $timeline->carsInPitAt($nowMs) : [],
+                'cars_in_fuel' => $isStopLogDevice ? $timeline->carsFuelingAt($nowMs) : [],
             ],
         ];
     }

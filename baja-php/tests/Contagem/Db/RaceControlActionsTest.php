@@ -55,6 +55,8 @@ final class RaceControlActionsTest extends ReviewDbTestCase
      * start stores a "cancelamento" row pointing at it, the race is back
      * to "aguardando", and the start time kept for the results pages
      * (prova.tempo) is cleared. Nothing was deleted: both rows are there.
+     * (Cancelling the ONLY start asks for a confirmation of its own, which
+     * the page sends along; see RaceControlStartTest.)
      */
     public function testAStartPressedByMistakeCanBeCancelled(): void
     {
@@ -62,7 +64,7 @@ final class RaceControlActionsTest extends ReviewDbTestCase
         $start = $this->eventsInForce()[0];
         $this->assertSame(RaceTimeline::CORRENDO, $this->raceState());
 
-        $this->press(['acao' => 'cancelar', 'ocorrencia_id' => $start->id]);
+        $this->press(['acao' => 'cancelar', 'ocorrencia_id' => $start->id, 'confirmar_sem_largada' => '1']);
 
         $this->assertSame(RaceTimeline::AGUARDANDO, $this->raceState());
         $this->assertSame([], $this->eventsInForce());

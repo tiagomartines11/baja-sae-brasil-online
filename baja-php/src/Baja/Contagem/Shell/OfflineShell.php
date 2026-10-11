@@ -1,6 +1,10 @@
 <?php
 namespace Baja\Contagem\Shell;
 
+use Baja\Contagem\Engine\Settings;
+use Baja\Contagem\Service\CarRoster;
+use Baja\Model\Prova;
+
 /**
  * The HTML document shared by the count page and the pit page, and the asset
  * list their service worker caches.
@@ -109,24 +113,43 @@ final class OfflineShell
     }
 
     /**
-     * Car list embedded in the page for its very first paint, and for a first
-     * load that never reaches the sync endpoint. Once the device has synced,
-     * the `valid_cars` of the sync answer replaces it.
+     * What both pages need to know about the prova, embedded in the page
+     * for its very first paint and for a first load that never reaches the
+     * sync endpoint. Once the device has synced, the sync answer replaces
+     * every one of these (see default/js/contagem/page-info.js).
      *
-     * @return array<int, array{numero: int, nome: string}>
+     * @return array<string, mixed>
      */
-    public static function presentCars(string $eventoId): array
+    public static function provaConfig(Prova $prova): array
     {
-        $equipes = \Baja\Model\EquipeQuery::create()
-            ->filterByEventoId($eventoId)
-            ->filterByPresente(true)
-            ->orderByEquipeId()
-            ->find();
-        $carros = [];
-        foreach ($equipes as $equipe) {
-            $carros[] = ['numero' => (int) $equipe->getEquipeId(), 'nome' => $equipe->getEquipe()];
+        $settings = Settings::fromArray($prova->getParams()->contagem ?? null);
+        $roster = CarRoster::forProva($prova);
+        return [
+            'versao' => self::assetVersion(),
+            // Cars that take part (present and classified): tiles and lists.
+            'carros' => self::carsForPage($roster->classified()),
+            // Present but not classified: typing one gives a loud warning.
+            'carros_nao_classificados' => self::carsForPage($roster->unclassified()),
+            'janela_ms' => $settings->janelaMs,
+            'abastecimento' => $settings->abastecimento,
+            'simulacao' => $settings->permitirSimulacao,
+            // Times on the page are shown in the event's time zone, not in
+            // whatever zone the phone happens to be set to.
+            'fuso' => date_default_timezone_get(),
+        ];
+    }
+
+    /**
+     * @param array<int, array{numero: int, nome: string, escola: string}> $cars keyed by car number
+     * @return array<int, array{numero: int, nome: string}> a plain list, as the sync answer sends it
+     */
+    private static function carsForPage(array $cars): array
+    {
+        $list = [];
+        foreach ($cars as $car) {
+            $list[] = ['numero' => (int) $car['numero'], 'nome' => (string) $car['nome']];
         }
-        return $carros;
+        return $list;
     }
 
     /**
@@ -160,12 +183,15 @@ final class OfflineShell
     }
 
     /**
-     * The always-visible bar: source name, race clock, connection state,
-     * entries waiting, last successful sync, who else is on this source.
+     * The always-visible bar: source name, race clock, official time,
+     * connection state, entries waiting, last successful sync, who else is
+     * on this source. Above it, the "SIMULAÇÃO" banner (the script shows it
+     * while the prova allows simulation).
      */
     public static function printStatusBar(string $fonteNome, string $outrosRotulo): void
     {
         ?>
+<div id="faixa-simulacao" class="faixa-simulacao" role="status" hidden>SIMULAÇÃO</div>
 <header class="barra-status">
     <div class="barra-linha barra-principal">
         <strong id="st-fonte" class="fonte-nome"><?= htmlspecialchars($fonteNome) ?></strong>
@@ -179,6 +205,8 @@ final class OfflineShell
         <span class="detalhe">Na fila: <b id="st-pendentes">0</b></span>
         <span class="detalhe">Último envio: <b id="st-ultimo-sync">—</b></span>
     </div>
+    <?php // The server's clock, never the phone's: "sincronizando…" until the first answer of this page load. ?>
+    <div class="barra-linha barra-horario">Horário oficial: <b id="st-horario-oficial" class="sincronizando">sincronizando…</b></div>
     <div class="barra-linha barra-outros"><?= htmlspecialchars($outrosRotulo) ?> <b id="st-outros">ninguém</b></div>
 </header>
 <div id="aviso-fixo" class="aviso-fixo" role="alert" hidden>
@@ -198,17 +226,30 @@ final class OfflineShell
     }
 
     /**
-     * Printed inside each page's footer: the "end my shift" button and the
-     * two lines that say whether this device is safe to count on.
+     * Printed first inside each page's footer: "Exportar meus dados" and,
+     * beside it, "Encerrar meu turno" (the script asks before ending).
+     */
+    public static function printFooterButtons(): void
+    {
+        ?>
+<button type="button" id="btn-exportar" class="botao-secundario">Exportar meus dados</button>
+<button type="button" id="btn-encerrar-turno" class="botao-secundario">Encerrar meu turno</button>
+        <?php
+    }
+
+    /**
+     * Printed last inside each page's footer: the outcome of "end my shift"
+     * and the lines that say whether this device is safe to count on.
      */
     public static function printFooterTools(): void
     {
         ?>
-<button type="button" id="btn-encerrar-turno" class="botao-secundario">Encerrar meu turno</button>
 <p id="turno-mensagem" class="turno-mensagem" aria-live="polite" hidden></p>
 <ul class="estado-aparelho">
     <li id="st-armazenamento">Armazenamento protegido: verificando…</li>
     <li id="st-copia-offline">Cópia offline: verificando…</li>
+    <?php // Shown only where the browser cannot keep a second tab out. ?>
+    <li id="st-aba-unica" hidden></li>
 </ul>
         <?php
     }

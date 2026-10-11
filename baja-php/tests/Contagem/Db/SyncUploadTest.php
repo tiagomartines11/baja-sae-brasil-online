@@ -225,40 +225,63 @@ final class SyncUploadTest extends DbTestCase
     }
 
     /**
-     * SITUATION: a phone's clock is 5 seconds behind the server's. The
-     * phone finds that out by comparing clocks with the server, but only
-     * after its first successful contact. The counter typed a car BEFORE
-     * that, while the phone had no idea how wrong its clock was. That
-     * entry is uploaded with "clock offset unknown" (null). On the next
-     * upload the phone reports its offset: +5000 ms.
+     * SITUATION: three entries arrive whose times look wrong in three
+     * different ways. One is stamped a full day before the race. One is
+     * stamped an hour in the future. One comes from a phone that never
+     * managed to compare its clock with the server and says so
+     * ("desconhecido").
      *
-     * EXPECTED: the early entry ends up with the corrected time (phone
-     * time + 5 seconds), because the server applies the first offset the
-     * device ever reports to the entries that came without one. The stored
-     * entry itself is not rewritten: its corrected time stays empty in the
-     * table and is worked out whenever the data is read.
+     * WHAT WENT WRONG BEFORE: the server refused entries whose time it
+     * found implausible. The phone then kept them at the head of its queue
+     * and resent them for ever, and everything typed after them waited
+     * behind. And a refused entry is a pass nobody will ever see again.
+     *
+     * EXPECTED: all three are stored, each with exactly the time and the
+     * quality the phone sent. Whether they count is the engine's and the
+     * reviewer's business ("Passagem com horário desconhecido"), never the
+     * upload's.
      */
-    public function testAnEntryRecordedBeforeTheClockOffsetWasKnownIsCorrectedLater(): void
+    public function testAnEntryIsNeverRefusedBecauseOfItsTime(): void
     {
         $token = $this->issueToken($this->fontes[0]);
-        $phoneTime = $this->at(120);
+        $dayBefore = $this->at(-86400);
+        $hourAhead = $this->at(600 + 3600);
+        $rawPhoneTime = $this->at(120);
 
-        $this->upload(
-            $token,
-            [$this->entryPayload(self::newUuid(), self::CAR_A, $phoneTime, null)],
-            ['clock_offset_ms' => null]
+        $answer = $this->upload($token, [
+            $this->entryPayload('aaaaaaaa-0000-4000-8000-000000000001', self::CAR_A, $dayBefore),
+            $this->entryPayload('aaaaaaaa-0000-4000-8000-000000000002', self::CAR_A, $hourAhead, 'estimado'),
+            $this->entryPayload('aaaaaaaa-0000-4000-8000-000000000003', self::CAR_A, $rawPhoneTime, 'desconhecido'),
+        ]);
+
+        $this->assertSame(200, $answer['status']);
+        $this->assertCount(3, $answer['body']['stored_uuids']);
+        $this->assertSame([], $answer['body']['refused']);
+        $this->assertSame(
+            [[$dayBefore, 'exato'], [$hourAhead, 'estimado'], [$rawPhoneTime, 'desconhecido']],
+            $this->storedTimesFor($this->fontes[0]->getFonteId())
         );
-        $this->upload($token, [], ['clock_offset_ms' => 5000]);
+    }
 
-        $this->assertSame(1, $this->countRows(
-            'contagem_passagem',
-            'fonte_id = ? AND ts_ms IS NULL',
-            [$this->fontes[0]->getFonteId()]
-        ), 'the stored row keeps "time unknown"');
+    /**
+     * SITUATION: an entry was uploaded and stored with its time. The same
+     * entry (same uuid) is uploaded again, this time carrying a different
+     * time, as an old or broken page might do.
+     *
+     * EXPECTED: the stored time does not move. An entry's time is fixed by
+     * the phone at the moment the counter pressed Enter and is never
+     * changed afterwards by anybody, which is what makes the raw table
+     * evidence.
+     */
+    public function testTheTimeOfAStoredEntryNeverChanges(): void
+    {
+        $token = $this->issueToken($this->fontes[0]);
+        $uuid = self::newUuid();
+        $this->upload($token, [$this->entryPayload($uuid, self::CAR_A, $this->at(120))]);
 
-        $entries = $this->service->loadInput()->entries;
-        $this->assertCount(1, $entries);
-        $this->assertSame($phoneTime + 5000, $entries[0]->tsMs);
+        $this->upload($token, [$this->entryPayload($uuid, self::CAR_A, $this->at(180), 'estimado')]);
+
+        $this->assertSame([[$this->at(120), 'exato']], $this->storedTimesFor($this->fontes[0]->getFonteId()));
     }
 
     /**
@@ -275,11 +298,49 @@ final class SyncUploadTest extends DbTestCase
         $token = $this->issueToken($this->fontes[0]);
         $phoneNow = $this->at(500);
 
-        $this->upload($token, [], ['device_now_ms' => $phoneNow, 'queue_empty' => false]);
+        $this->upload($token, [], ['now_ms' => $phoneNow, 'queue_empty' => false]);
         $this->assertNull($this->syncedThroughOf($token), 'entries still waiting: no mark yet');
 
-        $this->upload($token, [], ['device_now_ms' => $phoneNow, 'queue_empty' => true]);
+        $this->upload($token, [], ['now_ms' => $phoneNow, 'queue_empty' => true]);
         $this->assertSame($phoneNow, $this->syncedThroughOf($token));
+    }
+
+    /**
+     * SITUATION: a phone says its queue is empty, but it has not compared
+     * clocks with the server since the page was opened, so it cannot say
+     * what time it is on the server's clock (`now_ms` is null). Another
+     * phone claims a "now" two minutes in the future.
+     *
+     * EXPECTED: the first moves no mark at all: "synced through an unknown
+     * moment" means nothing. The second gets the server's own time, never
+     * more: a mark in the future would make the engine believe the phone
+     * had already reported on passes that have not happened yet.
+     */
+    public function testTheSyncedThroughMarkNeedsAKnownTimeAndNeverPassesTheServerClock(): void
+    {
+        $tokenWithoutClock = $this->issueToken($this->fontes[0]);
+        $tokenAhead = $this->issueToken($this->fontes[1]);
+
+        $this->upload($tokenWithoutClock, [], ['now_ms' => null, 'queue_empty' => true]);
+        $this->upload($tokenAhead, [], ['now_ms' => Clock::nowMs() + 120000, 'queue_empty' => true]);
+
+        $this->assertNull($this->syncedThroughOf($tokenWithoutClock));
+        $this->assertSame(Clock::nowMs(), $this->syncedThroughOf($tokenAhead));
+    }
+
+    /**
+     * @return array<int, array{0: int, 1: string}> [time, quality] of each stored entry, in the order they were stored
+     */
+    private function storedTimesFor(int $fonteId): array
+    {
+        $statement = \Propel\Runtime\Propel::getWriteConnection('resultados')->prepare(
+            'SELECT ts_ms, qualidade_tempo FROM contagem_passagem WHERE fonte_id = ? ORDER BY passagem_id'
+        );
+        $statement->execute([$fonteId]);
+        return array_map(
+            fn(array $row): array => [(int) $row[0], (string) $row[1]],
+            $statement->fetchAll(\PDO::FETCH_NUM)
+        );
     }
 
     private function entriesStoredFor(int $fonteId): int

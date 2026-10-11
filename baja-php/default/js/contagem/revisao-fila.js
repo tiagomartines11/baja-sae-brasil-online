@@ -2,7 +2,7 @@
 // of the flag queue, the state of each source, which counts disagree.
 // Pure functions, tested with `node --test`.
 
-import { idade } from './revisao-formato.js';
+import { idade, tempoDeProva } from './revisao-formato.js';
 
 // Half of the "about one minute" a selected flag shows around its moment.
 export const MEIA_JANELA_MS = 30000;
@@ -49,6 +49,18 @@ export function janelaDoAlerta(alerta, meiaJanelaMs = MEIA_JANELA_MS) {
     return null;
   }
   return { de: alerta.ts_ms - meiaJanelaMs, ate: alerta.ts_ms + meiaJanelaMs };
+}
+
+// A flag about an entry of unknown time has no moment worth a one-minute
+// window: the time the entry carries is its phone's own guess. What helps
+// the reviewer decide is the car's whole race, so that is what is loaded.
+export function mostraCorridaInteira(alerta) {
+  return alerta?.tipo === 'tempo_desconhecido' && (alerta.carros ?? []).length > 0;
+}
+
+// When a flag happened, for the queue and the panel's title.
+export function quandoDoAlerta(alerta, largadaMs) {
+  return mostraCorridaInteira(alerta) ? 'sem horário' : tempoDeProva(alerta.ts_ms, largadaMs);
 }
 
 export function encontrarAlerta(estado, alertaId) {

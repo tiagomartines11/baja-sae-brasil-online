@@ -27,8 +27,10 @@ final class FlagsInEveryModeTest extends EngineTestCase
 {
     /**
      * SITUATION: whole synthetic races with every kind of mistake, a
-     * handover and a finish, computed in each of the four publish modes;
-     * first untouched, then after a reviewer accepted every suggestion.
+     * handover, a finish and the race-day trouble (a start recorded late,
+     * unclassified cars, estimated and unknown times), computed in each of
+     * the four publish modes; first untouched, then after a reviewer
+     * accepted every suggestion.
      *
      * EXPECTED: the review queue is identical in the four modes: the same
      * flags, about the same entries, with the same suggestions and the same
@@ -39,7 +41,7 @@ final class FlagsInEveryModeTest extends EngineTestCase
     public function testAWholeRaceShowsTheSameFlagsInAllFourModes(): void
     {
         foreach ([1, 2, 3, 7] as $seed) {
-            $race = SyntheticRace::generate(SyntheticRaceConfig::withSeed($seed)->withFinish());
+            $race = SyntheticRace::generate(SyntheticRaceConfig::withSeed($seed)->withFinish()->withRaceDayTrouble());
 
             $unreviewed = [];
             $reviewed = [];

@@ -62,13 +62,20 @@ final class CounterLinks
             // The spelling stored on the link is the one in `user`, so that
             // it matches what the session reports when that person logs in.
             $canonicalUsername = (string) $user->getUsername();
-            if (ContagemFonteUsuarioQuery::create()->findPk([$fonte->getFonteId(), $canonicalUsername]) === null) {
+            $link = ContagemFonteUsuarioQuery::create()->findPk([$fonte->getFonteId(), $canonicalUsername]);
+            if ($link === null) {
                 $link = new ContagemFonteUsuario();
                 $link->setFonteId($fonte->getFonteId());
                 $link->setUsuario($canonicalUsername);
                 $link->setAdicionadoPor($addedBy);
                 $link->setCriadoEmMs(Clock::nowMs());
                 $link->save();
+            } else {
+                // Linking somebody who is already linked is how a controller
+                // says "let this person back in" after revoking their
+                // device: a revoked device only blocks a user while it is
+                // newer than the link (see DeviceTokens::isBlocked()).
+                DeviceTokens::release($fonte, $canonicalUsername);
             }
 
             $connection->commit();

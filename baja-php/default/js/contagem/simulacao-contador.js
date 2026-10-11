@@ -1,0 +1,218 @@
+// What one simulated person does with the shared race script.
+//
+// A COUNTER types the number of each car that crosses the line, a moment
+// before or after it really crossed, and makes the mistakes people make:
+// misses a car, hits a wrong digit, enters a car twice. A PIT-LOG person
+// taps cars entering and leaving an area, sometimes late, sometimes not at
+// all.
+//
+// Each person has their own stream of random numbers, derived from the
+// shared seed and from who they are (their source id), so three counters
+// watching the same race make DIFFERENT mistakes, and the same counter
+// makes the same mistakes every time the simulation is run with that seed.
+//
+// Nothing here touches a page or the network. The result is a plan: a list
+// of "type this car at this time", plus the list of mistakes that were put
+// in on purpose, which is the answer key for the review screen.
+
+import { Prng, deriveSeed } from './simulacao-prng.js';
+import { AREA_BOX, carsInsideAt } from './simulacao-corrida.js';
+
+/** The mistakes a counter can make, and how often, per thousand crossings. */
+export const TAXAS_PADRAO = {
+    perdido: 4,           // did not see the car: nothing typed
+    numero_errado: 8,     // typed another number (see wrongNumberFor)
+    toque_duplo: 4,       // the same car again within a second
+    repetida: 4,          // the same car again a few seconds later
+    desconhecido: 2,      // an extra entry for a number no car has
+    nao_classificado: 2,  // an extra entry for a car that may not race
+    no_box: 2,            // an extra entry for a car that is in the pit lane
+};
+
+/** Mistakes of the person logging an area, per thousand events. */
+export const TAXAS_PARADA_PADRAO = {
+    perdido: 20,          // the event is not logged at all
+    atrasado: 50,         // logged 5 to 20 seconds late
+};
+
+export const ERRO = {
+    PERDIDO: 'perdido',
+    NUMERO_ERRADO: 'numero_errado',
+    TOQUE_DUPLO: 'toque_duplo',
+    REPETIDA: 'repetida',
+    DESCONHECIDO: 'desconhecido',
+    NAO_CLASSIFICADO: 'nao_classificado',
+    NO_BOX: 'no_box',
+    PARADA_PERDIDA: 'parada_perdida',
+    PARADA_ATRASADA: 'parada_atrasada',
+};
+
+/**
+ * How far from the true crossing a simulated counter types, in whole
+ * milliseconds.
+ *
+ * In a real race (matching window of 20 s) people press Enter from half a
+ * second before the car reaches the line to a second and a half after; a
+ * double tap comes within a second, a forgetful repeat some seconds later.
+ * A compressed rehearsal has a matching window of a second or two (see the
+ * "Predefinição de teste"), and those human times would no longer fit
+ * inside it: three counters seeing the same crossing would not be matched.
+ * So every time is capped by a share of the window. With the real window
+ * the caps do nothing and the times are the human ones.
+ */
+export function timingFor(janelaMs) {
+    return {
+        earlyMs: Math.min(500, Math.trunc(janelaMs / 8)),
+        lateMs: Math.min(1500, Math.trunc(janelaMs / 2)),
+        doubleTapMinMs: Math.min(300, Math.trunc(janelaMs / 10)),
+        doubleTapMaxMs: Math.min(900, Math.trunc(janelaMs / 5)),
+        repeatMinMs: Math.trunc((janelaMs * 3) / 10),
+        repeatMaxMs: Math.trunc((janelaMs * 6) / 10),
+        strayMinMs: Math.trunc(janelaMs / 10),
+        strayMaxMs: Math.trunc(janelaMs / 5),
+    };
+}
+
+/**
+ * A wrong number for a car, the way fingers produce them: two digits
+ * swapped (41 -> 14), one digit one key off (41 -> 42), or a digit dropped
+ * (41 -> 4). Returns null when no variant gives a different, usable number.
+ */
+export function wrongNumberFor(carro, prng) {
+    const digits = String(carro).split('');
+    const variants = [];
+    if (digits.length >= 2 && digits[0] !== digits[1] && digits[1] !== '0') {
+        variants.push(Number([digits[1], digits[0], ...digits.slice(2)].join('')));
+    }
+    const lastDigit = Number(digits[digits.length - 1]);
+    const neighbour = lastDigit === 9 ? 8 : lastDigit + 1;
+    variants.push(Number([...digits.slice(0, -1), neighbour].join('')));
+    if (digits.length >= 2) {
+        variants.push(Number(digits.slice(0, -1).join('')));
+    }
+    const usable = variants.filter((number) => number > 0 && number !== carro);
+    return usable.length === 0 ? null : prng.pick(usable);
+}
+
+/**
+ * @param {object}   options
+ * @param {object}   options.roteiro  the shared race script
+ * @param {number}   options.semente  the shared seed
+ * @param {number}   options.fonteId  who this counter is
+ * @param {number[]} [options.naoClassificados] cars that are present but may not race
+ * @param {number}   [options.janelaMs] the prova's matching window; see timingFor()
+ * @param {object}   [options.taxas]  overrides of TAXAS_PADRAO
+ * @returns {{acoes: Array<{tsMs: number, carro: number}>, erros: Array<object>}}
+ *          `acoes` sorted by time; each error says what was done and when
+ */
+export function planCounter({ roteiro, semente, fonteId, naoClassificados = [], janelaMs = 20000, taxas = {} }) {
+    const rates = { ...TAXAS_PADRAO, ...taxas };
+    const timing = timingFor(janelaMs);
+    const prng = new Prng(deriveSeed(semente, fonteId));
+    const racing = new Set(roteiro.carros);
+    const acoes = [];
+    const erros = [];
+    const noteError = (tipo, tsMs, carro, digitado = null) => erros.push({ tipo, fonteId, tsMs, carro, digitado });
+
+    for (const { carro, tsMs: crossingMs } of roteiro.travessias) {
+        const typedAtMs = crossingMs + prng.between(-timing.earlyMs, timing.lateMs);
+
+        if (prng.chance(rates.perdido)) {
+            noteError(ERRO.PERDIDO, crossingMs, carro);
+            continue;
+        }
+        let typed = carro;
+        if (prng.chance(rates.numero_errado)) {
+            const wrong = wrongNumberFor(carro, prng);
+            if (wrong !== null) {
+                typed = wrong;
+                noteError(ERRO.NUMERO_ERRADO, typedAtMs, carro, wrong);
+            }
+        }
+        acoes.push({ tsMs: typedAtMs, carro: typed });
+
+        if (prng.chance(rates.toque_duplo)) {
+            const againAtMs = typedAtMs + prng.between(timing.doubleTapMinMs, timing.doubleTapMaxMs);
+            acoes.push({ tsMs: againAtMs, carro: typed });
+            noteError(ERRO.TOQUE_DUPLO, againAtMs, carro, typed);
+        } else if (prng.chance(rates.repetida)) {
+            const againAtMs = typedAtMs + prng.between(timing.repeatMinMs, timing.repeatMaxMs);
+            acoes.push({ tsMs: againAtMs, carro: typed });
+            noteError(ERRO.REPETIDA, againAtMs, carro, typed);
+        }
+
+        // Entries for cars that did NOT cross: a number nobody has, a car
+        // that may not race, a car that is standing in the pit lane.
+        const strayAtMs = typedAtMs + prng.between(timing.strayMinMs, timing.strayMaxMs);
+        if (prng.chance(rates.desconhecido)) {
+            const unknown = unknownNumber(racing, naoClassificados, prng);
+            acoes.push({ tsMs: strayAtMs, carro: unknown });
+            noteError(ERRO.DESCONHECIDO, strayAtMs, null, unknown);
+        }
+        if (naoClassificados.length > 0 && prng.chance(rates.nao_classificado)) {
+            const unclassified = prng.pick(naoClassificados);
+            acoes.push({ tsMs: strayAtMs, carro: unclassified });
+            noteError(ERRO.NAO_CLASSIFICADO, strayAtMs, null, unclassified);
+        }
+        if (prng.chance(rates.no_box)) {
+            const inPitLane = carsInsideAt(roteiro, AREA_BOX, strayAtMs);
+            if (inPitLane.length > 0) {
+                const standing = prng.pick(inPitLane);
+                acoes.push({ tsMs: strayAtMs, carro: standing });
+                noteError(ERRO.NO_BOX, strayAtMs, null, standing);
+            }
+        }
+    }
+
+    acoes.sort((a, b) => a.tsMs - b.tsMs);
+    return { acoes, erros };
+}
+
+/** A number that belongs to no car of the event. */
+function unknownNumber(racing, naoClassificados, prng) {
+    const taken = new Set([...racing, ...naoClassificados]);
+    for (let attempt = 0; attempt < 50; attempt++) {
+        const candidate = prng.between(1, 999);
+        if (!taken.has(candidate)) {
+            return candidate;
+        }
+    }
+    return 9999;
+}
+
+/**
+ * The plan of the person logging one area (pit lane or fueling station).
+ *
+ * @param {object} options
+ * @param {object} options.roteiro
+ * @param {number} options.semente
+ * @param {string} options.area     AREA_BOX or AREA_ABASTECIMENTO
+ * @param {object} [options.taxas]  overrides of TAXAS_PARADA_PADRAO
+ * @returns {{acoes: Array<{tsMs: number, carro: number, tipo: string}>, erros: Array<object>}}
+ */
+export function planStopLog({ roteiro, semente, area, taxas = {} }) {
+    const rates = { ...TAXAS_PARADA_PADRAO, ...taxas };
+    // The two areas are logged by different people: different streams.
+    const prng = new Prng(deriveSeed(semente, area === AREA_BOX ? 100001 : 100002));
+    const acoes = [];
+    const erros = [];
+
+    for (const stop of roteiro.paradas.filter((candidate) => candidate.area === area)) {
+        for (const [sentido, happenedAtMs] of [['entrada', stop.entradaMs], ['saida', stop.saidaMs]]) {
+            const tipo = area + '_' + sentido;
+            if (prng.chance(rates.perdido)) {
+                erros.push({ tipo: ERRO.PARADA_PERDIDA, area, evento: tipo, tsMs: happenedAtMs, carro: stop.carro });
+                continue;
+            }
+            let loggedAtMs = happenedAtMs + prng.between(0, 2000);
+            if (prng.chance(rates.atrasado)) {
+                loggedAtMs = happenedAtMs + prng.between(5000, 20000);
+                erros.push({ tipo: ERRO.PARADA_ATRASADA, area, evento: tipo, tsMs: loggedAtMs, carro: stop.carro });
+            }
+            acoes.push({ tsMs: loggedAtMs, carro: stop.carro, tipo });
+        }
+    }
+
+    acoes.sort((a, b) => a.tsMs - b.tsMs);
+    return { acoes, erros };
+}

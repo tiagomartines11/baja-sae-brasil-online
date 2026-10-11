@@ -33,7 +33,8 @@ final class SyntheticMistakeChoices
     {
         $free = [];
         for ($source = 1; $source <= $this->config->counters; $source++) {
-            if (!in_array($source, $except, true) && !$this->isBeingHandedOver($source, $tsMs)) {
+            $isBusy = $this->isBeingHandedOver($source, $tsMs) || $this->isIn($this->config->estimatedTimePeriods, $source, $tsMs);
+            if (!in_array($source, $except, true) && !$isBusy) {
                 $free[] = $source;
             }
         }
@@ -41,6 +42,36 @@ final class SyntheticMistakeChoices
             return null;
         }
         return array_slice($this->random->shuffleArray($free), 0, $howMany);
+    }
+
+    /**
+     * True around a start that was recorded late (until half a minute after
+     * it) and while any counter's phone has no usable time (with a minute
+     * to spare on each side).
+     */
+    public function nobodyMakesMistakesAt(int $tsMs, int $recordedStartMs): bool
+    {
+        if ($this->config->startRecordedLate && $tsMs < $recordedStartMs + 30000) {
+            return true;
+        }
+        return $this->isIn($this->config->unknownTimePeriods, null, $tsMs);
+    }
+
+    /**
+     * @param array<int, array{source: int, fromSeconds: int, toSeconds: int}> $periods
+     * @param int|null $source null: a period of any source
+     * @return bool true from a minute before one of the periods to a minute after it
+     */
+    private function isIn(array $periods, ?int $source, int $tsMs): bool
+    {
+        foreach ($periods as $period) {
+            $fromMs = $this->startMs + ($period['fromSeconds'] - 60) * 1000;
+            $toMs = $this->startMs + ($period['toSeconds'] + 60) * 1000;
+            if (($source === null || $period['source'] === $source) && $tsMs >= $fromMs && $tsMs <= $toMs) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** True from a minute before the handover to a minute after it. */

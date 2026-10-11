@@ -167,6 +167,90 @@ final class PassZeroTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: the same race ("largada" rule, start window of 30 s,
+     * counter 1 typing cars 7 and 8 ten seconds after the start, car 8 also
+     * typed by the others), in every publish mode. Counter 1 is the primary
+     * source for the "fonte_principal" mode.
+     *
+     * WHAT COULD GO WRONG: "todas" counts every entry and "fonte_principal"
+     * counts whatever counter 1 has, so in those two modes the entries in
+     * the start window would each be a lap: two laps per car instead of one.
+     *
+     * EXPECTED: the start window is a rule of the race, not of a publish
+     * mode. In all four modes each car has one lap, the groups typed inside
+     * the window are marked and do not count, and nothing is flagged.
+     */
+    public function testTheStartWindowHoldsInEveryPublishMode(): void
+    {
+        foreach (Settings::MODOS_PUBLICACAO as $mode) {
+            $race = RaceScenario::withCounters(3);
+            $race->settings->modoPublicacao = $mode;
+            $race->settings->fontePrincipalId = 1;
+            $race->settings->passagemInicial = Settings::INICIAL_LARGADA;
+            $race->settings->janelaLargadaS = 30;
+            $race->start('00:00');
+            $loneInTheWindow = $race->entry(1, 7, '00:10');
+            $agreedInTheWindow = $race->pass(8, '00:10');
+            $race->pass(7, '03:00');
+            $race->pass(8, '03:00');
+
+            $result = $race->run('04:00');
+
+            $this->assertLapCounts([7 => 1, 8 => 1], $result, "Mode $mode.");
+            $this->assertNoOpenFlags($result, "Mode $mode.");
+            foreach ([$loneInTheWindow, $agreedInTheWindow[2]] as $entryId) {
+                $group = $result->groupOfEntry($entryId);
+                $this->assertTrue($group->dentroDaJanelaDeLargada, "Mode $mode.");
+                $this->assertFalse($group->contado, "Mode $mode.");
+                $this->assertSame(0, $group->numeroVolta, "Mode $mode: shown as the pass zero.");
+            }
+            $this->assertSame(1, $race->countCars('04:00', [8])->lapCount(8), "Mode $mode, fast path.");
+
+            // Without the window the same entries count wherever the mode
+            // lets them: everywhere for car 8 (all three agree), and for
+            // car 7's lone entry only where one counter is enough.
+            $race->settings->janelaLargadaS = 0;
+            $loneCounts = $mode === Settings::MODO_TODAS || $mode === Settings::MODO_FONTE_PRINCIPAL;
+            $this->assertLapCounts([7 => $loneCounts ? 2 : 1, 8 => 2], $race->run('04:00'), "Mode $mode, no window.");
+        }
+    }
+
+    /**
+     * SITUATION: "largada" rule with a 30-second start window, in "todas"
+     * mode. Ten cars are typed by everybody at 00:10 (inside the window)
+     * and again at 01:50, a hundred seconds later.
+     *
+     * WHAT COULD GO WRONG: flags and the pace are judged against the
+     * default counting rule, which in a non-default mode is worked out
+     * separately. If the start window were forgotten THERE, the crossings
+     * at 00:10 would be passes for the pace model, the ten "laps" from
+     * 00:10 to 01:50 would look like ten full laps of 100 s, and the
+     * engine would believe it knows the pace.
+     *
+     * EXPECTED: each car has one lap (start to 01:50), which is not a full
+     * lap of the track; no full lap has been driven, so the pace is still
+     * unknown.
+     */
+    public function testTheStartWindowAlsoHoldsForWhatFlagsAndPaceAreJudgedBy(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->settings->modoPublicacao = Settings::MODO_TODAS;
+        $race->settings->passagemInicial = Settings::INICIAL_LARGADA;
+        $race->settings->janelaLargadaS = 30;
+        $race->start('00:00');
+        foreach ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as $car) {
+            $race->pass($car, '00:10');
+            $race->pass($car, '01:50');
+        }
+
+        $result = $race->run('02:30');
+
+        $this->assertSame(1, $result->lapCount(1));
+        $this->assertNull($result->cars[1]->voltaEsperadaMs);
+        $this->assertNoOpenFlags($result);
+    }
+
+    /**
      * SITUATION: the same 30-second start window. Car 7 is typed by
      * everybody at 00:29.999 and car 8 at 00:30 sharp.
      *

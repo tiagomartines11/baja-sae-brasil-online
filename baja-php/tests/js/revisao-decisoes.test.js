@@ -14,7 +14,7 @@ import assert from 'node:assert/strict';
 
 import {
   acoesDaEntrada, alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoDesfazer,
-  decisaoExcluirFonte, decisaoManterAmbas, decisaoReatribuir, descreverDecisao, descreverSugestao, exclusoesAbertas,
+  decisaoExcluirFonte, decisaoReatribuir, descreverDecisao, descreverSugestao, exclusoesAbertas,
   mensagemDeConflito, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo, podeDecidirSobreAlerta, problemaAoAdicionar,
 } from '../../default/js/contagem/revisao-decisoes.js';
 
@@ -50,15 +50,7 @@ test('accepting a suggestion does not hand out the flag\'s own object', () => {
   assert.equal(TROCA_PROVAVEL.sugestao.equipe_numero, 41);
 });
 
-test('"manter ambas" (K) confirms the first entry of the flag', () => {
-  // The reviewer watched the video: both cars really did cross together.
-  // By convention that is a "confirmar" on the flag's first entry.
-  assert.deepEqual(decisaoManterAmbas(TROCA_PROVAVEL), { tipo: 'confirmar', passagem_id: 101 });
-});
-
-test('"manter ambas" is not available on a flag that is about no entry', () => {
-  assert.equal(decisaoManterAmbas({ passagem_ids: [] }), null);
-});
+// What the K button does is tested in revisao-confirmar.test.js.
 
 test('"anular" (V) acts on the chip the reviewer clicked', () => {
   assert.equal(alvoDaAnulacao(TROCA_PROVAVEL, 102), 102);
@@ -226,6 +218,15 @@ test('each kind of decision carries the fields the server expects', () => {
 test('a normal entry can be voided, reassigned or confirmed', () => {
   const acoes = acoesDaEntrada({ id: 10, decisoes: [] });
   assert.deepEqual(acoes.map((opcao) => opcao.acao), ['anular', 'reatribuir', 'confirmar']);
+});
+
+test('an entry whose pass has other entries can also have the whole pass discarded', () => {
+  // Car 41 crossed once; all three counters typed it (entries 10, 11, 12).
+  const acoes = acoesDaEntrada({ id: 10, decisoes: [], grupo: { contado: true, passagem_ids: [10, 11, 12] } });
+  assert.deepEqual(acoes[acoes.length - 1], { acao: 'descartar_passagem', registros: 3 });
+  // Alone in its pass there is nothing more to discard than "anular" does.
+  const sozinha = acoesDaEntrada({ id: 10, decisoes: [], grupo: { contado: false, passagem_ids: [10] } });
+  assert.equal(sozinha.some((opcao) => opcao.acao === 'descartar_passagem'), false);
 });
 
 test('a voided entry can only be restored, by undoing the void', () => {

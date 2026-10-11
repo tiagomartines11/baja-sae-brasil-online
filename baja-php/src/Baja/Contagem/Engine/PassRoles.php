@@ -7,8 +7,22 @@ use Baja\Contagem\Engine\Data\PassGroup;
 
 /**
  * Takes out the passes that the rules of the race say are not laps, however
- * well the counters agree on them: the crossing at the start and the
- * crossings after the finish.
+ * well the counters agree on them: anything before the start, the crossing
+ * at the start and the crossings after the finish.
+ *
+ * BEFORE THE START
+ *
+ * A pass can only follow the start, so a group whose pass time is before it
+ * is not an official pass. It is kept and marked (`antesDaLargada`) rather
+ * than dropped: when the start was recorded a few seconds late, the pack's
+ * first crossing lands here, and silently losing it would cost those cars a
+ * lap. A reviewer who confirms such a group makes it the car's pass zero.
+ * Only one group per car can be that (the latest confirmed one), so nobody
+ * gets a lap that ended before the race began. Under the "largada" rule the
+ * start itself is pass zero, and nothing before it ever counts.
+ *
+ * This is decided from the group alone and the reviewer's word, never from
+ * what other cars did, so recounting one car gives the same answer.
  *
  * AT THE START (setting `passagem_inicial`)
  *
@@ -56,8 +70,14 @@ final class PassRoles
         foreach ($groupsByCar as $groups) {
             $countedPassesStillAllowed = $passesAllowedAfterFinish;
             $referencePassesStillAllowed = $passesAllowedAfterFinish;
+            if ($timeline->largadaMs !== null && $groups[0]->primeiroTsMs < $timeline->largadaMs) {
+                self::assignBeforeTheStart($groups, $timeline->largadaMs, $settings);
+            }
 
             foreach ($groups as $group) {
+                if ($group->antesDaLargada) {
+                    continue;
+                }
                 if ($startWindowEndsMs !== null && $group->primeiroTsMs < $startWindowEndsMs) {
                     $group->dentroDaJanelaDeLargada = true;
                     $group->contado = false;
@@ -78,6 +98,40 @@ final class PassRoles
                     $group->referencia = false;
                 }
             }
+        }
+    }
+
+    /**
+     * @param PassGroup[] $groups one car's groups in time order; the first one begins before the start
+     */
+    private static function assignBeforeTheStart(array $groups, int $largadaMs, Settings $settings): void
+    {
+        $passZero = null;
+        foreach ($groups as $group) {
+            if ($group->primeiroTsMs >= $largadaMs) {
+                // Groups are ordered by their first entry: none of the
+                // remaining ones can have a pass time before the start.
+                break;
+            }
+            // The pass time decides, not the first entry: a group typed on
+            // both sides of the start instant with its median after it is
+            // an ordinary pass.
+            if ($group->tsMs >= $largadaMs) {
+                continue;
+            }
+            $group->antesDaLargada = true;
+            if ($group->isReviewersWord() && $settings->firstPassIsLapZero()) {
+                $passZero = $group;
+            }
+            $group->contado = false;
+            $group->referencia = false;
+            // Under the "largada" rule nothing before the start is a
+            // mistake to be reviewed: the first crossing is not typed at all.
+            $group->foraDaReferencia = !$settings->firstPassIsLapZero();
+        }
+        if ($passZero !== null) {
+            $passZero->contado = true;
+            $passZero->referencia = true;
         }
     }
 

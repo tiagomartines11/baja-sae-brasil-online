@@ -3,9 +3,11 @@ namespace Baja\Juiz;
 
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Review\ConfirmationNeeded;
 use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\SettingsForm;
 use Baja\Contagem\Review\SourceAdmin;
+use Baja\Contagem\Review\SourceSettings;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\LockBusy;
 use InvalidArgumentException;
@@ -19,12 +21,17 @@ ContagemAccess::requireController($prova);
 $service = ContagemService::forProva($prova);
 $errorMessage = null;
 $newApiToken = null;
+// Set when an action answered "ask the person first": shown with a button that sends the form again.
+$question = null;
 $messages = [
     'criada' => 'Fonte criada.',
     'salva' => 'Fonte salva.',
     'revogado' => 'Dispositivo revogado.',
     'configuracoes' => 'Configurações salvas. A contagem foi recalculada.',
     'totais' => 'Totais importados.',
+    'liberado' => 'Usuário liberado: o aparelho dele volta a receber acesso a esta fonte.',
+    'predefinicao' => 'Predefinição de teste aplicada. Os valores anteriores ficaram guardados.',
+    'restaurado' => 'Valores salvos restaurados. A contagem foi recalculada.',
 ];
 
 if (Pagina::isPost()) {
@@ -43,6 +50,15 @@ if (Pagina::isPost()) {
             case 'salvar_configuracoes':
                 SourceAdmin::saveSettings($service, $_POST);
                 Pagina::redirectAfterPost('contagem_fontes.php', $prova, ['msg' => 'configuracoes']);
+            case 'liberar_usuario':
+                SourceSettings::release($service, $_POST);
+                Pagina::redirectAfterPost('contagem_fontes.php', $prova, ['msg' => 'liberado']);
+            case 'aplicar_predefinicao':
+                SourceSettings::applyTestPreset($service, $_POST);
+                Pagina::redirectAfterPost('contagem_fontes.php', $prova, ['msg' => 'predefinicao']);
+            case 'restaurar_configuracoes':
+                SourceSettings::restore($service);
+                Pagina::redirectAfterPost('contagem_fontes.php', $prova, ['msg' => 'restaurado']);
             case 'importar_totais':
                 SourceAdmin::importTotals($service, $_POST, $_FILES['arquivo'] ?? null);
                 Pagina::redirectAfterPost('contagem_fontes.php', $prova, ['msg' => 'totais']);
@@ -54,6 +70,8 @@ if (Pagina::isPost()) {
             default:
                 throw new InvalidArgumentException('Ação desconhecida.');
         }
+    } catch (ConfirmationNeeded $needed) {
+        $question = $needed;
     } catch (InvalidArgumentException $invalid) {
         $errorMessage = $invalid->getMessage();
     } catch (LockBusy $busy) {
@@ -83,6 +101,12 @@ Pagina::printHeader($prova, 'Fontes e configurações');
 ?>
 <?php if ($confirmation !== null) { ?><p class="contagem-ok"><?= $h($confirmation) ?></p><?php } ?>
 <?php if ($errorMessage !== null) { ?><p class="contagem-erro"><?= $h($errorMessage) ?></p><?php } ?>
+<?php if ($question !== null) { ?>
+    <div class="contagem-aviso contagem-pergunta" role="alert">
+        <p><strong>Nada foi alterado ainda.</strong> <?= $h($question->getMessage()) ?></p>
+        <?= Pagina::confirmationForm($prova, $action, $_POST, $question) ?>
+    </div>
+<?php } ?>
 <?php if ($newApiToken !== null) { ?>
     <div class="contagem-token">
         <strong>Token de API criado.</strong> Copie agora: ele não será mostrado de novo.
@@ -137,8 +161,25 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         if ($fonte->getTipo() === Source::TIPO_TOTAIS) {
             continue;
         }
-        $devices = SourceAdmin::devices($fonte); ?>
+        $devices = SourceAdmin::devices($fonte);
+        $blockedUsers = SourceSettings::blockedUsers($fonte); ?>
         <h3><?= $h($fonte->getNome()) ?></h3>
+        <?php if ($blockedUsers !== []) { ?>
+            <div class="contagem-aviso">
+                <strong>Bloqueados nesta fonte:</strong>
+                <?php foreach ($blockedUsers as $blockedUser) { ?>
+                    <form method="POST" action="<?= $h($action) ?>" class="contagem-em-linha"
+                          onsubmit="return confirm(<?= $h(json_encode('Liberar ' . $blockedUser . '? O aparelho dessa pessoa volta a poder enviar registros para esta fonte.')) ?>);">
+                        <?= $csrf ?>
+                        <input type="hidden" name="acao" value="liberar_usuario">
+                        <input type="hidden" name="fonte_id" value="<?= (int) $fonte->getFonteId() ?>">
+                        <input type="hidden" name="usuario" value="<?= $h($blockedUser) ?>">
+                        <?= $h($blockedUser) ?> <button type="submit">liberar</button>
+                    </form>
+                <?php } ?>
+                <br><small><?= $h(SourceSettings::BLOCK_RULE) ?></small>
+            </div>
+        <?php } ?>
         <?php if ($devices === []) { ?>
             <p>Nenhum dispositivo abriu esta fonte ainda.</p>
         <?php } else { ?>
@@ -164,7 +205,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                             <?php } else { ?>
                                 <?php if ($isClosed) { ?>turno encerrado em <?= $h(Pagina::formatClock($closedAtMs)) ?><?php } ?>
                                 <form method="POST" action="<?= $h($action) ?>"
-                                      onsubmit="return confirm('Revogar este dispositivo? Ele não poderá mais enviar registros.');">
+                                      onsubmit="return confirm('Revogar este dispositivo? Ele não poderá mais enviar registros, e o usuário dele fica bloqueado nesta fonte até ser liberado nesta página ou vinculado de novo.');">
                                     <?= $csrf ?>
                                     <input type="hidden" name="acao" value="revogar_dispositivo">
                                     <input type="hidden" name="dispositivo_id" value="<?= (int) $device->getDispositivoId() ?>">
@@ -240,6 +281,18 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         </label>
         <?= $choiceField('passagem_inicial') ?>
         <?= $choiceField('apos_encerramento') ?>
+        <label><?= $h(SettingsForm::CLASSIFICATION_LABEL) ?>
+            <select name="<?= $h(SettingsForm::CLASSIFICATION_FIELD) ?>">
+                <?= $options(['' => '(nenhum: todo carro presente participa)'] + SourceSettings::classificationChoices($prova), $settings->campoClassificacao ?? '') ?>
+            </select>
+            <small><?= $h(SettingsForm::CLASSIFICATION_HINT) ?></small>
+        </label>
+        <?php foreach (SettingsForm::BOOLEAN_FIELDS as $key => [$label, $hint]) { ?>
+            <label><input type="checkbox" name="<?= $h($key) ?>" value="1" <?= !empty($settingValues[$key]) ? 'checked' : '' ?>>
+                <?= $h($label) ?>
+                <small><?= $h($hint) ?></small>
+            </label>
+        <?php } ?>
         <?php foreach (SettingsForm::numberFields() as $key => [$label, $hint]) { ?>
             <label><?= $h($label) ?>
                 <input type="text" inputmode="decimal" name="<?= $h($key) ?>" required size="8"
@@ -249,6 +302,30 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         <?php } ?>
         <button type="submit">Salvar configurações</button>
     </form>
+</section>
+
+<section class="contagem-bloco">
+    <h2>Predefinição de teste</h2>
+    <p class="contagem-dica">
+        Para ensaiar com uma corrida simulada de voltas curtas: ajusta a janela de agrupamento e os outros tempos
+        para a volta média informada. Os valores em vigor ficam guardados e voltam com "Restaurar valores salvos".
+        Liga também "Permitir simulação" (a faixa SIMULAÇÃO aparece em todas as páginas); restaurar desliga de novo.
+    </p>
+    <form method="POST" action="<?= $h($action) ?>" class="contagem-acao"
+          onsubmit="return confirm('Aplicar a predefinição de teste? Os tempos da contagem mudam agora, a simulação é permitida e a corrida é recalculada. NÃO use durante uma corrida de verdade.');">
+        <?= $csrf ?>
+        <input type="hidden" name="acao" value="aplicar_predefinicao">
+        <label>Volta média (s) <input type="number" name="volta_media_s" min="10" max="3600" required value="60" size="6"></label>
+        <button type="submit">Aplicar predefinição de teste</button>
+    </form>
+    <?php if ($service->hasSavedSettings()) { ?>
+        <form method="POST" action="<?= $h($action) ?>" class="contagem-acao">
+            <?= $csrf ?>
+            <input type="hidden" name="acao" value="restaurar_configuracoes">
+            <button type="submit">Restaurar valores salvos</button>
+            <span class="contagem-aviso">Uma predefinição de teste está aplicada: as configurações acima NÃO são as da corrida de verdade.</span>
+        </form>
+    <?php } ?>
 </section>
 <?php
 Pagina::printFooter();

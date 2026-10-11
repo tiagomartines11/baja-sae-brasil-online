@@ -2,7 +2,7 @@
 namespace Baja\Juiz;
 
 use Baja\Contagem\Access\ContagemAccess;
-use Baja\Contagem\Service\ScorePublisher;
+use Baja\Contagem\Review\ManualScoreFields;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\InputQuery;
@@ -46,7 +46,11 @@ $fields = $prova->getParamsInputs();
 // engine after every upload. They are shown as plain text: a value typed
 // here would be overwritten within seconds, and a correction belongs on the
 // review screen, where it is recorded as a decision.
-$engineOwnedFields = $prova->getType() == ContagemAccess::PROVA_TYPE ? ScorePublisher::ENGINE_FIELDS : [];
+// With publishing switched off ("desligada") the engine writes none of them:
+// the list is empty and all three are ordinary fields again, for whoever
+// copies them from the spreadsheet.
+$isLapsProva = $prova->getType() == ContagemAccess::PROVA_TYPE;
+$engineOwnedFields = ManualScoreFields::engineOwnedFields($prova);
 foreach ($fields as $k=>$field) {
     // A row created by the engine has no value yet for the fields people type.
     $value = $nota ? ($nota->getDados()->{$field->getCode()} ?? null) : null;
@@ -64,7 +68,7 @@ foreach ($fields as $k=>$field) {
         <input type="submit" name="submit" id="submit1" value="Salvar" disabled /> &nbsp&nbsp&nbspOU&nbsp&nbsp&nbsp <input type="submit" name="submit" id="submit2" value="Salvar e Avançar" disabled /></th>
 </tr>
 <tr style="border: solid 2px black; height: 60px">
-    <?php if ($engineOwnedFields !== []) { // laps prova: the lap count in this row is not this page's to delete ?>
+    <?php if ($isLapsProva) { // laps prova: the lap count in this row is not this page's to delete ?>
         <th colspan="2">
             <input type="submit" name="delete" id="delete" value="Limpar campos manuais"
                    onclick="return confirm('Limpar os campos digitados deste carro? As voltas contadas não são alteradas.');" /><br />

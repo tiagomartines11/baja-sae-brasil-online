@@ -99,14 +99,44 @@ final class SnapshotService
      */
     public function storeFromRun(EngineInput $input, EngineResult $result, ?int $changesSeen): RaceSnapshot
     {
-        $snapshot = new RaceSnapshot(
-            bin2hex(random_bytes(8)),
-            $input->nowMs,
-            $changesSeen,
-            SnapshotBuilder::build($this->service, $input, $result)
-        );
-        $this->store->put($snapshot);
+        // A slow recalculation that started BEFORE a decision can finish
+        // AFTER the decision stored its own, newer snapshot. Storing ours
+        // then would put the pre-decision race back on every screen.
+        $stored = $this->store->get();
+        if ($this->hasSeenMore($stored, $changesSeen)) {
+            return $stored;
+        }
+
+        $dados = SnapshotBuilder::build($this->service, $input, $result);
+        // The token is a digest of the content: recalculating a race in
+        // which nothing visible changed gives the same token, and review
+        // screens are told "inalterado" instead of downloading it again.
+        $token = sha1((string) json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+        $snapshot = new RaceSnapshot($token, $input->nowMs, $changesSeen, $dados);
+        $this->store->put($snapshot, $input->settings->recalculoS * 1000);
         return $snapshot;
+    }
+
+    /** True when the stored snapshot was computed from a later state of the race than $changesSeen. */
+    public function storedHasSeenMoreThan(?int $changesSeen): bool
+    {
+        return $this->hasSeenMore($this->store->get(), $changesSeen);
+    }
+
+    private function hasSeenMore(?RaceSnapshot $stored, ?int $changesSeen): bool
+    {
+        if ($stored === null || $stored->mudancas === null || $changesSeen === null) {
+            return false;
+        }
+        // The change count only ever grows, so a stored snapshot that claims
+        // more changes than the counter shows NOW was made before Redis
+        // lost the counter (a restart). Its number means nothing any more,
+        // and obeying it would keep that old snapshot on screen for hours.
+        $changesNow = $this->changes->current();
+        if ($changesNow !== null && $stored->mudancas > $changesNow) {
+            return false;
+        }
+        return $stored->mudancas > $changesSeen;
     }
 
     public function clear(): void
@@ -134,13 +164,12 @@ final class SnapshotService
         // leaves the counter ahead of this snapshot, so the next request
         // sees it as stale. Read after, that change could be missed.
         $changesSeen = $this->changes->current();
-        $settings = $this->service->getSettings();
 
         $input = $this->service->loadInput();
         $result = Engine::run($input);
         $snapshot = $this->storeFromRun($input, $result, $changesSeen);
 
-        $this->service->settleTimingResults($result, $settings);
+        $this->service->settleFullRun($result, $changesSeen);
         return $snapshot;
     }
 }

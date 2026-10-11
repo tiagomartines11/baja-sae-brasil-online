@@ -19,6 +19,10 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * official pass completes lap 1, measured from the start time. That lap is
  * not a full lap of the track, so it is never a best lap and does not feed
  * the pace model.
+ *
+ * A lap during which the race was stopped by a red flag, or the car was in
+ * the pit lane or in the fueling station, is counted like any other but
+ * marked "interrompida": its duration says nothing about the car's speed.
  */
 final class LapBuilder
 {
@@ -66,6 +70,11 @@ final class LapBuilder
         $previousGroup = null;
         $passZeroTaken = !$settings->firstPassIsLapZero();
         $lapNumber = 0;
+        // Most cars never stop and most races have no red flag: knowing
+        // that once per car spares three questions per lap.
+        $canBeInterrupted = $timeline->redFlagIntervals !== []
+            || isset($timeline->pitIntervals[$carro])
+            || isset($timeline->fuelIntervals[$carro]);
 
         foreach ($groups as $group) {
             $isPass = $reference ? $group->referencia : $group->contado;
@@ -76,7 +85,10 @@ final class LapBuilder
                 if (!$reference && $group->dentroDaJanelaDeLargada && $official === []) {
                     $official[] = self::passZero($carro, $group);
                     $group->numeroVolta = 0;
-                } elseif (!$group->dentroDaJanelaDeLargada && !$group->ignoradoAposEncerramento) {
+                } elseif (!$group->dentroDaJanelaDeLargada && !$group->ignoradoAposEncerramento && !$group->antesDaLargada) {
+                    // What the race rules leave out (before the start, the
+                    // start window, after the finish) is not waiting for
+                    // anything, so it gets no row.
                     $pendingGroups[] = $group;
                 }
                 continue;
@@ -96,18 +108,18 @@ final class LapBuilder
             if (!$reference) {
                 $group->numeroVolta = $lapNumber;
             }
-            $lap = new Lap($carro, $lapNumber, $group->tsMs, $group->dispersaoMs, $group->sourceCount());
+            $lap = new Lap($carro, $lapNumber, $group->tsMs, $group->dispersaoMs, count($group->entries));
             $lap->grupo = $group;
             $lap->grupoAnterior = $previousGroup;
 
             if ($previousGroup !== null) {
                 // Durations use the habit-corrected times; overlaps with red
-                // flags and pit stays use the plain pass times.
+                // flags, pit stays and fueling stays use the plain pass times.
                 $lap->tempoVoltaMs = max(0, $group->tsAjustadoMs - $previousGroup->tsAjustadoMs);
-                $lap->interrompida = self::isInterrupted($carro, $previousGroup->tsMs, $group->tsMs, $timeline);
+                $lap->interrompida = $canBeInterrupted && self::isInterrupted($carro, $previousGroup->tsMs, $group->tsMs, $timeline);
             } elseif ($timeline->largadaMs !== null) {
                 $lap->tempoVoltaMs = max(0, $group->tsMs - $timeline->largadaMs);
-                $lap->interrompida = self::isInterrupted($carro, $timeline->largadaMs, $group->tsMs, $timeline);
+                $lap->interrompida = $canBeInterrupted && self::isInterrupted($carro, $timeline->largadaMs, $group->tsMs, $timeline);
             }
 
             $official[] = $lap;
@@ -140,7 +152,9 @@ final class LapBuilder
 
     private static function isInterrupted(int $carro, int $fromMs, int $toMs, RaceTimeline $timeline): bool
     {
-        return $timeline->overlapsRedFlag($fromMs, $toMs) || $timeline->overlapsPitStay($carro, $fromMs, $toMs);
+        return $timeline->overlapsRedFlag($fromMs, $toMs)
+            || $timeline->overlapsPitStay($carro, $fromMs, $toMs)
+            || $timeline->overlapsFuelStay($carro, $fromMs, $toMs);
     }
 
     /**
@@ -194,9 +208,13 @@ final class LapBuilder
         if ($group->tempoPreciso) {
             return true;
         }
-        if ($group->dispersaoMs > $settings->dispersaoMaxMs || count($group->entries) < 2) {
+        $entryCount = count($group->entries);
+        if ($group->dispersaoMs > $settings->dispersaoMaxMs || $entryCount < 2) {
             return false;
         }
-        return count($group->realSourceIds()) >= 2;
+        // Two REAL sources are needed. A group holds at most one entry per
+        // source, so with two entries the only question is whether one of
+        // them is a pass a reviewer added.
+        return $entryCount >= 3 || !$group->adicionadoPorRevisor;
     }
 }

@@ -41,17 +41,26 @@ test('an entry is uploaded in the shape the server expects and then marked as se
     // Expected: the request carries exactly the fields of the upload contract.
     assert.equal(outcome.resultado, RESULTADO.OK);
     const request = device.server.receivedRequests[0];
+    const typedAt = device.clock.serverNow();
     assert.deepEqual(request.entries, [{
         uuid: 'uuid-1',
         car: 41,
-        ts_device_ms: device.store.findEntry('uuid-1').ts_device_ms,
-        clock_offset_ms: null,
-        typing_ms: 500,
         mode: 'teclado_tela',
+        typing_ms: 500,
+        // The FINAL time, already on the server's clock...
+        ts_ms: typedAt,
+        time_quality: 'exato',
+        // ...and, for the audit trail only, what the phone's own clock said
+        // and which anchor the time was worked out from (taken 1 s earlier).
+        ts_device_ms: device.store.findEntry('uuid-1').ts_device_ms,
+        anchor: { server_ms: typedAt - 1000, rtt_ms: 0, age_ms: 1000 },
     }]);
     assert.deepEqual(request.voids, []);
     assert.deepEqual(request.pit_events, []);
-    assert.equal(typeof request.device_now_ms, 'number');
+    assert.equal(request.now_ms, typedAt);
+    // The fields of the old format are gone.
+    assert.equal('device_now_ms' in request, false);
+    assert.equal('clock_offset_ms' in request, false);
 
     // ...and afterwards nothing is waiting any more.
     assert.equal(device.store.findEntry('uuid-1').sent, true);
@@ -482,7 +491,7 @@ test('queue_empty is true only when the server really has everything', async () 
     // decide that a car missing from this counter was really missed, and not
     // just still on its way. A false promise would create false alarms.
     const device = await createDevice();
-    await device.queue.syncOnce();          // first contact: learns the clock offset
+    await device.queue.syncOnce();          // an ordinary heartbeat
     await device.type(41);
 
     await device.queue.syncOnce();          // carries the entry
@@ -525,7 +534,7 @@ test('queue_empty stays false while an entry is still being written to the phone
     // this counter with a miss, for an entry that arrived a second later.
     const disk = createSlowStorage(createMemoryStorage());
     const device = await createDevice({ disk });
-    await device.queue.syncOnce();              // first contact: learns the clock offset
+    await device.queue.syncOnce();              // an ordinary heartbeat
 
     disk.holdWrites = true;
     const typing = device.type(41);             // Enter pressed; the disk has not answered
@@ -569,20 +578,20 @@ test('queue_empty stays false while an undo is still being written to the phone'
     await undoing;
 });
 
-test('the very first request never claims queue_empty, because the clock offset is unknown', async () => {
-    // Situation: the page has just opened. It has never heard from the server,
-    // so it does not know how wrong the phone's clock is. "Everything up to
-    // device time X" would be meaningless to the server.
-    const device = await createDevice();
+test('the very first request never claims queue_empty, because the server time is unknown', async () => {
+    // Situation: the page has just opened. It has never heard from the server
+    // in this page load, so it cannot say what time it is on the server's
+    // clock. "You have everything up to time X" has no X yet.
+    const device = await createDevice({ anchored: false });
 
     await device.queue.syncOnce();
     await device.queue.syncOnce();
 
-    // Expected: first request says false and carries a null offset; the
-    // second, made after one answer, knows the offset and says true.
-    assert.equal(device.server.receivedRequests[0].clock_offset_ms, null);
+    // Expected: the first request says false and carries no time; the
+    // second, made after one answer, knows the server's time and says true.
+    assert.equal(device.server.receivedRequests[0].now_ms, null);
     assert.equal(device.server.receivedRequests[0].queue_empty, false);
-    assert.equal(typeof device.server.receivedRequests[1].clock_offset_ms, 'number');
+    assert.equal(device.server.receivedRequests[1].now_ms, device.clock.serverNow());
     assert.equal(device.server.receivedRequests[1].queue_empty, true);
 });
 

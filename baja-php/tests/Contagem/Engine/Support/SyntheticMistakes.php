@@ -30,6 +30,10 @@ use Random\Randomizer;
  *   that is indistinguishable from a real pass, for any system.
  * - During a handover the source being handed over makes no mistakes (two
  *   people are watching the line for it).
+ * - A counter whose phone is stamping estimated times makes no mistakes
+ *   meanwhile; while a phone has no usable time at all, nobody does; and
+ *   nobody does around a start that was recorded late. Each of those is
+ *   trouble enough on its own, and the truth must stay easy to state.
  * - Every kind whose rate is not zero happens at least once per race.
  */
 final class SyntheticMistakes
@@ -105,6 +109,9 @@ final class SyntheticMistakes
         foreach ($track->passes as $passIndex => $pass) {
             $tooSoon = $pass['tsMs'] - $lastMistakeMs < self::MIN_GAP_MS;
             if ($tooSoon || isset($mistakes->actions[$passIndex]) || $pass['tsMs'] > $endMs) {
+                continue;
+            }
+            if ($mistakes->choices->nobodyMakesMistakesAt($pass['tsMs'], $track->recordedStartMs)) {
                 continue;
             }
             $kind = $mistakes->owedKindAt($pass['tsMs']) ?? $mistakes->randomKind($rates);

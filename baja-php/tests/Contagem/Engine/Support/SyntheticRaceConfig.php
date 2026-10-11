@@ -60,6 +60,43 @@ final class SyntheticRaceConfig
     public float $breakdownRate = 0.015;
     /** A car makes a pit stop of 2 to 5 minutes, logged by the pit log. */
     public float $pitStopRate = 0.02;
+    /** A car refuels for 1 to 3 minutes, logged by the fueling station log. */
+    public float $fuelStopRate = 0.01;
+
+    // ----- race-day trouble: not the counters' mistakes, but work for a reviewer -----
+
+    /**
+     * Race control records the start a moment LATE: the first cars (up to
+     * three) have already crossed the counting line by then, so their
+     * first crossing was typed before the recorded start.
+     */
+    public bool $startRecordedLate = false;
+
+    /**
+     * This many teams are present but not classified (numbers after the
+     * last regular car) and go out anyway for three laps. Every counter
+     * types them. They must never count.
+     */
+    public int $unclassifiedCarsOnTrack = 0;
+
+    /**
+     * Periods during which a counter's phone stamps its entries with an
+     * ESTIMATED time (typed offline, page reloaded): each entry is
+     * `errorMs` off. The counter itself types flawlessly meanwhile.
+     *
+     * @var array<int, array{source: int, fromSeconds: int, toSeconds: int, errorMs: int}>
+     */
+    public array $estimatedTimePeriods = [];
+
+    /**
+     * Periods during which a counter's phone has NO usable time: each
+     * entry carries the phone's own clock, `errorMs` away from the truth.
+     * Nobody makes a mistake meanwhile, so that every crossing still has
+     * two good entries.
+     *
+     * @var array<int, array{source: int, fromSeconds: int, toSeconds: int, errorMs: int}>
+     */
+    public array $unknownTimePeriods = [];
 
     /**
      * Race control ends the race at `raceMinutes`. Every car then crosses
@@ -115,6 +152,22 @@ final class SyntheticRaceConfig
         return $this;
     }
 
+    /**
+     * Adds everything a race day can bring that is nobody's typing mistake
+     * and still needs a reviewer: a start recorded late, two unclassified
+     * cars on track, four minutes of estimated times on counter 3 and two
+     * minutes of unknown times (the phone's calendar is three days behind)
+     * on counter 2.
+     */
+    public function withRaceDayTrouble(): self
+    {
+        $this->startRecordedLate = true;
+        $this->unclassifiedCarsOnTrack = 2;
+        $this->estimatedTimePeriods = [['source' => 3, 'fromSeconds' => 20 * 60, 'toSeconds' => 24 * 60, 'errorMs' => 1200]];
+        $this->unknownTimePeriods = [['source' => 2, 'fromSeconds' => 70 * 60, 'toSeconds' => 72 * 60, 'errorMs' => -3 * 24 * 3600 * 1000]];
+        return $this;
+    }
+
     /** A race of the given size with no incidents and no handover, for timing the engine. */
     public static function forTiming(int $seed, int $cars, int $counters, int $raceMinutes, int $baseLapSeconds): self
     {
@@ -124,6 +177,9 @@ final class SyntheticRaceConfig
         $config->raceMinutes = $raceMinutes;
         $config->baseLapSeconds = $baseLapSeconds;
         $config->handovers = [];
+        // The timing races are kept exactly as they were when the budgets
+        // were set, so that times can be compared from round to round.
+        $config->fuelStopRate = 0.0;
         return $config;
     }
 

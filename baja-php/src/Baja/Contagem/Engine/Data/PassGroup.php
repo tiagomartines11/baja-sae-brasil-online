@@ -14,7 +14,7 @@ final class PassGroup
     /** @var Entry[] in time order; at most one per source */
     public array $entries = [];
 
-    /** Time of the first entry. Only used while matching. */
+    /** Time of the first entry. */
     public int $primeiroTsMs;
 
     /**
@@ -59,6 +59,16 @@ final class PassGroup
      * `janela_largada_s`). Kept and shown, never a lap.
      */
     public bool $dentroDaJanelaDeLargada = false;
+
+    /**
+     * The pass time is before the start of the race. Kept and shown, and
+     * not an official pass unless a reviewer confirms it; a confirmed one is
+     * the car's pass zero (the start was recorded a little late).
+     */
+    public bool $antesDaLargada = false;
+
+    /** One of the entries has an estimated time (`Entry::TEMPO_ESTIMADO`). */
+    public bool $tempoEstimado = false;
 
     /** A pass after the finish that the `apos_encerramento` rule leaves out. Shown, never a lap. */
     public bool $ignoradoAposEncerramento = false;
@@ -130,6 +140,12 @@ final class PassGroup
     public function anchorEntryId(): int
     {
         return min($this->entryIds());
+    }
+
+    /** True when a reviewer vouched for this group: confirmed it, or added the pass. */
+    public function isReviewersWord(): bool
+    {
+        return $this->confirmadoPorRevisor || $this->adicionadoPorRevisor;
     }
 
     /** True when exactly one real source recorded it and no reviewer vouched for it. */

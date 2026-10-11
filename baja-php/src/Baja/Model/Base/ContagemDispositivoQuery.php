@@ -29,7 +29,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDispositivoQuery orderByFechadoEmMs($order = Criteria::ASC) Order by the fechado_em_ms column
  * @method     ChildContagemDispositivoQuery orderByVistoEmMs($order = Criteria::ASC) Order by the visto_em_ms column
  * @method     ChildContagemDispositivoQuery orderBySincronizadoAteMs($order = Criteria::ASC) Order by the sincronizado_ate_ms column
- * @method     ChildContagemDispositivoQuery orderByPrimeiroDesvioMs($order = Criteria::ASC) Order by the primeiro_desvio_ms column
  *
  * @method     ChildContagemDispositivoQuery groupByDispositivoId() Group by the dispositivo_id column
  * @method     ChildContagemDispositivoQuery groupByFonteId() Group by the fonte_id column
@@ -41,7 +40,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDispositivoQuery groupByFechadoEmMs() Group by the fechado_em_ms column
  * @method     ChildContagemDispositivoQuery groupByVistoEmMs() Group by the visto_em_ms column
  * @method     ChildContagemDispositivoQuery groupBySincronizadoAteMs() Group by the sincronizado_ate_ms column
- * @method     ChildContagemDispositivoQuery groupByPrimeiroDesvioMs() Group by the primeiro_desvio_ms column
  *
  * @method     ChildContagemDispositivoQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildContagemDispositivoQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -86,7 +84,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDispositivo|null findOneByFechadoEmMs(string $fechado_em_ms) Return the first ChildContagemDispositivo filtered by the fechado_em_ms column
  * @method     ChildContagemDispositivo|null findOneByVistoEmMs(string $visto_em_ms) Return the first ChildContagemDispositivo filtered by the visto_em_ms column
  * @method     ChildContagemDispositivo|null findOneBySincronizadoAteMs(string $sincronizado_ate_ms) Return the first ChildContagemDispositivo filtered by the sincronizado_ate_ms column
- * @method     ChildContagemDispositivo|null findOneByPrimeiroDesvioMs(string $primeiro_desvio_ms) Return the first ChildContagemDispositivo filtered by the primeiro_desvio_ms column
  *
  * @method     ChildContagemDispositivo requirePk($key, ?ConnectionInterface $con = null) Return the ChildContagemDispositivo by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDispositivo requireOne(?ConnectionInterface $con = null) Return the first ChildContagemDispositivo matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -101,7 +98,6 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDispositivo requireOneByFechadoEmMs(string $fechado_em_ms) Return the first ChildContagemDispositivo filtered by the fechado_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDispositivo requireOneByVistoEmMs(string $visto_em_ms) Return the first ChildContagemDispositivo filtered by the visto_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDispositivo requireOneBySincronizadoAteMs(string $sincronizado_ate_ms) Return the first ChildContagemDispositivo filtered by the sincronizado_ate_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildContagemDispositivo requireOneByPrimeiroDesvioMs(string $primeiro_desvio_ms) Return the first ChildContagemDispositivo filtered by the primeiro_desvio_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildContagemDispositivo[]|Collection find(?ConnectionInterface $con = null) Return ChildContagemDispositivo objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildContagemDispositivo> find(?ConnectionInterface $con = null) Return ChildContagemDispositivo objects based on current ModelCriteria
@@ -126,8 +122,6 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemDispositivo> findByVistoEmMs(string|array<string> $visto_em_ms) Return ChildContagemDispositivo objects filtered by the visto_em_ms column
  * @method     ChildContagemDispositivo[]|Collection findBySincronizadoAteMs(string|array<string> $sincronizado_ate_ms) Return ChildContagemDispositivo objects filtered by the sincronizado_ate_ms column
  * @psalm-method Collection&\Traversable<ChildContagemDispositivo> findBySincronizadoAteMs(string|array<string> $sincronizado_ate_ms) Return ChildContagemDispositivo objects filtered by the sincronizado_ate_ms column
- * @method     ChildContagemDispositivo[]|Collection findByPrimeiroDesvioMs(string|array<string> $primeiro_desvio_ms) Return ChildContagemDispositivo objects filtered by the primeiro_desvio_ms column
- * @psalm-method Collection&\Traversable<ChildContagemDispositivo> findByPrimeiroDesvioMs(string|array<string> $primeiro_desvio_ms) Return ChildContagemDispositivo objects filtered by the primeiro_desvio_ms column
  *
  * @method     ChildContagemDispositivo[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildContagemDispositivo> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -227,7 +221,7 @@ abstract class ContagemDispositivoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT dispositivo_id, fonte_id, token_hash, usuario, rotulo, criado_em_ms, revogado_em_ms, fechado_em_ms, visto_em_ms, sincronizado_ate_ms, primeiro_desvio_ms FROM contagem_dispositivo WHERE dispositivo_id = :p0';
+        $sql = 'SELECT dispositivo_id, fonte_id, token_hash, usuario, rotulo, criado_em_ms, revogado_em_ms, fechado_em_ms, visto_em_ms, sincronizado_ate_ms FROM contagem_dispositivo WHERE dispositivo_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -704,49 +698,6 @@ abstract class ContagemDispositivoQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS, $sincronizadoAteMs, $comparison);
-
-        return $this;
-    }
-
-    /**
-     * Filter the query on the primeiro_desvio_ms column
-     *
-     * Example usage:
-     * <code>
-     * $query->filterByPrimeiroDesvioMs(1234); // WHERE primeiro_desvio_ms = 1234
-     * $query->filterByPrimeiroDesvioMs(array(12, 34)); // WHERE primeiro_desvio_ms IN (12, 34)
-     * $query->filterByPrimeiroDesvioMs(array('min' => 12)); // WHERE primeiro_desvio_ms > 12
-     * </code>
-     *
-     * @param mixed $primeiroDesvioMs The value to use as filter.
-     *              Use scalar values for equality.
-     *              Use array values for in_array() equivalent.
-     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
-     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
-     *
-     * @return $this The current query, for fluid interface
-     */
-    public function filterByPrimeiroDesvioMs($primeiroDesvioMs = null, ?string $comparison = null)
-    {
-        if (is_array($primeiroDesvioMs)) {
-            $useMinMax = false;
-            if (isset($primeiroDesvioMs['min'])) {
-                $this->addUsingAlias(ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS, $primeiroDesvioMs['min'], Criteria::GREATER_EQUAL);
-                $useMinMax = true;
-            }
-            if (isset($primeiroDesvioMs['max'])) {
-                $this->addUsingAlias(ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS, $primeiroDesvioMs['max'], Criteria::LESS_EQUAL);
-                $useMinMax = true;
-            }
-            if ($useMinMax) {
-                return $this;
-            }
-            if (null === $comparison) {
-                $comparison = Criteria::IN;
-            }
-        }
-
-        $this->addUsingAlias(ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS, $primeiroDesvioMs, $comparison);
 
         return $this;
     }

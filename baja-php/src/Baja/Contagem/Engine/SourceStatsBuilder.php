@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Engine;
 
-use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\Data\SourceStats;
@@ -16,13 +15,11 @@ final class SourceStatsBuilder
 {
     /**
      * @param array<int, Source> $sourcesById
-     * @param Entry[] $keptEntries entries that took part in matching
-     * @param PassGroup[] $groups
+     * @param PassGroup[] $groups every pass group of the race
      * @return array<int, SourceStats>
      */
     public static function build(
         array $sourcesById,
-        array $keptEntries,
         array $groups,
         AppliedDecisions $applied,
         DuplicateFilter $duplicates,
@@ -46,9 +43,20 @@ final class SourceStatsBuilder
             $statsBySource[$source->id] = $stats;
         }
 
-        foreach ($keptEntries as $entry) {
-            if (isset($statsBySource[$entry->fonteId])) {
-                $statsBySource[$entry->fonteId]->entradas++;
+        // Entries in use: those in a pass group of the race. What was typed
+        // before the start and not accepted as an initial pass is warm-up.
+        $entriesBySource = [];
+        foreach ($groups as $group) {
+            if ($group->antesDaLargada && !$group->contado) {
+                continue;
+            }
+            foreach ($group->entries as $entry) {
+                $entriesBySource[$entry->fonteId] = ($entriesBySource[$entry->fonteId] ?? 0) + 1;
+            }
+        }
+        foreach ($entriesBySource as $fonteId => $entryCount) {
+            if (isset($statsBySource[$fonteId])) {
+                $statsBySource[$fonteId]->entradas = $entryCount;
             }
         }
 

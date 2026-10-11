@@ -241,22 +241,13 @@ final class SourceAdmin
         return count($totals);
     }
 
-    /** @param array<string, mixed> $post */
+    /**
+     * @param array<string, mixed> $post
+     * @throws ConfirmationNeeded see SourceSettings::save()
+     */
     public static function saveSettings(ContagemService $service, array $post): void
     {
-        $countingIds = [];
-        $activeCountingIds = [];
-        foreach (self::sources($service->getProva()) as $fonte) {
-            if ($fonte->getTipo() === Source::TIPO_TOTAIS) {
-                continue;
-            }
-            $countingIds[] = (int) $fonte->getFonteId();
-            if ($fonte->getAtiva()) {
-                $activeCountingIds[] = (int) $fonte->getFonteId();
-            }
-        }
-        // saveSettings() takes the lock and recounts the race by itself.
-        $service->saveSettings(SettingsForm::fromPost($post, $countingIds, $activeCountingIds));
+        SourceSettings::save($service, $post);
     }
 
     public static function rerunEngine(ContagemService $service): void

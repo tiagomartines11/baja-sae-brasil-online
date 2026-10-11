@@ -4,9 +4,10 @@
 
 import { SessaoExpirada, enviarDecisao } from './revisao-api.js';
 import {
-  alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoConfirmar, decisaoDesfazer,
-  decisaoExcluirFonte, decisaoManterAmbas, decisaoReatribuir, mensagemDeConflito,
-  pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo, podeDecidirSobreAlerta, problemaAoAdicionar,
+  alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoConfirmar, decisaoConfirmarAlerta,
+  decisaoDescartarPassagem, decisaoDesfazer, decisaoEncerrarExclusao, decisaoExcluirFonte, decisaoReatribuir,
+  mensagemDeConflito, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo, perguntaSobreVoltaCurta,
+  podeDecidirSobreAlerta, problemaAoAdicionar, problemaAoEncerrarExclusao, voltaCurtaAoContar,
 } from './revisao-decisoes.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { interpretarTempoDeProva } from './revisao-formato.js';
@@ -141,12 +142,60 @@ export function criarAcoes(ganchos) {
     }
   }
 
+  // K. Asks first when it would give the car a lap too short to be real.
+  function confirmarAlerta() {
+    const alerta = alertaQuePodeSerDecidido();
+    const decisao = alerta ? decisaoConfirmarAlerta(alerta) : null;
+    if (!decisao) {
+      return;
+    }
+    const voltaCurtaMs = voltaCurtaAoContar(alerta, tela.estado);
+    if (voltaCurtaMs !== null && !window.confirm(perguntaSobreVoltaCurta(voltaCurtaMs))) {
+      return;
+    }
+    enviar(pedidoParaAlerta(comMotivo(decisao, tela.motivo), alerta, tela.estado, tela.janelaAssinatura));
+  }
+
+  // "Descartar esta passagem" on a flag: every entry of the flag's pass.
+  function descartarPassagem() {
+    const alerta = alertaQuePodeSerDecidido();
+    const ids = alerta?.passagem_ids ?? [];
+    if (ids.length === 0) {
+      return;
+    }
+    const pergunta = `Descartar esta passagem do carro ${(alerta.carros ?? []).join(', ')}? `
+      + `Os ${ids.length} registros dela são anulados de uma vez e o carro perde uma volta. Pode ser desfeito pelo histórico.`;
+    if (window.confirm(pergunta)) {
+      enviar(pedidoParaAlerta(comMotivo(decisaoDescartarPassagem(ids[0]), tela.motivo), alerta, tela.estado, tela.janelaAssinatura));
+    }
+  }
+
+  // What must be asked before an action on one chip; null when nothing.
+  function perguntaDaEntrada(opcao, entrada) {
+    if (opcao.acao === 'confirmar' && opcao.maisUmaPassagem) {
+      return entrada.anulada_auto
+        ? `Este registro foi anulado automaticamente como repetição (toque duplo ou troca de contador). `
+          + `Contá-lo dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta), poucos segundos depois da anterior. Contar mesmo assim?`
+        : `Contar esta passagem dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta) com base neste único registro. Contar?`;
+    }
+    if (opcao.acao === 'descartar_passagem') {
+      return `Descartar esta passagem do carro ${entrada.carro}? Os ${opcao.registros} registros dela são anulados de uma vez. `
+        + 'Pode ser desfeito pelo histórico.';
+    }
+    return null;
+  }
+
   // `opcao` is one of the items of acoesDaEntrada(); `carroNovo` is only
   // given for "reatribuir".
   function acaoNaEntrada(opcao, entrada, carroNovo) {
+    const pergunta = perguntaDaEntrada(opcao, entrada);
+    if (pergunta !== null && !window.confirm(pergunta)) {
+      return;
+    }
     const decisoes = {
       anular: () => decisaoAnular(entrada.id),
       confirmar: () => decisaoConfirmar(entrada.id),
+      descartar_passagem: () => decisaoDescartarPassagem(entrada.id),
       reatribuir: () => decisaoReatribuir(entrada.id, carroNovo),
       restaurar: () => decisaoDesfazer(opcao.decisaoId),
       remover: () => decisaoDesfazer(opcao.decisaoId),
@@ -210,13 +259,28 @@ export function criarAcoes(ganchos) {
     enviar(pedidoSemAlvo(decisaoDesfazer(decisao.id), tela.estado));
   }
 
+  // "Encerrar exclusão em h:mm:ss" on an open-ended exclusion.
+  function encerrarExclusao(exclusao, textoAte) {
+    const largada = tela.estado.corrida.largada_ms;
+    const desdeALargada = largada === null || largada === undefined ? null : interpretarTempoDeProva(textoAte);
+    const ate = desdeALargada === null ? null : largada + desdeALargada;
+    const problema = problemaAoEncerrarExclusao(exclusao, ate, agoraServidorMs());
+    if (problema) {
+      mostrarMensagem(problema, 'erro');
+      return;
+    }
+    enviar(pedidoSemAlvo(decisaoEncerrarExclusao(exclusao.id, ate), tela.estado));
+  }
+
   return {
     aceitar: () => decidirSobreAlerta(decisaoAceitar),
-    manterAmbas: () => decidirSobreAlerta(decisaoManterAmbas),
+    confirmarAlerta,
+    descartarPassagem,
     anular,
     acaoNaEntrada,
     adicionar,
     excluirFonte,
+    encerrarExclusao,
     desfazer,
   };
 }

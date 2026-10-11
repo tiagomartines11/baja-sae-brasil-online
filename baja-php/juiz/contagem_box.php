@@ -25,7 +25,7 @@ $provaId = $prova->getProvaId();
 // opened on the same device.
 $fonte = DeviceTokens::boxSourceFor($prova);
 
-$config = [
+$config = OfflineShell::provaConfig($prova) + [
     'tipo' => 'box',
     'evento_id' => $prova->getEventoId(),
     'prova_id' => $provaId,
@@ -36,37 +36,61 @@ $config = [
         'dispositivo' => 'contagem_dispositivo.php?p=' . rawurlencode($provaId) . '&box=1',
         'service_worker' => 'contagem_sw.php',
     ],
-    'versao' => OfflineShell::assetVersion(),
-    'carros' => OfflineShell::presentCars($prova->getEventoId()),
-    'janela_ms' => null,
 ];
 
 OfflineShell::printDocumentStart('Box - ' . $prova->getNome(), $config, 'box.js');
 OfflineShell::printStatusBar($fonte->getNome(), 'Também registrando o box:');
 ?>
 <main id="conteudo" class="conteudo" hidden>
-    <section class="entrada" aria-label="Registrar entrada ou saída do box">
-        <form id="form-box" class="form-teclado" autocomplete="off">
-            <input id="campo-numero" class="campo-numero" type="text" inputmode="numeric" pattern="[0-9]*"
-                   maxlength="4" autocomplete="off" aria-label="Número do carro" placeholder="Nº">
-        </form>
-        <div id="box-equipe" class="box-equipe">&nbsp;</div>
-        <div class="botoes-box">
-            <button type="button" id="btn-entrou" class="botao-box botao-entrou" disabled>Entrou</button>
-            <button type="button" id="btn-saiu" class="botao-box botao-saiu" disabled>Saiu</button>
+    <?php // The page opens here: which area (only when the prova logs the fueling station),
+          // then entry or exit. box.js shows one question at a time. ?>
+    <section id="box-escolha" class="entrada box-escolha" hidden>
+        <div id="escolha-area" hidden>
+            <h2>Onde você está?</h2>
+            <div class="botoes-box">
+                <button type="button" class="botao-box botao-area" data-area="box">Box</button>
+                <button type="button" class="botao-box botao-area" data-area="abastecimento">Abastecimento</button>
+            </div>
         </div>
+        <div id="escolha-sentido" hidden>
+            <h2>O que você vai registrar?</h2>
+            <div class="botoes-box">
+                <button type="button" class="botao-box botao-entrou" data-sentido="entrada">Entrada</button>
+                <button type="button" class="botao-box botao-saiu" data-sentido="saida">Saída</button>
+            </div>
+            <p class="texto-apoio">Depois de escolher, cada toque em um carro registra na hora.
+               Dá para trocar a qualquer momento.</p>
+        </div>
+    </section>
+
+    <section id="box-registro" class="entrada" aria-label="Registrar entrada ou saída" hidden>
+        <nav id="chave-area" class="chave" aria-label="Área" hidden>
+            <button type="button" data-area="box">Box</button>
+            <button type="button" data-area="abastecimento">Abastecimento</button>
+        </nav>
+        <nav id="chave-sentido" class="chave" aria-label="Entrada ou saída">
+            <button type="button" data-sentido="entrada">Entrada</button>
+            <button type="button" data-sentido="saida">Saída</button>
+        </nav>
+        <p id="box-instrucao" class="box-instrucao"></p>
         <p id="box-mensagem" class="box-mensagem" aria-live="assertive"></p>
-    </section>
 
-    <section class="no-box">
-        <h2>No box agora</h2>
-        <div id="lista-no-box" class="blocos"></div>
-        <p id="no-box-vazio" class="texto-apoio">Nenhum carro no box.</p>
-    </section>
+        <h2 id="titulo-primeiros"></h2>
+        <div id="blocos-primeiros" class="blocos"></div>
+        <p id="primeiros-vazio" class="texto-apoio" hidden></p>
 
-    <section class="todos-carros">
-        <h2>Carros</h2>
-        <div id="blocos" class="blocos blocos-pequenos"></div>
+        <?php // Never hidden while it has cars: the person at the other end may have missed one. ?>
+        <div id="grupo-outros">
+            <h2 id="titulo-outros"></h2>
+            <div id="blocos-outros" class="blocos blocos-pequenos"></div>
+        </div>
+
+        <form id="form-box" class="form-teclado form-outro-numero" autocomplete="off">
+            <input id="campo-numero" class="campo-numero" type="text" inputmode="numeric" pattern="[0-9]*"
+                   maxlength="4" enterkeyhint="done" autocomplete="off" aria-label="Outro número de carro"
+                   placeholder="Outro nº">
+            <button type="submit" class="botao-secundario">Registrar</button>
+        </form>
     </section>
 
     <section class="recentes">
@@ -75,7 +99,7 @@ OfflineShell::printStatusBar($fonte->getNome(), 'Também registrando o box:');
     </section>
 
     <footer class="rodape">
-        <button type="button" id="btn-exportar" class="botao-secundario">Exportar meus dados</button>
+        <?php OfflineShell::printFooterButtons(); ?>
         <a class="link-voltar" href="contagem.php?p=<?= htmlspecialchars(rawurlencode($provaId)) ?>">Voltar</a>
         <?php OfflineShell::printFooterTools(); ?>
     </footer>

@@ -2,13 +2,15 @@
 // the count page and the pit page. Reads nothing, decides nothing: it turns a
 // state object into text.
 
-import { describeRaceClock, formatTimeOfDay } from './race-clock.js';
+import { describeOfficialTime, describeRaceClock, formatTimeOfDay } from './race-clock.js';
 import { describeBanner, describeConnection } from './status-messages.js';
 
 export function createStatusBar(documentRef, config) {
     const element = (id) => documentRef.getElementById(id);
     const fonte = element('st-fonte');
     const relogio = element('st-relogio');
+    const horarioOficial = element('st-horario-oficial');
+    const faixaSimulacao = element('faixa-simulacao');
     const estadoCorrida = element('st-estado-corrida');
     const conexao = element('st-conexao');
     const pendentes = element('st-pendentes');
@@ -41,10 +43,15 @@ export function createStatusBar(documentRef, config) {
 
     return {
         /**
-         * @param {object} state    SyncQueue.getState()
-         * @param {object} problems {tokenProblem: ?string, armazenamento: string}
+         * @param {object}  state    SyncQueue.getState()
+         * @param {object}  problems {tokenProblem: ?string, armazenamento: string}
+         * @param {boolean} simulationAllowed the prova is in simulation mode
          */
-        render(state, problems) {
+        render(state, problems, simulationAllowed = false) {
+            // Permanent while the setting is on: nobody may mistake a
+            // rehearsal with invented cars for a real count, or the reverse.
+            faixaSimulacao.hidden = !simulationAllowed;
+
             const serverFonte = state.servidor && state.servidor.fonte;
             fonte.textContent = serverFonte && serverFonte.nome ? serverFonte.nome : config.fonte.nome;
 
@@ -52,9 +59,12 @@ export function createStatusBar(documentRef, config) {
             conexao.textContent = describeConnection(state, problems);
             conexao.className = 'conexao conexao-' + connectionClass;
 
-            pendentes.textContent = String(state.pendentes);
+            // Records typed before this page knew the server's time are in
+            // the queue too; saying why they wait avoids "why is it stuck?".
+            const held = state.aguardandoHorario > 0 ? ' (' + state.aguardandoHorario + ' aguardando horário oficial)' : '';
+            pendentes.textContent = String(state.pendentes) + held;
             pendentes.parentElement.classList.toggle('tem-pendentes', state.pendentes > 0);
-            ultimoSync.textContent = formatTimeOfDay(state.ultimoSyncMs);
+            ultimoSync.textContent = formatTimeOfDay(state.ultimoSyncMs, config.fuso || null);
 
             // Names of other people counting on THIS source (a handover, or
             // two people sharing a counter). Never anything about what they
@@ -64,10 +74,16 @@ export function createStatusBar(documentRef, config) {
             renderBanner(state, problems);
         },
 
-        /** Called a few times per second; cheap on purpose. */
-        renderClock(state, deviceNowMs, clockOffsetMs) {
+        /**
+         * Called a few times per second; cheap on purpose.
+         * @param {?number} serverNowMs ServerClock.serverNowMs(): null until
+         *        this page load has heard from the server
+         */
+        renderClock(state, serverNowMs) {
             const race = state.servidor ? state.servidor.race : null;
-            const description = describeRaceClock(race, deviceNowMs, clockOffsetMs);
+            const description = describeRaceClock(race, serverNowMs);
+            horarioOficial.textContent = describeOfficialTime(serverNowMs, config.fuso || null);
+            horarioOficial.classList.toggle('sincronizando', serverNowMs === null);
             relogio.textContent = description.texto;
             estadoCorrida.textContent = description.rotulo;
             estadoCorrida.className = 'estado-corrida estado-' + description.estado;

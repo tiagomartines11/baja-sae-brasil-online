@@ -170,3 +170,58 @@ test('undoing something that does not exist does nothing', async () => {
     assert.equal(result, null);
     assert.equal(device.store.findEntry('uuid-1').voided, false);
 });
+
+// ---------------------------------------------------------------------------
+// The race simulation records through the same function, with a given time
+// ---------------------------------------------------------------------------
+
+test('a pass can be recorded with an intended time instead of "now"', async () => {
+    // SITUATION: a rehearsal. The simulation plays a race script through
+    // the count page: "car 41 crosses at T". Browsers slow down the timers
+    // of a tab in the background, so the timer for this crossing fires 7
+    // seconds late.
+    //
+    // EXPECTED: the entry takes the usual path (local store, queue, upload)
+    // but carries the INTENDED time T, not the moment the timer fired, and
+    // says it is simulated, so that the server can refuse it where
+    // simulation is not allowed.
+    const device = await createDevice();
+    device.server.simulacao = true;
+    const intendedMs = device.clock.serverNow() - 7000;
+
+    const result = await device.session.recordPass({ car: 41, typingMs: null, mode: 'simulacao', tsMs: intendedMs });
+    await device.queue.flush();
+
+    assert.equal(result.entry.ts_ms, intendedMs);
+    const stored = device.server.storedEntries.get('uuid-1');
+    assert.equal(stored.ts_ms, intendedMs);
+    assert.equal(stored.time_quality, 'exato');
+    assert.equal(stored.mode, 'simulacao');
+    assert.equal(stored.car, 41);
+});
+
+test('a replayed race warns about repeats by the intended times, not by when they were injected', async () => {
+    // SITUATION: replay at 30 times real speed. Car 41's laps are 4 minutes
+    // apart in the script but are injected 8 seconds apart.
+    const device = await createDevice();
+    const startMs = device.clock.serverNow() - 3_600_000;
+
+    await device.session.recordPass({ car: 41, typingMs: null, mode: 'simulacao', tsMs: startMs });
+    device.clock.advance(8000);
+    const nextLap = await device.session.recordPass({ car: 41, typingMs: null, mode: 'simulacao', tsMs: startMs + 240_000 });
+    const doubleTap = await device.session.recordPass({ car: 41, typingMs: null, mode: 'simulacao', tsMs: startMs + 243_000 });
+
+    // EXPECTED: no "already typed 8 s ago" for an honest next lap; but a
+    // scripted double tap 3 s after it is warned about, as in a real race.
+    assert.deepEqual(nextLap.avisos, []);
+    assert.equal(doubleTap.avisos.length, 1);
+});
+
+test('an ordinary pass ignores no time: leaving `tsMs` out means "now"', async () => {
+    const device = await createDevice();
+    device.clock.advance(3000);
+
+    const result = await device.session.recordPass({ car: 41, typingMs: 300, mode: 'teclado' });
+
+    assert.equal(result.entry.ts_ms, device.clock.serverNow());
+});

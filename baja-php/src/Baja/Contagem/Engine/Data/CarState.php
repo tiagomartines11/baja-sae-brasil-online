@@ -13,6 +13,8 @@ final class CarState
     public const ATRASADO = 'atrasado';
     public const PARADO = 'parado';
     public const NO_BOX = 'no_box';
+    /** Logged as inside the fueling station. When a car is in both areas, the one it entered last is shown. */
+    public const ABASTECENDO = 'abastecendo';
     public const FORA = 'fora';
 
     public int $carro;
@@ -34,7 +36,7 @@ final class CarState
 
     public string $status = self::FORA;
 
-    /** Since when the car is atrasado / parado / no_box. Null for the other statuses. */
+    /** Since when the car is atrasado / parado / no_box / abastecendo. Null for the other statuses. */
     public ?int $statusDesdeMs = null;
 
     /**

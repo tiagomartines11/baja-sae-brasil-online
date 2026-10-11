@@ -20,6 +20,14 @@ ob_start();
 header('Content-Type: application/json; charset=utf-8');
 // A cached answer would tell a phone that entries were stored when they were not.
 header('Cache-Control: no-store');
+// Which group of PHP workers answered. Uploads have workers of their own
+// (see baja-infra/baja-app/php-fpm-pools.conf); this header is how a test,
+// or somebody with the browser's network tab open, checks that the web
+// server really sends them there.
+$workerPool = getenv('BAJA_FPM_POOL');
+if (is_string($workerPool) && $workerPool !== '') {
+    header('X-Baja-Pool: ' . $workerPool);
+}
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     http_response_code(405);

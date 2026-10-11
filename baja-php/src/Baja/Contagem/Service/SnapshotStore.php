@@ -54,7 +54,41 @@ final class SnapshotStore
         return is_string($json) && $json !== '' ? RaceSnapshot::fromJson($json) : null;
     }
 
-    public function put(RaceSnapshot $snapshot): void
+    /**
+     * Could the stored snapshot of a prova be stale? Answered from a few
+     * bytes kept beside the snapshot, without reading the snapshot itself
+     * or the database, because every heartbeat of every phone asks.
+     *
+     * "No" is only said when it is certain. Without Redis the answer is
+     * also "no": heartbeats then leave the recalculation to the uploads and
+     * the review screen, which check properly.
+     *
+     * @param int|null $changesNow the current change count; null when unknown
+     */
+    public static function mayBeStale(string $eventoId, string $provaId, ?int $changesNow, int $nowMs): bool
+    {
+        $redis = RedisClient::get();
+        if ($redis === null) {
+            return false;
+        }
+        try {
+            $summary = json_decode((string) $redis->get('contagem:' . $eventoId . ':' . $provaId . ':snapshot_resumo'), true);
+        } catch (\Throwable $error) {
+            return false;
+        }
+        if (!is_array($summary)) {
+            return true;
+        }
+        if ($nowMs - (int) ($summary['gerado_em_ms'] ?? 0) < (int) ($summary['recalculo_ms'] ?? 0)) {
+            return false;
+        }
+        return $changesNow === null || $changesNow !== ($summary['mudancas'] ?? null);
+    }
+
+    /**
+     * @param int $recalculationIntervalMs the prova's `recalculo_s`, kept beside the snapshot for mayBeStale()
+     */
+    public function put(RaceSnapshot $snapshot, int $recalculationIntervalMs): void
     {
         $json = $snapshot->toJson();
 
@@ -62,6 +96,11 @@ final class SnapshotStore
         if ($redis !== null) {
             try {
                 $redis->set($this->redisKey, $json);
+                $redis->set($this->redisKey . '_resumo', (string) json_encode([
+                    'gerado_em_ms' => $snapshot->geradoEmMs,
+                    'mudancas' => $snapshot->mudancas,
+                    'recalculo_ms' => $recalculationIntervalMs,
+                ]));
             } catch (\Throwable $error) {
                 error_log('Contagem\SnapshotStore: Redis write failed: ' . $error->getMessage());
             }
@@ -80,7 +119,7 @@ final class SnapshotStore
         $redis = RedisClient::get();
         if ($redis !== null) {
             try {
-                $redis->del($this->redisKey);
+                $redis->del($this->redisKey, $this->redisKey . '_resumo');
             } catch (\Throwable $error) {
                 error_log('Contagem\SnapshotStore: Redis delete failed: ' . $error->getMessage());
             }

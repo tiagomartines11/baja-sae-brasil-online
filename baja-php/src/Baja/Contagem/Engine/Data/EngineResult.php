@@ -13,8 +13,23 @@ final class EngineResult
 {
     public RaceTimeline $timeline;
 
-    /** @var PassGroup[] every pass group after the start, in time order */
+    /**
+     * Every pass group, in time order. Groups typed before the start are in
+     * here too, marked `antesDaLargada`; they are shown and never count
+     * unless a reviewer confirms them.
+     *
+     * @var PassGroup[]
+     */
     public array $groups = [];
+
+    /**
+     * Entries whose time is unknown (`Entry::TEMPO_DESCONHECIDO`) and that no
+     * reviewer confirmed. They are in no pass group and count for nothing;
+     * each has a "tempo_desconhecido" flag. Listed so timelines can show them.
+     *
+     * @var Entry[]
+     */
+    public array $unknownTimeEntries = [];
 
     /** @var Lap[] counted and pending laps, ready to be saved to contagem_volta */
     public array $laps = [];
@@ -66,24 +81,36 @@ final class EngineResult
         return isset($this->cars[$carro]) ? $this->cars[$carro]->voltas : 0;
     }
 
-    /** @var array<int, PassGroup> entry id => the group it is in */
-    private array $groupByEntryId = [];
+    /**
+     * Entry id => the group it is in. Built the first time somebody asks:
+     * most runs (every recalculation nobody is looking at) never do, and
+     * indexing tens of thousands of entries for nothing is wasted time.
+     *
+     * @var array<int, PassGroup>|null
+     */
+    private ?array $groupByEntryId = null;
 
     /** @param PassGroup[] $groupsInTimeOrder */
     public function setGroups(array $groupsInTimeOrder): void
     {
         $this->groups = $groupsInTimeOrder;
-        $this->groupByEntryId = [];
-        foreach ($groupsInTimeOrder as $group) {
-            foreach ($group->entries as $entry) {
-                $this->groupByEntryId[$entry->id] = $group;
-            }
-        }
+        $this->groupByEntryId = null;
     }
 
-    /** The pass group an entry ended up in, or null if it was voided or is before the start. */
+    /**
+     * The pass group an entry ended up in. Null if it was voided, if its
+     * time is unknown, or if the race has no start yet.
+     */
     public function groupOfEntry(int $passagemId): ?PassGroup
     {
+        if ($this->groupByEntryId === null) {
+            $this->groupByEntryId = [];
+            foreach ($this->groups as $group) {
+                foreach ($group->entries as $entry) {
+                    $this->groupByEntryId[$entry->id] = $group;
+                }
+            }
+        }
         return $this->groupByEntryId[$passagemId] ?? null;
     }
 }

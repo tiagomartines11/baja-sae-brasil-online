@@ -15,7 +15,9 @@ import assert from 'node:assert/strict';
 
 import { createMemoryStorage } from '../../default/js/contagem/storage-memory.js';
 import { LocalStore } from '../../default/js/contagem/local-store.js';
-import { obtainDeviceToken, TokenUnavailableError } from '../../default/js/contagem/device-token.js';
+import {
+    REFUSAL_PAUSE_MS, createTokenSource, obtainDeviceToken, TokenUnavailableError,
+} from '../../default/js/contagem/device-token.js';
 
 /** A pretend contagem_dispositivo.php that hands out "token-1", "token-2", ... */
 function createTokenEndpoint() {
@@ -188,4 +190,118 @@ test('a handover refused by the server does not fall back to the other person\'s
         () => obtainDeviceToken({ store, requestToken: endpoint.requestToken, usuario: 'capitao2' }),
         (error) => error.motivo === 'sem_permissao',
     );
+});
+
+// ---------------------------------------------------------------------------
+// Brief 2.4: a revoked device stays blocked
+// ---------------------------------------------------------------------------
+//
+// A controller revoked this person's phone on this source. The server now
+// refuses to give that person a new token for the source (403 with
+// {"erro": "dispositivo_revogado"}) until the controller links them again or
+// presses "liberar". Before, the page simply asked for a new token half a
+// minute after the revocation and got one: the revocation did nothing.
+
+function blockedEndpoint() {
+    const endpoint = {
+        calls: 0,
+        blocked: true,
+        requestToken: async () => {
+            endpoint.calls++;
+            return endpoint.blocked
+                ? { status: 403, body: { erro: 'dispositivo_revogado' } }
+                : { status: 200, body: { token: 'token-novo' } };
+        },
+    };
+    return endpoint;
+}
+
+test('a blocked user is told so, with its own reason, not "sem permissão"', async () => {
+    const store = await LocalStore.open(createMemoryStorage());
+    const endpoint = blockedEndpoint();
+
+    await assert.rejects(
+        () => obtainDeviceToken({ store, requestToken: endpoint.requestToken, usuario: 'equipe1' }),
+        (error) => error instanceof TokenUnavailableError && error.motivo === 'dispositivo_revogado',
+    );
+    // A 403 without that body is still the general "not allowed".
+    await assert.rejects(
+        () => obtainDeviceToken({ store, requestToken: async () => ({ status: 403, body: null }), usuario: 'equipe1' }),
+        (error) => error.motivo === 'sem_permissao',
+    );
+});
+
+test('after a refusal the page asks again slowly, not at every heartbeat', async () => {
+    // SITUATION: the phone is blocked. The upload timer fires every 5
+    // seconds, and every upload first needs a token.
+    //
+    // EXPECTED: the server is asked once, then not again for
+    // REFUSAL_PAUSE_MS. In between the page fails at once with the same
+    // reason (so the banner stays), without a request.
+    const store = await LocalStore.open(createMemoryStorage());
+    const endpoint = blockedEndpoint();
+    let monotonicMs = 1000;
+    const outcomes = [];
+    const tokens = createTokenSource({
+        store,
+        requestToken: endpoint.requestToken,
+        usuario: 'equipe1',
+        monotonicNow: () => monotonicMs,
+        onOutcome: (motivo) => outcomes.push(motivo),
+    });
+
+    for (let heartbeat = 0; heartbeat < 5; heartbeat++) {
+        await assert.rejects(() => tokens.get(), (error) => error.motivo === 'dispositivo_revogado');
+        monotonicMs += 5000;
+    }
+    assert.equal(endpoint.calls, 1);
+
+    // Half a minute after the refusal it asks again; still blocked.
+    monotonicMs = 1000 + REFUSAL_PAUSE_MS;
+    await assert.rejects(() => tokens.get());
+    assert.equal(endpoint.calls, 2);
+
+    // The controller presses "liberar". At the next slow attempt the page
+    // gets its token and recovers by itself, with no reload.
+    endpoint.blocked = false;
+    monotonicMs += REFUSAL_PAUSE_MS;
+    const result = await tokens.get();
+    assert.deepEqual(result, { token: 'token-novo', issuedNow: true });
+    assert.deepEqual(outcomes, ['dispositivo_revogado', 'dispositivo_revogado', null]);
+});
+
+test('"Tentar de novo" asks at once, whatever was answered a moment ago', async () => {
+    const store = await LocalStore.open(createMemoryStorage());
+    const endpoint = blockedEndpoint();
+    const tokens = createTokenSource({
+        store, requestToken: endpoint.requestToken, usuario: 'equipe1', monotonicNow: () => 1000,
+    });
+    await assert.rejects(() => tokens.get());
+
+    endpoint.blocked = false;
+    tokens.forgetRefusal();
+
+    assert.equal((await tokens.get()).token, 'token-novo');
+    assert.equal(endpoint.calls, 2);
+});
+
+test('trouble that is not a refusal (no network, expired session) is retried at every heartbeat', async () => {
+    // Those can end at any second; waiting half a minute would only delay
+    // the first upload.
+    const store = await LocalStore.open(createMemoryStorage());
+    let calls = 0;
+    const tokens = createTokenSource({
+        store,
+        requestToken: async () => {
+            calls++;
+            throw new Error('simulated: no network');
+        },
+        usuario: 'equipe1',
+        monotonicNow: () => 1000,
+    });
+
+    await assert.rejects(() => tokens.get(), (error) => error.motivo === 'sem_rede');
+    await assert.rejects(() => tokens.get());
+
+    assert.equal(calls, 2);
 });

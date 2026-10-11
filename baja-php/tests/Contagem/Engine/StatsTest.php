@@ -94,4 +94,41 @@ final class StatsTest extends TestCase
             }
         }
     }
+
+    /**
+     * SITUATION: the habit loop needs, after every entry, the running
+     * median as a whole number of milliseconds. `addAndRound` adds a number
+     * and gives that in one step. Numbers here are small and of both signs,
+     * so that the median often falls on a half (two middle numbers one
+     * apart), positive and negative.
+     *
+     * EXPECTED: after every number, exactly what rounding the true median
+     * of the last N numbers gives, a half rounding away from zero: 1.5
+     * becomes 2 and -1.5 becomes -2. Two hand-checked cases first.
+     */
+    public function testTheRoundedRunningMedianRoundsHalvesAwayFromZero(): void
+    {
+        $positive = new RecentMedian(4);
+        $this->assertSame(1, $positive->addAndRound(1));
+        $this->assertSame(2, $positive->addAndRound(2), 'The median of 1 and 2 is 1.5.');
+        $negative = new RecentMedian(4);
+        $this->assertSame(-1, $negative->addAndRound(-1));
+        $this->assertSame(-2, $negative->addAndRound(-2), 'The median of -1 and -2 is -1.5.');
+
+        $random = new Randomizer(new Mt19937(12));
+        foreach ([2, 4, 30] as $capacity) {
+            $running = new RecentMedian($capacity);
+            $all = [];
+            $halves = 0;
+            for ($i = 0; $i < 400; $i++) {
+                $value = $random->getInt(-6, 6);
+                $all[] = $value;
+                $median = Stats::median(array_slice($all, -$capacity));
+                $halves += floor($median) !== $median ? 1 : 0;
+
+                $this->assertSame((int) round($median), $running->addAndRound($value), "Capacity $capacity, after number $i.");
+            }
+            $this->assertGreaterThan(20, $halves, 'The medians must often fall on a half.');
+        }
+    }
 }

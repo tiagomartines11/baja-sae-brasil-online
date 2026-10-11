@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Contagem\Engine;
 
 use Baja\Contagem\Engine\Data\EngineInput;
+use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\Lap;
 use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
@@ -21,11 +22,18 @@ use Baja\Contagem\Engine\Data\Source;
  *      PassRoles         leave out the start crossing and late finishers
  *
  * A car's count depends only on that car's own entries, on the decisions,
- * and on which sources were switched on or excluded. It does not depend on
- * the other cars, on whether a phone has synced, or on the pace of the race.
- * That is what lets an upload recount just the cars it touched (pass
- * `$onlyCars`) and get exactly what a full recount would give; a test
- * checks that this stays true.
+ * on which sources were switched on or excluded, and on whether the car is
+ * classified. It does not depend on the other cars, on whether a phone has
+ * synced, or on the pace of the race. That is what lets an upload recount
+ * just the cars it touched (pass `$onlyCars`) and get exactly what a full
+ * recount would give; a test checks that this stays true.
+ *
+ * No entry is dropped because of its time. Entries from before the start
+ * are grouped like the others and marked (see PassRoles). The one exception
+ * to "grouped like the others" is an entry whose time is UNKNOWN: its time
+ * means nothing, so matching it with anything would be a guess. It is set
+ * aside in `$unknownTimeEntries` until a reviewer confirms it, which is the
+ * reviewer accepting its time.
  */
 final class LapCounter
 {
@@ -39,6 +47,13 @@ final class LapCounter
 
     /** @var array<int, PassGroup[]> carro => its pass groups in time order */
     public array $groupsByCar = [];
+
+    /**
+     * Entries of unknown time that no reviewer confirmed: in no group, never counted.
+     *
+     * @var Entry[]
+     */
+    public array $unknownTimeEntries = [];
 
     /** The counting rule actually applied: the publish mode, or what it fell back to. One of Settings::MODO_*. */
     public string $ruleApplied = Settings::MODO_CONFIRMADAS;
@@ -60,14 +75,15 @@ final class LapCounter
         $counter->applied = DecisionApplier::apply($input->entries, $input->decisions, $counter->sourcesById);
         $counter->availability = new SourceAvailability($counter->sourcesById, $counter->applied, $input->settings->janelaMs);
 
-        $entries = self::inTimeOrder($counter->entriesAfterStart($onlyCars));
-        $counter->duplicates = DuplicateFilter::filter($entries, $input->settings, $counter->applied->confirmedEntryIds, $counter->sourcesById);
+        $entries = $counter->entriesInTimeOrder($onlyCars);
+        $counter->duplicates = DuplicateFilter::filter($entries, $input->settings, $counter->applied->confirmedEntryIds, $counter->sourcesById, $counter->timeline->largadaMs);
         $counter->groupsByCar = PassMatcher::match($counter->duplicates->keptEntries, $input->settings->janelaMs, $counter->applied->confirmedEntryIds);
 
         foreach ($counter->groupsByCar as $groups) {
             PassTimeFuser::setPassTimes($groups, $counter->sourcesById);
         }
-        $counter->ruleApplied = PublishRule::decide($counter->groupsByCar, $input->settings, $counter->availability);
+        $unclassifiedCars = array_fill_keys($input->unclassifiedCars, true);
+        $counter->ruleApplied = PublishRule::decide($counter->groupsByCar, $input->settings, $counter->availability, $unclassifiedCars);
         PassRoles::assign($counter->groupsByCar, $counter->timeline, $input->settings);
 
         return $counter;
@@ -85,81 +101,63 @@ final class LapCounter
     }
 
     /**
+     * The entries that take part, in time order: after decisions, for the
+     * requested cars, and with a usable time. The car is the one the entry
+     * counts for now, so an entry a reviewer moved to car 41 belongs to car
+     * 41 here. While the race has no start there is nothing to count.
+     *
      * Entries arrive in the order phones uploaded them. Every later step
      * wants them in time order (earlier id first when two share a
      * millisecond), so they are sorted here, once, for all of them.
-     *
      * Sorting a plain list of times and following the order is several
      * times faster than sorting the objects with a comparison callback, and
      * this is the largest sort of a run. Entries sharing a millisecond are
-     * rare; each such handful is put in id order afterwards.
-     *
-     * @param \Baja\Contagem\Engine\Data\Entry[] $entries
-     * @return \Baja\Contagem\Engine\Data\Entry[]
-     */
-    private static function inTimeOrder(array $entries): array
-    {
-        $times = [];
-        foreach ($entries as $entry) {
-            $times[] = $entry->tsMs;
-        }
-        asort($times);
-
-        $ordered = [];
-        $sameMillisecond = [];
-        $previousTime = null;
-        foreach ($times as $index => $time) {
-            if ($time !== $previousTime) {
-                self::appendInIdOrder($ordered, $sameMillisecond);
-                $sameMillisecond = [];
-                $previousTime = $time;
-            }
-            $sameMillisecond[] = $entries[$index];
-        }
-        self::appendInIdOrder($ordered, $sameMillisecond);
-        return $ordered;
-    }
-
-    /**
-     * @param \Baja\Contagem\Engine\Data\Entry[] $ordered
-     * @param \Baja\Contagem\Engine\Data\Entry[] $sameMillisecond
-     */
-    private static function appendInIdOrder(array &$ordered, array $sameMillisecond): void
-    {
-        if (count($sameMillisecond) > 1) {
-            usort($sameMillisecond, fn($a, $b) => $a->id <=> $b->id);
-        }
-        foreach ($sameMillisecond as $entry) {
-            $ordered[] = $entry;
-        }
-    }
-
-    /**
-     * Entries that can be part of the race: after decisions, at or after
-     * the start (a pass can only follow the start), and for the requested
-     * cars. The car is the one the entry counts for now, so an entry a
-     * reviewer moved to car 41 belongs to car 41 here.
+     * rare; each such handful is put in id order as it goes by.
      *
      * @param int[]|null $onlyCars
-     * @return \Baja\Contagem\Engine\Data\Entry[]
+     * @return Entry[]
      */
-    private function entriesAfterStart(?array $onlyCars): array
+    private function entriesInTimeOrder(?array $onlyCars): array
     {
         if ($this->timeline->largadaMs === null) {
             return [];
         }
         $wanted = $onlyCars === null ? null : array_fill_keys($onlyCars, true);
+        $confirmedEntryIds = $this->applied->confirmedEntryIds;
 
         $entries = [];
+        $times = [];
         foreach ($this->applied->entries as $entry) {
-            if ($entry->tsMs < $this->timeline->largadaMs) {
-                continue;
-            }
             if ($wanted !== null && !isset($wanted[$entry->carro])) {
                 continue;
             }
+            if ($entry->qualidadeTempo === Entry::TEMPO_DESCONHECIDO && !isset($confirmedEntryIds[$entry->id])) {
+                $this->unknownTimeEntries[] = $entry;
+                continue;
+            }
             $entries[] = $entry;
+            $times[] = $entry->tsMs;
         }
-        return $entries;
+        asort($times);
+
+        $ordered = [];
+        $previousTime = null;
+        foreach ($times as $index => $time) {
+            $entry = $entries[$index];
+            if ($time !== $previousTime) {
+                $ordered[] = $entry;
+                $previousTime = $time;
+                continue;
+            }
+            // Same millisecond as the entry before: slide back past the
+            // ones with a later id.
+            $position = count($ordered);
+            while ($position > 0 && $ordered[$position - 1]->tsMs === $time && $ordered[$position - 1]->id > $entry->id) {
+                $ordered[$position] = $ordered[$position - 1];
+                $position--;
+            }
+            $ordered[$position] = $entry;
+        }
+        return $ordered;
     }
 }

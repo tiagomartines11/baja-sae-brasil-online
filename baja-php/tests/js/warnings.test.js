@@ -245,3 +245,86 @@ test('the team name shown after an entry comes from the car list', () => {
     assert.equal(teamNameOf(14, CAR_LIST), null);
     assert.equal(teamNameOf(41, null), null);
 });
+
+// ---------------------------------------------------------------------------
+// A car that is at the event but not classified for this prova (brief 7)
+// ---------------------------------------------------------------------------
+
+const UNCLASSIFIED = [{ numero: 9, nome: 'Equipe Nove' }];
+
+test('a pass for an unclassified car gets a loud warning of its own', () => {
+    // SITUATION: car 9 is at the event but was not classified for the
+    // endurance race (it failed the brake test). It goes out on the track
+    // anyway, and the counter types it.
+    const warnings = computeWarnings({
+        car: 9, tsDeviceMs: 50_000, ownEntries: [], validCars: CAR_LIST, unclassifiedCars: UNCLASSIFIED, janelaMs: 20000,
+    });
+
+    // EXPECTED: "carro não classificado", marked `grave`: the page shows it
+    // in the error colour with the error sound. It is NOT called an unknown
+    // number: the car exists, it just may not race.
+    assert.deepEqual(warnings.map((warning) => warning.tipo), [AVISO.NAO_CLASSIFICADO]);
+    assert.equal(warnings[0].grave, true);
+    assert.match(warnings[0].mensagem, /^CARRO NÃO CLASSIFICADO/);
+    assert.match(warnings[0].mensagem, /Registrado mesmo assim/);
+});
+
+test('the other warnings are not "grave"', () => {
+    const warnings = computeWarnings({
+        car: 99, tsDeviceMs: 50_000, ownEntries: [ownEntry(99, 45_000)], validCars: CAR_LIST,
+        unclassifiedCars: UNCLASSIFIED, janelaMs: 20000,
+    });
+
+    assert.deepEqual(warnings.map((warning) => [warning.tipo, warning.grave]),
+        [[AVISO.NUMERO_DESCONHECIDO, false], [AVISO.REPETIDO, false]]);
+});
+
+test('a pass for an unclassified car is stored and uploaded like any other', async () => {
+    // WHY: the phone's list can be out of date (the car was classified five
+    // minutes ago), and a stored pass is what protects a protest. The
+    // server stores it too, does not count it, and shows a reviewer a flag.
+    const device = await createDevice();
+    device.server.unclassifiedCars = UNCLASSIFIED;
+    await device.queue.syncOnce();
+
+    const result = await device.type(9);
+    await device.queue.flush();
+
+    assert.deepEqual(result.avisos.map((aviso) => aviso.tipo), [AVISO.NAO_CLASSIFICADO]);
+    // The flash still shows whose car it is.
+    assert.equal(result.nomeEquipe, 'Equipe Nove');
+    assert.deepEqual(device.server.storedCars(), [9]);
+});
+
+test('a number in neither list is "unknown", also when every car is unclassified so far', () => {
+    // Situation: the classification field was just set up and nobody is
+    // marked yet: the classified list is empty, the other has everybody.
+    const types = warningTypes({
+        car: 500, tsDeviceMs: 50_000, ownEntries: [], validCars: [], unclassifiedCars: UNCLASSIFIED, janelaMs: 20000,
+    });
+
+    assert.deepEqual(types, [AVISO.NUMERO_DESCONHECIDO]);
+});
+
+// ---------------------------------------------------------------------------
+// "Typed again too soon" must not depend on the phone's clock
+// ---------------------------------------------------------------------------
+
+test('the repeat warning survives the phone clock being changed between the two entries', async () => {
+    // SITUATION: car 41 is typed; the phone's clock then jumps an hour
+    // ahead; 6 seconds later the counter types 41 again by mistake.
+    //
+    // WHAT WOULD GO WRONG if the warning compared the phone-clock readings:
+    // "an hour apart", no warning, and the double entry goes unnoticed.
+    const device = await createDevice();
+    await device.type(41);
+    device.clock.stepWallClock(3_600_000);
+    device.clock.advance(6000);
+
+    const result = await device.type(41);
+
+    // EXPECTED: the two entries are compared on a clock the step did not
+    // touch: 6 seconds apart, warning shown.
+    assert.deepEqual(result.avisos.map((aviso) => aviso.tipo), [AVISO.REPETIDO]);
+    assert.match(result.avisos[0].mensagem, /há 6 s/);
+});

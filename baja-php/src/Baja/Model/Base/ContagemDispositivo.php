@@ -139,13 +139,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
     protected $sincronizado_ate_ms;
 
     /**
-     * The value for the primeiro_desvio_ms field.
-     *
-     * @var        string|null
-     */
-    protected $primeiro_desvio_ms;
-
-    /**
      * @var        ChildContagemFonte
      */
     protected $aContagemFonte;
@@ -499,16 +492,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
     }
 
     /**
-     * Get the [primeiro_desvio_ms] column value.
-     *
-     * @return string|null
-     */
-    public function getPrimeiroDesvioMs()
-    {
-        return $this->primeiro_desvio_ms;
-    }
-
-    /**
      * Set the value of [dispositivo_id] column.
      *
      * @param int $v New value
@@ -713,26 +696,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
     }
 
     /**
-     * Set the value of [primeiro_desvio_ms] column.
-     *
-     * @param string|null $v New value
-     * @return $this The current object (for fluent API support)
-     */
-    public function setPrimeiroDesvioMs($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->primeiro_desvio_ms !== $v) {
-            $this->primeiro_desvio_ms = $v;
-            $this->modifiedColumns[ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS] = true;
-        }
-
-        return $this;
-    }
-
-    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -798,9 +761,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemDispositivoTableMap::translateFieldName('SincronizadoAteMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->sincronizado_ate_ms = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ContagemDispositivoTableMap::translateFieldName('PrimeiroDesvioMs', TableMap::TYPE_PHPNAME, $indexType)];
-            $this->primeiro_desvio_ms = (null !== $col) ? (string) $col : null;
-
             $this->resetModified();
             $this->setNew(false);
 
@@ -808,7 +768,7 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 11; // 11 = ContagemDispositivoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 10; // 10 = ContagemDispositivoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemDispositivo'), 0, $e);
@@ -1075,9 +1035,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS)) {
             $modifiedColumns[':p' . $index++]  = 'sincronizado_ate_ms';
         }
-        if ($this->isColumnModified(ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS)) {
-            $modifiedColumns[':p' . $index++]  = 'primeiro_desvio_ms';
-        }
 
         $sql = sprintf(
             'INSERT INTO contagem_dispositivo (%s) VALUES (%s)',
@@ -1127,10 +1084,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
                         break;
                     case 'sincronizado_ate_ms':
                         $stmt->bindValue($identifier, $this->sincronizado_ate_ms, PDO::PARAM_INT);
-
-                        break;
-                    case 'primeiro_desvio_ms':
-                        $stmt->bindValue($identifier, $this->primeiro_desvio_ms, PDO::PARAM_INT);
 
                         break;
                 }
@@ -1225,9 +1178,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
             case 9:
                 return $this->getSincronizadoAteMs();
 
-            case 10:
-                return $this->getPrimeiroDesvioMs();
-
             default:
                 return null;
         } // switch()
@@ -1266,7 +1216,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
             $keys[7] => $this->getFechadoEmMs(),
             $keys[8] => $this->getVistoEmMs(),
             $keys[9] => $this->getSincronizadoAteMs(),
-            $keys[10] => $this->getPrimeiroDesvioMs(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1370,9 +1319,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
             case 9:
                 $this->setSincronizadoAteMs($value);
                 break;
-            case 10:
-                $this->setPrimeiroDesvioMs($value);
-                break;
         } // switch()
 
         return $this;
@@ -1428,9 +1374,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         }
         if (array_key_exists($keys[9], $arr)) {
             $this->setSincronizadoAteMs($arr[$keys[9]]);
-        }
-        if (array_key_exists($keys[10], $arr)) {
-            $this->setPrimeiroDesvioMs($arr[$keys[10]]);
         }
 
         return $this;
@@ -1504,9 +1447,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS)) {
             $criteria->add(ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS, $this->sincronizado_ate_ms);
-        }
-        if ($this->isColumnModified(ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS)) {
-            $criteria->add(ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS, $this->primeiro_desvio_ms);
         }
 
         return $criteria;
@@ -1605,7 +1545,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         $copyObj->setFechadoEmMs($this->getFechadoEmMs());
         $copyObj->setVistoEmMs($this->getVistoEmMs());
         $copyObj->setSincronizadoAteMs($this->getSincronizadoAteMs());
-        $copyObj->setPrimeiroDesvioMs($this->getPrimeiroDesvioMs());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -2003,7 +1942,6 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         $this->fechado_em_ms = null;
         $this->visto_em_ms = null;
         $this->sincronizado_ate_ms = null;
-        $this->primeiro_desvio_ms = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();

@@ -14,6 +14,13 @@ use Baja\Tests\Contagem\Engine\Support\RaceScenario;
  *
  * Like everything else, race-control events are never edited. Changing the
  * start time means recording a new start; the most recent one wins.
+ *
+ * Mistakes are undone with new rows too: a "correction" (the same event at
+ * another time, pointing at the row it replaces) and a "cancelamento"
+ * (pointing at the row it removes). They are resolved from the newest row
+ * to the oldest, so that undoing an undo works: cancelling a correction
+ * brings the original back, and cancelling a cancellation ("restaurar")
+ * brings the event back.
  */
 final class RaceControlTest extends EngineTestCase
 {
@@ -235,5 +242,195 @@ final class RaceControlTest extends EngineTestCase
         $this->assertSame(RaceTimeline::CORRENDO, $running->timeline->stateAt(RaceScenario::ms('07:00')));
         $this->assertFalse($running->laps[1]->interrompida);
         $this->assertTrue($running->laps[1]->elegivelMelhorVolta);
+    }
+
+    /**
+     * SITUATION: the start was recorded at 00:00. Somebody "corrected" it
+     * to 00:30, then realised the first time had been right and cancelled
+     * the correction. Car 3 crossed at 02:00 and 05:00.
+     *
+     * WHAT WENT WRONG BEFORE: a corrected row was simply ignored, whatever
+     * happened to its correction later. With the correction cancelled there
+     * was no start left at all, and every count in the race went to zero.
+     *
+     * EXPECTED: cancelling the correction brings the original back. The
+     * start is 00:00 again, car 3 has its lap, and LAST is 300 seconds.
+     */
+    public function testCancellingACorrectionBringsTheOriginalBack(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $original = $race->start('00:00');
+        $race->pass(3, '02:00');
+        $race->pass(3, '05:00');
+        $correction = $race->correct($original, '00:30');
+        $this->assertSame(RaceScenario::ms('00:30'), $race->run('06:00')->timeline->largadaMs);
+
+        $race->cancel($correction);
+        $result = $race->run('06:00');
+
+        $this->assertSame(RaceScenario::ms('00:00'), $result->timeline->largadaMs);
+        $this->assertLapCounts([3 => 1], $result);
+        $this->assertSame(300, PublishedValues::forCar($result->cars[3], $result->timeline)['LAST']);
+        $this->assertSame([$original], array_map(fn(Ocorrencia $o) => $o->id, $result->timeline->eventosEmVigor));
+    }
+
+    /**
+     * SITUATION: a red flag was recorded at 05:00, corrected to 06:00, and
+     * that correction corrected again to 07:00.
+     *
+     * EXPECTED: only the last correction is in force: the stoppage begins
+     * at 07:00. The first row does NOT come back just because the row that
+     * replaced it was itself replaced. Then the last correction is
+     * cancelled: the one before it (06:00) is in force again, not the
+     * original (05:00).
+     */
+    public function testACorrectionOfACorrectionLeavesOnlyTheLastOneInForce(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $first = $race->redFlag('05:00');
+        $second = $race->correct($first, '06:00');
+        $third = $race->correct($second, '07:00');
+
+        $timeline = $race->run('10:00')->timeline;
+        $this->assertSame([[RaceScenario::ms('07:00'), null]], $timeline->redFlagIntervals);
+        $this->assertSame(RaceTimeline::CORRENDO, $timeline->stateAt(RaceScenario::ms('05:30')));
+        $this->assertSame(RaceTimeline::CORRENDO, $timeline->stateAt(RaceScenario::ms('06:30')));
+        $this->assertSame(RaceTimeline::BANDEIRA_VERMELHA, $timeline->stateAt(RaceScenario::ms('07:30')));
+
+        $race->cancel($third);
+        $this->assertSame([[RaceScenario::ms('06:00'), null]], $race->run('10:00')->timeline->redFlagIntervals);
+    }
+
+    /**
+     * SITUATION: "Encerrar" at 05:00 was cancelled (the race went on), and
+     * then race control decided the finish had been right after all and
+     * pressed "restaurar" on the cancelled row, which is recorded as a
+     * cancellation of the cancellation. And then changed its mind once
+     * more.
+     *
+     * EXPECTED: each new row undoes exactly the one it points at:
+     * cancelled -> the race is on; restored -> finished at 05:00 again;
+     * the restoration cancelled -> on again.
+     */
+    public function testCancellingACancellationRestoresTheEvent(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $finish = $race->finish('05:00');
+
+        $cancellation = $race->cancel($finish);
+        $this->assertNull($race->run('08:00')->timeline->encerramentoMs);
+
+        $restoration = $race->cancel($cancellation);
+        $restored = $race->run('08:00')->timeline;
+        $this->assertSame(RaceScenario::ms('05:00'), $restored->encerramentoMs);
+        $this->assertSame(RaceTimeline::ENCERRADA, $restored->stateAt(RaceScenario::ms('08:00')));
+
+        $race->cancel($restoration);
+        $this->assertNull($race->run('08:00')->timeline->encerramentoMs);
+    }
+
+    /**
+     * SITUATION: two stoppages: red flag 05:00, restart 08:00; red flag
+     * 12:00, restart 15:00. Then halves of the pairs are cancelled, one
+     * case at a time.
+     *
+     * WHAT COULD GO WRONG: a red flag left without its restart, or a
+     * restart without its red flag, could produce stoppages that overlap or
+     * run backwards, and with them negative racing times.
+     *
+     * EXPECTED: red flags and restarts are paired in time order, and an
+     * event with no partner changes nothing:
+     * - nothing cancelled: 05:00-08:00 and 12:00-15:00;
+     * - the first restart cancelled: one stoppage 05:00-15:00 (the second
+     *   red flag fell while the race was already stopped);
+     * - the first red flag cancelled instead: only 12:00-15:00 (the restart
+     *   at 08:00 restarted nothing);
+     * - both red flags cancelled: no stoppage at all, and the time between
+     *   04:00 and 16:00 is twelve full minutes of racing.
+     */
+    public function testRedFlagsAndRestartsStayPairedWhenOneOfThemIsCancelled(): void
+    {
+        $build = function (): array {
+            $race = RaceScenario::withCounters(3);
+            $race->start('00:00');
+            $events = [
+                'flag1' => $race->redFlag('05:00'),
+                'restart1' => $race->restart('08:00'),
+                'flag2' => $race->redFlag('12:00'),
+                'restart2' => $race->restart('15:00'),
+            ];
+            return [$race, $events];
+        };
+        $intervals = function (RaceScenario $race): array {
+            $clock = fn(?int $ms) => $ms === null ? null : RaceScenario::clock(intdiv($ms - RaceScenario::CLOCK_ZERO_MS, 1000));
+            return array_map(fn(array $interval) => [$clock($interval[0]), $clock($interval[1])], $race->run('20:00')->timeline->redFlagIntervals);
+        };
+
+        [$race, $events] = $build();
+        $this->assertSame([['05:00', '08:00'], ['12:00', '15:00']], $intervals($race));
+        $this->assertSame(6 * 60000, $race->run('20:00')->timeline->racingMsBetween(RaceScenario::ms('04:00'), RaceScenario::ms('16:00')));
+
+        $race->cancel($events['restart1']);
+        $this->assertSame([['05:00', '15:00']], $intervals($race));
+
+        [$race, $events] = $build();
+        $race->cancel($events['flag1']);
+        $this->assertSame([['12:00', '15:00']], $intervals($race));
+
+        $race->cancel($events['flag2']);
+        $this->assertSame([], $intervals($race));
+        $this->assertSame(12 * 60000, $race->run('20:00')->timeline->racingMsBetween(RaceScenario::ms('04:00'), RaceScenario::ms('16:00')));
+    }
+
+    /**
+     * SITUATION: a race-control page wants to list what is in force. The
+     * log holds: a start, a red flag that was corrected, a restart that was
+     * cancelled, a pit entry, and the rows that did the correcting and
+     * cancelling.
+     *
+     * EXPECTED: `eventosEmVigor` holds exactly the rows that still count,
+     * oldest first: the start, the CORRECTING red flag (not the one it
+     * replaced) and the pit entry. A cancelled row is not in it, and a
+     * "cancelamento" is never an event itself.
+     */
+    public function testTheEventsInForceAreListedOldestFirst(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $start = $race->start('00:00');
+        $wrongFlag = $race->redFlag('05:00');
+        $restart = $race->restart('08:00');
+        $pitEntry = $race->pitIn(7, '09:00');
+        $rightFlag = $race->correct($wrongFlag, '06:00');
+        $race->cancel($restart);
+
+        $inForce = $race->run('10:00')->timeline->eventosEmVigor;
+
+        $this->assertSame([$start, $pitEntry, $rightFlag], array_map(fn(Ocorrencia $o) => $o->id, $inForce));
+        $this->assertSame(
+            [Ocorrencia::LARGADA, Ocorrencia::BOX_ENTRADA, Ocorrencia::BANDEIRA_VERMELHA],
+            array_map(fn(Ocorrencia $o) => $o->tipo, $inForce)
+        );
+    }
+
+    /**
+     * SITUATION: "Largar agora" was pressed twice, at 00:00 and, by
+     * mistake, again at 04:00. The second start is cancelled.
+     *
+     * EXPECTED: among several starts the most recently recorded one wins,
+     * so the mistake moved the start to 04:00; cancelling it puts the first
+     * start back in force.
+     */
+    public function testCancellingASecondStartPutsTheFirstOneBackInForce(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $again = $race->start('04:00');
+        $this->assertSame(RaceScenario::ms('04:00'), $race->run('06:00')->timeline->largadaMs);
+
+        $race->cancel($again);
+
+        $this->assertSame(RaceScenario::ms('00:00'), $race->run('06:00')->timeline->largadaMs);
     }
 }

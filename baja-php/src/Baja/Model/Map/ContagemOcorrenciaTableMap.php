@@ -268,7 +268,7 @@ class ContagemOcorrenciaTableMap extends TableMap
         $this->addPrimaryKey('ocorrencia_id', 'OcorrenciaId', 'BIGINT', true, null, null);
         $this->addForeignKey('evento_id', 'EventoId', 'CHAR', 'prova', 'evento_id', true, 4, null);
         $this->addForeignKey('prova_id', 'ProvaId', 'CHAR', 'prova', 'prova_id', true, 3, null);
-        $this->addColumn('tipo', 'Tipo', 'VARCHAR', true, 20, null);
+        $this->addColumn('tipo', 'Tipo', 'VARCHAR', true, 24, null);
         $this->addColumn('equipe_numero', 'EquipeNumero', 'INTEGER', false, null, null);
         $this->addColumn('ts_ms', 'TsMs', 'BIGINT', true, null, null);
         $this->addColumn('usuario', 'Usuario', 'VARCHAR', false, 45, null);

@@ -33,8 +33,19 @@ final class EngineInput
      */
     public array $totals = [];
 
-    /** @var int[] car numbers of the teams present at the event */
+    /** @var int[] car numbers of the teams that take part: present at the event AND classified */
     public array $validCars = [];
+
+    /**
+     * Cars present at the event but not classified (the prova names one of
+     * its fields as the classification field and this car's is not "SIM").
+     * A pass typed for one of them is kept and flagged, and never counts
+     * unless a reviewer says "contar mesmo assim". The list must also be
+     * given to countCars(), or the two entry points would disagree.
+     *
+     * @var int[]
+     */
+    public array $unclassifiedCars = [];
 
     /** "Now", milliseconds since the epoch. Car status is evaluated at this moment. */
     public int $nowMs = 0;

@@ -120,6 +120,55 @@ final class ScorePublisher
     }
 
     /**
+     * The check on the fast path. Called with a full run that is known to
+     * be up to date (nothing changed since it loaded the race): whatever
+     * the scoring system holds that differs from it is wrong and is put
+     * right here.
+     *
+     * A different VOLTAS or LAST means the per-car recount inside an upload
+     * and the full run disagreed, which must never happen; each case is
+     * written to the error log so that somebody finds out why. A different
+     * BEST is normal: the best lap is only ever published from here.
+     *
+     * Cars without a lap are included, so a best lap left over from laps
+     * that were later cancelled is cleared.
+     */
+    public function reconcile(EngineResult $result): PublishOutcome
+    {
+        $outcome = new PublishOutcome();
+        if (!$this->mayPublish($result->timeline, $outcome)) {
+            return $outcome;
+        }
+        $valuesByCar = [];
+        foreach ($this->teamNumbers() as $carro) {
+            $valuesByCar[$carro] = isset($result->cars[$carro])
+                ? PublishedValues::forCar($result->cars[$carro], $result->timeline)
+                : self::zeros();
+        }
+
+        foreach ($this->existingData(array_keys($valuesByCar)) as $carro => $dados) {
+            foreach ([PublishedValues::VOLTAS, PublishedValues::LAST] as $field) {
+                $published = $dados[$field] ?? null;
+                $computed = $valuesByCar[$carro][$field];
+                if ($published === null || $published != $computed) {
+                    error_log(sprintf(
+                        'Contagem\ScorePublisher: %s/%s carro %d: %s publicado era %s, o cálculo completo dá %d. Corrigido.',
+                        $this->prova->getEventoId(),
+                        $this->prova->getProvaId(),
+                        $carro,
+                        $field,
+                        json_encode($published),
+                        $computed
+                    ));
+                    $outcome->correctedCars[] = (int) $carro;
+                }
+            }
+        }
+        $outcome->correctedCars = array_values(array_unique($outcome->correctedCars));
+        return $this->write($valuesByCar, true, false, $outcome);
+    }
+
+    /**
      * Sets every existing row back to zero laps. Used by "Zerar corrida":
      * once the race is wiped there is no start any more, publishing would
      * stand back, and the old numbers would stay on the results page.

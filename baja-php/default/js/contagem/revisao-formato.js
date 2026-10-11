@@ -16,6 +16,12 @@ export const NOMES_DE_ALERTA = {
   volta_curta: 'Volta curta demais',
   divergencia_total: 'Diferença para o total importado',
   primeira_passagem_tardia: 'Primeira passagem tardia',
+  antes_da_largada: 'Passagem antes da largada',
+  no_encerramento: 'Passagem em cima do encerramento',
+  tempo_estimado: 'Horário estimado',
+  tempo_desconhecido: 'Horário desconhecido',
+  carro_nao_classificado: 'Carro não classificado',
+  no_abastecimento: 'Passagem com o carro no abastecimento',
 };
 
 export const NOMES_DE_STATUS = {
@@ -23,6 +29,7 @@ export const NOMES_DE_STATUS = {
   atrasado: 'atrasado',
   parado: 'parado',
   no_box: 'no box',
+  abastecendo: 'abastecendo',
   fora: 'fora',
 };
 
@@ -134,3 +141,11 @@ export function relogioDaCorrida(corrida, agoraServidorMs) {
 export function listaDeCarros(carros) {
   return (carros ?? []).join(', ');
 }
+
+// Shown wherever a lap time is: it is not the plain difference of the two
+// pass times beside it, and a reviewer with a calculator must not take the
+// gap for a mistake.
+export const AVISO_TEMPO_DE_VOLTA = 'O tempo de volta não é exatamente a diferença entre os dois horários de passagem mostrados. '
+  + 'O horário da passagem é a mediana do que os contadores digitaram; a duração da volta desconta o hábito de cada contador '
+  + '(quem sempre aperta um pouco antes ou depois). A diferença costuma ser de 0,2 s e chega a cerca de 1 s, '
+  + 'mais quando um contador é substituído no meio da volta.';

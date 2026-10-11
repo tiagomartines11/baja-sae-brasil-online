@@ -3,13 +3,13 @@
 // module that draws it.
 
 import { desenharBarra, desenharFila } from './revisao-barra.js';
-import { chaveAoVivo } from './revisao-conexao.js';
+import { chaveAoVivo, chaveDoDetalhe as chaveDoPainel } from './revisao-conexao.js';
 import { podeDecidirSobreAlerta } from './revisao-decisoes.js';
 import { desenharDetalheDeAlerta, desenharDetalheDeCarro } from './revisao-detalhe.js';
 import { el, estaDigitandoEm, substituir } from './revisao-dom.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { desenharFontes, desenharHistorico, desenharTabelaDeCarros } from './revisao-tabela.js';
-import { agoraServidorMs, pagina, semConexao, tela } from './revisao-tela.js';
+import { agoraServidorMs, horarioOficialMs, pagina, semConexao, tela } from './revisao-tela.js';
 
 export const alertaSelecionado = () => (tela.selecao?.tipo === 'alerta' ? encontrarAlerta(tela.estado, tela.selecao.id) : null);
 
@@ -64,11 +64,21 @@ export function criarDesenho(ganchos) {
     const carro = tela.selecao?.tipo === 'carro'
       ? (tela.estado.carros ?? []).find((linha) => linha.carro === tela.selecao.numero) ?? null
       : null;
-    return JSON.stringify([
-      tela.selecao, tela.estado.versao, tela.janelaVersao, tela.janelaAssinatura, tela.janela !== null, tela.erroDaJanela,
-      tela.entradaSelecionadaId, tela.modoManual, tela.ocupado, semConexao(), alertaSelecionado()?.olhando ?? null,
-      carro?.status ?? null, tela.estado.corrida?.largada_ms ?? null,
-    ]);
+    // Not the state's version: see chaveDoDetalhe() in revisao-conexao.js.
+    return chaveDoPainel({
+      selecao: tela.selecao,
+      alerta: alertaSelecionado(),
+      carro,
+      janelaCarregada: tela.janela !== null,
+      janelaAssinatura: tela.janelaAssinatura,
+      desatualizada: janelaDesatualizada(),
+      erroDaJanela: tela.erroDaJanela,
+      entradaSelecionadaId: tela.entradaSelecionadaId,
+      modoManual: tela.modoManual,
+      ocupado: tela.ocupado,
+      semConexao: semConexao(),
+      largadaMs: tela.estado.corrida?.largada_ms ?? null,
+    });
   }
 
   const desenhado = { listas: null, fontes: null, detalhe: null, selecao: null };
@@ -128,7 +138,9 @@ export function criarDesenho(ganchos) {
     if (!tela.estado) {
       return;
     }
-    desenharBarra(pagina.barra, tela.estado, agoraServidorMs());
+    desenharBarra(pagina.barra, tela.estado, agoraServidorMs(), horarioOficialMs());
+    // Permanent while the prova accepts simulated entries.
+    pagina.faixaSimulacao?.classList.toggle('oculto', !tela.estado.simulacao);
 
     const chave = chaveDasListas();
     if (chave !== desenhado.listas) {
@@ -148,7 +160,9 @@ export function criarDesenho(ganchos) {
     // typing in would erase what they typed, so that redraw waits, and it
     // must then happen as soon as the cursor leaves, not at the next change.
     if (chave !== desenhado.fontes && !estaDigitandoEm(pagina.fontes)) {
-      desenharFontes(pagina.fontes, tela.estado, tela.ocupado || semConexao(), { excluirFonte: ganchos.acoes.excluirFonte, desfazer: ganchos.acoes.desfazer });
+      desenharFontes(pagina.fontes, tela.estado, tela.ocupado || semConexao(), {
+        excluirFonte: ganchos.acoes.excluirFonte, encerrarExclusao: ganchos.acoes.encerrarExclusao, desfazer: ganchos.acoes.desfazer,
+      });
       desenhado.fontes = chave;
     }
     if (!estaDigitandoEm(pagina.detalhe) && chaveDoDetalhe() !== desenhado.detalhe) {

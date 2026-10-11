@@ -4,13 +4,12 @@ declare(strict_types=1);
 namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\Data\Decision;
-use Baja\Contagem\Engine\Data\EngineInput;
-use Baja\Contagem\Engine\Data\Source;
 use InvalidArgumentException;
 
 /**
- * The body of a POST to contagem_decidir.php, checked and turned into a
- * Decision the service can store.
+ * The body of a POST to contagem_decidir.php, read and checked for SHAPE
+ * only: is it a decision at all, are the numbers numbers, is everything
+ * there that this kind of decision needs.
  *
  * Expected shape:
  *   {
@@ -20,20 +19,48 @@ use InvalidArgumentException;
  *     "ultima_decisao_id": 9
  *   }
  *
- * Everything here comes from a browser, so nothing is trusted: an entry id
- * must belong to this prova, a car must be one of the cars at the event.
+ * Nothing here looks at the race, so a request that makes no sense is
+ * refused before the count lock is taken and before a single row is read.
+ * Whether the entry belongs to this prova, whether the car exists and so on
+ * needs the race and is checked afterwards, under the lock, by
+ * DecisionResolver.
  *
- * ENTRY IDS BELOW ZERO. A pass added by a reviewer is not a row of
- * contagem_passagem; on the timeline it carries the id "minus the id of the
- * decision that added it". Voiding such a pass therefore means undoing that
- * decision, and that is what a request to void entry -N is turned into.
+ * Besides the engine's own decision types there are two that only the
+ * review screen knows. Each is stored as ordinary decisions, in one step:
+ *
+ *   descartar_passagem  void every entry of the pass group that
+ *                       "passagem_id" is in (a pass that did not happen)
+ *   encerrar_exclusao   give an open-ended source exclusion
+ *                       ("desfaz_decisao_id") an end at "ts_fim_ms"
  */
 final class DecisionRequest
 {
+    public const DESCARTAR_PASSAGEM = 'descartar_passagem';
+    public const ENCERRAR_EXCLUSAO = 'encerrar_exclusao';
+
     private const MAX_WATCHED_ENTRIES = 500;
     private const MAX_REASON_LENGTH = 500;
 
-    public Decision $decision;
+    /** Which numbers each kind of decision must carry: key in the request => message when it is missing or not a number. */
+    private const REQUIRED_NUMBERS = [
+        Decision::ANULAR => ['passagem_id' => 'Passagem inválida.'],
+        Decision::CONFIRMAR => ['passagem_id' => 'Passagem inválida.'],
+        self::DESCARTAR_PASSAGEM => ['passagem_id' => 'Passagem inválida.'],
+        Decision::REATRIBUIR => ['passagem_id' => 'Passagem inválida.', 'equipe_numero' => 'Número de carro inválido.'],
+        Decision::ADICIONAR => ['equipe_numero' => 'Número de carro inválido.', 'ts_ms' => 'Horário inválido.'],
+        Decision::EXCLUIR_FONTE => ['fonte_id' => 'Fonte inválida.', 'ts_ms' => 'Início do intervalo inválido.'],
+        Decision::DESFAZER => ['desfaz_decisao_id' => 'Decisão a desfazer inválida.'],
+        self::ENCERRAR_EXCLUSAO => ['desfaz_decisao_id' => 'Exclusão a encerrar inválida.', 'ts_fim_ms' => 'Fim do intervalo inválido.'],
+    ];
+
+    /** Kinds of decision that are about one entry on the reviewer's screen. */
+    private const ABOUT_ONE_ENTRY = [Decision::ANULAR, Decision::CONFIRMAR, Decision::REATRIBUIR, self::DESCARTAR_PASSAGEM];
+
+    public string $tipo;
+
+    /** @var array<string, int> the numbers of the decision, by their key in the request */
+    public array $numeros = [];
+
     public ?string $motivo = null;
 
     /** @var int[] the entries the reviewer was looking at */
@@ -49,19 +76,30 @@ final class DecisionRequest
      * @param array<string, mixed> $request the decoded JSON body
      * @throws InvalidArgumentException with a message in Portuguese, safe to show
      */
-    public static function parse(array $request, EngineInput $input): self
+    public static function parse(array $request): self
     {
         $raw = $request['decisao'] ?? null;
         if (!is_array($raw)) {
             throw new InvalidArgumentException('Pedido sem decisão.');
         }
         $tipo = $raw['tipo'] ?? null;
-        if (!is_string($tipo) || !in_array($tipo, Decision::TIPOS, true)) {
+        if (!is_string($tipo) || !isset(self::REQUIRED_NUMBERS[$tipo])) {
             throw new InvalidArgumentException('Tipo de decisão desconhecido.');
         }
 
         $parsed = new self();
-        $parsed->decision = self::buildDecision($tipo, $raw, $input);
+        $parsed->tipo = $tipo;
+        foreach (self::REQUIRED_NUMBERS[$tipo] as $key => $message) {
+            $parsed->numeros[$key] = self::wholeNumber($raw[$key] ?? null, $message, $key === 'passagem_id');
+        }
+        // The one number that may be left out: no end means "até segunda ordem".
+        if ($tipo === Decision::EXCLUIR_FONTE && ($raw['ts_fim_ms'] ?? null) !== null) {
+            $parsed->numeros['ts_fim_ms'] = self::wholeNumber($raw['ts_fim_ms'], 'Fim do intervalo inválido.', false);
+            if ($parsed->numeros['ts_fim_ms'] <= $parsed->numeros['ts_ms']) {
+                throw new InvalidArgumentException('O fim do intervalo deve ser depois do início.');
+            }
+        }
+
         $parsed->motivo = self::reason($raw['motivo'] ?? null);
         $parsed->passagemIds = self::watchedEntries($request['passagem_ids'] ?? []);
 
@@ -71,14 +109,13 @@ final class DecisionRequest
         $ultima = $request['ultima_decisao_id'] ?? null;
         $parsed->ultimaDecisaoId = self::isWholeNumber($ultima) ? (int) $ultima : null;
 
-        $aboutOneEntry = in_array($tipo, ActiveDecisions::ENTRY_TYPES, true);
         $watchedWithoutSignature = $parsed->passagemIds !== [] && $parsed->assinatura === null;
-        if (($aboutOneEntry && $parsed->passagemIds === []) || $watchedWithoutSignature) {
+        if (($parsed->isAboutOneEntry() && $parsed->passagemIds === []) || $watchedWithoutSignature) {
             // Without these the server could not tell whether the entry
             // changed under the reviewer, which is the whole point.
             throw new InvalidArgumentException('Pedido sem as passagens observadas ou sem assinatura.');
         }
-        if ($aboutOneEntry && !in_array((int) $raw['passagem_id'], $parsed->passagemIds, true)) {
+        if ($parsed->isAboutOneEntry() && !in_array($parsed->numeros['passagem_id'], $parsed->passagemIds, true)) {
             // The signature only covers the watched entries. A decision
             // about an entry outside that list would slip past the check
             // that it is still as the reviewer saw it.
@@ -88,118 +125,26 @@ final class DecisionRequest
         return $parsed;
     }
 
-    /** @param array<string, mixed> $raw */
-    private static function buildDecision(string $tipo, array $raw, EngineInput $input): Decision
+    public function isAboutOneEntry(): bool
     {
-        // Id 0: the real id is assigned by the database when it is stored.
-        switch ($tipo) {
-            case Decision::ANULAR:
-                $entryId = self::entryId($raw, $input, true);
-                // Voiding an added pass is undoing the decision that added it.
-                return $entryId < 0 ? Decision::desfazer(0, -$entryId) : Decision::anular(0, $entryId);
-            case Decision::CONFIRMAR:
-                return Decision::confirmar(0, self::entryId($raw, $input, true));
-            case Decision::REATRIBUIR:
-                return Decision::reatribuir(0, self::entryId($raw, $input, false), self::validCar($raw, $input));
-            case Decision::ADICIONAR:
-                return Decision::adicionar(0, self::validCar($raw, $input), self::positiveInt($raw, 'ts_ms', 'Horário inválido.'));
-            case Decision::EXCLUIR_FONTE:
-                return self::buildSourceExclusion($raw, $input);
-            default:
-                return self::buildUndo($raw, $input);
-        }
+        return in_array($this->tipo, self::ABOUT_ONE_ENTRY, true);
     }
 
-    /** @param array<string, mixed> $raw */
-    private static function buildSourceExclusion(array $raw, EngineInput $input): Decision
+    public function number(string $key): ?int
     {
-        $fonteId = self::positiveInt($raw, 'fonte_id', 'Fonte inválida.');
-        $known = false;
-        foreach ($input->sources as $source) {
-            if ($source->id === $fonteId
-                && in_array($source->tipo, [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA], true)) {
-                $known = true;
-            }
-        }
-        if (!$known) {
-            throw new InvalidArgumentException('Esta fonte não pertence a esta prova.');
-        }
-        $from = self::positiveInt($raw, 'ts_ms', 'Início do intervalo inválido.');
-        // No end means "até segunda ordem": the counter's device is gone and
-        // nobody knows yet when, or whether, the source comes back.
-        $until = ($raw['ts_fim_ms'] ?? null) === null
-            ? null
-            : self::positiveInt($raw, 'ts_fim_ms', 'Fim do intervalo inválido.');
-        if ($until !== null && $until <= $from) {
-            throw new InvalidArgumentException('O fim do intervalo deve ser depois do início.');
-        }
-        return Decision::excluirFonte(0, $fonteId, $from, $until);
-    }
-
-    /** @param array<string, mixed> $raw */
-    private static function buildUndo(array $raw, EngineInput $input): Decision
-    {
-        $targetId = self::positiveInt($raw, 'desfaz_decisao_id', 'Decisão a desfazer inválida.');
-        $target = ActiveDecisions::indexById($input->decisions)[$targetId] ?? null;
-        if ($target === null) {
-            throw new InvalidArgumentException('Esta decisão não pertence a esta prova.');
-        }
-        if ($target->tipo === Decision::DESFAZER) {
-            // Undoing an undo would leave a chain nobody can read in the
-            // history. Making the original decision again says the same thing.
-            throw new InvalidArgumentException('Não é possível desfazer um "desfazer". Registre a decisão novamente.');
-        }
-        return Decision::desfazer(0, $targetId);
+        return $this->numeros[$key] ?? null;
     }
 
     /**
-     * The entry a decision is about: a stored entry of this prova, or (when
-     * allowed) a pass a reviewer added, named by its id below zero.
+     * A whole number above zero. An entry id may also be below zero: a pass
+     * added by a reviewer is not a row of contagem_passagem, and on the
+     * timeline it carries "minus the id of the decision that added it".
      *
-     * @param array<string, mixed> $raw
+     * @param mixed $value
      */
-    private static function entryId(array $raw, EngineInput $input, bool $allowAddedPass): int
+    private static function wholeNumber($value, string $message, bool $mayBeNegative): int
     {
-        $value = $raw['passagem_id'] ?? null;
-        if (!self::isWholeNumber($value) || (int) $value === 0) {
-            throw new InvalidArgumentException('Passagem inválida.');
-        }
-        $id = (int) $value;
-
-        if ($id < 0) {
-            if (!$allowAddedPass) {
-                throw new InvalidArgumentException('Uma passagem adicionada pelo revisor não pode ser trocada de carro: remova-a e adicione no carro certo.');
-            }
-            $addition = ActiveDecisions::filter($input->decisions)[-$id] ?? null;
-            if ($addition === null || $addition->tipo !== Decision::ADICIONAR) {
-                throw new InvalidArgumentException('Esta passagem adicionada não existe mais.');
-            }
-            return $id;
-        }
-
-        foreach ($input->entries as $entry) {
-            if ($entry->id === $id) {
-                return $id;
-            }
-        }
-        throw new InvalidArgumentException('Esta passagem não pertence a esta prova.');
-    }
-
-    /** @param array<string, mixed> $raw */
-    private static function validCar(array $raw, EngineInput $input): int
-    {
-        $car = self::positiveInt($raw, 'equipe_numero', 'Número de carro inválido.');
-        if (!in_array($car, $input->validCars, true)) {
-            throw new InvalidArgumentException('O carro ' . $car . ' não está presente neste evento.');
-        }
-        return $car;
-    }
-
-    /** @param array<string, mixed> $raw */
-    private static function positiveInt(array $raw, string $key, string $message): int
-    {
-        $value = $raw[$key] ?? null;
-        if (!self::isWholeNumber($value) || (int) $value <= 0) {
+        if (!self::isWholeNumber($value) || (int) $value === 0 || (!$mayBeNegative && (int) $value < 0)) {
             throw new InvalidArgumentException($message);
         }
         return (int) $value;

@@ -146,7 +146,16 @@ export const TECLA = {
     DIGITO: 'digito',
     APAGAR: 'apagar',
     REGISTRAR: 'registrar',
+    // The key must do NOTHING: not what the page would do with it, and not
+    // what the browser would do with it either (the page cancels it).
+    NADA: 'nada',
 };
+
+const DO_NOTHING = { tecla: TECLA.NADA, digito: null };
+
+function isDigit(key) {
+    return /^[0-9]$/.test(key);
+}
 
 /**
  * Decides what a key pressed ANYWHERE on the page means for the number being
@@ -163,27 +172,41 @@ export const TECLA = {
  * @param {object}  context
  * @param {string}  context.mode             one of MODO.*
  * @param {boolean} context.typedInNumberBox the key went into the number box itself
- * @returns {?{tecla: string, digito: ?string}} null when the page must leave the key alone
+ * @param {boolean} [context.focusOnKeypadKey] the focus is on a key of the on-screen keypad
+ * @returns {?{tecla: string, digito: ?string}} null when the page must leave
+ *          the key alone (the browser then does what it normally does with
+ *          it); `TECLA.NADA` when the key must be cancelled altogether
  */
-export function keyActionFor(key, { mode, typedInNumberBox }) {
+export function keyActionFor(key, { mode, typedInNumberBox, focusOnKeypadKey = false }) {
     if (mode !== MODO.TECLADO && mode !== MODO.TECLADO_TELA) {
-        return null;
-    }
-    // In keyboard mode the number box handles its own typing (that is also
-    // the only path a phone's on-screen keyboard uses). Handling the key here
-    // as well would enter every digit twice.
-    if (mode === MODO.TECLADO && typedInNumberBox) {
-        return null;
-    }
-    // A key held down a moment too long must not become "77" or two passes.
-    if (key.repeat) {
         return null;
     }
     // Ctrl+1, Alt+2... are browser shortcuts, not car numbers.
     if (key.ctrlKey || key.altKey || key.metaKey) {
         return null;
     }
-    if (/^[0-9]$/.test(key.key)) {
+    // In keyboard mode the number box handles its own typing (that is also
+    // the only path a phone's on-screen keyboard uses). Handling the key here
+    // as well would enter every digit twice.
+    if (mode === MODO.TECLADO && typedInNumberBox) {
+        // ...except for a key HELD DOWN. The browser repeats it by itself,
+        // and the box would fill with "777" (or a held Enter would submit
+        // again and again). Leaving the key alone is not enough here: the
+        // repeat has to be cancelled. A held Backspace may keep deleting.
+        return key.repeat && (isDigit(key.key) || key.key === 'Enter') ? DO_NOTHING : null;
+    }
+    // On the keypad the last key that was tapped keeps the focus, and a
+    // browser "clicks" the focused button when Space is pressed: a stray
+    // Space would type that digit again, or press OK again. (Space on any
+    // other control, a checkbox for instance, keeps working.)
+    if (key.key === ' ' || key.key === 'Spacebar') {
+        return focusOnKeypadKey ? DO_NOTHING : null;
+    }
+    // A key held down a moment too long must not become "77" or two passes.
+    if (key.repeat) {
+        return isDigit(key.key) || key.key === 'Enter' ? DO_NOTHING : null;
+    }
+    if (isDigit(key.key)) {
         return { tecla: TECLA.DIGITO, digito: key.key };
     }
     if (key.key === 'Backspace') {

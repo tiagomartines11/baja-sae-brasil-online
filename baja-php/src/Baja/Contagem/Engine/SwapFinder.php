@@ -60,11 +60,13 @@ final class SwapFinder
                 continue;
             }
             $distanceMs = abs($candidate->tsMs - $loneEntry->tsMs);
-            $score = [
-                intdiv($distanceMs, 1000),
-                DigitSimilarity::rank($loneEntry->carro, $candidate->carro),
-                $distanceMs,
-            ];
+            $distanceSeconds = intdiv($distanceMs, 1000);
+            if ($bestScore !== null && $distanceSeconds > $bestScore[0]) {
+                // Further away in whole seconds: it cannot win, so how
+                // alike the two numbers are need not be worked out.
+                continue;
+            }
+            $score = [$distanceSeconds, DigitSimilarity::rank($loneEntry->carro, $candidate->carro), $distanceMs];
             if ($bestScore === null || $score < $bestScore) {
                 $best = $candidate;
                 $bestScore = $score;
@@ -86,10 +88,12 @@ final class SwapFinder
         if (isset($this->takenGroups[spl_object_id($candidate)])) {
             return false;
         }
-        if (count($candidate->realSourceIds()) < 2) {
-            // The other car must be a real pass, seen by two counters. Two
-            // stray entries next to each other explain nothing, and pairing
-            // them would turn two mistakes into one counted lap.
+        $entryCount = count($candidate->entries);
+        if ($entryCount < 2 || ($entryCount === 2 && $candidate->adicionadoPorRevisor)) {
+            // The other car must be a real pass, seen by two counters (a
+            // pass a reviewer added is not a counter). Two stray entries
+            // next to each other explain nothing, and pairing them would
+            // turn two mistakes into one counted lap.
             return false;
         }
         return !$candidate->hasSource($loneGroup->entries[0]->fonteId);

@@ -15,6 +15,32 @@ const TEXTO_REVOGADO = 'Este aparelho foi desconectado desta contagem e não est
     + 'Tudo o que você registrou continua guardado aqui. Toque em “Exportar meus dados” '
     + 'e procure o responsável pela prova. Se você for liberado de novo, o envio volta sozinho.';
 
+const TEXTO_DISPOSITIVO_BLOQUEADO = 'Este aparelho foi bloqueado nesta contagem pelo responsável pela prova '
+    + 'e não está enviando. Tudo o que você registrou continua guardado aqui. Peça ao responsável para '
+    + 'vincular você de novo ou tocar em “liberar” na página de fontes: o envio volta sozinho em até meio minuto. '
+    + 'Se precisar, toque em “Exportar meus dados”.';
+
+const MOTIVO_SEM_CONFIRMACAO = 'sem_confirmacao';
+const TEXTO_MOTIVO_RECUSA = {
+    simulacao_nao_permitida: 'a simulação não está permitida nesta prova',
+    [MOTIVO_SEM_CONFIRMACAO]: 'o servidor não confirmou o recebimento',
+};
+
+/**
+ * @param {string[]} motivos one reason per refused record
+ * @returns {?string} null when nothing was refused
+ */
+function describeRefused(motivos) {
+    if (motivos.length === 0) {
+        return null;
+    }
+    const reasons = Array.from(new Set(motivos), (motivo) => TEXTO_MOTIVO_RECUSA[motivo] || motivo);
+    const quantity = motivos.length === 1 ? '1 registro foi recusado' : motivos.length + ' registros foram recusados';
+    return quantity + ' pelo servidor (' + reasons.join('; ') + '). Nada foi apagado: '
+        + (motivos.length === 1 ? 'ele continua' : 'eles continuam') + ' neste aparelho e em “Exportar meus dados”. '
+        + 'Avise o responsável pela prova.';
+}
+
 const TEXTO_SEM_DISCO = 'Este navegador não deixa guardar os registros no aparelho. '
     + 'NÃO recarregue nem feche esta página enquanto houver registros na fila.';
 
@@ -39,7 +65,7 @@ const TEXTO_ARMAZENAMENTO = {
 /**
  * @param {object}  state    SyncQueue.getState()
  * @param {object}  problems
- * @param {?string} problems.tokenProblem  'sem_permissao' | 'sem_sessao' | 'sem_rede' | null
+ * @param {?string} problems.tokenProblem  'sem_permissao' | 'dispositivo_revogado' | 'sem_sessao' | 'sem_rede' | null
  * @param {string}  problems.armazenamento one of ARMAZENAMENTO.*
  * @returns {{avisos: string[], oferecerNovaTentativa: boolean}}
  *          `avisos`: every warning that applies, most dangerous first.
@@ -54,7 +80,11 @@ export function describeBanner(state, problems) {
     }
 
     let uploadWarning = null;
-    if (state.conexao === CONEXAO.REVOGADO) {
+    if (problems.tokenProblem === 'dispositivo_revogado') {
+        // The server has said WHY the token stopped working; that is more
+        // useful than the general "desconectado" text below.
+        uploadWarning = TEXTO_DISPOSITIVO_BLOQUEADO;
+    } else if (state.conexao === CONEXAO.REVOGADO) {
         uploadWarning = TEXTO_REVOGADO;
     } else if (TEXTO_PROBLEMA_TOKEN[problems.tokenProblem]) {
         uploadWarning = TEXTO_PROBLEMA_TOKEN[problems.tokenProblem];
@@ -63,9 +93,19 @@ export function describeBanner(state, problems) {
         avisos.push(uploadWarning);
     }
 
+    const refusedMotivos = Array.isArray(state.recusados) ? state.recusados : [];
+    const refusedWarning = describeRefused(refusedMotivos);
+    if (refusedWarning !== null) {
+        avisos.push(refusedWarning);
+    }
+    // Trying again can help with an upload problem, and with records the
+    // server never answered about. It cannot help with a record the server
+    // refused with a reason.
+    const retryCanHelp = uploadWarning !== null || refusedMotivos.includes(MOTIVO_SEM_CONFIRMACAO);
+
     return {
         avisos,
-        oferecerNovaTentativa: uploadWarning !== null && storageWarning === null,
+        oferecerNovaTentativa: retryCanHelp && storageWarning === null,
     };
 }
 

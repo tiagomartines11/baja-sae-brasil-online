@@ -1,27 +1,67 @@
 // Stand-ins used by the tests in this folder. Nothing here is a test itself.
 //
-// The real page has three things we cannot have inside `node --test`: a wall
-// clock, a disk (IndexedDB) and a server. Each gets a small fake that the test
-// fully controls, so a test can say "the network is down now" or "ten seconds
-// pass" and see exactly what the code does.
+// The real page has things we cannot have inside `node --test`: two clocks
+// (the system clock and the monotonic one), a disk (IndexedDB) and a server.
+// Each gets a small fake that the test fully controls, so a test can say "the
+// network is down now", "ten seconds pass" or "somebody sets the phone's
+// clock back an hour" and see exactly what the code does.
 
 import { createMemoryStorage } from '../../../default/js/contagem/storage-memory.js';
 import { LocalStore } from '../../../default/js/contagem/local-store.js';
-import { ClockEstimator } from '../../../default/js/contagem/clock-estimator.js';
+import { ServerClock } from '../../../default/js/contagem/server-clock.js';
 import { SyncQueue } from '../../../default/js/contagem/sync-queue.js';
 import { SyncHeartbeat } from '../../../default/js/contagem/sync-heartbeat.js';
 import { CountSession } from '../../../default/js/contagem/count-session.js';
+import { PitSession } from '../../../default/js/contagem/pit-session.js';
 
-/** A clock that only moves when the test says so. */
+/**
+ * Time that only moves when the test says so. It holds the three clocks of
+ * the story:
+ *
+ *   serverNow()     the TRUE time, which is also the server's clock;
+ *   now()           the phone's system clock (`Date.now()`): true time plus
+ *                   an error the test can set and change;
+ *   monotonicNow()  the phone's monotonic clock (`performance.now()`):
+ *                   counts from the page load, cannot be set, but can be
+ *                   made to stand still as it does on a sleeping phone.
+ */
 export class FakeClock {
     constructor(startMs = 1_760_000_000_000) {
-        this.currentMs = startMs;
-        // Bound so it can be handed around as a plain function.
-        this.now = () => this.currentMs;
+        this.trueMs = startMs;
+        this.wallErrorMs = 0;
+        // True time the monotonic clock failed to count.
+        this.monotonicLostMs = 0;
+        // Bound so they can be handed around as plain functions.
+        this.now = () => this.trueMs + this.wallErrorMs;
+        this.serverNow = () => this.trueMs;
+        this.monotonicNow = this.newMonotonicClock();
     }
 
+    /** Time passes normally: all three clocks move together. */
     advance(milliseconds) {
-        this.currentMs += milliseconds;
+        this.trueMs += milliseconds;
+    }
+
+    /** The phone's system clock is wrong by this much from now on (positive = ahead). */
+    setWallClockError(milliseconds) {
+        this.wallErrorMs = milliseconds;
+    }
+
+    /** Somebody (or the network) changes the phone's system clock, right now. */
+    stepWallClock(milliseconds) {
+        this.wallErrorMs += milliseconds;
+    }
+
+    /** The phone sleeps: time passes, but its monotonic clock stands still. */
+    sleepWithStalledMonotonic(milliseconds) {
+        this.trueMs += milliseconds;
+        this.monotonicLostMs += milliseconds;
+    }
+
+    /** A page load gets its own monotonic clock, which starts near zero. */
+    newMonotonicClock() {
+        const pageOpenedAt = this.trueMs - this.monotonicLostMs - 1500;
+        return () => this.trueMs - this.monotonicLostMs - pageOpenedAt;
     }
 }
 
@@ -157,12 +197,10 @@ export class FakeBrowserLocks {
  *                   (what a hotel or track Wi-Fi login portal answers)
  */
 export class FakeServer {
-    constructor(deviceClock, { serverAheadMs = 0 } = {}) {
+    constructor(deviceClock) {
         this.deviceClock = deviceClock;
-        // How far the server's clock is ahead of the device's clock.
-        this.serverAheadMs = serverAheadMs;
         this.behaviour = 'ok';
-        // Network delay of each leg of the trip, in ms of device clock.
+        // Network delay of each leg of the trip, in ms of true time.
         this.uploadDelayMs = 0;
         this.downloadDelayMs = 0;
         // When set, only the first N new entries of a request are stored.
@@ -181,6 +219,18 @@ export class FakeServer {
         this.janelaMs = 20000;
         this.outrosUsuarios = [];
         this.carsInPit = [];
+        this.unclassifiedCars = [];
+        this.carsInFuel = [];
+        this.abastecimento = false;
+        this.simulacao = false;
+        // uuid -> reason: records this server names in `refused` and never stores.
+        this.refusedUuids = new Map();
+        // Records this server silently drops: neither stored nor refused
+        // (the kind of server bug the client's safety net exists for).
+        this.ignoredUuids = new Set();
+        // Set to false to play a server that does not close the device
+        // although the request asked for it.
+        this.closesWhenAsked = true;
 
         this.send = (requestBody) => this.handle(requestBody);
     }
@@ -209,8 +259,22 @@ export class FakeServer {
 
         this.receivedRequests.push(request);
         const storedUuids = [];
+        const refused = [];
+        const isRefused = (record) => {
+            if (record.mode === 'simulacao' && !this.simulacao) {
+                this.refusedUuids.set(record.uuid, 'simulacao_nao_permitida');
+            }
+            if (this.refusedUuids.has(record.uuid)) {
+                refused.push({ uuid: record.uuid, motivo: this.refusedUuids.get(record.uuid) });
+                return true;
+            }
+            return this.ignoredUuids.has(record.uuid);
+        };
         let newlyStored = 0;
         for (const entry of request.entries) {
+            if (isRefused(entry)) {
+                continue;
+            }
             if (!this.storedEntries.has(entry.uuid)) {
                 if (this.storeAtMostPerRequest !== null && newlyStored >= this.storeAtMostPerRequest) {
                     continue;
@@ -222,6 +286,9 @@ export class FakeServer {
             storedUuids.push(entry.uuid);
         }
         for (const pitEvent of request.pit_events) {
+            if (isRefused(pitEvent)) {
+                continue;
+            }
             if (!this.storedPitEvents.has(pitEvent.uuid)) {
                 this.storedPitEvents.set(pitEvent.uuid, pitEvent);
                 this.insertCount.set(pitEvent.uuid, (this.insertCount.get(pitEvent.uuid) || 0) + 1);
@@ -230,12 +297,12 @@ export class FakeServer {
         }
         const voidedUuids = [];
         for (const voidRequest of request.voids) {
-            if (this.storedEntries.has(voidRequest.uuid)) {
+            if (this.storedEntries.has(voidRequest.uuid) && !this.ignoredUuids.has('void:' + voidRequest.uuid)) {
                 this.voidedUuids.add(voidRequest.uuid);
                 voidedUuids.push(voidRequest.uuid);
             }
         }
-        const serverNowMs = this.deviceClock.now() + this.serverAheadMs;
+        const serverNowMs = this.deviceClock.serverNow();
         this.deviceClock.advance(this.downloadDelayMs);
 
         if (this.behaviour === 'answer_lost') {
@@ -253,6 +320,12 @@ export class FakeServer {
                 janela_ms: this.janelaMs,
                 outros_usuarios: this.outrosUsuarios,
                 cars_in_pit: this.carsInPit,
+                unclassified_cars: this.unclassifiedCars,
+                cars_in_fuel: this.carsInFuel,
+                abastecimento: this.abastecimento,
+                simulacao: this.simulacao,
+                encerrado: request.encerrando === true && this.closesWhenAsked,
+                refused,
             },
         };
     }
@@ -269,39 +342,59 @@ export class FakeServer {
 }
 
 /**
- * One counter's phone: a disk, a clock, a store, a queue and a count session,
+ * One counter's phone: a disk, clocks, a store, a queue and a count session,
  * wired the way page-setup.js wires them in the browser.
  *
  * `reload()` simulates closing and reopening the page: everything in memory is
- * thrown away and rebuilt from the same disk.
+ * thrown away and rebuilt from the same disk, and the monotonic clock starts
+ * again, as `performance.now()` does. (`reload` is `boot`: it takes the same
+ * optional `{anchored}`.)
  */
 export async function createDevice({
     server = null, clock = new FakeClock(), disk = createMemoryStorage(), maxBatch, uuidPrefix = 'uuid',
-    vouchesForHistory = true, renewToken = null,
+    vouchesForHistory = true, renewToken = null, anchored = true,
 } = {}) {
     const fakeServer = server || new FakeServer(clock);
-    const device = { clock, disk, server: fakeServer, stateChanges: [] };
+    const device = { clock, disk, server: fakeServer, stateChanges: [], pageLoads: 0 };
 
-    async function boot() {
+    async function boot({ anchored: bootAnchored = false } = {}) {
+        device.pageLoads++;
         device.store = await LocalStore.open(disk);
-        device.clockEstimator = new ClockEstimator();
+        device.serverClock = new ServerClock({
+            now: clock.now,
+            monotonicNow: clock.newMonotonicClock(),
+            loadId: uuidPrefix + '-load-' + device.pageLoads,
+        });
         device.queue = new SyncQueue({
             store: device.store,
             send: (body) => fakeServer.send(body),
-            clock: device.clockEstimator,
-            now: clock.now,
+            clock: device.serverClock,
             onChange: (state) => device.stateChanges.push(state),
             vouchesForHistory,
             ...(maxBatch ? { maxBatch } : {}),
         });
         // The 5-second timer. Tests that need it call device.heartbeat.start()
         // with a pretend setInterval, or device.heartbeat.tick() directly.
-        device.heartbeat = new SyncHeartbeat({ queue: device.queue, now: clock.now, renewToken });
+        device.heartbeat = new SyncHeartbeat({
+            queue: device.queue, now: device.serverClock.monotonicNow, renewToken,
+        });
+        // As the page does on opening (see SyncQueue.prepare).
+        await device.queue.prepare();
+        if (bootAnchored) {
+            device.pretendFirstAnswerArrived();
+        }
+        // The same phone can play the pit page: same store, clock and queue.
+        device.pit = new PitSession({
+            store: device.store, clock: device.serverClock, generateUuid: device.generateUuid,
+        });
         device.session = new CountSession({
             store: device.store,
-            clock: device.clockEstimator,
-            now: clock.now,
+            clock: device.serverClock,
             generateUuid: device.generateUuid,
+            getUnclassifiedCars: () => {
+                const serverInfo = device.store.getMeta('servidor', null);
+                return serverInfo ? serverInfo.unclassified_cars : null;
+            },
             getValidCars: () => {
                 const serverInfo = device.store.getMeta('servidor', null);
                 return serverInfo ? serverInfo.valid_cars : null;
@@ -316,8 +409,19 @@ export async function createDevice({
     // Created once, outside boot(): uuids keep counting up across reloads.
     device.generateUuid = createUuidSequence(uuidPrefix);
     device.reload = boot;
+    /**
+     * Gives the page its anchor without a request showing up in the fake
+     * server's log: "the heartbeat sent when the page opened has already
+     * been answered, instantly". Most tests are about something else and
+     * start from there. Tests about the time BEFORE the first answer pass
+     * `anchored: false` to createDevice(); a `reload()` never has an anchor.
+     */
+    device.pretendFirstAnswerArrived = () => {
+        const monoMs = device.serverClock.monotonicNow();
+        device.serverClock.addSample(monoMs, monoMs, clock.serverNow());
+    };
     /** The counter types a car number and presses Enter. */
     device.type = (car, mode = 'teclado') => device.session.recordPass({ car, typingMs: 500, mode });
-    await boot();
+    await boot({ anchored });
     return device;
 }

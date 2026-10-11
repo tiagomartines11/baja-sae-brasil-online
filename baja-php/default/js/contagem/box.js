@@ -1,150 +1,224 @@
-// Pit log page controller: pick a car, then "Entrou" or "Saiu".
-// Same local store, queue and status bar as the count page.
+// Pit lane and fueling station page controller. Same local store, queue and
+// status bar as the count page. The page opens on a choice (which area, then
+// entry or exit); after that every tap on a car records that event. The
+// decisions are in pit-session.js; this file connects them to the DOM.
+//
+// FOR THE RACE SIMULATION: while the prova allows simulation, this page puts
+// one object on `window.contagemPagina`:
+//
+//     await window.contagemPagina.registrarParada({ car: 41, tipo: 'box_entrada', tsMs: 1760000000000 });
+//
+// It is the same function a tap on a car ends in (`recordEvent` below). The
+// only differences are the time (`tsMs`, in SERVER time, instead of "now")
+// and the mode (`modo`, 'simulacao' unless given).
 
 import { startPage } from './page-setup.js';
-import { PitSession, TIPO_BOX } from './pit-session.js';
+import {
+    PitSession, PitFlow, PASSO, AREA, SENTIDO, orderCarsForMode, partsOfTipo, tipoFor,
+} from './pit-session.js';
 import { generateUuid } from './uuid.js';
 import { buildPitEventsCsv } from './csv-export.js';
 import { createFeedback } from './feedback.js';
 import { NumberBuffer } from './entry-modes.js';
 import { carListIsKnown, teamNameOf } from './warnings.js';
-import { formatTimeOfDay } from './race-clock.js';
+import { createPitLists, describeTipo } from './box-listas.js';
 
-const ROTULO_TIPO = {
-    [TIPO_BOX.ENTRADA]: 'entrou',
-    [TIPO_BOX.SAIDA]: 'saiu',
-};
+const MODO_SIMULACAO = 'simulacao';
 
-function textNode(tagName, className, text) {
-    const node = document.createElement(tagName);
-    node.className = className;
-    node.textContent = text;
-    return node;
-}
+// After an event the tapped car moves to the other group and the tiles below
+// it shift. A second touch landing within this time is the same finger still
+// on the screen, now over a different car, so it is ignored.
+const TAP_GUARD_MS = 350;
 
 async function main() {
     const page = await startPage({ buildExportCsv: (store) => buildPitEventsCsv(store.allPitEvents()) });
-    const { store, queue, clock, now, preferences } = page;
+    const { store, queue, clock, monotonicNow, preferences } = page;
     const element = (id) => document.getElementById(id);
 
-    const session = new PitSession({ store, clock, now, generateUuid });
+    const session = new PitSession({ store, clock, generateUuid });
+    const flow = new PitFlow({ preferences, fuelingEnabled: page.fuelingEnabled() });
     const feedback = createFeedback({ preferences, windowRef: window });
     const buffer = new NumberBuffer();
     const field = element('campo-numero');
-    let renderedSignature = null;
+    let lastRecordedAtMs = -Infinity;
 
-    function selectCar(carNumber) {
-        buffer.setText(String(carNumber), now());
-        field.value = buffer.text();
-        renderSelection();
-    }
-
-    function renderSelection() {
-        const hasNumber = !buffer.isEmpty();
-        element('btn-entrou').disabled = !hasNumber;
-        element('btn-saiu').disabled = !hasNumber;
-        const teamName = hasNumber ? teamNameOf(parseInt(buffer.text(), 10), page.validCars()) : null;
-        // An empty car list means "not known yet", not "every number is wrong".
-        const nameWhenNotFound = carListIsKnown(page.validCars()) ? 'Número desconhecido' : ' ';
-        element('box-equipe').textContent = hasNumber ? (teamName || nameWhenNotFound) : ' ';
-    }
-
-    function carButton(carNumber, className) {
-        const button = textNode('button', className, String(carNumber));
-        button.type = 'button';
-        button.title = teamNameOf(carNumber, page.validCars()) || '';
-        button.addEventListener('click', () => selectCar(carNumber));
-        return button;
-    }
-
-    function serverCarsInPit() {
-        const serverInfo = store.getMeta('servidor', null);
-        return serverInfo ? serverInfo.cars_in_pit : [];
-    }
-
-    function renderLists() {
-        const carsInPit = session.carsInPit(serverCarsInPit());
-        const validCars = (page.validCars() || []).slice().sort((first, second) => first.numero - second.numero);
-        const recentEvents = session.recentEvents();
-        // Redrawn only when something visible changed (see contar-recentes.js).
-        const signature = JSON.stringify([
-            carsInPit,
-            validCars.map((car) => car.numero),
-            recentEvents.map((pitEvent) => [pitEvent.uuid, pitEvent.sent]),
-        ]);
-        if (signature === renderedSignature) {
-            return;
-        }
-        renderedSignature = signature;
-
-        const inPitList = element('lista-no-box');
-        inPitList.replaceChildren();
-        for (const carNumber of carsInPit) {
-            inPitList.appendChild(carButton(carNumber, 'bloco bloco-no-box'));
-        }
-        element('no-box-vazio').hidden = carsInPit.length > 0;
-
-        const tiles = element('blocos');
-        tiles.replaceChildren();
-        for (const car of validCars) {
-            tiles.appendChild(carButton(car.numero, 'bloco'));
-        }
-
-        const recentList = element('lista-recentes');
-        recentList.replaceChildren();
-        for (const pitEvent of recentEvents) {
-            const item = document.createElement('li');
-            item.className = 'recente';
-            item.appendChild(textNode('span', 'recente-numero', String(pitEvent.car)));
-            item.appendChild(textNode('span', 'recente-equipe', ROTULO_TIPO[pitEvent.tipo]));
-            item.appendChild(textNode('span', 'recente-hora', formatTimeOfDay(pitEvent.ts_device_ms)));
-            item.appendChild(textNode('span', 'recente-estado', pitEvent.sent ? 'enviado' : 'na fila'));
-            recentList.appendChild(item);
-        }
-    }
-
-    async function recordEvent(tipo) {
-        if (page.shiftEnded()) {
-            return;
-        }
-        // Time is taken inside recordEvent, at the tap, before the disk write.
-        const confirmed = buffer.confirm(now());
-        if (confirmed === null) {
-            return;
-        }
-        field.value = '';
-        renderSelection();
+    function showMessage(text, isProblem) {
         const message = element('box-mensagem');
+        message.textContent = text;
+        message.className = isProblem ? 'box-mensagem box-mensagem-erro' : 'box-mensagem';
+    }
+
+    const lists = createPitLists({
+        element,
+        timeZone: page.config.fuso || null,
+        getTeamName: (car) => teamNameOf(car, page.validCars(), page.unclassifiedCars()) || '',
+        onTapCar: (car) => recordTappedCar(car),
+    });
+
+    // ---- recording an event ----
+
+    /**
+     * Every pit and fueling event goes through here: a tap on a car, the
+     * "other number" box, and the simulation.
+     *
+     * @param {number} car
+     * @param {string} tipo  one of TIPO_PARADA.*
+     * @param {object} [options]
+     * @param {?number} [options.tsMs] time of the event in SERVER time; left out = right now
+     * @param {?string} [options.modo] 'simulacao' for a simulated event
+     */
+    async function recordEvent(car, tipo, { tsMs = null, modo = null } = {}) {
+        let record;
         try {
-            await session.recordEvent({ car: confirmed.car, tipo });
+            // The time of the event is taken inside, first thing.
+            record = await session.recordEvent({ car, tipo, tsMs, mode: modo });
         } catch (storageError) {
-            message.textContent = 'NÃO REGISTRADO: o aparelho não conseguiu guardar o carro ' + confirmed.car + '.';
-            message.className = 'box-mensagem box-mensagem-erro';
+            showMessage('NÃO REGISTRADO: o aparelho não conseguiu guardar o carro ' + car + '.', true);
             feedback.erro();
+            throw storageError;
+        }
+        const anyListKnown = carListIsKnown(page.validCars()) || carListIsKnown(page.unclassifiedCars());
+        const unknownNumber = anyListKnown && teamNameOf(car, page.validCars(), page.unclassifiedCars()) === null;
+        showMessage(
+            'Carro ' + car + ' ' + describeTipo(tipo) + '.' + (unknownNumber ? ' Número desconhecido; registrado mesmo assim.' : ''),
+            unknownNumber,
+        );
+        if (modo !== MODO_SIMULACAO) {
+            if (unknownNumber) {
+                feedback.aviso();
+            } else {
+                feedback.registrado();
+            }
+        }
+        render();
+        queue.requestSync();
+        return record;
+    }
+
+    function recordTappedCar(car) {
+        const tipo = flow.tipo();
+        const nowMs = monotonicNow();
+        if (page.shiftEnded() || tipo === null || nowMs - lastRecordedAtMs < TAP_GUARD_MS) {
             return;
         }
-        message.textContent = 'Carro ' + confirmed.car + ' ' + ROTULO_TIPO[tipo] + '.';
-        message.className = 'box-mensagem';
-        feedback.registrado();
-        renderLists();
-        queue.requestSync();
+        lastRecordedAtMs = nowMs;
+        recordEvent(car, tipo).catch(() => {});
     }
+
+    // ---- the choices: area, then entry or exit ----
+
+    function render() {
+        const passo = flow.passo();
+        const remembered = flow.lembrado();
+        element('box-escolha').hidden = passo === PASSO.CARROS;
+        element('escolha-area').hidden = passo !== PASSO.AREA;
+        element('escolha-sentido').hidden = passo !== PASSO.SENTIDO;
+        element('box-registro').hidden = passo !== PASSO.CARROS;
+        // The switches stay visible while recording: one person doing both
+        // ends changes mode with one tap. The area switch only exists when
+        // the prova logs the fueling station.
+        element('chave-area').hidden = !flow.fuelingEnabled;
+        for (const button of document.querySelectorAll('[data-area]')) {
+            const isCurrent = button.dataset.area === flow.area;
+            button.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
+            button.classList.toggle('escolha-lembrada', flow.area === null && button.dataset.area === remembered.area);
+        }
+        for (const button of document.querySelectorAll('[data-sentido]')) {
+            const isCurrent = button.dataset.sentido === flow.sentido;
+            button.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
+            button.classList.toggle('escolha-lembrada', flow.sentido === null && button.dataset.sentido === remembered.sentido);
+        }
+        if (passo !== PASSO.CARROS) {
+            lists.renderRecent(session.recentEvents());
+            return;
+        }
+        const carsInside = session.carsInside(flow.area, page.serverCarsInside(flow.area));
+        lists.render({
+            area: flow.area,
+            sentido: flow.sentido,
+            groups: orderCarsForMode({
+                // Classified cars only; a car that is inside is added by
+                // orderCarsForMode whatever list it is (or is not) in.
+                listedCars: (page.validCars() || []).map((car) => car.numero),
+                carsInside,
+                sentido: flow.sentido,
+            }),
+            recentEvents: session.recentEvents(),
+        });
+    }
+
+    for (const button of document.querySelectorAll('[data-area]')) {
+        button.addEventListener('click', () => {
+            flow.chooseArea(button.dataset.area);
+            render();
+        });
+    }
+    for (const button of document.querySelectorAll('[data-sentido]')) {
+        button.addEventListener('click', () => {
+            flow.chooseSentido(button.dataset.sentido);
+            render();
+        });
+    }
+
+    // ---- a number that has no tile (not classified, not in the list) ----
 
     field.addEventListener('input', () => {
-        buffer.setText(field.value, now());
+        buffer.setText(field.value, monotonicNow());
         if (field.value !== buffer.text()) {
             field.value = buffer.text();
         }
-        renderSelection();
     });
-    element('form-box').addEventListener('submit', (event) => event.preventDefault());
-    element('btn-entrou').addEventListener('click', () => recordEvent(TIPO_BOX.ENTRADA));
-    element('btn-saiu').addEventListener('click', () => recordEvent(TIPO_BOX.SAIDA));
+    element('form-box').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const confirmed = buffer.confirm(monotonicNow());
+        field.value = '';
+        if (confirmed !== null) {
+            recordTappedCar(confirmed.car);
+        }
+    });
 
-    page.onState(renderLists);
-    renderSelection();
+    page.onState(() => {
+        if (flow.setFuelingEnabled(page.fuelingEnabled())) {
+            showMessage('O abastecimento foi desligado nesta prova. Você está registrando o BOX agora.', true);
+        }
+        render();
+    });
     element('carregando').hidden = true;
     element('conteudo').hidden = false;
+
+    // The simulation's way in (see the top of this file).
+    page.exposeForSimulation({
+        tipo: 'box',
+        config: page.config,
+        /** ServerClock: `relogio.serverNowMs()` is the official time (null until synced). */
+        relogio: clock,
+        /** SyncQueue: `fila.flush()` resolves when everything recorded so far was offered to the server. */
+        fila: queue,
+        sessao: session,
+        /** LocalStore: `armazenamento.getMeta('servidor')` is the last sync answer (race start, lists). */
+        armazenamento: store,
+        carros: page.validCars,
+        naoClassificados: page.unclassifiedCars,
+        janelaMs: page.janelaMs,
+        abastecimento: page.fuelingEnabled,
+        AREA,
+        SENTIDO,
+        tipoFor,
+        /**
+         * @param {object}  pitEvent
+         * @param {number}  pitEvent.car
+         * @param {string}  pitEvent.tipo   'box_entrada' | 'box_saida' | 'abastecimento_entrada' | 'abastecimento_saida'
+         * @param {?number} [pitEvent.tsMs] intended time, SERVER time in ms; left out = now
+         * @param {string}  [pitEvent.modo] 'simulacao' unless given
+         * @returns {Promise<object>} the stored record
+         */
+        registrarParada({ car, tipo, tsMs = null, modo = MODO_SIMULACAO }) {
+            if (partsOfTipo(tipo) === null) {
+                return Promise.reject(new Error('Tipo de parada desconhecido: ' + tipo));
+            }
+            return recordEvent(car, tipo, { tsMs, modo });
+        },
+    });
 }
 
 main().catch((startupError) => {

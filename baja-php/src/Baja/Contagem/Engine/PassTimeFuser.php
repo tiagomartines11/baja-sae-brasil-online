@@ -39,6 +39,10 @@ final class PassTimeFuser
     /**
      * Sets the pass time of each group. Needs nothing but the group itself.
      *
+     * The entries of a group are already in time order (that is how the
+     * matcher built it), so the median is simply the entry in the middle,
+     * or halfway between the two in the middle. Nothing has to be sorted.
+     *
      * @param iterable<PassGroup> $groups
      * @param array<int, Source> $sourcesById
      */
@@ -47,16 +51,29 @@ final class PassTimeFuser
         $preciseSourceIds = self::preciseSourceIds($sourcesById);
 
         foreach ($groups as $group) {
-            $times = [];
+            $entries = $group->entries;
+            $count = count($entries);
+            if ($count === 3) {
+                $medianMs = $entries[1]->tsMs;
+            } elseif ($count === 1) {
+                $medianMs = $entries[0]->tsMs;
+            } else {
+                $middle = $count >> 1;
+                $medianMs = $count % 2 === 1
+                    ? $entries[$middle]->tsMs
+                    : self::halfwayBetween($entries[$middle - 1]->tsMs, $entries[$middle]->tsMs);
+            }
+
             $preciseTime = null;
-            foreach ($group->entries as $entry) {
-                $times[] = $entry->tsMs;
-                if (isset($preciseSourceIds[$entry->fonteId])) {
-                    $preciseTime = $entry->tsMs;
+            if ($preciseSourceIds !== []) {
+                foreach ($entries as $entry) {
+                    if (isset($preciseSourceIds[$entry->fonteId])) {
+                        $preciseTime = $entry->tsMs;
+                    }
                 }
             }
             $group->tempoPreciso = $preciseTime !== null;
-            $group->tsMs = $preciseTime ?? (int) round(Stats::median($times));
+            $group->tsMs = $preciseTime ?? $medianMs;
             // Until habits are measured (the slower, whole-race step) the
             // corrected time is simply the pass time.
             $group->tsAjustadoMs = $group->tsMs;
@@ -66,6 +83,10 @@ final class PassTimeFuser
     /**
      * Measures each source's habit as the race goes and sets the
      * habit-corrected time and the spread of every group.
+     *
+     * This loop visits every entry of the race and is the most expensive
+     * step of a full run, which is why the medians of two and of three
+     * numbers (nearly every group) are worked out in place.
      *
      * @param PassGroup[] $groupsInTimeOrder every pass group of the race
      * @param array<int, Source> $sourcesById
@@ -82,8 +103,9 @@ final class PassTimeFuser
 
         foreach ($groupsInTimeOrder as $group) {
             $entries = $group->entries;
+            $count = count($entries);
 
-            if (count($entries) === 1) {
+            if ($count === 1) {
                 // A single entry has no spread, and nothing to compare with,
                 // so it teaches nothing about its source either.
                 $entry = $entries[0];
@@ -92,13 +114,55 @@ final class PassTimeFuser
                 continue;
             }
 
-            $correctedTimes = [];
-            foreach ($entries as $entry) {
-                $fonteId = $entry->fonteId;
-                $correctedTimes[] = isset($preciseSourceIds[$fonteId]) ? $entry->tsMs : $entry->tsMs - ($habit[$fonteId] ?? 0);
+            if ($preciseSourceIds === []) {
+                $passMs = $group->tsMs;
+                if ($count === 3) {
+                    [$first, $second, $third] = $entries;
+                    $a = $first->tsMs - ($habit[$first->fonteId] ?? 0);
+                    $b = $second->tsMs - ($habit[$second->fonteId] ?? 0);
+                    $c = $third->tsMs - ($habit[$third->fonteId] ?? 0);
+                    // Put the three in order by hand: smallest, middle, largest.
+                    if ($a > $b) {
+                        [$a, $b] = [$b, $a];
+                    }
+                    if ($b > $c) {
+                        [$b, $c] = [$c, $b];
+                        if ($a > $b) {
+                            [$a, $b] = [$b, $a];
+                        }
+                    }
+                    $group->dispersaoMs = $c - $a;
+                    $group->tsAjustadoMs = $b;
+                } elseif ($count === 2) {
+                    [$first, $second] = $entries;
+                    $a = $first->tsMs - ($habit[$first->fonteId] ?? 0);
+                    $b = $second->tsMs - ($habit[$second->fonteId] ?? 0);
+                    $group->dispersaoMs = $a > $b ? $a - $b : $b - $a;
+                    $group->tsAjustadoMs = self::halfwayBetween($a, $b);
+                } else {
+                    $correctedTimes = [];
+                    foreach ($entries as $entry) {
+                        $correctedTimes[] = $entry->tsMs - ($habit[$entry->fonteId] ?? 0);
+                    }
+                    // Sorted once, the list gives the spread (its two ends)
+                    // and the median (its middle) with no further work.
+                    sort($correctedTimes);
+                    $middle = $count >> 1;
+                    $group->dispersaoMs = $correctedTimes[$count - 1] - $correctedTimes[0];
+                    $group->tsAjustadoMs = $count % 2 === 1
+                        ? $correctedTimes[$middle]
+                        : self::halfwayBetween($correctedTimes[$middle - 1], $correctedTimes[$middle]);
+                }
+            } else {
+                $passMs = $group->tsMs;
+                $correctedTimes = [];
+                foreach ($entries as $entry) {
+                    $fonteId = $entry->fonteId;
+                    $correctedTimes[] = isset($preciseSourceIds[$fonteId]) ? $entry->tsMs : $entry->tsMs - ($habit[$fonteId] ?? 0);
+                }
+                $group->dispersaoMs = max($correctedTimes) - min($correctedTimes);
+                $group->tsAjustadoMs = $group->tempoPreciso ? $passMs : (int) round(Stats::median($correctedTimes));
             }
-            $group->dispersaoMs = max($correctedTimes) - min($correctedTimes);
-            $group->tsAjustadoMs = $group->tempoPreciso ? $group->tsMs : (int) round(Stats::median($correctedTimes));
 
             // Only now does this group teach us something, for the groups
             // that come after it.
@@ -108,13 +172,18 @@ final class PassTimeFuser
                     continue;
                 }
                 $differences = $recentDifferences[$fonteId] ?? ($recentDifferences[$fonteId] = new RecentMedian(self::HABIT_SAMPLE_SIZE));
-                $differences->add($entry->tsMs - $group->tsMs);
-                $habit[$fonteId] = (int) round($differences->median());
+                $habit[$fonteId] = $differences->addAndRound($entry->tsMs - $passMs);
             }
         }
 
         $fuser->offsetBySource = $habit;
         return $fuser;
+    }
+
+    /** The whole millisecond halfway between two times; a half rounds up, as round() does. */
+    private static function halfwayBetween(int $a, int $b): int
+    {
+        return (int) round(($a + $b) / 2);
     }
 
     /**

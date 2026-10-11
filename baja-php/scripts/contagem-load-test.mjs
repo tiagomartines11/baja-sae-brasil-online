@@ -9,18 +9,28 @@
 //   20 viewers  polling the public feed every 2 s
 //
 // and reports, per kind of request, how many were made, how many failed, and
-// the p50 / p95 / max latency. It also estimates how busy each PHP-FPM pool
-// was: the time spent in its requests divided by the time its workers had.
+// the p50 / p95 / max latency.
 //
-// Before running it, fill the prova with a whole race:
-//     docker compose exec --user "$(id -u):$(id -g)" baja-app php scripts/contagem-load-seed.php 26BR END
+// It also reports how busy each PHP-FPM pool REALLY was. Once a second it
+// asks the pools themselves (scripts/contagem-fpm-status.php, run inside
+// the app container) how many workers are busy and whether anything is
+// queueing. Client latency cannot tell that: it includes the network, and
+// it misses the work a worker does after it has answered (the whole-race
+// recalculation).
+//
+// Before running it, fill the prova with a whole race of 64 cars:
+//     docker compose exec --user "$(id -u):$(id -g)" baja-app php scripts/contagem-load-seed.php 26BR END 64
 // Then, from the host (Node 20 or newer, no dependencies):
 //     node baja-php/scripts/contagem-load-test.mjs --minutes 10
+// And afterwards remove the stand-in teams the seed added:
+//     docker compose exec --user "$(id -u):$(id -g)" baja-app php scripts/contagem-load-seed.php 26BR END limpar
 //
 // Options: --minutes N (default 10), --evento 26BR, --prova END,
-//          --domain baja.local, --www-workers 8, --contagem-workers 3
+//          --domain baja.local, --container baja-app
 //
 // It uses the seeded dev users (password 123456). Never point it at production.
+
+import { execFile } from 'node:child_process';
 
 const options = Object.fromEntries(process.argv.slice(2).reduce((pairs, arg, index, all) => {
     if (arg.startsWith('--')) pairs.push([arg.slice(2), all[index + 1]]);
@@ -30,7 +40,7 @@ const MINUTES = Number(options.minutes ?? 10);
 const EVENTO = options.evento ?? '26BR';
 const PROVA = options.prova ?? 'END';
 const DOMAIN = options.domain ?? 'baja.local';
-const WORKERS = { www: Number(options['www-workers'] ?? 8), contagem: Number(options['contagem-workers'] ?? 3) };
+const CONTAINER = options.container ?? 'baja-app';
 
 const JUIZ = `http://juiz.${DOMAIN}/${EVENTO}/`;
 const RESULTADOS = `http://resultados.${DOMAIN}/`;
@@ -86,8 +96,18 @@ async function openDevice(username, sourceId) {
     return { username, sourceId, token: answer.token };
 }
 
+/** One entry as a count page uploads it: its final time, in server time, and how good that time is. */
+function entryFor(car) {
+    const nowMs = Date.now();
+    return {
+        uuid: crypto.randomUUID(), car, mode: 'teclado', typing_ms: 700,
+        ts_ms: nowMs, time_quality: 'exato', ts_device_ms: nowMs,
+        anchor: { server_ms: nowMs - 5000, rtt_ms: 40, age_ms: 5000 },
+    };
+}
+
 function sync(device, entries) {
-    const body = { entries, voids: [], device_now_ms: Date.now(), clock_offset_ms: 0, queue_empty: true };
+    const body = { entries, voids: [], now_ms: Date.now(), queue_empty: true };
     return timed(entries.length ? 'upload with an entry' : 'heartbeat', 'contagem', () => fetch(`${JUIZ}contagem_sync.php`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${device.token}`, 'Content-Type': 'application/json' },
@@ -135,7 +155,7 @@ tasks.push((async () => {
         // The three counters press Enter within about a second of each other.
         await Promise.all(primaryDevices.map(async (device) => {
             await sleep(Math.random() * 1000);
-            return sync(device, [{ uuid: crypto.randomUUID(), car, ts_device_ms: Date.now(), clock_offset_ms: 0, typing_ms: 700, mode: 'teclado' }]);
+            return sync(device, [entryFor(car)]);
         }));
         await sleep(randomBetween(1000, 2000));
     }
@@ -153,28 +173,65 @@ for (let viewer = 0; viewer < 20; viewer++) {
     tasks.push(everyInterval(untilMs, 2000, () => timed('public feed', 'www', () => fetch(`${RESULTADOS}contagem_feed.php?evt=${EVENTO}&p=${PROVA}`))));
 }
 
-const startedAt = Date.now();
+// Once a second, ask the pools how busy they are.
+const poolSamples = { www: [], contagem: [] };
+function readPoolStatus() {
+    return new Promise((resolve) => {
+        execFile('docker', ['exec', CONTAINER, 'php', 'scripts/contagem-fpm-status.php'], { timeout: 5000 }, (error, stdout) => {
+            try { resolve(error ? null : JSON.parse(stdout)); } catch { resolve(null); }
+        });
+    });
+}
+const statusAtStart = await readPoolStatus();
+tasks.push(everyInterval(untilMs, 1000, async () => {
+    const status = await readPoolStatus();
+    for (const pool of Object.keys(poolSamples)) {
+        if (status?.[pool]) poolSamples[pool].push(status[pool]);
+    }
+}));
+
 await Promise.all(tasks);
-const elapsedMs = Date.now() - startedAt;
+const statusAtEnd = await readPoolStatus();
 
 // ---------------------------------------------------------------- report
 function percentile(sorted, fraction) {
     return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * fraction))];
 }
 console.log('\nkind of request          requests  failed    p50     p95     max');
-const busyMsByPool = { www: 0, contagem: 0 };
-for (const [kind, { pool, latencies, failures }] of Object.entries(measurements)) {
+for (const [kind, { latencies, failures }] of Object.entries(measurements)) {
     const sorted = [...latencies].sort((a, b) => a - b);
-    busyMsByPool[pool] += latencies.reduce((sum, ms) => sum + ms, 0);
     console.log(
         kind.padEnd(24), String(latencies.length).padStart(8), String(failures).padStart(7),
         `${percentile(sorted, 0.5).toFixed(0)} ms`.padStart(8), `${percentile(sorted, 0.95).toFixed(0)} ms`.padStart(7),
         `${sorted[sorted.length - 1].toFixed(0)} ms`.padStart(7),
     );
 }
-console.log('\nworker occupancy (time in requests / time the workers had; an upper bound, it includes the network):');
-for (const [pool, busyMs] of Object.entries(busyMsByPool)) {
-    console.log(`  ${pool.padEnd(9)} ${(100 * busyMs / (elapsedMs * WORKERS[pool])).toFixed(1)} % of ${WORKERS[pool]} workers`);
+console.log('\nworker occupancy, as reported by PHP-FPM itself (sampled once a second):');
+let everyWorkerWasBusyAtSomePoint = false;
+for (const [pool, samples] of Object.entries(poolSamples)) {
+    if (samples.length === 0 || !statusAtStart?.[pool] || !statusAtEnd?.[pool]) {
+        console.log(`  ${pool.padEnd(9)} no answer from the pool (is pm.status_path set, and is "${CONTAINER}" the app container?)`);
+        continue;
+    }
+    // The request that reads the status is itself served by a worker of
+    // the pool it asks, so one "active" worker in every sample is ours.
+    const busy = samples.map((sample) => Math.max(0, sample['active processes'] - 1));
+    const workers = samples[0]['total processes'] > 0 ? Math.max(...samples.map((sample) => sample['total processes'])) : 0;
+    const meanBusy = busy.reduce((sum, count) => sum + count, 0) / busy.length;
+    const timesAllBusy = statusAtEnd[pool]['max children reached'] - statusAtStart[pool]['max children reached'];
+    const longestQueue = Math.max(...samples.map((sample) => sample['listen queue']));
+    // A request or two in the queue for an instant is normal (a dynamic
+    // pool is starting a worker); the pool's own count of "limit reached"
+    // is what says it truly ran out.
+    everyWorkerWasBusyAtSomePoint ||= timesAllBusy > 0;
+    console.log(
+        `  ${pool.padEnd(9)} mean ${meanBusy.toFixed(2)} busy, peak ${Math.max(...busy)} of ${workers} running workers`
+        + `; longest queue ${longestQueue}; every worker busy ${timesAllBusy} time(s)`
+        + `; ${statusAtEnd[pool]['accepted conn'] - statusAtStart[pool]['accepted conn']} requests served`,
+    );
 }
 const anyFailure = Object.values(measurements).some((bucket) => bucket.failures > 0);
+if (everyWorkerWasBusyAtSomePoint) console.log('\nA pool ran out of free workers at some point: see the figures above.');
+// Only failed requests fail the run. A short queue is worth knowing about
+// and is printed above, but a request that waited a moment was still served.
 process.exit(anyFailure ? 1 : 0);

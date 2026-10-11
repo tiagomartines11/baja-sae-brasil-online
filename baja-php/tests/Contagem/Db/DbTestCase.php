@@ -5,6 +5,7 @@ namespace Baja\Tests\Contagem\Db;
 
 use Baja\Contagem\Access\CounterLinks;
 use Baja\Contagem\Engine\Data\Ocorrencia;
+use Baja\Contagem\Engine\Settings;
 use Baja\Contagem\Service\Clock;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Sync\DeviceTokens;
@@ -102,11 +103,10 @@ abstract class DbTestCase extends TestCase
 
         $this->helperDeviceIds = [];
 
-        // The made-up race starts at a fixed moment in the past, and the
-        // server refuses entries timed more than a week away from "now" (a
-        // phone with its clock on the wrong day). So for the tests "now" is
-        // stopped one hour into that race; a test that cares about the time
-        // of day moves it with Clock::freezeAt().
+        // The made-up race starts at a fixed moment in the past. For the
+        // tests "now" is stopped one hour into that race, so every run sees
+        // the same times; a test that cares about the time of day moves it
+        // with Clock::freezeAt().
         Clock::freezeAt(self::RACE_START_MS + 3600 * 1000);
     }
 
@@ -175,8 +175,8 @@ abstract class DbTestCase extends TestCase
         $connection->prepare(
             'INSERT INTO contagem_passagem
                  (fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_dispositivo_ms,
-                  desvio_relogio_ms, ts_ms, digitacao_ms, modo_entrada, recebido_em_ms)
-             VALUES (?, ?, ?, ?, ?, 0, ?, NULL, ?, ?)'
+                  ts_ms, qualidade_tempo, digitacao_ms, modo_entrada, recebido_em_ms)
+             VALUES (?, ?, ?, ?, ?, ?, \'exato\', NULL, ?, ?)'
         )->execute([
             $fonte->getFonteId(),
             $this->helperDeviceId($fonte),
@@ -304,6 +304,20 @@ abstract class DbTestCase extends TestCase
         )->execute([$tsMs, $tsMs, self::EVENTO_ID, self::PROVA_ID]);
     }
 
+    /**
+     * Changes some of the prova's lap counting settings, as the settings
+     * page does, leaving the others as they are.
+     *
+     * @param array<string, mixed> $overrides setting name (as stored, e.g. 'modo_publicacao') => new value
+     */
+    protected function changeSettings(array $overrides): void
+    {
+        $this->newRequest();
+        $current = $this->service->getSettings()->toArray();
+        $this->service->saveSettings(Settings::fromArray(array_merge($current, $overrides)));
+        $this->newRequest();
+    }
+
     /** Runs the engine and publishes, as happens after every upload or decision. */
     protected function recompute(): void
     {
@@ -328,18 +342,27 @@ abstract class DbTestCase extends TestCase
     }
 
     /**
-     * One entry as a phone sends it. The phone's clock is taken to be
-     * exact (offset 0) unless the test says otherwise.
+     * One entry as a phone sends it.
      *
+     * The phone works out the time of the entry itself, in the server's
+     * time, from the last moment it compared clocks with the server (its
+     * "anchor"). It also says how good that time is: "exato" when it had
+     * an anchor, "estimado" or "desconhecido" when it did not. The server
+     * stores the time as it comes and never changes it.
+     *
+     * @param string $timeQuality 'exato', 'estimado' or 'desconhecido'
      * @return array<string, mixed>
      */
-    protected function entryPayload(string $uuid, int $car, int $tsMs, ?int $clockOffsetMs = 0): array
+    protected function entryPayload(string $uuid, int $car, int $tsMs, string $timeQuality = 'exato'): array
     {
         return [
             'uuid' => $uuid,
             'car' => $car,
+            'ts_ms' => $tsMs,
+            'time_quality' => $timeQuality,
+            // What the phone's own clock said, kept for audit only.
             'ts_device_ms' => $tsMs,
-            'clock_offset_ms' => $clockOffsetMs,
+            'anchor' => $timeQuality === 'desconhecido' ? null : ['server_ms' => $tsMs - 10000, 'rtt_ms' => 80, 'age_ms' => 10000],
             'typing_ms' => 800,
             'mode' => 'teclado',
         ];
@@ -358,8 +381,8 @@ abstract class DbTestCase extends TestCase
         $body = array_merge([
             'entries' => $entries,
             'voids' => [],
-            'device_now_ms' => Clock::nowMs(),
-            'clock_offset_ms' => 0,
+            // The phone's idea of the server's time right now.
+            'now_ms' => Clock::nowMs(),
             'queue_empty' => false,
         ], $extra);
 

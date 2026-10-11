@@ -53,8 +53,9 @@ final class SyntheticReviewer
     }
 
     /**
-     * Accepts every suggestion, then settles each remaining lone entry by
-     * what the video shows, and repeats until nothing changes.
+     * Accepts every suggestion, then settles what is left by what the
+     * video shows (see settleWithTheVideo), and repeats until nothing
+     * changes.
      */
     public static function settleEverythingWithTheVideo(SyntheticRace $race, EngineInput $input): EngineResult
     {
@@ -62,17 +63,56 @@ final class SyntheticReviewer
             $result = self::acceptEverySuggestion($input);
             $settled = 0;
             foreach ($result->openFlags() as $flag) {
-                if ($flag->tipo !== Flag::SOLITARIA || count($flag->passagemIds) !== 1) {
-                    continue;
+                foreach (self::settleWithTheVideo($race, $input, $result, $flag) as $decision) {
+                    $input->decisions[] = $decision;
+                    $settled++;
                 }
-                $input->decisions[] = self::whatTheVideoShows($race, $input, $result, $flag->passagemIds[0]);
-                $settled++;
             }
             if ($settled === 0) {
                 return $result;
             }
         }
         throw new \LogicException('The video reviewer kept finding lone entries for ten rounds.');
+    }
+
+    /**
+     * What the reviewer with the video does about one flag that has no
+     * suggestion:
+     *
+     * - a lone entry: confirm, reassign or void it, by what really crossed;
+     * - an estimated time: the video shows the pass where the group is, so
+     *   "está correto" (confirm);
+     * - an unknown time: the pass was counted from the other counters'
+     *   entries, so the stray entry is voided;
+     * - a car that is not classified: it stays not classified, so its
+     *   entries are discarded (voided), which is the only way to clear the
+     *   flag without counting the pass.
+     *
+     * @return Decision[]
+     */
+    private static function settleWithTheVideo(SyntheticRace $race, EngineInput $input, EngineResult $result, Flag $flag): array
+    {
+        $isLoneEntry = count($flag->passagemIds) === 1;
+        $nextId = self::nextDecisionId($input);
+        if ($flag->tipo === Flag::SOLITARIA && $isLoneEntry) {
+            return [self::whatTheVideoShows($race, $input, $result, $flag->passagemIds[0])];
+        }
+        if ($flag->tipo === Flag::TEMPO_ESTIMADO) {
+            return [$isLoneEntry
+                ? self::whatTheVideoShows($race, $input, $result, $flag->passagemIds[0])
+                : Decision::confirmar($nextId, $flag->passagemIds[0])];
+        }
+        if ($flag->tipo === Flag::TEMPO_DESCONHECIDO) {
+            return [Decision::anular($nextId, $flag->passagemIds[0])];
+        }
+        if ($flag->tipo === Flag::CARRO_NAO_CLASSIFICADO) {
+            $voids = [];
+            foreach ($flag->passagemIds as $offset => $entryId) {
+                $voids[] = Decision::anular($nextId + $offset, $entryId);
+            }
+            return $voids;
+        }
+        return [];
     }
 
     private static function whatTheVideoShows(SyntheticRace $race, EngineInput $input, EngineResult $result, int $entryId): Decision

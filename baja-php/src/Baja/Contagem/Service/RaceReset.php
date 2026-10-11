@@ -38,7 +38,7 @@ final class RaceReset
             'where' => 't.fonte_id IN (SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova)',
         ],
         'contagem_passagem' => [
-            'columns' => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_dispositivo_ms', 'desvio_relogio_ms', 'ts_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms'],
+            'columns' => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_ms', 'qualidade_tempo', 'ts_dispositivo_ms', 'ancora_servidor_ms', 'ancora_rtt_ms', 'ancora_idade_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms'],
             'where' => 't.fonte_id IN (SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova)',
         ],
     ];

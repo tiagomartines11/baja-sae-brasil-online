@@ -33,16 +33,40 @@ function isoTime(timestampMs) {
     return Number.isFinite(timestampMs) ? new Date(timestampMs).toISOString() : '';
 }
 
+// A record typed before this page knew the server's time has no official
+// time yet (see server-clock.js). The export says so instead of leaving a gap
+// that looks like a mistake.
+const SEM_HORARIO_OFICIAL = 'aguardando';
+
+/** The time columns shared by both files: official time first, the phone's own clock as a witness. */
+function timeCells(record) {
+    const hasOfficialTime = Number.isFinite(record.ts_ms);
+    return [
+        hasOfficialTime ? record.ts_ms : '',
+        isoTime(record.ts_ms),
+        hasOfficialTime ? record.time_quality : SEM_HORARIO_OFICIAL,
+        record.ts_device_ms,
+        isoTime(record.ts_device_ms),
+    ];
+}
+
+const TIME_HEADERS = [
+    'horario_oficial_ms', 'horario_oficial_utc', 'qualidade_horario',
+    'horario_dispositivo_ms', 'horario_dispositivo_utc',
+];
+
 /** @param {Array} entries LocalStore.allEntries() */
 export function buildEntriesCsv(entries) {
     const lines = [csvLine([
-        'uuid', 'carro', 'horario_dispositivo_ms', 'horario_dispositivo_utc', 'desvio_relogio_ms',
-        'digitacao_ms', 'modo', 'enviado', 'anulado', 'anulacao_enviada',
+        'uuid', 'carro', ...TIME_HEADERS, 'digitacao_ms', 'modo', 'enviado', 'anulado', 'anulacao_enviada',
+        'recusado_pelo_servidor',
     ])];
     for (const entry of entries) {
         lines.push(csvLine([
-            entry.uuid, entry.car, entry.ts_device_ms, isoTime(entry.ts_device_ms), entry.clock_offset_ms,
-            entry.typing_ms, entry.mode, yesOrNo(entry.sent), yesOrNo(entry.voided), yesOrNo(entry.void_sent),
+            entry.uuid, entry.car, ...timeCells(entry), entry.typing_ms, entry.mode,
+            yesOrNo(entry.sent), yesOrNo(entry.voided), yesOrNo(entry.void_sent),
+            // Empty for an ordinary entry; otherwise the reason.
+            entry.refused ? entry.refused_reason : '',
         ]));
     }
     return BYTE_ORDER_MARK + lines.join(LINE_END) + LINE_END;
@@ -50,13 +74,11 @@ export function buildEntriesCsv(entries) {
 
 /** @param {Array} pitEvents LocalStore.allPitEvents() */
 export function buildPitEventsCsv(pitEvents) {
-    const lines = [csvLine([
-        'uuid', 'carro', 'tipo', 'horario_dispositivo_ms', 'horario_dispositivo_utc', 'desvio_relogio_ms', 'enviado',
-    ])];
+    const lines = [csvLine(['uuid', 'carro', 'tipo', ...TIME_HEADERS, 'enviado', 'recusado_pelo_servidor'])];
     for (const pitEvent of pitEvents) {
         lines.push(csvLine([
-            pitEvent.uuid, pitEvent.car, pitEvent.tipo, pitEvent.ts_device_ms, isoTime(pitEvent.ts_device_ms),
-            pitEvent.clock_offset_ms, yesOrNo(pitEvent.sent),
+            pitEvent.uuid, pitEvent.car, pitEvent.tipo, ...timeCells(pitEvent), yesOrNo(pitEvent.sent),
+            pitEvent.refused ? pitEvent.refused_reason : '',
         ]));
     }
     return BYTE_ORDER_MARK + lines.join(LINE_END) + LINE_END;

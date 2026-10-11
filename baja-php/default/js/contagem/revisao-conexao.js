@@ -70,10 +70,24 @@ export function criarOrdemDePedidos() {
   };
 }
 
-// Difference between the server's clock and this computer's, so the race
-// clock on screen is the server's even when this computer's is wrong.
-export function desvioDoServidorMs(servidorAgoraMs, clienteAgoraMs) {
-  return servidorAgoraMs - clienteAgoraMs;
+// Which older pages of the decision history stay on screen when a new
+// state arrives.
+//
+// The pages were fetched by hand ("Carregar decisões mais antigas") and are
+// only wrong once a decision was made or undone since: that may change
+// which of the old rows are still in force. A new calculation with the same
+// decisions (which happens every few seconds during a race) leaves them
+// exactly right, so they are kept.
+//
+//   paginas: {antigas, haMais}  what the screen has loaded
+// Returns the {antigas, haMais} to use from now on.
+export function historicoAposResposta(estadoAnterior, estadoNovo, paginas) {
+  const mesmasDecisoes = Boolean(estadoAnterior)
+    && estadoAnterior.ultima_decisao_id === estadoNovo.ultima_decisao_id;
+  if (mesmasDecisoes) {
+    return { antigas: paginas.antigas, haMais: paginas.haMais };
+  }
+  return { antigas: [], haMais: Boolean(estadoNovo.historico_ha_mais) };
 }
 
 function comQuemEstaOlhando(alertas, olhando) {
@@ -124,7 +138,7 @@ export function aplicarResposta(estadoAtual, resposta, meuUsuario = null) {
     ));
   }
   // The same keys the full state has; taken over only when the answer brings them.
-  for (const chave of ['servidor_agora_ms', 'calculado_em_ms', 'corrida', 'dispositivos', 'revisores', 'publicado_em_ms', 'publicacao_desligada']) {
+  for (const chave of ['servidor_agora_ms', 'calculado_em_ms', 'corrida', 'dispositivos', 'revisores', 'publicado_em_ms', 'publicacao_desligada', 'simulacao']) {
     if (resposta[chave] !== undefined) {
       novo[chave] = resposta[chave];
     }
@@ -145,5 +159,33 @@ export function chaveAoVivo(estado) {
     [...(estado.alertas_abertos ?? []), ...(estado.alertas_resolvidos ?? [])].map((alerta) => alerta.olhando ?? []),
     estado.corrida?.estado ?? null,
     estado.publicacao_desligada ?? false,
+    estado.simulacao ?? false,
+  ]);
+}
+
+// Everything the detail panel shows, as one string. The panel is rebuilt
+// when this changes, and only then: rebuilding it resets the timeline's
+// scroll position and can swallow a click that lands meanwhile.
+//
+// The state's version is deliberately NOT part of it. A new version arrives
+// every few seconds during a race, nearly always about other cars. What the
+// panel shows of a flag changes exactly when the flag's signature does (its
+// entries, their groups, the decisions about them), and what it shows of a
+// car is the car's own row.
+//
+//   visao: {selecao, alerta, carro, janelaCarregada, janelaAssinatura,
+//           desatualizada, erroDaJanela, entradaSelecionadaId, modoManual,
+//           ocupado, semConexao, largadaMs}
+export function chaveDoDetalhe(visao) {
+  const alerta = visao.alerta ?? null;
+  const carro = visao.carro ?? null;
+  return JSON.stringify([
+    visao.selecao ?? null,
+    alerta ? [alerta.assinatura, alerta.olhando ?? [], alerta.motivo, alerta.sugestao ?? null,
+      alerta.efeito_de_confirmar ?? null, alerta.volta_resultante_ms ?? null] : null,
+    carro ? [carro.voltas, carro.passagens ?? null, carro.status ?? null, carro.ultima_volta_ms ?? null,
+      carro.melhor_volta_ms ?? null, carro.classificado ?? null] : null,
+    visao.janelaCarregada, visao.janelaAssinatura ?? null, visao.desatualizada, visao.erroDaJanela,
+    visao.entradaSelecionadaId ?? null, visao.modoManual, visao.ocupado, visao.semConexao, visao.largadaMs ?? null,
   ]);
 }

@@ -413,6 +413,10 @@
     <column name="usuario" phpName="Usuario" type="VARCHAR" size="45" primaryKey="true" required="true"/>
     <column name="adicionado_por" phpName="AdicionadoPor" type="VARCHAR" size="45"/>
     <column name="criado_em_ms" phpName="CriadoEmMs" type="BIGINT" required="true"/>
+    <!-- When a controller last pressed "liberar" for this user on this
+         source. A user whose device was revoked gets no new token until
+         they are linked again or released; this is the release. -->
+    <column name="liberado_em_ms" phpName="LiberadoEmMs" type="BIGINT"/>
     <foreign-key foreignTable="contagem_fonte" name="contagem_fonte_usuario_fonte" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="fonte_id" foreign="fonte_id"/>
     </foreign-key>
@@ -445,12 +449,8 @@
     <!-- Last contact of any kind. -->
     <column name="visto_em_ms" phpName="VistoEmMs" type="BIGINT"/>
     <!-- "Synced through": the device told us its queue was empty at this
-         (corrected) time, so everything it recorded before it is here. -->
+         (server) time, so everything it recorded before it is here. -->
     <column name="sincronizado_ate_ms" phpName="SincronizadoAteMs" type="BIGINT"/>
-    <!-- First clock offset this device ever reported. Applied at read time
-         to entries it sent before it knew any offset (their ts_ms is NULL),
-         which keeps contagem_passagem free of UPDATEs. -->
-    <column name="primeiro_desvio_ms" phpName="PrimeiroDesvioMs" type="BIGINT"/>
     <foreign-key foreignTable="contagem_fonte" name="contagem_dispositivo_fonte" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="fonte_id" foreign="fonte_id"/>
     </foreign-key>
@@ -478,13 +478,30 @@
     <!-- The number as typed. Deliberately no FK to equipe: a typo may not
          match a real car and must still be stored. -->
     <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER" required="true"/>
+    <!-- THE time of the pass, in server time. The count page works it out
+         itself, from a monotonic clock anchored to the server's time, and
+         uploads it final. It is stored as received and never changed
+         afterwards: a time that could move after a lap was counted is how
+         counts and standings change behind everybody's back. -->
+    <column name="ts_ms" phpName="TsMs" type="BIGINT" required="true"/>
+    <!-- How far ts_ms can be trusted:
+           exato         stamped from a server anchor of that page load
+           estimado      stamped from an anchor saved by an earlier page
+                         load (the phone was reloaded while offline)
+           desconhecido  no anchor at all; ts_ms is the device's own clock
+         The engine flags the last two for a reviewer and never counts a
+         pass of unknown time by itself. -->
+    <column name="qualidade_tempo" phpName="QualidadeTempo" type="VARCHAR" size="12" required="true" default="exato"/>
+    <!-- For audit only; nothing computes with these. The device's own
+         clock at the moment of the entry, and the anchor ts_ms was derived
+         from: the server time it was taken at, the round trip of the
+         request that produced it, and how old it was at the entry. -->
     <column name="ts_dispositivo_ms" phpName="TsDispositivoMs" type="BIGINT" required="true"/>
-    <column name="desvio_relogio_ms" phpName="DesvioRelogioMs" type="BIGINT"/>
-    <!-- Corrected time the engine uses. NULL only when the device knew no
-         clock offset yet; see contagem_dispositivo.primeiro_desvio_ms. -->
-    <column name="ts_ms" phpName="TsMs" type="BIGINT"/>
+    <column name="ancora_servidor_ms" phpName="AncoraServidorMs" type="BIGINT"/>
+    <column name="ancora_rtt_ms" phpName="AncoraRttMs" type="INTEGER"/>
+    <column name="ancora_idade_ms" phpName="AncoraIdadeMs" type="BIGINT"/>
     <column name="digitacao_ms" phpName="DigitacaoMs" type="INTEGER"/>
-    <!-- teclado | teclado_tela | blocos | api -->
+    <!-- teclado | teclado_tela | blocos | api | simulacao -->
     <column name="modo_entrada" phpName="ModoEntrada" type="VARCHAR" size="12" required="true"/>
     <column name="recebido_em_ms" phpName="RecebidoEmMs" type="BIGINT" required="true"/>
     <foreign-key foreignTable="contagem_fonte" name="contagem_passagem_fonte" onDelete="CASCADE" onUpdate="CASCADE">
@@ -519,9 +536,10 @@
     <column name="ocorrencia_id" phpName="OcorrenciaId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
     <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
     <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" required="true"/>
-    <!-- largada | bandeira_vermelha | relargada | encerramento | box_entrada | box_saida
+    <!-- largada | bandeira_vermelha | relargada | encerramento
+         | box_entrada | box_saida | abastecimento_entrada | abastecimento_saida
          | cancelamento (removes the row named by substitui_id and is nothing itself) -->
-    <column name="tipo" phpName="Tipo" type="VARCHAR" size="20" required="true"/>
+    <column name="tipo" phpName="Tipo" type="VARCHAR" size="24" required="true"/>
     <!-- Only for pit events. -->
     <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER"/>
     <column name="ts_ms" phpName="TsMs" type="BIGINT" required="true"/>

@@ -73,14 +73,23 @@ final class CarStatus
     /** @param PassGroup[] $groups */
     private function fillCountsPerSource(CarState $state, array $groups): void
     {
+        // Counted in a local list and handed over at the end: this loop
+        // visits every entry of the race.
+        $counts = [];
         foreach ($groups as $group) {
+            if ($group->antesDaLargada && !$group->contado) {
+                // Typed before the start and not accepted as the initial
+                // pass: warm-up, not a pass of the race.
+                continue;
+            }
             foreach ($group->entries as $entry) {
                 if ($entry->fonteId === Source::REVISOR_ID) {
                     continue;
                 }
-                $state->contagemPorFonte[$entry->fonteId] = ($state->contagemPorFonte[$entry->fonteId] ?? 0) + 1;
+                $counts[$entry->fonteId] = ($counts[$entry->fonteId] ?? 0) + 1;
             }
         }
+        $state->contagemPorFonte = $counts;
     }
 
     private function fillStatus(CarState $state, int $nowMs): void
@@ -125,7 +134,14 @@ final class CarStatus
             return [CarState::FORA, null];
         }
 
+        // The pit lane and the fueling station are separate areas and a
+        // car can be logged in both. The one it entered last is where it
+        // was last seen going, so that is the one shown.
         $pitEntryMs = $timeline->pitEntryBefore($carro, $nowMs);
+        $fuelEntryMs = $timeline->fuelEntryBefore($carro, $nowMs);
+        if ($fuelEntryMs !== null && ($pitEntryMs === null || $fuelEntryMs > $pitEntryMs)) {
+            return [CarState::ABASTECENDO, $fuelEntryMs];
+        }
         if ($pitEntryMs !== null) {
             return [CarState::NO_BOX, $pitEntryMs];
         }
@@ -137,13 +153,18 @@ final class CarStatus
 
         // The stopwatch for "how long since this car last passed" does not
         // run during a red flag: nobody is passing then.
-        // A car that just left the pit lane is known to have been there, so
-        // the wait is measured from whichever is later: its last pass or
-        // its last pit exit. Otherwise every pit stop would end "atrasado".
+        // A car that just left the pit lane or the fueling station is known
+        // to have been there, so the wait is measured from whichever is
+        // latest: its last pass, its last pit exit or its last fueling
+        // exit. Otherwise every stop would end "atrasado".
         $lastSeenMs = $ultimaPassagemMs ?? (int) $timeline->largadaMs;
         $lastPitExitMs = $timeline->lastPitExitBefore($carro, $nowMs);
         if ($lastPitExitMs !== null && $lastPitExitMs > $lastSeenMs) {
             $lastSeenMs = $lastPitExitMs;
+        }
+        $lastFuelExitMs = $timeline->lastFuelExitBefore($carro, $nowMs);
+        if ($lastFuelExitMs !== null && $lastFuelExitMs > $lastSeenMs) {
+            $lastSeenMs = $lastFuelExitMs;
         }
         $racingSinceLastSeenMs = $timeline->racingMsBetween($lastSeenMs, $nowMs);
 

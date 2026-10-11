@@ -1,11 +1,14 @@
 // The review screen's own state and the elements it draws into. Shared by
 // revisao.js (polling and drawing) and revisao-acoes.js (decisions).
 
+import { criarRelogioOficial } from './revisao-relogio.js';
+
 export const pagina = {
   prova: document.body.dataset.prova,
   csrf: document.body.dataset.csrf,
   usuario: document.body.dataset.usuario,
   barra: document.getElementById('barra-estado'),
+  faixaSimulacao: document.getElementById('faixa-simulacao'),
   avisoConexao: document.getElementById('aviso-conexao'),
   avisoMensagem: document.getElementById('aviso-mensagem'),
   detalhe: document.getElementById('painel-detalhe'),
@@ -25,7 +28,6 @@ export const pagina = {
 
 export const tela = {
   estado: null,            // last full state from the server, with later "inalterado" answers folded in
-  desvioMs: 0,             // server clock minus this computer's clock
   falhas: 0,               // polls failed in a row
   sessaoExpirada: false,
   selecao: null,           // {tipo: 'alerta', id} or {tipo: 'carro', numero}
@@ -42,7 +44,18 @@ export const tela = {
   ocupado: false,          // a decision is on its way; buttons are disabled
 };
 
-export const agoraServidorMs = () => Date.now() + tela.desvioMs;
+// The official clock: the server's time, carried by this computer's
+// monotonic clock. The system clock (Date.now()) is never used to tell the
+// time here; see revisao-relogio.js.
+export const relogioOficial = criarRelogioOficial();
+
+// Null while the clock has no anchor (before the first answer, or after
+// the monotonic clock stalled).
+export const horarioOficialMs = () => relogioOficial.agora(performance.now());
+
+// "Now" for everything that needs a number: the official clock, or, in the
+// moments it has no anchor, the time the server stated in its last answer.
+export const agoraServidorMs = () => horarioOficialMs() ?? tela.estado?.servidor_agora_ms ?? null;
 
 // Decisions are online-only: while this is true every decision button is off.
 export const semConexao = () => tela.falhas > 0 || tela.sessaoExpirada;

@@ -4,27 +4,38 @@ declare(strict_types=1);
 namespace Baja\Contagem\Sync;
 
 use Baja\Contagem\Engine\Data\Decision;
+use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Propel\Runtime\Propel;
 
 /**
  * Stores what one upload carried: entries, the counter's own voids, pit
- * events.
+ * lane and fueling events.
  *
  * Everything here is idempotent. A phone that never received our answer
  * sends the same batch again, possibly many times, and the second copy
  * must change nothing. The client-generated uuid is what makes that
  * possible: a uuid we already hold is acknowledged and otherwise ignored.
  *
+ * TIME. The page works out the time of each entry itself, on the server's
+ * clock, and sends it final; it is stored exactly as received and never
+ * touched again. An entry is NEVER refused because of its time, however
+ * absurd: a refused entry would sit in the phone's queue for ever and block
+ * everything behind it. An odd time is stored and becomes the reviewer's
+ * business (the engine flags it).
+ *
  * Each method returns the uuids the client may now forget ("uuids") and
  * how many of them were new to us ("new").
  */
 final class EntryWriter
 {
-    private const MODES = ['teclado', 'teclado_tela', 'blocos', 'api'];
+    private const MODES = ['teclado', 'teclado_tela', 'blocos', 'api', self::MODE_SIMULATION];
+    public const MODE_SIMULATION = 'simulacao';
 
     /** Stored when a client sends a mode we do not know. Dropping the entry would be worse. */
     private const UNKNOWN_MODE = 'desconhecido';
+
+    private const TIME_QUALITIES = [Entry::TEMPO_EXATO, Entry::TEMPO_ESTIMADO, Entry::TEMPO_DESCONHECIDO];
 
     private int $fonteId;
     private int $dispositivoId;
@@ -32,8 +43,12 @@ final class EntryWriter
     private string $provaId;
     private ?string $usuario;
     private int $nowMs;
+    private bool $simulationAllowed;
 
-    public function __construct(int $fonteId, int $dispositivoId, string $eventoId, string $provaId, ?string $usuario, int $nowMs)
+    /** @var array<int, array{uuid: string, motivo: string}> entries that will never be stored, with the reason */
+    public array $refused = [];
+
+    public function __construct(int $fonteId, int $dispositivoId, string $eventoId, string $provaId, ?string $usuario, int $nowMs, bool $simulationAllowed)
     {
         $this->fonteId = $fonteId;
         $this->dispositivoId = $dispositivoId;
@@ -41,6 +56,7 @@ final class EntryWriter
         $this->provaId = $provaId;
         $this->usuario = $usuario;
         $this->nowMs = $nowMs;
+        $this->simulationAllowed = $simulationAllowed;
     }
 
     /**
@@ -58,24 +74,20 @@ final class EntryWriter
                 continue;
             }
             $car = UploadFields::carOf($entry);
-            $deviceTimeMs = UploadFields::intOrNull($entry['ts_device_ms'] ?? null);
-            $offsetMs = UploadFields::intOrNull($entry['clock_offset_ms'] ?? null);
-            if ($car === null || $deviceTimeMs === null || !UploadFields::isPlausibleTime($deviceTimeMs + ($offsetMs ?? 0), $this->nowMs)) {
-                // Not acknowledged, so the client keeps it and keeps showing
-                // it as unsent, which is the visible sign that something is
-                // wrong with that device (a clock set to the wrong year, say).
+            $tsMs = UploadFields::intOrNull($entry['ts_ms'] ?? null);
+            if ($car === null || $tsMs === null) {
+                // Not an entry at all (no car, no time): nothing to store.
+                // The client's own safety net marks it as refused after a
+                // few answers that do not acknowledge it.
+                continue;
+            }
+            if ($this->isForbiddenSimulation($entry)) {
+                $this->refused[] = ['uuid' => $uuid, 'motivo' => 'simulacao_nao_permitida'];
                 continue;
             }
             $acknowledged[] = $uuid;
             $cars[$car] = true;
-            $valid[UploadFields::key($uuid)] = [
-                'uuid' => $uuid,
-                'car' => $car,
-                'ts_device_ms' => $deviceTimeMs,
-                'clock_offset_ms' => $entry['clock_offset_ms'] ?? null,
-                'typing_ms' => $entry['typing_ms'] ?? null,
-                'mode' => $entry['mode'] ?? null,
-            ];
+            $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'ts_ms' => $tsMs, 'raw' => $entry];
         }
 
         $alreadyStored = $this->existingValues(
@@ -86,9 +98,9 @@ final class EntryWriter
 
         $insert = Propel::getWriteConnection('resultados')->prepare(
             'INSERT INTO contagem_passagem
-                 (fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_dispositivo_ms,
-                  desvio_relogio_ms, ts_ms, digitacao_ms, modo_entrada, recebido_em_ms)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                 (fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_ms, qualidade_tempo, ts_dispositivo_ms,
+                  ancora_servidor_ms, ancora_rtt_ms, ancora_idade_ms, digitacao_ms, modo_entrada, recebido_em_ms)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
         $newCount = 0;
@@ -96,21 +108,25 @@ final class EntryWriter
             if (isset($alreadyStored[$key])) {
                 continue;
             }
-            $offsetMs = UploadFields::intOrNull($entry['clock_offset_ms']);
-            $typingMs = UploadFields::intOrNull($entry['typing_ms']);
-            $mode = $entry['mode'];
+            $raw = $entry['raw'];
+            $anchor = is_array($raw['anchor'] ?? null) ? $raw['anchor'] : [];
+            $typingMs = UploadFields::intOrNull($raw['typing_ms'] ?? null);
+            $mode = $raw['mode'] ?? null;
 
             $insert->execute([
                 $this->fonteId,
                 $this->dispositivoId,
                 $entry['uuid'],
                 $entry['car'],
-                $entry['ts_device_ms'],
-                $offsetMs,
-                // NULL when the device knew no offset yet. The time is then
-                // worked out at read time from the device's first offset.
-                ClockCorrection::correctedTime($entry['ts_device_ms'], $offsetMs),
-                $typingMs === null ? null : max(0, min($typingMs, UploadFields::INT_MAX)),
+                $entry['ts_ms'],
+                self::timeQualityOf($raw),
+                // For audit only: the device's own clock and the anchor the
+                // page derived ts_ms from. Nothing computes with them.
+                UploadFields::intOrNull($raw['ts_device_ms'] ?? null) ?? $entry['ts_ms'],
+                UploadFields::intOrNull($anchor['server_ms'] ?? null),
+                self::boundedInt($anchor['rtt_ms'] ?? null),
+                UploadFields::intOrNull($anchor['age_ms'] ?? null),
+                self::boundedInt($typingMs),
                 is_string($mode) && in_array($mode, self::MODES, true) ? $mode : self::UNKNOWN_MODE,
                 $this->nowMs,
             ]);
@@ -128,13 +144,13 @@ final class EntryWriter
      * A counter pressing "desfazer" on one of their own entries. The entry
      * itself is kept; a decision of type "anular" is added.
      *
-     * A counter can void an entry once. If a reviewer later reverses that
-     * void, a stale resend of the same request must not void it again, so
-     * any earlier counter void of the entry, undone or not, makes this a
-     * no-op.
+     * Nothing is added when the entry is already voided by anybody (a
+     * second void would survive the undo of the first), nor when this
+     * counter voided it before, even if a reviewer has since reversed that:
+     * a stale resend must not void it again.
      *
      * @param array<int, mixed> $voids
-     * @return array{uuids: string[], new: int}
+     * @return array{uuids: string[], new: int, cars: int[]}
      */
     public function storeVoids(array $voids): array
     {
@@ -156,9 +172,17 @@ final class EntryWriter
             return ['uuids' => [], 'new' => 0, 'cars' => []];
         }
 
-        $alreadyVoided = $this->existingValues(
+        $voidedByThisCounterBefore = $this->existingValues(
             'SELECT passagem_id FROM contagem_decisao WHERE tipo = ? AND origem = ? AND passagem_id IN (%s)',
             [Decision::ANULAR, Decision::ORIGEM_CONTADOR],
+            array_values($entryIdByKey)
+        );
+        $voidInForce = $this->existingValues(
+            'SELECT d.passagem_id FROM contagem_decisao d
+              WHERE d.tipo = ?
+                AND NOT EXISTS (SELECT 1 FROM contagem_decisao u WHERE u.tipo = ? AND u.desfaz_decisao_id = d.decisao_id)
+                AND d.passagem_id IN (%s)',
+            [Decision::ANULAR, Decision::DESFAZER],
             array_values($entryIdByKey)
         );
 
@@ -178,7 +202,8 @@ final class EntryWriter
                 continue;
             }
             $acknowledged[] = $uuid;
-            if (isset($alreadyVoided[UploadFields::key((string) $entryId)])) {
+            $entryKey = UploadFields::key((string) $entryId);
+            if (isset($voidedByThisCounterBefore[$entryKey]) || isset($voidInForce[$entryKey])) {
                 continue;
             }
             $insert->execute([
@@ -197,40 +222,13 @@ final class EntryWriter
     }
 
     /**
-     * The cars whose count a change to these entries can affect: the number
-     * each was typed with, and the car a reviewer may have reassigned it to.
-     *
-     * @param array<int, mixed> $entryIds
-     * @return int[]
-     */
-    private function carsOfEntries(array $entryIds): array
-    {
-        $typed = $this->existingValues(
-            'SELECT equipe_numero FROM contagem_passagem WHERE fonte_id = ? AND passagem_id IN (%s)',
-            [$this->fonteId],
-            $entryIds
-        );
-        $reassigned = $this->existingValues(
-            'SELECT equipe_numero FROM contagem_decisao WHERE tipo = ? AND equipe_numero IS NOT NULL AND passagem_id IN (%s)',
-            [Decision::REATRIBUIR],
-            $entryIds
-        );
-        $cars = [];
-        foreach (array_keys($typed + $reassigned) as $key) {
-            // existingValues() prefixes its keys with one letter.
-            $cars[] = (int) substr($key, 1);
-        }
-        return $cars;
-    }
-
-    /**
-     * Pit-lane entries and exits from a pit-log device.
+     * Entries and exits of the pit lane and of the fueling station, from a
+     * pit-log device.
      *
      * @param array<int, mixed> $events
-     * @param int|null $fallbackOffsetMs offset to use for an event sent without one
      * @return array{uuids: string[], new: int}
      */
-    public function storePitEvents(array $events, ?int $fallbackOffsetMs): array
+    public function storeStopEvents(array $events): array
     {
         $acknowledged = [];
         $valid = [];
@@ -240,22 +238,20 @@ final class EntryWriter
                 continue;
             }
             $car = UploadFields::carOf($event);
-            $deviceTimeMs = UploadFields::intOrNull($event['ts_device_ms'] ?? null);
+            $tsMs = UploadFields::intOrNull($event['ts_ms'] ?? null);
             $tipo = $event['tipo'] ?? null;
-            if ($car === null || $deviceTimeMs === null || !in_array($tipo, Ocorrencia::TIPOS_BOX, true)) {
+            if ($car === null || $tsMs === null || !in_array($tipo, Ocorrencia::TIPOS_DE_PARADA, true)) {
                 continue;
             }
-            // An event recorded before the device knew its clock offset gets
-            // the device's first later estimate, like an entry does. Unlike
-            // an entry it cannot be stored without a time, so while there is
-            // no estimate at all it is NOT acknowledged: the phone keeps it
-            // and sends it again, and by then it has an estimate.
-            $offsetMs = UploadFields::intOrNull($event['clock_offset_ms'] ?? null) ?? $fallbackOffsetMs;
-            if ($offsetMs === null || !UploadFields::isPlausibleTime($deviceTimeMs + $offsetMs, $this->nowMs)) {
+            // The table has no column for the mode of a stop event, so a
+            // simulated one cannot be told apart once stored. All the more
+            // reason to keep it out of a prova that is not a rehearsal.
+            if ($this->isForbiddenSimulation($event)) {
+                $this->refused[] = ['uuid' => $uuid, 'motivo' => 'simulacao_nao_permitida'];
                 continue;
             }
             $acknowledged[] = $uuid;
-            $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'tipo' => $tipo, 'ts_ms' => $deviceTimeMs + $offsetMs];
+            $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'tipo' => $tipo, 'ts_ms' => $tsMs];
         }
 
         $alreadyStored = $this->existingValues(
@@ -289,6 +285,59 @@ final class EntryWriter
         }
 
         return ['uuids' => $acknowledged, 'new' => $newCount];
+    }
+
+    /**
+     * Simulated entries are only accepted while the prova allows simulation,
+     * so that a rehearsal script left running can never write into a race.
+     *
+     * @param array<string, mixed> $entry
+     */
+    private function isForbiddenSimulation(array $entry): bool
+    {
+        return ($entry['mode'] ?? null) === self::MODE_SIMULATION && !$this->simulationAllowed;
+    }
+
+    /** @param array<string, mixed> $entry */
+    private static function timeQualityOf(array $entry): string
+    {
+        $quality = $entry['time_quality'] ?? null;
+        // A client that does not say is one that cannot vouch for its time.
+        return is_string($quality) && in_array($quality, self::TIME_QUALITIES, true) ? $quality : Entry::TEMPO_DESCONHECIDO;
+    }
+
+    /** A value for a signed 32-bit INT column, or null. */
+    private static function boundedInt($value): ?int
+    {
+        $number = UploadFields::intOrNull($value);
+        return $number === null ? null : max(0, min($number, UploadFields::INT_MAX));
+    }
+
+    /**
+     * The cars whose count a change to these entries can affect: the number
+     * each was typed with, and the car a reviewer may have reassigned it to.
+     *
+     * @param array<int, mixed> $entryIds
+     * @return int[]
+     */
+    private function carsOfEntries(array $entryIds): array
+    {
+        $typed = $this->existingValues(
+            'SELECT equipe_numero FROM contagem_passagem WHERE fonte_id = ? AND passagem_id IN (%s)',
+            [$this->fonteId],
+            $entryIds
+        );
+        $reassigned = $this->existingValues(
+            'SELECT equipe_numero FROM contagem_decisao WHERE tipo = ? AND equipe_numero IS NOT NULL AND passagem_id IN (%s)',
+            [Decision::REATRIBUIR],
+            $entryIds
+        );
+        $cars = [];
+        foreach (array_keys($typed + $reassigned) as $key) {
+            // existingValues() prefixes its keys with one letter.
+            $cars[] = (int) substr($key, 1);
+        }
+        return $cars;
     }
 
     /**

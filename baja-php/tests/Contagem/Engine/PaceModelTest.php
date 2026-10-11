@@ -275,4 +275,47 @@ final class PaceModelTest extends TestCase
         $this->assertSame($early, $backwards->fieldPaceAt(300000));
         $this->assertSame([100000.0, 200000.0, 130000.0], [$early, $middle, $late]);
     }
+
+    /**
+     * SITUATION: car 50 laps in 80 s among a field lapping in 100 s. The
+     * model is asked about car 50 late in the race first (three laps
+     * finished: factor 0.8), then about an EARLIER moment (two laps
+     * finished), then about the late moment again.
+     *
+     * EXPECTED: each answer is about the moment asked, whatever was asked
+     * before. Going back in time, the car is "average" again (factor 1.0):
+     * the laps it had not finished yet at that moment do not count.
+     */
+    public function testQuestionsAboutOneCarCanGoBackInTime(): void
+    {
+        $laps = $this->steadyField(2000);
+        $laps[50] = [$this->lap(50, 1080, 80), $this->lap(50, 1160, 80), $this->lap(50, 1240, 80)];
+        $pace = new PaceModel($laps, new Settings());
+
+        $this->assertSame(0.8, $pace->carFactorAt(50, 1500000));
+        $this->assertSame(1.0, $pace->carFactorAt(50, 1200000), 'Back when only two laps were finished.');
+        $this->assertSame(100000, $pace->expectedLapMs(50, 1200000));
+        $this->assertSame(0.8, $pace->carFactorAt(50, 1500000));
+        $this->assertSame(0.8, $pace->carFactorAt(50, 1240000), 'A lap that ended exactly at the moment asked counts.');
+    }
+
+    /**
+     * SITUATION: early in a race (only three laps completed by the field)
+     * the model is asked twice what lap to expect of car 1 at the same
+     * moment, as the engine does (once for flags, once for best laps).
+     *
+     * EXPECTED: "unknown" both times. An answer that is remembered must
+     * come back exactly as it was given the first time, unknown included.
+     */
+    public function testAnUnknownPaceIsStillUnknownWhenAskedAgain(): void
+    {
+        $laps = [];
+        for ($car = 1; $car <= 3; $car++) {
+            $laps[$car][] = $this->lap($car, 100 + $car, 100);
+        }
+        $pace = new PaceModel($laps, new Settings());
+
+        $this->assertNull($pace->expectedLapMs(1, 180000));
+        $this->assertNull($pace->expectedLapMs(1, 180000));
+    }
 }

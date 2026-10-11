@@ -6,7 +6,7 @@ use Baja\Contagem\Review\CsvExport;
 use Baja\Contagem\Review\Pagina;
 use InvalidArgumentException;
 
-// CSV download: GET ?p=&tipo=passagens|decisoes|voltas. Read-only.
+// CSV download: GET ?p=&tipo=passagens|decisoes|voltas|paradas. Read-only.
 
 $prova = Pagina::provaOrRedirect();
 ContagemAccess::requireController($prova);

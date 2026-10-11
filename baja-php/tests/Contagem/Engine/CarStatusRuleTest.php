@@ -175,14 +175,14 @@ final class CarStatusRuleTest extends EngineTestCase
     }
 
     /**
-     * SITUATION: whole synthetic races (pit stops, breakdowns, a phone
-     * offline for a quarter of an hour, a finish), looked at every four
-     * minutes. At each look the engine gives every car a status. We then
+     * SITUATION: whole synthetic races (pit stops, fueling stops,
+     * breakdowns, a phone offline for a quarter of an hour, a finish),
+     * looked at every four minutes. At each look the engine gives every car a status. We then
      * ask the plain function the same question, giving it only what a
      * stored snapshot holds: the car's last pass and expected lap.
      *
      * EXPECTED: the same status and the same "since when", for every car at
-     * every look. And the races are varied enough that all five statuses
+     * every look. And the races are varied enough that all six statuses
      * were seen.
      */
     public function testTheRuleAgreesWithTheEngineForEveryCarAtEveryMoment(): void
@@ -215,7 +215,7 @@ final class CarStatusRuleTest extends EngineTestCase
 
         ksort($statusesSeen);
         $this->assertSame(
-            [CarState::ATRASADO, CarState::CORRENDO, CarState::FORA, CarState::NO_BOX, CarState::PARADO],
+            [CarState::ABASTECENDO, CarState::ATRASADO, CarState::CORRENDO, CarState::FORA, CarState::NO_BOX, CarState::PARADO],
             array_keys($statusesSeen)
         );
     }

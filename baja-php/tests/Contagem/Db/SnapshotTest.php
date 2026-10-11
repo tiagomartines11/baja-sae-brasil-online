@@ -23,8 +23,10 @@ use Baja\Contagem\Service\RedisClient;
  *   - by one request at a time; anybody else gets the previous snapshot
  *     instead of waiting.
  *
- * Each snapshot carries a "token", a random string. Two snapshots with the
- * same token are the same snapshot; that is all a token says.
+ * Each snapshot carries a "token", a fingerprint of its content. Two
+ * snapshots with the same token show the same race; a review screen that
+ * already has that token is told "nothing new" instead of being sent it all
+ * again.
  */
 final class SnapshotTest extends DbTestCase
 {
@@ -205,7 +207,10 @@ final class SnapshotTest extends DbTestCase
         Clock::freezeAt($this->at(700));
         $this->newRequest();
         $rebuilt = $this->service->snapshot();
-        $this->assertNotSame($first->token, $rebuilt->token);
+        $this->assertSame($this->at(700), $rebuilt->geradoEmMs, 'recalculated now');
+        // The race itself did not change, so the content is the same and so
+        // is the token: review screens are not made to download it again.
+        $this->assertSame($first->token, $rebuilt->token);
     }
 
     /**

@@ -1,6 +1,16 @@
 // Count page controller: connects buttons, keys and lists to CountSession.
 // All decisions live in the modules it imports; this file only moves data
 // between them and the DOM.
+//
+// FOR THE RACE SIMULATION: while the prova allows simulation, this page puts
+// one object on `window.contagemPagina`:
+//
+//     await window.contagemPagina.registrarPassagem({ car: 41, tsMs: 1760000000000 });
+//
+// It is the same function a key press ends in (`recordPass` below): local
+// store, big flash, recent list, upload queue. The only differences are the
+// time (`tsMs`, in SERVER time, instead of "now") and the mode (`modo`,
+// 'simulacao' unless given). See exposeForSimulation at the end of main().
 
 import { startPage } from './page-setup.js';
 import { CountSession } from './count-session.js';
@@ -9,24 +19,28 @@ import { buildEntriesCsv } from './csv-export.js';
 import { createFeedback, canVibrate } from './feedback.js';
 import { carListIsKnown } from './warnings.js';
 import { createRecentList } from './contar-recentes.js';
+import { wireCountKeys } from './contar-teclas.js';
+import { createTilesPanel } from './contar-blocos.js';
+import { TilesControl } from './tiles-control.js';
 import {
-    MODO, MODOS, TECLA, NumberBuffer, keyActionFor, loadEntryMode, saveEntryMode,
+    MODO, MODOS, TECLA, NumberBuffer, loadEntryMode, saveEntryMode,
 } from './entry-modes.js';
 
 const FLASH_CLASS = 'destaque-ativo';
 const KEYPAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'apagar', '0', 'registrar'];
+const MODO_SIMULACAO = 'simulacao';
 
 async function main() {
     const page = await startPage({ buildExportCsv: (store) => buildEntriesCsv(store.allEntries()) });
-    const { store, queue, clock, now, preferences } = page;
+    const { store, queue, clock, monotonicNow, preferences } = page;
     const element = (id) => document.getElementById(id);
 
     const session = new CountSession({
         store,
         clock,
-        now,
         generateUuid,
         getValidCars: page.validCars,
+        getUnclassifiedCars: page.unclassifiedCars,
         getJanelaMs: page.janelaMs,
     });
     const feedback = createFeedback({ preferences, windowRef: window });
@@ -37,6 +51,7 @@ async function main() {
     const recentList = createRecentList({
         listElement: element('lista-recentes'),
         session,
+        timeZone: page.config.fuso || null,
         onUndo: async (uuid) => {
             await session.undo(uuid);
             recentList.render();
@@ -46,7 +61,8 @@ async function main() {
 
     // ---- recording a pass ----
 
-    function showFlash(numberText, teamText, warningTexts, isProblem) {
+    /** @param {string} level '' (fine), 'aviso' (look again) or 'erro' (something is wrong) */
+    function showFlash(numberText, teamText, warningTexts, level) {
         const flash = element('destaque');
         element('destaque-numero').textContent = numberText;
         element('destaque-equipe').textContent = teamText;
@@ -57,7 +73,8 @@ async function main() {
             line.textContent = text;
             warningsBox.appendChild(line);
         }
-        flash.classList.toggle('destaque-problema', isProblem);
+        flash.classList.toggle('destaque-problema', level === 'aviso');
+        flash.classList.toggle('destaque-erro', level === 'erro');
         // Removing and re-adding the class restarts the CSS animation, so two
         // identical entries in a row still flash twice.
         flash.classList.remove(FLASH_CLASS);
@@ -65,45 +82,71 @@ async function main() {
         flash.classList.add(FLASH_CLASS);
     }
 
-    async function recordPass(car, typingMs) {
+    /**
+     * Every pass goes through here: Enter, the keypad's OK, a tile, "Passou",
+     * and the simulation.
+     *
+     * @param {number}  car
+     * @param {?number} typingMs
+     * @param {object}  [options]
+     * @param {?number} [options.tsMs] time of the pass in SERVER time; left out = right now
+     * @param {string}  [options.modo] how it was entered; left out = the mode on screen
+     */
+    async function recordPass(car, typingMs, { tsMs = null, modo = currentMode } = {}) {
+        const simulated = modo === MODO_SIMULACAO;
         let result;
         try {
-            result = await session.recordPass({ car, typingMs, mode: currentMode });
+            // The time of the pass is taken inside, first thing.
+            result = await session.recordPass({ car, typingMs, mode: modo, tsMs });
         } catch (storageError) {
             // The only case in which a typed number is NOT kept. It must be
             // impossible to miss.
-            showFlash(String(car), 'NÃO REGISTRADO', ['O aparelho não conseguiu guardar. Digite de novo.'], true);
+            showFlash(String(car), 'NÃO REGISTRADO', ['O aparelho não conseguiu guardar. Digite de novo.'], 'erro');
             feedback.erro();
-            return;
+            throw storageError;
         }
         const warningTexts = result.avisos.map((aviso) => aviso.mensagem);
+        const serious = result.avisos.some((aviso) => aviso.grave);
         // With no car list at all, "unknown number" would be shown for every
         // car; the page then simply shows no team name.
-        const nameWhenNotFound = carListIsKnown(page.validCars()) ? 'Número desconhecido' : '';
-        showFlash(String(car), result.nomeEquipe || nameWhenNotFound, warningTexts, warningTexts.length > 0);
-        if (warningTexts.length > 0) {
-            feedback.aviso();
-        } else {
-            feedback.registrado();
+        const anyListKnown = carListIsKnown(page.validCars()) || carListIsKnown(page.unclassifiedCars());
+        const nameWhenNotFound = anyListKnown ? 'Número desconhecido' : '';
+        const level = serious ? 'erro' : (warningTexts.length > 0 ? 'aviso' : '');
+        showFlash(String(car), result.nomeEquipe || nameWhenNotFound, warningTexts, level);
+        // A simulated race is hundreds of passes a minute; it stays silent.
+        if (!simulated) {
+            if (serious) {
+                feedback.erro();
+            } else if (warningTexts.length > 0) {
+                feedback.aviso();
+            } else {
+                feedback.registrado();
+            }
         }
         recentList.render();
         queue.requestSync();
+        return result;
     }
 
-    function confirmBuffer() {
+    /** For event handlers: the failure was already shown by recordPass. */
+    function recordTypedPass(pass) {
         if (page.shiftEnded()) {
             // The entry controls are hidden; a stray Enter must not record.
             return;
         }
-        const confirmed = buffer.confirm(now());
+        recordPass(pass.car, pass.typingMs).catch(() => {});
+    }
+
+    function confirmBuffer() {
+        const confirmed = page.shiftEnded() ? null : buffer.confirm(monotonicNow());
         renderBuffer();
         if (confirmed !== null) {
-            recordPass(confirmed.car, confirmed.typingMs);
+            recordTypedPass({ car: confirmed.car, typingMs: Math.round(confirmed.typingMs) });
         }
     }
 
     function renderBuffer() {
-        element('visor-numero').textContent = buffer.isEmpty() ? ' ' : buffer.text();
+        element('visor-numero').textContent = buffer.isEmpty() ? ' ' : buffer.text();
         const field = element('campo-numero');
         if (field.value !== buffer.text()) {
             field.value = buffer.text();
@@ -115,7 +158,7 @@ async function main() {
     // focus is anywhere else are handled by the page-wide listener below.
 
     element('campo-numero').addEventListener('input', (event) => {
-        buffer.setText(event.target.value, now());
+        buffer.setText(event.target.value, monotonicNow());
         renderBuffer();
     });
     element('form-teclado').addEventListener('submit', (event) => {
@@ -134,7 +177,7 @@ async function main() {
         if (key === 'apagar') {
             buffer.backspace();
         } else {
-            buffer.pressDigit(key, now());
+            buffer.pressDigit(key, monotonicNow());
         }
         renderBuffer();
     }
@@ -151,59 +194,32 @@ async function main() {
     }
 
     // ---- both keyboard modes: a physical keyboard works wherever the focus is ----
-    // After a tap on "desfazer", on a switch or on the page background the
-    // number box no longer has the focus. The next car is typed without
-    // looking, so those keys must still count.
 
-    document.addEventListener('keydown', (event) => {
-        if (page.shiftEnded()) {
-            return;
-        }
-        const action = keyActionFor(event, {
-            mode: currentMode,
-            typedInNumberBox: event.target === element('campo-numero'),
-        });
-        if (action === null) {
-            return;
-        }
-        // Stops the key from also doing what it normally does where the
-        // focus is: Enter would "click" the button that was tapped last.
-        event.preventDefault();
-        if (action.tecla === TECLA.DIGITO) {
-            pressKeypadKey(action.digito);
-        } else {
-            pressKeypadKey(action.tecla);
-        }
-        if (currentMode === MODO.TECLADO) {
-            // Back to the box, so the following keys take the normal path.
-            element('campo-numero').focus();
-        }
+    wireCountKeys({
+        documentRef: document,
+        numberField: element('campo-numero'),
+        keypad,
+        getMode: () => currentMode,
+        isBlocked: () => page.shiftEnded(),
+        onKey(action) {
+            pressKeypadKey(action.tecla === TECLA.DIGITO ? action.digito : action.tecla);
+            if (currentMode === MODO.TECLADO) {
+                // Back to the box, so the following keys take the normal path.
+                element('campo-numero').focus();
+            }
+        },
     });
 
     // ---- mode 3: one tile per car ----
 
-    let renderedTilesSignature = null;
-
-    function renderTiles() {
-        const cars = (page.validCars() || []).slice().sort((first, second) => first.numero - second.numero);
-        const signature = cars.map((car) => car.numero).join(',');
-        if (signature === renderedTilesSignature) {
-            return;
-        }
-        renderedTilesSignature = signature;
-        const container = element('blocos');
-        container.replaceChildren();
-        for (const car of cars) {
-            const tile = document.createElement('button');
-            tile.type = 'button';
-            tile.className = 'bloco';
-            tile.textContent = String(car.numero);
-            tile.title = car.nome;
-            tile.addEventListener('click', () => recordPass(car.numero, null));
-            container.appendChild(tile);
-        }
-        element('blocos-vazio').hidden = cars.length > 0;
-    }
+    const tiles = createTilesPanel({
+        element,
+        control: new TilesControl({ preferences, monotonicNow }),
+        // Classified cars only; an unclassified car can still be typed.
+        getCars: () => page.validCars() || [],
+        confirm: (question) => window.confirm(question),
+        onPass: recordTypedPass,
+    });
 
     // ---- switching modes ----
 
@@ -211,6 +227,7 @@ async function main() {
         currentMode = mode;
         buffer.clear();
         renderBuffer();
+        tiles.clearSelection();
         for (const candidate of MODOS) {
             element('modo-' + candidate).hidden = candidate !== mode;
         }
@@ -241,7 +258,7 @@ async function main() {
     }
 
     page.onState(() => {
-        renderTiles();
+        tiles.render();
         recentList.render();
     });
     applyMode(currentMode);
@@ -250,6 +267,34 @@ async function main() {
     if (currentMode === MODO.TECLADO) {
         element('campo-numero').focus();
     }
+
+    // The simulation's way in (see the top of this file).
+    page.exposeForSimulation({
+        tipo: 'contar',
+        config: page.config,
+        /** ServerClock: `relogio.serverNowMs()` is the official time (null until synced). */
+        relogio: clock,
+        /** SyncQueue: `fila.flush()` resolves when everything typed so far was offered to the server. */
+        fila: queue,
+        sessao: session,
+        /** LocalStore: `armazenamento.getMeta('servidor')` is the last sync answer (race start, lists). */
+        armazenamento: store,
+        carros: page.validCars,
+        naoClassificados: page.unclassifiedCars,
+        janelaMs: page.janelaMs,
+        abastecimento: page.fuelingEnabled,
+        /**
+         * @param {object}  pass
+         * @param {number}  pass.car
+         * @param {?number} [pass.tsMs]     intended time, SERVER time in ms; left out = now
+         * @param {string}  [pass.modo]     'simulacao' unless given
+         * @param {?number} [pass.typingMs]
+         * @returns {Promise<{entry: object, avisos: Array, nomeEquipe: ?string}>}
+         */
+        registrarPassagem({ car, tsMs = null, modo = MODO_SIMULACAO, typingMs = null }) {
+            return recordPass(car, typingMs, { tsMs, modo });
+        },
+    });
 }
 
 main().catch((startupError) => {

@@ -21,6 +21,9 @@ use Baja\Contagem\Engine\Data\Source;
  *
  * Anything else (same device, 5 to 20 seconds apart) is odd enough to show
  * to a reviewer, with "void the later one" as the suggestion.
+ *
+ * Repeats typed before the start (warm-up, rehearsal) are dealt with in the
+ * same way, silently: no flag, and nothing held against the counter.
  */
 final class DuplicateFilter
 {
@@ -39,14 +42,26 @@ final class DuplicateFilter
     /** @var array<int, true> ids of the later entry of each open "repetida" flag */
     public array $openRepeatEntryIds = [];
 
+    /** @var array<int, true> cars that have an open "repetida" flag, so only their groups need to be searched for it */
+    public array $openRepeatCars = [];
+
+    /**
+     * Entries typed before the start are warm-up and rehearsal. Repeats
+     * among them are handled like any other (so a pass confirmed there is
+     * not doubled by a double tap), but nobody is asked to review them.
+     */
+    private int $flagsFromMs = PHP_INT_MIN;
+
     /**
      * @param Entry[] $entriesInTimeOrder entries after decisions, in time order
      * @param array<int, true> $confirmedEntryIds entries a reviewer said to keep
      * @param array<int, Source> $sourcesById
+     * @param int|null $largadaMs repeats typed before this moment are dealt with the same way but raise no flag
      */
-    public static function filter(array $entriesInTimeOrder, Settings $settings, array $confirmedEntryIds, array $sourcesById): self
+    public static function filter(array $entriesInTimeOrder, Settings $settings, array $confirmedEntryIds, array $sourcesById, ?int $largadaMs = null): self
     {
         $result = new self();
+        $result->flagsFromMs = $largadaMs ?? PHP_INT_MIN;
         $janelaMs = $settings->janelaMs;
 
         /** @var array<int, array<int, Entry>> fonteId => carro => the last entry kept for that source and car */
@@ -98,8 +113,13 @@ final class DuplicateFilter
             return true;
         }
 
+        $isBeforeTheStart = $entry->tsMs < $this->flagsFromMs;
+
         if ($fromAnotherDevice || $gapMs <= $settings->duplicataMs) {
             $this->autoVoidedEntryIds[] = $entry->id;
+            if ($isBeforeTheStart) {
+                return false;
+            }
             $this->autoVoidedCountBySource[$entry->fonteId] = ($this->autoVoidedCountBySource[$entry->fonteId] ?? 0) + 1;
 
             $flag = new Flag(Flag::REPETIDA, [$entry->carro], [$lastKept->id, $entry->id], $lastKept->id . '-' . $entry->id);
@@ -114,6 +134,9 @@ final class DuplicateFilter
         }
 
         // Odd enough to show to a reviewer. It stays in the count meanwhile.
+        if ($isBeforeTheStart) {
+            return true;
+        }
         $flag = new Flag(Flag::REPETIDA, [$entry->carro], [$entry->id, $lastKept->id], $lastKept->id . '-' . $entry->id);
         $flag->fonteId = $entry->fonteId;
         $flag->tsMs = $entry->tsMs;
@@ -126,6 +149,7 @@ final class DuplicateFilter
         );
         $this->flags[] = $flag;
         $this->openRepeatEntryIds[$entry->id] = true;
+        $this->openRepeatCars[$entry->carro] = true;
         return true;
     }
 }

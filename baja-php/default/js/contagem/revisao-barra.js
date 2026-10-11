@@ -2,10 +2,13 @@
 
 import { el, substituir } from './revisao-dom.js';
 import {
-  NOMES_DE_ALERTA, NOMES_DE_ESTADO, idade, listaDeCarros, relogio, relogioDaCorrida, tempoDeProva,
+  NOMES_DE_ALERTA, NOMES_DE_ESTADO, idade, listaDeCarros, relogio, relogioDaCorrida,
 } from './revisao-formato.js';
 import { exclusoesAbertas } from './revisao-decisoes.js';
-import { dispositivosDaFonte, estadoDaFonte, ordenarFila, resumoDeAlertas, resumoDosDispositivos } from './revisao-fila.js';
+import {
+  dispositivosDaFonte, estadoDaFonte, ordenarFila, quandoDoAlerta, resumoDeAlertas, resumoDosDispositivos,
+} from './revisao-fila.js';
+import { horarioOficial, idadeDoCalculo } from './revisao-relogio.js';
 
 // The chip of one source: its name, whether it is in contact, and anything
 // about its devices or an open-ended exclusion a reviewer must not miss.
@@ -23,10 +26,21 @@ function chipDaFonte(fonte, estado, agoraServidorMs, excluidas) {
   excluida ? el('strong', { class: 'chip-excluida' }, ' · EXCLUÍDA até segunda ordem') : null);
 }
 
+// The bar before the first answer: there is no state yet, and the official
+// time is not known, so it says so instead of showing this computer's clock.
+export function desenharBarraSemEstado(container) {
+  substituir(container, el('span', { class: 'horario-oficial' }, 'Horário oficial ', el('strong', {}, horarioOficial(null))));
+}
+
 // Redrawn every second so the clock and the "há 12 s" ages keep moving
 // between two answers from the server.
-export function desenharBarra(container, estado, agoraServidorMs) {
+//
+// `agoraServidorMs` is the best the screen knows for "now" and is what the
+// ages are worked out from. `oficialMs` is the server-anchored clock itself:
+// null while it is (re)synchronising, and then the bar says so.
+export function desenharBarra(container, estado, agoraServidorMs, oficialMs = agoraServidorMs) {
   const corrida = estado.corrida;
+  const calculo = idadeDoCalculo(estado, agoraServidorMs);
   const decorrido = relogioDaCorrida(corrida, agoraServidorMs);
   const abertos = (estado.alertas_abertos ?? []).length;
   const excluidas = new Set(exclusoesAbertas(estado).map((decisao) => decisao.fonte_id));
@@ -48,11 +62,17 @@ export function desenharBarra(container, estado, agoraServidorMs) {
   const outros = (estado.revisores ?? []).filter((nome) => nome !== document.body.dataset.usuario);
 
   substituir(container,
-    el('span', { class: `relogio estado-${corrida.estado}` },
-      el('strong', {}, relogio(decorrido)), ' ', NOMES_DE_ESTADO[corrida.estado] ?? corrida.estado),
+    el('span', { class: 'horario-oficial', title: 'Horário do servidor, igual em todas as telas; não depende do relógio deste computador' },
+      'Horário oficial ', el('strong', {}, horarioOficial(oficialMs))),
+    el('span', { class: `relogio estado-${corrida.estado}`, title: 'Tempo de prova, contado a partir da largada pelo horário oficial' },
+      el('strong', {}, oficialMs === null ? 'sincronizando…' : relogio(decorrido)), ' ', NOMES_DE_ESTADO[corrida.estado] ?? corrida.estado),
     el('span', { class: 'fontes' }, fontes),
     el('span', { class: abertos > 0 ? 'pendencias com-alertas' : 'pendencias' }, resumoDeAlertas(abertos)),
     publicacao,
+    calculo === null ? null : el('span', {
+      class: calculo.atrasado ? 'calculo atrasado' : 'calculo',
+      title: 'Há quanto tempo alertas, tempos de volta e melhores voltas foram recalculados. A contagem de voltas em si é imediata.',
+    }, `calculado há ${calculo.segundos} s`),
     outros.length > 0 ? el('span', { class: 'revisores' }, `também revisando: ${outros.join(', ')}`) : null);
 }
 
@@ -70,7 +90,7 @@ function itemDaFila(alerta, estado, selecionadoId, aoEscolher) {
     el('button', { type: 'button', class: classes.join(' '), onclick: () => aoEscolher(alerta.id) },
       el('span', { class: 'tipo' }, NOMES_DE_ALERTA[alerta.tipo] ?? alerta.tipo),
       el('span', { class: 'carros' }, `carro ${listaDeCarros(alerta.carros)}`),
-      el('span', { class: 'quando' }, tempoDeProva(alerta.ts_ms, estado.corrida.largada_ms)),
+      el('span', { class: 'quando' }, quandoDoAlerta(alerta, estado.corrida.largada_ms)),
       alerta.prioridade !== null && alerta.prioridade !== undefined
         ? el('span', { class: 'posicao', title: 'melhor posição entre os carros envolvidos' }, `P${alerta.prioridade}`)
         : null,

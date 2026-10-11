@@ -203,4 +203,54 @@ final class ImpossiblyShortLapTest extends EngineTestCase
         $race->steadyField([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 180, 6);
         return $race;
     }
+
+    /**
+     * SITUATION: car 6 is recorded by everybody at 03:00 and again at
+     * 03:30, and the pit log says it entered the pit lane at 03:10.
+     *
+     * WHAT COULD GO WRONG: the pass at 03:30 has two things wrong with it:
+     * the car was logged in the pit lane, and it makes a 30-second lap.
+     * Two flags for one doubtful pass would have the reviewer deal with it
+     * twice.
+     *
+     * EXPECTED: one flag. The pass is flagged as "no_box", and the
+     * short-lap check leaves a pass that is already flagged alone.
+     */
+    public function testAPassThatIsAlreadyFlaggedGetsNoShortLapFlagOnTop(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->pass(6, '03:00');
+        $race->pitIn(6, '03:10');
+        $race->pass(6, '03:30');
+
+        $this->assertSingleOpenFlag($race->run('04:00'), Flag::NO_BOX);
+    }
+
+    /**
+     * SITUATION: car 6 is recorded at 04:50 and next at 10:20. The race was
+     * stopped by a red flag from 05:00 to 10:00.
+     *
+     * EXPECTED: laps are judged in RACING time. Five and a half minutes
+     * passed on the clock, but the car only raced for 10 s before the red
+     * flag and 20 s after it: a 30-second lap, which is flagged as too
+     * short (two passes that close in racing time are one crossing typed
+     * twice, or a pass typed while the cars were standing). The reason
+     * quotes the 30 seconds.
+     */
+    public function testAShortLapIsMeasuredInRacingTime(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->pass(6, '00:20');
+        $race->pass(6, '04:50');
+        $race->redFlag('05:00');
+        $race->restart('10:00');
+        $race->pass(6, '10:20');
+
+        $flag = $this->assertSingleOpenFlag($race->run('11:00'), Flag::VOLTA_CURTA);
+
+        $this->assertSame(RaceScenario::ms('10:20'), $flag->tsMs);
+        $this->assertStringContainsString('30 s de intervalo', $flag->motivo);
+    }
 }

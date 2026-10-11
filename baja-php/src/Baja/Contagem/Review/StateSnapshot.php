@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Review;
 
+use Baja\Contagem\Engine\Data\CarState;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Flag;
@@ -66,6 +67,7 @@ final class StateSnapshot
             'carros' => self::describeCars($input, $result, $teams),
             'carros_validos' => self::describeValidCars($input, $teams),
             'configuracoes' => $input->settings->toArray(),
+            'paradas_sem_par' => TimelineStops::describeUnpaired($result->timeline),
             'historico' => $history['linhas'],
             'historico_ha_mais' => $history['ha_mais'],
             'historico_em_vigor' => DecisionHistory::inForce($prova, $activeDecisionIds),
@@ -102,7 +104,7 @@ final class StateSnapshot
         }
         $state['dispositivos'] = $live['dispositivos'];
 
-        foreach (['versao', 'calculado_em_ms', 'servidor_agora_ms', 'corrida', 'revisores', 'publicado_em_ms', 'publicacao_desligada'] as $key) {
+        foreach (['versao', 'calculado_em_ms', 'servidor_agora_ms', 'corrida', 'revisores', 'publicado_em_ms', 'publicacao_desligada', 'simulacao'] as $key) {
             $state[$key] = $live[$key];
         }
         return $state;
@@ -147,6 +149,9 @@ final class StateSnapshot
             'revisores' => ReviewerPresence::online($prova),
             'publicado_em_ms' => $service->lastPublishedAtMs(),
             'publicacao_desligada' => !$settings->publishesToScoring(),
+            // Drives the permanent "SIMULAÇÃO" banner. Sent with every
+            // answer, so the banner follows the setting within one poll.
+            'simulacao' => $settings->permitirSimulacao,
         ];
     }
 
@@ -192,6 +197,9 @@ final class StateSnapshot
             }
         }
 
+        $classified = array_fill_keys($input->validCars, true);
+        $unclassified = array_fill_keys($input->unclassifiedCars, true);
+
         $rows = [];
         foreach ($result->cars as $state) {
             $row = $state->toArray();
@@ -200,6 +208,11 @@ final class StateSnapshot
             // types passes, so this is what each counter's own number is
             // compared with.
             $row['passagens'] = $officialPassesByCar[$state->carro] ?? 0;
+            // Takes part in the race: present at the event AND classified
+            // for this prova. A car that is not has entries only by mistake
+            // (or by a stale list on a phone); the table shows it apart.
+            $row['classificado'] = isset($classified[$state->carro]);
+            $row['presente'] = $row['classificado'] || isset($unclassified[$state->carro]);
             $row['equipe'] = $teams[$state->carro]['nome'] ?? null;
             $row['escola'] = $teams[$state->carro]['escola'] ?? null;
 
@@ -211,6 +224,25 @@ final class StateSnapshot
             }
             $row['totais_importados'] = $imported;
             $rows[] = $row;
+            unset($unclassified[$state->carro]);
+        }
+
+        // The engine keeps a car that is not classified out of the
+        // standings altogether. It is listed all the same, after the
+        // others and with nothing counted, so that a reviewer can open its
+        // timeline and see what was typed for it.
+        ksort($unclassified);
+        foreach (array_keys($unclassified) as $carro) {
+            $row = (new CarState($carro))->toArray();
+            unset($row['status'], $row['status_desde_ms']);
+            $rows[] = $row + [
+                'passagens' => 0,
+                'equipe' => $teams[$carro]['nome'] ?? null,
+                'escola' => $teams[$carro]['escola'] ?? null,
+                'classificado' => false,
+                'presente' => true,
+                'totais_importados' => [],
+            ];
         }
         return $rows;
     }

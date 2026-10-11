@@ -363,3 +363,68 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 #historico-mais { margin: 6px 0 12px; }
 
 .contagem-configuracoes select { max-width: 100%; }
+
+/* ---- round 3 ----------------------------------------------------------- */
+
+/* Permanent while the prova accepts simulated entries: must be impossible to overlook. */
+.contagem-simulacao {
+  margin: 0;
+  padding: 8px 12px;
+  background: repeating-linear-gradient(45deg, #5b21b6, #5b21b6 14px, #6d28d9 14px, #6d28d9 28px);
+  color: #fff;
+  font: 14px/1.4 "Trebuchet MS", Arial, sans-serif;
+}
+.contagem-simulacao strong { font-size: 18px; letter-spacing: 2px; margin-right: 10px; }
+
+.contagem-pergunta { border: 2px solid var(--cor-ambar); }
+.contagem-pergunta p { margin: 0 0 8px; }
+.contagem-em-linha { display: inline-flex; gap: 6px; align-items: center; margin: 0 10px 0 6px; }
+.contagem-configuracoes input[type="checkbox"] { margin-right: 4px; }
+.linha-substituida td.sem-risco { text-decoration: none; }
+
+/* status bar: official clock and age of the calculation */
+.horario-oficial { color: var(--cor-fraca); }
+.horario-oficial strong { color: var(--cor-texto); font-size: 16px; font-variant-numeric: tabular-nums; }
+.calculo { color: var(--cor-fraca); font-variant-numeric: tabular-nums; }
+.calculo.atrasado { padding: 2px 8px; border-radius: 4px; background: var(--fundo-vermelho); color: var(--cor-vermelha); font-weight: bold; }
+
+/* A button that adds a lap must not look like the one that changes nothing. */
+.botoes button.soma-volta { border-color: var(--cor-ambar); background: var(--fundo-ambar); color: var(--cor-ambar); font-weight: bold; }
+
+.exclusao-aberta .em-linha { margin: 6px 6px 0 0; }
+.paradas-sem-par { border-color: var(--cor-ambar); }
+
+/* car table: cars that do not take part */
+.carros tr.nao-classificado td { color: var(--cor-fraca); background: var(--cor-fundo); }
+.etiqueta-fora { margin-left: 6px; padding: 0 6px; border-radius: 8px; background: var(--fundo-ambar); color: var(--cor-ambar); font-size: 11px; }
+.carros tr.status-abastecendo .situacao, .carros tr.status-no_box .situacao { color: var(--cor-azul); }
+
+/* timeline: passes before the start, estimated and unknown times */
+.chip.antes-da-largada { border-style: dashed; border-color: var(--cor-ambar); background: var(--fundo-ambar); color: var(--cor-ambar); }
+.chip.antes-da-largada.contada { background: var(--fundo-verde); border-color: var(--cor-verde); color: var(--cor-texto); }
+.chip.tempo-estimado::before, .chip.tempo-desconhecido::before {
+  position: absolute;
+  top: -7px;
+  left: -5px;
+  padding: 0 3px;
+  border-radius: 6px;
+  background: var(--cor-ambar);
+  color: #fff;
+  font-size: 9px;
+  line-height: 12px;
+}
+.chip.tempo-estimado::before { content: "~"; }
+.chip.tempo-desconhecido::before { content: "?"; }
+.horario-desconhecido { margin: 8px 0; padding: 8px 10px; background: var(--fundo-ambar); border: 1px solid var(--cor-ambar); border-radius: 4px; font-size: 13px; }
+.chip.solto { position: relative; margin: 4px 4px 0 6px; }
+
+/* timeline: race control, pit lane and fueling lanes */
+.raia-direcao .raia-trilho, .raia-box .raia-trilho, .raia-abastecimento .raia-trilho { background: var(--cor-fundo); }
+.estadia { position: absolute; top: 20px; height: 6px; border-radius: 3px; background: var(--cor-azul); opacity: 0.55; }
+.estadia.aberta { background: repeating-linear-gradient(90deg, var(--cor-azul), var(--cor-azul) 6px, transparent 6px, transparent 10px); }
+.raia-abastecimento .estadia { background: var(--cor-verde); }
+.marca-box { top: 1px; }
+.marca-box.sem-par { background: var(--fundo-vermelho); border: 1px dashed var(--cor-vermelha); color: var(--cor-vermelha); font-weight: bold; }
+
+/* Something with an explanation behind it (hover): lap times, above all. */
+.com-dica { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }

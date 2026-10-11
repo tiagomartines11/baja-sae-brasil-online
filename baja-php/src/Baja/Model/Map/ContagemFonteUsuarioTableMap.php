@@ -63,7 +63,7 @@ class ContagemFonteUsuarioTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 4;
+    public const NUM_COLUMNS = 5;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ContagemFonteUsuarioTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 4;
+    public const NUM_HYDRATE_COLUMNS = 5;
 
     /**
      * the column name for the fonte_id field
@@ -96,6 +96,11 @@ class ContagemFonteUsuarioTableMap extends TableMap
     public const COL_CRIADO_EM_MS = 'contagem_fonte_usuario.criado_em_ms';
 
     /**
+     * the column name for the liberado_em_ms field
+     */
+    public const COL_LIBERADO_EM_MS = 'contagem_fonte_usuario.liberado_em_ms';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -109,11 +114,11 @@ class ContagemFonteUsuarioTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['FonteId', 'Usuario', 'AdicionadoPor', 'CriadoEmMs', ],
-        self::TYPE_CAMELNAME     => ['fonteId', 'usuario', 'adicionadoPor', 'criadoEmMs', ],
-        self::TYPE_COLNAME       => [ContagemFonteUsuarioTableMap::COL_FONTE_ID, ContagemFonteUsuarioTableMap::COL_USUARIO, ContagemFonteUsuarioTableMap::COL_ADICIONADO_POR, ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS, ],
-        self::TYPE_FIELDNAME     => ['fonte_id', 'usuario', 'adicionado_por', 'criado_em_ms', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, ]
+        self::TYPE_PHPNAME       => ['FonteId', 'Usuario', 'AdicionadoPor', 'CriadoEmMs', 'LiberadoEmMs', ],
+        self::TYPE_CAMELNAME     => ['fonteId', 'usuario', 'adicionadoPor', 'criadoEmMs', 'liberadoEmMs', ],
+        self::TYPE_COLNAME       => [ContagemFonteUsuarioTableMap::COL_FONTE_ID, ContagemFonteUsuarioTableMap::COL_USUARIO, ContagemFonteUsuarioTableMap::COL_ADICIONADO_POR, ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS, ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS, ],
+        self::TYPE_FIELDNAME     => ['fonte_id', 'usuario', 'adicionado_por', 'criado_em_ms', 'liberado_em_ms', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, ]
     ];
 
     /**
@@ -125,11 +130,11 @@ class ContagemFonteUsuarioTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['FonteId' => 0, 'Usuario' => 1, 'AdicionadoPor' => 2, 'CriadoEmMs' => 3, ],
-        self::TYPE_CAMELNAME     => ['fonteId' => 0, 'usuario' => 1, 'adicionadoPor' => 2, 'criadoEmMs' => 3, ],
-        self::TYPE_COLNAME       => [ContagemFonteUsuarioTableMap::COL_FONTE_ID => 0, ContagemFonteUsuarioTableMap::COL_USUARIO => 1, ContagemFonteUsuarioTableMap::COL_ADICIONADO_POR => 2, ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS => 3, ],
-        self::TYPE_FIELDNAME     => ['fonte_id' => 0, 'usuario' => 1, 'adicionado_por' => 2, 'criado_em_ms' => 3, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, ]
+        self::TYPE_PHPNAME       => ['FonteId' => 0, 'Usuario' => 1, 'AdicionadoPor' => 2, 'CriadoEmMs' => 3, 'LiberadoEmMs' => 4, ],
+        self::TYPE_CAMELNAME     => ['fonteId' => 0, 'usuario' => 1, 'adicionadoPor' => 2, 'criadoEmMs' => 3, 'liberadoEmMs' => 4, ],
+        self::TYPE_COLNAME       => [ContagemFonteUsuarioTableMap::COL_FONTE_ID => 0, ContagemFonteUsuarioTableMap::COL_USUARIO => 1, ContagemFonteUsuarioTableMap::COL_ADICIONADO_POR => 2, ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS => 3, ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS => 4, ],
+        self::TYPE_FIELDNAME     => ['fonte_id' => 0, 'usuario' => 1, 'adicionado_por' => 2, 'criado_em_ms' => 3, 'liberado_em_ms' => 4, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, ]
     ];
 
     /**
@@ -169,6 +174,14 @@ class ContagemFonteUsuarioTableMap extends TableMap
         'COL_CRIADO_EM_MS' => 'CRIADO_EM_MS',
         'criado_em_ms' => 'CRIADO_EM_MS',
         'contagem_fonte_usuario.criado_em_ms' => 'CRIADO_EM_MS',
+        'LiberadoEmMs' => 'LIBERADO_EM_MS',
+        'ContagemFonteUsuario.LiberadoEmMs' => 'LIBERADO_EM_MS',
+        'liberadoEmMs' => 'LIBERADO_EM_MS',
+        'contagemFonteUsuario.liberadoEmMs' => 'LIBERADO_EM_MS',
+        'ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS' => 'LIBERADO_EM_MS',
+        'COL_LIBERADO_EM_MS' => 'LIBERADO_EM_MS',
+        'liberado_em_ms' => 'LIBERADO_EM_MS',
+        'contagem_fonte_usuario.liberado_em_ms' => 'LIBERADO_EM_MS',
     ];
 
     /**
@@ -192,6 +205,7 @@ class ContagemFonteUsuarioTableMap extends TableMap
         $this->addPrimaryKey('usuario', 'Usuario', 'VARCHAR', true, 45, null);
         $this->addColumn('adicionado_por', 'AdicionadoPor', 'VARCHAR', false, 45, null);
         $this->addColumn('criado_em_ms', 'CriadoEmMs', 'BIGINT', true, null, null);
+        $this->addColumn('liberado_em_ms', 'LiberadoEmMs', 'BIGINT', false, null, null);
     }
 
     /**
@@ -422,11 +436,13 @@ class ContagemFonteUsuarioTableMap extends TableMap
             $criteria->addSelectColumn(ContagemFonteUsuarioTableMap::COL_USUARIO);
             $criteria->addSelectColumn(ContagemFonteUsuarioTableMap::COL_ADICIONADO_POR);
             $criteria->addSelectColumn(ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS);
+            $criteria->addSelectColumn(ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS);
         } else {
             $criteria->addSelectColumn($alias . '.fonte_id');
             $criteria->addSelectColumn($alias . '.usuario');
             $criteria->addSelectColumn($alias . '.adicionado_por');
             $criteria->addSelectColumn($alias . '.criado_em_ms');
+            $criteria->addSelectColumn($alias . '.liberado_em_ms');
         }
     }
 
@@ -449,11 +465,13 @@ class ContagemFonteUsuarioTableMap extends TableMap
             $criteria->removeSelectColumn(ContagemFonteUsuarioTableMap::COL_USUARIO);
             $criteria->removeSelectColumn(ContagemFonteUsuarioTableMap::COL_ADICIONADO_POR);
             $criteria->removeSelectColumn(ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS);
+            $criteria->removeSelectColumn(ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS);
         } else {
             $criteria->removeSelectColumn($alias . '.fonte_id');
             $criteria->removeSelectColumn($alias . '.usuario');
             $criteria->removeSelectColumn($alias . '.adicionado_por');
             $criteria->removeSelectColumn($alias . '.criado_em_ms');
+            $criteria->removeSelectColumn($alias . '.liberado_em_ms');
         }
     }
 

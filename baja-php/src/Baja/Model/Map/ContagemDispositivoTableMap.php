@@ -63,7 +63,7 @@ class ContagemDispositivoTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 11;
+    public const NUM_COLUMNS = 10;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ContagemDispositivoTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 11;
+    public const NUM_HYDRATE_COLUMNS = 10;
 
     /**
      * the column name for the dispositivo_id field
@@ -126,11 +126,6 @@ class ContagemDispositivoTableMap extends TableMap
     public const COL_SINCRONIZADO_ATE_MS = 'contagem_dispositivo.sincronizado_ate_ms';
 
     /**
-     * the column name for the primeiro_desvio_ms field
-     */
-    public const COL_PRIMEIRO_DESVIO_MS = 'contagem_dispositivo.primeiro_desvio_ms';
-
-    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -144,11 +139,11 @@ class ContagemDispositivoTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['DispositivoId', 'FonteId', 'TokenHash', 'Usuario', 'Rotulo', 'CriadoEmMs', 'RevogadoEmMs', 'FechadoEmMs', 'VistoEmMs', 'SincronizadoAteMs', 'PrimeiroDesvioMs', ],
-        self::TYPE_CAMELNAME     => ['dispositivoId', 'fonteId', 'tokenHash', 'usuario', 'rotulo', 'criadoEmMs', 'revogadoEmMs', 'fechadoEmMs', 'vistoEmMs', 'sincronizadoAteMs', 'primeiroDesvioMs', ],
-        self::TYPE_COLNAME       => [ContagemDispositivoTableMap::COL_DISPOSITIVO_ID, ContagemDispositivoTableMap::COL_FONTE_ID, ContagemDispositivoTableMap::COL_TOKEN_HASH, ContagemDispositivoTableMap::COL_USUARIO, ContagemDispositivoTableMap::COL_ROTULO, ContagemDispositivoTableMap::COL_CRIADO_EM_MS, ContagemDispositivoTableMap::COL_REVOGADO_EM_MS, ContagemDispositivoTableMap::COL_FECHADO_EM_MS, ContagemDispositivoTableMap::COL_VISTO_EM_MS, ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS, ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS, ],
-        self::TYPE_FIELDNAME     => ['dispositivo_id', 'fonte_id', 'token_hash', 'usuario', 'rotulo', 'criado_em_ms', 'revogado_em_ms', 'fechado_em_ms', 'visto_em_ms', 'sincronizado_ate_ms', 'primeiro_desvio_ms', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, ]
+        self::TYPE_PHPNAME       => ['DispositivoId', 'FonteId', 'TokenHash', 'Usuario', 'Rotulo', 'CriadoEmMs', 'RevogadoEmMs', 'FechadoEmMs', 'VistoEmMs', 'SincronizadoAteMs', ],
+        self::TYPE_CAMELNAME     => ['dispositivoId', 'fonteId', 'tokenHash', 'usuario', 'rotulo', 'criadoEmMs', 'revogadoEmMs', 'fechadoEmMs', 'vistoEmMs', 'sincronizadoAteMs', ],
+        self::TYPE_COLNAME       => [ContagemDispositivoTableMap::COL_DISPOSITIVO_ID, ContagemDispositivoTableMap::COL_FONTE_ID, ContagemDispositivoTableMap::COL_TOKEN_HASH, ContagemDispositivoTableMap::COL_USUARIO, ContagemDispositivoTableMap::COL_ROTULO, ContagemDispositivoTableMap::COL_CRIADO_EM_MS, ContagemDispositivoTableMap::COL_REVOGADO_EM_MS, ContagemDispositivoTableMap::COL_FECHADO_EM_MS, ContagemDispositivoTableMap::COL_VISTO_EM_MS, ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS, ],
+        self::TYPE_FIELDNAME     => ['dispositivo_id', 'fonte_id', 'token_hash', 'usuario', 'rotulo', 'criado_em_ms', 'revogado_em_ms', 'fechado_em_ms', 'visto_em_ms', 'sincronizado_ate_ms', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ]
     ];
 
     /**
@@ -160,11 +155,11 @@ class ContagemDispositivoTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['DispositivoId' => 0, 'FonteId' => 1, 'TokenHash' => 2, 'Usuario' => 3, 'Rotulo' => 4, 'CriadoEmMs' => 5, 'RevogadoEmMs' => 6, 'FechadoEmMs' => 7, 'VistoEmMs' => 8, 'SincronizadoAteMs' => 9, 'PrimeiroDesvioMs' => 10, ],
-        self::TYPE_CAMELNAME     => ['dispositivoId' => 0, 'fonteId' => 1, 'tokenHash' => 2, 'usuario' => 3, 'rotulo' => 4, 'criadoEmMs' => 5, 'revogadoEmMs' => 6, 'fechadoEmMs' => 7, 'vistoEmMs' => 8, 'sincronizadoAteMs' => 9, 'primeiroDesvioMs' => 10, ],
-        self::TYPE_COLNAME       => [ContagemDispositivoTableMap::COL_DISPOSITIVO_ID => 0, ContagemDispositivoTableMap::COL_FONTE_ID => 1, ContagemDispositivoTableMap::COL_TOKEN_HASH => 2, ContagemDispositivoTableMap::COL_USUARIO => 3, ContagemDispositivoTableMap::COL_ROTULO => 4, ContagemDispositivoTableMap::COL_CRIADO_EM_MS => 5, ContagemDispositivoTableMap::COL_REVOGADO_EM_MS => 6, ContagemDispositivoTableMap::COL_FECHADO_EM_MS => 7, ContagemDispositivoTableMap::COL_VISTO_EM_MS => 8, ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS => 9, ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS => 10, ],
-        self::TYPE_FIELDNAME     => ['dispositivo_id' => 0, 'fonte_id' => 1, 'token_hash' => 2, 'usuario' => 3, 'rotulo' => 4, 'criado_em_ms' => 5, 'revogado_em_ms' => 6, 'fechado_em_ms' => 7, 'visto_em_ms' => 8, 'sincronizado_ate_ms' => 9, 'primeiro_desvio_ms' => 10, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, ]
+        self::TYPE_PHPNAME       => ['DispositivoId' => 0, 'FonteId' => 1, 'TokenHash' => 2, 'Usuario' => 3, 'Rotulo' => 4, 'CriadoEmMs' => 5, 'RevogadoEmMs' => 6, 'FechadoEmMs' => 7, 'VistoEmMs' => 8, 'SincronizadoAteMs' => 9, ],
+        self::TYPE_CAMELNAME     => ['dispositivoId' => 0, 'fonteId' => 1, 'tokenHash' => 2, 'usuario' => 3, 'rotulo' => 4, 'criadoEmMs' => 5, 'revogadoEmMs' => 6, 'fechadoEmMs' => 7, 'vistoEmMs' => 8, 'sincronizadoAteMs' => 9, ],
+        self::TYPE_COLNAME       => [ContagemDispositivoTableMap::COL_DISPOSITIVO_ID => 0, ContagemDispositivoTableMap::COL_FONTE_ID => 1, ContagemDispositivoTableMap::COL_TOKEN_HASH => 2, ContagemDispositivoTableMap::COL_USUARIO => 3, ContagemDispositivoTableMap::COL_ROTULO => 4, ContagemDispositivoTableMap::COL_CRIADO_EM_MS => 5, ContagemDispositivoTableMap::COL_REVOGADO_EM_MS => 6, ContagemDispositivoTableMap::COL_FECHADO_EM_MS => 7, ContagemDispositivoTableMap::COL_VISTO_EM_MS => 8, ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS => 9, ],
+        self::TYPE_FIELDNAME     => ['dispositivo_id' => 0, 'fonte_id' => 1, 'token_hash' => 2, 'usuario' => 3, 'rotulo' => 4, 'criado_em_ms' => 5, 'revogado_em_ms' => 6, 'fechado_em_ms' => 7, 'visto_em_ms' => 8, 'sincronizado_ate_ms' => 9, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ]
     ];
 
     /**
@@ -251,14 +246,6 @@ class ContagemDispositivoTableMap extends TableMap
         'COL_SINCRONIZADO_ATE_MS' => 'SINCRONIZADO_ATE_MS',
         'sincronizado_ate_ms' => 'SINCRONIZADO_ATE_MS',
         'contagem_dispositivo.sincronizado_ate_ms' => 'SINCRONIZADO_ATE_MS',
-        'PrimeiroDesvioMs' => 'PRIMEIRO_DESVIO_MS',
-        'ContagemDispositivo.PrimeiroDesvioMs' => 'PRIMEIRO_DESVIO_MS',
-        'primeiroDesvioMs' => 'PRIMEIRO_DESVIO_MS',
-        'contagemDispositivo.primeiroDesvioMs' => 'PRIMEIRO_DESVIO_MS',
-        'ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS' => 'PRIMEIRO_DESVIO_MS',
-        'COL_PRIMEIRO_DESVIO_MS' => 'PRIMEIRO_DESVIO_MS',
-        'primeiro_desvio_ms' => 'PRIMEIRO_DESVIO_MS',
-        'contagem_dispositivo.primeiro_desvio_ms' => 'PRIMEIRO_DESVIO_MS',
     ];
 
     /**
@@ -288,7 +275,6 @@ class ContagemDispositivoTableMap extends TableMap
         $this->addColumn('fechado_em_ms', 'FechadoEmMs', 'BIGINT', false, null, null);
         $this->addColumn('visto_em_ms', 'VistoEmMs', 'BIGINT', false, null, null);
         $this->addColumn('sincronizado_ate_ms', 'SincronizadoAteMs', 'BIGINT', false, null, null);
-        $this->addColumn('primeiro_desvio_ms', 'PrimeiroDesvioMs', 'BIGINT', false, null, null);
     }
 
     /**
@@ -476,7 +462,6 @@ class ContagemDispositivoTableMap extends TableMap
             $criteria->addSelectColumn(ContagemDispositivoTableMap::COL_FECHADO_EM_MS);
             $criteria->addSelectColumn(ContagemDispositivoTableMap::COL_VISTO_EM_MS);
             $criteria->addSelectColumn(ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS);
-            $criteria->addSelectColumn(ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS);
         } else {
             $criteria->addSelectColumn($alias . '.dispositivo_id');
             $criteria->addSelectColumn($alias . '.fonte_id');
@@ -488,7 +473,6 @@ class ContagemDispositivoTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.fechado_em_ms');
             $criteria->addSelectColumn($alias . '.visto_em_ms');
             $criteria->addSelectColumn($alias . '.sincronizado_ate_ms');
-            $criteria->addSelectColumn($alias . '.primeiro_desvio_ms');
         }
     }
 
@@ -517,7 +501,6 @@ class ContagemDispositivoTableMap extends TableMap
             $criteria->removeSelectColumn(ContagemDispositivoTableMap::COL_FECHADO_EM_MS);
             $criteria->removeSelectColumn(ContagemDispositivoTableMap::COL_VISTO_EM_MS);
             $criteria->removeSelectColumn(ContagemDispositivoTableMap::COL_SINCRONIZADO_ATE_MS);
-            $criteria->removeSelectColumn(ContagemDispositivoTableMap::COL_PRIMEIRO_DESVIO_MS);
         } else {
             $criteria->removeSelectColumn($alias . '.dispositivo_id');
             $criteria->removeSelectColumn($alias . '.fonte_id');
@@ -529,7 +512,6 @@ class ContagemDispositivoTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.fechado_em_ms');
             $criteria->removeSelectColumn($alias . '.visto_em_ms');
             $criteria->removeSelectColumn($alias . '.sincronizado_ate_ms');
-            $criteria->removeSelectColumn($alias . '.primeiro_desvio_ms');
         }
     }
 

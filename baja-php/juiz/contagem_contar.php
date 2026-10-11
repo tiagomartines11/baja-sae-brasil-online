@@ -3,7 +3,6 @@ namespace Baja\Juiz;
 
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Engine\Data\Source;
-use Baja\Contagem\Engine\Settings;
 use Baja\Contagem\Shell\OfflineShell;
 use Baja\Model\ContagemFonteQuery;
 use Baja\Session;
@@ -30,9 +29,8 @@ if (!$fonte || $fonte->getTipo() !== Source::TIPO_MANUAL || !ContagemAccess::can
 }
 
 $provaId = $prova->getProvaId();
-$settings = Settings::fromArray($prova->getParams()->contagem ?? null);
 
-$config = [
+$config = OfflineShell::provaConfig($prova) + [
     'tipo' => 'contar',
     'evento_id' => $prova->getEventoId(),
     'prova_id' => $provaId,
@@ -43,9 +41,6 @@ $config = [
         'dispositivo' => 'contagem_dispositivo.php?p=' . rawurlencode($provaId) . '&f=' . (int) $fonte->getFonteId(),
         'service_worker' => 'contagem_sw.php',
     ],
-    'versao' => OfflineShell::assetVersion(),
-    'carros' => OfflineShell::presentCars($prova->getEventoId()),
-    'janela_ms' => $settings->janelaMs,
 ];
 
 OfflineShell::printDocumentStart($fonte->getNome() . ' - ' . $prova->getNome(), $config, 'contar.js');
@@ -73,6 +68,16 @@ OfflineShell::printStatusBar($fonte->getNome(), 'Também contando aqui:');
         <div id="modo-blocos" hidden>
             <div id="blocos" class="blocos"></div>
             <p id="blocos-vazio" class="texto-apoio" hidden>A lista de carros ainda não chegou. Use o teclado.</p>
+            <?php // Two taps: the car as it approaches, then "Passou" as it crosses. Stays at the
+                  // bottom of the screen while the tiles scroll, under the thumb. ?>
+            <div id="blocos-dois-toques" class="passou-painel">
+                <div class="selecionado" aria-live="polite">
+                    <span id="selecionado-numero" class="selecionado-numero">–</span>
+                    <span id="selecionado-equipe" class="selecionado-equipe">Toque no carro que vem chegando</span>
+                </div>
+                <button type="button" id="btn-passou" class="botao-passou" disabled>Passou</button>
+            </div>
+            <label class="opcao opcao-um-toque"><input type="checkbox" id="opt-um-toque"> Um toque marca a passagem</label>
         </div>
     </section>
 
@@ -88,7 +93,7 @@ OfflineShell::printStatusBar($fonte->getNome(), 'Também contando aqui:');
     </section>
 
     <footer class="rodape">
-        <button type="button" id="btn-exportar" class="botao-secundario">Exportar meus dados</button>
+        <?php OfflineShell::printFooterButtons(); ?>
         <label class="opcao"><input type="checkbox" id="opt-som"> Som</label>
         <label class="opcao"><input type="checkbox" id="opt-vibrar"> Vibrar</label>
         <a class="link-voltar" href="contagem.php?p=<?= htmlspecialchars(rawurlencode($provaId)) ?>">Voltar</a>

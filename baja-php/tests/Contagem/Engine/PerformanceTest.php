@@ -24,17 +24,24 @@ use Random\Randomizer;
  *   (`Engine::run`), which happens every few seconds.
  *
  * What is measured is the engine call only (not loading from the database),
- * as the best of three runs so that a hiccup of the machine running the
+ * as the best of five runs so that a hiccup of the machine running the
  * test does not fail it. Entries are handed over SHUFFLED, in the order
  * phones happened to upload them, never conveniently sorted by time.
  *
  * If one of these tests ever fails, the answer is NOT to raise the budget.
+ *
+ * To see the measured times (they are not printed when the tests pass), run
+ * with the environment variable CONTAGEM_PERF_LOG=1: each test then writes
+ * one line with its best time to the error output.
  */
 final class PerformanceTest extends EngineTestCase
 {
     private const BUDGET_ONE_CAR_MS = 10;
     private const BUDGET_REAL_RACE_MS = 100;
     private const BUDGET_STRESS_RACE_MS = 300;
+
+    /** Each measurement is repeated this many times and the fastest one is kept. */
+    private const RUNS = 5;
 
     /** A national endurance race: 64 cars, about 70 laps each, three counters. */
     private function realSizeRace(): SyntheticRace
@@ -67,7 +74,7 @@ final class PerformanceTest extends EngineTestCase
         $onlyThatCar->entries = array_values(array_filter($input->entries, fn($entry) => $carAfterDecisions($entry) === $car));
         $this->assertGreaterThan(190, count($onlyThatCar->entries));
 
-        [$bestMs, $count] = $this->bestOfThree(fn() => Engine::countCars($onlyThatCar, [$car]));
+        [$bestMs, $count] = $this->bestOfFive(fn() => Engine::countCars($onlyThatCar, [$car]));
 
         $this->assertSame($full->lapCount($car), $count->lapCount($car), 'And the answer is the one the full recompute gives.');
         $this->assertSame($full->cars[$car]->ultimaPassagemMs, $count->lastPassMs($car));
@@ -88,7 +95,7 @@ final class PerformanceTest extends EngineTestCase
         $this->assertGreaterThanOrEqual(13000, count($input->entries), 'The race must be as big as promised.');
         $this->assertGreaterThanOrEqual(68, array_sum($race->truthLapsByCar) / count($race->truthLapsByCar));
 
-        [$bestMs, $result] = $this->bestOfThree(fn() => Engine::run($input));
+        [$bestMs, $result] = $this->bestOfFive(fn() => Engine::run($input));
 
         $this->assertRoughlyTheTruth($race, array_sum(array_map(fn($car) => $car->voltas, $result->cars)));
         $this->assertLessThan(self::BUDGET_REAL_RACE_MS, $bestMs, sprintf('A full recompute took %.0f ms.', $bestMs));
@@ -107,7 +114,7 @@ final class PerformanceTest extends EngineTestCase
         $this->assertGreaterThanOrEqual(38000, count($input->entries), 'The race must be as big as promised.');
         $this->assertGreaterThanOrEqual(95, array_sum($race->truthLapsByCar) / count($race->truthLapsByCar));
 
-        [$bestMs, $result] = $this->bestOfThree(fn() => Engine::run($input));
+        [$bestMs, $result] = $this->bestOfFive(fn() => Engine::run($input));
 
         $this->assertRoughlyTheTruth($race, array_sum(array_map(fn($car) => $car->voltas, $result->cars)));
         $this->assertLessThan(self::BUDGET_STRESS_RACE_MS, $bestMs, sprintf('A full recompute took %.0f ms.', $bestMs));
@@ -123,16 +130,22 @@ final class PerformanceTest extends EngineTestCase
     /**
      * @template T
      * @param callable(): T $engineCall
-     * @return array{0: float, 1: T} the fastest of three runs in milliseconds, and the last result
+     * @return array{0: float, 1: T} the fastest of five runs in milliseconds, and the last result
      */
-    private function bestOfThree(callable $engineCall): array
+    private function bestOfFive(callable $engineCall): array
     {
         $bestMs = PHP_FLOAT_MAX;
         $result = null;
-        for ($run = 0; $run < 3; $run++) {
+        for ($run = 0; $run < self::RUNS; $run++) {
+            // The previous run's result is thrown away BEFORE the clock
+            // starts, so that freeing it is not charged to the next run.
+            $result = null;
             $startedAt = hrtime(true);
             $result = $engineCall();
             $bestMs = min($bestMs, (hrtime(true) - $startedAt) / 1e6);
+        }
+        if (getenv('CONTAGEM_PERF_LOG')) {
+            fwrite(STDERR, sprintf("PERF %s: %.2f ms\n", $this->name(), $bestMs));
         }
         return [$bestMs, $result];
     }

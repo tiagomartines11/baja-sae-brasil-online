@@ -78,6 +78,21 @@ final class SettingsForm
 
     public const PRIMARY_SOURCE_HINT = 'A fonte em que o modo "Fonte principal" confia. Nos outros modos não tem efeito.';
 
+    /** On/off fields: key => [label, hint]. */
+    public const BOOLEAN_FIELDS = [
+        'abastecimento' => ['Área de abastecimento', 'Liga o registro de entrada e saída do abastecimento, na mesma página do registro de box. Desligado, a escolha de área não aparece.'],
+        'permitir_simulacao' => ['Permitir simulação', 'Só para ensaios: aceita passagens geradas pelo simulador. Enquanto estiver ligado, todas as páginas mostram a faixa "SIMULAÇÃO". Desligue antes da corrida de verdade.'],
+    ];
+
+    /** The one field whose choices are the prova's own input fields. */
+    public const CLASSIFICATION_FIELD = 'campo_classificacao';
+    public const CLASSIFICATION_LABEL = 'Campo de classificação';
+    public const CLASSIFICATION_HINT = 'Um campo da própria prova (por exemplo APTO, com SIM/NÃO) preenchido por carro na tela de campos manuais. '
+        . 'Com ele, só participa da corrida o carro presente E marcado SIM; em branco conta como não classificado. '
+        . 'Sem campo escolhido, todo carro presente participa.';
+    /** The value of that field that means "this car takes part". */
+    public const CLASSIFIED_VALUE = 'SIM';
+
     /**
      * Every number field in the order the form shows them.
      *
@@ -92,11 +107,22 @@ final class SettingsForm
      * @param array<string, mixed> $post
      * @param int[] $countingSourceIds sources that may be chosen as primary
      * @param int[]|null $activeSourceIds the ones among them that are switched on; null when all are
+     * @param string[] $inputFieldCodes codes of the prova's input fields that may hold the classification
      * @throws InvalidArgumentException naming the bad field, in Portuguese
      */
-    public static function fromPost(array $post, array $countingSourceIds, ?array $activeSourceIds = null): Settings
+    public static function fromPost(array $post, array $countingSourceIds, ?array $activeSourceIds = null, array $inputFieldCodes = []): Settings
     {
         $values = [];
+
+        // An unticked checkbox is simply absent from the form.
+        foreach (array_keys(self::BOOLEAN_FIELDS) as $key) {
+            $values[$key] = ($post[$key] ?? '') === '1';
+        }
+        $classification = is_string($post[self::CLASSIFICATION_FIELD] ?? null) ? trim($post[self::CLASSIFICATION_FIELD]) : '';
+        if ($classification !== '' && !in_array($classification, $inputFieldCodes, true)) {
+            throw new InvalidArgumentException(self::CLASSIFICATION_LABEL . ': escolha um dos campos desta prova.');
+        }
+        $values[self::CLASSIFICATION_FIELD] = $classification === '' ? null : $classification;
 
         foreach (self::CHOICE_FIELDS as $key => [$label, , $options]) {
             $chosen = $post[$key] ?? null;

@@ -17,10 +17,12 @@ final class UploadContents
     /** @var array<int, mixed> */
     public array $pitEvents;
 
-    /** The device's raw clock when it sent the request. */
-    public ?int $deviceNowMs;
-    /** The clock offset the device believes right now; null when it has no estimate. */
-    public ?int $clockOffsetMs;
+    /**
+     * The page's current time on the SERVER's clock, as it works it out
+     * from its anchor. Null while the page has no anchor (it has not yet
+     * had one successful answer since it was opened).
+     */
+    public ?int $nowMs;
     /** The device says it holds nothing unsent. */
     public bool $queueEmpty;
     /** The device says its counter is done ("Encerrar meu turno", or the page was closed). */
@@ -34,8 +36,7 @@ final class UploadContents
         $this->entries = self::listOf($request['entries'] ?? null);
         $this->voids = self::listOf($request['voids'] ?? null);
         $this->pitEvents = self::listOf($request['pit_events'] ?? null);
-        $this->deviceNowMs = UploadFields::intOrNull($request['device_now_ms'] ?? null);
-        $this->clockOffsetMs = UploadFields::intOrNull($request['clock_offset_ms'] ?? null);
+        $this->nowMs = UploadFields::intOrNull($request['now_ms'] ?? null);
         $this->queueEmpty = ($request['queue_empty'] ?? false) === true;
         $this->closing = ($request['encerrando'] ?? false) === true;
     }
@@ -44,21 +45,6 @@ final class UploadContents
     public function carriesData(): bool
     {
         return $this->entries !== [] || $this->voids !== [] || $this->pitEvents !== [];
-    }
-
-    /**
-     * The clock offsets sent with the individual entries and pit events, in
-     * order. Used to find the device's first estimate.
-     *
-     * @return array<int, int|null>
-     */
-    public function itemOffsetsMs(): array
-    {
-        $offsets = [];
-        foreach (array_merge($this->entries, $this->pitEvents) as $item) {
-            $offsets[] = is_array($item) ? UploadFields::intOrNull($item['clock_offset_ms'] ?? null) : null;
-        }
-        return $offsets;
     }
 
     /**

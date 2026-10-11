@@ -23,6 +23,11 @@ use Random\Randomizer;
  * Because the truth is known, a test can check the engine's answer against
  * it. No real race data is used anywhere; this repository is public.
  *
+ * The generator can also produce what is not a typing mistake but still
+ * lands on a reviewer's desk (see SyntheticRaceConfig::withRaceDayTrouble):
+ * a start recorded late, unclassified cars on track, and phones stamping
+ * estimated or unknown times.
+ *
  * THE TRUTH ABOUT LAPS: the counting line is after the start line, so a
  * car's first crossing completes no lap (it is its "pass zero"). A car that
  * really crossed N times has N - 1 laps. With the other setting
@@ -51,6 +56,14 @@ final class SyntheticRace
     private array $entries = [];
     /** @var array<int, ?int> entry id => the car that really crossed, or null when no crossing is behind the entry */
     private array $realCarByEntryId = [];
+    /**
+     * Entry id => the moment the counter really pressed Enter. Usually the
+     * entry's own time; not for an entry stamped by a phone whose clock
+     * could not be trusted.
+     *
+     * @var array<int, int>
+     */
+    private array $typedAtMsByEntryId = [];
 
     private SyntheticRaceConfig $config;
     private Randomizer $random;
@@ -84,7 +97,13 @@ final class SyntheticRace
     {
         $laps = [];
         foreach ($this->track->officialPassTimesByCar as $car => $passTimes) {
-            $laps[$car] = self::lapsFromPasses(count($passTimes), $passagemInicial);
+            $passes = count($passTimes);
+            // With the start itself as pass zero, every crossing AFTER the
+            // start is a lap. A crossing before the recorded start is none.
+            if ($passagemInicial === Settings::INICIAL_LARGADA && in_array($car, $this->track->carsBeforeTheRecordedStart, true)) {
+                $passes--;
+            }
+            $laps[$car] = self::lapsFromPasses($passes, $passagemInicial);
         }
         return $laps;
     }
@@ -110,10 +129,33 @@ final class SyntheticRace
         return $this->realCarByEntryId[$entryId] ?? null;
     }
 
-    /** @return int[] */
+    /** @return int[] the cars that take part */
     public function carNumbers(): array
     {
         return range(1, $this->config->cars);
+    }
+
+    /** @return int[] the cars that are present but not classified */
+    public function unclassifiedCarNumbers(): array
+    {
+        return $this->track->unclassifiedCars;
+    }
+
+    /** @return int[] the cars whose first crossing came before race control recorded the start */
+    public function carsBeforeTheRecordedStart(): array
+    {
+        return $this->track->carsBeforeTheRecordedStart;
+    }
+
+    /** When race control recorded the start (the true start is START_MS). */
+    public function recordedStartMs(): int
+    {
+        return $this->track->recordedStartMs;
+    }
+
+    public function fuelStops(): int
+    {
+        return $this->track->fuelStops;
     }
 
     // ---------------------------------------------------------------
@@ -132,6 +174,7 @@ final class SyntheticRace
         $input = new EngineInput();
         $input->nowMs = $nowMs;
         $input->validCars = $this->carNumbers();
+        $input->unclassifiedCars = $this->unclassifiedCarNumbers();
         $input->ocorrencias = array_values(array_filter($this->track->ocorrencias, fn(Ocorrencia $o) => $o->tsMs <= $nowMs));
 
         for ($sourceId = 1; $sourceId <= $this->config->counters; $sourceId++) {
@@ -140,11 +183,12 @@ final class SyntheticRace
         }
 
         foreach ($this->entries as $entry) {
-            if ($entry->tsMs > $nowMs) {
+            $typedAtMs = $this->typedAtMsByEntryId[$entry->id];
+            if ($typedAtMs > $nowMs) {
                 continue;
             }
             $heldBackFromMs = $this->offlineSinceMs($entry->fonteId, $nowMs);
-            if ($heldBackFromMs !== null && $entry->tsMs >= $heldBackFromMs) {
+            if ($heldBackFromMs !== null && $typedAtMs >= $heldBackFromMs) {
                 continue;
             }
             $input->entries[] = $entry;
@@ -155,11 +199,7 @@ final class SyntheticRace
 
     private function lastEntryMs(): int
     {
-        $lastMs = $this->endMs;
-        foreach ($this->entries as $entry) {
-            $lastMs = max($lastMs, $entry->tsMs);
-        }
-        return $lastMs;
+        return max($this->endMs, max($this->typedAtMsByEntryId));
     }
 
     /** If the source is offline at $nowMs, the moment it lost connection; otherwise null. */
@@ -193,6 +233,14 @@ final class SyntheticRace
                 $typedAtMs = $pass['tsMs'] + $habitMs[$sourceId] + $this->random->getInt(-400, 400);
                 $mistake = $this->mistakes->actions[$passIndex][$sourceId] ?? null;
                 $this->typeOneCrossing($sourceId, $pass, $typedAtMs, $mistake);
+            }
+        }
+
+        // The unclassified cars are typed by everybody, with no mistakes.
+        foreach ($this->track->unclassifiedPasses as $pass) {
+            for ($sourceId = 1; $sourceId <= $this->config->counters; $sourceId++) {
+                $typedAtMs = $pass['tsMs'] + $habitMs[$sourceId] + $this->random->getInt(-400, 400);
+                $this->addEntry($sourceId, $this->deviceInUse($sourceId, $pass['tsMs']), $pass['car'], $typedAtMs, $pass['car']);
             }
         }
     }
@@ -265,7 +313,28 @@ final class SyntheticRace
         // Nobody types a number before the race has started.
         $tsMs = max($tsMs, self::START_MS);
         $id = $this->nextEntryId++;
-        $this->entries[] = new Entry($id, $sourceId, $device, $car, $tsMs);
+        $this->typedAtMsByEntryId[$id] = $tsMs;
         $this->realCarByEntryId[$id] = $realCar;
+
+        $entry = new Entry($id, $sourceId, $device, $car, $tsMs);
+        foreach ([Entry::TEMPO_ESTIMADO => $this->config->estimatedTimePeriods, Entry::TEMPO_DESCONHECIDO => $this->config->unknownTimePeriods] as $quality => $periods) {
+            foreach ($periods as $period) {
+                $fromMs = self::START_MS + $period['fromSeconds'] * 1000;
+                $toMs = self::START_MS + $period['toSeconds'] * 1000;
+                if ($period['source'] === $sourceId && $tsMs >= $fromMs && $tsMs < $toMs) {
+                    // The phone's clock could not be anchored to the server:
+                    // the entry carries a time that is off, and says so.
+                    $entry->qualidadeTempo = $quality;
+                    $entry->tsMs = $tsMs + $period['errorMs'];
+                }
+            }
+        }
+        $this->entries[] = $entry;
+    }
+
+    /** How many entries carry the given time quality (Entry::TEMPO_*). */
+    public function entriesWithTimeQuality(string $quality): int
+    {
+        return count(array_filter($this->entries, fn(Entry $entry) => $entry->qualidadeTempo === $quality));
     }
 }

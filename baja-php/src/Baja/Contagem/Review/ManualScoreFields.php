@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Review;
 
+use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\ScorePublisher;
 use Baja\Model\Input;
@@ -28,7 +29,31 @@ use Baja\Model\Prova;
 final class ManualScoreFields
 {
     /**
-     * Saves the manual fields of one car.
+     * The fields of this prova that the lap counting engine writes and
+     * people therefore must not: VOLTAS, LAST and BEST.
+     *
+     * None when the prova is not a laps prova, and none while publishing is
+     * switched off ("desligada"): the engine then writes nothing to the
+     * scoring system, the spreadsheet or a person is the one filling those
+     * three in, and the entry page has to let them.
+     *
+     * @return string[]
+     */
+    public static function engineOwnedFields(Prova $prova): array
+    {
+        if ($prova->getType() != ContagemAccess::PROVA_TYPE) {
+            return [];
+        }
+        return ContagemService::forProva($prova)->getSettings()->publishesToScoring() ? ScorePublisher::ENGINE_FIELDS : [];
+    }
+
+    /**
+     * Saves the fields of one car that people type.
+     *
+     * When the value of the prova's classification field changes, the car
+     * joins or leaves the race, so the whole race is recounted in the same
+     * locked step: its passes start or stop counting at once, not at the
+     * next upload.
      *
      * @param array<string, mixed> $newValues field code => value, as the entry page prepared them
      * @return array<string, mixed> the fields that changed, with their new values; empty when nothing did
@@ -36,9 +61,10 @@ final class ManualScoreFields
      */
     public static function save(Prova $prova, int $equipeId, array $newValues): array
     {
-        $newValues = self::withoutEngineFields($newValues);
+        $newValues = array_diff_key($newValues, array_flip(self::engineOwnedFields($prova)));
+        $service = ContagemService::forProva($prova);
 
-        return ContagemService::forProva($prova)->withLock(function () use ($prova, $equipeId, $newValues): array {
+        return $service->withLock(function () use ($prova, $service, $equipeId, $newValues): array {
             $row = self::freshRow($prova, $equipeId) ?? self::newRow($prova, $equipeId);
             $stored = (array) $row->getDados();
 
@@ -59,6 +85,11 @@ final class ManualScoreFields
             $row->setDados(array_merge($stored, $newValues));
             $row->save();
             $prova->refreshVarsAndPontos();
+
+            $classificationField = $service->carRoster()->classificationField();
+            if ($classificationField !== null && array_key_exists($classificationField, $changed)) {
+                $service->recomputeAndPublish();
+            }
             return $changed;
         });
     }
@@ -72,27 +103,27 @@ final class ManualScoreFields
      */
     public static function clear(Prova $prova, int $equipeId, array $manualFieldCodes): bool
     {
-        $emptyValues = self::withoutEngineFields(array_fill_keys($manualFieldCodes, null));
+        $emptyValues = array_diff_key(array_fill_keys($manualFieldCodes, null), array_flip(ScorePublisher::ENGINE_FIELDS));
+        $service = ContagemService::forProva($prova);
 
-        return ContagemService::forProva($prova)->withLock(function () use ($prova, $equipeId, $emptyValues): bool {
+        return $service->withLock(function () use ($prova, $service, $equipeId, $emptyValues): bool {
             $row = self::freshRow($prova, $equipeId);
             if ($row === null) {
                 return false;
             }
-            $row->setDados(array_merge((array) $row->getDados(), $emptyValues));
+            $stored = (array) $row->getDados();
+            $row->setDados(array_merge($stored, $emptyValues));
             $row->save();
             $prova->refreshVarsAndPontos();
+
+            // Emptying the classification field takes the car out of the race.
+            $classificationField = $service->carRoster()->classificationField();
+            if ($classificationField !== null && array_key_exists($classificationField, $emptyValues)
+                && ($stored[$classificationField] ?? null) !== null) {
+                $service->recomputeAndPublish();
+            }
             return true;
         });
-    }
-
-    /**
-     * @param array<string, mixed> $values
-     * @return array<string, mixed>
-     */
-    private static function withoutEngineFields(array $values): array
-    {
-        return array_diff_key($values, array_flip(ScorePublisher::ENGINE_FIELDS));
     }
 
     /** The row as it is in the database right now, not as Propel remembers it. */

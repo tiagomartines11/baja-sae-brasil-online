@@ -25,9 +25,6 @@ use Propel\Runtime\Propel;
  */
 final class LapStore
 {
-    /** Rows per INSERT statement. Keeps each statement far below max_allowed_packet. */
-    private const INSERT_CHUNK = 500;
-
     private string $eventoId;
     private string $provaId;
 
@@ -57,36 +54,36 @@ final class LapStore
             foreach ($laps as $lap) {
                 $wanted[$lap->numeroVolta] = [$lap->tsMs, $lap->fontes, $lap->estado];
             }
-            if ($wanted === ($storedByCar[$carro] ?? [])) {
+            $stored = $storedByCar[$carro] ?? [];
+            if ($wanted === $stored) {
                 continue;
             }
-            $this->writeCar((int) $carro, $laps, array_keys($storedByCar[$carro] ?? []));
+            $this->writeCar((int) $carro, $laps, $stored);
             $wroteSomething = true;
         }
         return $wroteSomething;
     }
 
     /**
-     * Throws the whole table away and writes it again from a full run.
-     * Used by "Reconstruir" and after changes made by a person (a decision,
-     * a race-control event), which can touch any car.
+     * Makes the whole table match a full run, car by car, writing only the
+     * rows that differ. Used after changes made by a person (a decision, a
+     * race-control event), which can touch any car but usually touch one.
      *
-     * @param Lap[] $laps
+     * @param Lap[] $laps every lap of the race
+     * @return bool true when anything was written
      */
-    public function replaceAll(array $laps): void
+    public function replaceEveryCar(array $laps): bool
     {
-        $connection = Propel::getWriteConnection('resultados');
-        $connection->beginTransaction();
-        try {
-            $this->deleteAll();
-            foreach (array_chunk($laps, self::INSERT_CHUNK) as $chunk) {
-                $this->insertChunk($chunk);
-            }
-            $connection->commit();
-        } catch (\Throwable $error) {
-            $connection->rollBack();
-            throw $error;
+        $lapsByCar = [];
+        foreach ($laps as $lap) {
+            $lapsByCar[$lap->carro][] = $lap;
         }
+        // A car that has rows in the table but no lap in this run (its
+        // entries were all cancelled, say) must lose those rows.
+        foreach ($this->carsWithStoredLaps() as $carro) {
+            $lapsByCar[$carro] ??= [];
+        }
+        return $this->replaceCars($lapsByCar);
     }
 
     /**
@@ -99,27 +96,38 @@ final class LapStore
     public function updateTimingColumns(array $laps): void
     {
         $stored = $this->storedTimingColumns();
-        $update = Propel::getWriteConnection('resultados')->prepare(
+        $connection = Propel::getWriteConnection('resultados');
+        $update = $connection->prepare(
             'UPDATE contagem_volta
                 SET tempo_volta_ms = ?, dispersao_ms = ?, elegivel_melhor_volta = ?
               WHERE evento_id = ? AND prova_id = ? AND equipe_numero = ? AND numero_volta = ? AND ts_ms = ?'
         );
-        foreach ($laps as $lap) {
-            $wanted = [$lap->tsMs, $lap->tempoVoltaMs, $lap->dispersaoMs, $lap->elegivelMelhorVolta ? 1 : 0];
-            $key = $lap->carro . ':' . $lap->numeroVolta;
-            if (!isset($stored[$key]) || $stored[$key] === $wanted || $stored[$key][0] !== $lap->tsMs) {
-                continue;
+        // One transaction for all of them. Left to commit one by one, each
+        // row waits for the disk: after a rebuild that is several thousand
+        // waits, and took close to twenty seconds for a full race.
+        $connection->beginTransaction();
+        try {
+            foreach ($laps as $lap) {
+                $wanted = [$lap->tsMs, $lap->tempoVoltaMs, $lap->dispersaoMs, $lap->elegivelMelhorVolta ? 1 : 0];
+                $key = $lap->carro . ':' . $lap->numeroVolta;
+                if (!isset($stored[$key]) || $stored[$key] === $wanted || $stored[$key][0] !== $lap->tsMs) {
+                    continue;
+                }
+                $update->execute([
+                    $lap->tempoVoltaMs,
+                    $lap->dispersaoMs,
+                    $lap->elegivelMelhorVolta ? 1 : 0,
+                    $this->eventoId,
+                    $this->provaId,
+                    $lap->carro,
+                    $lap->numeroVolta,
+                    $lap->tsMs,
+                ]);
             }
-            $update->execute([
-                $lap->tempoVoltaMs,
-                $lap->dispersaoMs,
-                $lap->elegivelMelhorVolta ? 1 : 0,
-                $this->eventoId,
-                $this->provaId,
-                $lap->carro,
-                $lap->numeroVolta,
-                $lap->tsMs,
-            ]);
+            $connection->commit();
+        } catch (\Throwable $error) {
+            $connection->rollBack();
+            throw $error;
         }
     }
 
@@ -133,15 +141,15 @@ final class LapStore
 
     /**
      * @param Lap[] $laps
-     * @param int[] $storedLapNumbers lap numbers the car has in the table now
+     * @param array<int, array{0: int, 1: int, 2: string}> $stored what the car has in the table now: lap number => [ts, sources, state]
      */
-    private function writeCar(int $carro, array $laps, array $storedLapNumbers): void
+    private function writeCar(int $carro, array $laps, array $stored): void
     {
         $connection = Propel::getWriteConnection('resultados');
         $connection->beginTransaction();
         try {
             $wantedNumbers = array_map(fn(Lap $lap) => $lap->numeroVolta, $laps);
-            $obsolete = array_diff($storedLapNumbers, $wantedNumbers);
+            $obsolete = array_diff(array_keys($stored), $wantedNumbers);
             if ($obsolete !== []) {
                 $delete = $connection->prepare(
                     'DELETE FROM contagem_volta
@@ -168,6 +176,11 @@ final class LapStore
                      estado = VALUES(estado)'
             );
             foreach ($laps as $lap) {
+                // A new pass normally adds one lap at the end; the hundred
+                // laps before it are already right and are left alone.
+                if (($stored[$lap->numeroVolta] ?? null) === [$lap->tsMs, $lap->fontes, $lap->estado]) {
+                    continue;
+                }
                 $upsert->execute([$this->eventoId, $this->provaId, $carro, $lap->numeroVolta, $lap->tsMs, $lap->fontes, $lap->estado]);
             }
             $connection->commit();
@@ -216,31 +229,13 @@ final class LapStore
         return $rows;
     }
 
-    /** @param Lap[] $laps */
-    private function insertChunk(array $laps): void
+    /** @return int[] */
+    private function carsWithStoredLaps(): array
     {
-        $rowPlaceholder = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-        $sql = 'INSERT INTO contagem_volta
-                    (evento_id, prova_id, equipe_numero, numero_volta, ts_ms, dispersao_ms, fontes,
-                     tempo_volta_ms, elegivel_melhor_volta, estado)
-                VALUES ' . implode(', ', array_fill(0, count($laps), $rowPlaceholder));
-
-        $values = [];
-        foreach ($laps as $lap) {
-            array_push(
-                $values,
-                $this->eventoId,
-                $this->provaId,
-                $lap->carro,
-                $lap->numeroVolta,
-                $lap->tsMs,
-                $lap->dispersaoMs,
-                $lap->fontes,
-                $lap->tempoVoltaMs,
-                $lap->elegivelMelhorVolta ? 1 : 0,
-                $lap->estado
-            );
-        }
-        Propel::getWriteConnection('resultados')->prepare($sql)->execute($values);
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            'SELECT DISTINCT equipe_numero FROM contagem_volta WHERE evento_id = ? AND prova_id = ?'
+        );
+        $statement->execute([$this->eventoId, $this->provaId]);
+        return array_map('intval', $statement->fetchAll(\PDO::FETCH_COLUMN));
     }
 }

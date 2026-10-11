@@ -213,11 +213,51 @@ test('a key held down too long is counted once', () => {
     // keyboard then repeats the key many times a second, and the browser
     // marks every repetition with `repeat: true`.
     //
-    // Expected: the repetitions are ignored. Otherwise a long press would
-    // type 7777, or record the same car as several passes.
-    assert.equal(keyActionFor({ key: '7', repeat: true }, SOMEWHERE_ELSE), null);
-    assert.equal(keyActionFor({ key: 'Enter', repeat: true }, SOMEWHERE_ELSE), null);
-    assert.equal(keyActionFor({ key: 'Enter', repeat: true }, { mode: MODO.TECLADO_TELA, typedInNumberBox: false }), null);
+    // Expected: the repetitions do NOTHING (`TECLA.NADA`): they type no
+    // digit and record no pass, and the page also cancels what the browser
+    // itself would do with them (a held Enter "clicks" the focused button
+    // again and again). Otherwise a long press would type 7777, or record
+    // the same car as several passes.
+    const nothing = { tecla: TECLA.NADA, digito: null };
+    assert.deepEqual(keyActionFor({ key: '7', repeat: true }, SOMEWHERE_ELSE), nothing);
+    assert.deepEqual(keyActionFor({ key: 'Enter', repeat: true }, SOMEWHERE_ELSE), nothing);
+    assert.deepEqual(keyActionFor({ key: 'Enter', repeat: true }, { mode: MODO.TECLADO_TELA, typedInNumberBox: false }), nothing);
+});
+
+test('a key held down INSIDE the number box is cancelled too', () => {
+    // SITUATION: keyboard mode, the cursor is in the number box (the normal
+    // case on a laptop). The counter types "7" and keeps the key down a
+    // moment too long.
+    //
+    // WHAT WENT WRONG: keys typed in the number box are left to the browser
+    // (the box does its own typing), and that included the repetitions of a
+    // held key: the box filled with "777", a car that does not exist.
+    //
+    // EXPECTED: the first press is still left alone (null: the box types
+    // it). Every repetition of a digit or of Enter is answered with
+    // `TECLA.NADA`, which makes the page cancel it. A held Backspace keeps
+    // deleting, as everywhere else.
+    const inTheBox = { mode: MODO.TECLADO, typedInNumberBox: true };
+    assert.equal(keyActionFor({ key: '7', repeat: false }, inTheBox), null);
+    assert.deepEqual(keyActionFor({ key: '7', repeat: true }, inTheBox), { tecla: TECLA.NADA, digito: null });
+    assert.deepEqual(keyActionFor({ key: 'Enter', repeat: true }, inTheBox), { tecla: TECLA.NADA, digito: null });
+    assert.equal(keyActionFor({ key: 'Backspace', repeat: true }, inTheBox), null);
+});
+
+test('Space on a key of the on-screen keypad does nothing', () => {
+    // SITUATION: keypad mode on a laptop or a tablet with a keyboard. The
+    // counter clicked "7" on the screen; that button now has the focus.
+    // Then the space bar gets pressed (a resting thumb is enough).
+    //
+    // WHAT WENT WRONG: a browser "clicks" the focused button on Space, so
+    // the 7 was typed a second time, or OK was pressed a second time.
+    //
+    // EXPECTED: `TECLA.NADA`, so the page cancels the key. Space on anything
+    // else (the "Som" checkbox, for example) is left alone and keeps working.
+    const onKeypadKey = { mode: MODO.TECLADO_TELA, typedInNumberBox: false, focusOnKeypadKey: true };
+    const onACheckbox = { mode: MODO.TECLADO_TELA, typedInNumberBox: false, focusOnKeypadKey: false };
+    assert.deepEqual(keyActionFor({ key: ' ' }, onKeypadKey), { tecla: TECLA.NADA, digito: null });
+    assert.equal(keyActionFor({ key: ' ' }, onACheckbox), null);
 });
 
 test('browser shortcuts and other keys are not car numbers', () => {

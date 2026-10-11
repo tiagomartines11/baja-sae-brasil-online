@@ -57,9 +57,10 @@ final class Engine
         $result = new EngineResult($timeline);
 
         $result->autoVoidedEntryIds = $counter->duplicates->autoVoidedEntryIds;
-        foreach ($counter->duplicates->keptEntries as $entry) {
-            $result->effectiveEntries[$entry->id] = $entry;
-        }
+        // Keyed by entry id. array_column does in one native call what a
+        // loop over tens of thousands of entries would do one by one.
+        $result->effectiveEntries = array_column($counter->duplicates->keptEntries, null, 'id');
+        $result->unknownTimeEntries = $counter->unknownTimeEntries;
 
         $groupsInTimeOrder = self::inTimeOrder($counter->groupsByCar);
         $fuser = PassTimeFuser::removeHabits($groupsInTimeOrder, $counter->sourcesById);
@@ -73,8 +74,9 @@ final class Engine
             : LapBuilder::buildReference($counter->groupsByCar, $timeline, $settings);
         $pace = new PaceModel($referenceLapsByCar, $settings);
 
-        $flagDetector = new FlagDetector($settings, $counter->availability, $pace, $timeline, $counter->sourcesById, $input->validCars);
-        $flags = $flagDetector->detect($counter->groupsByCar, $groupsInTimeOrder, $referenceLapsByCar, $counter->duplicates->openRepeatEntryIds);
+        $flagDetector = new FlagDetector($settings, $counter->availability, $pace, $timeline, $counter->sourcesById, $input->validCars, $input->unclassifiedCars);
+        $flags = $flagDetector->detect($counter->groupsByCar, $groupsInTimeOrder, $referenceLapsByCar, $counter->duplicates, $counter->unknownTimeEntries);
+        $flagDetector->describeRepeats($counter->duplicates->flags);
         $flags = array_merge($flags, $counter->duplicates->flags);
 
         LapBuilder::markBestLapEligibility($lapsByCar, $settings, $pace);
@@ -86,14 +88,9 @@ final class Engine
         $result->flags = self::inReviewOrder($flags, $result);
 
         $result->setGroups($groupsInTimeOrder);
-        foreach ($lapsByCar as $laps) {
-            foreach ($laps as $lap) {
-                $result->laps[] = $lap;
-            }
-        }
+        $result->laps = $lapsByCar === [] ? [] : array_merge(...array_values($lapsByCar));
         $result->sourceStats = SourceStatsBuilder::build(
             $counter->sourcesById,
-            $counter->duplicates->keptEntries,
             $groupsInTimeOrder,
             $counter->applied,
             $counter->duplicates,
@@ -132,9 +129,11 @@ final class Engine
     }
 
     /**
-     * The teams present at the event, plus any other number that somehow
-     * earned an official pass (so a lap is never invisible). Without a team
-     * list every number that was typed is reported.
+     * The cars that take part (present and classified), plus any other
+     * number that somehow earned an official pass (so a lap is never
+     * invisible): a number that is no team but two counters agree on, or an
+     * unclassified car a reviewer told to count. Without a team list every
+     * number that was typed is reported.
      *
      * @param int[] $validCars
      * @param array<int, Lap[]> $lapsByCar

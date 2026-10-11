@@ -157,8 +157,8 @@ final class FastPathTest extends DbTestCase
         // The first attempt: the entry reached the table, nothing else happened.
         $this->executeSql(
             'INSERT INTO contagem_passagem (fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_dispositivo_ms,
-                 desvio_relogio_ms, ts_ms, modo_entrada, recebido_em_ms)
-             SELECT fonte_id, dispositivo_id, ?, ?, ?, 0, ?, ?, ? FROM contagem_dispositivo WHERE fonte_id = ? LIMIT 1',
+                 ts_ms, modo_entrada, recebido_em_ms)
+             SELECT fonte_id, dispositivo_id, ?, ?, ?, ?, ?, ? FROM contagem_dispositivo WHERE fonte_id = ? LIMIT 1',
             [$uuid, self::CAR_A, $this->at(240), $this->at(240), 'teclado', $this->at(240), $this->fontes[0]->getFonteId()]
         );
         $this->assertNull($this->publishedData(self::CAR_A), 'nothing was published by the failed attempt');
@@ -205,32 +205,6 @@ final class FastPathTest extends DbTestCase
         $this->assertSame(401, $response['status']);
         $this->assertSame('token_invalido', $response['body']['erro']);
         $this->assertSame(0, $this->countRows('contagem_passagem', 'fonte_id = ?', [$this->fontes[0]->getFonteId()]));
-    }
-
-    /**
-     * SITUATION: a phone has its clock set to the wrong year, and sends an
-     * entry "timed" two years ago together with a good one.
-     *
-     * EXPECTED: the good entry is stored and acknowledged. The impossible
-     * one is neither: it stays in the phone's queue, where the counter sees
-     * "1 na fila" that never goes away, the visible sign that something is
-     * wrong with that phone. Stored, it would sit years away from the race,
-     * where no review screen would ever show it.
-     */
-    public function testAnEntryTimedYearsAwayIsNotStoredAndNotAcknowledged(): void
-    {
-        $token = $this->issueToken($this->fontes[0]);
-        $good = self::newUuid();
-        $impossible = self::newUuid();
-        $twoYearsMs = 2 * 365 * 24 * 3600 * 1000;
-
-        $response = $this->upload($token, [
-            $this->entryPayload($good, self::CAR_A, $this->at(60)),
-            $this->entryPayload($impossible, self::CAR_B, $this->at(60) - $twoYearsMs),
-        ]);
-
-        $this->assertSame([$good], $response['body']['stored_uuids']);
-        $this->assertSame(1, $this->countRows('contagem_passagem', 'fonte_id = ?', [$this->fontes[0]->getFonteId()]));
     }
 
     /**

@@ -5,6 +5,7 @@ namespace Baja\Contagem\Review;
 
 use Baja\Certificado\Insercao\Csrf;
 use Baja\Contagem\Access\ContagemAccess;
+use Baja\Contagem\Engine\Settings;
 use Baja\Juiz\Template;
 use Baja\Model\Prova;
 use Baja\Session;
@@ -201,6 +202,46 @@ final class Pagina
         echo self::stylesheetTag();
         echo '<div class="contagem-pagina">';
         echo self::navigation($prova, $title);
+        echo self::simulationBanner($prova);
+    }
+
+    /**
+     * The permanent "SIMULAÇÃO" banner of every controller page, shown for
+     * as long as the prova accepts simulated entries. A rehearsal left
+     * switched on would let made-up passes into a real race; the banner is
+     * what makes that impossible to overlook.
+     */
+    public static function simulationBanner(Prova $prova): string
+    {
+        if (!Settings::fromArray($prova->getParams()->contagem ?? null)->permitirSimulacao) {
+            return '';
+        }
+        return '<p class="contagem-simulacao" role="alert"><strong>SIMULAÇÃO</strong> '
+            . 'Esta prova aceita passagens simuladas. Desligue "Permitir simulação" em Fontes e configurações antes da corrida de verdade.</p>';
+    }
+
+    /**
+     * The form shown when an action answered "confirm first": the same
+     * fields again, plus the one that says yes.
+     *
+     * @param array<string, mixed> $post the form as it was sent
+     */
+    public static function confirmationForm(Prova $prova, string $action, array $post, ConfirmationNeeded $question): string
+    {
+        $fields = '';
+        foreach ($post as $name => $value) {
+            // The token is added fresh below; anything that is not plain
+            // text has no business in these forms.
+            if ($name === Csrf::CAMPO || !is_string($value)) {
+                continue;
+            }
+            $fields .= '<input type="hidden" name="' . self::h($name) . '" value="' . self::h($value) . '">';
+        }
+        return '<form method="POST" action="' . self::h($action) . '" class="contagem-acao contagem-confirmacao">'
+            . self::csrfField($prova) . $fields
+            . '<input type="hidden" name="' . self::h($question->campo) . '" value="1">'
+            . '<button type="submit" class="botao-vermelho">' . self::h($question->rotulo) . '</button>'
+            . '<a href="' . self::h($action) . '">Não, voltar</a></form>';
     }
 
     public static function printFooter(): void

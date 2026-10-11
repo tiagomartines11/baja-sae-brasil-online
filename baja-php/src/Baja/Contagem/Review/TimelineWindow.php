@@ -13,7 +13,7 @@ use Propel\Runtime\Propel;
 
 /**
  * The lane view of the review screen: one lane per source with what that
- * source typed, plus the pit lane.
+ * source typed, plus the pit lane and the fueling station (TimelineStops).
  *
  * Unlike the engine's result, this shows the raw entries too, including the
  * ones that were voided, because a reviewer deciding about a flag needs to
@@ -109,7 +109,9 @@ final class TimelineWindow
             'largada_ms' => $recount->timeline->largadaMs,
             'encerramento_ms' => $recount->timeline->encerramentoMs,
             'raias' => $lanes,
-            'ocorrencias' => self::describeOcorrencias($recount->input->ocorrencias, $wantsOcorrencia),
+            'ocorrencias' => TimelineStops::describeOcorrencias($recount->input->ocorrencias, $recount->timeline, $wantsOcorrencia),
+            'estadias' => TimelineStops::describeStays($recount->timeline, $carro, $fromMs, $untilMs),
+            'abastecimento' => $recount->input->settings->abastecimento,
         ];
     }
 
@@ -133,12 +135,16 @@ final class TimelineWindow
             'carro' => $effectiveCar,
             'carro_digitado' => $raw->carroDigitado,
             'ts_ms' => $raw->tsMs,
+            // 'exato', 'estimado' (stamped from an anchor of an earlier page
+            // load) or 'desconhecido' (the phone's own clock: the entry is
+            // in no group and its place on the timeline means nothing).
+            'qualidade_tempo' => $raw->qualidadeTempo,
             'anulada' => $reasonNotInUse === CarsRecount::ANULADA,
             'anulada_auto' => $reasonNotInUse === CarsRecount::REPETIDA,
             'reatribuida' => $effectiveCar !== $raw->carroDigitado,
             // In no group and nobody voided it: before the start, or its
             // source was off or excluded at that moment.
-            'fora_de_uso' => in_array($reasonNotInUse, [CarsRecount::ANTES_DA_LARGADA, CarsRecount::FONTE_INATIVA, CarsRecount::FONTE_EXCLUIDA], true),
+            'fora_de_uso' => in_array($reasonNotInUse, [CarsRecount::ANTES_DA_LARGADA, CarsRecount::FONTE_INATIVA, CarsRecount::FONTE_EXCLUIDA, CarsRecount::TEMPO_DESCONHECIDO], true),
             'motivo_fora_de_uso' => $reasonNotInUse,
             'adicionada_por_revisor' => $raw->fonteId === Source::REVISOR_ID,
             'decisoes' => $decisions,
@@ -155,6 +161,9 @@ final class TimelineWindow
      *   papel 'janela_largada'     typed inside the start window; never a lap
      *   papel 'apos_encerramento'  a pass after the finish that the rules leave out
      *   papel 'pendente'           does not count yet (one counter only)
+     *   papel 'antes_da_largada'   typed shortly before the start; counts
+     *                              (as the car's pass zero) only once a
+     *                              reviewer confirmed it
      *
      * @return array<string, mixed>
      */
@@ -163,7 +172,9 @@ final class TimelineWindow
         // The start window is asked first: the engine numbers a car's first
         // crossing typed inside it as pass 0 too, and the reviewer should be
         // told the more specific thing.
-        if ($group->dentroDaJanelaDeLargada) {
+        if ($group->antesDaLargada) {
+            $role = 'antes_da_largada';
+        } elseif ($group->dentroDaJanelaDeLargada) {
             $role = 'janela_largada';
         } elseif ($group->numeroVolta === 0) {
             $role = 'inicial';
@@ -181,7 +192,7 @@ final class TimelineWindow
             'ts_ms' => $group->tsMs,
             'papel' => $role,
             // "contado" keeps its old meaning for the screen: an official pass.
-            'contado' => $role === 'volta' || $role === 'inicial',
+            'contado' => $role === 'volta' || $role === 'inicial' || ($role === 'antes_da_largada' && $group->contado),
             'numero_volta' => $group->numeroVolta,
             'confirmado_por_revisor' => $group->confirmadoPorRevisor,
         ];
@@ -195,15 +206,11 @@ final class TimelineWindow
      */
     private static function carsTypedBetween(Prova $prova, int $fromMs, int $untilMs): array
     {
-        // The effective time of an entry is ts_ms, or, for an entry typed
-        // before its device knew its clock offset, the device time plus the
-        // first offset it reported later (see EngineInputLoader).
         $sql = 'SELECT DISTINCT p.equipe_numero
                   FROM contagem_passagem p
                   JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
-                  JOIN contagem_dispositivo d ON d.dispositivo_id = p.dispositivo_id
                  WHERE f.evento_id = :evento AND f.prova_id = :prova
-                   AND COALESCE(p.ts_ms, p.ts_dispositivo_ms + COALESCE(d.primeiro_desvio_ms, 0)) BETWEEN :de AND :ate';
+                   AND p.ts_ms BETWEEN :de AND :ate';
         $statement = Propel::getReadConnection('resultados')->prepare($sql);
         $statement->execute([
             ':evento' => $prova->getEventoId(),
@@ -231,40 +238,5 @@ final class TimelineWindow
             $lanes[] = ['fonte_id' => Source::REVISOR_ID, 'nome' => 'Revisor', 'tipo' => 'revisor', 'ativa' => true];
         }
         return $lanes;
-    }
-
-    /**
-     * @param Ocorrencia[] $ocorrencias
-     * @param callable(Ocorrencia): bool $wantsOcorrencia
-     * @return array<int, array<string, mixed>> pit and race-control events, in time order
-     */
-    private static function describeOcorrencias(array $ocorrencias, callable $wantsOcorrencia): array
-    {
-        // A row that another row corrects or cancels was a mistake; the
-        // engine ignores it and so does the timeline.
-        $replaced = [];
-        foreach ($ocorrencias as $ocorrencia) {
-            if ($ocorrencia->substituiId !== null) {
-                $replaced[$ocorrencia->substituiId] = true;
-            }
-        }
-
-        $rows = [];
-        foreach ($ocorrencias as $ocorrencia) {
-            // A cancellation is nothing itself; it only removes its target.
-            $isCancellation = $ocorrencia->tipo === Ocorrencia::CANCELAMENTO;
-            if ($isCancellation || isset($replaced[$ocorrencia->id]) || !$wantsOcorrencia($ocorrencia)) {
-                continue;
-            }
-            $rows[] = [
-                'id' => $ocorrencia->id,
-                'tipo' => $ocorrencia->tipo,
-                'carro' => $ocorrencia->carro,
-                'ts_ms' => $ocorrencia->tsMs,
-                'box' => in_array($ocorrencia->tipo, Ocorrencia::TIPOS_BOX, true),
-            ];
-        }
-        usort($rows, fn(array $a, array $b) => [$a['ts_ms'], $a['id']] <=> [$b['ts_ms'], $b['id']]);
-        return $rows;
     }
 }

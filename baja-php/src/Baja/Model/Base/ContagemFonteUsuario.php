@@ -92,6 +92,13 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
     protected $criado_em_ms;
 
     /**
+     * The value for the liberado_em_ms field.
+     *
+     * @var        string|null
+     */
+    protected $liberado_em_ms;
+
+    /**
      * @var        ChildContagemFonte
      */
     protected $aContagemFonte;
@@ -371,6 +378,16 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
     }
 
     /**
+     * Get the [liberado_em_ms] column value.
+     *
+     * @return string|null
+     */
+    public function getLiberadoEmMs()
+    {
+        return $this->liberado_em_ms;
+    }
+
+    /**
      * Set the value of [fonte_id] column.
      *
      * @param int $v New value
@@ -455,6 +472,26 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [liberado_em_ms] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setLiberadoEmMs($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->liberado_em_ms !== $v) {
+            $this->liberado_em_ms = $v;
+            $this->modifiedColumns[ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -502,6 +539,9 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 3 + $startcol : ContagemFonteUsuarioTableMap::translateFieldName('CriadoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->criado_em_ms = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ContagemFonteUsuarioTableMap::translateFieldName('LiberadoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->liberado_em_ms = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -509,7 +549,7 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 4; // 4 = ContagemFonteUsuarioTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 5; // 5 = ContagemFonteUsuarioTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemFonteUsuario'), 0, $e);
@@ -735,6 +775,9 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS)) {
             $modifiedColumns[':p' . $index++]  = 'criado_em_ms';
         }
+        if ($this->isColumnModified(ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'liberado_em_ms';
+        }
 
         $sql = sprintf(
             'INSERT INTO contagem_fonte_usuario (%s) VALUES (%s)',
@@ -760,6 +803,10 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
                         break;
                     case 'criado_em_ms':
                         $stmt->bindValue($identifier, $this->criado_em_ms, PDO::PARAM_INT);
+
+                        break;
+                    case 'liberado_em_ms':
+                        $stmt->bindValue($identifier, $this->liberado_em_ms, PDO::PARAM_INT);
 
                         break;
                 }
@@ -829,6 +876,9 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
             case 3:
                 return $this->getCriadoEmMs();
 
+            case 4:
+                return $this->getLiberadoEmMs();
+
             default:
                 return null;
         } // switch()
@@ -861,6 +911,7 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
             $keys[1] => $this->getUsuario(),
             $keys[2] => $this->getAdicionadoPor(),
             $keys[3] => $this->getCriadoEmMs(),
+            $keys[4] => $this->getLiberadoEmMs(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -931,6 +982,9 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
             case 3:
                 $this->setCriadoEmMs($value);
                 break;
+            case 4:
+                $this->setLiberadoEmMs($value);
+                break;
         } // switch()
 
         return $this;
@@ -968,6 +1022,9 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
         }
         if (array_key_exists($keys[3], $arr)) {
             $this->setCriadoEmMs($arr[$keys[3]]);
+        }
+        if (array_key_exists($keys[4], $arr)) {
+            $this->setLiberadoEmMs($arr[$keys[4]]);
         }
 
         return $this;
@@ -1023,6 +1080,9 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS)) {
             $criteria->add(ContagemFonteUsuarioTableMap::COL_CRIADO_EM_MS, $this->criado_em_ms);
+        }
+        if ($this->isColumnModified(ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS)) {
+            $criteria->add(ContagemFonteUsuarioTableMap::COL_LIBERADO_EM_MS, $this->liberado_em_ms);
         }
 
         return $criteria;
@@ -1131,6 +1191,7 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
         $copyObj->setUsuario($this->getUsuario());
         $copyObj->setAdicionadoPor($this->getAdicionadoPor());
         $copyObj->setCriadoEmMs($this->getCriadoEmMs());
+        $copyObj->setLiberadoEmMs($this->getLiberadoEmMs());
         if ($makeNew) {
             $copyObj->setNew(true);
         }
@@ -1225,6 +1286,7 @@ abstract class ContagemFonteUsuario implements ActiveRecordInterface
         $this->usuario = null;
         $this->adicionado_por = null;
         $this->criado_em_ms = null;
+        $this->liberado_em_ms = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();

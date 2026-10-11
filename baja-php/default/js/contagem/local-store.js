@@ -30,6 +30,21 @@ function insertInSequenceOrder(records, record) {
     records.splice(position, 0, record);
 }
 
+/** Still to be uploaded: not confirmed by the server and not refused by it. */
+function isWaiting(record) {
+    return !record.sent && !record.refused;
+}
+
+/** False for a record held until this device knows the server's time. */
+function hasFinalTime(record) {
+    return Number.isFinite(record.ts_ms);
+}
+
+/** An undo still to be confirmed. (The undo of an entry the server refused has nothing to undo there.) */
+function isUnconfirmedVoid(record) {
+    return record.voided && !record.void_sent && !record.void_refused && !record.refused;
+}
+
 export class LocalStore {
     /** Use `LocalStore.open(adapter)`; the constructor alone loads nothing. */
     constructor(storageAdapter) {
@@ -84,8 +99,9 @@ export class LocalStore {
     // ---- entries (passes typed on the count page) ----
 
     /**
-     * @param {{uuid: string, car: number, ts_device_ms: number,
-     *          clock_offset_ms: ?number, typing_ms: ?number, mode: string}} entry
+     * @param {object} entry `{uuid, car, typing_ms, mode}` plus the time
+     *        fields ServerClock.stamp() returns. `ts_ms` is null for an entry
+     *        HELD until this page has an anchor (see server-clock.js).
      * @returns {Promise<object>} the stored record, with its local marks
      */
     async addEntry(entry) {
@@ -100,6 +116,9 @@ export class LocalStore {
             voided: false,
             voided_at_ms: null,
             void_sent: false,
+            // Set when the server will never store this entry (see refused-records.js).
+            refused: false,
+            refused_reason: null,
         };
         await this.trackWrite(() => this.storage.put('entries', record.uuid, record));
         // Memory is updated only after the disk write succeeded: an entry the
@@ -152,8 +171,14 @@ export class LocalStore {
         return this.entries.slice();
     }
 
+    /** Entries the server still has to receive: held ones included, refused ones not. */
     unsentEntries() {
-        return this.entries.filter((record) => !record.sent);
+        return this.entries.filter(isWaiting);
+    }
+
+    /** The unsent entries that may go up now: the ones whose final time is known. */
+    entriesReadyToSend() {
+        return this.entries.filter((record) => isWaiting(record) && hasFinalTime(record));
     }
 
     /**
@@ -162,18 +187,17 @@ export class LocalStore {
      * receives a void for an entry it has not seen.
      */
     voidsReadyToSend() {
-        return this.entries.filter((record) => record.voided && !record.void_sent && record.sent);
+        return this.entries.filter((record) => record.sent && isUnconfirmedVoid(record));
     }
 
-    // ---- pit events ("Entrou" / "Saiu" on the pit page) ----
+    // ---- pit events (entries and exits on the pit and fueling page) ----
 
-    /**
-     * @param {{uuid: string, car: number, tipo: string, ts_device_ms: number,
-     *          clock_offset_ms: ?number}} pitEvent
-     */
+    /** @param {object} pitEvent `{uuid, car, tipo}` plus the time fields, as in addEntry */
     async addPitEvent(pitEvent) {
         // Same rule as addEntry: the sequence number is taken before waiting.
-        const record = { ...pitEvent, seq: this.nextSequence++, sent: false, sent_at_ms: null };
+        const record = {
+            ...pitEvent, seq: this.nextSequence++, sent: false, sent_at_ms: null, refused: false, refused_reason: null,
+        };
         await this.trackWrite(() => this.storage.put('pit_events', record.uuid, record));
         insertInSequenceOrder(this.pitEvents, record);
         return record;
@@ -196,14 +220,70 @@ export class LocalStore {
     }
 
     unsentPitEvents() {
-        return this.pitEvents.filter((record) => !record.sent);
+        return this.pitEvents.filter(isWaiting);
+    }
+
+    pitEventsReadyToSend() {
+        return this.pitEvents.filter((record) => isWaiting(record) && hasFinalTime(record));
+    }
+
+    // ---- final times of held records (see server-clock.js) ----
+
+    /** Entries and pit events typed while this device had no anchor, still without a time. */
+    heldRecords() {
+        const held = [];
+        for (const [collection, records] of [['entries', this.entries], ['pit_events', this.pitEvents]]) {
+            for (const record of records) {
+                // (A record uploaded by an older version of this page has no
+                // `ts_ms` either; the server already has its time.)
+                if (!record.sent && !hasFinalTime(record)) {
+                    held.push({ collection, record });
+                }
+            }
+        }
+        return held;
+    }
+
+    heldCount() {
+        return this.heldRecords().length;
+    }
+
+    /**
+     * Gives a held record its final time. This is the ONLY change ever made
+     * to the time of a record, it happens once, and always before upload.
+     * @param {string} collection 'entries' or 'pit_events'
+     * @param {{ts_ms: number, time_quality: string, anchor: ?object}} time
+     */
+    async setFinalTime(collection, uuid, time) {
+        const record = this.findRecord(collection, uuid);
+        if (!record || hasFinalTime(record)) {
+            return;
+        }
+        await this.patchRecord(collection, uuid, {
+            ts_ms: time.ts_ms, time_quality: time.time_quality, anchor: time.anchor,
+        });
+    }
+
+    /** Changes some local marks of a record, disk first (see refused-records.js). */
+    async patchRecord(collection, uuid, changes) {
+        const record = this.findRecord(collection, uuid);
+        if (!record) {
+            return;
+        }
+        await this.storage.patch(collection, uuid, changes);
+        Object.assign(record, changes);
+    }
+
+    findRecord(collection, uuid) {
+        const records = collection === 'entries' ? this.entries : this.pitEvents;
+        return records.find((record) => record.uuid === uuid);
     }
 
     // ---- what the status bar shows as "na fila" ----
 
-    /** Number of things the server has not confirmed yet. */
+    /** Number of things the server has not confirmed yet (and still may). */
     pendingCount() {
-        const unconfirmedVoids = this.entries.filter((record) => record.voided && !record.void_sent).length;
+        const unconfirmedVoids = this.entries.filter(isUnconfirmedVoid).length;
         return this.unsentEntries().length + unconfirmedVoids + this.unsentPitEvents().length;
     }
 

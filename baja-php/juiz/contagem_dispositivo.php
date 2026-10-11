@@ -66,6 +66,14 @@ if (!empty($_GET['box'])) {
 }
 
 $username = Session::getCurrentUser()->getUsername();
+
+// A user whose device on this source was revoked stays out until a
+// controller links them again or presses "liberar". Otherwise the revoked
+// phone would be back half a minute later with a fresh token.
+if (DeviceTokens::isBlocked($fonte, $username)) {
+    $respond(403, ['erro' => 'dispositivo_revogado']);
+}
+
 $token = DeviceTokens::issue($fonte, $username, (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
 
 $respond(200, [

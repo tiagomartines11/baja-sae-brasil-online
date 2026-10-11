@@ -30,14 +30,19 @@ final class LateFirstPass
 
     /**
      * @param array<int, Lap[]> $referenceLapsByCar each car's pass zero followed by its laps
+     * @param array<int, true> $validCars the cars that take part; empty = every car. A number that
+     *   is no team, or a car that is not classified, is neither part of "the field" nor flagged here
      * @return array<int, array{0: Flag, 1: PassGroup}> each flag with the pass group it is about
      */
-    public static function find(array $referenceLapsByCar): array
+    public static function find(array $referenceLapsByCar, array $validCars = []): array
     {
         $firstPassByCar = [];
         $firstPassTimes = [];
         $firstLapDurations = [];
         foreach ($referenceLapsByCar as $carro => $laps) {
+            if ($validCars !== [] && !isset($validCars[$carro])) {
+                continue;
+            }
             $passZero = $laps[0] ?? null;
             if ($passZero === null || $passZero->estado !== Lap::INICIAL) {
                 continue;

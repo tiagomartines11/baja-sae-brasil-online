@@ -34,6 +34,9 @@ final class SettingsTest extends TestCase
         'fonte_offline_s' => 60,
         'recalculo_s' => 5,
         'dispositivo_ausente_s' => 600,
+        'campo_classificacao' => null,
+        'abastecimento' => false,
+        'permitir_simulacao' => false,
     ];
 
     /**
@@ -75,6 +78,9 @@ final class SettingsTest extends TestCase
             'fonte_offline_s' => 90,
             'recalculo_s' => 10,
             'dispositivo_ausente_s' => 300,
+            'campo_classificacao' => 'APTO',
+            'abastecimento' => true,
+            'permitir_simulacao' => true,
         ];
         $this->assertSame(array_keys(self::DEFAULTS), array_keys($custom), 'The test must cover every key.');
 
@@ -98,6 +104,9 @@ final class SettingsTest extends TestCase
         $this->assertSame(90, $settings->fonteOfflineS);
         $this->assertSame(10, $settings->recalculoS);
         $this->assertSame(300, $settings->dispositivoAusenteS);
+        $this->assertSame('APTO', $settings->campoClassificacao);
+        $this->assertTrue($settings->abastecimento);
+        $this->assertTrue($settings->permitirSimulacao);
     }
 
     /**
@@ -142,6 +151,24 @@ final class SettingsTest extends TestCase
         }
         $cases['janela_largada_s = -1'] = ['janela_largada_s', -1];
         $cases['janela_largada_s = "abc"'] = ['janela_largada_s', 'abc'];
+        // The classification field must look like the name of an input field.
+        $cases['campo_classificacao = ""'] = ['campo_classificacao', ''];
+        $cases['campo_classificacao = "AP TO"'] = ['campo_classificacao', 'AP TO'];
+        $cases['campo_classificacao = "APTO;--"'] = ['campo_classificacao', 'APTO;--'];
+        $cases['campo_classificacao = 5'] = ['campo_classificacao', 5];
+        $cases['campo_classificacao = null'] = ['campo_classificacao', null];
+        // The two switches are on only for an unmistakable yes.
+        foreach (['abastecimento', 'permitir_simulacao'] as $key) {
+            $cases["$key = false"] = [$key, false];
+            $cases["$key = 0"] = [$key, 0];
+            $cases["$key = \"0\""] = [$key, '0'];
+            $cases["$key = \"\""] = [$key, ''];
+            $cases["$key = \"nao\""] = [$key, 'nao'];
+            $cases["$key = \"talvez\""] = [$key, 'talvez'];
+            $cases["$key = 2"] = [$key, 2];
+            $cases["$key = null"] = [$key, null];
+            $cases["$key = []"] = [$key, []];
+        }
         return $cases;
     }
 
@@ -174,6 +201,43 @@ final class SettingsTest extends TestCase
         $this->assertSame(1.0, Settings::fromArray(['fracao_volta_minima' => 1])->fracaoVoltaMinima);
         $this->assertSame(0.99, Settings::fromArray(['fracao_volta_minima' => 0.99])->fracaoVoltaMinima);
         $this->assertSame(self::DEFAULTS, Settings::fromArray(['chave_que_nao_existe' => 7, 'janelaMs' => 1])->toArray());
+    }
+
+    /**
+     * SITUATION: the settings page posts a ticked checkbox as "1" or "on",
+     * and a JSON editor may write true, 1 or "sim".
+     *
+     * EXPECTED: all of those switch the fueling area and the simulation on,
+     * each switch on its own. (What does NOT switch them on is listed among
+     * the unusable values above: when in doubt, off.)
+     */
+    public function testTheSwitchesAcceptTheUsualWaysOfSayingYes(): void
+    {
+        foreach ([true, 1, '1', 'true', 'on', 'sim', ' SIM '] as $yes) {
+            $fueling = Settings::fromArray(['abastecimento' => $yes]);
+            $this->assertTrue($fueling->abastecimento, 'abastecimento = ' . var_export($yes, true));
+            $this->assertFalse($fueling->permitirSimulacao, 'One switch must not turn the other on.');
+
+            $simulation = Settings::fromArray(['permitir_simulacao' => $yes]);
+            $this->assertTrue($simulation->permitirSimulacao, 'permitir_simulacao = ' . var_export($yes, true));
+            $this->assertFalse($simulation->abastecimento);
+        }
+    }
+
+    /**
+     * SITUATION: the prova names "APTO" as its classification field.
+     *
+     * EXPECTED: the name is kept as typed. Letters, digits and underscores
+     * are allowed, up to 64 characters; with no field named (the default)
+     * every present car takes part.
+     */
+    public function testTheClassificationFieldIsTheNameOfAnInputField(): void
+    {
+        $this->assertNull((new Settings())->campoClassificacao);
+        $this->assertSame('APTO', Settings::fromArray(['campo_classificacao' => 'APTO'])->campoClassificacao);
+        $this->assertSame('apto_2', Settings::fromArray(['campo_classificacao' => 'apto_2'])->campoClassificacao);
+        $this->assertSame(str_repeat('A', 64), Settings::fromArray(['campo_classificacao' => str_repeat('A', 64)])->campoClassificacao);
+        $this->assertNull(Settings::fromArray(['campo_classificacao' => str_repeat('A', 65)])->campoClassificacao);
     }
 
     /**

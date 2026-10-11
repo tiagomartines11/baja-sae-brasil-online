@@ -17,6 +17,7 @@ import assert from 'node:assert/strict';
 import {
   dispositivosDaFonte, encontrarAlerta, estadoDaFonte, fontesDivergentes, janelaDoAlerta, ordenarFila,
   resumoDeAlertas, resumoDosDispositivos,
+  mostraCorridaInteira, quandoDoAlerta,
 } from '../../default/js/contagem/revisao-fila.js';
 
 // A small helper so each test only writes the fields it cares about.
@@ -225,4 +226,28 @@ test('the status bar names the devices of a source that are silent, closed or re
 test('a source whose devices were all closed says nobody is expected, not a date', () => {
   const fonte = { ativa: true, tipo: 'manual', stats: { visto_em_ms: 9000, offline: false, nada_a_esperar: true, sincronizado_ate_ms: null } };
   assert.deepEqual(estadoDaFonte(fonte, 10000), { classe: 'ao-vivo', texto: 'sem dispositivo aberto' });
+});
+
+// SITUATION: a flag "tempo_desconhecido": counter 3's phone uploaded an
+// entry for car 33 with no official time. The time the entry carries is the
+// phone's own guess, here three days before the race.
+//
+// WHAT WOULD GO WRONG: shown like any other flag, the queue would say it
+// happened at "-71:35:00" and its panel would load one empty minute of
+// three days ago.
+//
+// EXPECTED: such a flag says "sem horário", and its panel shows the car's
+// whole race, which is what the reviewer needs to decide where (and
+// whether) the pass belongs. Every other flag keeps its time and its
+// one-minute window.
+test('a flag about an entry of unknown time shows no time and loads the car\'s whole race', () => {
+  const largada = 1_760_000_000_000;
+  const desconhecido = { tipo: 'tempo_desconhecido', carros: [33], passagem_ids: [9], ts_ms: largada - 3 * 24 * 3600 * 1000 };
+  const solitaria = { tipo: 'solitaria', carros: [44], passagem_ids: [5], ts_ms: largada + 400_000 };
+
+  assert.equal(mostraCorridaInteira(desconhecido), true);
+  assert.equal(quandoDoAlerta(desconhecido, largada), 'sem horário');
+
+  assert.equal(mostraCorridaInteira(solitaria), false);
+  assert.equal(quandoDoAlerta(solitaria, largada), '0:06:40');
 });

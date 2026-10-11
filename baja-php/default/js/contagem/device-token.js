@@ -8,8 +8,23 @@
 const META_DEVICE = 'dispositivo';
 const META_REVOKED = 'token_revogado';
 
+const ERRO_DISPOSITIVO_REVOGADO = 'dispositivo_revogado';
+
+export const MOTIVO = {
+    SEM_PERMISSAO: 'sem_permissao',
+    DISPOSITIVO_REVOGADO: 'dispositivo_revogado',
+    SEM_SESSAO: 'sem_sessao',
+    SEM_REDE: 'sem_rede',
+};
+
+// After the server said "no" to this person, the page asks again only this
+// often. The "no" is a decision by a controller; knocking every 5 seconds
+// would not change it, and half a minute is soon enough to notice a "yes".
+export const REFUSAL_PAUSE_MS = 30000;
+const MOTIVOS_DE_RECUSA = [MOTIVO.SEM_PERMISSAO, MOTIVO.DISPOSITIVO_REVOGADO];
+
 export class TokenUnavailableError extends Error {
-    /** @param {string} motivo 'sem_permissao' | 'sem_sessao' | 'sem_rede' */
+    /** @param {string} motivo 'sem_permissao' | 'dispositivo_revogado' | 'sem_sessao' | 'sem_rede' */
     constructor(motivo) {
         super('Device token unavailable: ' + motivo);
         this.motivo = motivo;
@@ -46,7 +61,11 @@ export async function obtainDeviceToken({ store, requestToken, usuario }) {
     if (response.status === 403) {
         // A clear "no" from the server. A token of another user must not be
         // used in this person's name, so there is no fallback here.
-        throw new TokenUnavailableError('sem_permissao');
+        // "dispositivo_revogado": a controller revoked this person's device
+        // on this source. They stay blocked until the controller links them
+        // again or presses "liberar"; the page must say exactly that.
+        const blocked = Boolean(response.body) && response.body.erro === ERRO_DISPOSITIVO_REVOGADO;
+        throw new TokenUnavailableError(blocked ? MOTIVO.DISPOSITIVO_REVOGADO : MOTIVO.SEM_PERMISSAO);
     }
     if (response.status !== 200 || !response.body || typeof response.body.token !== 'string') {
         // Typically the login page arriving instead of JSON: session expired.
@@ -78,4 +97,44 @@ function fallBackToStoredToken(stored, storedIsUsable, motivo) {
         return { token: stored.token, issuedNow: false };
     }
     throw new TokenUnavailableError(motivo);
+}
+
+/**
+ * obtainDeviceToken() with a memory: after a refusal it does not ask the
+ * server again for REFUSAL_PAUSE_MS (it fails at once with the same reason),
+ * and it reports every outcome so the page can show or clear its warning.
+ *
+ * @param {object}   options
+ * @param {object}   options.store
+ * @param {function} options.requestToken
+ * @param {?string}  options.usuario
+ * @param {function} options.monotonicNow  () => ms; a clock that cannot be set
+ * @param {function} [options.onOutcome]   (motivo|null) => void, after every real attempt
+ */
+export function createTokenSource({ store, requestToken, usuario, monotonicNow, onOutcome = () => {} }) {
+    let lastRefusal = null;
+
+    return {
+        /** @returns {Promise<{token: string, issuedNow: boolean}>} */
+        async get() {
+            if (lastRefusal !== null && Math.abs(monotonicNow() - lastRefusal.atMs) < REFUSAL_PAUSE_MS) {
+                throw new TokenUnavailableError(lastRefusal.motivo);
+            }
+            try {
+                const result = await obtainDeviceToken({ store, requestToken, usuario });
+                lastRefusal = null;
+                onOutcome(null);
+                return result;
+            } catch (tokenError) {
+                const motivo = tokenError.motivo || null;
+                lastRefusal = MOTIVOS_DE_RECUSA.includes(motivo) ? { motivo, atMs: monotonicNow() } : null;
+                onOutcome(motivo);
+                throw tokenError;
+            }
+        },
+        /** "Tentar de novo": the next get() asks the server whatever was answered before. */
+        forgetRefusal() {
+            lastRefusal = null;
+        },
+    };
 }

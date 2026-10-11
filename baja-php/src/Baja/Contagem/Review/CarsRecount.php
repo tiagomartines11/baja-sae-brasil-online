@@ -86,6 +86,34 @@ final class CarsRecount
     }
 
     /**
+     * The recount a DECISION is checked against: the cars of the entries the
+     * reviewer was looking at, and nothing else.
+     *
+     * A decision used to be checked against a full engine run, and then the
+     * full engine ran again to publish it. The check only needs to know
+     * whether those few entries are still as the reviewer saw them, and the
+     * signature of an entry comes out the same from this quick recount as
+     * from a full run (SignatureCalculator explains why).
+     *
+     * @param int[] $entryIds stored entries, and passes a reviewer added (ids below zero)
+     */
+    public static function loadForEntries(ContagemService $service, array $entryIds): self
+    {
+        $storedIds = array_values(array_filter($entryIds, fn(int $id) => $id > 0));
+        $recount = self::load($service, self::carsTypedIn($service->getProva(), $storedIds));
+
+        // A pass a reviewer added exists only as a decision: its car is there.
+        $moreCars = [];
+        foreach ($recount->activeDecisions as $decision) {
+            $isWatchedAddition = $decision->tipo === Decision::ADICIONAR && in_array(-$decision->id, $entryIds, true);
+            if ($isWatchedAddition && $decision->carro !== null && !in_array($decision->carro, $recount->cars, true)) {
+                $moreCars[] = $decision->carro;
+            }
+        }
+        return $moreCars === [] ? $recount : self::load($service, array_merge($recount->cars, $moreCars));
+    }
+
+    /**
      * @param int[] $cars
      */
     private function __construct(EngineInput $input, array $cars)
@@ -144,15 +172,17 @@ final class CarsRecount
     public const ANTES_DA_LARGADA = 'antes_da_largada';
     public const FONTE_INATIVA = 'fonte_inativa';
     public const FONTE_EXCLUIDA = 'fonte_excluida';
+    public const TEMPO_DESCONHECIDO = 'tempo_desconhecido';
 
     /**
      * Why an entry that is in no pass group is not in use:
      *
-     *   anulada           a person voided it
-     *   repetida          the engine dropped it as a double tap or a handover duplicate
-     *   antes_da_largada  typed before the start (or the race has none yet)
-     *   fonte_inativa     its source was switched off at that moment
-     *   fonte_excluida    a reviewer excluded its source for that period
+     *   anulada             a person voided it
+     *   repetida            the engine dropped it as a double tap or a handover duplicate
+     *   tempo_desconhecido  its phone had no usable clock: nobody knows when it was typed
+     *   antes_da_largada    typed before the start (or the race has none yet)
+     *   fonte_inativa       its source was switched off at that moment
+     *   fonte_excluida      a reviewer excluded its source for that period
      */
     public function reasonNotInUse(Entry $raw): string
     {
@@ -162,6 +192,11 @@ final class CarsRecount
         if (isset($this->autoVoidedEntryIds[$raw->id])) {
             return self::REPETIDA;
         }
+        if ($raw->qualidadeTempo === Entry::TEMPO_DESCONHECIDO) {
+            // Asked before the start: the time such an entry carries is the
+            // phone's own guess and says nothing about when it was typed.
+            return self::TEMPO_DESCONHECIDO;
+        }
         if ($this->timeline->largadaMs === null || $raw->tsMs < $this->timeline->largadaMs) {
             return self::ANTES_DA_LARGADA;
         }
@@ -170,6 +205,30 @@ final class CarsRecount
             return self::FONTE_INATIVA;
         }
         return self::FONTE_EXCLUIDA;
+    }
+
+    /**
+     * The numbers a set of stored entries was typed with. One small query:
+     * a decision concerns a handful of entries and must not load a race to
+     * learn which cars they are about.
+     *
+     * @param int[] $entryIds
+     * @return int[]
+     */
+    private static function carsTypedIn(\Baja\Model\Prova $prova, array $entryIds): array
+    {
+        if ($entryIds === []) {
+            return [];
+        }
+        $statement = \Propel\Runtime\Propel::getWriteConnection('resultados')->prepare(
+            'SELECT DISTINCT p.equipe_numero
+               FROM contagem_passagem p
+               JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
+              WHERE f.evento_id = ? AND f.prova_id = ?
+                AND p.passagem_id IN (' . implode(', ', array_fill(0, count($entryIds), '?')) . ')'
+        );
+        $statement->execute(array_merge([$prova->getEventoId(), $prova->getProvaId()], $entryIds));
+        return array_map('intval', $statement->fetchAll(\PDO::FETCH_COLUMN));
     }
 
     /**

@@ -7,10 +7,14 @@
 // answer; a lost answer, a timeout or an error leaves it unmarked and it simply
 // goes again on the next attempt.
 //
-// Dependencies arrive as arguments (store, send, clock, now) so the whole thing
-// runs under `node --test` with a fake server.
+// Dependencies arrive as arguments (store, send, clock) so the whole thing
+// runs under `node --test` with a fake server. What is done with a good
+// answer is in sync-answer.js.
 
 import { buildSyncRequest, nothingIsWaiting } from './sync-request.js';
+import { applySyncAnswer, META_LAST_SYNC, META_SERVER_INFO, META_ANCHOR } from './sync-answer.js';
+import { resolveHeldRecords, resolveRecordsOfEarlierLoads } from './held-records.js';
+import { refusedRecords, retryUnconfirmed, UnacknowledgedTracker } from './refused-records.js';
 
 export const CONEXAO = {
     CONECTANDO: 'conectando',
@@ -41,29 +45,29 @@ const DEFAULT_MAX_BATCH = 200;
 const MAX_REQUESTS_PER_FLUSH = 50;
 
 const META_REVOKED = 'token_revogado';
-const META_LAST_SYNC = 'ultimo_sync_ms';
-const META_SERVER_INFO = 'servidor';
-const META_CLOCK = 'relogio';
 const META_SHIFT_ENDED = 'turno_encerrado';
+
+function nothingDone(resultado) {
+    return { resultado, confirmados: 0, carimbados: 0, encerrado: false };
+}
 
 export class SyncQueue {
     /**
      * @param {object}   options
      * @param {object}   options.store  LocalStore
-     * @param {function} options.send   async (requestBody) => {status, body}; throws when the network fails
-     * @param {object}   options.clock  ClockEstimator
-     * @param {function} options.now    () => device time in ms
+     * @param {function} options.send   async (requestBody) => {status, body, sentMonoMs?, receivedMonoMs?};
+     *        throws when the network fails
+     * @param {object}   options.clock  ServerClock
      * @param {function} [options.onChange] called with the new state after anything changes
      * @param {number}   [options.maxBatch]
      * @param {boolean}  [options.vouchesForHistory] false when the store is memory only
      */
     constructor({
-        store, send, clock, now, onChange = null, maxBatch = DEFAULT_MAX_BATCH, vouchesForHistory = true,
+        store, send, clock, onChange = null, maxBatch = DEFAULT_MAX_BATCH, vouchesForHistory = true,
     }) {
         this.store = store;
         this.send = send;
         this.clock = clock;
-        this.now = now;
         this.onChange = onChange;
         this.maxBatch = maxBatch;
         this.vouchesForHistory = vouchesForHistory;
@@ -74,16 +78,31 @@ export class SyncQueue {
 
         // A revoked token stays revoked across reloads: the mark is on disk.
         this.conexao = store.getMeta(META_REVOKED, false) ? CONEXAO.REVOGADO : CONEXAO.CONECTANDO;
-        // Device time at which the server refused the token during THIS page
-        // load (null when the mark was already on disk).
+        // Monotonic time at which the server refused the token during THIS
+        // page load (null when the mark was already on disk).
         this.revokedAtMs = null;
         // So does an ended shift: reopening the page must not quietly tell
         // the server "I am counting again" before the person says so.
         this.turnoEncerrado = store.getMeta(META_SHIFT_ENDED, false) === true;
         this.outrosUsuarios = [];
+        this.unacknowledged = new UnacknowledgedTracker();
 
-        // The clock estimate saved before a reload (see applyAnswer).
-        clock.restore(store.getMeta(META_CLOCK, null), now());
+        // The anchor remembered from an earlier page load. It is used for one
+        // thing only: see prepare().
+        clock.restorePersisted(store.getMeta(META_ANCHOR, null));
+        this.prepared = null;
+    }
+
+    /**
+     * Must finish before the first request (syncOnce waits for it). Records
+     * that an EARLIER page load left without a time get one now, estimated
+     * from the system clock and marked as such (brief 6.4).
+     */
+    prepare() {
+        if (this.prepared === null) {
+            this.prepared = resolveRecordsOfEarlierLoads(this.store, this.clock);
+        }
+        return this.prepared;
     }
 
     /** Everything the status bar needs, in one object. */
@@ -91,6 +110,10 @@ export class SyncQueue {
         return {
             conexao: this.conexao,
             pendentes: this.store.pendingCount(),
+            // Typed before this page knew the server's time; they go up
+            // right after the next answer (already counted in `pendentes`).
+            aguardandoHorario: this.store.heldCount(),
+            recusados: refusedRecords(this.store).map((refused) => refused.motivo),
             ultimoSyncMs: this.store.getMeta(META_LAST_SYNC, null),
             servidor: this.store.getMeta(META_SERVER_INFO, null),
             outrosUsuarios: this.outrosUsuarios,
@@ -108,7 +131,6 @@ export class SyncQueue {
         return buildSyncRequest({
             store: this.store,
             clock: this.clock,
-            now: this.now,
             maxBatch: this.maxBatch,
             vouchesForHistory: this.vouchesForHistory,
             encerrando,
@@ -131,24 +153,29 @@ export class SyncQueue {
      * @param {object}  [options]
      * @param {boolean} [options.encerrando] ask the server to stop waiting for
      *        this device (only honoured when nothing is left to upload)
-     * @returns {Promise<{resultado: string, confirmados: number, encerrado: boolean}>}
-     *          `encerrado`: the server answered a request that carried "encerrando"
+     * @returns {Promise<{resultado: string, confirmados: number, carimbados: number, encerrado: boolean}>}
+     *          `carimbados`: held records that got their time from this answer.
+     *          `encerrado`: the SERVER said it closed this device (brief 2.3).
      */
     async syncOnce({ encerrando = false } = {}) {
         if (this.conexao === CONEXAO.REVOGADO) {
-            return { resultado: RESULTADO.REVOGADO, confirmados: 0, encerrado: false };
+            return nothingDone(RESULTADO.REVOGADO);
         }
         if (!encerrando && this.mustStaySilent()) {
-            return { resultado: RESULTADO.SILENCIO, confirmados: 0, encerrado: false };
+            return nothingDone(RESULTADO.SILENCIO);
         }
         if (this.requestInFlight) {
             // Two overlapping requests would be harmless for the data (uuids),
             // but would waste a weak connection.
-            return { resultado: RESULTADO.OCUPADO, confirmados: 0, encerrado: false };
+            return nothingDone(RESULTADO.OCUPADO);
         }
 
         this.requestInFlight = true;
         try {
+            await this.prepare();
+            // A record typed while the previous request was in the air may
+            // have missed that answer's anchor by an instant.
+            await resolveHeldRecords(this.store, this.clock);
             if (this.turnoEncerrado && !encerrando) {
                 // Something to upload appeared after the shift ended. Data
                 // is never held back: it goes, and the shift is open again.
@@ -156,21 +183,26 @@ export class SyncQueue {
             }
             const request = this.buildRequest({ encerrando });
             let response;
+            const segmentAtSend = this.clock.segment;
             // Fallback timing for a `send` that does not measure its own.
-            const calledSendAtMs = this.now();
+            const calledSendAtMs = this.clock.monotonicNow();
             try {
                 response = await this.send(request);
             } catch (networkError) {
                 return this.registerFailure();
             }
-            const answerSeenAtMs = this.now();
-            // The real transport reports the instants right around the
-            // fetch itself. Between "calledSendAtMs" and the fetch it may
+            const answerSeenAtMs = this.clock.monotonicNow();
+            // A phone that slept while the request was in the air: the two
+            // monotonic readings around it then say nothing about the trip.
+            this.clock.checkMonotonic();
+            // The real transport reports the monotonic instants right around
+            // the fetch itself. Between "calledSendAtMs" and the fetch it may
             // have spent seconds fetching a device token, and counting those
-            // as travel time would spoil the clock estimate.
+            // as travel time would spoil the anchor.
             const timing = {
-                sentAtMs: Number.isFinite(response.sentAtMs) ? response.sentAtMs : calledSendAtMs,
-                receivedAtMs: Number.isFinite(response.receivedAtMs) ? response.receivedAtMs : answerSeenAtMs,
+                sentMonoMs: Number.isFinite(response.sentMonoMs) ? response.sentMonoMs : calledSendAtMs,
+                receivedMonoMs: Number.isFinite(response.receivedMonoMs) ? response.receivedMonoMs : answerSeenAtMs,
+                usable: this.clock.segment === segmentAtSend,
             };
 
             const body = response.body;
@@ -183,8 +215,14 @@ export class SyncQueue {
             if (response.status !== 200 || !body || !Array.isArray(body.stored_uuids)) {
                 return this.registerFailure();
             }
-            const confirmados = await this.applyAnswer(request, body, timing);
-            return { resultado: RESULTADO.OK, confirmados, encerrado: request.encerrando === true };
+            const applied = await applySyncAnswer({
+                store: this.store, clock: this.clock, tracker: this.unacknowledged, request, body, timing,
+            });
+            this.outrosUsuarios = Array.isArray(body.outros_usuarios) ? body.outros_usuarios : [];
+            this.conexao = CONEXAO.ONLINE;
+            // Only the server's own word counts: a request that carried
+            // "encerrando" and got a 200 proves nothing by itself.
+            return { resultado: RESULTADO.OK, ...applied, encerrado: body.encerrado === true };
         } finally {
             this.requestInFlight = false;
             this.notifyChange();
@@ -193,7 +231,7 @@ export class SyncQueue {
 
     registerFailure() {
         this.conexao = CONEXAO.OFFLINE;
-        return { resultado: RESULTADO.FALHA, confirmados: 0, encerrado: false };
+        return nothingDone(RESULTADO.FALHA);
     }
 
     /**
@@ -204,45 +242,9 @@ export class SyncQueue {
      */
     async registerRevoked() {
         this.conexao = CONEXAO.REVOGADO;
-        this.revokedAtMs = this.now();
+        this.revokedAtMs = this.clock.monotonicNow();
         await this.store.setMeta(META_REVOKED, true);
-        return { resultado: RESULTADO.REVOGADO, confirmados: 0, encerrado: false };
-    }
-
-    async applyAnswer(request, body, { sentAtMs, receivedAtMs }) {
-        const becameTheEstimate = this.clock.addSample(sentAtMs, receivedAtMs, body.server_now_ms);
-
-        // Only uuids that were in THIS request and that the server named are
-        // marked. Anything the server left out stays in the queue.
-        const stored = new Set(body.stored_uuids);
-        const voided = new Set(Array.isArray(body.voided_uuids) ? body.voided_uuids : []);
-        const storedEntries = request.entries.map((entry) => entry.uuid).filter((uuid) => stored.has(uuid));
-        const storedPitEvents = request.pit_events.map((event) => event.uuid).filter((uuid) => stored.has(uuid));
-        const confirmedVoids = request.voids.map((item) => item.uuid).filter((uuid) => voided.has(uuid));
-
-        await this.store.markEntriesSent(storedEntries, receivedAtMs);
-        await this.store.markPitEventsSent(storedPitEvents, receivedAtMs);
-        await this.store.markVoidsSent(confirmedVoids);
-
-        // Kept on disk so that a reload without network still knows the car
-        // list, the race start and the warning window.
-        await this.store.setMeta(META_SERVER_INFO, {
-            race: body.race || null,
-            fonte: body.fonte || null,
-            valid_cars: Array.isArray(body.valid_cars) ? body.valid_cars : null,
-            janela_ms: Number.isFinite(body.janela_ms) ? body.janela_ms : null,
-            cars_in_pit: Array.isArray(body.cars_in_pit) ? body.cars_in_pit : [],
-        });
-        await this.store.setMeta(META_LAST_SYNC, receivedAtMs);
-        if (becameTheEstimate) {
-            // So that a reload (also one with no network) starts with a
-            // known offset instead of "unknown".
-            await this.store.setMeta(META_CLOCK, this.clock.sampleToStore());
-        }
-
-        this.outrosUsuarios = Array.isArray(body.outros_usuarios) ? body.outros_usuarios : [];
-        this.conexao = CONEXAO.ONLINE;
-        return storedEntries.length + storedPitEvents.length + confirmedVoids.length;
+        return nothingDone(RESULTADO.REVOGADO);
     }
 
     /**
@@ -269,7 +271,11 @@ export class SyncQueue {
             this.flushRequestedMeanwhile = false;
             for (let requests = 0; requests < MAX_REQUESTS_PER_FLUSH; requests++) {
                 const outcome = await this.syncOnce();
-                if (outcome.resultado !== RESULTADO.OK || outcome.confirmados === 0) {
+                // Another request is worth it while the last one moved
+                // something: confirmed records, or gave held ones their time
+                // (they could not be in that request and go up in the next).
+                const madeProgress = outcome.confirmados > 0 || outcome.carimbados > 0;
+                if (outcome.resultado !== RESULTADO.OK || !madeProgress) {
                     break;
                 }
             }
@@ -283,6 +289,16 @@ export class SyncQueue {
             // unmarked and is sent again by the next heartbeat.
         });
         this.notifyChange();
+    }
+
+    /**
+     * "Tentar de novo" for records the safety net gave up on (brief 2.1):
+     * they go back in the queue for another round of attempts.
+     */
+    async retryRefused() {
+        if (await retryUnconfirmed(this.store) > 0) {
+            this.requestSync();
+        }
     }
 
     /**

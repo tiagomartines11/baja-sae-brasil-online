@@ -12,12 +12,13 @@
 // must keep waiting for it.
 
 import { CONEXAO, RESULTADO } from './sync-queue.js';
-import { buildClosingBeaconBody } from './sync-request.js';
+import { buildClosingBeaconBody, nothingIsWaiting } from './sync-request.js';
 
 export const TURNO = {
     ENCERRADO: 'encerrado',       // the server answered the goodbye
     PENDENTE: 'pendente',         // entries are still waiting; nothing was said
     SEM_CONEXAO: 'sem_conexao',   // the goodbye could not be delivered
+    SEM_CONFIRMACAO: 'sem_confirmacao', // delivered, but the server did not say it closed the device
     BLOQUEADO: 'bloqueado',       // this device's token was revoked
 };
 
@@ -31,6 +32,7 @@ const MAX_GOODBYE_ATTEMPTS = 3;
  *          shift is still open and the page keeps working as before
  */
 export async function endShift(queue) {
+    let answeredWithoutClosing = false;
     for (let attempt = 0; attempt < MAX_GOODBYE_ATTEMPTS; attempt++) {
         try {
             await queue.flush();
@@ -43,6 +45,11 @@ export async function endShift(queue) {
         if (queue.store.pendingCount() > 0) {
             return TURNO.PENDENTE;
         }
+        if (!nothingIsWaiting(queue.store)) {
+            // Something is on its way to the disk this very instant; it
+            // will be in the queue on the next round.
+            continue;
+        }
         const outcome = await queue.syncOnce({ encerrando: true });
         if (outcome.resultado === RESULTADO.OCUPADO) {
             continue;
@@ -53,14 +60,28 @@ export async function endShift(queue) {
         if (outcome.resultado !== RESULTADO.OK) {
             return TURNO.SEM_CONEXAO;
         }
-        if (outcome.encerrado) {
+        // `encerrado` is the SERVER saying "I closed this device". Nothing
+        // else counts: a 200 to a request that asked for it proves nothing
+        // (the request may have gone out as an ordinary one because a pass
+        // was typed in the last instant, or the server may have declined).
+        if (!outcome.encerrado) {
+            answeredWithoutClosing = true;
+            continue;
+        }
+        // Checked once more before the page says "Turno encerrado": a pass
+        // typed while the goodbye was in the air is waiting now, the server
+        // does not have it, and a page that went quiet would sit on it.
+        if (nothingIsWaiting(queue.store)) {
             await queue.setShiftEnded(true);
             return TURNO.ENCERRADO;
         }
-        // The request went out as an ordinary one: something was recorded
-        // in the last instant. Go round again and upload it first.
+        // Uploading it (next round) also tells the server this device is
+        // counting again; then the goodbye is said anew.
     }
-    return queue.store.pendingCount() > 0 ? TURNO.PENDENTE : TURNO.SEM_CONEXAO;
+    if (!nothingIsWaiting(queue.store)) {
+        return TURNO.PENDENTE;
+    }
+    return answeredWithoutClosing ? TURNO.SEM_CONFIRMACAO : TURNO.SEM_CONEXAO;
 }
 
 /**
@@ -84,7 +105,6 @@ export function closingBeaconBody(queue, token) {
     return buildClosingBeaconBody({
         store: queue.store,
         clock: queue.clock,
-        now: queue.now,
         vouchesForHistory: queue.vouchesForHistory,
         token,
     });

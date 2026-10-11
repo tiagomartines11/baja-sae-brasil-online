@@ -8,10 +8,29 @@ use Baja\Contagem\Engine\Data\Ocorrencia;
 /**
  * The race as race control and the pit log describe it: when it started,
  * when it was stopped by a red flag, when it ended, and when each car was
- * in the pit lane.
+ * in the pit lane or in the fueling station.
  *
  * Built once per engine run from the ocorrências. Everything that needs to
  * know "was the race running between these two moments?" asks this class.
+ *
+ * CORRECTIONS AND CANCELLATIONS. Rows are never edited or deleted. A row
+ * that names another one in `substituiId` either corrects it (a new time
+ * for the same event) or, when it is a "cancelamento", removes it. They are
+ * resolved from the newest row to the oldest, the way decisions are, so
+ * that undoing works without special cases:
+ *
+ * - a cancelled row does nothing, so whatever it had corrected or cancelled
+ *   is back in force (cancelling a correction brings the original time back;
+ *   cancelling a cancellation restores the event);
+ * - a corrected row is out of force for good while its correction stands,
+ *   even when the correction is itself corrected later.
+ *
+ * THE TWO AREAS. The pit lane ("box") and the fueling station
+ * ("abastecimento") are logged the same way and are independent: a car can
+ * be in both at once. An exit with no entry before it, or a second entry
+ * with no exit in between, is an unpaired event. It is listed and never
+ * blocks anything; pairing is by time, so the missing half makes a stay of
+ * it whenever it arrives.
  */
 final class RaceTimeline
 {
@@ -19,6 +38,9 @@ final class RaceTimeline
     public const CORRENDO = 'correndo';
     public const BANDEIRA_VERMELHA = 'bandeira_vermelha';
     public const ENCERRADA = 'encerrada';
+
+    public const AREA_BOX = 'box';
+    public const AREA_ABASTECIMENTO = 'abastecimento';
 
     /** Start of the race. Null until race control starts it. */
     public ?int $largadaMs = null;
@@ -42,12 +64,44 @@ final class RaceTimeline
     public array $pitIntervals = [];
 
     /**
+     * Stays in the fueling station per car, same shape as `$pitIntervals`.
+     *
+     * @var array<int, array<int, array{0: int, 1: ?int}>> carro => [[in, out], ...]
+     */
+    public array $fuelIntervals = [];
+
+    /**
+     * Stop events that have no partner: an exit with no entry, or a second
+     * entry with no exit. In time order.
+     *
+     * @var array<int, array{area: string, tipo: string, carro: int, ts_ms: int, ocorrencia_id: int}>
+     */
+    public array $unpairedStops = [];
+
+    /**
+     * Every pit lane and fueling station event in force, paired or not, in
+     * time order. Same shape as `$unpairedStops`.
+     *
+     * @var array<int, array{area: string, tipo: string, carro: int, ts_ms: int, ocorrencia_id: int}>
+     */
+    public array $stopEvents = [];
+
+    /**
+     * The rows still in force once corrections and cancellations were
+     * resolved, oldest first (by id). A "cancelamento" is never in here.
+     *
+     * @var Ocorrencia[]
+     */
+    public array $eventosEmVigor = [];
+
+    /**
      * @param Ocorrencia[] $ocorrencias in any order
      */
     public static function fromOcorrencias(array $ocorrencias): self
     {
         $timeline = new self();
-        $valid = self::dropCorrected($ocorrencias);
+        $valid = self::inForce($ocorrencias);
+        $timeline->eventosEmVigor = $valid;
 
         // Among several starts (race control edited the start time) the most
         // recently created one wins, whatever time it carries.
@@ -64,7 +118,12 @@ final class RaceTimeline
         usort($byTime, fn(Ocorrencia $a, Ocorrencia $b) => [$a->tsMs, $a->id] <=> [$b->tsMs, $b->id]);
 
         $timeline->buildRedFlagIntervals($byTime);
-        $timeline->buildPitIntervals($byTime);
+
+        $stops = StopLog::pair($byTime);
+        $timeline->pitIntervals = $stops->stays[self::AREA_BOX];
+        $timeline->fuelIntervals = $stops->stays[self::AREA_ABASTECIMENTO];
+        $timeline->unpairedStops = $stops->unpaired;
+        $timeline->stopEvents = $stops->events;
 
         return $timeline;
     }
@@ -113,7 +172,7 @@ final class RaceTimeline
 
     public function overlapsRedFlag(int $fromMs, int $toMs): bool
     {
-        return self::overlapsAny($this->redFlagIntervals, $fromMs, $toMs);
+        return StopLog::overlapsAny($this->redFlagIntervals, $fromMs, $toMs);
     }
 
     public function isInPitAt(int $carro, int $tsMs): bool
@@ -121,45 +180,66 @@ final class RaceTimeline
         return $this->pitEntryBefore($carro, $tsMs) !== null;
     }
 
-    /** When the car entered the pit stay that contains $tsMs, or null if it is on track. */
+    /** When the car entered the pit stay that contains $tsMs, or null if it is not in the pit lane. */
     public function pitEntryBefore(int $carro, int $tsMs): ?int
     {
-        foreach ($this->pitIntervals[$carro] ?? [] as [$in, $out]) {
-            if ($tsMs >= $in && ($out === null || $tsMs < $out)) {
-                return $in;
-            }
-        }
-        return null;
+        return StopLog::entryOfStayAt($this->pitIntervals[$carro] ?? [], $tsMs);
     }
 
     /** When the car last left the pit lane at or before $tsMs, or null if it never did. */
     public function lastPitExitBefore(int $carro, int $tsMs): ?int
     {
-        $lastExit = null;
-        foreach ($this->pitIntervals[$carro] ?? [] as [$in, $out]) {
-            if ($out !== null && $out <= $tsMs && ($lastExit === null || $out > $lastExit)) {
-                $lastExit = $out;
-            }
-        }
-        return $lastExit;
+        return StopLog::lastExitAtOrBefore($this->pitIntervals[$carro] ?? [], $tsMs);
     }
 
     /** @return int[] cars logged as in the pit lane at $tsMs, in ascending order */
     public function carsInPitAt(int $tsMs): array
     {
-        $cars = [];
-        foreach (array_keys($this->pitIntervals) as $carro) {
-            if ($this->isInPitAt($carro, $tsMs)) {
-                $cars[] = $carro;
-            }
-        }
-        sort($cars);
-        return $cars;
+        return StopLog::carsInsideAt($this->pitIntervals, $tsMs);
     }
 
     public function overlapsPitStay(int $carro, int $fromMs, int $toMs): bool
     {
-        return self::overlapsAny($this->pitIntervals[$carro] ?? [], $fromMs, $toMs);
+        return StopLog::overlapsAny($this->pitIntervals[$carro] ?? [], $fromMs, $toMs);
+    }
+
+    public function isFuelingAt(int $carro, int $tsMs): bool
+    {
+        return $this->fuelEntryBefore($carro, $tsMs) !== null;
+    }
+
+    /** When the car entered the fueling stay that contains $tsMs, or null if it is not in the fueling station. */
+    public function fuelEntryBefore(int $carro, int $tsMs): ?int
+    {
+        return StopLog::entryOfStayAt($this->fuelIntervals[$carro] ?? [], $tsMs);
+    }
+
+    /** When the car last left the fueling station at or before $tsMs, or null if it never did. */
+    public function lastFuelExitBefore(int $carro, int $tsMs): ?int
+    {
+        return StopLog::lastExitAtOrBefore($this->fuelIntervals[$carro] ?? [], $tsMs);
+    }
+
+    /** @return int[] cars logged as in the fueling station at $tsMs, in ascending order */
+    public function carsFuelingAt(int $tsMs): array
+    {
+        return StopLog::carsInsideAt($this->fuelIntervals, $tsMs);
+    }
+
+    public function overlapsFuelStay(int $carro, int $fromMs, int $toMs): bool
+    {
+        return StopLog::overlapsAny($this->fuelIntervals[$carro] ?? [], $fromMs, $toMs);
+    }
+
+    /**
+     * The stays of every car in one area.
+     *
+     * @param string $area self::AREA_BOX or self::AREA_ABASTECIMENTO
+     * @return array<int, array<int, array{0: int, 1: ?int}>> carro => [[in, out], ...]
+     */
+    public function stayIntervals(string $area): array
+    {
+        return $area === self::AREA_ABASTECIMENTO ? $this->fuelIntervals : $this->pitIntervals;
     }
 
     /**
@@ -223,25 +303,51 @@ final class RaceTimeline
     }
 
     /**
-     * A row that another row "substitui" was a mistake and is ignored.
+     * Resolves corrections and cancellations, from the newest row to the
+     * oldest (see the class comment). By the time a row is reached, every
+     * later row that could cancel or correct it has already been seen.
      *
      * @param Ocorrencia[] $ocorrencias
-     * @return Ocorrencia[] ordered by id, oldest first
+     * @return Ocorrencia[] the rows in force, ordered by id, oldest first
      */
-    private static function dropCorrected(array $ocorrencias): array
+    private static function inForce(array $ocorrencias): array
     {
+        $newestFirst = $ocorrencias;
+        usort($newestFirst, fn(Ocorrencia $a, Ocorrencia $b) => $b->id <=> $a->id);
+
+        $cancelledIds = [];
         $correctedIds = [];
-        foreach ($ocorrencias as $ocorrencia) {
+        $inForce = [];
+        foreach ($newestFirst as $ocorrencia) {
+            if (isset($cancelledIds[$ocorrencia->id])) {
+                // Cancelled: it is as if this row had never been written,
+                // so the row it pointed at is left alone.
+                continue;
+            }
+            $isCancellation = $ocorrencia->tipo === Ocorrencia::CANCELAMENTO;
             if ($ocorrencia->substituiId !== null) {
-                $correctedIds[$ocorrencia->substituiId] = true;
+                if ($isCancellation) {
+                    $cancelledIds[$ocorrencia->substituiId] = true;
+                } else {
+                    $correctedIds[$ocorrencia->substituiId] = true;
+                }
+            }
+            if (!$isCancellation && !isset($correctedIds[$ocorrencia->id])) {
+                $inForce[] = $ocorrencia;
             }
         }
-        $valid = array_filter($ocorrencias, fn(Ocorrencia $o) => !isset($correctedIds[$o->id]));
-        usort($valid, fn(Ocorrencia $a, Ocorrencia $b) => $a->id <=> $b->id);
-        return $valid;
+        return array_reverse($inForce);
     }
 
-    /** @param Ocorrencia[] $byTime */
+    /**
+     * Pairs each red flag with the restart that follows it. An event with
+     * no partner changes nothing: a red flag while the race is already
+     * stopped, or a restart while it is running (its red flag was cancelled,
+     * say), is ignored, so cancelling one half of a pair can never produce
+     * overlapping or backwards stoppages.
+     *
+     * @param Ocorrencia[] $byTime
+     */
     private function buildRedFlagIntervals(array $byTime): void
     {
         $openSince = null;
@@ -257,37 +363,5 @@ final class RaceTimeline
             // Still stopped. The end of the race also ends the stoppage.
             $this->redFlagIntervals[] = [$openSince, $this->encerramentoMs !== null && $this->encerramentoMs > $openSince ? $this->encerramentoMs : null];
         }
-    }
-
-    /** @param Ocorrencia[] $byTime */
-    private function buildPitIntervals(array $byTime): void
-    {
-        $openSince = [];
-        foreach ($byTime as $ocorrencia) {
-            $carro = $ocorrencia->carro;
-            if ($carro === null) {
-                continue;
-            }
-            if ($ocorrencia->tipo === Ocorrencia::BOX_ENTRADA && !isset($openSince[$carro])) {
-                $openSince[$carro] = $ocorrencia->tsMs;
-            } elseif ($ocorrencia->tipo === Ocorrencia::BOX_SAIDA && isset($openSince[$carro])) {
-                $this->pitIntervals[$carro][] = [$openSince[$carro], $ocorrencia->tsMs];
-                unset($openSince[$carro]);
-            }
-        }
-        foreach ($openSince as $carro => $since) {
-            $this->pitIntervals[$carro][] = [$since, null];
-        }
-    }
-
-    /** @param array<int, array{0: int, 1: ?int}> $intervals */
-    private static function overlapsAny(array $intervals, int $fromMs, int $toMs): bool
-    {
-        foreach ($intervals as [$start, $end]) {
-            if ($start < $toMs && ($end === null || $end > $fromMs)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

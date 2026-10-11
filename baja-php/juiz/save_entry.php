@@ -4,7 +4,6 @@ namespace Baja\Juiz;
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Review\ManualScoreFields;
 use Baja\Contagem\Service\LockBusy;
-use Baja\Contagem\Service\ScorePublisher;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\Input;
@@ -34,11 +33,10 @@ array_walk($paramsInputs, function($v) use (&$provaInput) { $provaInput[$v->getC
 // In a laps prova, VOLTAS, LAST and BEST belong to the lap counting engine.
 // They are left out of everything below, so this page can neither change
 // them nor record them as edited; what a person saves here is merged into
-// the row beside them.
+// the row beside them. With publishing switched off ("desligada") the engine
+// writes none of them and the list is empty: all three can be typed here.
 $isLapsProva = $prova->getType() == ContagemAccess::PROVA_TYPE;
-if ($isLapsProva) {
-    $provaInput = array_diff_key($provaInput, array_flip(ScorePublisher::ENGINE_FIELDS));
-}
+$provaInput = array_diff_key($provaInput, array_flip(ManualScoreFields::engineOwnedFields($prova)));
 
 if (!array_key_exists("submit", $_POST) && !array_key_exists("delete", $_POST)) { header("Location: dashboard.php?p=$_page"); exit; }
 
@@ -57,6 +55,7 @@ if ($isLapsProva && $wantsDelete) {
     // The row also holds the lap count, which is not this page's to delete:
     // only the fields people type are emptied, and the row stays.
     try {
+        // clear() never empties VOLTAS, LAST or BEST, in any publish mode.
         if (ManualScoreFields::clear($prova, (int) $equipe->getEquipeId(), array_keys($provaInput))) {
             $writeLog('{"DELETED": "campos manuais"}');
         }
@@ -106,7 +105,8 @@ if ($isLapsProva) {
     // The lap counting engine writes VOLTAS, LAST and BEST into this same
     // row many times a minute. Writing back the row as it was read above
     // could put an old lap count over a new one, so the save is done under
-    // the count lock, from the row as it is at that moment.
+    // the count lock, from the row as it is at that moment. The same call
+    // recounts the race when the classification field of this car changed.
     try {
         $diff = ManualScoreFields::save($prova, (int) $equipe->getEquipeId(), $new_array);
     } catch (LockBusy $busy) {

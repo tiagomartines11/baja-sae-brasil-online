@@ -60,7 +60,7 @@ final class DeviceTokens
      * query of the whole feature. Revoked devices are returned too; the
      * caller decides what to answer.
      *
-     * @return array{dispositivo_id: int, fonte_id: int, usuario: ?string, revogado_em_ms: ?int, sincronizado_ate_ms: ?int, primeiro_desvio_ms: ?int, fonte_nome: string, fonte_tipo: string, evento_id: string, prova_id: string}|null
+     * @return array{dispositivo_id: int, fonte_id: int, usuario: ?string, revogado_em_ms: ?int, sincronizado_ate_ms: ?int, fonte_nome: string, fonte_tipo: string, evento_id: string, prova_id: string}|null
      */
     public static function describeByToken(string $plainToken): ?array
     {
@@ -69,7 +69,7 @@ final class DeviceTokens
         }
         $statement = Propel::getWriteConnection('resultados')->prepare(
             'SELECT d.dispositivo_id, d.fonte_id, d.usuario, d.revogado_em_ms, d.sincronizado_ate_ms,
-                    d.primeiro_desvio_ms, f.nome AS fonte_nome, f.tipo AS fonte_tipo, f.evento_id, f.prova_id
+                    f.nome AS fonte_nome, f.tipo AS fonte_tipo, f.evento_id, f.prova_id
                FROM contagem_dispositivo d
                JOIN contagem_fonte f ON f.fonte_id = d.fonte_id
               WHERE d.token_hash = ?'
@@ -86,7 +86,6 @@ final class DeviceTokens
             'usuario' => $row['usuario'] === null ? null : (string) $row['usuario'],
             'revogado_em_ms' => $nullableInt($row['revogado_em_ms']),
             'sincronizado_ate_ms' => $nullableInt($row['sincronizado_ate_ms']),
-            'primeiro_desvio_ms' => $nullableInt($row['primeiro_desvio_ms']),
             'fonte_nome' => (string) $row['fonte_nome'],
             'fonte_tipo' => (string) $row['fonte_tipo'],
             'evento_id' => (string) $row['evento_id'],
@@ -135,6 +134,63 @@ final class DeviceTokens
             ':usuario' => $usuario,
         ]);
         return $statement->rowCount();
+    }
+
+    /**
+     * May this user be given a (new) token for this source?
+     *
+     * Not while a device of theirs on this source was revoked and nothing
+     * has happened since to let them back in. Without this rule a revoked
+     * phone simply asked for a new token half a minute later and got one,
+     * which made "revogar" on the sources page mean nothing.
+     *
+     * Two things let a user back in: a controller linking them to the
+     * source again (a new link is newer than the revocation), or pressing
+     * "liberar" (see release()).
+     */
+    public static function isBlocked(ContagemFonte $fonte, string $usuario): bool
+    {
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            'SELECT MAX(d.revogado_em_ms) AS revogado, MAX(u.criado_em_ms) AS vinculado, MAX(u.liberado_em_ms) AS liberado
+               FROM contagem_dispositivo d
+          LEFT JOIN contagem_fonte_usuario u ON u.fonte_id = d.fonte_id AND u.usuario = d.usuario
+              WHERE d.fonte_id = ? AND d.usuario = ? AND d.revogado_em_ms IS NOT NULL'
+        );
+        $statement->execute([$fonte->getFonteId(), $usuario]);
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+        if (!is_array($row) || $row['revogado'] === null) {
+            return false;
+        }
+        $letBackInAtMs = max((int) ($row['vinculado'] ?? 0), (int) ($row['liberado'] ?? 0));
+        return (int) $row['revogado'] >= $letBackInAtMs;
+    }
+
+    /**
+     * "Liberar": lets a user whose device was revoked get a token again,
+     * without removing and re-adding their link. The release is recorded on
+     * the link. Somebody with no link (a controller counting on a source)
+     * has no row to record it on; for them the revoked devices are detached
+     * from the username instead, so they stop counting against it.
+     */
+    public static function release(ContagemFonte $fonte, string $usuario): void
+    {
+        $nowMs = Clock::nowMs();
+        $connection = Propel::getWriteConnection('resultados');
+        $update = $connection->prepare(
+            'UPDATE contagem_fonte_usuario SET liberado_em_ms = ? WHERE fonte_id = ? AND usuario = ?'
+        );
+        $update->execute([$nowMs, $fonte->getFonteId(), $usuario]);
+        if ($update->rowCount() > 0) {
+            return;
+        }
+        // No link to carry the release: detach the revoked devices from the
+        // username instead, so they no longer count against it. The devices
+        // stay revoked and their entries stay attributed to the source.
+        $connection->prepare(
+            'UPDATE contagem_dispositivo
+                SET rotulo = LEFT(CONCAT(COALESCE(rotulo, \'\'), \' (revogado de \', usuario, \')\'), 255), usuario = NULL
+              WHERE fonte_id = ? AND usuario = ? AND revogado_em_ms IS NOT NULL'
+        )->execute([$fonte->getFonteId(), $usuario]);
     }
 
     /**

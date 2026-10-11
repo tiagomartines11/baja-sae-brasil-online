@@ -24,9 +24,12 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemPassagemQuery orderByDispositivoId($order = Criteria::ASC) Order by the dispositivo_id column
  * @method     ChildContagemPassagemQuery orderByUuidCliente($order = Criteria::ASC) Order by the uuid_cliente column
  * @method     ChildContagemPassagemQuery orderByEquipeNumero($order = Criteria::ASC) Order by the equipe_numero column
- * @method     ChildContagemPassagemQuery orderByTsDispositivoMs($order = Criteria::ASC) Order by the ts_dispositivo_ms column
- * @method     ChildContagemPassagemQuery orderByDesvioRelogioMs($order = Criteria::ASC) Order by the desvio_relogio_ms column
  * @method     ChildContagemPassagemQuery orderByTsMs($order = Criteria::ASC) Order by the ts_ms column
+ * @method     ChildContagemPassagemQuery orderByQualidadeTempo($order = Criteria::ASC) Order by the qualidade_tempo column
+ * @method     ChildContagemPassagemQuery orderByTsDispositivoMs($order = Criteria::ASC) Order by the ts_dispositivo_ms column
+ * @method     ChildContagemPassagemQuery orderByAncoraServidorMs($order = Criteria::ASC) Order by the ancora_servidor_ms column
+ * @method     ChildContagemPassagemQuery orderByAncoraRttMs($order = Criteria::ASC) Order by the ancora_rtt_ms column
+ * @method     ChildContagemPassagemQuery orderByAncoraIdadeMs($order = Criteria::ASC) Order by the ancora_idade_ms column
  * @method     ChildContagemPassagemQuery orderByDigitacaoMs($order = Criteria::ASC) Order by the digitacao_ms column
  * @method     ChildContagemPassagemQuery orderByModoEntrada($order = Criteria::ASC) Order by the modo_entrada column
  * @method     ChildContagemPassagemQuery orderByRecebidoEmMs($order = Criteria::ASC) Order by the recebido_em_ms column
@@ -36,9 +39,12 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemPassagemQuery groupByDispositivoId() Group by the dispositivo_id column
  * @method     ChildContagemPassagemQuery groupByUuidCliente() Group by the uuid_cliente column
  * @method     ChildContagemPassagemQuery groupByEquipeNumero() Group by the equipe_numero column
- * @method     ChildContagemPassagemQuery groupByTsDispositivoMs() Group by the ts_dispositivo_ms column
- * @method     ChildContagemPassagemQuery groupByDesvioRelogioMs() Group by the desvio_relogio_ms column
  * @method     ChildContagemPassagemQuery groupByTsMs() Group by the ts_ms column
+ * @method     ChildContagemPassagemQuery groupByQualidadeTempo() Group by the qualidade_tempo column
+ * @method     ChildContagemPassagemQuery groupByTsDispositivoMs() Group by the ts_dispositivo_ms column
+ * @method     ChildContagemPassagemQuery groupByAncoraServidorMs() Group by the ancora_servidor_ms column
+ * @method     ChildContagemPassagemQuery groupByAncoraRttMs() Group by the ancora_rtt_ms column
+ * @method     ChildContagemPassagemQuery groupByAncoraIdadeMs() Group by the ancora_idade_ms column
  * @method     ChildContagemPassagemQuery groupByDigitacaoMs() Group by the digitacao_ms column
  * @method     ChildContagemPassagemQuery groupByModoEntrada() Group by the modo_entrada column
  * @method     ChildContagemPassagemQuery groupByRecebidoEmMs() Group by the recebido_em_ms column
@@ -81,9 +87,12 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemPassagem|null findOneByDispositivoId(int $dispositivo_id) Return the first ChildContagemPassagem filtered by the dispositivo_id column
  * @method     ChildContagemPassagem|null findOneByUuidCliente(string $uuid_cliente) Return the first ChildContagemPassagem filtered by the uuid_cliente column
  * @method     ChildContagemPassagem|null findOneByEquipeNumero(int $equipe_numero) Return the first ChildContagemPassagem filtered by the equipe_numero column
- * @method     ChildContagemPassagem|null findOneByTsDispositivoMs(string $ts_dispositivo_ms) Return the first ChildContagemPassagem filtered by the ts_dispositivo_ms column
- * @method     ChildContagemPassagem|null findOneByDesvioRelogioMs(string $desvio_relogio_ms) Return the first ChildContagemPassagem filtered by the desvio_relogio_ms column
  * @method     ChildContagemPassagem|null findOneByTsMs(string $ts_ms) Return the first ChildContagemPassagem filtered by the ts_ms column
+ * @method     ChildContagemPassagem|null findOneByQualidadeTempo(string $qualidade_tempo) Return the first ChildContagemPassagem filtered by the qualidade_tempo column
+ * @method     ChildContagemPassagem|null findOneByTsDispositivoMs(string $ts_dispositivo_ms) Return the first ChildContagemPassagem filtered by the ts_dispositivo_ms column
+ * @method     ChildContagemPassagem|null findOneByAncoraServidorMs(string $ancora_servidor_ms) Return the first ChildContagemPassagem filtered by the ancora_servidor_ms column
+ * @method     ChildContagemPassagem|null findOneByAncoraRttMs(int $ancora_rtt_ms) Return the first ChildContagemPassagem filtered by the ancora_rtt_ms column
+ * @method     ChildContagemPassagem|null findOneByAncoraIdadeMs(string $ancora_idade_ms) Return the first ChildContagemPassagem filtered by the ancora_idade_ms column
  * @method     ChildContagemPassagem|null findOneByDigitacaoMs(int $digitacao_ms) Return the first ChildContagemPassagem filtered by the digitacao_ms column
  * @method     ChildContagemPassagem|null findOneByModoEntrada(string $modo_entrada) Return the first ChildContagemPassagem filtered by the modo_entrada column
  * @method     ChildContagemPassagem|null findOneByRecebidoEmMs(string $recebido_em_ms) Return the first ChildContagemPassagem filtered by the recebido_em_ms column
@@ -96,9 +105,12 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemPassagem requireOneByDispositivoId(int $dispositivo_id) Return the first ChildContagemPassagem filtered by the dispositivo_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOneByUuidCliente(string $uuid_cliente) Return the first ChildContagemPassagem filtered by the uuid_cliente column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOneByEquipeNumero(int $equipe_numero) Return the first ChildContagemPassagem filtered by the equipe_numero column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildContagemPassagem requireOneByTsDispositivoMs(string $ts_dispositivo_ms) Return the first ChildContagemPassagem filtered by the ts_dispositivo_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
- * @method     ChildContagemPassagem requireOneByDesvioRelogioMs(string $desvio_relogio_ms) Return the first ChildContagemPassagem filtered by the desvio_relogio_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOneByTsMs(string $ts_ms) Return the first ChildContagemPassagem filtered by the ts_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemPassagem requireOneByQualidadeTempo(string $qualidade_tempo) Return the first ChildContagemPassagem filtered by the qualidade_tempo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemPassagem requireOneByTsDispositivoMs(string $ts_dispositivo_ms) Return the first ChildContagemPassagem filtered by the ts_dispositivo_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemPassagem requireOneByAncoraServidorMs(string $ancora_servidor_ms) Return the first ChildContagemPassagem filtered by the ancora_servidor_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemPassagem requireOneByAncoraRttMs(int $ancora_rtt_ms) Return the first ChildContagemPassagem filtered by the ancora_rtt_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemPassagem requireOneByAncoraIdadeMs(string $ancora_idade_ms) Return the first ChildContagemPassagem filtered by the ancora_idade_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOneByDigitacaoMs(int $digitacao_ms) Return the first ChildContagemPassagem filtered by the digitacao_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOneByModoEntrada(string $modo_entrada) Return the first ChildContagemPassagem filtered by the modo_entrada column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOneByRecebidoEmMs(string $recebido_em_ms) Return the first ChildContagemPassagem filtered by the recebido_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -116,12 +128,18 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByUuidCliente(string|array<string> $uuid_cliente) Return ChildContagemPassagem objects filtered by the uuid_cliente column
  * @method     ChildContagemPassagem[]|Collection findByEquipeNumero(int|array<int> $equipe_numero) Return ChildContagemPassagem objects filtered by the equipe_numero column
  * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByEquipeNumero(int|array<int> $equipe_numero) Return ChildContagemPassagem objects filtered by the equipe_numero column
- * @method     ChildContagemPassagem[]|Collection findByTsDispositivoMs(string|array<string> $ts_dispositivo_ms) Return ChildContagemPassagem objects filtered by the ts_dispositivo_ms column
- * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByTsDispositivoMs(string|array<string> $ts_dispositivo_ms) Return ChildContagemPassagem objects filtered by the ts_dispositivo_ms column
- * @method     ChildContagemPassagem[]|Collection findByDesvioRelogioMs(string|array<string> $desvio_relogio_ms) Return ChildContagemPassagem objects filtered by the desvio_relogio_ms column
- * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByDesvioRelogioMs(string|array<string> $desvio_relogio_ms) Return ChildContagemPassagem objects filtered by the desvio_relogio_ms column
  * @method     ChildContagemPassagem[]|Collection findByTsMs(string|array<string> $ts_ms) Return ChildContagemPassagem objects filtered by the ts_ms column
  * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByTsMs(string|array<string> $ts_ms) Return ChildContagemPassagem objects filtered by the ts_ms column
+ * @method     ChildContagemPassagem[]|Collection findByQualidadeTempo(string|array<string> $qualidade_tempo) Return ChildContagemPassagem objects filtered by the qualidade_tempo column
+ * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByQualidadeTempo(string|array<string> $qualidade_tempo) Return ChildContagemPassagem objects filtered by the qualidade_tempo column
+ * @method     ChildContagemPassagem[]|Collection findByTsDispositivoMs(string|array<string> $ts_dispositivo_ms) Return ChildContagemPassagem objects filtered by the ts_dispositivo_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByTsDispositivoMs(string|array<string> $ts_dispositivo_ms) Return ChildContagemPassagem objects filtered by the ts_dispositivo_ms column
+ * @method     ChildContagemPassagem[]|Collection findByAncoraServidorMs(string|array<string> $ancora_servidor_ms) Return ChildContagemPassagem objects filtered by the ancora_servidor_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByAncoraServidorMs(string|array<string> $ancora_servidor_ms) Return ChildContagemPassagem objects filtered by the ancora_servidor_ms column
+ * @method     ChildContagemPassagem[]|Collection findByAncoraRttMs(int|array<int> $ancora_rtt_ms) Return ChildContagemPassagem objects filtered by the ancora_rtt_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByAncoraRttMs(int|array<int> $ancora_rtt_ms) Return ChildContagemPassagem objects filtered by the ancora_rtt_ms column
+ * @method     ChildContagemPassagem[]|Collection findByAncoraIdadeMs(string|array<string> $ancora_idade_ms) Return ChildContagemPassagem objects filtered by the ancora_idade_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByAncoraIdadeMs(string|array<string> $ancora_idade_ms) Return ChildContagemPassagem objects filtered by the ancora_idade_ms column
  * @method     ChildContagemPassagem[]|Collection findByDigitacaoMs(int|array<int> $digitacao_ms) Return ChildContagemPassagem objects filtered by the digitacao_ms column
  * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByDigitacaoMs(int|array<int> $digitacao_ms) Return ChildContagemPassagem objects filtered by the digitacao_ms column
  * @method     ChildContagemPassagem[]|Collection findByModoEntrada(string|array<string> $modo_entrada) Return ChildContagemPassagem objects filtered by the modo_entrada column
@@ -227,7 +245,7 @@ abstract class ContagemPassagemQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT passagem_id, fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_dispositivo_ms, desvio_relogio_ms, ts_ms, digitacao_ms, modo_entrada, recebido_em_ms FROM contagem_passagem WHERE passagem_id = :p0';
+        $sql = 'SELECT passagem_id, fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_ms, qualidade_tempo, ts_dispositivo_ms, ancora_servidor_ms, ancora_rtt_ms, ancora_idade_ms, digitacao_ms, modo_entrada, recebido_em_ms FROM contagem_passagem WHERE passagem_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -526,6 +544,77 @@ abstract class ContagemPassagemQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query on the ts_ms column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByTsMs(1234); // WHERE ts_ms = 1234
+     * $query->filterByTsMs(array(12, 34)); // WHERE ts_ms IN (12, 34)
+     * $query->filterByTsMs(array('min' => 12)); // WHERE ts_ms > 12
+     * </code>
+     *
+     * @param mixed $tsMs The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByTsMs($tsMs = null, ?string $comparison = null)
+    {
+        if (is_array($tsMs)) {
+            $useMinMax = false;
+            if (isset($tsMs['min'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_TS_MS, $tsMs['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($tsMs['max'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_TS_MS, $tsMs['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemPassagemTableMap::COL_TS_MS, $tsMs, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the qualidade_tempo column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByQualidadeTempo('fooValue');   // WHERE qualidade_tempo = 'fooValue'
+     * $query->filterByQualidadeTempo('%fooValue%', Criteria::LIKE); // WHERE qualidade_tempo LIKE '%fooValue%'
+     * $query->filterByQualidadeTempo(['foo', 'bar']); // WHERE qualidade_tempo IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $qualidadeTempo The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByQualidadeTempo($qualidadeTempo = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($qualidadeTempo)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemPassagemTableMap::COL_QUALIDADE_TEMPO, $qualidadeTempo, $comparison);
+
+        return $this;
+    }
+
+    /**
      * Filter the query on the ts_dispositivo_ms column
      *
      * Example usage:
@@ -569,16 +658,16 @@ abstract class ContagemPassagemQuery extends ModelCriteria
     }
 
     /**
-     * Filter the query on the desvio_relogio_ms column
+     * Filter the query on the ancora_servidor_ms column
      *
      * Example usage:
      * <code>
-     * $query->filterByDesvioRelogioMs(1234); // WHERE desvio_relogio_ms = 1234
-     * $query->filterByDesvioRelogioMs(array(12, 34)); // WHERE desvio_relogio_ms IN (12, 34)
-     * $query->filterByDesvioRelogioMs(array('min' => 12)); // WHERE desvio_relogio_ms > 12
+     * $query->filterByAncoraServidorMs(1234); // WHERE ancora_servidor_ms = 1234
+     * $query->filterByAncoraServidorMs(array(12, 34)); // WHERE ancora_servidor_ms IN (12, 34)
+     * $query->filterByAncoraServidorMs(array('min' => 12)); // WHERE ancora_servidor_ms > 12
      * </code>
      *
-     * @param mixed $desvioRelogioMs The value to use as filter.
+     * @param mixed $ancoraServidorMs The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
@@ -586,16 +675,16 @@ abstract class ContagemPassagemQuery extends ModelCriteria
      *
      * @return $this The current query, for fluid interface
      */
-    public function filterByDesvioRelogioMs($desvioRelogioMs = null, ?string $comparison = null)
+    public function filterByAncoraServidorMs($ancoraServidorMs = null, ?string $comparison = null)
     {
-        if (is_array($desvioRelogioMs)) {
+        if (is_array($ancoraServidorMs)) {
             $useMinMax = false;
-            if (isset($desvioRelogioMs['min'])) {
-                $this->addUsingAlias(ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS, $desvioRelogioMs['min'], Criteria::GREATER_EQUAL);
+            if (isset($ancoraServidorMs['min'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS, $ancoraServidorMs['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
-            if (isset($desvioRelogioMs['max'])) {
-                $this->addUsingAlias(ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS, $desvioRelogioMs['max'], Criteria::LESS_EQUAL);
+            if (isset($ancoraServidorMs['max'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS, $ancoraServidorMs['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -606,22 +695,22 @@ abstract class ContagemPassagemQuery extends ModelCriteria
             }
         }
 
-        $this->addUsingAlias(ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS, $desvioRelogioMs, $comparison);
+        $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS, $ancoraServidorMs, $comparison);
 
         return $this;
     }
 
     /**
-     * Filter the query on the ts_ms column
+     * Filter the query on the ancora_rtt_ms column
      *
      * Example usage:
      * <code>
-     * $query->filterByTsMs(1234); // WHERE ts_ms = 1234
-     * $query->filterByTsMs(array(12, 34)); // WHERE ts_ms IN (12, 34)
-     * $query->filterByTsMs(array('min' => 12)); // WHERE ts_ms > 12
+     * $query->filterByAncoraRttMs(1234); // WHERE ancora_rtt_ms = 1234
+     * $query->filterByAncoraRttMs(array(12, 34)); // WHERE ancora_rtt_ms IN (12, 34)
+     * $query->filterByAncoraRttMs(array('min' => 12)); // WHERE ancora_rtt_ms > 12
      * </code>
      *
-     * @param mixed $tsMs The value to use as filter.
+     * @param mixed $ancoraRttMs The value to use as filter.
      *              Use scalar values for equality.
      *              Use array values for in_array() equivalent.
      *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
@@ -629,16 +718,16 @@ abstract class ContagemPassagemQuery extends ModelCriteria
      *
      * @return $this The current query, for fluid interface
      */
-    public function filterByTsMs($tsMs = null, ?string $comparison = null)
+    public function filterByAncoraRttMs($ancoraRttMs = null, ?string $comparison = null)
     {
-        if (is_array($tsMs)) {
+        if (is_array($ancoraRttMs)) {
             $useMinMax = false;
-            if (isset($tsMs['min'])) {
-                $this->addUsingAlias(ContagemPassagemTableMap::COL_TS_MS, $tsMs['min'], Criteria::GREATER_EQUAL);
+            if (isset($ancoraRttMs['min'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_RTT_MS, $ancoraRttMs['min'], Criteria::GREATER_EQUAL);
                 $useMinMax = true;
             }
-            if (isset($tsMs['max'])) {
-                $this->addUsingAlias(ContagemPassagemTableMap::COL_TS_MS, $tsMs['max'], Criteria::LESS_EQUAL);
+            if (isset($ancoraRttMs['max'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_RTT_MS, $ancoraRttMs['max'], Criteria::LESS_EQUAL);
                 $useMinMax = true;
             }
             if ($useMinMax) {
@@ -649,7 +738,50 @@ abstract class ContagemPassagemQuery extends ModelCriteria
             }
         }
 
-        $this->addUsingAlias(ContagemPassagemTableMap::COL_TS_MS, $tsMs, $comparison);
+        $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_RTT_MS, $ancoraRttMs, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the ancora_idade_ms column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByAncoraIdadeMs(1234); // WHERE ancora_idade_ms = 1234
+     * $query->filterByAncoraIdadeMs(array(12, 34)); // WHERE ancora_idade_ms IN (12, 34)
+     * $query->filterByAncoraIdadeMs(array('min' => 12)); // WHERE ancora_idade_ms > 12
+     * </code>
+     *
+     * @param mixed $ancoraIdadeMs The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByAncoraIdadeMs($ancoraIdadeMs = null, ?string $comparison = null)
+    {
+        if (is_array($ancoraIdadeMs)) {
+            $useMinMax = false;
+            if (isset($ancoraIdadeMs['min'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_IDADE_MS, $ancoraIdadeMs['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($ancoraIdadeMs['max'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_IDADE_MS, $ancoraIdadeMs['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemPassagemTableMap::COL_ANCORA_IDADE_MS, $ancoraIdadeMs, $comparison);
 
         return $this;
     }

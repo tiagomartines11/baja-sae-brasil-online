@@ -15,7 +15,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  aplicarResposta, avisoDeConexao, chaveAoVivo, criarOrdemDePedidos, desvioDoServidorMs, proximoAtrasoMs, versaoParaPedir,
+  aplicarResposta, avisoDeConexao, chaveAoVivo, chaveDoDetalhe, criarOrdemDePedidos, historicoAposResposta, proximoAtrasoMs,
+  versaoParaPedir,
 } from '../../default/js/contagem/revisao-conexao.js';
 
 test('while everything works the screen asks every 2 seconds', () => {
@@ -109,11 +110,6 @@ test('an answer that arrives late does not put the screen back in the past', () 
   assert.equal(ordem.aceitar(decisao), true, 'the answer to the decision is applied');
   assert.equal(ordem.aceitar(poll), false, 'the older poll is dropped');
   assert.equal(ordem.aceitar(decisao), false, 'and no answer is ever applied twice');
-});
-
-test('the difference between the two clocks is server minus this computer', () => {
-  // This computer's clock is 3 seconds behind the server's.
-  assert.equal(desvioDoServidorMs(10_000, 7_000), 3_000);
 });
 
 test('a full answer replaces the state', () => {
@@ -216,4 +212,77 @@ test('the screen notices a change that came without a new version', () => {
   assert.equal(chaveAoVivo(antes), chaveAoVivo(igual));
   assert.notEqual(chaveAoVivo(antes), chaveAoVivo(carroAtrasado));
   assert.notEqual(chaveAoVivo(antes), chaveAoVivo(telefoneMudo));
+});
+
+// SITUATION: a long race has 300 decisions. The reviewer wants to check one
+// made an hour ago and presses "Carregar decisões mais antigas" three times.
+// Meanwhile the race goes on: every few seconds the server recalculates and
+// the screen receives a new state, with the same decisions.
+//
+// WHAT WENT WRONG: every new state threw the loaded pages away. The list
+// collapsed back to the newest 50 rows under the reviewer's eyes, every few
+// seconds, and the old decision could never be reached.
+//
+// EXPECTED: the loaded pages stay for as long as no decision is made or
+// undone ("ultima_decisao_id" is the same). When one is, the pages are
+// dropped: which old rows are still in force may have changed.
+test('older history pages stay on screen until a decision is made, not until the next calculation', () => {
+  const paginas = { antigas: [{ id: 40 }, { id: 39 }], haMais: true };
+  const antes = { versao: 'aaa', ultima_decisao_id: 90, historico_ha_mais: true };
+
+  const novoCalculo = { versao: 'bbb', ultima_decisao_id: 90, historico_ha_mais: true };
+  assert.deepEqual(historicoAposResposta(antes, novoCalculo, paginas), paginas, 'a new calculation alone keeps the pages');
+
+  const novaDecisao = { versao: 'ccc', ultima_decisao_id: 91, historico_ha_mais: true };
+  assert.deepEqual(historicoAposResposta(antes, novaDecisao, paginas), { antigas: [], haMais: true });
+
+  // The very first state: nothing was loaded yet.
+  assert.deepEqual(historicoAposResposta(null, { ultima_decisao_id: 3, historico_ha_mais: false }, { antigas: [], haMais: false }),
+    { antigas: [], haMais: false });
+});
+
+// SITUATION: the reviewer has a flag about car 41 open and is reading its
+// timeline, scrolled to the side. Elsewhere on the track car 7 completes a
+// lap; the server recalculates and sends a state with a new version.
+//
+// WHAT WENT WRONG: the detail panel was rebuilt for every new version. The
+// timeline jumped back, a chip being clicked was replaced under the mouse,
+// and this happened every few seconds for as long as the race ran.
+//
+// EXPECTED: what decides whether the panel is rebuilt does not contain the
+// version. It changes when the flag's signature changes (its entries, their
+// groups, the decisions about them), when somebody else starts looking at
+// it, or when the reviewer does something in the panel.
+test('the detail panel is not rebuilt for a new calculation that left the selected flag as it was', () => {
+  const alerta = { id: 'solitaria:9', assinatura: 'abc', olhando: [], motivo: 'x', sugestao: null };
+  const visao = {
+    selecao: { tipo: 'alerta', id: 'solitaria:9' }, alerta, carro: null, janelaCarregada: true, janelaAssinatura: 'abc',
+    desatualizada: false, erroDaJanela: false, entradaSelecionadaId: null, modoManual: false, ocupado: false, semConexao: false,
+    largadaMs: 1000,
+  };
+
+  // A new calculation: another object for the same flag, nothing else.
+  assert.equal(chaveDoDetalhe({ ...visao, alerta: { ...alerta } }), chaveDoDetalhe(visao));
+
+  assert.notEqual(chaveDoDetalhe({ ...visao, alerta: { ...alerta, assinatura: 'zzz' } }), chaveDoDetalhe(visao), 'a late entry joined');
+  assert.notEqual(chaveDoDetalhe({ ...visao, alerta: { ...alerta, olhando: ['maria'] } }), chaveDoDetalhe(visao), 'somebody is looking');
+  assert.notEqual(chaveDoDetalhe({ ...visao, entradaSelecionadaId: 5 }), chaveDoDetalhe(visao), 'the reviewer clicked a chip');
+});
+
+test('a car\'s panel is rebuilt when that car\'s own numbers change, not when another car\'s do', () => {
+  const carro = { carro: 41, voltas: 12, passagens: 13, status: 'correndo', ultima_volta_ms: 200000, melhor_volta_ms: 190000 };
+  const visao = { selecao: { tipo: 'carro', numero: 41 }, carro, janelaCarregada: true, desatualizada: false };
+
+  assert.equal(chaveDoDetalhe({ ...visao, carro: { ...carro } }), chaveDoDetalhe(visao));
+  assert.notEqual(chaveDoDetalhe({ ...visao, carro: { ...carro, voltas: 13 } }), chaveDoDetalhe(visao));
+  assert.notEqual(chaveDoDetalhe({ ...visao, carro: { ...carro, status: 'abastecendo' } }), chaveDoDetalhe(visao));
+});
+
+test('switching the simulation setting on reaches a screen that is already open', () => {
+  // The setting travels with every answer, also the short "inalterado" one,
+  // so the "SIMULAÇÃO" banner appears without a reload.
+  const estado = { versao: 'aaa', simulacao: false, alertas_abertos: [], alertas_resolvidos: [] };
+  const depois = aplicarResposta(estado, { inalterado: true, versao: 'aaa', simulacao: true });
+  assert.equal(depois.simulacao, true);
+  assert.notEqual(chaveAoVivo(depois), chaveAoVivo(estado));
 });

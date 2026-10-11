@@ -67,9 +67,13 @@ final class DecisionApplier
         }
 
         $alwaysCounting = self::sourcesThatCountedAllAlong($sourcesById, $applied);
+        // This loop visits every entry of the race, so what it reads and
+        // writes on each turn is kept in local variables.
+        $voidedEntryIds = $applied->voidedEntryIds;
+        $survivors = [];
 
         foreach ($entries as $rawEntry) {
-            if (isset($applied->voidedEntryIds[$rawEntry->id])) {
+            if (isset($voidedEntryIds[$rawEntry->id])) {
                 continue;
             }
             if (!isset($alwaysCounting[$rawEntry->fonteId])) {
@@ -89,18 +93,19 @@ final class DecisionApplier
                 // Untouched by any decision: the raw entry itself is used,
                 // read-only. Copying tens of thousands of them on every run
                 // would be the slowest step of the engine.
-                $applied->entries[] = $rawEntry;
+                $survivors[] = $rawEntry;
                 continue;
             }
             $entry = clone $rawEntry;
             $entry->carro = $newCar;
             $applied->reassignedEntryIds[$entry->id] = $entry->fonteId;
-            $applied->entries[] = $entry;
+            $survivors[] = $entry;
         }
 
         foreach ($addedPasses as $addedPass) {
-            $applied->entries[] = $addedPass;
+            $survivors[] = $addedPass;
         }
+        $applied->entries = $survivors;
 
         return $applied;
     }

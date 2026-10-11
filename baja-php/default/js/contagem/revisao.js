@@ -7,14 +7,16 @@
 
 import { criarAcoes } from './revisao-acoes.js';
 import { SessaoExpirada, buscarCarro, buscarEstado, buscarHistorico, buscarJanela } from './revisao-api.js';
-import { desenharBarra } from './revisao-barra.js';
+import { desenharBarra, desenharBarraSemEstado } from './revisao-barra.js';
 import {
-  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, desvioDoServidorMs, proximoAtrasoMs, versaoParaPedir,
+  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, historicoAposResposta, proximoAtrasoMs, versaoParaPedir,
 } from './revisao-conexao.js';
 import { alertaSelecionado, atualizarListaDeCarros, criarDesenho, janelaDesatualizada } from './revisao-desenho.js';
 import { estaDigitandoEm } from './revisao-dom.js';
-import { janelaDoAlerta } from './revisao-fila.js';
-import { agoraServidorMs, mostrarAba, mostrarMensagem, pagina, tela } from './revisao-tela.js';
+import { janelaDoAlerta, mostraCorridaInteira } from './revisao-fila.js';
+import {
+  agoraServidorMs, horarioOficialMs, mostrarAba, mostrarMensagem, pagina, relogioOficial, tela,
+} from './revisao-tela.js';
 
 // Puts the answers in order; see criarOrdemDePedidos().
 const ordem = criarOrdemDePedidos();
@@ -31,7 +33,11 @@ const acoes = criarAcoes({
 
 const acoesDoDetalhe = {
   aceitar: acoes.aceitar,
-  manterAmbas: acoes.manterAmbas,
+  confirmarAlerta: acoes.confirmarAlerta,
+  descartarPassagem: acoes.descartarPassagem,
+  // "Era outro carro…" on a repeat: opens the entry's own box, where the
+  // field to move it to another car is.
+  eraOutroCarro: (id) => { tela.entradaSelecionadaId = id; desenharDetalhe(); },
   anular: acoes.anular,
   acaoNaEntrada: acoes.acaoNaEntrada,
   adicionar: acoes.adicionar,
@@ -57,15 +63,12 @@ function receberEstado(estado, numero) {
   if (!ordem.aceitar(numero)) {
     return false;
   }
-  const mudouDeVersao = !tela.estado || tela.estado.versao !== estado.versao;
+  // Older history pages the reviewer loaded stay until a decision is made
+  // or undone; a new calculation alone does not throw them away.
+  const paginas = historicoAposResposta(tela.estado, estado, { antigas: tela.historicoAntigo, haMais: tela.historicoHaMais });
+  tela.historicoAntigo = paginas.antigas;
+  tela.historicoHaMais = paginas.haMais;
   tela.estado = estado;
-  tela.desvioMs = desvioDoServidorMs(estado.servidor_agora_ms, Date.now());
-  if (mudouDeVersao) {
-    // The older pages were loaded for another calculation: a decision since
-    // then may have changed which of them are still in force.
-    tela.historicoAntigo = [];
-    tela.historicoHaMais = Boolean(estado.historico_ha_mais);
-  }
   atualizarListaDeCarros();
   return true;
 }
@@ -79,12 +82,14 @@ async function carregarHistoricoAntigo() {
   if (carregadas.length === 0) {
     return;
   }
-  const versao = tela.estado.versao;
+  const ultimaDecisao = tela.estado.ultima_decisao_id;
   tela.historicoCarregando = true;
   desenharTudo();
   try {
     const maisAntigas = await buscarHistorico(pagina.prova, carregadas[carregadas.length - 1].id);
-    if (tela.estado.versao === versao) {
+    // Unless a decision arrived meanwhile: the page would then be appended
+    // to a list that was just started afresh.
+    if (tela.estado.ultima_decisao_id === ultimaDecisao) {
       tela.historicoAntigo = [...tela.historicoAntigo, ...(maisAntigas.linhas ?? [])];
       tela.historicoHaMais = Boolean(maisAntigas.ha_mais);
     }
@@ -108,6 +113,8 @@ async function carregarJanela() {
     let janela = null;
     if (selecao.tipo === 'carro') {
       janela = await buscarCarro(pagina.prova, selecao.numero);
+    } else if (mostraCorridaInteira(alerta)) {
+      janela = await buscarCarro(pagina.prova, alerta.carros[0]);
     } else {
       const limites = janelaDoAlerta(alerta);
       // A flag with no moment (a difference to an imported total) has no timeline.
@@ -168,7 +175,11 @@ async function consultar(pedirTudo = false) {
   const numero = ordem.novo();
   try {
     const versao = pedirTudo ? null : versaoParaPedir(tela.estado);
+    const enviadoPerfMs = performance.now();
     const resposta = await buscarEstado(pagina.prova, versao, tela.selecao?.tipo === 'alerta' ? tela.selecao.id : null);
+    // Every answer says what time it is on the server. Paired with this
+    // computer's monotonic clock, that is the official clock of the screen.
+    relogioOficial.registrar({ servidorAgoraMs: resposta.servidor_agora_ms, enviadoPerfMs, recebidoPerfMs: performance.now() });
 
     if (tela.ocupado) {
       // A decision is on its way and its own answer brings the state as it
@@ -178,7 +189,6 @@ async function consultar(pedirTudo = false) {
       receberEstado(resposta, numero);
     } else if (ordem.aceitar(numero) && tela.estado && resposta.versao === tela.estado.versao) {
       tela.estado = aplicarResposta(tela.estado, resposta, pagina.usuario);
-      tela.desvioMs = desvioDoServidorMs(resposta.servidor_agora_ms, Date.now());
     }
     tela.falhas = 0;
     tela.sessaoExpirada = false;
@@ -229,7 +239,8 @@ document.addEventListener('keydown', (evento) => {
   if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
     return;
   }
-  const atalhos = { a: acoes.aceitar, k: acoes.manterAmbas, v: acoes.anular };
+  // K does nothing on a flag that has no K button (a repeat): confirmarAlerta checks.
+  const atalhos = { a: acoes.aceitar, k: acoes.confirmarAlerta, v: acoes.anular };
   const acao = atalhos[evento.key.toLowerCase()];
   const alerta = alertaSelecionado();
   // The actions themselves refuse while the timeline is missing or stale.
@@ -241,9 +252,14 @@ document.addEventListener('keydown', (evento) => {
 
 // The clock and the "há 12 s" ages keep moving between two answers.
 setInterval(() => {
+  // The system clock is read here and only here, and only to notice that
+  // the monotonic clock stalled (a laptop that slept). It never tells the time.
+  relogioOficial.vigiar(performance.now(), Date.now());
   if (tela.estado) {
-    desenharBarra(pagina.barra, tela.estado, agoraServidorMs());
+    desenharBarra(pagina.barra, tela.estado, agoraServidorMs(), horarioOficialMs());
   }
 }, 1000);
+
+desenharBarraSemEstado(pagina.barra);
 
 consultar();

@@ -63,7 +63,7 @@ class ContagemPassagemTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 11;
+    public const NUM_COLUMNS = 14;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ContagemPassagemTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 11;
+    public const NUM_HYDRATE_COLUMNS = 14;
 
     /**
      * the column name for the passagem_id field
@@ -101,19 +101,34 @@ class ContagemPassagemTableMap extends TableMap
     public const COL_EQUIPE_NUMERO = 'contagem_passagem.equipe_numero';
 
     /**
+     * the column name for the ts_ms field
+     */
+    public const COL_TS_MS = 'contagem_passagem.ts_ms';
+
+    /**
+     * the column name for the qualidade_tempo field
+     */
+    public const COL_QUALIDADE_TEMPO = 'contagem_passagem.qualidade_tempo';
+
+    /**
      * the column name for the ts_dispositivo_ms field
      */
     public const COL_TS_DISPOSITIVO_MS = 'contagem_passagem.ts_dispositivo_ms';
 
     /**
-     * the column name for the desvio_relogio_ms field
+     * the column name for the ancora_servidor_ms field
      */
-    public const COL_DESVIO_RELOGIO_MS = 'contagem_passagem.desvio_relogio_ms';
+    public const COL_ANCORA_SERVIDOR_MS = 'contagem_passagem.ancora_servidor_ms';
 
     /**
-     * the column name for the ts_ms field
+     * the column name for the ancora_rtt_ms field
      */
-    public const COL_TS_MS = 'contagem_passagem.ts_ms';
+    public const COL_ANCORA_RTT_MS = 'contagem_passagem.ancora_rtt_ms';
+
+    /**
+     * the column name for the ancora_idade_ms field
+     */
+    public const COL_ANCORA_IDADE_MS = 'contagem_passagem.ancora_idade_ms';
 
     /**
      * the column name for the digitacao_ms field
@@ -144,11 +159,11 @@ class ContagemPassagemTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['PassagemId', 'FonteId', 'DispositivoId', 'UuidCliente', 'EquipeNumero', 'TsDispositivoMs', 'DesvioRelogioMs', 'TsMs', 'DigitacaoMs', 'ModoEntrada', 'RecebidoEmMs', ],
-        self::TYPE_CAMELNAME     => ['passagemId', 'fonteId', 'dispositivoId', 'uuidCliente', 'equipeNumero', 'tsDispositivoMs', 'desvioRelogioMs', 'tsMs', 'digitacaoMs', 'modoEntrada', 'recebidoEmMs', ],
-        self::TYPE_COLNAME       => [ContagemPassagemTableMap::COL_PASSAGEM_ID, ContagemPassagemTableMap::COL_FONTE_ID, ContagemPassagemTableMap::COL_DISPOSITIVO_ID, ContagemPassagemTableMap::COL_UUID_CLIENTE, ContagemPassagemTableMap::COL_EQUIPE_NUMERO, ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS, ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS, ContagemPassagemTableMap::COL_TS_MS, ContagemPassagemTableMap::COL_DIGITACAO_MS, ContagemPassagemTableMap::COL_MODO_ENTRADA, ContagemPassagemTableMap::COL_RECEBIDO_EM_MS, ],
-        self::TYPE_FIELDNAME     => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_dispositivo_ms', 'desvio_relogio_ms', 'ts_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, ]
+        self::TYPE_PHPNAME       => ['PassagemId', 'FonteId', 'DispositivoId', 'UuidCliente', 'EquipeNumero', 'TsMs', 'QualidadeTempo', 'TsDispositivoMs', 'AncoraServidorMs', 'AncoraRttMs', 'AncoraIdadeMs', 'DigitacaoMs', 'ModoEntrada', 'RecebidoEmMs', ],
+        self::TYPE_CAMELNAME     => ['passagemId', 'fonteId', 'dispositivoId', 'uuidCliente', 'equipeNumero', 'tsMs', 'qualidadeTempo', 'tsDispositivoMs', 'ancoraServidorMs', 'ancoraRttMs', 'ancoraIdadeMs', 'digitacaoMs', 'modoEntrada', 'recebidoEmMs', ],
+        self::TYPE_COLNAME       => [ContagemPassagemTableMap::COL_PASSAGEM_ID, ContagemPassagemTableMap::COL_FONTE_ID, ContagemPassagemTableMap::COL_DISPOSITIVO_ID, ContagemPassagemTableMap::COL_UUID_CLIENTE, ContagemPassagemTableMap::COL_EQUIPE_NUMERO, ContagemPassagemTableMap::COL_TS_MS, ContagemPassagemTableMap::COL_QUALIDADE_TEMPO, ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS, ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS, ContagemPassagemTableMap::COL_ANCORA_RTT_MS, ContagemPassagemTableMap::COL_ANCORA_IDADE_MS, ContagemPassagemTableMap::COL_DIGITACAO_MS, ContagemPassagemTableMap::COL_MODO_ENTRADA, ContagemPassagemTableMap::COL_RECEBIDO_EM_MS, ],
+        self::TYPE_FIELDNAME     => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_ms', 'qualidade_tempo', 'ts_dispositivo_ms', 'ancora_servidor_ms', 'ancora_rtt_ms', 'ancora_idade_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ]
     ];
 
     /**
@@ -160,11 +175,11 @@ class ContagemPassagemTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['PassagemId' => 0, 'FonteId' => 1, 'DispositivoId' => 2, 'UuidCliente' => 3, 'EquipeNumero' => 4, 'TsDispositivoMs' => 5, 'DesvioRelogioMs' => 6, 'TsMs' => 7, 'DigitacaoMs' => 8, 'ModoEntrada' => 9, 'RecebidoEmMs' => 10, ],
-        self::TYPE_CAMELNAME     => ['passagemId' => 0, 'fonteId' => 1, 'dispositivoId' => 2, 'uuidCliente' => 3, 'equipeNumero' => 4, 'tsDispositivoMs' => 5, 'desvioRelogioMs' => 6, 'tsMs' => 7, 'digitacaoMs' => 8, 'modoEntrada' => 9, 'recebidoEmMs' => 10, ],
-        self::TYPE_COLNAME       => [ContagemPassagemTableMap::COL_PASSAGEM_ID => 0, ContagemPassagemTableMap::COL_FONTE_ID => 1, ContagemPassagemTableMap::COL_DISPOSITIVO_ID => 2, ContagemPassagemTableMap::COL_UUID_CLIENTE => 3, ContagemPassagemTableMap::COL_EQUIPE_NUMERO => 4, ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS => 5, ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS => 6, ContagemPassagemTableMap::COL_TS_MS => 7, ContagemPassagemTableMap::COL_DIGITACAO_MS => 8, ContagemPassagemTableMap::COL_MODO_ENTRADA => 9, ContagemPassagemTableMap::COL_RECEBIDO_EM_MS => 10, ],
-        self::TYPE_FIELDNAME     => ['passagem_id' => 0, 'fonte_id' => 1, 'dispositivo_id' => 2, 'uuid_cliente' => 3, 'equipe_numero' => 4, 'ts_dispositivo_ms' => 5, 'desvio_relogio_ms' => 6, 'ts_ms' => 7, 'digitacao_ms' => 8, 'modo_entrada' => 9, 'recebido_em_ms' => 10, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, ]
+        self::TYPE_PHPNAME       => ['PassagemId' => 0, 'FonteId' => 1, 'DispositivoId' => 2, 'UuidCliente' => 3, 'EquipeNumero' => 4, 'TsMs' => 5, 'QualidadeTempo' => 6, 'TsDispositivoMs' => 7, 'AncoraServidorMs' => 8, 'AncoraRttMs' => 9, 'AncoraIdadeMs' => 10, 'DigitacaoMs' => 11, 'ModoEntrada' => 12, 'RecebidoEmMs' => 13, ],
+        self::TYPE_CAMELNAME     => ['passagemId' => 0, 'fonteId' => 1, 'dispositivoId' => 2, 'uuidCliente' => 3, 'equipeNumero' => 4, 'tsMs' => 5, 'qualidadeTempo' => 6, 'tsDispositivoMs' => 7, 'ancoraServidorMs' => 8, 'ancoraRttMs' => 9, 'ancoraIdadeMs' => 10, 'digitacaoMs' => 11, 'modoEntrada' => 12, 'recebidoEmMs' => 13, ],
+        self::TYPE_COLNAME       => [ContagemPassagemTableMap::COL_PASSAGEM_ID => 0, ContagemPassagemTableMap::COL_FONTE_ID => 1, ContagemPassagemTableMap::COL_DISPOSITIVO_ID => 2, ContagemPassagemTableMap::COL_UUID_CLIENTE => 3, ContagemPassagemTableMap::COL_EQUIPE_NUMERO => 4, ContagemPassagemTableMap::COL_TS_MS => 5, ContagemPassagemTableMap::COL_QUALIDADE_TEMPO => 6, ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS => 7, ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS => 8, ContagemPassagemTableMap::COL_ANCORA_RTT_MS => 9, ContagemPassagemTableMap::COL_ANCORA_IDADE_MS => 10, ContagemPassagemTableMap::COL_DIGITACAO_MS => 11, ContagemPassagemTableMap::COL_MODO_ENTRADA => 12, ContagemPassagemTableMap::COL_RECEBIDO_EM_MS => 13, ],
+        self::TYPE_FIELDNAME     => ['passagem_id' => 0, 'fonte_id' => 1, 'dispositivo_id' => 2, 'uuid_cliente' => 3, 'equipe_numero' => 4, 'ts_ms' => 5, 'qualidade_tempo' => 6, 'ts_dispositivo_ms' => 7, 'ancora_servidor_ms' => 8, 'ancora_rtt_ms' => 9, 'ancora_idade_ms' => 10, 'digitacao_ms' => 11, 'modo_entrada' => 12, 'recebido_em_ms' => 13, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ]
     ];
 
     /**
@@ -213,22 +228,6 @@ class ContagemPassagemTableMap extends TableMap
         'COL_EQUIPE_NUMERO' => 'EQUIPE_NUMERO',
         'equipe_numero' => 'EQUIPE_NUMERO',
         'contagem_passagem.equipe_numero' => 'EQUIPE_NUMERO',
-        'TsDispositivoMs' => 'TS_DISPOSITIVO_MS',
-        'ContagemPassagem.TsDispositivoMs' => 'TS_DISPOSITIVO_MS',
-        'tsDispositivoMs' => 'TS_DISPOSITIVO_MS',
-        'contagemPassagem.tsDispositivoMs' => 'TS_DISPOSITIVO_MS',
-        'ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS' => 'TS_DISPOSITIVO_MS',
-        'COL_TS_DISPOSITIVO_MS' => 'TS_DISPOSITIVO_MS',
-        'ts_dispositivo_ms' => 'TS_DISPOSITIVO_MS',
-        'contagem_passagem.ts_dispositivo_ms' => 'TS_DISPOSITIVO_MS',
-        'DesvioRelogioMs' => 'DESVIO_RELOGIO_MS',
-        'ContagemPassagem.DesvioRelogioMs' => 'DESVIO_RELOGIO_MS',
-        'desvioRelogioMs' => 'DESVIO_RELOGIO_MS',
-        'contagemPassagem.desvioRelogioMs' => 'DESVIO_RELOGIO_MS',
-        'ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS' => 'DESVIO_RELOGIO_MS',
-        'COL_DESVIO_RELOGIO_MS' => 'DESVIO_RELOGIO_MS',
-        'desvio_relogio_ms' => 'DESVIO_RELOGIO_MS',
-        'contagem_passagem.desvio_relogio_ms' => 'DESVIO_RELOGIO_MS',
         'TsMs' => 'TS_MS',
         'ContagemPassagem.TsMs' => 'TS_MS',
         'tsMs' => 'TS_MS',
@@ -237,6 +236,46 @@ class ContagemPassagemTableMap extends TableMap
         'COL_TS_MS' => 'TS_MS',
         'ts_ms' => 'TS_MS',
         'contagem_passagem.ts_ms' => 'TS_MS',
+        'QualidadeTempo' => 'QUALIDADE_TEMPO',
+        'ContagemPassagem.QualidadeTempo' => 'QUALIDADE_TEMPO',
+        'qualidadeTempo' => 'QUALIDADE_TEMPO',
+        'contagemPassagem.qualidadeTempo' => 'QUALIDADE_TEMPO',
+        'ContagemPassagemTableMap::COL_QUALIDADE_TEMPO' => 'QUALIDADE_TEMPO',
+        'COL_QUALIDADE_TEMPO' => 'QUALIDADE_TEMPO',
+        'qualidade_tempo' => 'QUALIDADE_TEMPO',
+        'contagem_passagem.qualidade_tempo' => 'QUALIDADE_TEMPO',
+        'TsDispositivoMs' => 'TS_DISPOSITIVO_MS',
+        'ContagemPassagem.TsDispositivoMs' => 'TS_DISPOSITIVO_MS',
+        'tsDispositivoMs' => 'TS_DISPOSITIVO_MS',
+        'contagemPassagem.tsDispositivoMs' => 'TS_DISPOSITIVO_MS',
+        'ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS' => 'TS_DISPOSITIVO_MS',
+        'COL_TS_DISPOSITIVO_MS' => 'TS_DISPOSITIVO_MS',
+        'ts_dispositivo_ms' => 'TS_DISPOSITIVO_MS',
+        'contagem_passagem.ts_dispositivo_ms' => 'TS_DISPOSITIVO_MS',
+        'AncoraServidorMs' => 'ANCORA_SERVIDOR_MS',
+        'ContagemPassagem.AncoraServidorMs' => 'ANCORA_SERVIDOR_MS',
+        'ancoraServidorMs' => 'ANCORA_SERVIDOR_MS',
+        'contagemPassagem.ancoraServidorMs' => 'ANCORA_SERVIDOR_MS',
+        'ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS' => 'ANCORA_SERVIDOR_MS',
+        'COL_ANCORA_SERVIDOR_MS' => 'ANCORA_SERVIDOR_MS',
+        'ancora_servidor_ms' => 'ANCORA_SERVIDOR_MS',
+        'contagem_passagem.ancora_servidor_ms' => 'ANCORA_SERVIDOR_MS',
+        'AncoraRttMs' => 'ANCORA_RTT_MS',
+        'ContagemPassagem.AncoraRttMs' => 'ANCORA_RTT_MS',
+        'ancoraRttMs' => 'ANCORA_RTT_MS',
+        'contagemPassagem.ancoraRttMs' => 'ANCORA_RTT_MS',
+        'ContagemPassagemTableMap::COL_ANCORA_RTT_MS' => 'ANCORA_RTT_MS',
+        'COL_ANCORA_RTT_MS' => 'ANCORA_RTT_MS',
+        'ancora_rtt_ms' => 'ANCORA_RTT_MS',
+        'contagem_passagem.ancora_rtt_ms' => 'ANCORA_RTT_MS',
+        'AncoraIdadeMs' => 'ANCORA_IDADE_MS',
+        'ContagemPassagem.AncoraIdadeMs' => 'ANCORA_IDADE_MS',
+        'ancoraIdadeMs' => 'ANCORA_IDADE_MS',
+        'contagemPassagem.ancoraIdadeMs' => 'ANCORA_IDADE_MS',
+        'ContagemPassagemTableMap::COL_ANCORA_IDADE_MS' => 'ANCORA_IDADE_MS',
+        'COL_ANCORA_IDADE_MS' => 'ANCORA_IDADE_MS',
+        'ancora_idade_ms' => 'ANCORA_IDADE_MS',
+        'contagem_passagem.ancora_idade_ms' => 'ANCORA_IDADE_MS',
         'DigitacaoMs' => 'DIGITACAO_MS',
         'ContagemPassagem.DigitacaoMs' => 'DIGITACAO_MS',
         'digitacaoMs' => 'DIGITACAO_MS',
@@ -285,9 +324,12 @@ class ContagemPassagemTableMap extends TableMap
         $this->addForeignKey('dispositivo_id', 'DispositivoId', 'INTEGER', 'contagem_dispositivo', 'dispositivo_id', true, null, null);
         $this->addColumn('uuid_cliente', 'UuidCliente', 'CHAR', true, 36, null);
         $this->addColumn('equipe_numero', 'EquipeNumero', 'INTEGER', true, null, null);
+        $this->addColumn('ts_ms', 'TsMs', 'BIGINT', true, null, null);
+        $this->addColumn('qualidade_tempo', 'QualidadeTempo', 'VARCHAR', true, 12, 'exato');
         $this->addColumn('ts_dispositivo_ms', 'TsDispositivoMs', 'BIGINT', true, null, null);
-        $this->addColumn('desvio_relogio_ms', 'DesvioRelogioMs', 'BIGINT', false, null, null);
-        $this->addColumn('ts_ms', 'TsMs', 'BIGINT', false, null, null);
+        $this->addColumn('ancora_servidor_ms', 'AncoraServidorMs', 'BIGINT', false, null, null);
+        $this->addColumn('ancora_rtt_ms', 'AncoraRttMs', 'INTEGER', false, null, null);
+        $this->addColumn('ancora_idade_ms', 'AncoraIdadeMs', 'BIGINT', false, null, null);
         $this->addColumn('digitacao_ms', 'DigitacaoMs', 'INTEGER', false, null, null);
         $this->addColumn('modo_entrada', 'ModoEntrada', 'VARCHAR', true, 12, null);
         $this->addColumn('recebido_em_ms', 'RecebidoEmMs', 'BIGINT', true, null, null);
@@ -463,9 +505,12 @@ class ContagemPassagemTableMap extends TableMap
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_DISPOSITIVO_ID);
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_UUID_CLIENTE);
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_EQUIPE_NUMERO);
-            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS);
-            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS);
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_TS_MS);
+            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_QUALIDADE_TEMPO);
+            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS);
+            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS);
+            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_ANCORA_RTT_MS);
+            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_ANCORA_IDADE_MS);
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_DIGITACAO_MS);
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_MODO_ENTRADA);
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_RECEBIDO_EM_MS);
@@ -475,9 +520,12 @@ class ContagemPassagemTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.dispositivo_id');
             $criteria->addSelectColumn($alias . '.uuid_cliente');
             $criteria->addSelectColumn($alias . '.equipe_numero');
-            $criteria->addSelectColumn($alias . '.ts_dispositivo_ms');
-            $criteria->addSelectColumn($alias . '.desvio_relogio_ms');
             $criteria->addSelectColumn($alias . '.ts_ms');
+            $criteria->addSelectColumn($alias . '.qualidade_tempo');
+            $criteria->addSelectColumn($alias . '.ts_dispositivo_ms');
+            $criteria->addSelectColumn($alias . '.ancora_servidor_ms');
+            $criteria->addSelectColumn($alias . '.ancora_rtt_ms');
+            $criteria->addSelectColumn($alias . '.ancora_idade_ms');
             $criteria->addSelectColumn($alias . '.digitacao_ms');
             $criteria->addSelectColumn($alias . '.modo_entrada');
             $criteria->addSelectColumn($alias . '.recebido_em_ms');
@@ -504,9 +552,12 @@ class ContagemPassagemTableMap extends TableMap
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_DISPOSITIVO_ID);
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_UUID_CLIENTE);
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_EQUIPE_NUMERO);
-            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS);
-            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_DESVIO_RELOGIO_MS);
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_TS_MS);
+            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_QUALIDADE_TEMPO);
+            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS);
+            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS);
+            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_ANCORA_RTT_MS);
+            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_ANCORA_IDADE_MS);
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_DIGITACAO_MS);
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_MODO_ENTRADA);
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_RECEBIDO_EM_MS);
@@ -516,9 +567,12 @@ class ContagemPassagemTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.dispositivo_id');
             $criteria->removeSelectColumn($alias . '.uuid_cliente');
             $criteria->removeSelectColumn($alias . '.equipe_numero');
-            $criteria->removeSelectColumn($alias . '.ts_dispositivo_ms');
-            $criteria->removeSelectColumn($alias . '.desvio_relogio_ms');
             $criteria->removeSelectColumn($alias . '.ts_ms');
+            $criteria->removeSelectColumn($alias . '.qualidade_tempo');
+            $criteria->removeSelectColumn($alias . '.ts_dispositivo_ms');
+            $criteria->removeSelectColumn($alias . '.ancora_servidor_ms');
+            $criteria->removeSelectColumn($alias . '.ancora_rtt_ms');
+            $criteria->removeSelectColumn($alias . '.ancora_idade_ms');
             $criteria->removeSelectColumn($alias . '.digitacao_ms');
             $criteria->removeSelectColumn($alias . '.modo_entrada');
             $criteria->removeSelectColumn($alias . '.recebido_em_ms');

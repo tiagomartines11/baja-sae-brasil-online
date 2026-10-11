@@ -11,6 +11,7 @@ $prova = Pagina::provaOrRedirect();
 ContagemAccess::requireController($prova);
 
 $h = [Pagina::class, 'h'];
+$simulationIsOn = Pagina::simulationBanner($prova) !== '';
 
 // /js/ is cached for 30 days. The entry module gets a version in its URL,
 // but the modules it imports are named inside the files, so the import map
@@ -41,6 +42,10 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
 
 <?= Pagina::navigation($prova, 'Revisão') ?>
 
+<?php // Permanent while the prova accepts simulated entries; the script keeps it in step with the setting. ?>
+<p class="contagem-simulacao<?= $simulationIsOn ? '' : ' oculto' ?>" id="faixa-simulacao" role="alert">
+    <strong>SIMULAÇÃO</strong> Esta prova aceita passagens simuladas. Desligue "Permitir simulação" em Fontes e configurações antes da corrida de verdade.
+</p>
 <header class="revisao-barra" id="barra-estado" aria-live="polite"></header>
 <div class="revisao-aviso oculto" id="aviso-conexao" role="alert"></div>
 <div class="revisao-aviso oculto" id="aviso-mensagem" role="status"></div>

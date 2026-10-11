@@ -165,6 +165,9 @@ final class TestWorld
         // The backslash makes the underscore literal; a bare "_" in LIKE
         // means "any one character".
         $connection->prepare('DELETE FROM `user` WHERE username LIKE ?')->execute(['zzt\\_%']);
+        // The application's log of edits is not linked to the event, so the
+        // lines written about the test prova have to be removed by name.
+        $connection->prepare('DELETE FROM `log` WHERE pagina = ?')->execute([self::EVENTO_ID . '_' . self::PROVA_ID]);
 
         // The review screens' version counter and the like live in Redis,
         // outside the database, so they are cleared separately.

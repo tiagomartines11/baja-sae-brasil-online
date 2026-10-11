@@ -13,6 +13,17 @@
  *
  * The race it writes started 3 h 20 min ago and is still running, so the
  * load test can add laps "now".
+ *
+ * A third argument asks for a field of that many cars, the size of a full
+ * national event:
+ *
+ *       php scripts/contagem-load-seed.php 26BR END 64
+ *
+ * When the event has fewer present teams, stand-in teams named "Carga NNN"
+ * (numbers from 900 up) are added to make up the difference. Remove them
+ * again with:
+ *
+ *       php scripts/contagem-load-seed.php 26BR END limpar
  */
 
 use Baja\Contagem\Engine\Data\Ocorrencia;
@@ -44,14 +55,33 @@ if ($prova === null || $prova->getType() !== 'laps') {
     exit(1);
 }
 
+const FIRST_STAND_IN_NUMBER = 900;
+const STAND_IN_NAME = 'Carga ';
+
+$connection = Propel::getWriteConnection('resultados');
 $service = ContagemService::forProva($prova);
 $service->resetRace('load-seed');
+
+// Stand-in teams of an earlier run always go first: with "limpar" that is
+// all there is to do, and otherwise the field is built to the size asked.
+$connection->prepare('DELETE FROM equipe WHERE evento_id = ? AND equipe_id >= ? AND equipe LIKE ?')
+    ->execute([$eventoId, FIRST_STAND_IN_NUMBER, STAND_IN_NAME . '%']);
+if (($argv[3] ?? '') === 'limpar') {
+    echo "Race wiped and stand-in teams removed.\n";
+    exit(0);
+}
+$wantedCars = (int) ($argv[3] ?? 0);
+$missingCars = $wantedCars - count($service->loadTeams(true));
+for ($standIn = 0; $standIn < $missingCars; $standIn++) {
+    $number = FIRST_STAND_IN_NUMBER + $standIn;
+    $connection->prepare('INSERT INTO equipe (evento_id, equipe_id, escola, equipe, presente) VALUES (?, ?, ?, ?, 1)')
+        ->execute([$eventoId, $number, 'Teste de carga', STAND_IN_NAME . $number]);
+}
 
 $nowMs = Clock::nowMs();
 $startMs = $nowMs - RACE_AGE_SECONDS * 1000;
 $service->withLock(fn() => $service->recordOcorrencia(Ocorrencia::LARGADA, $startMs, null, 'load-seed'));
 
-$connection = Propel::getWriteConnection('resultados');
 $sources = ContagemFonteQuery::create()
     ->filterByEventoId($eventoId)->filterByProvaId($provaId)->filterByTipo('manual')->filterByAtiva(true)
     ->orderByOrdem()->find();
@@ -70,12 +100,12 @@ foreach ($sources as $source) {
 mt_srand(2026);
 $insert = $connection->prepare(
     'INSERT INTO contagem_passagem (fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_dispositivo_ms,
-         desvio_relogio_ms, ts_ms, digitacao_ms, modo_entrada, recebido_em_ms)
-     VALUES (?, ?, ?, ?, ?, 0, ?, 800, ?, ?)'
+         ts_ms, qualidade_tempo, digitacao_ms, modo_entrada, recebido_em_ms)
+     VALUES (?, ?, ?, ?, ?, ?, \'exato\', 800, ?, ?)'
 );
 $entries = 0;
 $connection->beginTransaction();
-foreach (array_keys($service->loadTeams(true)) as $car) {
+foreach (array_keys($service->carRoster()->classified()) as $car) {
     $carFactor = mt_rand(85, 130) / 100;
     $passMs = $startMs + (int) (mt_rand(30, 100) / 100 * BASE_LAP_SECONDS * 1000 * $carFactor);
     while ($passMs < $nowMs - 60000) {

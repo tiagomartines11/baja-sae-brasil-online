@@ -5,8 +5,11 @@
 // means is decided in revisao.js.
 
 import { el, substituir } from './revisao-dom.js';
-import { NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, listaDeCarros, relogio, tempoDeProva } from './revisao-formato.js';
-import { acoesDaEntrada, descreverSugestao } from './revisao-decisoes.js';
+import {
+  AVISO_TEMPO_DE_VOLTA, NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, listaDeCarros, relogio, tempoDeProva,
+} from './revisao-formato.js';
+import { acaoDeConfirmar, acoesDaEntrada, descreverSugestao } from './revisao-decisoes.js';
+import { mostraCorridaInteira, quandoDoAlerta } from './revisao-fila.js';
 import { desenharRaias } from './revisao-raias.js';
 import { ESCALA_ALERTA, ESCALA_CARRO, descricaoDoChip, encontrarEntrada } from './revisao-raias-logica.js';
 
@@ -63,7 +66,12 @@ function caixaDaEntrada(contexto, entrada) {
       case 'anular':
         return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() }, 'Anular');
       case 'confirmar':
-        return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() }, 'Confirmar (conta como está)');
+        // Said in full: on a pass that does not count today this button adds a lap.
+        return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() },
+          opcao.maisUmaPassagem ? 'Contar esta passagem (+1 volta)' : 'Está correto, parar de avisar');
+      case 'descartar_passagem':
+        return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() },
+          `Descartar esta passagem (anula os ${opcao.registros} registros)`);
       case 'restaurar':
         return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() }, 'Restaurar (desfazer a anulação)');
       case 'remover':
@@ -86,7 +94,7 @@ function caixaDaEntrada(contexto, entrada) {
   return el('div', { class: 'caixa-entrada' },
     el('p', {},
       el('strong', {}, `Carro ${entrada.carro}`), ' · ', descricaoDoChip(entrada), ' · ',
-      tempoDeProva(entrada.ts_ms, contexto.estado.corrida.largada_ms)),
+      entrada.qualidade_tempo === 'desconhecido' ? 'sem horário' : tempoDeProva(entrada.ts_ms, contexto.estado.corrida.largada_ms)),
     el('div', { class: 'botoes' }, botoes));
 }
 
@@ -129,11 +137,13 @@ export function desenharDetalheDeAlerta(container, contexto) {
   // flag list, there is nothing to act on.
   const semDecisao = ocupado || !contexto.podeDecidir;
   const semEntradas = (alerta.passagem_ids ?? []).length === 0;
+  const confirmar = acaoDeConfirmar(alerta);
+  const sugereAnular = alerta.sugestao?.tipo === 'anular';
 
   substituir(container,
     el('header', { class: 'detalhe-titulo' },
       el('h2', {}, `${NOMES_DE_ALERTA[alerta.tipo] ?? alerta.tipo} · carro ${listaDeCarros(alerta.carros)}`),
-      el('span', { class: 'quando' }, tempoDeProva(alerta.ts_ms, estado.corrida.largada_ms)),
+      el('span', { class: 'quando' }, quandoDoAlerta(alerta, estado.corrida.largada_ms)),
       el('button', { type: 'button', class: 'fechar', onclick: acoes.fechar }, 'Fechar')),
     olhando.length > 0 ? el('p', { class: 'olhando' }, `${olhando.join(', ')} também está olhando este alerta.`) : null,
     el('p', { class: 'motivo' }, alerta.motivo),
@@ -142,27 +152,41 @@ export function desenharDetalheDeAlerta(container, contexto) {
       ? el('p', { class: 'vazio' }, 'Resolvido automaticamente. Use os registros abaixo se quiser mudar o resultado.')
       : el('div', { class: 'botoes botoes-decisao' },
         el('button', { type: 'button', class: 'primario', disabled: semDecisao || !alerta.sugestao, onclick: acoes.aceitar },
-          'Aceitar sugestão ', el('kbd', {}, 'A')),
-        el('button', { type: 'button', disabled: semDecisao || semEntradas, onclick: acoes.manterAmbas },
-          'Manter ambas ', el('kbd', {}, 'K')),
+          alerta.tipo === 'repetida' && sugereAnular ? 'Anular a segunda ' : 'Aceitar sugestão ', el('kbd', {}, 'A')),
+        // No K on a repeat: "keep both" would count the car twice.
+        confirmar
+          ? el('button', {
+            type: 'button', class: confirmar.maisUmaPassagem ? 'soma-volta' : '', disabled: semDecisao, onclick: acoes.confirmarAlerta,
+          }, `${confirmar.rotulo} `, el('kbd', {}, 'K'))
+          : null,
+        alerta.tipo === 'repetida'
+          ? el('button', { type: 'button', disabled: semDecisao || !sugereAnular, onclick: () => acoes.eraOutroCarro(alerta.sugestao.passagem_id) },
+            'Era outro carro…')
+          : null,
+        // A lap too short to be real: the usual answer is that the pass did
+        // not happen, and that takes every counter's entry out at once.
+        alerta.tipo === 'volta_curta'
+          ? el('button', { type: 'button', disabled: semDecisao || semEntradas, onclick: acoes.descartarPassagem },
+            `Descartar esta passagem (anula os ${(alerta.passagem_ids ?? []).length} registros)`)
+          : null,
         el('button', { type: 'button', disabled: semDecisao || semEntradas, onclick: acoes.anular },
           'Anular registro ', el('kbd', {}, 'V')),
         el('button', { type: 'button', class: contexto.modoManual ? 'ativo' : '', onclick: acoes.alternarManual },
           'Editar manualmente')),
     campoDeMotivo(contexto),
     avisoDesatualizado(contexto),
-    raiasOuCarregando(contexto, {
-      escala: ESCALA_ALERTA,
-      idsEmDestaque: alerta.passagem_ids ?? [],
-      centrarEmMs: alerta.ts_ms,
-    }),
+    raiasOuCarregando(contexto, mostraCorridaInteira(alerta)
+      // The car's whole race: the entry of unknown time is listed under it.
+      ? { escala: ESCALA_CARRO, idsEmDestaque: alerta.passagem_ids ?? [], centrarEmMs: null }
+      : { escala: ESCALA_ALERTA, idsEmDestaque: alerta.passagem_ids ?? [], centrarEmMs: alerta.ts_ms }),
     el('p', { class: 'contagem-dica' }, LEGENDA),
     entradaSelecionada(contexto),
     contexto.modoManual ? formularioAdicionar(contexto, (alerta.carros ?? [])[0], alerta.ts_ms) : null);
 }
 
 const LEGENDA = 'Clique em um registro para agir sobre ele. Riscado = anulado; contorno = envolvido neste alerta; '
-  + '"0" no canto = passagem zero (não é volta); tracejado = não conta (janela de largada ou depois do encerramento).';
+  + '"0" no canto = passagem zero (não é volta); tracejado = não conta (antes da largada, janela de largada ou depois do encerramento); '
+  + '"~" = horário estimado; "?" = horário desconhecido (fora da linha do tempo).';
 
 export function desenharDetalheDeCarro(container, contexto) {
   const { carro, acoes } = contexto;
@@ -175,7 +199,14 @@ export function desenharDetalheDeCarro(container, contexto) {
       el('button', { type: 'button', class: 'fechar', onclick: acoes.fechar }, 'Fechar')),
     el('p', { class: 'motivo' },
       `${carro.voltas} voltas${passagemZero} · ${NOMES_DE_STATUS[carro.status] ?? carro.status}`,
-      ` · última volta ${duracao(carro.ultima_volta_ms)} · melhor volta ${duracao(carro.melhor_volta_ms)}`),
+      ' · ',
+      el('span', { class: 'com-dica', title: AVISO_TEMPO_DE_VOLTA },
+        `última volta ${duracao(carro.ultima_volta_ms)} · melhor volta ${duracao(carro.melhor_volta_ms)}`)),
+    carro.classificado === false
+      ? el('p', { class: 'revisao-aviso' }, carro.presente
+        ? 'Carro presente, mas NÃO classificado para esta prova: as passagens dele não contam, a não ser as que um revisor confirmar.'
+        : 'Este número não é de nenhuma equipe presente no evento.')
+      : null,
     avisoDesatualizado(contexto),
     raiasOuCarregando(contexto, { escala: ESCALA_CARRO, idsEmDestaque: [], centrarEmMs: null }),
     el('p', { class: 'contagem-dica' }, 'A corrida inteira deste carro. Role para os lados. ', LEGENDA),

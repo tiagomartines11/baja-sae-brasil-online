@@ -128,19 +128,122 @@ final class PublishModeTest extends EngineTestCase
 
     /**
      * SITUATION: "fonte_principal" with counter 1 as the primary, and then
-     * counter 1 is switched off on the settings page.
+     * counter 1 is switched off on the settings page at 10:00. After that,
+     * car 1 is recorded by counters 2 and 3 at 11:00 and car 2 by counter 2
+     * alone at 11:30.
      *
-     * EXPECTED: trusting a counter that is no longer counting would freeze
-     * the race, so the engine falls back to "confirmadas".
+     * EXPECTED: the question "does the primary have it?" only makes sense
+     * for the moments at which the primary was counting. It is asked pass
+     * by pass:
+     * - before 10:00 the primary decides, exactly as in the test above
+     *   (car 2 counts on its word alone; car 3, which it missed, does not);
+     * - from 10:00 on the primary has nothing BY DECISION, so the other
+     *   counters decide by agreement: car 1's pass at 11:00 counts (two
+     *   agree), car 2's lone entry at 11:30 waits.
+     * Trusting a counter that is no longer counting would freeze the race.
+     *
+     * (Until round 3 a switched-off primary made the WHOLE race fall back
+     * to "confirmadas", which also changed laps the primary had decided
+     * while it was counting.)
      */
-    public function testFontePrincipalFallsBackWhenThePrimarySourceWasSwitchedOff(): void
+    public function testFontePrincipalAsksThePrimaryOnlyWhileItWasCounting(): void
     {
         $race = $this->raceWithOneCarOfEachKind();
         $race->settings->modoPublicacao = Settings::MODO_FONTE_PRINCIPAL;
         $race->settings->fontePrincipalId = 1;
         $race->deactivateSource(1, '10:00');
+        $race->pass(1, '11:00', [2, 3]);
+        $race->pass(2, '11:30', [2]);
 
-        $this->assertLapCounts([1 => 1, 2 => 0, 3 => 1, 4 => 1], $race->run('12:00'));
+        $this->assertLapCounts([1 => 2, 2 => 1, 3 => 0, 4 => 1], $race->run('12:00'));
+    }
+
+    /**
+     * SITUATION: "fonte_principal" with counter 1 as the primary. Counter 1
+     * was confused from minute 4 to minute 8 and a reviewer excluded it for
+     * that interval ("excluir esta fonte"). During the interval car 2 was
+     * recorded by counters 2 and 3, and car 3 by counter 2 alone. Later a
+     * reviewer excludes counter 1 for the whole race, with no end time.
+     *
+     * WHAT WENT WRONG BEFORE: an excluded source's entries are dropped, so
+     * "count what the primary has" counted nothing while it was excluded.
+     * Excluding the primary for the whole race zeroed the race.
+     *
+     * EXPECTED: inside the exclusion the passes follow the agreement rule
+     * (car 2 gets its lap, car 3's lone entry waits); outside it the
+     * primary still decides (car 4, recorded by the primary alone at
+     * 09:00, counts). With the primary excluded for the whole race, the
+     * race is counted by agreement throughout, not zeroed.
+     */
+    public function testFontePrincipalWithThePrimaryExcludedCountsThatStretchByAgreement(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->settings->modoPublicacao = Settings::MODO_FONTE_PRINCIPAL;
+        $race->settings->fontePrincipalId = 1;
+        $race->start('00:00');
+        $race->firstCrossing([2, 3, 4]);
+        $race->pass(2, '05:00', [2, 3]);
+        $race->pass(3, '06:00', [2]);
+        $race->pass(4, '09:00', [1]);
+        $exclusion = $race->excludeSource(1, '04:00', '08:00');
+
+        $this->assertLapCounts([2 => 1, 3 => 0, 4 => 1], $race->run('12:00'));
+
+        // Without the exclusion the primary decides everywhere: it has
+        // neither car 2 nor car 3 at minutes 5 and 6.
+        $race->undo($exclusion);
+        $this->assertLapCounts([2 => 0, 3 => 0, 4 => 1], $race->run('12:00'));
+
+        // Excluded for the whole race: the first crossings (pass zero) are
+        // still there thanks to counters 2 and 3, car 2 has its lap, and
+        // car 4's pass, which only the excluded primary had, is gone.
+        $race->excludeSource(1, null, null);
+        $wholeRace = $race->run('12:00');
+        $this->assertLapCounts([2 => 1, 3 => 0, 4 => 0], $wholeRace);
+        $this->assertSame(RaceScenario::ms('00:20'), $wholeRace->cars[4]->ultimaPassagemMs, 'The race is not zeroed: pass zero stands.');
+    }
+
+    /**
+     * SITUATION: "fonte_principal" with counter 1 as the primary. Nobody
+     * recorded car 5 at minute 6, and a reviewer who watched the video adds
+     * the pass ("adicionar"). The primary has no entry for it.
+     *
+     * EXPECTED: a reviewer's word counts in every mode, whether it is a
+     * confirmation of somebody's entry (car 4 above) or a pass added from
+     * nothing. Car 5 has its lap.
+     */
+    public function testFontePrincipalCountsAPassAReviewerAdded(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->settings->modoPublicacao = Settings::MODO_FONTE_PRINCIPAL;
+        $race->settings->fontePrincipalId = 1;
+        $race->start('00:00');
+        $race->firstCrossing([5]);
+        $this->assertLapCounts([5 => 0], $race->run('08:00'));
+
+        $race->addPass(5, '06:00');
+
+        $this->assertLapCounts([5 => 1], $race->run('08:00'));
+    }
+
+    /**
+     * SITUATION: "fonte_principal" is selected with a primary id that is
+     * not a counter at all: the pit log's source, or a number that no
+     * source has.
+     *
+     * EXPECTED: as with no primary chosen, the race is counted by
+     * agreement.
+     */
+    public function testFontePrincipalPointingAtSomethingThatIsNotACounterFallsBack(): void
+    {
+        foreach ([9 => 'the pit log', 77 => 'no source at all'] as $primaryId => $what) {
+            $race = $this->raceWithOneCarOfEachKind();
+            $race->addSource(9, 'Box', \Baja\Contagem\Engine\Data\Source::TIPO_BOX);
+            $race->settings->modoPublicacao = Settings::MODO_FONTE_PRINCIPAL;
+            $race->settings->fontePrincipalId = $primaryId;
+
+            $this->assertLapCounts([1 => 1, 2 => 0, 3 => 1, 4 => 1], $race->run('12:00'), "Primary is $what.");
+        }
     }
 
     /**

@@ -53,13 +53,22 @@ final class PassMatcher
         $openGroups = [];
 
         foreach ($carEntries as $entry) {
+            $fonteId = $entry->fonteId;
             $joinedGroup = null;
             foreach ($openGroups as $index => $openGroup) {
                 if ($entry->tsMs - $openGroup->primeiroTsMs > $janelaMs) {
                     unset($openGroups[$index]);
                     continue;
                 }
-                if (!$openGroup->hasSource($entry->fonteId)) {
+                // (PassGroup::hasSource(), written out: this runs once per entry of the race.)
+                $alreadyHasTheSource = false;
+                foreach ($openGroup->entries as $other) {
+                    if ($other->fonteId === $fonteId) {
+                        $alreadyHasTheSource = true;
+                        break;
+                    }
+                }
+                if (!$alreadyHasTheSource) {
                     $joinedGroup = $openGroup;
                     break;
                 }
@@ -73,11 +82,14 @@ final class PassMatcher
                 $openGroups[] = $joinedGroup;
             }
 
-            if ($entry->fonteId === Source::REVISOR_ID) {
+            if ($fonteId === Source::REVISOR_ID) {
                 $joinedGroup->adicionadoPorRevisor = true;
             }
             if (isset($confirmedEntryIds[$entry->id])) {
                 $joinedGroup->confirmadoPorRevisor = true;
+            }
+            if ($entry->qualidadeTempo !== Entry::TEMPO_EXATO) {
+                $joinedGroup->tempoEstimado = true;
             }
         }
 

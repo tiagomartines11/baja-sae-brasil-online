@@ -17,6 +17,12 @@ final class PublishOutcome
     /** @var int[] cars whose published values were written */
     public array $changedCars = [];
 
+    /**
+     * @var int[] cars whose published VOLTAS or LAST disagreed with an
+     *            up-to-date full run and were corrected (see ScorePublisher::reconcile())
+     */
+    public array $correctedCars = [];
+
     /** True when points were recalculated (Prova::refreshVarsAndPontos()). */
     public bool $refreshRan = false;
 

@@ -25,6 +25,18 @@ final class SourceAvailability
     /** @var Source[] sources of the kinds that record passes (manual or automatic) */
     private array $passSources = [];
 
+    /**
+     * The usual case, worked out once: sources that are switched on and
+     * were never excluded were supposed to count at every moment. Only the
+     * others need their periods looked at, question by question.
+     *
+     * @var array<int, true> fonteId => true
+     */
+    private array $alwaysSupposedToCount = [];
+
+    /** @var Source[] pass sources that were switched off at some point, or excluded for some period */
+    private array $sometimesSupposedToCount = [];
+
     private AppliedDecisions $applied;
     private int $janelaMs;
 
@@ -34,8 +46,14 @@ final class SourceAvailability
     public function __construct(array $sourcesById, AppliedDecisions $applied, int $janelaMs)
     {
         foreach ($sourcesById as $source) {
-            if ($source->recordsPasses()) {
-                $this->passSources[] = $source;
+            if (!$source->recordsPasses()) {
+                continue;
+            }
+            $this->passSources[] = $source;
+            if ($source->ativa && !isset($applied->exclusions[$source->id])) {
+                $this->alwaysSupposedToCount[$source->id] = true;
+            } else {
+                $this->sometimesSupposedToCount[] = $source;
             }
         }
         $this->applied = $applied;
@@ -68,6 +86,41 @@ final class SourceAvailability
             }
         }
         return $ids;
+    }
+
+    /** How many sources were supposed to be counting at $tsMs. */
+    public function activeSourceCountAt(int $tsMs): int
+    {
+        $count = count($this->alwaysSupposedToCount);
+        foreach ($this->sometimesSupposedToCount as $source) {
+            if ($this->wasSupposedToCount($source, $tsMs)) {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
+    /**
+     * Was this one source supposed to be counting at $tsMs? False for a
+     * source that does not exist or does not record passes.
+     */
+    public function wasSupposedToCountAt(int $fonteId, int $tsMs): bool
+    {
+        if (isset($this->alwaysSupposedToCount[$fonteId])) {
+            return true;
+        }
+        foreach ($this->sometimesSupposedToCount as $source) {
+            if ($source->id === $fonteId) {
+                return $this->wasSupposedToCount($source, $tsMs);
+            }
+        }
+        return false;
+    }
+
+    /** True for a source that was supposed to count at every moment of the race: switched on, never excluded. */
+    public function wasAlwaysSupposedToCount(int $fonteId): bool
+    {
+        return isset($this->alwaysSupposedToCount[$fonteId]);
     }
 
     /** True once the source has synced past $tsMs plus the matching window. */

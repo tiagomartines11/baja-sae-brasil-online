@@ -8,10 +8,12 @@ import { createMemoryStorage } from './storage-memory.js';
 import { openStorageWithRetry, ARMAZENAMENTO } from './storage-open.js';
 import { claimSingleTab, ABA } from './single-tab.js';
 import { LocalStore } from './local-store.js';
-import { ClockEstimator } from './clock-estimator.js';
+import { ServerClock } from './server-clock.js';
 import { SyncQueue, CONEXAO } from './sync-queue.js';
 import { SyncHeartbeat } from './sync-heartbeat.js';
-import { obtainDeviceToken } from './device-token.js';
+import { createTokenSource } from './device-token.js';
+import { createPageInfo } from './page-info.js';
+import { generateUuid } from './uuid.js';
 import { postJson } from './http.js';
 import { createStatusBar } from './status-bar.js';
 import { createPreferences } from './entry-modes.js';
@@ -20,6 +22,13 @@ import { keepScreenAwake, registerOfflineShell, requestPersistentStorage, warnBe
 import { wireShiftButtons, wireDeviceStatus } from './page-extras.js';
 
 const CLOCK_REFRESH_MS = 250;
+// How often the monotonic clock is checked against the system clock (brief 6.5).
+const CLOCK_GUARD_MS = 1000;
+
+// The one global this feature puts on `window`, and only while the prova
+// allows simulation: the race simulation finds the page's own recording
+// function there (see exposeForSimulation below).
+const SIMULATION_GLOBAL = 'contagemPagina';
 
 const TEXTO_OUTRA_ABA = 'Esta contagem já está aberta em outra aba deste aparelho. Use aquela aba. '
     + 'Se ela for fechada, esta aqui abre sozinha.';
@@ -53,7 +62,7 @@ function indexedDbOrNull(windowRef) {
 async function waitToBeTheOnlyTab(windowRef, documentRef, lockName) {
     const claim = await claimSingleTab(windowRef.navigator.locks, lockName);
     if (claim.resultado !== ABA.OUTRA_ABERTA) {
-        return;
+        return claim.resultado;
     }
     const loading = documentRef.getElementById('carregando');
     const originalText = loading.textContent;
@@ -62,6 +71,7 @@ async function waitToBeTheOnlyTab(windowRef, documentRef, lockName) {
     await claim.whenFree();
     loading.textContent = originalText;
     loading.classList.remove('carregando-bloqueado');
+    return ABA.UNICA;
 }
 
 /**
@@ -71,12 +81,16 @@ async function waitToBeTheOnlyTab(windowRef, documentRef, lockName) {
  */
 export async function startPage({ buildExportCsv, windowRef = window, documentRef = document }) {
     const config = readConfig(documentRef);
+    // The system clock: a witness only. No time of a pass is built on it
+    // (see server-clock.js).
     const now = () => Date.now();
+    // The clock passes ARE timed with: cannot be set, only moves forward.
+    const monotonicNow = () => windowRef.performance.now();
     // One database per event + prova + source: counting on source 1 in the
     // morning and source 2 in the afternoon keeps two separate logs.
     const databaseName = ['contagem', config.evento_id, config.prova_id, config.fonte.id].join('-');
 
-    await waitToBeTheOnlyTab(windowRef, documentRef, databaseName);
+    const abaUnica = await waitToBeTheOnlyTab(windowRef, documentRef, databaseName);
 
     const indexedDbFactory = indexedDbOrNull(windowRef);
     const opened = await openStorageWithRetry({
@@ -85,7 +99,8 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
         createMemory: createMemoryStorage,
     });
     const store = await LocalStore.open(opened.storage);
-    const clock = new ClockEstimator();
+    const clock = new ServerClock({ now, monotonicNow, loadId: generateUuid() });
+    const info = createPageInfo(store, config);
     const preferences = createPreferences(localStorageOrNull(windowRef));
     const statusBar = createStatusBar(documentRef, config);
     const stateListeners = [];
@@ -93,33 +108,75 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
     const storedOnDisk = opened.armazenamento === ARMAZENAMENTO.DISCO;
     const fetchFn = windowRef.fetch.bind(windowRef);
 
-    function requestToken() {
-        return postJson(fetchFn, config.endpoints.dispositivo);
-    }
-
-    async function getToken() {
-        try {
-            const result = await obtainDeviceToken({ store, requestToken, usuario: config.usuario });
-            problems.tokenProblem = null;
-            return result;
-        } catch (tokenError) {
-            problems.tokenProblem = tokenError.motivo || null;
-            throw tokenError;
-        }
-    }
+    const tokenSource = createTokenSource({
+        store,
+        requestToken: () => postJson(fetchFn, config.endpoints.dispositivo),
+        usuario: config.usuario,
+        monotonicNow,
+        onOutcome: (motivo) => {
+            problems.tokenProblem = motivo;
+        },
+    });
 
     async function send(requestBody) {
-        const { token } = await getToken();
-        // postJson notes the device time right around the fetch itself and
-        // hands both instants back; the clock estimate is built from them.
-        return postJson(fetchFn, config.endpoints.sync, { token, body: requestBody, now });
+        const { token } = await tokenSource.get();
+        // postJson reads the monotonic clock right around the fetch itself
+        // and hands both instants back; the anchor is built from them.
+        return postJson(fetchFn, config.endpoints.sync, { token, body: requestBody, now: monotonicNow });
+    }
+
+    /** Set by the page controller: what the simulation may call (see exposeForSimulation). */
+    let simulationApi = null;
+
+    // The simulation itself (simulacao.js) is loaded only where it is
+    // allowed, and only once. It is optional: a failed import (for example
+    // an offline copy that does not have it) changes nothing for counting.
+    let simulationModule = null;
+    let simulationModuleAsked = false;
+
+    function installSimulationModule() {
+        if (simulationModule !== null) {
+            simulationModule.instalarSimulacao(windowRef);
+            return;
+        }
+        if (simulationModuleAsked) {
+            return;
+        }
+        simulationModuleAsked = true;
+        import('./simulacao.js').then((loaded) => {
+            simulationModule = loaded;
+            // The setting may have been switched off while the file loaded.
+            if (windowRef[SIMULATION_GLOBAL] === simulationApi) {
+                loaded.instalarSimulacao(windowRef);
+            }
+        }).catch(() => {
+            simulationModuleAsked = false;
+        });
+    }
+
+    function updateSimulationGlobal() {
+        if (simulationApi === null) {
+            return;
+        }
+        if (info.simulationAllowed()) {
+            if (windowRef[SIMULATION_GLOBAL] !== simulationApi) {
+                windowRef[SIMULATION_GLOBAL] = simulationApi;
+                installSimulationModule();
+            }
+        } else if (windowRef[SIMULATION_GLOBAL] === simulationApi) {
+            delete windowRef[SIMULATION_GLOBAL];
+            if (simulationModule !== null) {
+                simulationModule.removerSimulacao(windowRef);
+            }
+        }
     }
 
     function renderStatus() {
         const state = queue.getState();
-        statusBar.render(state, problems);
-        statusBar.renderClock(state, now(), clock.offsetMs());
+        statusBar.render(state, problems, info.simulationAllowed());
+        statusBar.renderClock(state, clock.serverNowMs());
         shiftButtons.render(state);
+        updateSimulationGlobal();
         for (const listener of stateListeners) {
             listener(state);
         }
@@ -129,7 +186,6 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
         store,
         send,
         clock,
-        now,
         onChange: renderStatus,
         // A memory-only page cannot see what this device recorded before, so
         // it never tells the server "you have everything" and sends no
@@ -138,25 +194,34 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
     });
     const heartbeat = new SyncHeartbeat({
         queue,
-        now,
+        // Monotonic: the 30-second pause must not depend on a clock that can be set.
+        now: monotonicNow,
         // True only when the server issued a NEW token, which it does for a
         // logged-in user who is (again) allowed on this source.
-        renewToken: async () => (await getToken()).issuedNow,
+        renewToken: async () => (await tokenSource.get()).issuedNow,
     });
+    // Records an earlier page load left without a time get one now, before
+    // anything is shown or uploaded (brief 6.4).
+    await queue.prepare();
 
     const shiftButtons = wireShiftButtons({ windowRef, documentRef, queue, store, syncUrl: config.endpoints.sync });
 
-    // Drawn at once, clock included: after a reload with no network the race
-    // start and the clock offset are already known from the disk, and the
-    // counter must not look at "--:--:--" while waiting for the first timer.
     renderStatus();
-    windowRef.setInterval(() => statusBar.renderClock(queue.getState(), now(), clock.offsetMs()), CLOCK_REFRESH_MS);
+    windowRef.setInterval(() => statusBar.renderClock(queue.getState(), clock.serverNowMs()), CLOCK_REFRESH_MS);
+    // Brief 6.5: a phone whose monotonic clock stood still while it slept
+    // (or whose system clock was changed) loses its anchor here, and asks
+    // the server for a new one at once instead of at the next heartbeat.
+    windowRef.setInterval(() => {
+        if (clock.checkMonotonic()) {
+            queue.requestSync();
+        }
+    }, CLOCK_GUARD_MS);
 
     heartbeat.start(windowRef.setInterval.bind(windowRef), windowRef.clearInterval.bind(windowRef));
     if (!storedOnDisk) {
         // No heartbeat will ask for the token here, and a counter should
         // learn about an expired session before the first car, not after.
-        getToken().catch(() => {}).finally(renderStatus);
+        tokenSource.get().catch(() => {}).finally(renderStatus);
     }
 
     // Do not wait up to 5 s for the heartbeat when the network comes back or
@@ -164,6 +229,9 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
     windowRef.addEventListener('online', () => queue.requestSync());
     documentRef.addEventListener('visibilitychange', () => {
         if (documentRef.visibilityState === 'visible') {
+            // Coming back from the background is exactly when the phone may
+            // have slept; check the clocks before the first tap.
+            clock.checkMonotonic();
             queue.requestSync();
         }
     });
@@ -173,7 +241,11 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
     const offlineShellRegistered = registerOfflineShell(windowRef.navigator, config.endpoints.service_worker);
     const persistenceAsked = requestPersistentStorage(windowRef.navigator);
     wireDeviceStatus({
-        windowRef, documentRef, armazenamento: opened.armazenamento, refreshAfter: [offlineShellRegistered, persistenceAsked],
+        windowRef,
+        documentRef,
+        armazenamento: opened.armazenamento,
+        abaUnica,
+        refreshAfter: [offlineShellRegistered, persistenceAsked],
     });
 
     documentRef.getElementById('btn-exportar').addEventListener('click', () => {
@@ -183,10 +255,13 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
     // "Tentar de novo" retries in place. It must never reload the page: a
     // reload is exactly what loses records that are not on the disk.
     documentRef.getElementById('btn-reconectar').addEventListener('click', () => {
+        // A person asked: skip the pauses that only spare the server.
+        tokenSource.forgetRefusal();
         if (queue.getState().conexao === CONEXAO.REVOGADO) {
             heartbeat.tryToRecoverFromRevocation({ force: true }).finally(renderStatus);
         } else {
-            queue.requestSync();
+            // Also puts back what the safety net had given up on (brief 2.1).
+            queue.retryRefused().finally(() => queue.requestSync());
         }
     });
 
@@ -196,7 +271,9 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
         queue,
         clock,
         now,
+        monotonicNow,
         preferences,
+        ...info,
         /** True after "Encerrar meu turno": the page must not record anything. */
         shiftEnded() {
             return queue.turnoEncerrado;
@@ -206,15 +283,18 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
             stateListeners.push(listener);
             listener(queue.getState());
         },
-        /** Car list: the server's when it has sent one, else the one in the page. */
-        validCars() {
-            const serverInfo = store.getMeta('servidor', null);
-            const serverCars = serverInfo ? serverInfo.valid_cars : null;
-            return Array.isArray(serverCars) && serverCars.length > 0 ? serverCars : config.carros;
-        },
-        janelaMs() {
-            const serverInfo = store.getMeta('servidor', null);
-            return serverInfo && Number.isFinite(serverInfo.janela_ms) ? serverInfo.janela_ms : config.janela_ms;
+        /**
+         * Makes the page's recording function reachable from outside the
+         * module, for the race simulation, as `window.contagemPagina`. The
+         * global exists ONLY while the prova allows simulation
+         * (`contagem.permitir_simulacao`); it appears and disappears with
+         * the setting, without a reload.
+         *
+         * @param {object} api what to expose; each page documents its own
+         */
+        exposeForSimulation(api) {
+            simulationApi = api;
+            updateSimulationGlobal();
         },
     };
 }

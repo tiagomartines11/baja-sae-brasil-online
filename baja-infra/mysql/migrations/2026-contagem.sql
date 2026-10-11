@@ -3,8 +3,11 @@
 -- Apply once to an existing baja_resultados database:
 --     mysql -u <user> -p baja_resultados < 2026-contagem.sql
 --
--- Safe to run again: every statement is CREATE TABLE IF NOT EXISTS, and
--- nothing here touches an existing table or row.
+-- This file ONLY CREATES TABLES. Safe to run again: every statement is
+-- CREATE TABLE IF NOT EXISTS, and nothing here touches an existing table or
+-- row. For the same reason it does not alter a contagem_* table that
+-- already exists: a database that got these tables from an earlier version
+-- of this file (only development machines did) must drop them first.
 --
 -- The definitions mirror baja-php/schema.xml, which stays the source of
 -- truth for the Propel classes. If one changes, change the other.
@@ -50,6 +53,7 @@ CREATE TABLE IF NOT EXISTS `contagem_fonte_usuario` (
   `usuario` varchar(45) NOT NULL,
   `adicionado_por` varchar(45) DEFAULT NULL,
   `criado_em_ms` bigint NOT NULL,
+  `liberado_em_ms` bigint DEFAULT NULL,
   PRIMARY KEY (`fonte_id`,`usuario`),
   KEY `contagem_fonte_usuario_usuario_idx` (`usuario`),
   CONSTRAINT `contagem_fonte_usuario_fonte` FOREIGN KEY (`fonte_id`) REFERENCES `contagem_fonte` (`fonte_id`) ON DELETE CASCADE ON UPDATE CASCADE
@@ -66,7 +70,6 @@ CREATE TABLE IF NOT EXISTS `contagem_dispositivo` (
   `fechado_em_ms` bigint DEFAULT NULL,
   `visto_em_ms` bigint DEFAULT NULL,
   `sincronizado_ate_ms` bigint DEFAULT NULL,
-  `primeiro_desvio_ms` bigint DEFAULT NULL,
   PRIMARY KEY (`dispositivo_id`),
   UNIQUE KEY `contagem_dispositivo_token_hash_UNIQUE` (`token_hash`),
   KEY `contagem_dispositivo_fonte_idx` (`fonte_id`),
@@ -79,9 +82,12 @@ CREATE TABLE IF NOT EXISTS `contagem_passagem` (
   `dispositivo_id` int NOT NULL,
   `uuid_cliente` char(36) CHARACTER SET ascii NOT NULL,
   `equipe_numero` int NOT NULL,
+  `ts_ms` bigint NOT NULL,
+  `qualidade_tempo` varchar(12) NOT NULL DEFAULT 'exato',
   `ts_dispositivo_ms` bigint NOT NULL,
-  `desvio_relogio_ms` bigint DEFAULT NULL,
-  `ts_ms` bigint DEFAULT NULL,
+  `ancora_servidor_ms` bigint DEFAULT NULL,
+  `ancora_rtt_ms` int DEFAULT NULL,
+  `ancora_idade_ms` bigint DEFAULT NULL,
   `digitacao_ms` int DEFAULT NULL,
   `modo_entrada` varchar(12) NOT NULL,
   `recebido_em_ms` bigint NOT NULL,
@@ -98,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `contagem_ocorrencia` (
   `ocorrencia_id` bigint NOT NULL AUTO_INCREMENT,
   `evento_id` char(4) CHARACTER SET latin1 NOT NULL,
   `prova_id` char(3) CHARACTER SET latin1 NOT NULL,
-  `tipo` varchar(20) NOT NULL,
+  `tipo` varchar(24) NOT NULL,
   `equipe_numero` int DEFAULT NULL,
   `ts_ms` bigint NOT NULL,
   `usuario` varchar(45) DEFAULT NULL,

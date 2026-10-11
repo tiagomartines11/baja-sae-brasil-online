@@ -55,6 +55,19 @@ button {
     cursor: pointer;
 }
 
+/* ---- "SIMULAÇÃO": permanent while the prova allows simulation ---- */
+
+.faixa-simulacao {
+    padding: 4px 12px;
+    padding-top: max(4px, env(safe-area-inset-top));
+    background: #ffd24d;
+    color: #000000;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    text-align: center;
+}
+
 /* ---- status bar: always visible ---- */
 
 .barra-status {
@@ -97,8 +110,22 @@ button {
 }
 
 .barra-detalhes,
-.barra-outros {
+.barra-outros,
+.barra-horario {
     font-size: 15px;
+}
+
+.barra-horario {
+    justify-content: flex-start;
+    font-variant-numeric: tabular-nums;
+}
+
+/* No server time yet: must not look like a clock. */
+.sincronizando {
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #ffd24d;
+    color: #000000;
 }
 
 .conexao {
@@ -249,6 +276,21 @@ button {
     border-color: var(--cor-alerta);
 }
 
+/* Something is wrong, not merely worth a second look: the pass was not
+   stored, or the car is not classified for this prova. */
+.destaque-erro {
+    border-color: var(--cor-erro);
+}
+
+.destaque-erro.destaque-ativo {
+    animation-name: destaque-erro;
+}
+
+.destaque-erro .destaque-avisos p {
+    background: var(--cor-erro);
+    font-size: 20px;
+}
+
 @keyframes destaque-registrado {
     from { background: var(--cor-ok); color: #ffffff; }
     to { background: var(--cor-fundo); color: var(--cor-texto); }
@@ -256,6 +298,11 @@ button {
 
 @keyframes destaque-aviso {
     from { background: var(--cor-alerta); color: #ffffff; }
+    to { background: var(--cor-fundo); color: var(--cor-texto); }
+}
+
+@keyframes destaque-erro {
+    from { background: var(--cor-erro); color: #ffffff; }
     to { background: var(--cor-fundo); color: var(--cor-texto); }
 }
 
@@ -383,6 +430,74 @@ button {
 .bloco-no-box {
     border-color: var(--cor-alerta);
     background: #fff1d6;
+}
+
+/* The car chosen in two-tap mode, waiting for "Passou". */
+.bloco-selecionado,
+.bloco-selecionado:active {
+    border-color: var(--cor-acao);
+    background: var(--cor-acao);
+    color: #ffffff;
+}
+
+/* Two-tap panel: the selected car, large, and the "Passou" button. It stays
+   at the bottom of the screen while the tiles scroll behind it. */
+.passou-painel {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 10px;
+    align-items: stretch;
+    margin-top: 10px;
+    padding: 8px 0;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    border-top: 4px solid var(--cor-borda);
+    background: var(--cor-fundo);
+}
+
+.selecionado {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    text-align: center;
+}
+
+.selecionado-numero {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.selecionado-equipe {
+    font-size: 15px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.botao-passou {
+    min-height: 104px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--cor-ok);
+    color: #ffffff;
+    font-size: 34px;
+    font-weight: 800;
+}
+
+.botao-passou:active {
+    background: #000000;
+}
+
+.botao-passou:disabled {
+    background: #8a8a8a;
+}
+
+.opcao-um-toque {
+    margin-top: 6px;
 }
 
 /* ---- mode switch ---- */
@@ -524,6 +639,79 @@ button {
     padding: 8px;
     background: var(--cor-erro);
     color: #ffffff;
+}
+
+/* The opening questions (area, then entry or exit). */
+.box-escolha h2 {
+    margin: 10px 0;
+    font-size: 22px;
+    text-transform: none;
+    letter-spacing: 0;
+    text-align: center;
+}
+
+.botao-area {
+    background: var(--cor-acao);
+}
+
+/* What this device chose last time: marked, never pre-pressed. */
+.escolha-lembrada {
+    outline: 4px dashed var(--cor-borda);
+    outline-offset: 3px;
+}
+
+/* The switches that stay visible while recording. */
+.chave {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.chave button {
+    min-height: var(--alvo-toque);
+    border: 3px solid var(--cor-borda);
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.chave button[aria-pressed="true"] {
+    background: #000000;
+    color: #ffffff;
+}
+
+/* Says, in words and in colour, what the next tap will record. */
+.box-instrucao {
+    margin: 0 0 8px;
+    padding: 10px;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.box-instrucao-entrada {
+    background: var(--cor-alerta);
+}
+
+.box-instrucao-saida {
+    background: var(--cor-ok);
+}
+
+#box-registro h2 {
+    margin-top: 12px;
+}
+
+.form-outro-numero {
+    margin-top: 14px;
+}
+
+.form-outro-numero .campo-numero {
+    height: var(--alvo-toque);
+    font-size: 26px;
 }
 
 /* ---- footer ---- */

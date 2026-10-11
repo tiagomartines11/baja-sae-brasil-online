@@ -33,7 +33,9 @@ final class ReviewSettingsFormTest extends TestCase
         $onTheForm = array_merge(
             array_keys(SettingsForm::CHOICE_FIELDS),
             array_keys(SettingsForm::numberFields()),
-            ['fonte_principal_id'] // drawn by the page itself, as a list of the sources
+            array_keys(SettingsForm::BOOLEAN_FIELDS),
+            // Drawn by the page itself: a list of the sources, and a list of the prova's own fields.
+            ['fonte_principal_id', SettingsForm::CLASSIFICATION_FIELD]
         );
 
         foreach (array_keys((new Settings())->toArray()) as $setting) {
@@ -46,7 +48,48 @@ final class ReviewSettingsFormTest extends TestCase
         foreach (SettingsForm::numberFields() as $key => [$label, $hint]) {
             $this->assertNotSame('', trim($hint), $key . ' has no help text');
         }
+        foreach (SettingsForm::BOOLEAN_FIELDS as $key => [$label, $hint]) {
+            $this->assertNotSame('', trim($hint), $key . ' has no help text');
+        }
         $this->assertNotSame('', SettingsForm::PRIMARY_SOURCE_HINT);
+        $this->assertNotSame('', SettingsForm::CLASSIFICATION_HINT);
+    }
+
+    /**
+     * SITUATION: round 3 added three settings. The controller ticks "Área
+     * de abastecimento" and "Permitir simulação" and picks the prova's
+     * field APTO as the classification field. On another day they untick
+     * both boxes and choose "(nenhum)".
+     *
+     * EXPECTED: a ticked box is true, a box that is not ticked (browsers
+     * then send nothing at all for it) is false, and the classification
+     * field is the chosen code or nothing. A code that is not a field of
+     * this prova (a tampered form) is refused by name.
+     */
+    public function testTheSwitchesAndTheClassificationFieldAreReadFromTheForm(): void
+    {
+        $fields = ['DESCLAS', 'APTO'];
+
+        $on = SettingsForm::fromPost($this->filledForm([
+            'abastecimento' => '1', 'permitir_simulacao' => '1', 'campo_classificacao' => 'APTO',
+        ]), [1, 2, 3], null, $fields);
+        $this->assertTrue($on->abastecimento);
+        $this->assertTrue($on->permitirSimulacao);
+        $this->assertSame('APTO', $on->campoClassificacao);
+
+        $form = $this->filledForm(['campo_classificacao' => '']);
+        unset($form['abastecimento'], $form['permitir_simulacao']);
+        $off = SettingsForm::fromPost($form, [1, 2, 3], null, $fields);
+        $this->assertFalse($off->abastecimento);
+        $this->assertFalse($off->permitirSimulacao);
+        $this->assertNull($off->campoClassificacao);
+
+        try {
+            SettingsForm::fromPost($this->filledForm(['campo_classificacao' => 'VOLTAS']), [1, 2, 3], null, $fields);
+            $this->fail('a field that cannot be the classification field was accepted');
+        } catch (InvalidArgumentException $refusal) {
+            $this->assertStringContainsString('Campo de classificação', $refusal->getMessage());
+        }
     }
 
     /**
@@ -161,6 +204,13 @@ final class ReviewSettingsFormTest extends TestCase
     {
         $form = [];
         foreach ((new Settings())->toArray() as $key => $value) {
+            if (is_bool($value)) {
+                // A checkbox: sent as "1" when ticked, not sent at all otherwise.
+                if ($value) {
+                    $form[$key] = '1';
+                }
+                continue;
+            }
             $form[$key] = $value === null ? '' : str_replace('.', ',', (string) $value);
         }
         return $changes + $form;

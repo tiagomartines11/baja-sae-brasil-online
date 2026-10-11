@@ -59,10 +59,14 @@ final class PaceModel
     private array $carLapEnds = [];
     /** @var array<int, float[]> carro => lap ÷ field pace, same order */
     private array $carLapRatios = [];
-    /** @var array<int, array<int, ?int>> carro => moment => the answer expectedLapMs() gave */
+    /** @var array<int, array<int, int>> carro => moment => the answer expectedLapMs() gave (0 for "unknown") */
     private array $expectedLapByCarAndMoment = [];
     /** @var array<int, array<int, float>> carro => number of its laps finished => its factor then */
     private array $carFactorByLapsFinished = [];
+    /** @var array<int, int> carro => the moment last asked about */
+    private array $lastMomentAskedByCar = [];
+    /** @var array<int, int> carro => how many of its laps were finished by that moment */
+    private array $lapsFinishedThenByCar = [];
 
     /**
      * @param array<int, Lap[]> $lapsByCar
@@ -74,12 +78,16 @@ final class PaceModel
         $endTimes = [];
         $durations = [];
         foreach ($lapsByCar as $carro => $laps) {
+            $cleanLaps = [];
             foreach ($laps as $lap) {
                 if (self::isClean($lap)) {
-                    $this->cleanLapsByCar[$carro][] = $lap;
+                    $cleanLaps[] = $lap;
                     $endTimes[] = $lap->tsMs;
                     $durations[] = (int) $lap->tempoVoltaMs;
                 }
+            }
+            if ($cleanLaps !== []) {
+                $this->cleanLapsByCar[$carro] = $cleanLaps;
             }
         }
         asort($endTimes);
@@ -115,7 +123,12 @@ final class PaceModel
         if ($lapCount < self::MIN_LAPS_FOR_FIELD_PACE) {
             return null;
         }
-        return Stats::median(array_slice($this->fieldLapDurations, $firstIndex, $lapCount));
+        $durations = array_slice($this->fieldLapDurations, $firstIndex, $lapCount);
+        sort($durations);
+        $middle = $lapCount >> 1;
+        return $lapCount % 2 === 1
+            ? (float) $durations[$middle]
+            : ($durations[$middle - 1] + $durations[$middle]) / 2;
     }
 
     /**
@@ -127,7 +140,7 @@ final class PaceModel
         if (!isset($this->carLapEnds[$carro])) {
             $this->measureCar($carro);
         }
-        $lapsFinished = Stats::countAtMost($this->carLapEnds[$carro], $tsMs);
+        $lapsFinished = $this->lapsFinishedBy($carro, $tsMs);
         if ($lapsFinished < self::MIN_LAPS_FOR_CAR_FACTOR) {
             return 1.0;
         }
@@ -141,17 +154,45 @@ final class PaceModel
         return $this->carFactorByLapsFinished[$carro][$lapsFinished];
     }
 
+    /**
+     * How many of the car's qualifying laps had ended by $tsMs.
+     *
+     * Questions about one car nearly always come in time order (lap after
+     * lap), so the previous answer is remembered and the count simply moves
+     * on from there. A question about an earlier moment is answered by a
+     * binary search instead.
+     */
+    private function lapsFinishedBy(int $carro, int $tsMs): int
+    {
+        $lapEnds = $this->carLapEnds[$carro];
+        if ($tsMs < ($this->lastMomentAskedByCar[$carro] ?? PHP_INT_MAX)) {
+            $finished = Stats::countAtMost($lapEnds, $tsMs);
+        } else {
+            $finished = $this->lapsFinishedThenByCar[$carro];
+            $lapCount = count($lapEnds);
+            while ($finished < $lapCount && $lapEnds[$finished] <= $tsMs) {
+                $finished++;
+            }
+        }
+        $this->lastMomentAskedByCar[$carro] = $tsMs;
+        $this->lapsFinishedThenByCar[$carro] = $finished;
+        return $finished;
+    }
+
     /** Expected lap of the car around $tsMs, in ms. Null while the field pace is unknown. */
     public function expectedLapMs(int $carro, int $tsMs): ?int
     {
         // Asked twice for every lap (is it too short? may it be a best
-        // lap?), with the same car and moment both times.
-        if (isset($this->expectedLapByCarAndMoment[$carro]) && array_key_exists($tsMs, $this->expectedLapByCarAndMoment[$carro])) {
-            return $this->expectedLapByCarAndMoment[$carro][$tsMs];
+        // lap?), with the same car and moment both times. The answers are
+        // remembered with "unknown" written as 0, so that one look-up tells
+        // "not asked yet" (nothing there) from "asked, and unknown".
+        $remembered = $this->expectedLapByCarAndMoment[$carro][$tsMs] ?? -1;
+        if ($remembered >= 0) {
+            return $remembered === 0 ? null : $remembered;
         }
         $fieldPace = $this->fieldPaceAt($tsMs);
         $expectedMs = $fieldPace === null ? null : (int) round($fieldPace * $this->carFactorAt($carro, $tsMs));
-        $this->expectedLapByCarAndMoment[$carro][$tsMs] = $expectedMs;
+        $this->expectedLapByCarAndMoment[$carro][$tsMs] = $expectedMs ?? 0;
         return $expectedMs;
     }
 
@@ -160,18 +201,25 @@ final class PaceModel
     {
         $this->carLapEnds[$carro] = [];
         $this->carLapRatios[$carro] = [];
+        $lapEnds = [];
+        $lapRatios = [];
         foreach ($this->cleanLapsByCar[$carro] ?? [] as $lap) {
             $lapStartMs = $lap->tsMs - (int) $lap->tempoVoltaMs;
-            $fieldPace = $this->fieldPaceAt($lapStartMs);
+            // The same grid step fieldPaceAt() uses; an answer already
+            // worked out is read straight from the list.
+            $step = intdiv($lapStartMs + self::GRID_MS - 1, self::GRID_MS);
+            $fieldPace = $this->paceByGridStep[$step] ?? $this->fieldPaceAt($lapStartMs);
             if ($fieldPace === null || $fieldPace <= 0) {
                 continue;
             }
             $ratio = $lap->tempoVoltaMs / $fieldPace;
             if ($ratio < self::MAX_CLEAN_RATIO) {
-                $this->carLapEnds[$carro][] = $lap->tsMs;
-                $this->carLapRatios[$carro][] = $ratio;
+                $lapEnds[] = $lap->tsMs;
+                $lapRatios[] = $ratio;
             }
         }
+        $this->carLapEnds[$carro] = $lapEnds;
+        $this->carLapRatios[$carro] = $lapRatios;
     }
 
     private static function isClean(Lap $lap): bool

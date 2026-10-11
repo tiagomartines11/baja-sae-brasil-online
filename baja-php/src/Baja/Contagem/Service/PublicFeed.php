@@ -6,6 +6,7 @@ namespace Baja\Contagem\Service;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Lap;
 use Baja\Contagem\Engine\Settings;
+use Baja\Contagem\Engine\StopStats;
 use Baja\Model\ProvaQuery;
 
 /**
@@ -24,6 +25,7 @@ final class PublicFeed
     public const CACHE_SECONDS = 2;
 
     private const BEST_LAP_EVENTS_KEPT = 10;
+    private const STOP_EVENTS_KEPT = 10;
 
     /**
      * @return string|null the feed as JSON, or null when there is no laps prova with these ids
@@ -82,6 +84,8 @@ final class PublicFeed
             'carros' => $cars,
             'melhor_volta' => $bestLapEvents === [] ? null : $bestLapEvents[count($bestLapEvents) - 1],
             'novas_melhores_voltas' => array_slice($bestLapEvents, -self::BEST_LAP_EVENTS_KEPT),
+            // Newest first: what a "car 12 enters the pit lane" graphic needs.
+            'ultimas_paradas' => StopStats::recentEvents($result->timeline, self::STOP_EVENTS_KEPT),
         ];
     }
 
@@ -95,10 +99,14 @@ final class PublicFeed
         $statusByCar = LiveStatus::ofCars($live, $settings, $nowMs);
         $race = LiveStatus::ofRace($live, $nowMs);
 
+        // Stops are worked out now, not stored: the time a car has spent in
+        // the pit lane grows while it stands there.
+        $timeline = RaceContext::timelineOf($live['corrida'] ?? []);
         $cars = [];
         foreach ($stored['carros'] ?? [] as $car) {
-            $status = $statusByCar[(int) $car['numero']] ?? ['status' => 'fora', 'status_desde_ms' => null];
-            $cars[] = array_merge($car, $status);
+            $carro = (int) $car['numero'];
+            $status = $statusByCar[$carro] ?? ['status' => 'fora', 'status_desde_ms' => null];
+            $cars[] = array_merge($car, $status, StopReport::forFeed($timeline, $carro, $settings->abastecimento, $nowMs));
         }
 
         return [
@@ -117,6 +125,7 @@ final class PublicFeed
             'carros' => $cars,
             'melhor_volta' => $stored['melhor_volta'] ?? null,
             'novas_melhores_voltas' => $stored['novas_melhores_voltas'] ?? [],
+            'ultimas_paradas' => $stored['ultimas_paradas'] ?? [],
         ];
     }
 

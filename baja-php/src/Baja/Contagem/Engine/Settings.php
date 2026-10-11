@@ -95,6 +95,18 @@ final class Settings
     public int $dispositivoAusenteS = 600;
 
     /**
+     * Name of the prova's input field that says whether a car is classified
+     * ("SIM"), for example "APTO". Null: every present car takes part.
+     */
+    public ?string $campoClassificacao = null;
+
+    /** Whether the fueling station is logged as an area of its own. */
+    public bool $abastecimento = false;
+
+    /** Whether simulated entries are accepted. Only for rehearsals; off for a real race. */
+    public bool $permitirSimulacao = false;
+
+    /**
      * @param array<string, mixed>|object|null $raw the decoded `contagem` block
      */
     public static function fromArray($raw): self
@@ -130,6 +142,13 @@ final class Settings
         // Above 1 every ordinary lap would be "too short to be real".
         $settings->fracaoVoltaMinima = min(1.0, self::positiveFloat($raw, 'fracao_volta_minima', $settings->fracaoVoltaMinima));
 
+        $campo = $raw['campo_classificacao'] ?? null;
+        if (is_string($campo) && preg_match('/^[A-Za-z0-9_]{1,64}$/', $campo) === 1) {
+            $settings->campoClassificacao = $campo;
+        }
+        $settings->abastecimento = self::onOrOff($raw, 'abastecimento');
+        $settings->permitirSimulacao = self::onOrOff($raw, 'permitir_simulacao');
+
         return $settings;
     }
 
@@ -156,6 +175,9 @@ final class Settings
             'fonte_offline_s' => $this->fonteOfflineS,
             'recalculo_s' => $this->recalculoS,
             'dispositivo_ausente_s' => $this->dispositivoAusenteS,
+            'campo_classificacao' => $this->campoClassificacao,
+            'abastecimento' => $this->abastecimento,
+            'permitir_simulacao' => $this->permitirSimulacao,
         ];
     }
 
@@ -198,6 +220,22 @@ final class Settings
     {
         $value = $raw[$key] ?? null;
         return is_string($value) && in_array($value, $allowed, true) ? $value : $default;
+    }
+
+    /**
+     * A switch. On only for an unmistakable yes: true, 1, "1", "true", "on",
+     * "sim". Anything else, including a typo, is off, which is the safe
+     * side for both switches that use this.
+     *
+     * @param array<string, mixed> $raw
+     */
+    private static function onOrOff(array $raw, string $key): bool
+    {
+        $value = $raw[$key] ?? null;
+        if (is_string($value)) {
+            return in_array(strtolower(trim($value)), ['1', 'true', 'on', 'sim'], true);
+        }
+        return $value === true || $value === 1;
     }
 
     /** @param array<string, mixed> $raw */

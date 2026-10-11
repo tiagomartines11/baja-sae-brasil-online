@@ -4,7 +4,12 @@ declare(strict_types=1);
 namespace Baja\Contagem\Engine\Data;
 
 /**
- * A race-control or pit event. Mirrors one row of contagem_ocorrencia.
+ * A race-control, pit lane or fueling station event. Mirrors one row of
+ * contagem_ocorrencia.
+ *
+ * Rows are never edited. A row whose `substituiId` names another row either
+ * corrects it (same kind of event, new time) or, when its type is
+ * "cancelamento", removes it. See RaceTimeline for how these are resolved.
  */
 final class Ocorrencia
 {
@@ -14,6 +19,9 @@ final class Ocorrencia
     public const ENCERRAMENTO = 'encerramento';
     public const BOX_ENTRADA = 'box_entrada';
     public const BOX_SAIDA = 'box_saida';
+    /** The fueling station is a second area, logged exactly like the pit lane and independent of it. */
+    public const ABASTECIMENTO_ENTRADA = 'abastecimento_entrada';
+    public const ABASTECIMENTO_SAIDA = 'abastecimento_saida';
 
     public const TIPOS = [
         self::LARGADA,
@@ -22,6 +30,8 @@ final class Ocorrencia
         self::ENCERRAMENTO,
         self::BOX_ENTRADA,
         self::BOX_SAIDA,
+        self::ABASTECIMENTO_ENTRADA,
+        self::ABASTECIMENTO_SAIDA,
         self::CANCELAMENTO,
     ];
 
@@ -32,13 +42,16 @@ final class Ocorrencia
     public const CANCELAMENTO = 'cancelamento';
 
     public const TIPOS_BOX = [self::BOX_ENTRADA, self::BOX_SAIDA];
+    public const TIPOS_ABASTECIMENTO = [self::ABASTECIMENTO_ENTRADA, self::ABASTECIMENTO_SAIDA];
+    /** Every event that says a car went into or out of an area: pit lane and fueling station. */
+    public const TIPOS_DE_PARADA = [self::BOX_ENTRADA, self::BOX_SAIDA, self::ABASTECIMENTO_ENTRADA, self::ABASTECIMENTO_SAIDA];
 
     public int $id;
     public string $tipo;
     public int $tsMs;
-    /** Only for pit events. */
+    /** Only for pit lane and fueling station events. */
     public ?int $carro;
-    /** The row this one corrects, if any. A corrected row is ignored. */
+    /** The row this one corrects or cancels, if any. */
     public ?int $substituiId;
 
     public function __construct(int $id, string $tipo, int $tsMs, ?int $carro = null, ?int $substituiId = null)
