@@ -332,6 +332,54 @@ class ProvaTableMap extends TableMap
     1 => ':prova_id',
   ),
 ), 'CASCADE', 'CASCADE', 'Tournaments', false);
+        $this->addRelation('ContagemFonte', '\\Baja\\Model\\ContagemFonte', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':evento_id',
+    1 => ':evento_id',
+  ),
+  1 =>
+  array (
+    0 => ':prova_id',
+    1 => ':prova_id',
+  ),
+), 'CASCADE', 'CASCADE', 'ContagemFontes', false);
+        $this->addRelation('ContagemOcorrencia', '\\Baja\\Model\\ContagemOcorrencia', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':evento_id',
+    1 => ':evento_id',
+  ),
+  1 =>
+  array (
+    0 => ':prova_id',
+    1 => ':prova_id',
+  ),
+), 'CASCADE', 'CASCADE', 'ContagemOcorrencias', false);
+        $this->addRelation('ContagemDecisao', '\\Baja\\Model\\ContagemDecisao', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':evento_id',
+    1 => ':evento_id',
+  ),
+  1 =>
+  array (
+    0 => ':prova_id',
+    1 => ':prova_id',
+  ),
+), 'CASCADE', 'CASCADE', 'ContagemDecisaos', false);
+        $this->addRelation('ContagemVolta', '\\Baja\\Model\\ContagemVolta', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':evento_id',
+    1 => ':evento_id',
+  ),
+  1 =>
+  array (
+    0 => ':prova_id',
+    1 => ':prova_id',
+  ),
+), 'CASCADE', 'CASCADE', 'ContagemVoltas', false);
     }
 
     /**
@@ -400,6 +448,10 @@ class ProvaTableMap extends TableMap
         // since one or more of them may be deleted by ON DELETE CASCADE/SETNULL rule.
         InputTableMap::clearInstancePool();
         TournamentTableMap::clearInstancePool();
+        ContagemFonteTableMap::clearInstancePool();
+        ContagemOcorrenciaTableMap::clearInstancePool();
+        ContagemDecisaoTableMap::clearInstancePool();
+        ContagemVoltaTableMap::clearInstancePool();
     }
 
     /**

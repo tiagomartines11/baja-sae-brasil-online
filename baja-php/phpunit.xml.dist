@@ -5,17 +5,19 @@
   Two suites, because they need different things:
 
     engine   Pure logic. Needs nothing but PHP, so it runs anywhere,
-             including CI:
-                 vendor/bin/phpunit --testsuite engine
+             including CI.
 
     db       Exercises the upload endpoint, the score publisher and the
              counter links against a real MySQL. Run it inside the dev
-             container, where the database and Redis are reachable:
-                 docker compose exec -e BAJA_TEST_DB=1 baja-app \
-                     vendor/bin/phpunit --testsuite db
-             Without BAJA_TEST_DB=1 every test in it is skipped, so that
-             nobody writes test rows into a database by accident. Never set
-             it against production.
+             container, where the database and Redis are reachable, with
+             the environment variable BAJA_TEST_DB set to 1. Without it
+             every test in the suite is skipped, so that nobody writes test
+             rows into a database by accident. Never set it against
+             production.
+
+  The exact commands are in docs/contagem.md, "Tests". They are not repeated
+  here because an XML comment cannot contain two hyphens in a row, which
+  every command-line option has.
 -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
