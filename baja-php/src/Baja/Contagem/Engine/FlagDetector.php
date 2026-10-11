@@ -198,11 +198,11 @@ final class FlagDetector
         if ($shortestLapMs !== null && $this->settings->isImpossiblyShortLap($shortestLapMs, $expectedMs)) {
             $flag->sugestao = ['tipo' => Decision::ANULAR, 'passagem_id' => $entry->id];
             $flag->motivo = sprintf(
-                'Só %s registrou o carro %d, e contar esta passagem criaria uma volta de %d s%s.',
+                'Só %s registrou o carro %d, e contar esta passagem criaria uma volta de %d s, %s.',
                 $this->sourceName($entry->fonteId),
                 $entry->carro,
                 (int) round($shortestLapMs / 1000),
-                $expectedMs !== null ? sprintf(', quando o esperado para este carro é cerca de %d s', (int) round($expectedMs / 1000)) : ''
+                $this->whyTooShort($shortestLapMs, $expectedMs)
             );
         } else {
             $flag->motivo = sprintf(
@@ -283,12 +283,30 @@ final class FlagDetector
         $flag = new Flag(Flag::VOLTA_CURTA, [$lap->carro], $group->entryIds(), (string) $group->anchorEntryId());
         $flag->tsMs = $group->tsMs;
         $flag->motivo = sprintf(
-            'O carro %d foi registrado duas vezes com %d s de intervalo%s.',
+            'O carro %d foi registrado duas vezes com %d s de intervalo, %s.',
             $lap->carro,
             (int) round($racingMs / 1000),
-            $expectedMs !== null ? sprintf(', quando o esperado para este carro é cerca de %d s por volta', (int) round($expectedMs / 1000)) : ''
+            $this->whyTooShort($racingMs, $expectedMs)
         );
         $this->attach($flag, $group);
+    }
+
+    /**
+     * The end of the sentence that tells the reviewer WHY a lap is too
+     * short, naming the rule that actually applied. Two rules can make a
+     * lap "impossibly short" (see Settings::isImpossiblyShortLap), and
+     * quoting the wrong one produces nonsense such as "29 s, when about
+     * 28 s is expected".
+     */
+    private function whyTooShort(int $lapMs, ?int $expectedMs): string
+    {
+        if ($expectedMs !== null && $lapMs < $this->settings->fracaoVoltaMinima * $expectedMs) {
+            return sprintf('quando o esperado para este carro é cerca de %d s por volta', (int) round($expectedMs / 1000));
+        }
+        return sprintf(
+            'e duas passagens do mesmo carro com menos de %d s são tratadas como a mesma passagem registrada duas vezes',
+            (int) round(2 * $this->settings->janelaMs / 1000)
+        );
     }
 
     private function attach(Flag $flag, PassGroup $group): void

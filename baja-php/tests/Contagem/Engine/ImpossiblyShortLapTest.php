@@ -160,6 +160,41 @@ final class ImpossiblyShortLapTest extends EngineTestCase
         }
     }
 
+    /**
+     * SITUATION: a rehearsal on a table, not a race: ten "cars" typed round
+     * and round every 28 seconds. The engine learns that pace, so it
+     * expects car 5 to lap in about 28 s, and car 5's laps do take 28 s.
+     * They are still flagged, because of the OTHER rule: two passes of one
+     * car less than 40 s apart (two matching windows) are taken for one
+     * crossing typed twice.
+     *
+     * WHAT WENT WRONG (in the software, found in a real rehearsal): the
+     * reason shown to the reviewer quoted the pace anyway, and read "28 s
+     * de intervalo, quando o esperado para este carro é cerca de 28 s",
+     * which explains nothing.
+     *
+     * EXPECTED: the reason names the rule that actually applied. Here that
+     * is the 40-second minimum; the expected lap is not mentioned, since
+     * the lap is not short compared with it.
+     */
+    public function testTheReasonNamesTheRuleThatActuallyApplied(): void
+    {
+        $rehearsal = RaceScenario::withCounters(3);
+        $rehearsal->start('00:00');
+        $rehearsal->steadyField([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 28, 8, '01:00', 2);
+
+        $result = $rehearsal->run('05:00');
+
+        $this->assertSame(28000, $result->cars[5]->voltaEsperadaMs, 'The pace is known, and it is 28 s.');
+        $flagsOfCar5 = array_values(array_filter($this->openFlags($result, Flag::VOLTA_CURTA), fn(Flag $flag) => $flag->carros === [5]));
+        $this->assertNotEmpty($flagsOfCar5);
+        foreach ($flagsOfCar5 as $flag) {
+            $this->assertStringContainsString('28 s de intervalo', $flag->motivo);
+            $this->assertStringContainsString('menos de 40 s', $flag->motivo);
+            $this->assertStringNotContainsString('esperado', $flag->motivo);
+        }
+    }
+
     /** Ten cars lapping every 180 s; car 5 crosses at 03:28, 06:28, ..., 18:28. */
     private function steadyRace(): RaceScenario
     {
