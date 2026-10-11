@@ -96,11 +96,28 @@ abstract class DbTestCase extends TestCase
         // A previous run that crashed half way may have left its world behind.
         TestWorld::delete();
         $this->fontes = TestWorld::create();
-        $this->prova = ProvaQuery::create()->findPk([self::EVENTO_ID, self::PROVA_ID]);
-        $this->service = ContagemService::forProva($this->prova);
+        $this->newRequest();
 
         $this->helperDeviceIds = [];
         Clock::freezeAt(null);
+    }
+
+    /**
+     * Starts a new simulated web request.
+     *
+     * In production every upload, page view or button press is a separate
+     * PHP request that starts with an empty memory and loads what it needs
+     * from the database. A test plays many of them one after another in a
+     * single PHP process, so before each one the memory is emptied by hand
+     * and the prova is loaded afresh. The helpers below call this for you;
+     * call it yourself before using $this->service directly after another
+     * "request" has changed something.
+     */
+    protected function newRequest(): void
+    {
+        TestWorld::forgetLoadedRows();
+        $this->prova = ProvaQuery::create()->findPk([self::EVENTO_ID, self::PROVA_ID]);
+        $this->service = ContagemService::forProva($this->prova);
     }
 
     protected function tearDown(): void
@@ -131,6 +148,7 @@ abstract class DbTestCase extends TestCase
      */
     protected function startRace(int $tsMs): void
     {
+        $this->newRequest();
         $this->service->withLock(function () use ($tsMs): void {
             $this->service->recordOcorrencia(Ocorrencia::LARGADA, $tsMs, null, self::USER_PREFIX . 'controle');
         });
@@ -186,6 +204,7 @@ abstract class DbTestCase extends TestCase
     /** Runs the engine and publishes, as happens after every upload or decision. */
     protected function recompute(): void
     {
+        $this->newRequest();
         $this->service->withLock(function (): void {
             $this->service->recomputeAndPublish();
         });
@@ -241,6 +260,7 @@ abstract class DbTestCase extends TestCase
             'queue_empty' => false,
         ], $extra);
 
+        $this->newRequest();
         return SyncHandler::handle($token === null ? null : 'Bearer ' . $token, (string) json_encode($body));
     }
 
@@ -377,10 +397,13 @@ abstract class DbTestCase extends TestCase
             'SELECT ' . $column . ' FROM input WHERE evento_id = ? AND prova_id = ? AND equipe_id = ?'
         );
         $statement->execute([self::EVENTO_ID, self::PROVA_ID, $car]);
-        $json = $statement->fetchColumn();
-        if ($json === false) {
+        // fetch(), not fetchColumn(): Propel's statement wrapper turns the
+        // "no row" answer of fetchColumn() into an empty string, which
+        // cannot be told apart from an empty value.
+        $row = $statement->fetch(\PDO::FETCH_NUM);
+        if ($row === false || $row === null || $row[0] === null) {
             return null;
         }
-        return (array) json_decode((string) $json, true);
+        return (array) json_decode((string) $row[0], true);
     }
 }

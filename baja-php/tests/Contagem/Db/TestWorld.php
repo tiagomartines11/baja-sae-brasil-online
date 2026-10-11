@@ -51,14 +51,29 @@ final class TestWorld
             }
         }
 
-        // Propel normally remembers every row object it has loaded and
-        // hands the same object out again. A test changes rows behind its
-        // back (with plain SQL, or by pretending to be several requests),
-        // so that memory would serve stale data. A web request is too short
-        // for this to matter; a test run is not.
-        Propel::disableInstancePooling();
-
         self::$databaseBooted = true;
+    }
+
+    /**
+     * Makes Propel forget every row object it has loaded, which is what the
+     * end of a web request does.
+     *
+     * Propel (the database library) remembers each row it loads and hands
+     * the same object out again when the row is asked for a second time.
+     * The application relies on that: Prova::refreshVarsAndPontos() writes
+     * the prova's totals and then every score row reads them back through
+     * "its" prova, which must be that very same object. So the memory has
+     * to stay switched on, exactly as in production.
+     *
+     * But one test plays several requests in a row, and changes rows with
+     * plain SQL in between. Without this, the second "request" would be
+     * handed objects from the first one, with old values.
+     */
+    public static function forgetLoadedRows(): void
+    {
+        foreach (Propel::getServiceContainer()->getDatabaseMap('resultados')->getTables() as $tableMap) {
+            $tableMap::clearInstancePool();
+        }
     }
 
     /**
