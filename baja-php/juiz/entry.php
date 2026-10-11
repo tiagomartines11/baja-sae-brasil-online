@@ -1,6 +1,8 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Contagem\Access\ContagemAccess;
+use Baja\Contagem\Service\ScorePublisher;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\InputQuery;
@@ -40,8 +42,19 @@ echo '
 ';
 
 $fields = $prova->getParamsInputs();
+// In a laps prova, VOLTAS, LAST and BEST are written by the lap counting
+// engine after every upload. They are shown as plain text: a value typed
+// here would be overwritten within seconds, and a correction belongs on the
+// review screen, where it is recorded as a decision.
+$engineOwnedFields = $prova->getType() == ContagemAccess::PROVA_TYPE ? ScorePublisher::ENGINE_FIELDS : [];
 foreach ($fields as $k=>$field) {
-    echo '<tr '.(($field->getPass() >= 0 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == ($field->getPass()+1))) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($nota ? $nota->getDados()->{$field->getCode()} : null) . '</tr>';
+    // A row created by the engine has no value yet for the fields people type.
+    $value = $nota ? ($nota->getDados()->{$field->getCode()} ?? null) : null;
+    if (in_array($field->getCode(), $engineOwnedFields, true)) {
+        echo '<tr><td>'.$field->getName().'</td><td style="width: 80px; font-size: 20px;" title="Calculado pela contagem de voltas">'.($value !== null ? htmlspecialchars((string)$value) : '&ndash;').'</td></tr>';
+        continue;
+    }
+    echo '<tr '.(($field->getPass() >= 0 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == ($field->getPass()+1))) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($value) . '</tr>';
 }
 
 ?>

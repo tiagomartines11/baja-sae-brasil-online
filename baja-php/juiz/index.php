@@ -2,6 +2,7 @@
 namespace Baja\Juiz;
 
 use Baja\Certificado\Insercao\Acesso;
+use Baja\Contagem\Access\ContagemAccess;
 use Baja\Model\EventoQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
@@ -30,6 +31,14 @@ echo '<div style="max-width: 400px; margin: 0 auto"><table class="tablesorter">
         ';
 
 foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->getEventoId()) as $prova) {
+    // A laps prova is listed for its controller and for anyone allowed to
+    // count on it. contagem.php then sends each of them to the right place.
+    if ($prova->getType() == ContagemAccess::PROVA_TYPE) {
+        if (ContagemAccess::isController($prova) || ContagemAccess::isCounter($prova)) {
+            echo '<tr style="height: 40px"><td><a href="contagem.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+        }
+        continue;
+    }
     if (Session::hasPermission($prova->getProvaId()) && (count($prova->getParamsInputs()) > 0 || $prova->getType() == 'tournament')) {
         if ($prova->getType() == 'normal') {
             echo '<tr style="height: 40px"><td><a href="dashboard.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';

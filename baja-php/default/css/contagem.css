@@ -1,0 +1,540 @@
+/*
+ * Count page and pit page.
+ *
+ * Designed for a phone held in one hand in full sun: black on white, no greys
+ * for anything that matters, colour always backed by text, touch targets of
+ * at least 56px. On a wide screen the same layout is centred in a column.
+ */
+
+:root {
+    --cor-fundo: #ffffff;
+    --cor-texto: #000000;
+    --cor-barra: #000000;
+    --cor-barra-texto: #ffffff;
+    --cor-ok: #0a6b1f;
+    --cor-alerta: #b35900;
+    --cor-erro: #b00020;
+    --cor-acao: #003c9e;
+    --cor-borda: #000000;
+    --alvo-toque: 56px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Several blocks below set `display`; without this, `hidden` would lose. */
+[hidden] {
+    display: none !important;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font: 18px/1.3 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* No double-tap zoom: it would delay every tap by 300 ms. */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+/* ---- status bar: always visible ---- */
+
+.barra-status {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 6px 12px;
+    padding-top: max(6px, env(safe-area-inset-top));
+    background: var(--cor-barra);
+    color: var(--cor-barra-texto);
+}
+
+.barra-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2px 14px;
+}
+
+.fonte-nome {
+    font-size: 22px;
+}
+
+.relogio {
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.estado-corrida {
+    margin-left: 6px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.estado-bandeira_vermelha {
+    padding: 0 6px;
+    background: var(--cor-erro);
+}
+
+.barra-detalhes,
+.barra-outros {
+    font-size: 15px;
+}
+
+.conexao {
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    background: #ffffff;
+    color: #000000;
+}
+
+.conexao-online {
+    background: #7dffa0;
+}
+
+.conexao-offline,
+.conexao-conectando {
+    background: #ffd24d;
+}
+
+.conexao-revogado {
+    background: #ff8a8a;
+}
+
+.tem-pendentes b {
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #ffd24d;
+    color: #000000;
+}
+
+.aviso-fixo {
+    margin: 0;
+    padding: 10px 12px;
+    background: var(--cor-erro);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.aviso-fixo p {
+    margin: 0 0 8px;
+}
+
+.carregando {
+    padding: 24px 12px;
+    font-size: 20px;
+    text-align: center;
+}
+
+/* ---- page body ---- */
+
+.conteudo {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 10px 12px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.conteudo > section,
+.conteudo > nav {
+    margin-bottom: 14px;
+}
+
+.texto-apoio {
+    margin: 8px 0;
+}
+
+/* ---- the big flash after each entry ---- */
+
+.destaque {
+    min-height: 132px;
+    padding: 6px 10px;
+    border: 4px solid var(--cor-borda);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.destaque-numero {
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.destaque-equipe {
+    font-size: 22px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.destaque-avisos p {
+    margin: 6px 0 0;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--cor-alerta);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.destaque-ativo {
+    animation: destaque-registrado 0.7s ease-out;
+}
+
+.destaque-problema.destaque-ativo {
+    animation-name: destaque-aviso;
+}
+
+.destaque-problema {
+    border-color: var(--cor-alerta);
+}
+
+@keyframes destaque-registrado {
+    from { background: var(--cor-ok); color: #ffffff; }
+    to { background: var(--cor-fundo); color: var(--cor-texto); }
+}
+
+@keyframes destaque-aviso {
+    from { background: var(--cor-alerta); color: #ffffff; }
+    to { background: var(--cor-fundo); color: var(--cor-texto); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .destaque-ativo {
+        animation-duration: 0.01s;
+    }
+}
+
+/* ---- mode 1: system keyboard (also the pit page's number box) ---- */
+
+.form-teclado {
+    display: flex;
+    gap: 10px;
+}
+
+.campo-numero {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 72px;
+    padding: 0 12px;
+    border: 4px solid var(--cor-borda);
+    border-radius: 10px;
+    background: #ffffff;
+    color: #000000;
+    /* 16px or more also stops iOS from zooming the page on focus. */
+    font-size: 44px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.campo-numero:focus {
+    outline: 4px solid var(--cor-acao);
+    outline-offset: 2px;
+}
+
+.botao-registrar {
+    flex: 0 0 auto;
+    min-width: 132px;
+    height: 72px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--cor-ok);
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+/* ---- mode 2: on-screen keypad ---- */
+
+.visor-numero {
+    height: 64px;
+    margin-bottom: 8px;
+    border: 4px solid var(--cor-borda);
+    border-radius: 10px;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 56px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.teclado-tela {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.tecla {
+    height: 72px;
+    border: 3px solid var(--cor-borda);
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 34px;
+    font-weight: 800;
+}
+
+.tecla:active,
+.bloco:active {
+    background: #000000;
+    color: #ffffff;
+}
+
+.tecla-apagar {
+    background: #e6e6e6;
+}
+
+.tecla-registrar {
+    border-color: var(--cor-ok);
+    background: var(--cor-ok);
+    color: #ffffff;
+}
+
+/* ---- mode 3: tiles (also the pit page's car lists) ---- */
+
+.blocos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 8px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.bloco {
+    min-height: 68px;
+    border: 3px solid var(--cor-borda);
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 30px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.blocos-pequenos {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+}
+
+.blocos-pequenos .bloco {
+    min-height: var(--alvo-toque);
+    font-size: 24px;
+}
+
+.bloco-no-box {
+    border-color: var(--cor-alerta);
+    background: #fff1d6;
+}
+
+/* ---- mode switch ---- */
+
+.seletor-modos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.seletor-modos button {
+    min-height: var(--alvo-toque);
+    border: 3px solid var(--cor-borda);
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.seletor-modos button[aria-pressed="true"] {
+    background: #000000;
+    color: #ffffff;
+}
+
+/* ---- recent list ---- */
+
+.lista-recentes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 2px solid var(--cor-borda);
+}
+
+.recente {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    grid-template-areas:
+        "numero equipe botao"
+        "numero hora   botao";
+    align-items: center;
+    gap: 0 10px;
+    min-height: var(--alvo-toque);
+    padding: 4px 0;
+    border-bottom: 2px solid var(--cor-borda);
+}
+
+.recente-numero {
+    grid-area: numero;
+    font-size: 30px;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.recente-equipe {
+    grid-area: equipe;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.recente-hora {
+    grid-area: hora;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.recente-estado {
+    grid-area: hora;
+    justify-self: end;
+    font-size: 15px;
+}
+
+.recente-desfeito .recente-numero,
+.recente-desfeito .recente-equipe {
+    text-decoration: line-through;
+}
+
+.recente-desfeito .recente-estado {
+    grid-area: botao;
+    font-weight: 700;
+    color: var(--cor-erro);
+}
+
+.botao-desfazer {
+    grid-area: botao;
+    min-width: 96px;
+    min-height: 48px;
+    border: 3px solid var(--cor-erro);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--cor-erro);
+    font-weight: 700;
+}
+
+/* ---- pit page ---- */
+
+.box-equipe {
+    margin: 6px 0;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.botoes-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.botao-box {
+    height: 84px;
+    border: 0;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.botao-entrou {
+    background: var(--cor-alerta);
+}
+
+.botao-saiu {
+    background: var(--cor-ok);
+}
+
+.botao-box:disabled {
+    background: #8a8a8a;
+}
+
+.box-mensagem {
+    min-height: 1.3em;
+    margin: 8px 0 0;
+    font-weight: 700;
+    text-align: center;
+}
+
+.box-mensagem-erro {
+    padding: 8px;
+    background: var(--cor-erro);
+    color: #ffffff;
+}
+
+/* ---- footer ---- */
+
+.rodape {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+    padding-top: 10px;
+    border-top: 2px solid var(--cor-borda);
+}
+
+.botao-secundario {
+    min-height: var(--alvo-toque);
+    padding: 0 16px;
+    border: 3px solid var(--cor-borda);
+    border-radius: 8px;
+    background: #ffffff;
+    color: #000000;
+    font-weight: 700;
+}
+
+.opcao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--alvo-toque);
+}
+
+.opcao input {
+    width: 26px;
+    height: 26px;
+}
+
+.link-voltar {
+    margin-left: auto;
+    padding: 14px 4px;
+    color: var(--cor-acao);
+    font-weight: 700;
+}
+
+/* ---- wider screens: keypad and flash side by side would only add travel
+        for the eyes, so the single column stays; it just gets more air ---- */
+
+@media (min-width: 700px) {
+    .conteudo {
+        padding-top: 18px;
+    }
+
+    .destaque-numero {
+        font-size: 96px;
+    }
+}

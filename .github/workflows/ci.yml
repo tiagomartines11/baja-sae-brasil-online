@@ -80,6 +80,33 @@ jobs:
             -not -path './src/Baja/Model/Map/*' \
             -print0 | xargs -0 -n1 -P4 php -l
 
+      # Lap counting engine: pure logic, needs no database.
+      #
+      # The "db" suite (upload endpoint, score publishing, counter links) is
+      # NOT run here, because this job has no MySQL or Redis. Run it locally
+      # in the dev container before merging anything under
+      # src/Baja/Contagem/ or juiz/contagem*:
+      #
+      #   cd baja-infra
+      #   docker compose exec -e BAJA_TEST_DB=1 baja-app vendor/bin/phpunit --testsuite db
+      #
+      # BAJA_TEST_DB=1 is what allows those tests to write (and then delete)
+      # their own rows. Never set it against production.
+      - name: PHPUnit (lap counting engine)
+        run: vendor/bin/phpunit --testsuite engine
+
+      # The browser-side logic of the count pages (offline queue, clock
+      # offset, warnings) is plain ES modules tested with Node's built-in
+      # runner; there is nothing to install.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Browser logic tests (node --test)
+        working-directory: ${{ github.workspace }}
+        run: node --test "baja-php/tests/js/*.test.js"
+
   infra:
     name: Infrastructure (baja-infra)
     runs-on: ubuntu-latest

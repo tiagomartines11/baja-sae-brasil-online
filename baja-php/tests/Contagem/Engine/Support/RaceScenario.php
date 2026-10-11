@@ -1,0 +1,302 @@
+<?php
+declare(strict_types=1);
+
+namespace Baja\Tests\Contagem\Engine\Support;
+
+use Baja\Contagem\Engine\Data\Decision;
+use Baja\Contagem\Engine\Data\EngineInput;
+use Baja\Contagem\Engine\Data\EngineResult;
+use Baja\Contagem\Engine\Data\Entry;
+use Baja\Contagem\Engine\Data\Flag;
+use Baja\Contagem\Engine\Data\Ocorrencia;
+use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Engine\Engine;
+use Baja\Contagem\Engine\Settings;
+
+/**
+ * A small race written by hand, for tests.
+ *
+ * It lets a test read like the story it tells:
+ *
+ *     $race = RaceScenario::withCounters(3);        // "Contagem 1", "2" and "3"
+ *     $race->start('00:00');                        // race control starts the race
+ *     $race->pass(41, '03:10');                     // all three counters record car 41
+ *     $race->entry(1, 14, '06:20');                 // only counter 1 records car 14
+ *     $result = $race->run('10:00');                // what does the engine say at minute 10?
+ *
+ * Times are written as "minutes:seconds" on the race clock ("03:10" is three
+ * minutes and ten seconds after the start; "03:10.5" adds half a second;
+ * "-00:30" is thirty seconds BEFORE the start).
+ *
+ * Unless a test says otherwise, every counter is online and fully uploaded,
+ * so the engine knows everything each counter recorded.
+ */
+final class RaceScenario
+{
+    /** The moment "00:00" stands for. Any fixed date works; nothing depends on it. */
+    public const CLOCK_ZERO_MS = 1760000000000;
+
+    /** A moment far after any test race, used for "this counter has uploaded everything". */
+    private const FAR_FUTURE_MS = self::CLOCK_ZERO_MS + 100 * 3600 * 1000;
+
+    public Settings $settings;
+
+    /** @var array<int, Source> */
+    private array $sources = [];
+    /** @var Entry[] */
+    private array $entries = [];
+    /** @var Decision[] */
+    private array $decisions = [];
+    /** @var Ocorrencia[] */
+    private array $ocorrencias = [];
+    /** @var array<int, array<int, int>> */
+    private array $totals = [];
+    /** @var int[] */
+    private array $validCars = [];
+    /** @var array<int, true> sources whose "last seen" time the test set by hand */
+    private array $lastSeenSetByTest = [];
+
+    private int $nextEntryId = 1;
+    private int $nextDecisionId = 1;
+    private int $nextOcorrenciaId = 1;
+
+    public function __construct()
+    {
+        $this->settings = new Settings();
+    }
+
+    /** A race with N human counters, with source ids 1..N, named "Contagem 1".."Contagem N". */
+    public static function withCounters(int $count = 3): self
+    {
+        $scenario = new self();
+        for ($id = 1; $id <= $count; $id++) {
+            $scenario->addSource($id, 'Contagem ' . $id);
+        }
+        return $scenario;
+    }
+
+    /** Converts a race-clock time such as "03:10" into the milliseconds the engine works with. */
+    public static function ms(string $clock): int
+    {
+        $sign = 1;
+        if ($clock[0] === '-') {
+            $sign = -1;
+            $clock = substr($clock, 1);
+        }
+        [$minutes, $seconds] = explode(':', $clock);
+        return self::CLOCK_ZERO_MS + $sign * (int) round(((int) $minutes * 60 + (float) $seconds) * 1000);
+    }
+
+    public function addSource(
+        int $id,
+        string $nome,
+        string $tipo = Source::TIPO_MANUAL,
+        string $qualidadeTempo = Source::TEMPO_HUMANA
+    ): Source {
+        $source = new Source($id, $nome, $tipo, $qualidadeTempo, true, $id, self::FAR_FUTURE_MS, null);
+        $this->sources[$id] = $source;
+        return $source;
+    }
+
+    public function source(int $id): Source
+    {
+        return $this->sources[$id];
+    }
+
+    /** Race control starts the race. Calling it again is "the start time was edited". */
+    public function start(string $at = '00:00'): int
+    {
+        return $this->ocorrencia(Ocorrencia::LARGADA, $at);
+    }
+
+    /** One counter records one car. Returns the id of the stored entry. */
+    public function entry(int $source, int $car, string $at, ?int $device = null): int
+    {
+        $id = $this->nextEntryId++;
+        // By default each counter uses a single device, numbered after the source.
+        $this->entries[] = new Entry($id, $source, $device ?? $source * 10, $car, self::ms($at));
+        return $id;
+    }
+
+    /**
+     * A car crosses the line and the listed counters all record it at (about)
+     * the same time. Returns the entry ids keyed by source id.
+     *
+     * @param int[] $seenBy source ids; by default every human counter
+     * @return array<int, int>
+     */
+    public function pass(int $car, string $at, ?array $seenBy = null): array
+    {
+        $ids = [];
+        foreach ($seenBy ?? $this->countingSourceIds() as $source) {
+            $ids[$source] = $this->entry($source, $car, $at);
+        }
+        return $ids;
+    }
+
+    /**
+     * A field of well-behaved cars, so the engine has enough laps to know
+     * the pace of the race (it needs at least eight recent laps before it
+     * will say what a "normal" lap is).
+     *
+     * Every car in $cars crosses the line every $lapSeconds, $laps times,
+     * and every counter records every pass. Cars follow each other
+     * $gapSeconds apart. The first car's first pass is at $firstPassAt.
+     *
+     * @param int[] $cars
+     */
+    public function steadyField(array $cars, int $lapSeconds, int $laps, string $firstPassAt = '03:00', int $gapSeconds = 7): void
+    {
+        $firstPassMs = self::ms($firstPassAt) - self::CLOCK_ZERO_MS;
+        foreach (array_values($cars) as $position => $car) {
+            for ($lap = 0; $lap < $laps; $lap++) {
+                $passSeconds = intdiv($firstPassMs, 1000) + $position * $gapSeconds + $lap * $lapSeconds;
+                $this->pass($car, self::clock($passSeconds));
+            }
+        }
+    }
+
+    /** The opposite of ms(): seconds on the race clock written as "mm:ss". */
+    public static function clock(int $secondsAfterStart): string
+    {
+        return sprintf('%02d:%02d', intdiv($secondsAfterStart, 60), $secondsAfterStart % 60);
+    }
+
+    // ----- decisions, as a reviewer (or a counter) would make them -----
+
+    public function void(int $entryId, string $origem = Decision::ORIGEM_REVISOR): int
+    {
+        return $this->decide(Decision::anular($this->nextDecisionId, $entryId, $origem));
+    }
+
+    public function reassign(int $entryId, int $car): int
+    {
+        return $this->decide(Decision::reatribuir($this->nextDecisionId, $entryId, $car));
+    }
+
+    public function confirm(int $entryId): int
+    {
+        return $this->decide(Decision::confirmar($this->nextDecisionId, $entryId));
+    }
+
+    public function addPass(int $car, string $at): int
+    {
+        return $this->decide(Decision::adicionar($this->nextDecisionId, $car, self::ms($at)));
+    }
+
+    public function excludeSource(int $source, string $from, string $to): int
+    {
+        return $this->decide(Decision::excluirFonte($this->nextDecisionId, $source, self::ms($from), self::ms($to)));
+    }
+
+    /** Reverses an earlier decision (the "desfazer" button of the history panel). */
+    public function undo(int $decisionId): int
+    {
+        return $this->decide(Decision::desfazer($this->nextDecisionId, $decisionId));
+    }
+
+    /** The reviewer presses "aceitar sugestão" on a flag. */
+    public function accept(Flag $flag): int
+    {
+        if ($flag->sugestao === null) {
+            throw new \LogicException('The flag ' . $flag->id . ' has no suggestion to accept.');
+        }
+        $decision = new Decision($this->nextDecisionId, $flag->sugestao['tipo']);
+        $decision->passagemId = $flag->sugestao['passagem_id'] ?? null;
+        $decision->carro = $flag->sugestao['equipe_numero'] ?? null;
+        return $this->decide($decision);
+    }
+
+    private function decide(Decision $decision): int
+    {
+        $this->decisions[] = $decision;
+        $this->nextDecisionId++;
+        return $decision->id;
+    }
+
+    // ----- race control, pit log, connectivity -----
+
+    public function ocorrencia(string $tipo, string $at, ?int $car = null, ?int $replaces = null): int
+    {
+        $id = $this->nextOcorrenciaId++;
+        $this->ocorrencias[] = new Ocorrencia($id, $tipo, self::ms($at), $car, $replaces);
+        return $id;
+    }
+
+    public function pitIn(int $car, string $at): int
+    {
+        return $this->ocorrencia(Ocorrencia::BOX_ENTRADA, $at, $car);
+    }
+
+    public function pitOut(int $car, string $at): int
+    {
+        return $this->ocorrencia(Ocorrencia::BOX_SAIDA, $at, $car);
+    }
+
+    /**
+     * Says how far a counter's device has uploaded: "everything it recorded
+     * up to this moment is on the server". Null means it never connected.
+     */
+    public function syncedThrough(int $source, ?string $at): void
+    {
+        $this->sources[$source]->sincronizadoAteMs = $at === null ? null : self::ms($at);
+    }
+
+    /** Says when a counter's device was last heard from. */
+    public function lastSeen(int $source, ?string $at): void
+    {
+        $this->sources[$source]->vistoEmMs = $at === null ? null : self::ms($at);
+        $this->lastSeenSetByTest[$source] = true;
+    }
+
+    /** @param int[] $cars the car numbers of the teams present at the event */
+    public function teamsPresent(array $cars): void
+    {
+        $this->validCars = $cars;
+    }
+
+    /** @param array<int, int> $lapsByCar a paper count typed in after the race */
+    public function importTotals(int $source, array $lapsByCar): void
+    {
+        $this->totals[$source] = $lapsByCar;
+    }
+
+    /** Runs the engine as if the current time were $now on the race clock. */
+    public function run(string $now): EngineResult
+    {
+        return Engine::run($this->input($now));
+    }
+
+    public function input(string $now): EngineInput
+    {
+        $nowMs = self::ms($now);
+        foreach ($this->sources as $id => $source) {
+            if (!isset($this->lastSeenSetByTest[$id])) {
+                // An online counter's device calls the server every 5 seconds.
+                $source->vistoEmMs = $nowMs;
+            }
+        }
+
+        $input = new EngineInput($this->settings);
+        $input->sources = array_values($this->sources);
+        $input->entries = $this->entries;
+        $input->decisions = $this->decisions;
+        $input->ocorrencias = $this->ocorrencias;
+        $input->totals = $this->totals;
+        $input->validCars = $this->validCars;
+        $input->nowMs = $nowMs;
+        return $input;
+    }
+
+    /** @return int[] */
+    private function countingSourceIds(): array
+    {
+        $ids = [];
+        foreach ($this->sources as $source) {
+            if ($source->countsPasses()) {
+                $ids[] = $source->id;
+            }
+        }
+        return $ids;
+    }
+}

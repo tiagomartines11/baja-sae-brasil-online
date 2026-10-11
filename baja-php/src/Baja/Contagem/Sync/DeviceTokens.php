@@ -1,0 +1,132 @@
+<?php
+declare(strict_types=1);
+
+namespace Baja\Contagem\Sync;
+
+use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Service\Clock;
+use Baja\Model\ContagemDispositivo;
+use Baja\Model\ContagemDispositivoQuery;
+use Baja\Model\ContagemFonte;
+use Baja\Model\ContagemFonteQuery;
+use Baja\Model\Prova;
+use Propel\Runtime\Propel;
+
+/**
+ * Upload tokens: what lets a phone keep sending entries for hours without
+ * a forum session.
+ *
+ * A counter logs in once, opens the count page, and the page is handed a
+ * token bound to that source. Forum sessions expire and phones lose
+ * signal, and neither may ever stop an upload, so from then on the token
+ * alone is the credential. Only its SHA-256 is stored: someone who reads
+ * the database cannot upload as a counter.
+ */
+final class DeviceTokens
+{
+    private const TOKEN_BYTES = 32;
+    private const LABEL_MAX_LENGTH = 255;
+    private const BOX_SOURCE_NAME = 'Box';
+
+    /** Sorts the pit-log source after every counting source wherever sources are listed. */
+    private const BOX_SOURCE_ORDER = 1000;
+
+    /**
+     * Creates the device row and returns the plain token. This is the only
+     * moment the plain token exists on the server.
+     *
+     * @param string|null $usuario who bound the device; null for an external (API) client
+     * @param string $rotulo free text to recognise the device by (browser, "Transponder", ...)
+     */
+    public static function issue(ContagemFonte $fonte, ?string $usuario, string $rotulo): string
+    {
+        $plainToken = bin2hex(random_bytes(self::TOKEN_BYTES));
+
+        $device = new ContagemDispositivo();
+        $device->setFonteId($fonte->getFonteId());
+        $device->setTokenHash(self::hash($plainToken));
+        $device->setUsuario($usuario);
+        $device->setRotulo(mb_substr($rotulo, 0, self::LABEL_MAX_LENGTH));
+        $device->setCriadoEmMs(Clock::nowMs());
+        $device->save();
+
+        return $plainToken;
+    }
+
+    /** @return ContagemDispositivo|null null when the token is unknown or was revoked */
+    public static function findActiveByToken(string $plainToken): ?ContagemDispositivo
+    {
+        if ($plainToken === '') {
+            return null;
+        }
+        $device = ContagemDispositivoQuery::create()->findOneByTokenHash(self::hash($plainToken));
+        if ($device === null || $device->getRevogadoEmMs() !== null) {
+            return null;
+        }
+        return $device;
+    }
+
+    public static function revoke(ContagemDispositivo $device): void
+    {
+        if ($device->getRevogadoEmMs() !== null) {
+            return;
+        }
+        $device->setRevogadoEmMs(Clock::nowMs());
+        $device->save();
+    }
+
+    /**
+     * Revokes every device a user bound to one source. Used when a
+     * controller removes that user from the source.
+     *
+     * @return int how many devices were revoked
+     */
+    public static function revokeForUserOnSource(ContagemFonte $fonte, string $usuario): int
+    {
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            'UPDATE contagem_dispositivo
+                SET revogado_em_ms = :agora
+              WHERE fonte_id = :fonte AND usuario = :usuario AND revogado_em_ms IS NULL'
+        );
+        $statement->execute([
+            ':agora' => Clock::nowMs(),
+            ':fonte' => $fonte->getFonteId(),
+            ':usuario' => $usuario,
+        ]);
+        return $statement->rowCount();
+    }
+
+    /**
+     * The internal source pit-log devices are bound to, created the first
+     * time someone opens the pit log of a prova. It never counts laps; it
+     * exists so that pit-log phones get tokens the same way counters do.
+     */
+    public static function boxSourceFor(Prova $prova): ContagemFonte
+    {
+        $fonte = ContagemFonteQuery::create()
+            ->filterByEventoId($prova->getEventoId())
+            ->filterByProvaId($prova->getProvaId())
+            ->filterByTipo(Source::TIPO_BOX)
+            ->orderByFonteId()
+            ->findOne();
+        if ($fonte !== null) {
+            return $fonte;
+        }
+
+        $fonte = new ContagemFonte();
+        $fonte->setEventoId($prova->getEventoId());
+        $fonte->setProvaId($prova->getProvaId());
+        $fonte->setNome(self::BOX_SOURCE_NAME);
+        $fonte->setTipo(Source::TIPO_BOX);
+        $fonte->setQualidadeTempo(Source::TEMPO_HUMANA);
+        $fonte->setAtiva(true);
+        $fonte->setOrdem(self::BOX_SOURCE_ORDER);
+        $fonte->save();
+        return $fonte;
+    }
+
+    private static function hash(string $plainToken): string
+    {
+        return hash('sha256', $plainToken);
+    }
+}

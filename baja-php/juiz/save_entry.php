@@ -1,6 +1,8 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Contagem\Access\ContagemAccess;
+use Baja\Contagem\Service\ScorePublisher;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\Input;
@@ -26,6 +28,15 @@ if (!$prova) { header("Location: index.php"); exit; }
 $provaInput = [];
 $paramsInputs = $prova->getParamsInputs();
 array_walk($paramsInputs, function($v) use (&$provaInput) { $provaInput[$v->getCode()] = $v; });
+
+// In a laps prova, VOLTAS, LAST and BEST belong to the lap counting engine.
+// They are left out of everything below, so this page can neither change
+// them nor record them as edited; what a person saves here is merged into
+// the row beside them.
+$isLapsProva = $prova->getType() == ContagemAccess::PROVA_TYPE;
+if ($isLapsProva) {
+    $provaInput = array_diff_key($provaInput, array_flip(ScorePublisher::ENGINE_FIELDS));
+}
 
 if (!array_key_exists("submit", $_POST) && !array_key_exists("delete", $_POST)) { header("Location: dashboard.php?p=$_page"); exit; }
 
@@ -59,10 +70,8 @@ unset($v);
 
 $old_array = (array)$nota->getDados();
 $new_array = [];
-$i = 0;
 foreach ($provaInput as $k=>$v) {
-    $input = $prova->getParamsInputs()[$i++];
-    if ($input->getType() == "number" && ($_POST[$k] ?? null) !== null)
+    if ($v->getType() == "number" && ($_POST[$k] ?? null) !== null)
         $new_array[$k] = doubleval($_POST[$k]);
     else
         $new_array[$k] = $_POST[$k] ?? null;
@@ -76,7 +85,8 @@ foreach ($provaInput as $k=>$v) {
     $hasOld = array_key_exists($k, $new_array);
     $hasNew = array_key_exists($k, $new_array);
     $changed = false;
-    if ((!$hasOld && $hasNew) || ($hasOld && $hasNew && $new_array[$k] !== $old_array[$k])) {
+    // A row created by the lap counting engine has no key yet for the fields people type.
+    if ((!$hasOld && $hasNew) || ($hasOld && $hasNew && $new_array[$k] !== ($old_array[$k] ?? null))) {
         $diff[$k] = $new_array[$k];
         $changed = true;
     } else if (!$hasNew && $hasOld) {
@@ -92,7 +102,7 @@ foreach ($provaInput as $k=>$v) {
 }
 
 if (count($diff) > 0) {
-    $nota->setDados($new_array);
+    $nota->setDados($isLapsProva ? array_merge($old_array, $new_array) : $new_array);
     $nota->save();
 
     $prova->refreshVarsAndPontos();

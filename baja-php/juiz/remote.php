@@ -1,4 +1,5 @@
 <?php
+// TODO(contagem): remove this endpoint once the new lap counting has been validated at an event.
 namespace Baja\Juiz;
 
 use Baja\Model\EventoQuery;
@@ -47,7 +48,9 @@ if (array_key_exists("cars", $input)) {
                 $input->setEventoId($currentEventId);
                 $input->setProvaId('END');
             }
-            $input->setDados(array("VOLTAS"=> intval($carObj["laps"]), "BEST"=> intval($carObj["bestLapTime"]), "LAST"=> intval($carObj["lastPass"])));
+            // Merged, not replaced: the row also holds fields typed by people
+            // (DESCLAS), which the spreadsheet does not send.
+            $input->setDados(array_merge((array)$input->getDados(), array("VOLTAS"=> intval($carObj["laps"]), "BEST"=> intval($carObj["bestLapTime"]), "LAST"=> intval($carObj["lastPass"]))));
             try { $input->save(); } catch (PropelException $e) { continue; };
         }
     }

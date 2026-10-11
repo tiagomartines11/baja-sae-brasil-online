@@ -1,0 +1,9 @@
+{
+  "name": "baja-php-browser-tests",
+  "private": true,
+  "description": "Only tells Node that the .js files under baja-php are ES modules, so `node --test tests/js/` can import default/js/contagem/*. No dependencies, no build step.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/js/"
+  }
+}
