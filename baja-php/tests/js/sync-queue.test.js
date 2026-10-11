@@ -21,9 +21,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { CONEXAO, RESULTADO, HEARTBEAT_INTERVAL_MS } from '../../default/js/contagem/sync-queue.js';
+import { CONEXAO, RESULTADO } from '../../default/js/contagem/sync-queue.js';
 import { buildEntriesCsv } from '../../default/js/contagem/csv-export.js';
-import { createDevice } from './helpers/fakes.js';
+import { createMemoryStorage } from '../../default/js/contagem/storage-memory.js';
+import { createDevice, createSlowStorage } from './helpers/fakes.js';
 
 // ---------------------------------------------------------------------------
 // The normal case
@@ -392,6 +393,46 @@ test('after a revocation the phone stops knocking on the server', async () => {
     assert.equal(device.store.findEntry('uuid-1').sent, false);
 });
 
+test('a 401 that is not the server\'s own "token_invalido" is treated as a network problem', async () => {
+    // Situation: the counter's phone joins the track's Wi-Fi, and that Wi-Fi
+    // wants a login page accepted first. Until then IT answers every request,
+    // with HTTP 401 and a page of its own. Our server never saw the request.
+    //
+    // What used to go wrong: any 401 was read as "this device was removed
+    // from the count". The page stopped uploading for good, and only a reload
+    // plus a new login could bring it back, in the middle of a race.
+    const device = await createDevice();
+    await device.type(41);
+    device.server.behaviour = 'other_401';
+
+    const outcome = await device.queue.syncOnce();
+
+    // Expected: an ordinary failure. Nothing is marked as revoked...
+    assert.equal(outcome.resultado, RESULTADO.FALHA);
+    assert.equal(device.queue.getState().conexao, CONEXAO.OFFLINE);
+    assert.equal(device.store.getMeta('token_revogado', false), false);
+
+    // ...and as soon as the real server answers, the entry goes up.
+    device.server.behaviour = 'ok';
+    await device.queue.syncOnce();
+    assert.deepEqual(device.server.storedCars(), [41]);
+});
+
+test('other 401 bodies from our own server do not revoke the device either', async () => {
+    // Situation: the server answers 401 with {"erro": "token_ausente"}: the
+    // Authorization header got lost on the way (some proxies strip it). That
+    // says nothing about whether this device is still allowed.
+    const device = await createDevice();
+    await device.type(41);
+    device.server.send = async () => ({ status: 401, body: { erro: 'token_ausente' } });
+
+    const outcome = await device.queue.syncOnce();
+
+    // Expected: only the exact answer {"erro": "token_invalido"} revokes.
+    assert.equal(outcome.resultado, RESULTADO.FALHA);
+    assert.equal(device.queue.getState().conexao, CONEXAO.OFFLINE);
+});
+
 test('the revoked state survives a reload, and the counter can still type', async () => {
     // Situation: after the revocation the counter reloads the page, hoping it
     // helps, and keeps typing numbers.
@@ -432,36 +473,8 @@ test('uploads resume only after the server has issued a new token', async () => 
 });
 
 // ---------------------------------------------------------------------------
-// Heartbeat and "queue_empty"
+// "queue_empty" (the 5-second heartbeat itself is in sync-heartbeat.test.js)
 // ---------------------------------------------------------------------------
-
-test('the heartbeat talks to the server every 5 seconds even with nothing to send', async () => {
-    // Situation: a quiet minute, no car passes. The server still needs to know
-    // this counter is alive, otherwise it cannot tell "no car passed" from
-    // "this phone is dead".
-    const device = await createDevice();
-    const timers = [];
-    const fakeSetInterval = (callback, intervalMs) => {
-        timers.push({ callback, intervalMs });
-        return timers.length;
-    };
-
-    device.queue.startHeartbeat(fakeSetInterval, () => {});
-    await device.queue.flush();
-
-    // Expected: a 5000 ms timer, and a first request sent right away, with
-    // empty lists.
-    assert.equal(HEARTBEAT_INTERVAL_MS, 5000);
-    assert.equal(timers[0].intervalMs, 5000);
-    assert.ok(device.server.receivedRequests.length >= 1);
-    assert.deepEqual(device.server.receivedRequests[0].entries, []);
-
-    // Each tick of the timer produces another request.
-    const requestsBeforeTick = device.server.receivedRequests.length;
-    timers[0].callback();
-    await device.queue.flush();
-    assert.ok(device.server.receivedRequests.length > requestsBeforeTick);
-});
 
 test('queue_empty is true only when the server really has everything', async () => {
     // Background: "queue_empty: true" is a promise to the server: "you now
@@ -498,6 +511,62 @@ test('queue_empty stays false while an undo is still waiting', async () => {
     // Expected: the request that carries the void does not claim to be complete.
     assert.equal(device.server.receivedRequests.at(-1).voids.length, 1);
     assert.equal(device.server.receivedRequests.at(-1).queue_empty, false);
+});
+
+test('queue_empty stays false while an entry is still being written to the phone', async () => {
+    // Situation: a car crosses the line, the counter presses Enter, and in
+    // that very instant the 5-second timer fires. The entry already has its
+    // time (the Enter press) but the phone's storage has not answered yet,
+    // so the entry is in no list: the queue LOOKS empty.
+    //
+    // What used to go wrong: the request said "queue_empty: true, I have told
+    // you everything up to now". The server believed it, saw the other two
+    // counters' entries for that car and none from this one, and charged
+    // this counter with a miss, for an entry that arrived a second later.
+    const disk = createSlowStorage(createMemoryStorage());
+    const device = await createDevice({ disk });
+    await device.queue.syncOnce();              // first contact: learns the clock offset
+
+    disk.holdWrites = true;
+    const typing = device.type(41);             // Enter pressed; the disk has not answered
+    await device.queue.syncOnce();
+
+    // Expected: no entry in the request (it is not on the disk yet), and no
+    // claim of completeness either.
+    assert.deepEqual(device.server.receivedRequests[1].entries, []);
+    assert.equal(device.server.receivedRequests[1].queue_empty, false);
+
+    // Once the disk has answered, everything is as usual.
+    await disk.finishNextWrite();
+    await typing;
+    disk.holdWrites = false;
+    await device.queue.flush();
+    assert.deepEqual(device.server.storedCars(), [41]);
+    assert.equal(device.server.receivedRequests.at(-1).queue_empty, true);
+});
+
+test('queue_empty stays false while an undo is still being written to the phone', async () => {
+    // Situation: the same instant, but what the counter just did was tap
+    // "desfazer". Until the disk has answered, the undo is not in the queue,
+    // yet the server does not have "everything" this counter did.
+    const innerDisk = createMemoryStorage();
+    const fastDevice = await createDevice({ disk: innerDisk });
+    await fastDevice.type(41);
+    await fastDevice.queue.flush();
+
+    const slowDisk = createSlowStorage(innerDisk);
+    const device = await createDevice({ disk: slowDisk, server: fastDevice.server, clock: fastDevice.clock });
+    await device.queue.syncOnce();
+    assert.equal(device.server.receivedRequests.at(-1).queue_empty, true, 'all quiet before the undo');
+
+    slowDisk.holdWrites = true;
+    const undoing = device.session.undo('uuid-1');
+    await device.queue.syncOnce();
+
+    // Expected: no claim of completeness while the undo is on its way.
+    assert.equal(device.server.receivedRequests.at(-1).queue_empty, false);
+    await slowDisk.finishNextWrite();
+    await undoing;
 });
 
 test('the very first request never claims queue_empty, because the clock offset is unknown', async () => {

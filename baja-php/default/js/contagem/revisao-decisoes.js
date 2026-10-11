@@ -63,7 +63,8 @@ export function decisaoAdicionar(carro, tsMs) {
   return { tipo: 'adicionar', equipe_numero: carro, ts_ms: tsMs };
 }
 
-export function decisaoExcluirFonte(fonteId, deMs, ateMs) {
+// `ateMs` null means "até segunda ordem": excluded until somebody undoes it.
+export function decisaoExcluirFonte(fonteId, deMs, ateMs = null) {
   return { tipo: 'excluir_fonte', fonte_id: fonteId, ts_ms: deMs, ts_fim_ms: ateMs };
 }
 
@@ -76,17 +77,46 @@ export function decisaoDesfazer(decisaoId) {
 function pedido(decisao, estado, passagemIds, assinatura) {
   return {
     decisao,
-    versao: estado?.versao ?? null,
     passagem_ids: passagemIds,
     assinatura,
     ultima_decisao_id: estado?.ultima_decisao_id ?? null,
   };
 }
 
+// Adds the optional reason the reviewer typed. An empty reason is left out.
+export function comMotivo(decisao, motivo) {
+  const texto = String(motivo ?? '').trim();
+  return decisao && texto !== '' ? { ...decisao, motivo: texto } : decisao;
+}
+
+// May "Aceitar", "Manter ambas" and "Anular" be used on the selected flag?
+//
+// Only while the timeline on screen is the one the flag currently has. The
+// flag list is refreshed every two seconds but the timeline is loaded once,
+// so the two can differ; a decision taken then would be about entries the
+// reviewer is not looking at.
+export function podeDecidirSobreAlerta({ janelaCarregada, desatualizada }) {
+  return Boolean(janelaCarregada) && !desatualizada;
+}
+
 // A decision taken on a flag: the reviewer was looking at all of the
 // flag's entries.
-export function pedidoParaAlerta(decisao, alerta, estado) {
-  return pedido(decisao, estado, [...(alerta.passagem_ids ?? [])], alerta.assinatura ?? null);
+//
+// `assinaturaDaJanela` is the signature the flag had when the timeline now
+// on screen was loaded. That one is sent, not the flag's latest: the server
+// must compare with what the reviewer SAW, and the latest signature would
+// always match and let a decision through that was made on an old picture.
+//
+// Null when the decision is about an entry that is not one of the flag's:
+// the server refuses those (it could not check that the entry is unchanged),
+// so such a decision has to be sent as a decision on that one chip instead.
+export function pedidoParaAlerta(decisao, alerta, estado, assinaturaDaJanela) {
+  const ids = [...(alerta.passagem_ids ?? [])];
+  const alvo = decisao?.passagem_id;
+  if (alvo !== undefined && alvo !== null && !ids.includes(alvo)) {
+    return null;
+  }
+  return pedido(decisao, estado, ids, assinaturaDaJanela ?? null);
 }
 
 // A decision taken on one chip of the timeline.
@@ -100,7 +130,32 @@ export function pedidoSemAlvo(decisao, estado) {
   return pedido(decisao, estado, [], null);
 }
 
+// "Adicionar passagem": is this moment possible? Returns the sentence to
+// show, or null when it is fine. The server checks the same again.
+//
+// `tsMs` null means the text typed was not a time at all.
+export function problemaAoAdicionar(tsMs, corrida, agoraServidorMs) {
+  if (corrida?.largada_ms === null || corrida?.largada_ms === undefined) {
+    return 'A corrida ainda não tem largada: não é possível adicionar uma passagem.';
+  }
+  if (tsMs === null || tsMs === undefined) {
+    return 'Tempo inválido. Use h:mm:ss, por exemplo 1:02:05.';
+  }
+  if (tsMs > agoraServidorMs) {
+    return 'Esse tempo de prova ainda não chegou. Informe o tempo desde a largada (h:mm:ss), não a hora do relógio.';
+  }
+  return null;
+}
+
 // ---- what can be done with one chip ---------------------------------------
+
+// Source exclusions with no end that are still in force, from the state's
+// "historico_em_vigor". These are shown on top of everything: the source is
+// being ignored right now and will be until somebody undoes the decision.
+export function exclusoesAbertas(estado) {
+  return (estado?.historico_em_vigor ?? []).filter((decisao) => decisao.tipo === 'excluir_fonte'
+    && (decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined));
+}
 
 // Returns the list of actions offered for a timeline entry:
 //   {acao: 'remover', decisaoId}    a pass added by a reviewer: undo the addition
@@ -172,7 +227,8 @@ export function descreverDecisao(decisao, nomeDaFonte = () => null) {
     case 'adicionar':
       return `Adicionou uma passagem do carro ${decisao.equipe_numero}`;
     case 'excluir_fonte':
-      return `Excluiu a fonte ${nomeDaFonte(decisao.fonte_id) ?? `#${decisao.fonte_id}`} por um período`;
+      return `Excluiu a fonte ${nomeDaFonte(decisao.fonte_id) ?? `#${decisao.fonte_id}`} ${
+        decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined ? 'até segunda ordem' : 'por um período'}`;
     case 'desfazer':
       return `Desfez a decisão #${decisao.desfaz_decisao_id}`;
     default:

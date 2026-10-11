@@ -5,20 +5,23 @@ namespace Baja\Contagem\Service;
 
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Lap;
-use Baja\Model\Prova;
+use Baja\Contagem\Engine\Settings;
 use Baja\Model\ProvaQuery;
 
 /**
- * The read-only picture of a race for the public: broadcast overlays, the
- * results site, anyone's script. Served by resultados/contagem_feed.php.
+ * The public JSON feed for overlays and broadcast graphics.
  *
- * It only ever shows official numbers (counted laps). Flags, pending
- * passes and per-source counts are review material and stay out.
+ * It NEVER recalculates anything. During a race the audience polls this far
+ * more than anybody uploads, and the public site shares its server with the
+ * counting. So the feed is assembled from the snapshot the last
+ * recalculation left behind, plus the clock-dependent parts (race clock,
+ * car status) worked out on the spot. Keeping the snapshot fresh is the job
+ * of the uploads and of the review screen.
  */
 final class PublicFeed
 {
-    /** Many viewers poll this; they all share one engine run per this many seconds. */
-    private const CACHE_SECONDS = 2;
+    /** All viewers within this many seconds share one assembled answer. */
+    public const CACHE_SECONDS = 2;
 
     private const BEST_LAP_EVENTS_KEPT = 10;
 
@@ -38,20 +41,24 @@ final class PublicFeed
             return null;
         }
 
-        $json = (string) json_encode(self::build($prova), JSON_UNESCAPED_UNICODE);
+        $snapshot = (new SnapshotStore($prova))->get();
+        $settings = Settings::fromArray($prova->getParams()->contagem ?? null);
+        $feed = self::assemble($eventoId, $provaId, $snapshot, $settings, Clock::nowMs());
+
+        $json = (string) json_encode($feed, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         self::writeCache($cacheKey, $json);
         return $json;
     }
 
-    /** @return array<string, mixed> */
-    public static function build(Prova $prova): array
+    /**
+     * The part of the feed that does not depend on the clock, computed once
+     * per recalculation and stored in the snapshot.
+     *
+     * @param array<int, array{numero: int, nome: string, escola: string}> $teams
+     * @return array<string, mixed>
+     */
+    public static function fromResult(EngineResult $result, array $teams): array
     {
-        $service = ContagemService::forProva($prova);
-        $result = $service->compute();
-        $teams = $service->loadTeams(false);
-        $nowMs = Clock::nowMs();
-        $timeline = $result->timeline;
-
         $cars = [];
         foreach ($result->cars as $carro => $state) {
             // Typos can produce car numbers that are not teams of the event.
@@ -67,26 +74,49 @@ final class PublicFeed
                 'ultima_passagem_ms' => $state->ultimaPassagemMs,
                 'ultima_volta_ms' => $state->ultimaVoltaMs,
                 'melhor_volta_ms' => $state->melhorVoltaMs,
-                'status' => $state->status,
-                'status_desde_ms' => $state->statusDesdeMs,
             ];
         }
 
         $bestLapEvents = self::bestLapEvents($result, $teams);
-
         return [
-            'evento_id' => $prova->getEventoId(),
-            'prova_id' => $prova->getProvaId(),
-            'gerado_em_ms' => $nowMs,
-            'corrida' => [
-                'largada_ms' => $timeline->largadaMs,
-                'encerramento_ms' => $timeline->encerramentoMs,
-                'estado' => $timeline->stateAt($nowMs),
-                'decorrido_ms' => $timeline->elapsedMs($nowMs),
-            ],
             'carros' => $cars,
             'melhor_volta' => $bestLapEvents === [] ? null : $bestLapEvents[count($bestLapEvents) - 1],
             'novas_melhores_voltas' => array_slice($bestLapEvents, -self::BEST_LAP_EVENTS_KEPT),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function assemble(string $eventoId, string $provaId, ?RaceSnapshot $snapshot, Settings $settings, int $nowMs): array
+    {
+        $live = $snapshot !== null ? ($snapshot->dados['tempo_real'] ?? []) : [];
+        $stored = $snapshot !== null ? ($snapshot->dados['feed'] ?? []) : [];
+        $statusByCar = LiveStatus::ofCars($live, $settings, $nowMs);
+        $race = LiveStatus::ofRace($live, $nowMs);
+
+        $cars = [];
+        foreach ($stored['carros'] ?? [] as $car) {
+            $status = $statusByCar[(int) $car['numero']] ?? ['status' => 'fora', 'status_desde_ms' => null];
+            $cars[] = array_merge($car, $status);
+        }
+
+        return [
+            'evento_id' => $eventoId,
+            'prova_id' => $provaId,
+            'gerado_em_ms' => $nowMs,
+            // When the numbers below were last recalculated; a consumer can
+            // tell a quiet race from a stalled feed.
+            'calculado_em_ms' => $snapshot !== null ? $snapshot->geradoEmMs : null,
+            'corrida' => [
+                'largada_ms' => $race['largada_ms'],
+                'encerramento_ms' => $race['encerramento_ms'],
+                'estado' => $race['estado'],
+                'decorrido_ms' => $race['decorrido_ms'],
+            ],
+            'carros' => $cars,
+            'melhor_volta' => $stored['melhor_volta'] ?? null,
+            'novas_melhores_voltas' => $stored['novas_melhores_voltas'] ?? [],
         ];
     }
 

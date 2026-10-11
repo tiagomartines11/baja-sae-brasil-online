@@ -7,7 +7,7 @@ import { generateUuid } from './uuid.js';
 import { buildPitEventsCsv } from './csv-export.js';
 import { createFeedback } from './feedback.js';
 import { NumberBuffer } from './entry-modes.js';
-import { teamNameOf } from './warnings.js';
+import { carListIsKnown, teamNameOf } from './warnings.js';
 import { formatTimeOfDay } from './race-clock.js';
 
 const ROTULO_TIPO = {
@@ -44,7 +44,9 @@ async function main() {
         element('btn-entrou').disabled = !hasNumber;
         element('btn-saiu').disabled = !hasNumber;
         const teamName = hasNumber ? teamNameOf(parseInt(buffer.text(), 10), page.validCars()) : null;
-        element('box-equipe').textContent = hasNumber ? (teamName || 'Número desconhecido') : ' ';
+        // An empty car list means "not known yet", not "every number is wrong".
+        const nameWhenNotFound = carListIsKnown(page.validCars()) ? 'Número desconhecido' : ' ';
+        element('box-equipe').textContent = hasNumber ? (teamName || nameWhenNotFound) : ' ';
     }
 
     function carButton(carNumber, className) {
@@ -102,6 +104,9 @@ async function main() {
     }
 
     async function recordEvent(tipo) {
+        if (page.shiftEnded()) {
+            return;
+        }
         // Time is taken inside recordEvent, at the tap, before the disk write.
         const confirmed = buffer.confirm(now());
         if (confirmed === null) {

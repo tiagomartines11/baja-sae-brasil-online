@@ -25,9 +25,10 @@ final class AppliedDecisions
     public array $reassignedEntryIds = [];
 
     /**
-     * Periods during which a source is ignored.
+     * Periods during which a source is ignored. A null start means "since
+     * always" and a null end means "until further notice".
      *
-     * @var array<int, array<int, array{0: int, 1: int}>> fonteId => [[from, to], ...]
+     * @var array<int, array<int, array{0: ?int, 1: ?int}>> fonteId => [[from, to], ...]
      */
     public array $exclusions = [];
 
@@ -37,7 +38,7 @@ final class AppliedDecisions
     public function isSourceExcludedAt(int $fonteId, int $tsMs): bool
     {
         foreach ($this->exclusions[$fonteId] ?? [] as [$from, $to]) {
-            if ($tsMs >= $from && $tsMs <= $to) {
+            if (($from === null || $tsMs >= $from) && ($to === null || $tsMs <= $to)) {
                 return true;
             }
         }

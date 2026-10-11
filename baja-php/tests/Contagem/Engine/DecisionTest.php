@@ -16,14 +16,18 @@ use Baja\Tests\Contagem\Engine\Support\RaceScenario;
  * record laid on top of the raw data, and undoing a correction is yet
  * another record ("desfazer"). Each test below applies one kind of decision
  * and then undoes it, checking that the race returns to exactly where it was.
+ *
+ * Each car first makes its "first crossing" (pass zero, which completes no
+ * lap), so that the pass the test is about is the one completing lap 1.
  */
 final class DecisionTest extends EngineTestCase
 {
     /**
      * "anular": ignore an entry.
      *
-     * SITUATION: car 7 was recorded by counters 1 and 2 (counter 3 is online
-     * and has nothing). The reviewer voids counter 1's entry.
+     * SITUATION: car 7's second crossing was recorded by counters 1 and 2
+     * (counter 3 is online and has nothing). The reviewer voids counter 1's
+     * entry.
      *
      * EXPECTED: with one counter left the lap no longer counts and the
      * remaining entry is flagged as lone. Undoing the void restores the lap.
@@ -32,13 +36,14 @@ final class DecisionTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([7]);
         $entries = $race->pass(7, '03:00', [1, 2]);
         $this->assertLapCounts([7 => 1], $race->run('04:00'));
 
         $void = $race->void($entries[1]);
         $voided = $race->run('04:00');
         $this->assertLapCounts([7 => 0], $voided);
-        $this->assertSame(0, $this->sourceCount($voided, 7, 1));
+        $this->assertSame(1, $this->sourceCount($voided, 7, 1), 'Counter 1 is left with the first crossing only.');
         $this->assertSingleOpenFlag($voided, Flag::SOLITARIA);
 
         $race->undo($void);
@@ -104,8 +109,8 @@ final class DecisionTest extends EngineTestCase
      * "confirmar": count this pass even though only one counter has it.
      * It is also what the "keep both / it is fine" button stores.
      *
-     * SITUATION: only counter 2 recorded car 5. The reviewer checks the
-     * video and confirms the car did pass.
+     * SITUATION: only counter 2 recorded car 5's second crossing. The
+     * reviewer checks the video and confirms the car did pass.
      *
      * EXPECTED: the lap counts and the flag is gone. Undo: not counted,
      * flagged again.
@@ -114,6 +119,7 @@ final class DecisionTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([5]);
         $lone = $race->entry(2, 5, '03:00');
         $this->assertLapCounts([5 => 0], $race->run('04:00'));
 
@@ -131,9 +137,10 @@ final class DecisionTest extends EngineTestCase
     /**
      * "adicionar": add a pass nobody recorded.
      *
-     * SITUATION: all three counters missed car 8 at minute 5 (it crossed
-     * hidden behind another car). The team protests, the video agrees, and
-     * the reviewer adds the pass by hand.
+     * SITUATION: car 8 made its first crossing normally, and then all three
+     * counters missed it at minute 5 (it crossed hidden behind another car).
+     * The team protests, the video agrees, and the reviewer adds the pass by
+     * hand.
      *
      * EXPECTED: one lap for car 8, coming from the virtual "revisor" source,
      * with nothing to review. Undo removes it.
@@ -142,11 +149,13 @@ final class DecisionTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([8]);
 
         $add = $race->addPass(8, '05:00');
         $added = $race->run('06:00');
         $this->assertLapCounts([8 => 1], $added);
-        $this->assertSame(Source::REVISOR_ID, $added->groups[0]->entries[0]->fonteId);
+        $this->assertSame(Source::REVISOR_ID, $added->groups[1]->entries[0]->fonteId);
+        $this->assertSame(1, $added->groups[1]->numeroVolta);
         $this->assertSame(RaceScenario::ms('05:00'), $added->cars[8]->ultimaPassagemMs);
         $this->assertNoOpenFlags($added);
 
@@ -191,6 +200,7 @@ final class DecisionTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([7]);
         $entries = $race->pass(7, '03:00', [1, 2]);
 
         $void = $race->void($entries[1]);

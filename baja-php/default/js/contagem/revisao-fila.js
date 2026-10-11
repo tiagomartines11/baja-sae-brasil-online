@@ -78,6 +78,11 @@ export function estadoDaFonte(fonte, agoraServidorMs) {
   if (stats.offline) {
     return { classe: 'offline', texto: `offline há ${semContato}` };
   }
+  if (stats.nada_a_esperar) {
+    // In contact a moment ago, but no device is open any more (shift
+    // closed, or revoked): nothing more is expected from this source.
+    return { classe: 'ao-vivo', texto: 'sem dispositivo aberto' };
+  }
   const sincronizado = stats.sincronizado_ate_ms ?? null;
   if (sincronizado === null) {
     return { classe: 'ao-vivo', texto: 'ao vivo, ainda sem sincronizar' };
@@ -86,12 +91,47 @@ export function estadoDaFonte(fonte, agoraServidorMs) {
   return { classe: 'ao-vivo', texto: haQuanto === 'agora' ? 'ao vivo' : `ao vivo, sincronizado há ${haQuanto}` };
 }
 
+// The devices of one source that are NOT simply working, as short words for
+// the status bar: "1 silencioso, 1 revogado". Empty when all are fine.
+//
+// A reviewer wondering why a pass is still pending needs to know which
+// phone the system is waiting for, and which ones it stopped waiting for.
+export const NOMES_DE_SITUACAO = {
+  ativo: 'ativo',
+  sem_contato: 'sem contato',
+  silencioso: 'silencioso',
+  fechado: 'turno encerrado',
+  revogado: 'revogado',
+  nunca: 'nunca enviou',
+};
+
+export function dispositivosDaFonte(estado, fonteId) {
+  return (estado?.dispositivos ?? []).filter((dispositivo) => dispositivo.fonte_id === fonteId);
+}
+
+export function resumoDosDispositivos(dispositivos) {
+  const quantidades = {};
+  for (const dispositivo of dispositivos) {
+    if (dispositivo.situacao !== 'ativo') {
+      quantidades[dispositivo.situacao] = (quantidades[dispositivo.situacao] ?? 0) + 1;
+    }
+  }
+  return ['sem_contato', 'silencioso', 'fechado', 'revogado', 'nunca']
+    .filter((situacao) => quantidades[situacao])
+    .map((situacao) => `${quantidades[situacao]} ${NOMES_DE_SITUACAO[situacao]}`)
+    .join(', ');
+}
+
 // Which sources disagree with a car's official count. Returns the ids of
 // the sources whose cell should be highlighted in the car table.
 //
-// A counting source disagrees when its own count differs from the official
-// one; a "totais" source when the imported paper total differs.
+// A counter types PASSES, and a car's first pass is its "pass zero", which
+// is not a lap. So a counting source is compared with the car's official
+// passes ("passagens": laps plus the pass zero), not with its laps; with
+// laps every counter would look one ahead on every car. A "totais" source
+// holds lap totals from paper and is compared with the laps.
 export function fontesDivergentes(carro, fontes) {
+  const passagensOficiais = carro.passagens ?? carro.voltas;
   const divergentes = [];
   for (const fonte of fontes) {
     if (!fonte.ativa) {
@@ -105,7 +145,7 @@ export function fontesDivergentes(carro, fontes) {
       continue;
     }
     const contado = (carro.contagem_por_fonte ?? {})[fonte.id] ?? 0;
-    if (contado !== carro.voltas) {
+    if (contado !== passagensOficiais) {
       divergentes.push(fonte.id);
     }
   }

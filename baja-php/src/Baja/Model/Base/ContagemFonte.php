@@ -138,6 +138,13 @@ abstract class ContagemFonte implements ActiveRecordInterface
     protected $ordem;
 
     /**
+     * The value for the desativada_em_ms field.
+     *
+     * @var        string|null
+     */
+    protected $desativada_em_ms;
+
+    /**
      * @var        ChildProva
      */
     protected $aProva;
@@ -539,6 +546,16 @@ abstract class ContagemFonte implements ActiveRecordInterface
     }
 
     /**
+     * Get the [desativada_em_ms] column value.
+     *
+     * @return string|null
+     */
+    public function getDesativadaEmMs()
+    {
+        return $this->desativada_em_ms;
+    }
+
+    /**
      * Set the value of [fonte_id] column.
      *
      * @param int $v New value
@@ -715,6 +732,26 @@ abstract class ContagemFonte implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [desativada_em_ms] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setDesativadaEmMs($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->desativada_em_ms !== $v) {
+            $this->desativada_em_ms = $v;
+            $this->modifiedColumns[ContagemFonteTableMap::COL_DESATIVADA_EM_MS] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -790,6 +827,9 @@ abstract class ContagemFonte implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ContagemFonteTableMap::translateFieldName('Ordem', TableMap::TYPE_PHPNAME, $indexType)];
             $this->ordem = (null !== $col) ? (int) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ContagemFonteTableMap::translateFieldName('DesativadaEmMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->desativada_em_ms = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -797,7 +837,7 @@ abstract class ContagemFonte implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 8; // 8 = ContagemFonteTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 9; // 9 = ContagemFonteTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemFonte'), 0, $e);
@@ -1118,6 +1158,9 @@ abstract class ContagemFonte implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemFonteTableMap::COL_ORDEM)) {
             $modifiedColumns[':p' . $index++]  = 'ordem';
         }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_DESATIVADA_EM_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'desativada_em_ms';
+        }
 
         $sql = sprintf(
             'INSERT INTO contagem_fonte (%s) VALUES (%s)',
@@ -1159,6 +1202,10 @@ abstract class ContagemFonte implements ActiveRecordInterface
                         break;
                     case 'ordem':
                         $stmt->bindValue($identifier, $this->ordem, PDO::PARAM_INT);
+
+                        break;
+                    case 'desativada_em_ms':
+                        $stmt->bindValue($identifier, $this->desativada_em_ms, PDO::PARAM_INT);
 
                         break;
                 }
@@ -1247,6 +1294,9 @@ abstract class ContagemFonte implements ActiveRecordInterface
             case 7:
                 return $this->getOrdem();
 
+            case 8:
+                return $this->getDesativadaEmMs();
+
             default:
                 return null;
         } // switch()
@@ -1283,6 +1333,7 @@ abstract class ContagemFonte implements ActiveRecordInterface
             $keys[5] => $this->getQualidadeTempo(),
             $keys[6] => $this->getAtiva(),
             $keys[7] => $this->getOrdem(),
+            $keys[8] => $this->getDesativadaEmMs(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1425,6 +1476,9 @@ abstract class ContagemFonte implements ActiveRecordInterface
             case 7:
                 $this->setOrdem($value);
                 break;
+            case 8:
+                $this->setDesativadaEmMs($value);
+                break;
         } // switch()
 
         return $this;
@@ -1474,6 +1528,9 @@ abstract class ContagemFonte implements ActiveRecordInterface
         }
         if (array_key_exists($keys[7], $arr)) {
             $this->setOrdem($arr[$keys[7]]);
+        }
+        if (array_key_exists($keys[8], $arr)) {
+            $this->setDesativadaEmMs($arr[$keys[8]]);
         }
 
         return $this;
@@ -1541,6 +1598,9 @@ abstract class ContagemFonte implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ContagemFonteTableMap::COL_ORDEM)) {
             $criteria->add(ContagemFonteTableMap::COL_ORDEM, $this->ordem);
+        }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_DESATIVADA_EM_MS)) {
+            $criteria->add(ContagemFonteTableMap::COL_DESATIVADA_EM_MS, $this->desativada_em_ms);
         }
 
         return $criteria;
@@ -1637,6 +1697,7 @@ abstract class ContagemFonte implements ActiveRecordInterface
         $copyObj->setQualidadeTempo($this->getQualidadeTempo());
         $copyObj->setAtiva($this->getAtiva());
         $copyObj->setOrdem($this->getOrdem());
+        $copyObj->setDesativadaEmMs($this->getDesativadaEmMs());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -2791,6 +2852,7 @@ abstract class ContagemFonte implements ActiveRecordInterface
         $this->qualidade_tempo = null;
         $this->ativa = null;
         $this->ordem = null;
+        $this->desativada_em_ms = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();

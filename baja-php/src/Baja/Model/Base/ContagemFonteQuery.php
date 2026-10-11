@@ -27,6 +27,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonteQuery orderByQualidadeTempo($order = Criteria::ASC) Order by the qualidade_tempo column
  * @method     ChildContagemFonteQuery orderByAtiva($order = Criteria::ASC) Order by the ativa column
  * @method     ChildContagemFonteQuery orderByOrdem($order = Criteria::ASC) Order by the ordem column
+ * @method     ChildContagemFonteQuery orderByDesativadaEmMs($order = Criteria::ASC) Order by the desativada_em_ms column
  *
  * @method     ChildContagemFonteQuery groupByFonteId() Group by the fonte_id column
  * @method     ChildContagemFonteQuery groupByEventoId() Group by the evento_id column
@@ -36,6 +37,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonteQuery groupByQualidadeTempo() Group by the qualidade_tempo column
  * @method     ChildContagemFonteQuery groupByAtiva() Group by the ativa column
  * @method     ChildContagemFonteQuery groupByOrdem() Group by the ordem column
+ * @method     ChildContagemFonteQuery groupByDesativadaEmMs() Group by the desativada_em_ms column
  *
  * @method     ChildContagemFonteQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildContagemFonteQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -108,6 +110,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonte|null findOneByQualidadeTempo(string $qualidade_tempo) Return the first ChildContagemFonte filtered by the qualidade_tempo column
  * @method     ChildContagemFonte|null findOneByAtiva(boolean $ativa) Return the first ChildContagemFonte filtered by the ativa column
  * @method     ChildContagemFonte|null findOneByOrdem(int $ordem) Return the first ChildContagemFonte filtered by the ordem column
+ * @method     ChildContagemFonte|null findOneByDesativadaEmMs(string $desativada_em_ms) Return the first ChildContagemFonte filtered by the desativada_em_ms column
  *
  * @method     ChildContagemFonte requirePk($key, ?ConnectionInterface $con = null) Return the ChildContagemFonte by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonte requireOne(?ConnectionInterface $con = null) Return the first ChildContagemFonte matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -120,6 +123,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonte requireOneByQualidadeTempo(string $qualidade_tempo) Return the first ChildContagemFonte filtered by the qualidade_tempo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonte requireOneByAtiva(boolean $ativa) Return the first ChildContagemFonte filtered by the ativa column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonte requireOneByOrdem(int $ordem) Return the first ChildContagemFonte filtered by the ordem column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemFonte requireOneByDesativadaEmMs(string $desativada_em_ms) Return the first ChildContagemFonte filtered by the desativada_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildContagemFonte[]|Collection find(?ConnectionInterface $con = null) Return ChildContagemFonte objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildContagemFonte> find(?ConnectionInterface $con = null) Return ChildContagemFonte objects based on current ModelCriteria
@@ -140,6 +144,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemFonte> findByAtiva(boolean|array<boolean> $ativa) Return ChildContagemFonte objects filtered by the ativa column
  * @method     ChildContagemFonte[]|Collection findByOrdem(int|array<int> $ordem) Return ChildContagemFonte objects filtered by the ordem column
  * @psalm-method Collection&\Traversable<ChildContagemFonte> findByOrdem(int|array<int> $ordem) Return ChildContagemFonte objects filtered by the ordem column
+ * @method     ChildContagemFonte[]|Collection findByDesativadaEmMs(string|array<string> $desativada_em_ms) Return ChildContagemFonte objects filtered by the desativada_em_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemFonte> findByDesativadaEmMs(string|array<string> $desativada_em_ms) Return ChildContagemFonte objects filtered by the desativada_em_ms column
  *
  * @method     ChildContagemFonte[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildContagemFonte> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -239,7 +245,7 @@ abstract class ContagemFonteQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT fonte_id, evento_id, prova_id, nome, tipo, qualidade_tempo, ativa, ordem FROM contagem_fonte WHERE fonte_id = :p0';
+        $sql = 'SELECT fonte_id, evento_id, prova_id, nome, tipo, qualidade_tempo, ativa, ordem, desativada_em_ms FROM contagem_fonte WHERE fonte_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -584,6 +590,49 @@ abstract class ContagemFonteQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ContagemFonteTableMap::COL_ORDEM, $ordem, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the desativada_em_ms column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByDesativadaEmMs(1234); // WHERE desativada_em_ms = 1234
+     * $query->filterByDesativadaEmMs(array(12, 34)); // WHERE desativada_em_ms IN (12, 34)
+     * $query->filterByDesativadaEmMs(array('min' => 12)); // WHERE desativada_em_ms > 12
+     * </code>
+     *
+     * @param mixed $desativadaEmMs The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByDesativadaEmMs($desativadaEmMs = null, ?string $comparison = null)
+    {
+        if (is_array($desativadaEmMs)) {
+            $useMinMax = false;
+            if (isset($desativadaEmMs['min'])) {
+                $this->addUsingAlias(ContagemFonteTableMap::COL_DESATIVADA_EM_MS, $desativadaEmMs['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($desativadaEmMs['max'])) {
+                $this->addUsingAlias(ContagemFonteTableMap::COL_DESATIVADA_EM_MS, $desativadaEmMs['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemFonteTableMap::COL_DESATIVADA_EM_MS, $desativadaEmMs, $comparison);
 
         return $this;
     }

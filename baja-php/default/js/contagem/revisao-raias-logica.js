@@ -94,6 +94,16 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
   if (entrada.grupo && entrada.grupo.contado) {
     classes.push('contada');
   }
+  // Passes the rules of the race keep out of the lap count, and the pass
+  // zero, must be told apart from laps at a glance.
+  const papel = entrada.grupo?.papel;
+  if (papel === 'inicial') {
+    classes.push('passagem-zero');
+  } else if (papel === 'janela_largada') {
+    classes.push('janela-largada');
+  } else if (papel === 'apos_encerramento') {
+    classes.push('apos-encerramento');
+  }
   if (idsEmDestaque.includes(entrada.id)) {
     classes.push('em-destaque');
   }
@@ -103,9 +113,34 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
   return classes;
 }
 
+const MOTIVOS_FORA_DE_USO = {
+  antes_da_largada: 'fora de uso: registrado antes da largada',
+  fonte_inativa: 'fora de uso: a fonte estava desativada',
+  fonte_excluida: 'fora de uso: a fonte foi excluída neste período',
+};
+
+// What the pass group of an entry is to the count, in words.
+export function descricaoDoPapel(grupo) {
+  switch (grupo.papel) {
+    case 'inicial':
+      return 'passagem zero (primeira passagem do carro; não é volta)';
+    case 'janela_largada':
+      return 'dentro da janela de largada (não conta volta)';
+    case 'apos_encerramento':
+      return 'depois do encerramento (ignorada, não conta volta)';
+    case 'volta':
+      return `volta ${grupo.numero_volta}`;
+    case 'pendente':
+      return 'ainda não conta como volta';
+    default:
+      // An answer from before "papel" existed.
+      return grupo.contado ? `volta ${grupo.numero_volta}` : 'ainda não conta como volta';
+  }
+}
+
 // What the tooltip of a chip says.
 export function descricaoDoChip(entrada) {
-  const partes = [`passagem #${entrada.id}`];
+  const partes = [entrada.adicionada_por_revisor ? 'passagem adicionada pelo revisor' : `passagem #${entrada.id}`];
   if (entrada.reatribuida) {
     partes.push(`digitado ${entrada.carro_digitado}, trocado para ${entrada.carro}`);
   }
@@ -114,10 +149,11 @@ export function descricaoDoChip(entrada) {
   } else if (entrada.anulada_auto) {
     partes.push('anulada automaticamente (repetida)');
   } else if (entrada.fora_de_uso) {
-    partes.push('fora de uso (fonte excluída ou inativa, ou registro anterior à largada)');
+    partes.push(MOTIVOS_FORA_DE_USO[entrada.motivo_fora_de_uso]
+      ?? 'fora de uso (fonte excluída ou inativa, ou registro anterior à largada)');
   }
   if (entrada.grupo) {
-    partes.push(entrada.grupo.contado ? `volta ${entrada.grupo.numero_volta}` : 'ainda não conta como volta');
+    partes.push(descricaoDoPapel(entrada.grupo));
   }
   return partes.join(' · ');
 }

@@ -4,18 +4,20 @@ declare(strict_types=1);
 namespace Baja\Contagem\Service;
 
 /**
- * What one run of the ScorePublisher did. Exists so that callers, and above
- * all the tests, can see whether the (expensive) points recalculation ran.
+ * What one call to the ScorePublisher did.
  */
 final class PublishOutcome
 {
-    /** True when the publisher stood back because the race has never been started. */
+    /** Nothing was written because the race has no start yet. */
     public bool $skippedNoStart = false;
 
-    /** @var int[] cars whose Input row was created or changed */
+    /** Nothing was written because the publish mode is "desligada". */
+    public bool $skippedPublishingOff = false;
+
+    /** @var int[] cars whose published values were written */
     public array $changedCars = [];
 
-    /** True when Prova::refreshVarsAndPontos() was called. */
+    /** True when points were recalculated (Prova::refreshVarsAndPontos()). */
     public bool $refreshRan = false;
 
     public function anythingChanged(): bool

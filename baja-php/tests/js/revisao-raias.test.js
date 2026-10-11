@@ -128,3 +128,40 @@ test('an entry is found by id across all lanes', () => {
   assert.equal(encontrarEntrada(janela, 99), null);
   assert.equal(encontrarEntrada(null, 1), null);
 });
+
+// SITUATION: on a car's timeline there are four kinds of crossing that
+// two counters agreed on:
+//   - the car's first crossing, its "passagem zero" (official, not a lap);
+//   - an ordinary lap;
+//   - a crossing typed inside the "janela de largada" (the organisers chose
+//     not to count the start pack, but a counter typed it anyway);
+//   - a second crossing after the finish (only the first one after the
+//     finish counts).
+//
+// EXPECTED: each looks different and its tooltip says what it is. The last
+// two stay VISIBLE on the timeline, marked as not counting: a team that
+// protests must be able to see that the pass was recorded and why it is
+// not a lap.
+test('the pass zero and the passes left out by the rules are told apart from laps', () => {
+  const zero = { id: 1, grupo: { papel: 'inicial', contado: true, numero_volta: 0 } };
+  const volta = { id: 2, grupo: { papel: 'volta', contado: true, numero_volta: 1 } };
+  const naJanela = { id: 3, grupo: { papel: 'janela_largada', contado: false, numero_volta: null } };
+  const depoisDoFim = { id: 4, grupo: { papel: 'apos_encerramento', contado: false, numero_volta: null } };
+
+  assert.deepEqual(classesDoChip(zero, [], null), ['chip', 'contada', 'passagem-zero']);
+  assert.deepEqual(classesDoChip(volta, [], null), ['chip', 'contada']);
+  assert.deepEqual(classesDoChip(naJanela, [], null), ['chip', 'janela-largada']);
+  assert.deepEqual(classesDoChip(depoisDoFim, [], null), ['chip', 'apos-encerramento']);
+
+  assert.match(descricaoDoChip(zero), /passagem zero/);
+  assert.match(descricaoDoChip(volta), /volta 1$/);
+  assert.match(descricaoDoChip(naJanela), /janela de largada/);
+  assert.match(descricaoDoChip(depoisDoFim), /depois do encerramento/);
+});
+
+test('an entry that is not in use says why', () => {
+  const antes = { id: 5, fora_de_uso: true, motivo_fora_de_uso: 'antes_da_largada', grupo: null };
+  const excluida = { id: 6, fora_de_uso: true, motivo_fora_de_uso: 'fonte_excluida', grupo: null };
+  assert.match(descricaoDoChip(antes), /antes da largada/);
+  assert.match(descricaoDoChip(excluida), /fonte foi excluída/);
+});

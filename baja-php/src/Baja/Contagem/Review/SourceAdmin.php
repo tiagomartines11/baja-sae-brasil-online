@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Engine\Settings;
+use Baja\Contagem\Service\Clock;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Sync\DeviceTokens;
 use Baja\Model\ContagemDispositivo;
@@ -36,7 +38,6 @@ final class SourceAdmin
 
     private const MAX_NAME_LENGTH = 45;
     private const MAX_LABEL_LENGTH = 100;
-    private const MAX_UPLOAD_BYTES = 200000;
 
     /**
      * @return ContagemFonte[] the prova's sources in display order, without the pit log's internal one
@@ -127,6 +128,8 @@ final class SourceAdmin
     public static function update(ContagemService $service, array $post): void
     {
         $fonte = self::requireSource($service->getProva(), $post['fonte_id'] ?? null);
+        $wasActive = (bool) $fonte->getAtiva();
+        $previousType = (string) $fonte->getTipo();
         self::applyEditableFields($fonte, $post);
 
         $order = filter_var($post['ordem'] ?? null, FILTER_VALIDATE_INT);
@@ -134,10 +137,51 @@ final class SourceAdmin
             throw new InvalidArgumentException('Ordem inválida: use um número entre 0 e 999.');
         }
         $fonte->setOrdem($order);
-        // Deactivating keeps every entry the source recorded; the engine just stops using them.
-        $fonte->setAtiva(($post['ativa'] ?? '') === '1');
+
+        $staysActive = ($post['ativa'] ?? '') === '1';
+        self::refuseBreakingThePrimarySource($service->getSettings(), $fonte, $staysActive, $previousType);
+
+        if ($wasActive && !$staysActive) {
+            // Switching a counter off must not erase what it recorded. The
+            // moment is kept, and the engine goes on using the source's
+            // entries from before it (Source::wasCountingAt).
+            $fonte->setDesativadaEmMs(Clock::nowMs());
+        } elseif ($staysActive) {
+            $fonte->setDesativadaEmMs(null);
+        }
+        $fonte->setAtiva($staysActive);
         $fonte->save();
         self::rerunEngine($service);
+    }
+
+    /**
+     * In the "fonte principal" mode the official count IS what the primary
+     * source recorded. Switching that source off, or turning it into a list
+     * of paper totals, would silently take every lap away from every car.
+     */
+    private static function refuseBreakingThePrimarySource(
+        Settings $settings,
+        ContagemFonte $fonte,
+        bool $staysActive,
+        string $previousType
+    ): void {
+        $isPrimaryInUse = $settings->modoPublicacao === Settings::MODO_FONTE_PRINCIPAL
+            && $settings->fontePrincipalId === (int) $fonte->getFonteId();
+        if (!$isPrimaryInUse) {
+            return;
+        }
+        if (!$staysActive) {
+            throw new InvalidArgumentException(
+                'Esta é a fonte principal e o modo de publicação é "fonte principal": não é possível desativá-la. '
+                . 'Troque a fonte principal ou o modo de publicação nas configurações primeiro.'
+            );
+        }
+        if ($fonte->getTipo() !== $previousType) {
+            throw new InvalidArgumentException(
+                'Esta é a fonte principal e o modo de publicação é "fonte principal": não é possível mudar o tipo dela. '
+                . 'Troque a fonte principal ou o modo de publicação nas configurações primeiro.'
+            );
+        }
     }
 
     /** @param array<string, mixed> $post */
@@ -183,7 +227,7 @@ final class SourceAdmin
 
         $text = is_string($post['texto'] ?? null) ? $post['texto'] : '';
         if ($upload !== null && ($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-            $text = self::readUpload($upload);
+            $text = TotalsImport::readUpload($upload);
         }
 
         $validCars = [];
@@ -201,13 +245,18 @@ final class SourceAdmin
     public static function saveSettings(ContagemService $service, array $post): void
     {
         $countingIds = [];
+        $activeCountingIds = [];
         foreach (self::sources($service->getProva()) as $fonte) {
-            if ($fonte->getTipo() !== Source::TIPO_TOTAIS) {
-                $countingIds[] = (int) $fonte->getFonteId();
+            if ($fonte->getTipo() === Source::TIPO_TOTAIS) {
+                continue;
+            }
+            $countingIds[] = (int) $fonte->getFonteId();
+            if ($fonte->getAtiva()) {
+                $activeCountingIds[] = (int) $fonte->getFonteId();
             }
         }
-        $service->saveSettings(SettingsForm::fromPost($post, $countingIds));
-        self::rerunEngine($service);
+        // saveSettings() takes the lock and recounts the race by itself.
+        $service->saveSettings(SettingsForm::fromPost($post, $countingIds, $activeCountingIds));
     }
 
     public static function rerunEngine(ContagemService $service): void
@@ -242,23 +291,5 @@ final class SourceAdmin
     {
         $text = is_string($value) ? trim(preg_replace('/\s+/u', ' ', $value) ?? '') : '';
         return mb_substr($text, 0, $maxLength);
-    }
-
-    /** @param array<string, mixed> $upload */
-    private static function readUpload(array $upload): string
-    {
-        if (($upload['error'] ?? null) !== UPLOAD_ERR_OK
-            || !is_string($upload['tmp_name'] ?? null)
-            || !is_uploaded_file($upload['tmp_name'])) {
-            throw new InvalidArgumentException('Não foi possível receber o arquivo.');
-        }
-        if ((int) ($upload['size'] ?? 0) > self::MAX_UPLOAD_BYTES) {
-            throw new InvalidArgumentException('Arquivo grande demais para uma lista de totais.');
-        }
-        $contents = file_get_contents($upload['tmp_name']);
-        if ($contents === false) {
-            throw new InvalidArgumentException('Não foi possível ler o arquivo.');
-        }
-        return $contents;
     }
 }

@@ -92,6 +92,7 @@ OfflineShell::printStatusBar($fonte->getNome(), 'Também contando aqui:');
         <label class="opcao"><input type="checkbox" id="opt-som"> Som</label>
         <label class="opcao"><input type="checkbox" id="opt-vibrar"> Vibrar</label>
         <a class="link-voltar" href="contagem.php?p=<?= htmlspecialchars(rawurlencode($provaId)) ?>">Voltar</a>
+        <?php OfflineShell::printFooterTools(); ?>
     </footer>
 </main>
 <?php

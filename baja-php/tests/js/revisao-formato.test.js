@@ -13,7 +13,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  duracao, idade, interpretarTempoDeProva, relogio, relogioDaCorrida, tempoDeProva,
+  NOMES_DE_ALERTA, duracao, idade, interpretarTempoDeProva, relogio, relogioDaCorrida, tempoDeProva,
 } from '../../default/js/contagem/revisao-formato.js';
 
 const SEGUNDO = 1000;
@@ -100,4 +100,17 @@ test('the race clock stops at the end of the race', () => {
 
 test('there is no race clock before the start', () => {
   assert.equal(relogioDaCorrida({ largada_ms: null, encerramento_ms: null }, 5000), null);
+});
+
+// SITUATION: the engine raises a flag of type "primeira_passagem_tardia"
+// when a car's first pass comes much later than everybody else's (its pass
+// zero was probably missed).
+//
+// EXPECTED: the queue shows it with a name in Portuguese, not with the
+// internal code.
+test('every kind of flag the engine raises has a name in Portuguese', () => {
+  assert.equal(NOMES_DE_ALERTA.primeira_passagem_tardia, 'Primeira passagem tardia');
+  for (const tipo of ['troca_provavel', 'solitaria', 'repetida', 'carro_desconhecido', 'no_box', 'volta_curta', 'divergencia_total']) {
+    assert.ok(NOMES_DE_ALERTA[tipo], `${tipo} has a name`);
+  }
 });

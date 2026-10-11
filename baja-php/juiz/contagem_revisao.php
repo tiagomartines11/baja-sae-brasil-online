@@ -76,6 +76,7 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
 
         <h2>Histórico de decisões</h2>
         <div class="rolagem"><table class="historico" id="tabela-historico"></table></div>
+        <div id="historico-mais"></div>
     </section>
 </main>
 

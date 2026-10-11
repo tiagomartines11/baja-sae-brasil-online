@@ -45,12 +45,13 @@ final class EntryWriter
 
     /**
      * @param array<int, mixed> $entries as decoded from the request
-     * @return array{uuids: string[], new: int}
+     * @return array{uuids: string[], new: int, cars: int[]}
      */
     public function storeEntries(array $entries): array
     {
         $acknowledged = [];
         $valid = [];
+        $cars = [];
         foreach ($entries as $entry) {
             $uuid = UploadFields::uuidOf($entry);
             if ($uuid === null) {
@@ -58,13 +59,15 @@ final class EntryWriter
             }
             $car = UploadFields::carOf($entry);
             $deviceTimeMs = UploadFields::intOrNull($entry['ts_device_ms'] ?? null);
-            if ($car === null || $deviceTimeMs === null || $deviceTimeMs <= 0) {
+            $offsetMs = UploadFields::intOrNull($entry['clock_offset_ms'] ?? null);
+            if ($car === null || $deviceTimeMs === null || !UploadFields::isPlausibleTime($deviceTimeMs + ($offsetMs ?? 0), $this->nowMs)) {
                 // Not acknowledged, so the client keeps it and keeps showing
                 // it as unsent, which is the visible sign that something is
-                // wrong with that device.
+                // wrong with that device (a clock set to the wrong year, say).
                 continue;
             }
             $acknowledged[] = $uuid;
+            $cars[$car] = true;
             $valid[UploadFields::key($uuid)] = [
                 'uuid' => $uuid,
                 'car' => $car,
@@ -114,7 +117,11 @@ final class EntryWriter
             $newCount++;
         }
 
-        return ['uuids' => $acknowledged, 'new' => $newCount];
+        // The cars of ALL acknowledged entries, new or not. If a previous
+        // attempt stored the entries and then failed before publishing, the
+        // phone sends them again; they are no longer new, but their cars
+        // still have to be recounted.
+        return ['uuids' => $acknowledged, 'new' => $newCount, 'cars' => array_keys($cars)];
     }
 
     /**
@@ -146,7 +153,7 @@ final class EntryWriter
             array_values($uuidByKey)
         );
         if ($entryIdByKey === []) {
-            return ['uuids' => [], 'new' => 0];
+            return ['uuids' => [], 'new' => 0, 'cars' => []];
         }
 
         $alreadyVoided = $this->existingValues(
@@ -186,7 +193,34 @@ final class EntryWriter
             $newCount++;
         }
 
-        return ['uuids' => $acknowledged, 'new' => $newCount];
+        return ['uuids' => $acknowledged, 'new' => $newCount, 'cars' => $this->carsOfEntries(array_values($entryIdByKey))];
+    }
+
+    /**
+     * The cars whose count a change to these entries can affect: the number
+     * each was typed with, and the car a reviewer may have reassigned it to.
+     *
+     * @param array<int, mixed> $entryIds
+     * @return int[]
+     */
+    private function carsOfEntries(array $entryIds): array
+    {
+        $typed = $this->existingValues(
+            'SELECT equipe_numero FROM contagem_passagem WHERE fonte_id = ? AND passagem_id IN (%s)',
+            [$this->fonteId],
+            $entryIds
+        );
+        $reassigned = $this->existingValues(
+            'SELECT equipe_numero FROM contagem_decisao WHERE tipo = ? AND equipe_numero IS NOT NULL AND passagem_id IN (%s)',
+            [Decision::REATRIBUIR],
+            $entryIds
+        );
+        $cars = [];
+        foreach (array_keys($typed + $reassigned) as $key) {
+            // existingValues() prefixes its keys with one letter.
+            $cars[] = (int) substr($key, 1);
+        }
+        return $cars;
     }
 
     /**
@@ -208,12 +242,18 @@ final class EntryWriter
             $car = UploadFields::carOf($event);
             $deviceTimeMs = UploadFields::intOrNull($event['ts_device_ms'] ?? null);
             $tipo = $event['tipo'] ?? null;
-            if ($car === null || $deviceTimeMs === null || $deviceTimeMs <= 0 || !in_array($tipo, Ocorrencia::TIPOS_BOX, true)) {
+            if ($car === null || $deviceTimeMs === null || !in_array($tipo, Ocorrencia::TIPOS_BOX, true)) {
                 continue;
             }
-            // contagem_ocorrencia has no "time unknown" state, so an event
-            // sent before the device had an offset gets the best one known.
-            $offsetMs = UploadFields::intOrNull($event['clock_offset_ms'] ?? null) ?? $fallbackOffsetMs ?? 0;
+            // An event recorded before the device knew its clock offset gets
+            // the device's first later estimate, like an entry does. Unlike
+            // an entry it cannot be stored without a time, so while there is
+            // no estimate at all it is NOT acknowledged: the phone keeps it
+            // and sends it again, and by then it has an estimate.
+            $offsetMs = UploadFields::intOrNull($event['clock_offset_ms'] ?? null) ?? $fallbackOffsetMs;
+            if ($offsetMs === null || !UploadFields::isPlausibleTime($deviceTimeMs + $offsetMs, $this->nowMs)) {
+                continue;
+            }
             $acknowledged[] = $uuid;
             $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'tipo' => $tipo, 'ts_ms' => $deviceTimeMs + $offsetMs];
         }

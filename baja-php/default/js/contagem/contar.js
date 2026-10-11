@@ -6,10 +6,11 @@ import { startPage } from './page-setup.js';
 import { CountSession } from './count-session.js';
 import { generateUuid } from './uuid.js';
 import { buildEntriesCsv } from './csv-export.js';
-import { createFeedback } from './feedback.js';
+import { createFeedback, canVibrate } from './feedback.js';
+import { carListIsKnown } from './warnings.js';
 import { createRecentList } from './contar-recentes.js';
 import {
-    MODO, MODOS, NumberBuffer, loadEntryMode, saveEntryMode,
+    MODO, MODOS, TECLA, NumberBuffer, keyActionFor, loadEntryMode, saveEntryMode,
 } from './entry-modes.js';
 
 const FLASH_CLASS = 'destaque-ativo';
@@ -76,7 +77,10 @@ async function main() {
             return;
         }
         const warningTexts = result.avisos.map((aviso) => aviso.mensagem);
-        showFlash(String(car), result.nomeEquipe || 'Número desconhecido', warningTexts, warningTexts.length > 0);
+        // With no car list at all, "unknown number" would be shown for every
+        // car; the page then simply shows no team name.
+        const nameWhenNotFound = carListIsKnown(page.validCars()) ? 'Número desconhecido' : '';
+        showFlash(String(car), result.nomeEquipe || nameWhenNotFound, warningTexts, warningTexts.length > 0);
         if (warningTexts.length > 0) {
             feedback.aviso();
         } else {
@@ -87,6 +91,10 @@ async function main() {
     }
 
     function confirmBuffer() {
+        if (page.shiftEnded()) {
+            // The entry controls are hidden; a stray Enter must not record.
+            return;
+        }
         const confirmed = buffer.confirm(now());
         renderBuffer();
         if (confirmed !== null) {
@@ -103,6 +111,8 @@ async function main() {
     }
 
     // ---- mode 1: system keyboard ----
+    // Typing inside the number box is handled here. Keys pressed while the
+    // focus is anywhere else are handled by the page-wide listener below.
 
     element('campo-numero').addEventListener('input', (event) => {
         buffer.setText(event.target.value, now());
@@ -114,7 +124,7 @@ async function main() {
         element('campo-numero').focus();
     });
 
-    // ---- mode 2: on-screen keypad (also answers to a physical keyboard) ----
+    // ---- mode 2: on-screen keypad ----
 
     function pressKeypadKey(key) {
         if (key === 'registrar') {
@@ -140,17 +150,33 @@ async function main() {
         keypad.appendChild(button);
     }
 
+    // ---- both keyboard modes: a physical keyboard works wherever the focus is ----
+    // After a tap on "desfazer", on a switch or on the page background the
+    // number box no longer has the focus. The next car is typed without
+    // looking, so those keys must still count.
+
     document.addEventListener('keydown', (event) => {
-        if (currentMode !== MODO.TECLADO_TELA || event.ctrlKey || event.altKey || event.metaKey) {
+        if (page.shiftEnded()) {
             return;
         }
-        if (/^[0-9]$/.test(event.key)) {
-            pressKeypadKey(event.key);
-        } else if (event.key === 'Backspace') {
-            pressKeypadKey('apagar');
-        } else if (event.key === 'Enter') {
-            event.preventDefault();
-            pressKeypadKey('registrar');
+        const action = keyActionFor(event, {
+            mode: currentMode,
+            typedInNumberBox: event.target === element('campo-numero'),
+        });
+        if (action === null) {
+            return;
+        }
+        // Stops the key from also doing what it normally does where the
+        // focus is: Enter would "click" the button that was tapped last.
+        event.preventDefault();
+        if (action.tecla === TECLA.DIGITO) {
+            pressKeypadKey(action.digito);
+        } else {
+            pressKeypadKey(action.tecla);
+        }
+        if (currentMode === MODO.TECLADO) {
+            // Back to the box, so the following keys take the normal path.
+            element('campo-numero').focus();
         }
     });
 
@@ -204,6 +230,9 @@ async function main() {
     }
 
     // ---- sound and vibration switches ----
+
+    // iPhones cannot vibrate; a switch that does nothing is not offered.
+    element('opt-vibrar').closest('label').hidden = !canVibrate(window.navigator);
 
     for (const [checkboxId, preferenceName] of [['opt-som', 'som'], ['opt-vibrar', 'vibrar']]) {
         const checkbox = element(checkboxId);

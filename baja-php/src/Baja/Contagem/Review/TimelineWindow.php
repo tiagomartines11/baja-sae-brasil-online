@@ -3,14 +3,13 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Review;
 
-use Baja\Contagem\Engine\Data\Decision;
-use Baja\Contagem\Engine\Data\EngineInput;
-use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\Ocorrencia;
+use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
-use Baja\Contagem\Engine\Engine;
 use Baja\Contagem\Service\ContagemService;
+use Baja\Model\Prova;
+use Propel\Runtime\Propel;
 
 /**
  * The lane view of the review screen: one lane per source with what that
@@ -19,6 +18,10 @@ use Baja\Contagem\Service\ContagemService;
  * Unlike the engine's result, this shows the raw entries too, including the
  * ones that were voided, because a reviewer deciding about a flag needs to
  * see what each counter actually did, not only what survived.
+ *
+ * It never runs the whole engine. A timeline concerns a handful of cars, so
+ * only those are recounted (see CarsRecount), which costs a few
+ * milliseconds however long the race is.
  */
 final class TimelineWindow
 {
@@ -33,16 +36,15 @@ final class TimelineWindow
     public static function forWindow(ContagemService $service, int $fromMs, int $untilMs): array
     {
         $untilMs = min($untilMs, $fromMs + self::MAX_WINDOW_MS);
-        $input = $service->loadInput();
-        $result = Engine::run($input);
+        $inWindow = fn(int $tsMs): bool => $tsMs >= $fromMs && $tsMs <= $untilMs;
 
-        $inWindow = fn(int $tsMs) => $tsMs >= $fromMs && $tsMs <= $untilMs;
+        $cars = self::carsTypedBetween($service->getProva(), $fromMs, $untilMs);
+        $recount = CarsRecount::load($service, $cars, [$fromMs, $untilMs]);
 
         return self::describe(
-            $input,
-            $result,
-            fn(Entry $raw, ?Entry $inUse) => $inWindow($raw->tsMs),
-            fn(Ocorrencia $ocorrencia) => $inWindow($ocorrencia->tsMs),
+            $recount,
+            fn(Entry $raw, int $effectiveCar): bool => $inWindow($raw->tsMs),
+            fn(Ocorrencia $ocorrencia): bool => $inWindow($ocorrencia->tsMs),
             $fromMs,
             $untilMs,
             null
@@ -57,16 +59,12 @@ final class TimelineWindow
      */
     public static function forCar(ContagemService $service, int $carro): array
     {
-        $input = $service->loadInput();
-        $result = Engine::run($input);
+        $recount = CarsRecount::load($service, [$carro]);
 
         return self::describe(
-            $input,
-            $result,
-            fn(Entry $raw, ?Entry $inUse) => $raw->carroDigitado === $carro
-                || $raw->carro === $carro
-                || ($inUse !== null && $inUse->carro === $carro),
-            fn(Ocorrencia $ocorrencia) => $ocorrencia->carro === null || $ocorrencia->carro === $carro,
+            $recount,
+            fn(Entry $raw, int $effectiveCar): bool => $raw->carroDigitado === $carro || $effectiveCar === $carro,
+            fn(Ocorrencia $ocorrencia): bool => $ocorrencia->carro === null || $ocorrencia->carro === $carro,
             null,
             null,
             $carro
@@ -74,34 +72,30 @@ final class TimelineWindow
     }
 
     /**
-     * @param callable(Entry, ?Entry): bool $wantsEntry
+     * @param callable(Entry, int): bool $wantsEntry given the raw entry and the car it counts for now
      * @param callable(Ocorrencia): bool $wantsOcorrencia
      * @return array<string, mixed>
      */
     private static function describe(
-        EngineInput $input,
-        EngineResult $result,
+        CarsRecount $recount,
         callable $wantsEntry,
         callable $wantsOcorrencia,
         ?int $fromMs,
         ?int $untilMs,
         ?int $carro
     ): array {
-        $signatures = new SignatureCalculator($result, $input->decisions);
-        $activeDecisions = ActiveDecisions::filter($input->decisions);
-        $autoVoided = array_flip($result->autoVoidedEntryIds);
-
         $entriesBySource = [];
-        foreach (self::rawAndAddedEntries($input, $result) as $raw) {
-            $inUse = $signatures->entryInUse($raw->id);
-            if (!$wantsEntry($raw, $inUse)) {
+        foreach (array_merge($recount->input->entries, $recount->addedPasses()) as $raw) {
+            $surviving = $recount->survivingEntry($raw->id);
+            $effectiveCar = $surviving !== null ? $surviving->carro : $raw->carro;
+            if (!$wantsEntry($raw, $effectiveCar)) {
                 continue;
             }
-            $entriesBySource[$raw->fonteId][] = self::describeEntry($raw, $inUse, $signatures, $activeDecisions, $autoVoided);
+            $entriesBySource[$raw->fonteId][] = self::describeEntry($recount, $raw, $effectiveCar);
         }
 
         $lanes = [];
-        foreach (self::laneSources($input, isset($entriesBySource[Source::REVISOR_ID])) as $laneSource) {
+        foreach (self::laneSources($recount->input->sources, isset($entriesBySource[Source::REVISOR_ID])) as $laneSource) {
             $entries = $entriesBySource[$laneSource['fonte_id']] ?? [];
             usort($entries, fn(array $a, array $b) => [$a['ts_ms'], $a['id']] <=> [$b['ts_ms'], $b['id']]);
             $laneSource['entradas'] = $entries;
@@ -112,35 +106,26 @@ final class TimelineWindow
             'de_ms' => $fromMs,
             'ate_ms' => $untilMs,
             'carro' => $carro,
-            'largada_ms' => $result->timeline->largadaMs,
-            'encerramento_ms' => $result->timeline->encerramentoMs,
+            'largada_ms' => $recount->timeline->largadaMs,
+            'encerramento_ms' => $recount->timeline->encerramentoMs,
             'raias' => $lanes,
-            'ocorrencias' => self::describeOcorrencias($input->ocorrencias, $wantsOcorrencia),
+            'ocorrencias' => self::describeOcorrencias($recount->input->ocorrencias, $wantsOcorrencia),
         ];
     }
 
     /**
-     * @param array<int, Decision> $activeDecisions
-     * @param array<int, int> $autoVoided entry id => anything
      * @return array<string, mixed>
      */
-    private static function describeEntry(
-        Entry $raw,
-        ?Entry $inUse,
-        SignatureCalculator $signatures,
-        array $activeDecisions,
-        array $autoVoided
-    ): array {
+    private static function describeEntry(CarsRecount $recount, Entry $raw, int $effectiveCar): array
+    {
         $decisions = [];
-        $voidedByPerson = false;
-        foreach ($signatures->decisionIdsOf($raw->id) as $decisaoId) {
-            $tipo = $activeDecisions[$decisaoId]->tipo;
-            $decisions[] = ['id' => $decisaoId, 'tipo' => $tipo, 'origem' => $activeDecisions[$decisaoId]->origem];
-            $voidedByPerson = $voidedByPerson || $tipo === Decision::ANULAR;
+        foreach ($recount->signatures->decisionIdsOf($raw->id) as $decisaoId) {
+            $decision = $recount->activeDecisions[$decisaoId];
+            $decisions[] = ['id' => $decisaoId, 'tipo' => $decision->tipo, 'origem' => $decision->origem];
         }
 
-        $group = $signatures->groupOf($raw->id);
-        $effectiveCar = $inUse !== null ? $inUse->carro : $raw->carro;
+        $group = $recount->groupOf($raw->id);
+        $reasonNotInUse = $group === null ? $recount->reasonNotInUse($raw) : null;
 
         return [
             'id' => $raw->id,
@@ -148,59 +133,98 @@ final class TimelineWindow
             'carro' => $effectiveCar,
             'carro_digitado' => $raw->carroDigitado,
             'ts_ms' => $raw->tsMs,
-            'anulada' => $voidedByPerson,
-            'anulada_auto' => isset($autoVoided[$raw->id]),
+            'anulada' => $reasonNotInUse === CarsRecount::ANULADA,
+            'anulada_auto' => $reasonNotInUse === CarsRecount::REPETIDA,
             'reatribuida' => $effectiveCar !== $raw->carroDigitado,
-            // Not voided by anyone, yet not in use: its source was excluded
-            // for that period, or it was typed before the start.
-            'fora_de_uso' => $inUse === null && !$voidedByPerson && !isset($autoVoided[$raw->id]),
+            // In no group and nobody voided it: before the start, or its
+            // source was off or excluded at that moment.
+            'fora_de_uso' => in_array($reasonNotInUse, [CarsRecount::ANTES_DA_LARGADA, CarsRecount::FONTE_INATIVA, CarsRecount::FONTE_EXCLUIDA], true),
+            'motivo_fora_de_uso' => $reasonNotInUse,
             'adicionada_por_revisor' => $raw->fonteId === Source::REVISOR_ID,
             'decisoes' => $decisions,
-            'grupo' => $group === null ? null : [
-                'ancora' => $group->anchorEntryId(),
-                'passagem_ids' => $group->entryIds(),
-                'ts_ms' => $group->tsMs,
-                'contado' => $group->contado,
-                'numero_volta' => $group->numeroVolta,
-                'confirmado_por_revisor' => $group->confirmadoPorRevisor,
-                'alertas' => $group->alertasAbertos,
-            ],
-            'assinatura' => $signatures->forEntries([$raw->id]),
+            'grupo' => $group === null ? null : self::describeGroup($group),
+            'assinatura' => $recount->signatures->forEntries([$raw->id]),
         ];
     }
 
     /**
-     * The raw entries plus the passes a reviewer added, which are not rows
-     * of contagem_passagem and so only exist inside the engine's groups.
+     * The pass group of an entry and the part it plays in the count:
      *
-     * @return Entry[]
+     *   papel 'volta'              an official pass that completes lap `numero_volta`
+     *   papel 'inicial'            the car's pass zero: official, but not a lap
+     *   papel 'janela_largada'     typed inside the start window; never a lap
+     *   papel 'apos_encerramento'  a pass after the finish that the rules leave out
+     *   papel 'pendente'           does not count yet (one counter only)
+     *
+     * @return array<string, mixed>
      */
-    private static function rawAndAddedEntries(EngineInput $input, EngineResult $result): array
+    private static function describeGroup(PassGroup $group): array
     {
-        $entries = $input->entries;
-        foreach ($result->groups as $group) {
-            foreach ($group->entries as $entry) {
-                if ($entry->fonteId === Source::REVISOR_ID) {
-                    $entries[] = $entry;
-                }
-            }
+        // The start window is asked first: the engine numbers a car's first
+        // crossing typed inside it as pass 0 too, and the reviewer should be
+        // told the more specific thing.
+        if ($group->dentroDaJanelaDeLargada) {
+            $role = 'janela_largada';
+        } elseif ($group->numeroVolta === 0) {
+            $role = 'inicial';
+        } elseif ($group->ignoradoAposEncerramento) {
+            $role = 'apos_encerramento';
+        } elseif ($group->contado) {
+            $role = 'volta';
+        } else {
+            $role = 'pendente';
         }
-        return $entries;
+
+        return [
+            'ancora' => $group->anchorEntryId(),
+            'passagem_ids' => $group->entryIds(),
+            'ts_ms' => $group->tsMs,
+            'papel' => $role,
+            // "contado" keeps its old meaning for the screen: an official pass.
+            'contado' => $role === 'volta' || $role === 'inicial',
+            'numero_volta' => $group->numeroVolta,
+            'confirmado_por_revisor' => $group->confirmadoPorRevisor,
+        ];
     }
 
     /**
+     * The numbers typed between two moments. This is the one question a
+     * window has to ask the whole race, so it is asked in SQL.
+     *
+     * @return int[]
+     */
+    private static function carsTypedBetween(Prova $prova, int $fromMs, int $untilMs): array
+    {
+        // The effective time of an entry is ts_ms, or, for an entry typed
+        // before its device knew its clock offset, the device time plus the
+        // first offset it reported later (see EngineInputLoader).
+        $sql = 'SELECT DISTINCT p.equipe_numero
+                  FROM contagem_passagem p
+                  JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
+                  JOIN contagem_dispositivo d ON d.dispositivo_id = p.dispositivo_id
+                 WHERE f.evento_id = :evento AND f.prova_id = :prova
+                   AND COALESCE(p.ts_ms, p.ts_dispositivo_ms + COALESCE(d.primeiro_desvio_ms, 0)) BETWEEN :de AND :ate';
+        $statement = Propel::getReadConnection('resultados')->prepare($sql);
+        $statement->execute([
+            ':evento' => $prova->getEventoId(),
+            ':prova' => $prova->getProvaId(),
+            ':de' => $fromMs,
+            ':ate' => $untilMs,
+        ]);
+        return array_map('intval', $statement->fetchAll(\PDO::FETCH_COLUMN));
+    }
+
+    /**
+     * @param Source[] $sources
      * @return array<int, array<string, mixed>> the counting sources in display order, then the reviewer lane if used
      */
-    private static function laneSources(EngineInput $input, bool $withReviewerLane): array
+    private static function laneSources(array $sources, bool $withReviewerLane): array
     {
-        $sources = array_values(array_filter(
-            $input->sources,
-            fn(Source $source) => in_array($source->tipo, [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA], true)
-        ));
-        usort($sources, fn(Source $a, Source $b) => [$a->ordem, $a->id] <=> [$b->ordem, $b->id]);
+        $counting = array_values(array_filter($sources, fn(Source $source) => $source->recordsPasses()));
+        usort($counting, fn(Source $a, Source $b) => [$a->ordem, $a->id] <=> [$b->ordem, $b->id]);
 
         $lanes = [];
-        foreach ($sources as $source) {
+        foreach ($counting as $source) {
             $lanes[] = ['fonte_id' => $source->id, 'nome' => $source->nome, 'tipo' => $source->tipo, 'ativa' => $source->ativa];
         }
         if ($withReviewerLane) {
@@ -216,8 +240,8 @@ final class TimelineWindow
      */
     private static function describeOcorrencias(array $ocorrencias, callable $wantsOcorrencia): array
     {
-        // A row that another row replaces was a mistake; the engine ignores
-        // it and so does the timeline.
+        // A row that another row corrects or cancels was a mistake; the
+        // engine ignores it and so does the timeline.
         $replaced = [];
         foreach ($ocorrencias as $ocorrencia) {
             if ($ocorrencia->substituiId !== null) {
@@ -227,7 +251,9 @@ final class TimelineWindow
 
         $rows = [];
         foreach ($ocorrencias as $ocorrencia) {
-            if (isset($replaced[$ocorrencia->id]) || !$wantsOcorrencia($ocorrencia)) {
+            // A cancellation is nothing itself; it only removes its target.
+            $isCancellation = $ocorrencia->tipo === Ocorrencia::CANCELAMENTO;
+            if ($isCancellation || isset($replaced[$ocorrencia->id]) || !$wantsOcorrencia($ocorrencia)) {
                 continue;
             }
             $rows[] = [

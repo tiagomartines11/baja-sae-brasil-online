@@ -13,12 +13,18 @@ use Baja\Model\Prova;
 use Propel\Runtime\Propel;
 
 /**
- * Reads everything the engine needs for one prova and turns the rows into
- * the engine's plain data objects.
+ * Reads what the engine needs for one prova and turns the rows into the
+ * engine's plain data objects.
  *
- * Plain prepared SQL instead of Propel objects, on purpose: this runs on
- * every upload, and a long race has tens of thousands of entries. Building
- * a Propel object per row costs several times more than the engine itself.
+ * Two ways in, matching the engine's two entry points:
+ *
+ * - load(): the whole race, for the full recalculation.
+ * - loadForCars(): only the entries of a few cars, for the recount that
+ *   runs inside an upload. A long race has tens of thousands of entries and
+ *   one new entry concerns a couple of hundred of them.
+ *
+ * Plain prepared SQL instead of Propel objects, on purpose: building a
+ * Propel object per row costs several times more than the engine itself.
  */
 final class EngineInputLoader
 {
@@ -33,14 +39,31 @@ final class EngineInputLoader
 
     public function load(Settings $settings): EngineInput
     {
-        $input = new EngineInput($settings);
-        $input->sources = $this->loadSources();
-        $input->entries = $this->loadEntries();
-        $input->decisions = $this->loadDecisions();
-        $input->ocorrencias = $this->loadOcorrencias();
+        $input = $this->everythingButEntries($settings);
+        $input->entries = $this->loadEntries(null, []);
         $input->totals = $this->loadTotals();
-        $input->validCars = array_keys($this->loadTeams(true));
-        $input->nowMs = Clock::nowMs();
+        return $input;
+    }
+
+    /**
+     * The input for Engine::countCars(): every entry that counts for the
+     * given cars. That is the entries typed with one of those numbers, plus
+     * the entries a reviewer reassigned to one of those cars (they were
+     * typed with another number).
+     *
+     * @param int[] $cars
+     */
+    public function loadForCars(Settings $settings, array $cars): EngineInput
+    {
+        $input = $this->everythingButEntries($settings);
+
+        $reassignedEntryIds = [];
+        foreach ($input->decisions as $decision) {
+            if ($decision->tipo === Decision::REATRIBUIR && $decision->passagemId !== null && in_array($decision->carro, $cars, true)) {
+                $reassignedEntryIds[] = $decision->passagemId;
+            }
+        }
+        $input->entries = $this->loadEntries($cars, $reassignedEntryIds);
         return $input;
     }
 
@@ -71,63 +94,77 @@ final class EngineInputLoader
         return $teams;
     }
 
-    /**
-     * Sources with the sync state of their devices already summarised.
-     *
-     * A source can have several devices over a race (a handover, a dead
-     * battery). Its "synced through" mark is the most recent one among the
-     * devices that are still allowed to upload: a revoked device will never
-     * report again, so its old mark says nothing about the source today.
-     *
-     * @return Source[]
-     */
-    private function loadSources(): array
+    /** @return Ocorrencia[] oldest first */
+    public function loadOcorrencias(): array
     {
-        $sql = 'SELECT f.fonte_id, f.nome, f.tipo, f.qualidade_tempo, f.ativa, f.ordem,
-                       MAX(CASE WHEN d.revogado_em_ms IS NULL THEN d.sincronizado_ate_ms END) AS sincronizado_ate_ms,
-                       MAX(d.visto_em_ms) AS visto_em_ms
-                  FROM contagem_fonte f
-             LEFT JOIN contagem_dispositivo d ON d.fonte_id = f.fonte_id
-                 WHERE f.evento_id = :evento AND f.prova_id = :prova
-              GROUP BY f.fonte_id, f.nome, f.tipo, f.qualidade_tempo, f.ativa, f.ordem
-              ORDER BY f.ordem, f.fonte_id';
+        $sql = 'SELECT ocorrencia_id, tipo, ts_ms, equipe_numero, substitui_id
+                  FROM contagem_ocorrencia
+                 WHERE evento_id = :evento AND prova_id = :prova
+              ORDER BY ocorrencia_id';
 
-        $sources = [];
+        $ocorrencias = [];
         foreach ($this->fetchAll($sql, $this->provaParams()) as $row) {
-            $sources[] = new Source(
-                (int) $row['fonte_id'],
-                (string) $row['nome'],
+            $ocorrencias[] = new Ocorrencia(
+                (int) $row['ocorrencia_id'],
                 (string) $row['tipo'],
-                (string) $row['qualidade_tempo'],
-                (bool) $row['ativa'],
-                (int) $row['ordem'],
-                self::nullableInt($row['sincronizado_ate_ms']),
-                self::nullableInt($row['visto_em_ms'])
+                (int) $row['ts_ms'],
+                self::nullableInt($row['equipe_numero']),
+                self::nullableInt($row['substitui_id'])
             );
         }
-        return $sources;
+        return $ocorrencias;
+    }
+
+    private function everythingButEntries(Settings $settings): EngineInput
+    {
+        $input = new EngineInput($settings);
+        $input->nowMs = Clock::nowMs();
+        $input->sources = (new SourceLoader($this->eventoId, $this->provaId))->load($settings, $input->nowMs);
+        $input->decisions = $this->loadDecisions();
+        $input->ocorrencias = $this->loadOcorrencias();
+        $input->validCars = array_keys($this->loadTeams(true));
+        return $input;
     }
 
     /**
-     * Every raw entry of the prova with its effective time.
+     * Raw entries with their effective time.
      *
      * An entry typed before its device knew any clock offset is stored with
      * ts_ms NULL. Its time is worked out here, from the first offset the
      * device reported later, so that contagem_passagem never needs an UPDATE.
      *
+     * @param int[]|null $cars only entries typed with these numbers; null for all
+     * @param int[] $alsoEntryIds entries to include whatever number they were typed with
      * @return Entry[]
      */
-    private function loadEntries(): array
+    private function loadEntries(?array $cars, array $alsoEntryIds): array
     {
         $sql = 'SELECT p.passagem_id, p.fonte_id, p.dispositivo_id, p.equipe_numero,
                        COALESCE(p.ts_ms, p.ts_dispositivo_ms + COALESCE(d.primeiro_desvio_ms, 0)) AS ts_efetivo_ms
                   FROM contagem_passagem p
                   JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
                   JOIN contagem_dispositivo d ON d.dispositivo_id = p.dispositivo_id
-                 WHERE f.evento_id = :evento AND f.prova_id = :prova';
+                 WHERE f.evento_id = ? AND f.prova_id = ?';
+        $params = [$this->eventoId, $this->provaId];
+
+        if ($cars !== null) {
+            $conditions = [];
+            if ($cars !== []) {
+                $conditions[] = 'p.equipe_numero IN (' . implode(', ', array_fill(0, count($cars), '?')) . ')';
+                $params = array_merge($params, array_map('intval', $cars));
+            }
+            if ($alsoEntryIds !== []) {
+                $conditions[] = 'p.passagem_id IN (' . implode(', ', array_fill(0, count($alsoEntryIds), '?')) . ')';
+                $params = array_merge($params, array_map('intval', $alsoEntryIds));
+            }
+            if ($conditions === []) {
+                return [];
+            }
+            $sql .= ' AND (' . implode(' OR ', $conditions) . ')';
+        }
 
         $entries = [];
-        foreach ($this->fetchAll($sql, $this->provaParams()) as $row) {
+        foreach ($this->fetchAll($sql, $params) as $row) {
             $entries[] = new Entry(
                 (int) $row['passagem_id'],
                 (int) $row['fonte_id'],
@@ -163,27 +200,6 @@ final class EngineInputLoader
         return $decisions;
     }
 
-    /** @return Ocorrencia[] oldest first */
-    private function loadOcorrencias(): array
-    {
-        $sql = 'SELECT ocorrencia_id, tipo, ts_ms, equipe_numero, substitui_id
-                  FROM contagem_ocorrencia
-                 WHERE evento_id = :evento AND prova_id = :prova
-              ORDER BY ocorrencia_id';
-
-        $ocorrencias = [];
-        foreach ($this->fetchAll($sql, $this->provaParams()) as $row) {
-            $ocorrencias[] = new Ocorrencia(
-                (int) $row['ocorrencia_id'],
-                (string) $row['tipo'],
-                (int) $row['ts_ms'],
-                self::nullableInt($row['equipe_numero']),
-                self::nullableInt($row['substitui_id'])
-            );
-        }
-        return $ocorrencias;
-    }
-
     /** @return array<int, array<int, int>> fonteId => [carro => voltas] */
     private function loadTotals(): array
     {
@@ -206,7 +222,7 @@ final class EngineInputLoader
     }
 
     /**
-     * @param array<string, mixed> $params
+     * @param array<int|string, mixed> $params
      * @return array<int, array<string, mixed>>
      */
     private function fetchAll(string $sql, array $params): array

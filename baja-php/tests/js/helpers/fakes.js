@@ -9,6 +9,7 @@ import { createMemoryStorage } from '../../../default/js/contagem/storage-memory
 import { LocalStore } from '../../../default/js/contagem/local-store.js';
 import { ClockEstimator } from '../../../default/js/contagem/clock-estimator.js';
 import { SyncQueue } from '../../../default/js/contagem/sync-queue.js';
+import { SyncHeartbeat } from '../../../default/js/contagem/sync-heartbeat.js';
 import { CountSession } from '../../../default/js/contagem/count-session.js';
 
 /** A clock that only moves when the test says so. */
@@ -56,6 +57,92 @@ export function createFlakyStorage(innerStorage) {
 }
 
 /**
+ * A disk on which a test decides WHEN a write finishes. While `holdWrites`
+ * is true, every write of an entry or pit event waits until the test calls
+ * `finishNextWrite()` (oldest first) or `finishWrite(n)` (the n-th one still
+ * waiting, starting at 0). That is how a test freezes the instant "the
+ * counter pressed Enter but the phone's storage has not answered yet".
+ */
+export function createSlowStorage(innerStorage) {
+    const waiting = [];
+    const slow = {
+        holdWrites: false,
+        persistent: innerStorage.persistent,
+        getAll: (collection) => innerStorage.getAll(collection),
+        put: (collection, key, record) => write(collection, () => innerStorage.put(collection, key, record)),
+        patch: (collection, key, changes) => write(collection, () => innerStorage.patch(collection, key, changes)),
+        async finishWrite(position) {
+            const [doTheWrite] = waiting.splice(position, 1);
+            await doTheWrite();
+        },
+        finishNextWrite() {
+            return slow.finishWrite(0);
+        },
+    };
+    function write(collection, doTheWrite) {
+        // Only the counter's own records are held back. The page's settings
+        // ("meta": last answer of the server, clock estimate) go straight
+        // through, so an upload can run to its end during the frozen instant.
+        if (!slow.holdWrites || collection === 'meta') {
+            return doTheWrite();
+        }
+        return new Promise((resolve, reject) => {
+            waiting.push(() => doTheWrite().then(resolve, reject));
+        });
+    }
+    return slow;
+}
+
+/**
+ * A pretend `navigator.locks`, shared by every "tab" of one pretend browser.
+ * It follows the two rules of the real thing that matter here: a lock has
+ * one holder at a time, and it is given up when the holder's tab closes.
+ * `closeTab(tab)` is the test closing a tab.
+ */
+export class FakeBrowserLocks {
+    constructor() {
+        this.holders = new Map();   // lock name -> tab that holds it
+        this.queues = new Map();    // lock name -> [{tab, grant}] waiting in line
+    }
+
+    /** The `navigator.locks` object as one particular tab sees it. */
+    forTab(tab) {
+        return {
+            request: (name, optionsOrCallback, maybeCallback) => {
+                const callback = maybeCallback || optionsOrCallback;
+                const options = maybeCallback ? optionsOrCallback : {};
+                if (!this.holders.has(name)) {
+                    this.holders.set(name, tab);
+                    return Promise.resolve(callback({ name }));
+                }
+                if (options.ifAvailable) {
+                    return Promise.resolve(callback(null));
+                }
+                return new Promise((resolve) => {
+                    const queue = this.queues.get(name) || [];
+                    queue.push({ tab, grant: () => resolve(callback({ name })) });
+                    this.queues.set(name, queue);
+                });
+            },
+        };
+    }
+
+    closeTab(tab) {
+        for (const [name, holder] of this.holders) {
+            if (holder !== tab) {
+                continue;
+            }
+            this.holders.delete(name);
+            const next = (this.queues.get(name) || []).shift();
+            if (next) {
+                this.holders.set(name, next.tab);
+                next.grant();
+            }
+        }
+    }
+}
+
+/**
  * A pretend contagem_sync.php. It follows the contract: it stores each uuid at
  * most once and answers with the uuids it now holds.
  *
@@ -65,7 +152,9 @@ export function createFlakyStorage(innerStorage) {
  *   'answer_lost'   the server stores the data, but the answer never arrives
  *   'server_error'  the server answers HTTP 500
  *   'garbage'       the server answers 200 with something that is not the contract
- *   'revoked'       the token was revoked: HTTP 401
+ *   'revoked'       the token was revoked: HTTP 401 with {"erro": "token_invalido"}
+ *   'other_401'     HTTP 401 that is NOT the server's verdict on the token
+ *                   (what a hotel or track Wi-Fi login portal answers)
  */
 export class FakeServer {
     constructor(deviceClock, { serverAheadMs = 0 } = {}) {
@@ -107,6 +196,9 @@ export class FakeServer {
         if (this.behaviour === 'revoked') {
             this.deviceClock.advance(this.downloadDelayMs);
             return { status: 401, body: { erro: 'token_invalido' } };
+        }
+        if (this.behaviour === 'other_401') {
+            return { status: 401, body: null };
         }
         if (this.behaviour === 'server_error') {
             return { status: 500, body: null };
@@ -185,6 +277,7 @@ export class FakeServer {
  */
 export async function createDevice({
     server = null, clock = new FakeClock(), disk = createMemoryStorage(), maxBatch, uuidPrefix = 'uuid',
+    vouchesForHistory = true, renewToken = null,
 } = {}) {
     const fakeServer = server || new FakeServer(clock);
     const device = { clock, disk, server: fakeServer, stateChanges: [] };
@@ -198,8 +291,12 @@ export async function createDevice({
             clock: device.clockEstimator,
             now: clock.now,
             onChange: (state) => device.stateChanges.push(state),
+            vouchesForHistory,
             ...(maxBatch ? { maxBatch } : {}),
         });
+        // The 5-second timer. Tests that need it call device.heartbeat.start()
+        // with a pretend setInterval, or device.heartbeat.tick() directly.
+        device.heartbeat = new SyncHeartbeat({ queue: device.queue, now: clock.now, renewToken });
         device.session = new CountSession({
             store: device.store,
             clock: device.clockEstimator,

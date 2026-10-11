@@ -17,6 +17,9 @@ use Baja\Tests\Contagem\Engine\Support\RaceScenario;
  * with the "synced through" mark: each device regularly says "my queue is
  * empty as of this moment", and only then is its silence about earlier
  * moments taken as fact.
+ *
+ * (`firstCrossing` is each car's pass zero, seen by everybody shortly after
+ * the start; the passes these tests are about come later.)
  */
 final class SourceAvailabilityTest extends EngineTestCase
 {
@@ -43,6 +46,7 @@ final class SourceAvailabilityTest extends EngineTestCase
         $race = RaceScenario::withCounters(3);
         $race->teamsPresent([14, 41]);
         $race->start('00:00');
+        $race->firstCrossing([41]);
         $race->entry(2, 41, '14:00');
         $race->entry(1, 14, '14:00');
 
@@ -143,6 +147,7 @@ final class SourceAvailabilityTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([5, 6, 8]);
         $race->pass(5, '12:00', [1, 2]);
         $race->entry(1, 6, '13:00');
         $entryOfExcludedCounter = $race->entry(3, 7, '14:00');
@@ -170,6 +175,7 @@ final class SourceAvailabilityTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([5]);
         $race->entry(1, 5, '12:00');
         $race->excludeSource(2, '10:00', '20:00');
         $race->excludeSource(3, '10:00', '20:00');

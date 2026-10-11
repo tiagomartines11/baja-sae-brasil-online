@@ -11,7 +11,9 @@ use Baja\Contagem\Engine\Data\Source;
  * Step 1 of the engine: apply what people decided before looking at anything
  * else, so every later step works on the corrected picture.
  *
- * The raw entries are never modified. This class works on copies.
+ * The raw entries are never modified. An entry a reviewer reassigned is
+ * copied and the copy carries the new car; every other entry is passed on
+ * as it is, and no later step writes to an entry.
  */
 final class DecisionApplier
 {
@@ -55,30 +57,44 @@ final class DecisionApplier
                     }
                     break;
                 case Decision::EXCLUIR_FONTE:
-                    if ($decision->fonteId !== null && $decision->tsMs !== null && $decision->tsFimMs !== null) {
+                    // No end time means "until further notice": the way out
+                    // when a counter's device is gone for good.
+                    if ($decision->fonteId !== null) {
                         $applied->exclusions[$decision->fonteId][] = [$decision->tsMs, $decision->tsFimMs];
                     }
                     break;
             }
         }
 
+        $alwaysCounting = self::sourcesThatCountedAllAlong($sourcesById, $applied);
+
         foreach ($entries as $rawEntry) {
             if (isset($applied->voidedEntryIds[$rawEntry->id])) {
                 continue;
             }
-            $source = $sourcesById[$rawEntry->fonteId] ?? null;
-            if ($source === null || !$source->countsPasses()) {
-                continue;
-            }
-            if ($applied->isSourceExcludedAt($rawEntry->fonteId, $rawEntry->tsMs)) {
-                continue;
+            if (!isset($alwaysCounting[$rawEntry->fonteId])) {
+                // A source that was switched off keeps what it recorded while
+                // it was on; only entries from after that moment are dropped.
+                $source = $sourcesById[$rawEntry->fonteId] ?? null;
+                if ($source === null || !$source->wasCountingAt($rawEntry->tsMs)) {
+                    continue;
+                }
+                if ($applied->isSourceExcludedAt($rawEntry->fonteId, $rawEntry->tsMs)) {
+                    continue;
+                }
             }
 
-            $entry = clone $rawEntry;
-            if (isset($newCarByEntryId[$entry->id]) && $newCarByEntryId[$entry->id] !== $entry->carro) {
-                $entry->carro = $newCarByEntryId[$entry->id];
-                $applied->reassignedEntryIds[$entry->id] = $entry->fonteId;
+            $newCar = $newCarByEntryId[$rawEntry->id] ?? null;
+            if ($newCar === null || $newCar === $rawEntry->carro) {
+                // Untouched by any decision: the raw entry itself is used,
+                // read-only. Copying tens of thousands of them on every run
+                // would be the slowest step of the engine.
+                $applied->entries[] = $rawEntry;
+                continue;
             }
+            $entry = clone $rawEntry;
+            $entry->carro = $newCar;
+            $applied->reassignedEntryIds[$entry->id] = $entry->fonteId;
             $applied->entries[] = $entry;
         }
 
@@ -87,6 +103,25 @@ final class DecisionApplier
         }
 
         return $applied;
+    }
+
+    /**
+     * The usual case, checked once per source instead of once per entry:
+     * sources that are switched on and were never excluded by a reviewer.
+     * Every entry of such a source takes part.
+     *
+     * @param array<int, Source> $sourcesById
+     * @return array<int, true> fonteId => true
+     */
+    private static function sourcesThatCountedAllAlong(array $sourcesById, AppliedDecisions $applied): array
+    {
+        $alwaysCounting = [];
+        foreach ($sourcesById as $source) {
+            if ($source->countsPasses() && !isset($applied->exclusions[$source->id])) {
+                $alwaysCounting[$source->id] = true;
+            }
+        }
+        return $alwaysCounting;
     }
 
     /**

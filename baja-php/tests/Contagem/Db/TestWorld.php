@@ -17,7 +17,7 @@ use Propel\Runtime\Propel;
  */
 final class TestWorld
 {
-    public const EVENTO_ID = 'ZZT1';
+    public const EVENTO_ID = '00NE';
     public const PROVA_ID = 'ZZL';
 
     /** Every test user's name starts with this, and users are deleted by this prefix. */
@@ -50,6 +50,15 @@ final class TestWorld
                 define($constant, $constant);
             }
         }
+
+        // Every run builds and deletes the same made-up event, so two runs
+        // at the same time (two people, or two terminals) would delete each
+        // other's rows mid-test. This named lock makes the second run wait
+        // for the first. MySQL releases it by itself when this PHP process
+        // ends and its connection closes.
+        Propel::getWriteConnection('resultados')
+            ->prepare('SELECT GET_LOCK(?, 900)')
+            ->execute(['contagem_suite_de_testes']);
 
         self::$databaseBooted = true;
     }
@@ -143,6 +152,15 @@ final class TestWorld
     public static function delete(): void
     {
         $connection = Propel::getWriteConnection('resultados');
+
+        // The raw record of a race refuses to be deleted along with its
+        // prova (ON DELETE RESTRICT), so that nobody erases it by accident.
+        // A test has to remove it on purpose first. Deleting a source takes
+        // its devices, entries, links and imported totals with it.
+        foreach (['contagem_decisao', 'contagem_ocorrencia', 'contagem_fonte', 'contagem_arquivo'] as $table) {
+            $connection->prepare('DELETE FROM ' . $table . ' WHERE evento_id = ? AND prova_id = ?')
+                ->execute([self::EVENTO_ID, self::PROVA_ID]);
+        }
         $connection->prepare('DELETE FROM evento WHERE evento_id = ?')->execute([self::EVENTO_ID]);
         // The backslash makes the underscore literal; a bare "_" in LIKE
         // means "any one character".
@@ -153,7 +171,17 @@ final class TestWorld
         $redis = RedisClient::get();
         if ($redis !== null) {
             $prefix = 'contagem:' . self::EVENTO_ID . ':' . self::PROVA_ID . ':';
-            $redis->del($prefix . 'versao', $prefix . 'publicado_em_ms', $prefix . 'impressao', $prefix . 'feed');
+            $redis->del(
+                $prefix . 'publicado_em_ms',
+                $prefix . 'feed',
+                $prefix . 'mudancas',
+                $prefix . 'contexto',
+                $prefix . 'snapshot'
+            );
         }
+        // The snapshot also has a copy in a local file (see SnapshotStore).
+        (new \Baja\Contagem\Service\SnapshotStore(
+            (new \Baja\Model\Prova())->setEventoId(self::EVENTO_ID)->setProvaId(self::PROVA_ID)
+        ))->clear();
     }
 }

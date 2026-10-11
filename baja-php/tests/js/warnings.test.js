@@ -14,7 +14,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { AVISO, DEFAULT_JANELA_MS, computeWarnings, teamNameOf } from '../../default/js/contagem/warnings.js';
+import {
+    AVISO, DEFAULT_JANELA_MS, carListIsKnown, computeWarnings, teamNameOf,
+} from '../../default/js/contagem/warnings.js';
 import { createDevice, FakeClock, FakeServer } from './helpers/fakes.js';
 
 const CAR_LIST = [{ numero: 7, nome: 'Equipe Sete' }, { numero: 41, nome: 'Equipe Quarenta e Um' }];
@@ -74,6 +76,26 @@ test('while the car list is not known yet, no number is called unknown', () => {
     assert.deepEqual(warningTypes({
         car: 14, tsDeviceMs: 100_000, ownEntries: [], validCars: null, janelaMs: 20_000,
     }), []);
+});
+
+test('an EMPTY car list also means "not known", not "every car is wrong"', () => {
+    // Situation: the organisers have not marked the teams as present yet, so
+    // the list the server sends has no car in it. The counter types car 14,
+    // which is a perfectly real car.
+    //
+    // What used to go wrong: an empty list was taken literally ("no number
+    // is valid"), so EVERY entry flashed "número não está na lista" with the
+    // warning sound, for the whole race.
+    assert.deepEqual(warningTypes({
+        car: 14, tsDeviceMs: 100_000, ownEntries: [], validCars: [], janelaMs: 20_000,
+    }), []);
+
+    // The page uses the same rule to decide whether to write "Número
+    // desconhecido" under the number: only when it really has a list.
+    assert.equal(carListIsKnown([]), false);
+    assert.equal(carListIsKnown(null), false);
+    assert.equal(carListIsKnown(CAR_LIST), true);
+    assert.equal(teamNameOf(14, []), null);
 });
 
 // ---------------------------------------------------------------------------

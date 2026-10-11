@@ -17,10 +17,22 @@ final class PassGroup
     /** Time of the first entry. Only used while matching. */
     public int $primeiroTsMs;
 
-    /** Fused pass time (see PassTimeFuser). Set after matching. */
+    /**
+     * The pass time: the middle value (median) of the times the sources
+     * recorded, or the time of a precise source when there is one. It only
+     * depends on the group's own entries, so it never changes after the fact
+     * unless the group itself changes. Used for ordering, for LAST and for
+     * car status.
+     */
     public int $tsMs = 0;
 
-    /** Spread between the sources' corrected times, in ms. 0 for a single source. */
+    /**
+     * The pass time with each counter's typing habit removed (see
+     * PassTimeFuser). Used only to measure lap durations and agreement.
+     */
+    public int $tsAjustadoMs = 0;
+
+    /** Spread between the sources' habit-corrected times, in ms. 0 for a single source. */
     public int $dispersaoMs = 0;
 
     /** True when a "precisa" source is in the group and supplied the time. */
@@ -32,10 +44,36 @@ final class PassGroup
     /** The group contains a pass added by a reviewer ("adicionar"). */
     public bool $adicionadoPorRevisor = false;
 
-    /** Decided by PublishRule: does this group become an official lap? */
+    /** Decided by PublishRule and PassRoles: is this group an official pass in the current publish mode? */
     public bool $contado = false;
 
-    /** Lap number once counted (1-based). Null while not counted. */
+    /**
+     * Would this group be a pass under the default rule (two sources agree,
+     * or a reviewer said so)? Flags and the pace model look at this instead
+     * of `contado`, so that they come out the same in every publish mode.
+     */
+    public bool $referencia = false;
+
+    /**
+     * The car's initial crossing, typed inside the start window (setting
+     * `janela_largada_s`). Kept and shown, never a lap.
+     */
+    public bool $dentroDaJanelaDeLargada = false;
+
+    /** A pass after the finish that the `apos_encerramento` rule leaves out. Shown, never a lap. */
+    public bool $ignoradoAposEncerramento = false;
+
+    /**
+     * Left out by the race rules (start window, after the finish) when the
+     * race is judged under the default counting rule. Review flags skip
+     * such a group in every publish mode: it is nobody's mistake.
+     */
+    public bool $foraDaReferencia = false;
+
+    /**
+     * Number of the official pass: 0 for the car's pass zero (not a lap),
+     * 1 for the pass that completes lap 1, and so on. Null while not counted.
+     */
     public ?int $numeroVolta = null;
 
     /** @var string[] types of the open flags attached to this group */

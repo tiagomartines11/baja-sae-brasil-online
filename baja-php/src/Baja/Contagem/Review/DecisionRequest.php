@@ -15,7 +15,6 @@ use InvalidArgumentException;
  * Expected shape:
  *   {
  *     "decisao": {"tipo": "reatribuir", "passagem_id": 12, "equipe_numero": 41, "motivo": "..."},
- *     "versao": 37,
  *     "passagem_ids": [12, 15],
  *     "assinatura": "…sha1…",
  *     "ultima_decisao_id": 9
@@ -23,6 +22,11 @@ use InvalidArgumentException;
  *
  * Everything here comes from a browser, so nothing is trusted: an entry id
  * must belong to this prova, a car must be one of the cars at the event.
+ *
+ * ENTRY IDS BELOW ZERO. A pass added by a reviewer is not a row of
+ * contagem_passagem; on the timeline it carries the id "minus the id of the
+ * decision that added it". Voiding such a pass therefore means undoing that
+ * decision, and that is what a request to void entry -N is turned into.
  */
 final class DecisionRequest
 {
@@ -74,6 +78,12 @@ final class DecisionRequest
             // changed under the reviewer, which is the whole point.
             throw new InvalidArgumentException('Pedido sem as passagens observadas ou sem assinatura.');
         }
+        if ($aboutOneEntry && !in_array((int) $raw['passagem_id'], $parsed->passagemIds, true)) {
+            // The signature only covers the watched entries. A decision
+            // about an entry outside that list would slip past the check
+            // that it is still as the reviewer saw it.
+            throw new InvalidArgumentException('A passagem decidida não está entre as passagens observadas.');
+        }
 
         return $parsed;
     }
@@ -84,11 +94,13 @@ final class DecisionRequest
         // Id 0: the real id is assigned by the database when it is stored.
         switch ($tipo) {
             case Decision::ANULAR:
-                return Decision::anular(0, self::existingEntryId($raw, $input));
+                $entryId = self::entryId($raw, $input, true);
+                // Voiding an added pass is undoing the decision that added it.
+                return $entryId < 0 ? Decision::desfazer(0, -$entryId) : Decision::anular(0, $entryId);
             case Decision::CONFIRMAR:
-                return Decision::confirmar(0, self::existingEntryId($raw, $input));
+                return Decision::confirmar(0, self::entryId($raw, $input, true));
             case Decision::REATRIBUIR:
-                return Decision::reatribuir(0, self::existingEntryId($raw, $input), self::validCar($raw, $input));
+                return Decision::reatribuir(0, self::entryId($raw, $input, false), self::validCar($raw, $input));
             case Decision::ADICIONAR:
                 return Decision::adicionar(0, self::validCar($raw, $input), self::positiveInt($raw, 'ts_ms', 'Horário inválido.'));
             case Decision::EXCLUIR_FONTE:
@@ -113,8 +125,12 @@ final class DecisionRequest
             throw new InvalidArgumentException('Esta fonte não pertence a esta prova.');
         }
         $from = self::positiveInt($raw, 'ts_ms', 'Início do intervalo inválido.');
-        $until = self::positiveInt($raw, 'ts_fim_ms', 'Fim do intervalo inválido.');
-        if ($until <= $from) {
+        // No end means "até segunda ordem": the counter's device is gone and
+        // nobody knows yet when, or whether, the source comes back.
+        $until = ($raw['ts_fim_ms'] ?? null) === null
+            ? null
+            : self::positiveInt($raw, 'ts_fim_ms', 'Fim do intervalo inválido.');
+        if ($until !== null && $until <= $from) {
             throw new InvalidArgumentException('O fim do intervalo deve ser depois do início.');
         }
         return Decision::excluirFonte(0, $fonteId, $from, $until);
@@ -136,10 +152,31 @@ final class DecisionRequest
         return Decision::desfazer(0, $targetId);
     }
 
-    /** @param array<string, mixed> $raw */
-    private static function existingEntryId(array $raw, EngineInput $input): int
+    /**
+     * The entry a decision is about: a stored entry of this prova, or (when
+     * allowed) a pass a reviewer added, named by its id below zero.
+     *
+     * @param array<string, mixed> $raw
+     */
+    private static function entryId(array $raw, EngineInput $input, bool $allowAddedPass): int
     {
-        $id = self::positiveInt($raw, 'passagem_id', 'Passagem inválida.');
+        $value = $raw['passagem_id'] ?? null;
+        if (!self::isWholeNumber($value) || (int) $value === 0) {
+            throw new InvalidArgumentException('Passagem inválida.');
+        }
+        $id = (int) $value;
+
+        if ($id < 0) {
+            if (!$allowAddedPass) {
+                throw new InvalidArgumentException('Uma passagem adicionada pelo revisor não pode ser trocada de carro: remova-a e adicione no carro certo.');
+            }
+            $addition = ActiveDecisions::filter($input->decisions)[-$id] ?? null;
+            if ($addition === null || $addition->tipo !== Decision::ADICIONAR) {
+                throw new InvalidArgumentException('Esta passagem adicionada não existe mais.');
+            }
+            return $id;
+        }
+
         foreach ($input->entries as $entry) {
             if ($entry->id === $id) {
                 return $id;

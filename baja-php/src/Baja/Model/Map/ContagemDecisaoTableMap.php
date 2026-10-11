@@ -349,7 +349,7 @@ class ContagemDecisaoTableMap extends TableMap
     0 => ':prova_id',
     1 => ':prova_id',
   ),
-), 'CASCADE', 'CASCADE', null, false);
+), 'RESTRICT', 'CASCADE', null, false);
     }
 
     /**

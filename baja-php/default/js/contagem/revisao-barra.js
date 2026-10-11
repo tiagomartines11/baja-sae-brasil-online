@@ -4,7 +4,24 @@ import { el, substituir } from './revisao-dom.js';
 import {
   NOMES_DE_ALERTA, NOMES_DE_ESTADO, idade, listaDeCarros, relogio, relogioDaCorrida, tempoDeProva,
 } from './revisao-formato.js';
-import { estadoDaFonte, ordenarFila, resumoDeAlertas } from './revisao-fila.js';
+import { exclusoesAbertas } from './revisao-decisoes.js';
+import { dispositivosDaFonte, estadoDaFonte, ordenarFila, resumoDeAlertas, resumoDosDispositivos } from './revisao-fila.js';
+
+// The chip of one source: its name, whether it is in contact, and anything
+// about its devices or an open-ended exclusion a reviewer must not miss.
+function chipDaFonte(fonte, estado, agoraServidorMs, excluidas) {
+  const situacao = estadoDaFonte(fonte, agoraServidorMs);
+  const dispositivos = resumoDosDispositivos(dispositivosDaFonte(estado, fonte.id));
+  const excluida = excluidas.has(fonte.id);
+
+  return el('span', {
+    class: `chip-fonte ${situacao.classe}${excluida ? ' excluida' : ''}`,
+    title: [situacao.texto, dispositivos ? `dispositivos: ${dispositivos}` : null].filter(Boolean).join(' · '),
+  },
+  el('strong', {}, fonte.nome), fonte.principal ? ' ★ ' : ' ', situacao.texto,
+  dispositivos ? el('span', { class: 'chip-dispositivos' }, ` · ${dispositivos}`) : null,
+  excluida ? el('strong', { class: 'chip-excluida' }, ' · EXCLUÍDA até segunda ordem') : null);
+}
 
 // Redrawn every second so the clock and the "há 12 s" ages keep moving
 // between two answers from the server.
@@ -12,16 +29,21 @@ export function desenharBarra(container, estado, agoraServidorMs) {
   const corrida = estado.corrida;
   const decorrido = relogioDaCorrida(corrida, agoraServidorMs);
   const abertos = (estado.alertas_abertos ?? []).length;
+  const excluidas = new Set(exclusoesAbertas(estado).map((decisao) => decisao.fonte_id));
 
-  const fontes = (estado.fontes ?? []).map((fonte) => {
-    const situacao = estadoDaFonte(fonte, agoraServidorMs);
-    return el('span', { class: `chip-fonte ${situacao.classe}`, title: situacao.texto },
-      el('strong', {}, fonte.nome), fonte.principal ? ' ★ ' : ' ', situacao.texto);
-  });
+  const fontes = (estado.fontes ?? []).map((fonte) => chipDaFonte(fonte, estado, agoraServidorMs, excluidas));
 
-  const publicado = estado.publicado_em_ms === null || estado.publicado_em_ms === undefined
-    ? 'ainda não publicado'
-    : `publicado há ${idade(agoraServidorMs - estado.publicado_em_ms)}`;
+  // With publishing switched off nothing reaches the official results, and
+  // "publicado há 3 h" would read as a fault. Say what is going on instead.
+  let publicacao = null;
+  if (estado.publicacao_desligada) {
+    publicacao = el('strong', { class: 'publicacao desligada', role: 'alert' },
+      'Publicação desligada: os resultados oficiais não estão sendo atualizados');
+  } else if (estado.publicado_em_ms === null || estado.publicado_em_ms === undefined) {
+    publicacao = el('span', { class: 'publicacao' }, 'ainda não publicado');
+  } else {
+    publicacao = el('span', { class: 'publicacao' }, `publicado há ${idade(agoraServidorMs - estado.publicado_em_ms)}`);
+  }
 
   const outros = (estado.revisores ?? []).filter((nome) => nome !== document.body.dataset.usuario);
 
@@ -30,7 +52,7 @@ export function desenharBarra(container, estado, agoraServidorMs) {
       el('strong', {}, relogio(decorrido)), ' ', NOMES_DE_ESTADO[corrida.estado] ?? corrida.estado),
     el('span', { class: 'fontes' }, fontes),
     el('span', { class: abertos > 0 ? 'pendencias com-alertas' : 'pendencias' }, resumoDeAlertas(abertos)),
-    el('span', { class: 'publicacao' }, publicado),
+    publicacao,
     outros.length > 0 ? el('span', { class: 'revisores' }, `também revisando: ${outros.join(', ')}`) : null);
 }
 

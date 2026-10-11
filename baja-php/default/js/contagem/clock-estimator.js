@@ -18,6 +18,11 @@
 // its time over the network in the middle of the race).
 const CLOCK_JUMP_MARGIN_MS = 500;
 
+// A stored estimate older than this is not reused after a reload. A race
+// lasts a few hours; an estimate from yesterday may predate the phone
+// correcting its own clock overnight, and nothing on the device can tell.
+export const STORED_SAMPLE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
 export class ClockEstimator {
     constructor() {
         this.bestSample = null;
@@ -39,6 +44,7 @@ export class ClockEstimator {
         const sample = {
             roundTripMs,
             offsetMs: Math.round(serverNowMs - (sentAtDeviceMs + receivedAtDeviceMs) / 2),
+            measuredAtDeviceMs: receivedAtDeviceMs,
         };
 
         if (this.bestSample === null
@@ -70,5 +76,42 @@ export class ClockEstimator {
     /** Round trip of the sample in use (null before the first one). */
     roundTripMs() {
         return this.bestSample === null ? null : this.bestSample.roundTripMs;
+    }
+
+    /** The estimate in use, as a plain object for the local store (null when none). */
+    sampleToStore() {
+        return this.bestSample === null ? null : { ...this.bestSample };
+    }
+
+    /**
+     * Puts back the estimate saved before a reload, so that the page does not
+     * start from "unknown": the race clock is right at once and new entries
+     * carry an offset, even when the page was reopened with no network.
+     * From then on it is an ordinary sample: a quicker or a contradicting
+     * answer from the server replaces it.
+     *
+     * @param {?object} storedSample what sampleToStore() returned earlier
+     * @param {number}  deviceNowMs
+     * @returns {boolean} whether the stored estimate is now in use
+     */
+    restore(storedSample, deviceNowMs) {
+        if (!storedSample
+            || !Number.isFinite(storedSample.offsetMs)
+            || !Number.isFinite(storedSample.roundTripMs)
+            || !Number.isFinite(storedSample.measuredAtDeviceMs)) {
+            return false;
+        }
+        const ageMs = deviceNowMs - storedSample.measuredAtDeviceMs;
+        // A negative age means the device clock was set back since the
+        // measurement, which is exactly the case the offset cannot survive.
+        if (ageMs < 0 || ageMs > STORED_SAMPLE_MAX_AGE_MS) {
+            return false;
+        }
+        this.bestSample = {
+            roundTripMs: storedSample.roundTripMs,
+            offsetMs: storedSample.offsetMs,
+            measuredAtDeviceMs: storedSample.measuredAtDeviceMs,
+        };
+        return true;
     }
 }

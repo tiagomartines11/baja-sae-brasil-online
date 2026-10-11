@@ -13,6 +13,9 @@ use Baja\Tests\Contagem\Engine\Support\RaceScenario;
  *
  * A car cannot cross the line twice within 20 seconds, so the second entry
  * is never a second lap. The only question is whether to bother a reviewer.
+ *
+ * In these tests car 9 first makes its "first crossing" (pass zero, which
+ * completes no lap); the crossing at 03:00 then completes lap 1.
  */
 final class RepeatedEntryTest extends EngineTestCase
 {
@@ -31,6 +34,7 @@ final class RepeatedEntryTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([9]);
         $race->pass(9, '03:00');
         $secondTap = $race->entry(1, 9, '03:02');
 
@@ -39,7 +43,7 @@ final class RepeatedEntryTest extends EngineTestCase
         $this->assertLapCounts([9 => 1], $result);
         $this->assertNoOpenFlags($result);
         $this->assertSame([$secondTap], $result->autoVoidedEntryIds);
-        $this->assertSame(1, $this->sourceCount($result, 9, 1), 'Counter 1 has one pass for car 9, not two.');
+        $this->assertSame(2, $this->sourceCount($result, 9, 1), 'Counter 1 has two passes for car 9 (00:20 and 03:00), not three.');
 
         $autoResolved = $this->autoResolvedFlags($result);
         $this->assertCount(1, $autoResolved);
@@ -64,6 +68,7 @@ final class RepeatedEntryTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([9]);
         $race->pass(9, '03:00');
         $repeat = $race->entry(1, 9, '03:12');
 
@@ -97,6 +102,7 @@ final class RepeatedEntryTest extends EngineTestCase
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
+        $race->firstCrossing([9]);
         $race->entry(1, 9, '03:00');
         $race->entry(2, 9, '03:09');
         $race->entry(1, 9, '03:10');
@@ -109,9 +115,10 @@ final class RepeatedEntryTest extends EngineTestCase
 
     /**
      * SITUATION: a handover on "Contagem 1". The person leaving (phone A)
-     * keeps counting for three laps while the person arriving (phone B)
-     * starts counting on the same source. For those laps both phones record
-     * every car, a few seconds apart. Counters 2 and 3 work normally.
+     * keeps counting while the person arriving (phone B) starts counting on
+     * the same source. Five cars cross three times each during the overlap
+     * (their first crossing and two laps), and both phones record every
+     * crossing, a few seconds apart. Counters 2 and 3 work normally.
      *
      * NOTHING WENT WRONG: this overlap is exactly how a handover should be
      * done, so that no car is missed while people swap seats.
@@ -147,12 +154,138 @@ final class RepeatedEntryTest extends EngineTestCase
 
         $result = $race->run('15:00');
 
-        $this->assertLapCounts([1 => 3, 2 => 3, 3 => 3, 4 => 3, 5 => 3], $result);
+        $this->assertLapCounts([1 => 2, 2 => 2, 3 => 2, 4 => 2, 5 => 2], $result, 'Three crossings each: pass zero and two laps.');
         $this->assertNoOpenFlags($result, 'A handover must not create work for the reviewer.');
         foreach ($cars as $car) {
             $this->assertSame(3, $this->sourceCount($result, $car, 1), "Contagem 1 has three passes for car $car.");
             $this->assertSame($this->sourceCount($result, $car, 2), $this->sourceCount($result, $car, 1));
         }
         $this->assertSame(0, $result->sourceStats[1]->faltas);
+    }
+
+    /**
+     * SITUATION: the double tap of the first test (car 9 at 03:00 and again
+     * at 03:02 on counter 1's phone). This time the reviewer looks at it
+     * and presses "keep both" on the second entry: improbable as it is,
+     * they are sure these were two crossings.
+     *
+     * EXPECTED: a person's decision overrules the automatic void. The
+     * second entry is kept, it counts as a pass of its own (the reviewer
+     * vouched for it), and nothing is left in the queue. Undoing the
+     * decision gives the automatic void back.
+     */
+    public function testKeepBothOverrulesTheAutomaticVoidOfADoubleTap(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        $race->pass(9, '03:00');
+        $secondTap = $race->entry(1, 9, '03:02');
+        $keepBoth = $race->confirm($secondTap);
+
+        $result = $race->run('04:00');
+
+        $this->assertSame([], $result->autoVoidedEntryIds);
+        $this->assertSame([], $result->flags, 'Neither an open flag nor an auto-resolved one.');
+        $this->assertNotNull($result->groupOfEntry($secondTap));
+        $this->assertLapCounts([9 => 2], $result);
+        $this->assertSame(3, $this->sourceCount($result, 9, 1));
+
+        $race->undo($keepBoth);
+        $undone = $race->run('04:00');
+        $this->assertSame([$secondTap], $undone->autoVoidedEntryIds);
+        $this->assertLapCounts([9 => 1], $undone);
+    }
+
+    /**
+     * SITUATION: the repeat of the second test (car 9 at 03:00 and again at
+     * 03:12 on the same phone), with its open "repetida" flag. Instead of
+     * accepting the suggestion to void, the reviewer presses "keep both".
+     *
+     * EXPECTED: the flag is gone, both entries stay, and the second one is
+     * a confirmed pass: the car has two laps.
+     */
+    public function testKeepBothOnARepeatClosesTheFlagAndCountsBothPasses(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        $race->pass(9, '03:00');
+        $repeat = $race->entry(1, 9, '03:12');
+        $this->assertSingleOpenFlag($race->run('04:00'), Flag::REPETIDA);
+
+        $race->confirm($repeat);
+        $result = $race->run('04:00');
+
+        $this->assertNoOpenFlags($result);
+        $this->assertTrue($result->groupOfEntry($repeat)->confirmadoPorRevisor);
+        $this->assertLapCounts([9 => 2], $result);
+    }
+
+    /**
+     * SITUATION: counter 1 records car 9 at 03:00 and once more, on the
+     * same phone, after exactly 5.000 s / 5.001 s / 19.999 s / 20.000 s.
+     *
+     * EXPECTED: the two limits are the settings `duplicata_ms` (5 s) and
+     * `janela_ms` (20 s):
+     *   up to 5.000 s inclusive   a double tap, voided automatically
+     *   5.001 s to 19.999 s       an open "repetida" flag
+     *   from 20.000 s on          not a repeat at all, but a separate (lone)
+     *                             entry, flagged as such
+     */
+    public function testTheLimitsOfADoubleTapAndOfARepeat(): void
+    {
+        $expectations = [
+            '03:05' => ['autoVoided' => 1, 'flag' => null],
+            '03:05.001' => ['autoVoided' => 0, 'flag' => Flag::REPETIDA],
+            '03:19.999' => ['autoVoided' => 0, 'flag' => Flag::REPETIDA],
+            '03:20' => ['autoVoided' => 0, 'flag' => Flag::SOLITARIA],
+        ];
+        foreach ($expectations as $secondEntryAt => $expected) {
+            $race = RaceScenario::withCounters(3);
+            $race->start('00:00');
+            $race->firstCrossing([9]);
+            $race->pass(9, '03:00');
+            $race->entry(1, 9, $secondEntryAt);
+
+            $result = $race->run('04:00');
+
+            $this->assertCount($expected['autoVoided'], $result->autoVoidedEntryIds, "Second entry at $secondEntryAt.");
+            $openTypes = array_map(fn(Flag $flag) => $flag->tipo, $result->openFlags());
+            $this->assertSame($expected['flag'] === null ? [] : [$expected['flag']], $openTypes, "Second entry at $secondEntryAt.");
+            $this->assertLapCounts([9 => 1], $result);
+        }
+    }
+
+    /**
+     * SITUATION: during a handover, the newcomer's phone records car 9
+     * fifteen seconds after the phone of the person leaving. Fifteen
+     * seconds on ONE phone would be shown to a reviewer.
+     *
+     * EXPECTED: from two phones it is a handover: voided automatically and
+     * listed, for the record, with the words "troca de contador". A double
+     * tap wider than `duplicata_ms` is only auto-voided when the setting is
+     * raised to cover it.
+     */
+    public function testAHandoverDuplicateIsRecognisedByItsTwoPhonesAndTheDoubleTapLimitIsASetting(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        $race->pass(9, '03:00');
+        $race->entry(1, 9, '03:15', 11);
+
+        $handover = $race->run('04:00');
+        $this->assertNoOpenFlags($handover);
+        $this->assertStringContainsString('troca de contador', $this->autoResolvedFlags($handover)[0]->motivo);
+
+        $samePhone = RaceScenario::withCounters(3);
+        $samePhone->start('00:00');
+        $samePhone->firstCrossing([9]);
+        $samePhone->pass(9, '03:00');
+        $samePhone->entry(1, 9, '03:15');
+        $this->assertSingleOpenFlag($samePhone->run('04:00'), Flag::REPETIDA);
+        $samePhone->settings->duplicataMs = 15000;
+        $this->assertNoOpenFlags($samePhone->run('04:00'));
     }
 }

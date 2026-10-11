@@ -13,9 +13,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  acoesDaEntrada, alvoDaAnulacao, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoDesfazer,
-  decisaoExcluirFonte, decisaoManterAmbas, decisaoReatribuir, descreverDecisao, descreverSugestao,
-  mensagemDeConflito, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo,
+  acoesDaEntrada, alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoDesfazer,
+  decisaoExcluirFonte, decisaoManterAmbas, decisaoReatribuir, descreverDecisao, descreverSugestao, exclusoesAbertas,
+  mensagemDeConflito, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo, podeDecidirSobreAlerta, problemaAoAdicionar,
 } from '../../default/js/contagem/revisao-decisoes.js';
 
 // The situation most tests use: counters 1 and 2 typed car 41, counter 3
@@ -31,7 +31,7 @@ const TROCA_PROVAVEL = {
 };
 
 // What the screen knew when the reviewer clicked.
-const ESTADO = { versao: 37, ultima_decisao_id: 9 };
+const ESTADO = { versao: '9f3a01c2', ultima_decisao_id: 9 };
 
 test('"aceitar sugestão" (A) stores exactly what the engine suggested', () => {
   assert.deepEqual(decisaoAceitar(TROCA_PROVAVEL), { tipo: 'reatribuir', passagem_id: 103, equipe_numero: 41 });
@@ -84,15 +84,62 @@ test('"anular" refuses to guess among several entries', () => {
 });
 
 test('a decision on a flag says the reviewer was looking at all of its entries', () => {
-  const pedido = pedidoParaAlerta(decisaoAceitar(TROCA_PROVAVEL), TROCA_PROVAVEL, ESTADO);
+  const pedido = pedidoParaAlerta(decisaoAceitar(TROCA_PROVAVEL), TROCA_PROVAVEL, ESTADO, 'abc123');
 
   assert.deepEqual(pedido, {
     decisao: { tipo: 'reatribuir', passagem_id: 103, equipe_numero: 41 },
-    versao: 37,
     passagem_ids: [101, 102, 103],
     assinatura: 'abc123',
     ultima_decisao_id: 9,
   });
+});
+
+// SITUATION: a reviewer opens a flag. The screen loads the flag's timeline
+// once; at that moment the flag's fingerprint ("assinatura") is "abc123".
+// The flag LIST, however, is refreshed every two seconds. A late upload
+// then adds an entry to the flag: in the list its fingerprint becomes
+// "zzz999", while the timeline on screen still shows the old picture.
+// The reviewer, looking at that old picture, presses "A".
+//
+// WHAT WENT WRONG: the request used to carry the fingerprint from the
+// refreshed list ("zzz999"). That is by definition what the server has, so
+// the check "is this still what the reviewer saw?" always passed, and the
+// decision was applied to entries the reviewer had never seen.
+//
+// EXPECTED: the request carries the fingerprint the VISIBLE timeline was
+// loaded with ("abc123"). The server then sees that it is out of date and
+// refuses. And while the timeline is behind, the buttons are off anyway.
+test('a decision on a flag carries the fingerprint of the timeline on screen, not of the refreshed list', () => {
+  const alertaNaListaAtualizada = { ...TROCA_PROVAVEL, assinatura: 'zzz999' };
+  const assinaturaDaJanelaNaTela = 'abc123';
+
+  const pedido = pedidoParaAlerta(decisaoAceitar(alertaNaListaAtualizada), alertaNaListaAtualizada, ESTADO, assinaturaDaJanelaNaTela);
+
+  assert.equal(pedido.assinatura, 'abc123');
+});
+
+test('A, K and V are off while the timeline is loading or behind the flag list', () => {
+  assert.equal(podeDecidirSobreAlerta({ janelaCarregada: false, desatualizada: false }), false, 'still loading');
+  assert.equal(podeDecidirSobreAlerta({ janelaCarregada: true, desatualizada: true }), false, 'new data arrived');
+  assert.equal(podeDecidirSobreAlerta({ janelaCarregada: true, desatualizada: false }), true);
+});
+
+// SITUATION: a flag is about entries 101, 102 and 103. On its timeline the
+// reviewer also sees entry 555, of another car, and clicks it; then
+// presses "V" (void).
+//
+// WHAT WENT WRONG: the request said "I was looking at 101, 102, 103" with
+// their fingerprint, and "void 555". The server only checks the entries
+// listed, so it voided 555 without knowing whether 555 was still as the
+// reviewer saw it.
+//
+// EXPECTED: such a request is not built as a decision on the flag at all
+// (null). The screen then sends it as a decision on that one chip, which
+// carries 555's own fingerprint. The server also refuses the old shape.
+test('a decision about an entry that is not one of the flag\'s is not sent as a decision on the flag', () => {
+  assert.equal(pedidoParaAlerta(decisaoAnular(555), TROCA_PROVAVEL, ESTADO, 'abc123'), null);
+  // An entry of the flag is fine.
+  assert.notEqual(pedidoParaAlerta(decisaoAnular(102), TROCA_PROVAVEL, ESTADO, 'abc123'), null);
 });
 
 test('a decision on one chip of the timeline says only that entry was being looked at', () => {
@@ -109,7 +156,62 @@ test('adding a pass, excluding a source and undoing look at no entry', () => {
 
   assert.deepEqual(pedido.passagem_ids, []);
   assert.equal(pedido.assinatura, null);
-  assert.equal(pedido.versao, 37);
+  assert.equal(pedido.ultima_decisao_id, 9);
+});
+
+// SITUATION: a reviewer adds a pass that nobody recorded. The form asks
+// for the "tempo de prova": time since the start, such as 1:02:05.
+//
+// WHAT WENT WRONG: (1) the form could be used before the race had a start,
+// when there is no time of race at all; (2) a reviewer typed the time of
+// day, "14:03:00", into it. That was read as 14 hours of race, and the car
+// got a lap dated hours in the future.
+//
+// EXPECTED: both are refused on the screen with a sentence that says what
+// to type. (The server refuses them too; see ReviewDecisionRulesTest.)
+test('a pass cannot be added before the start or at a time that has not come yet', () => {
+  const largada = 1_760_000_000_000;
+  const agora = largada + 30 * 60 * 1000; // half an hour into the race
+  const corrida = { largada_ms: largada };
+
+  assert.match(problemaAoAdicionar(largada + 60_000, { largada_ms: null }, agora), /ainda não tem largada/);
+  assert.match(problemaAoAdicionar(largada + 14 * 3600 * 1000, corrida, agora), /não a hora do relógio/);
+  assert.match(problemaAoAdicionar(null, corrida, agora), /Tempo inválido/);
+  assert.equal(problemaAoAdicionar(largada + 10 * 60 * 1000, corrida, agora), null, 'ten minutes in is fine');
+});
+
+// SITUATION: the reviewer types why they are deciding ("carro quebrou na
+// curva 3") in the optional field next to the buttons.
+//
+// EXPECTED: the reason travels with the decision (the server stores it and
+// the history shows it). An empty field adds nothing.
+test('the optional reason travels with the decision', () => {
+  assert.deepEqual(comMotivo(decisaoAnular(5), '  carro quebrou na curva 3 '), { tipo: 'anular', passagem_id: 5, motivo: 'carro quebrou na curva 3' });
+  assert.deepEqual(comMotivo(decisaoAnular(5), '   '), { tipo: 'anular', passagem_id: 5 });
+  assert.deepEqual(comMotivo(decisaoAnular(5), null), { tipo: 'anular', passagem_id: 5 });
+});
+
+// SITUATION: Contagem 2's phone fell in the mud at 0:40:00 and will not
+// come back. The reviewer excludes that source from then on, with no end.
+//
+// EXPECTED: the decision is sent with no end time, the history words it as
+// "até segunda ordem", and it is listed among the exclusions the screen
+// must keep in sight (a period that already ended is not).
+test('a source can be excluded with no end, and that exclusion stays in sight', () => {
+  assert.deepEqual(decisaoExcluirFonte(2, 5000), { tipo: 'excluir_fonte', fonte_id: 2, ts_ms: 5000, ts_fim_ms: null });
+  assert.equal(
+    descreverDecisao({ tipo: 'excluir_fonte', fonte_id: 2, ts_ms: 5000, ts_fim_ms: null }, () => 'Contagem 2'),
+    'Excluiu a fonte Contagem 2 até segunda ordem',
+  );
+
+  const estado = {
+    historico_em_vigor: [
+      { id: 4, tipo: 'excluir_fonte', fonte_id: 2, ts_ms: 5000, ts_fim_ms: null },
+      { id: 3, tipo: 'excluir_fonte', fonte_id: 1, ts_ms: 1000, ts_fim_ms: 2000 },
+      { id: 2, tipo: 'adicionar', equipe_numero: 41, ts_ms: 3000 },
+    ],
+  };
+  assert.deepEqual(exclusoesAbertas(estado).map((decisao) => decisao.id), [4]);
 });
 
 test('each kind of decision carries the fields the server expects', () => {
@@ -180,7 +282,7 @@ test('the history describes each decision in words', () => {
   assert.equal(descreverDecisao({ tipo: 'reatribuir', passagem_id: 5, equipe_numero: 41 }), 'Trocou a passagem #5 para o carro 41');
   assert.equal(descreverDecisao({ tipo: 'desfazer', desfaz_decisao_id: 3 }), 'Desfez a decisão #3');
   assert.equal(
-    descreverDecisao({ tipo: 'excluir_fonte', fonte_id: 2 }, (id) => (id === 2 ? 'Contagem 2' : null)),
+    descreverDecisao({ tipo: 'excluir_fonte', fonte_id: 2, ts_ms: 1000, ts_fim_ms: 2000 }, (id) => (id === 2 ? 'Contagem 2' : null)),
     'Excluiu a fonte Contagem 2 por um período',
   );
 });

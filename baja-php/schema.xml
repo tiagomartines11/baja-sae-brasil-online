@@ -387,7 +387,13 @@
     <column name="qualidade_tempo" phpName="QualidadeTempo" type="VARCHAR" size="8" required="true" default="humana"/>
     <column name="ativa" phpName="Ativa" type="BOOLEAN" required="true" default="true"/>
     <column name="ordem" phpName="Ordem" type="INTEGER" required="true" default="0"/>
-    <foreign-key foreignTable="prova" name="contagem_fonte_prova" onDelete="CASCADE" onUpdate="CASCADE">
+    <!-- When the source was switched off. Its entries from before that
+         moment keep counting; switching a counter off must not erase what
+         it recorded. NULL while active, and for a source never used. -->
+    <column name="desativada_em_ms" phpName="DesativadaEmMs" type="BIGINT"/>
+    <!-- RESTRICT, here and on ocorrencia and decisao: deleting a prova must
+         not silently erase the raw record of its race. -->
+    <foreign-key foreignTable="prova" name="contagem_fonte_prova" onDelete="RESTRICT" onUpdate="CASCADE">
       <reference local="evento_id" foreign="evento_id"/>
       <reference local="prova_id" foreign="prova_id"/>
     </foreign-key>
@@ -432,6 +438,10 @@
     <column name="rotulo" phpName="Rotulo" type="VARCHAR" size="255"/>
     <column name="criado_em_ms" phpName="CriadoEmMs" type="BIGINT" required="true"/>
     <column name="revogado_em_ms" phpName="RevogadoEmMs" type="BIGINT"/>
+    <!-- Set when the counter pressed "Encerrar meu turno" (or closed the
+         page with nothing left to send): this device is done and nobody
+         waits for it any more. Cleared if it comes back. -->
+    <column name="fechado_em_ms" phpName="FechadoEmMs" type="BIGINT"/>
     <!-- Last contact of any kind. -->
     <column name="visto_em_ms" phpName="VistoEmMs" type="BIGINT"/>
     <!-- "Synced through": the device told us its queue was empty at this
@@ -509,7 +519,8 @@
     <column name="ocorrencia_id" phpName="OcorrenciaId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
     <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
     <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" required="true"/>
-    <!-- largada | bandeira_vermelha | relargada | encerramento | box_entrada | box_saida -->
+    <!-- largada | bandeira_vermelha | relargada | encerramento | box_entrada | box_saida
+         | cancelamento (removes the row named by substitui_id and is nothing itself) -->
     <column name="tipo" phpName="Tipo" type="VARCHAR" size="20" required="true"/>
     <!-- Only for pit events. -->
     <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER"/>
@@ -521,7 +532,7 @@
          pages, so they need the same idempotency key. NULL for events
          created directly by race control. -->
     <column name="uuid_cliente" phpName="UuidCliente" type="CHAR" size="36"/>
-    <foreign-key foreignTable="prova" name="contagem_ocorrencia_prova" onDelete="CASCADE" onUpdate="CASCADE">
+    <foreign-key foreignTable="prova" name="contagem_ocorrencia_prova" onDelete="RESTRICT" onUpdate="CASCADE">
       <reference local="evento_id" foreign="evento_id"/>
       <reference local="prova_id" foreign="prova_id"/>
     </foreign-key>
@@ -559,7 +570,7 @@
     <column name="usuario" phpName="Usuario" type="VARCHAR" size="45"/>
     <column name="motivo" phpName="Motivo" type="LONGVARCHAR"/>
     <column name="criado_em_ms" phpName="CriadoEmMs" type="BIGINT" required="true"/>
-    <foreign-key foreignTable="prova" name="contagem_decisao_prova" onDelete="CASCADE" onUpdate="CASCADE">
+    <foreign-key foreignTable="prova" name="contagem_decisao_prova" onDelete="RESTRICT" onUpdate="CASCADE">
       <reference local="evento_id" foreign="evento_id"/>
       <reference local="prova_id" foreign="prova_id"/>
     </foreign-key>
@@ -593,6 +604,29 @@
       <reference local="evento_id" foreign="evento_id"/>
       <reference local="prova_id" foreign="prova_id"/>
     </foreign-key>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- Where "Zerar corrida" puts the raw rows before deleting them: one row
+       per deleted row, kept as JSON. No foreign keys on purpose, so nothing
+       can cascade into it. Nothing reads it; it exists to be queried by
+       hand if a wiped race turns out to have mattered. -->
+  <table name="contagem_arquivo" idMethod="native" phpName="ContagemArquivo">
+    <column name="arquivo_id" phpName="ArquivoId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
+    <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" required="true"/>
+    <column name="arquivado_em_ms" phpName="ArquivadoEmMs" type="BIGINT" required="true"/>
+    <column name="arquivado_por" phpName="ArquivadoPor" type="VARCHAR" size="45"/>
+    <!-- Name of the table the row came from. -->
+    <column name="tabela" phpName="Tabela" type="VARCHAR" size="32" required="true"/>
+    <column name="dados" phpName="Dados" type="LONGVARCHAR" sqlType="json" required="true"/>
+    <index name="contagem_arquivo_prova_idx">
+      <index-column name="evento_id"/>
+      <index-column name="prova_id"/>
+      <index-column name="arquivado_em_ms"/>
+    </index>
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>
     </vendor>

@@ -7,10 +7,11 @@ use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\SettingsForm;
 use Baja\Contagem\Review\SourceAdmin;
 use Baja\Contagem\Service\ContagemService;
+use Baja\Contagem\Service\LockBusy;
 use InvalidArgumentException;
 
 // Sources and settings: create and edit sources, devices and API tokens,
-// engine settings, import of paper totals. Every change reruns the engine.
+// engine settings, import of paper totals. Every change recounts the race.
 
 $prova = Pagina::provaOrRedirect();
 ContagemAccess::requireController($prova);
@@ -55,6 +56,8 @@ if (Pagina::isPost()) {
         }
     } catch (InvalidArgumentException $invalid) {
         $errorMessage = $invalid->getMessage();
+    } catch (LockBusy $busy) {
+        $errorMessage = 'A contagem está ocupada com outra operação. Confira se a alteração foi gravada e, se não, tente de novo.';
     }
 }
 
@@ -103,6 +106,9 @@ Pagina::printHeader($prova, 'Fontes e configurações');
             <label>Ordem <input type="number" name="ordem" min="0" max="999" required value="<?= (int) $fonte->getOrdem() ?>"></label>
             <label><input type="checkbox" name="ativa" value="1" <?= $fonte->getAtiva() ? 'checked' : '' ?>> ativa</label>
             <?php if ($settings->fontePrincipalId === $fonteId) { ?><span class="contagem-etiqueta">principal</span><?php } ?>
+            <?php if (!$fonte->getAtiva() && $fonte->getDesativadaEmMs() !== null) { ?>
+                <span class="contagem-dica">desativada em <?= $h(Pagina::formatClock((int) $fonte->getDesativadaEmMs())) ?>; o que registrou antes disso continua valendo</span>
+            <?php } ?>
             <button type="submit">Salvar</button>
         </form>
     <?php } ?>
@@ -117,7 +123,9 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         <button type="submit">Criar</button>
     </form>
     <p class="contagem-dica">
-        Fontes não são apagadas: desativar mantém todos os registros e apenas tira a fonte da contagem.
+        Fontes não são apagadas. Desativar uma fonte faz o sistema parar de esperar por ela a partir de agora;
+        tudo o que ela registrou até esse momento continua contando. Para descartar registros de um período,
+        use "Excluir esta fonte" na tela de revisão.
         Quem conta em cada fonte manual é definido em
         <a href="contagem_contadores.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Contadores</a>.
     </p>
@@ -138,7 +146,11 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                 <thead><tr><th>#</th><th>Usuário</th><th>Rótulo</th><th>Criado</th><th>Visto</th><th>Sincronizado até</th><th class="sorter-false"></th></tr></thead>
                 <tbody>
                 <?php foreach ($devices as $device) {
-                    $isRevoked = $device->getRevogadoEmMs() !== null; ?>
+                    $isRevoked = $device->getRevogadoEmMs() !== null;
+                    $closedAtMs = $device->getFechadoEmMs() === null ? null : (int) $device->getFechadoEmMs();
+                    // Closed by its counter, and not heard from since (a device that comes back is open again).
+                    $isClosed = !$isRevoked && $closedAtMs !== null
+                        && ($device->getVistoEmMs() === null || (int) $device->getVistoEmMs() <= $closedAtMs); ?>
                     <tr<?= $isRevoked ? ' class="linha-substituida"' : '' ?>>
                         <td><?= (int) $device->getDispositivoId() ?></td>
                         <td><?= $h($device->getUsuario() ?? '(API)') ?></td>
@@ -150,6 +162,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                             <?php if ($isRevoked) { ?>
                                 revogado em <?= $h(Pagina::formatClock((int) $device->getRevogadoEmMs())) ?>
                             <?php } else { ?>
+                                <?php if ($isClosed) { ?>turno encerrado em <?= $h(Pagina::formatClock($closedAtMs)) ?><?php } ?>
                                 <form method="POST" action="<?= $h($action) ?>"
                                       onsubmit="return confirm('Revogar este dispositivo? Ele não poderá mais enviar registros.');">
                                     <?= $csrf ?>
@@ -200,9 +213,19 @@ Pagina::printHeader($prova, 'Fontes e configurações');
     <form method="POST" action="<?= $h($action) ?>" class="contagem-configuracoes">
         <?= $csrf ?>
         <input type="hidden" name="acao" value="salvar_configuracoes">
-        <label>Quais passagens viram volta oficial
-            <select name="modo_publicacao"><?= $options(SettingsForm::MODE_LABELS, $settings->modoPublicacao) ?></select>
-        </label>
+        <?php
+        $choiceFields = SettingsForm::CHOICE_FIELDS;
+        $choiceField = function (string $key) use ($choiceFields, $settingValues, $options, $h): string {
+            [$label, $hint, $choices] = $choiceFields[$key];
+            return '<label>' . $h($label)
+                . ' <select name="' . $h($key) . '">' . $options($choices, $settingValues[$key]) . '</select>'
+                . ' <small>' . $h($hint) . '</small></label>';
+        };
+        ?>
+        <?= $choiceField('modo_publicacao') ?>
+        <?php if (!$settings->publishesToScoring()) { ?>
+            <p class="contagem-aviso">Publicação desligada: os resultados oficiais não estão sendo atualizados.</p>
+        <?php } ?>
         <label>Fonte principal
             <select name="fonte_principal_id">
                 <option value="">(nenhuma)</option>
@@ -210,11 +233,14 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                     if ($fonte->getTipo() === Source::TIPO_TOTAIS) {
                         continue;
                     } ?>
-                    <option value="<?= (int) $fonte->getFonteId() ?>" <?= $settings->fontePrincipalId === (int) $fonte->getFonteId() ? 'selected' : '' ?>><?= $h($fonte->getNome()) ?></option>
+                    <option value="<?= (int) $fonte->getFonteId() ?>" <?= $settings->fontePrincipalId === (int) $fonte->getFonteId() ? 'selected' : '' ?>><?= $h($fonte->getNome()) ?><?= $fonte->getAtiva() ? '' : ' (inativa)' ?></option>
                 <?php } ?>
             </select>
+            <small><?= $h(SettingsForm::PRIMARY_SOURCE_HINT) ?></small>
         </label>
-        <?php foreach (SettingsForm::INTEGER_FIELDS + SettingsForm::DECIMAL_FIELDS as $key => [$label, $hint]) { ?>
+        <?= $choiceField('passagem_inicial') ?>
+        <?= $choiceField('apos_encerramento') ?>
+        <?php foreach (SettingsForm::numberFields() as $key => [$label, $hint]) { ?>
             <label><?= $h($label) ?>
                 <input type="text" inputmode="decimal" name="<?= $h($key) ?>" required size="8"
                        value="<?= $h(str_replace('.', ',', (string) $settingValues[$key])) ?>">

@@ -35,59 +35,70 @@ final class DecisionValidator
      */
     public static function signature(EngineResult $result, array $passagemIds, array $decisions): string
     {
-        return (new SignatureCalculator($result, $decisions))->forEntries($passagemIds);
+        return SignatureCalculator::forResult($result, $decisions)->forEntries($passagemIds);
     }
 
     /**
-     * Validates and stores a decision, all under the per-prova lock so that
-     * of two simultaneous requests one always sees the other's decision.
+     * Validates and stores a decision, all under the count lock so that of
+     * two simultaneous requests one always sees the other's decision.
+     *
+     * The decision is checked against a full run made here, inside the
+     * lock, and never against the stored snapshot: the snapshot may be a
+     * few seconds old, and those seconds are exactly when the other
+     * reviewer clicked.
      *
      * @param array<string, mixed> $request decoded JSON body, see DecisionRequest
      * @return array{status: int, body: array<string, mixed>}
      *         200 with the new state, 409 with the fresh state, or 400
+     * @throws \Baja\Contagem\Service\LockBusy when the lock is not obtained in time
      */
     public static function decide(ContagemService $service, array $request, string $username): array
     {
-        // Captured by reference rather than returned, so this does not
-        // depend on withLock() passing the callable's return value through.
-        $response = ['status' => 500, 'body' => ['erro' => 'interno']];
-
-        $service->withLock(function () use ($service, $request, $username, &$response): void {
+        return $service->withLock(function () use ($service, $request, $username): array {
             $input = $service->loadInput();
             $result = Engine::run($input);
 
             try {
                 $parsed = DecisionRequest::parse($request, $input);
             } catch (InvalidArgumentException $invalid) {
-                $response = [
-                    'status' => 400,
-                    'body' => ['erro' => 'pedido_invalido', 'mensagem' => $invalid->getMessage()],
-                ];
-                return;
+                return self::badRequest($invalid->getMessage());
+            }
+            $invalidReason = DecisionRules::invalidReason($parsed->decision, $result->timeline, $input->nowMs);
+            if ($invalidReason !== null) {
+                return self::badRequest($invalidReason);
             }
 
             $conflict = self::findConflict($service->getProva(), $parsed, $input, $result);
             if ($conflict !== null) {
+                // The reviewer's screen was behind. Store a snapshot of the
+                // race as it is now, so the answer (and the next poll) shows
+                // what made the decision impossible.
+                $service->recomputeAndPublish();
                 $conflict['erro'] = 'conflito';
-                $conflict['estado'] = StateSnapshot::fromLoaded($service, $input, $result, $username);
-                $response = ['status' => 409, 'body' => $conflict];
-                return;
+                $conflict['estado'] = self::freshState($service, $username);
+                return ['status' => 409, 'body' => $conflict];
             }
 
             $decisaoId = $service->storeDecision($parsed->decision, $username, $parsed->motivo);
             $service->recomputeAndPublish();
 
-            $response = [
+            return [
                 'status' => 200,
-                'body' => [
-                    'ok' => true,
-                    'decisao_id' => $decisaoId,
-                    'estado' => StateSnapshot::build($service, $username),
-                ],
+                'body' => ['ok' => true, 'decisao_id' => $decisaoId, 'estado' => self::freshState($service, $username)],
             ];
         });
+    }
 
-        return $response;
+    /** The state after the recomputeAndPublish() just made by this request. */
+    private static function freshState(ContagemService $service, string $username): array
+    {
+        return StateSnapshot::live($service, $service->lastStoredSnapshot() ?? $service->snapshot(), $username);
+    }
+
+    /** @return array{status: int, body: array<string, mixed>} */
+    private static function badRequest(string $message): array
+    {
+        return ['status' => 400, 'body' => ['erro' => 'pedido_invalido', 'mensagem' => $message]];
     }
 
     /**
@@ -102,6 +113,13 @@ final class DecisionValidator
             if ($undoId !== null) {
                 return self::alreadyDecided(DecisionHistory::usernameOf($prova, $undoId));
             }
+        }
+
+        // Before the signature: this refusal names who made the decision
+        // that already stands, which is more useful than "the data changed".
+        $sameDecisionId = DecisionRules::sameDecisionInForce($decision, $input);
+        if ($sameDecisionId !== null) {
+            return self::alreadyDecided(DecisionHistory::usernameOf($prova, $sameDecisionId));
         }
 
         if ($parsed->passagemIds === []) {

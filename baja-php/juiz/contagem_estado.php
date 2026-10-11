@@ -1,19 +1,34 @@
 <?php
 namespace Baja\Juiz;
 
-use Baja\Contagem\Access\ContagemAccess;
+use Baja\Contagem\Review\DecisionHistory;
 use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\ReviewerPresence;
 use Baja\Contagem\Review\StateSnapshot;
-use Baja\Contagem\Service\Clock;
 use Baja\Contagem\Service\ContagemService;
 
-// Poll endpoint of the review screen: GET ?p=&versao=&alerta=
-// Answers the full state, or "inalterado" when the browser already has the
-// current version. Read-only apart from the reviewer's presence mark.
+// Poll endpoint of the review screen. Read-only apart from the reviewer's
+// presence mark.
+//
+//   GET ?p=&versao=&alerta=      the state. When `versao` is the token of the
+//                                current snapshot the answer is "inalterado"
+//                                with only the parts that change on their own.
+//   GET ?p=&historico_antes=ID   one older page of the decision history.
+//
+// This never runs the engine: the state comes from the stored snapshot,
+// which is recalculated at most every few seconds (see SnapshotService).
 
+Pagina::beginJsonEndpoint();
 $prova = Pagina::provaOrRedirect();
-ContagemAccess::requireController($prova);
+Pagina::requireControllerJson($prova);
+
+if (isset($_GET['historico_antes'])) {
+    $beforeId = filter_var($_GET['historico_antes'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($beforeId === false) {
+        Pagina::sendJson(400, ['erro' => 'pedido_invalido', 'mensagem' => 'Página do histórico inválida.']);
+    }
+    Pagina::sendJson(200, DecisionHistory::page($prova, DecisionHistory::activeIdsFromDatabase($prova), $beforeId));
+}
 
 $service = ContagemService::forProva($prova);
 $username = Pagina::username();
@@ -25,17 +40,13 @@ if (!is_string($openFlagId) || $openFlagId === '' || strlen($openFlagId) > 200) 
 // Refreshed on every poll, changed or not: this is what keeps "X está olhando" alive.
 ReviewerPresence::mark($prova, $username, $openFlagId);
 
-$knownVersion = filter_var($_GET['versao'] ?? null, FILTER_VALIDATE_INT);
-$currentVersion = $service->currentVersion();
+// Read once: the comparison below and the answer must be about the same snapshot.
+$snapshot = $service->snapshot();
 
-if ($knownVersion !== false && $knownVersion === $currentVersion) {
-    Pagina::sendJson(200, [
-        'inalterado' => true,
-        'versao' => $currentVersion,
-        'servidor_agora_ms' => Clock::nowMs(),
-        // Presence changes without the version changing, so it rides along.
-        'olhando' => (object) ReviewerPresence::current($prova),
-    ]);
+// The token is opaque: equal means "you already have this", and nothing else.
+$knownToken = is_string($_GET['versao'] ?? null) ? $_GET['versao'] : '';
+if ($knownToken !== '' && hash_equals($snapshot->token, $knownToken)) {
+    Pagina::sendJson(200, StateSnapshot::unchanged($service, $snapshot, $username));
 }
 
-Pagina::sendJson(200, StateSnapshot::build($service, $username));
+Pagina::sendJson(200, StateSnapshot::live($service, $snapshot, $username));

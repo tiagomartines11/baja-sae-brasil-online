@@ -17,12 +17,29 @@ final class Settings
     public const MODO_CONFIRMADAS = 'confirmadas';
     public const MODO_FONTE_PRINCIPAL = 'fonte_principal';
     public const MODO_TODAS = 'todas';
+    /** Count, review and feed as usual, but write nothing to the scoring system. */
+    public const MODO_DESLIGADA = 'desligada';
 
     public const MODOS_PUBLICACAO = [
         self::MODO_CONFIRMADAS,
         self::MODO_FONTE_PRINCIPAL,
         self::MODO_TODAS,
+        self::MODO_DESLIGADA,
     ];
+
+    /** Each car's first counted pass after the start is its pass 0, not a lap. */
+    public const INICIAL_PRIMEIRA_PASSAGEM = 'primeira_passagem';
+    /** The start itself is every car's pass 0; every counted pass is a lap. */
+    public const INICIAL_LARGADA = 'largada';
+
+    public const PASSAGENS_INICIAIS = [self::INICIAL_PRIMEIRA_PASSAGEM, self::INICIAL_LARGADA];
+
+    /** After the finish, each car's next pass still counts; later ones do not. */
+    public const APOS_PROXIMA_PASSAGEM = 'proxima_passagem';
+    /** Nothing after the finish counts. */
+    public const APOS_NENHUMA = 'nenhuma';
+
+    public const APOS_ENCERRAMENTO = [self::APOS_PROXIMA_PASSAGEM, self::APOS_NENHUMA];
 
     /** Which pass groups become official laps. See PublishRule. */
     public string $modoPublicacao = self::MODO_CONFIRMADAS;
@@ -30,13 +47,30 @@ final class Settings
     /** The source trusted by the "fonte_principal" mode. */
     public ?int $fontePrincipalId = null;
 
+    /**
+     * Which pass is "lap zero". The counting line is after the start line,
+     * so by default a car's first crossing completes no lap: laps = counted
+     * passes - 1. See PassRoles.
+     */
+    public string $passagemInicial = self::INICIAL_PRIMEIRA_PASSAGEM;
+
+    /**
+     * Only with passagem_inicial = "largada": entries in the first N seconds
+     * after the start are the initial crossing and never count, so a counter
+     * who types the start pack anyway gives nobody an extra lap.
+     */
+    public int $janelaLargadaS = 0;
+
+    /** What to do with passes after the finish. */
+    public string $aposEncerramento = self::APOS_PROXIMA_PASSAGEM;
+
     /** Entries for the same car closer than this are the same crossing. */
     public int $janelaMs = 20000;
 
     /** A repeat from the same source inside this window is a double tap. */
     public int $duplicataMs = 5000;
 
-    /** A lap shorter than this fraction of the expected lap is "too short to be real". */
+    /** A lap shorter than this fraction of the expected lap is "too short to be real". Never above 1. */
     public float $fracaoVoltaMinima = 0.5;
 
     /** How far back the field pace looks, in seconds. */
@@ -54,6 +88,12 @@ final class Settings
     /** A source silent for longer than this is shown as offline. */
     public int $fonteOfflineS = 60;
 
+    /** The full recalculation (flags, pace, best laps) runs at most once in this many seconds. */
+    public int $recalculoS = 5;
+
+    /** A device silent for longer than this is no longer waited for. */
+    public int $dispositivoAusenteS = 600;
+
     /**
      * @param array<string, mixed>|object|null $raw the decoded `contagem` block
      */
@@ -62,14 +102,19 @@ final class Settings
         $raw = (array) ($raw ?? []);
         $settings = new self();
 
-        $modo = $raw['modo_publicacao'] ?? null;
-        if (is_string($modo) && in_array($modo, self::MODOS_PUBLICACAO, true)) {
-            $settings->modoPublicacao = $modo;
-        }
+        $settings->modoPublicacao = self::oneOf($raw, 'modo_publicacao', self::MODOS_PUBLICACAO, $settings->modoPublicacao);
+        $settings->passagemInicial = self::oneOf($raw, 'passagem_inicial', self::PASSAGENS_INICIAIS, $settings->passagemInicial);
+        $settings->aposEncerramento = self::oneOf($raw, 'apos_encerramento', self::APOS_ENCERRAMENTO, $settings->aposEncerramento);
 
         $principal = $raw['fonte_principal_id'] ?? null;
         if (is_numeric($principal) && (int) $principal > 0) {
             $settings->fontePrincipalId = (int) $principal;
+        }
+
+        // Zero is a meaningful value here ("no start window"), unlike the others.
+        $janelaLargada = $raw['janela_largada_s'] ?? null;
+        if (is_numeric($janelaLargada) && (int) $janelaLargada >= 0) {
+            $settings->janelaLargadaS = (int) $janelaLargada;
         }
 
         $settings->janelaMs = self::positiveInt($raw, 'janela_ms', $settings->janelaMs);
@@ -77,10 +122,13 @@ final class Settings
         $settings->janelaRitmoS = self::positiveInt($raw, 'janela_ritmo_s', $settings->janelaRitmoS);
         $settings->dispersaoMaxMs = self::positiveInt($raw, 'dispersao_max_ms', $settings->dispersaoMaxMs);
         $settings->fonteOfflineS = self::positiveInt($raw, 'fonte_offline_s', $settings->fonteOfflineS);
+        $settings->recalculoS = self::positiveInt($raw, 'recalculo_s', $settings->recalculoS);
+        $settings->dispositivoAusenteS = self::positiveInt($raw, 'dispositivo_ausente_s', $settings->dispositivoAusenteS);
 
-        $settings->fracaoVoltaMinima = self::positiveFloat($raw, 'fracao_volta_minima', $settings->fracaoVoltaMinima);
         $settings->fatorAtrasado = self::positiveFloat($raw, 'fator_atrasado', $settings->fatorAtrasado);
         $settings->fatorParado = self::positiveFloat($raw, 'fator_parado', $settings->fatorParado);
+        // Above 1 every ordinary lap would be "too short to be real".
+        $settings->fracaoVoltaMinima = min(1.0, self::positiveFloat($raw, 'fracao_volta_minima', $settings->fracaoVoltaMinima));
 
         return $settings;
     }
@@ -95,6 +143,9 @@ final class Settings
         return [
             'modo_publicacao' => $this->modoPublicacao,
             'fonte_principal_id' => $this->fontePrincipalId,
+            'passagem_inicial' => $this->passagemInicial,
+            'janela_largada_s' => $this->janelaLargadaS,
+            'apos_encerramento' => $this->aposEncerramento,
             'janela_ms' => $this->janelaMs,
             'duplicata_ms' => $this->duplicataMs,
             'fracao_volta_minima' => $this->fracaoVoltaMinima,
@@ -103,7 +154,50 @@ final class Settings
             'fator_parado' => $this->fatorParado,
             'dispersao_max_ms' => $this->dispersaoMaxMs,
             'fonte_offline_s' => $this->fonteOfflineS,
+            'recalculo_s' => $this->recalculoS,
+            'dispositivo_ausente_s' => $this->dispositivoAusenteS,
         ];
+    }
+
+    /**
+     * False in "desligada" mode: the race is counted and reviewed, but the
+     * scoring system (Input.dados, prova.tempo, points) is left alone. Used
+     * to run beside the old spreadsheets without both writing VOLTAS.
+     */
+    public function publishesToScoring(): bool
+    {
+        return $this->modoPublicacao !== self::MODO_DESLIGADA;
+    }
+
+    /**
+     * Too short to be a lap: under the configured fraction of the lap
+     * expected of that car, or, whatever the pace (it is unknown early in
+     * the race), under two matching windows. No car laps the track in 40
+     * seconds; two passes that close are one crossing recorded twice.
+     *
+     * @param int|null $expectedMs the expected lap of the car, null while the pace is unknown
+     */
+    public function isImpossiblyShortLap(int $lapMs, ?int $expectedMs): bool
+    {
+        if ($lapMs < 2 * $this->janelaMs) {
+            return true;
+        }
+        return $expectedMs !== null && $lapMs < $this->fracaoVoltaMinima * $expectedMs;
+    }
+
+    public function firstPassIsLapZero(): bool
+    {
+        return $this->passagemInicial === self::INICIAL_PRIMEIRA_PASSAGEM;
+    }
+
+    /**
+     * @param array<string, mixed> $raw
+     * @param string[] $allowed
+     */
+    private static function oneOf(array $raw, string $key, array $allowed, string $default): string
+    {
+        $value = $raw[$key] ?? null;
+        return is_string($value) && in_array($value, $allowed, true) ? $value : $default;
     }
 
     /** @param array<string, mixed> $raw */

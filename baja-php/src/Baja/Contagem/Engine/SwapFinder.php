@@ -86,8 +86,10 @@ final class SwapFinder
         if (isset($this->takenGroups[spl_object_id($candidate)])) {
             return false;
         }
-        if ($candidate->realSourceIds() === []) {
-            // Only a reviewer-added pass: no counter saw it, nothing to pair with.
+        if (count($candidate->realSourceIds()) < 2) {
+            // The other car must be a real pass, seen by two counters. Two
+            // stray entries next to each other explain nothing, and pairing
+            // them would turn two mistakes into one counted lap.
             return false;
         }
         return !$candidate->hasSource($loneGroup->entries[0]->fonteId);

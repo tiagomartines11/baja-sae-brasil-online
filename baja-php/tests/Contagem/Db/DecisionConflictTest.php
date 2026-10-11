@@ -15,15 +15,20 @@ use Baja\Model\ContagemDecisaoQuery;
  * How the review screen works, in short:
  *   1. Each reviewer's browser asks the server for the "state" of the race:
  *      the list of flags (things that look wrong), the car table and so on.
+ *      The server does not work that out for every question: it keeps the
+ *      result of its last full calculation (the "snapshot") and hands that
+ *      out for a few seconds.
  *   2. Every flag in that state comes with an "assinatura" (signature): a
  *      fingerprint of the entries the flag is about, as they were at that
  *      moment.
  *   3. When a reviewer clicks a button, the browser sends the decision
  *      together with the signature it was shown.
- *   4. The server computes the signature again. If it is no longer the same,
- *      something changed after the reviewer's screen was drawn, and the
- *      decision is refused with HTTP status 409 ("conflict") plus the fresh
- *      state, so the reviewer can look again.
+ *   4. The server computes the signature again, from a calculation made at
+ *      that very moment (never from the snapshot, which may be a few seconds
+ *      old). If it is no longer the same, something changed after the
+ *      reviewer's screen was drawn, and the decision is refused with HTTP
+ *      status 409 ("conflict") plus the fresh state, so the reviewer can
+ *      look again.
  *
  * These tests play both reviewers by calling the server-side code directly,
  * exactly as contagem_decidir.php does, against the test database.
@@ -61,10 +66,11 @@ final class DecisionConflictTest extends DbTestCase
         $entryId = $this->addEntry($this->fontes[0], $car, $this->at(60));
         $this->syncAll($this->at(120));
         Clock::freezeAt($this->at(180));
+        $this->recompute();
 
         // Both reviewers load the screen. They see the same flag, with the same signature.
-        $anaScreen = StateSnapshot::build($this->service, 'ana');
-        $betoScreen = StateSnapshot::build($this->service, 'beto');
+        $anaScreen = $this->screenOf('ana');
+        $betoScreen = $this->screenOf('beto');
         $flagOnAnaScreen = $this->openFlagAbout($anaScreen, $entryId);
         $flagOnBetoScreen = $this->openFlagAbout($betoScreen, $entryId);
         $this->assertSame($flagOnAnaScreen['assinatura'], $flagOnBetoScreen['assinatura']);
@@ -91,12 +97,12 @@ final class DecisionConflictTest extends DbTestCase
         $this->assertSame('ana', $betoResponse['body']['por']);
         $this->assertStringContainsString('Já decidido por ana', $betoResponse['body']['mensagem']);
 
-        // The refusal carries the fresh state: not older than Beto's screen,
-        // with Ana's decision at the top of the history and the flag gone.
-        // (Not strictly "greater": without Redis the version is the clock in
-        // whole seconds, and this test runs in less than one.)
+        // The refusal carries the fresh state: a different snapshot from the
+        // one Beto's screen was drawn from, with Ana's decision at the top
+        // of the history and the flag gone. (The "versao" is a random token:
+        // two of them can only be compared for being equal or not.)
         $freshState = $betoResponse['body']['estado'];
-        $this->assertGreaterThanOrEqual($betoScreen['versao'], $freshState['versao']);
+        $this->assertNotSame($betoScreen['versao'], $freshState['versao']);
         $this->assertSame('ana', $freshState['historico'][0]['usuario']);
         $this->assertSame('anular', $freshState['historico'][0]['tipo']);
         $this->assertNull(
@@ -129,8 +135,9 @@ final class DecisionConflictTest extends DbTestCase
         $entryId = $this->addEntry($this->fontes[0], $car, $this->at(60));
         $this->syncAll($this->at(120));
         Clock::freezeAt($this->at(180));
+        $this->recompute();
 
-        $anaScreen = StateSnapshot::build($this->service, 'ana');
+        $anaScreen = $this->screenOf('ana');
         $flag = $this->openFlagAbout($anaScreen, $entryId);
 
         // Counter 2's late upload arrives: same car, one second after counter 1's entry.
@@ -163,8 +170,9 @@ final class DecisionConflictTest extends DbTestCase
         $entryId = $this->addEntry($this->fontes[0], $car, $this->at(60));
         $this->syncAll($this->at(120));
         Clock::freezeAt($this->at(180));
+        $this->recompute();
 
-        $betoScreen = StateSnapshot::build($this->service, 'beto');
+        $betoScreen = $this->screenOf('beto');
         $flag = $this->openFlagAbout($betoScreen, $entryId);
         $anaResponse = DecisionValidator::decide(
             $this->service,
@@ -184,7 +192,6 @@ final class DecisionConflictTest extends DbTestCase
             $this->service,
             [
                 'decisao' => ['tipo' => 'desfazer', 'desfaz_decisao_id' => $anaResponse['body']['decisao_id']],
-                'versao' => $freshState['versao'],
                 'passagem_ids' => [],
                 'assinatura' => null,
                 'ultima_decisao_id' => $freshState['ultima_decisao_id'],
@@ -201,6 +208,18 @@ final class DecisionConflictTest extends DbTestCase
     }
 
     /**
+     * What a reviewer's browser receives when it asks for the state: the
+     * stored snapshot, completed with what depends on the moment and on who
+     * is asking. This is what contagem_estado.php answers.
+     *
+     * @return array<string, mixed>
+     */
+    private function screenOf(string $username): array
+    {
+        return StateSnapshot::live($this->service, $this->service->snapshot(), $username);
+    }
+
+    /**
      * The request a browser sends: the decision, plus what the screen was
      * showing when the reviewer clicked.
      *
@@ -213,7 +232,6 @@ final class DecisionConflictTest extends DbTestCase
     {
         return [
             'decisao' => $decision,
-            'versao' => $screen['versao'],
             'passagem_ids' => $flag['passagem_ids'],
             'assinatura' => $flag['assinatura'],
             'ultima_decisao_id' => $screen['ultima_decisao_id'],

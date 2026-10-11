@@ -7,8 +7,11 @@ use Baja\Contagem\Service\PublicFeed;
 //
 // For overlays and anyone else who wants live standings. Open to every
 // origin, like overlaydata.php, because overlays are pages on other hosts.
-// The content is built by PublicFeed, which caches it for two seconds, so
-// any number of viewers costs one engine run per two seconds.
+//
+// This script never recalculates anything: PublicFeed assembles the answer
+// from the snapshot the last recalculation left behind. nginx serves it
+// with SKIP_AUTH (no forum session is involved), and the cache headers let
+// Cloudflare absorb the audience.
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
@@ -30,6 +33,8 @@ if ($json === null) {
     exit;
 }
 
-// Matches the server-side cache, so a CDN in front may share the answer too.
-header('Cache-Control: public, max-age=2');
+// s-maxage is for shared caches (Cloudflare): every viewer in the same two
+// seconds gets one stored answer, and this server sees one request.
+// max-age keeps a single browser from asking more often than that either.
+header('Cache-Control: public, max-age=' . PublicFeed::CACHE_SECONDS . ', s-maxage=' . PublicFeed::CACHE_SECONDS);
 echo $json;

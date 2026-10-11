@@ -19,6 +19,8 @@ final class Flag
     public const NO_BOX = 'no_box';
     public const VOLTA_CURTA = 'volta_curta';
     public const DIVERGENCIA_TOTAL = 'divergencia_total';
+    /** A car's first pass came much later than the field's: its pass zero was probably missed. */
+    public const PRIMEIRA_PASSAGEM_TARDIA = 'primeira_passagem_tardia';
 
     public string $id;
     public string $tipo;

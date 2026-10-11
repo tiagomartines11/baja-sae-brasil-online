@@ -53,6 +53,47 @@ final class DeviceTokens
         return $plainToken;
     }
 
+    /**
+     * Everything the upload endpoint needs to know about the device behind
+     * a token, in ONE query: the device row and the source it is bound to.
+     * Phones call that endpoint every five seconds, so this is the hottest
+     * query of the whole feature. Revoked devices are returned too; the
+     * caller decides what to answer.
+     *
+     * @return array{dispositivo_id: int, fonte_id: int, usuario: ?string, revogado_em_ms: ?int, sincronizado_ate_ms: ?int, primeiro_desvio_ms: ?int, fonte_nome: string, fonte_tipo: string, evento_id: string, prova_id: string}|null
+     */
+    public static function describeByToken(string $plainToken): ?array
+    {
+        if ($plainToken === '') {
+            return null;
+        }
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            'SELECT d.dispositivo_id, d.fonte_id, d.usuario, d.revogado_em_ms, d.sincronizado_ate_ms,
+                    d.primeiro_desvio_ms, f.nome AS fonte_nome, f.tipo AS fonte_tipo, f.evento_id, f.prova_id
+               FROM contagem_dispositivo d
+               JOIN contagem_fonte f ON f.fonte_id = d.fonte_id
+              WHERE d.token_hash = ?'
+        );
+        $statement->execute([self::hash($plainToken)]);
+        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return null;
+        }
+        $nullableInt = fn($value): ?int => $value === null ? null : (int) $value;
+        return [
+            'dispositivo_id' => (int) $row['dispositivo_id'],
+            'fonte_id' => (int) $row['fonte_id'],
+            'usuario' => $row['usuario'] === null ? null : (string) $row['usuario'],
+            'revogado_em_ms' => $nullableInt($row['revogado_em_ms']),
+            'sincronizado_ate_ms' => $nullableInt($row['sincronizado_ate_ms']),
+            'primeiro_desvio_ms' => $nullableInt($row['primeiro_desvio_ms']),
+            'fonte_nome' => (string) $row['fonte_nome'],
+            'fonte_tipo' => (string) $row['fonte_tipo'],
+            'evento_id' => (string) $row['evento_id'],
+            'prova_id' => (string) $row['prova_id'],
+        ];
+    }
+
     /** @return ContagemDispositivo|null null when the token is unknown or was revoked */
     public static function findActiveByToken(string $plainToken): ?ContagemDispositivo
     {

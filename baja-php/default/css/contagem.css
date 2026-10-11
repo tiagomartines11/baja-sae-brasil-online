@@ -122,6 +122,10 @@ button {
     background: #ff8a8a;
 }
 
+.conexao-encerrado {
+    background: #ffffff;
+}
+
 .tem-pendentes b {
     padding: 0 6px;
     border-radius: 4px;
@@ -145,6 +149,42 @@ button {
     padding: 24px 12px;
     font-size: 20px;
     text-align: center;
+}
+
+/* "Already open in another tab": this tab is not going to start, so it must
+   not look like a page that is merely slow to load. */
+.carregando-bloqueado {
+    margin: 12px;
+    border: 4px solid var(--cor-erro);
+    font-weight: 700;
+}
+
+/* ---- "turno encerrado": shown instead of the entry controls ---- */
+
+.turno-encerrado {
+    max-width: 640px;
+    margin: 12px auto;
+    padding: 14px 12px;
+    border: 4px solid var(--cor-borda);
+    text-align: center;
+}
+
+.turno-encerrado h2 {
+    margin: 0 0 8px;
+    font-size: 26px;
+}
+
+.turno-encerrado p {
+    margin: 0 0 12px;
+}
+
+/* Nobody should keep typing into a page that told the server it stopped.
+   The recent list and the export button stay. */
+.turno-encerrado-ativo .destaque,
+.turno-encerrado-ativo .entrada,
+.turno-encerrado-ativo .seletor-modos,
+.turno-encerrado-ativo #btn-encerrar-turno {
+    display: none;
 }
 
 /* ---- page body ---- */
@@ -524,6 +564,28 @@ button {
     padding: 14px 4px;
     color: var(--cor-acao);
     font-weight: 700;
+}
+
+.turno-mensagem {
+    flex-basis: 100%;
+    margin: 0;
+    padding: 8px 10px;
+    border: 3px solid var(--cor-alerta);
+    font-weight: 700;
+}
+
+/* The two lines that say whether this device is safe to count on. */
+.estado-aparelho {
+    flex-basis: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: var(--cor-alerta);
+}
+
+.estado-aparelho.estado-aparelho-ok {
+    color: var(--cor-texto);
 }
 
 /* ---- wider screens: keypad and flash side by side would only add travel

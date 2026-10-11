@@ -10,7 +10,7 @@ use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
 
 /**
- * Step 5: find what a reviewer should look at.
+ * Finds what a reviewer should look at.
  *
  * What is deliberately NOT a flag:
  * - A pass two sources recorded and a third did not. It is counted, and the
@@ -18,6 +18,10 @@ use Baja\Contagem\Engine\Data\Source;
  * - A long gap since a car's last pass. Real races show about one lap in six
  *   taking more than 1.5 times the car's usual lap, so a long gap is weak
  *   evidence of a missed pass. It feeds the car's status instead.
+ *
+ * Everything here is judged against the default counting rule (the
+ * `referencia` of each group and the laps built from it), never against the
+ * publish mode in force, so the same flags appear in every mode.
  *
  * A reviewer silences any flag about a pass group by confirming it.
  */
@@ -60,19 +64,25 @@ final class FlagDetector
     /**
      * @param array<int, PassGroup[]> $groupsByCar
      * @param PassGroup[] $groupsInTimeOrder
-     * @param array<int, Lap[]> $lapsByCar
+     * @param array<int, Lap[]> $referenceLapsByCar laps under the default counting rule
      * @param array<int, true> $openRepeatEntryIds entries already flagged as "repetida"
      * @return Flag[]
      */
-    public function detect(array $groupsByCar, array $groupsInTimeOrder, array $lapsByCar, array $openRepeatEntryIds): array
+    public function detect(array $groupsByCar, array $groupsInTimeOrder, array $referenceLapsByCar, array $openRepeatEntryIds): array
     {
         $swapFinder = new SwapFinder($groupsInTimeOrder, $this->settings->janelaMs);
 
         foreach ($groupsInTimeOrder as $group) {
+            // Crossings the race rules leave out (start window, after the
+            // finish) are not anybody's mistake.
+            if ($group->foraDaReferencia) {
+                continue;
+            }
+            $hasOpenRepeat = $this->markOpenRepeat($group, $openRepeatEntryIds);
             if ($group->confirmadoPorRevisor) {
                 continue;
             }
-            if ($this->isLoneEntryToInvestigate($group, $openRepeatEntryIds)) {
+            if (!$hasOpenRepeat && $group->isUnconfirmedSingleSource()) {
                 $this->examineLoneEntry($group, $swapFinder, $groupsByCar[$group->carro]);
             }
             if ($group->alertasAbertos === [] && $this->isUnknownCar($group->carro)) {
@@ -83,23 +93,40 @@ final class FlagDetector
             }
         }
 
-        foreach ($lapsByCar as $laps) {
+        foreach ($referenceLapsByCar as $laps) {
             foreach ($laps as $lap) {
                 $this->flagIfTooShort($lap);
+            }
+        }
+
+        if ($this->settings->firstPassIsLapZero()) {
+            foreach (LateFirstPass::find($referenceLapsByCar) as [$flag, $group]) {
+                $this->attach($flag, $group);
             }
         }
 
         return $this->flags;
     }
 
-    /** @param array<int, true> $openRepeatEntryIds */
-    private function isLoneEntryToInvestigate(PassGroup $group, array $openRepeatEntryIds): bool
+    /**
+     * The later entry of an unresolved "repetida" has its flag already (made
+     * by DuplicateFilter). Recording it on the group keeps every other check
+     * from flagging the same thing again, in whatever publish mode.
+     *
+     * @param array<int, true> $openRepeatEntryIds
+     */
+    private function markOpenRepeat(PassGroup $group, array $openRepeatEntryIds): bool
     {
-        if (!$group->isUnconfirmedSingleSource()) {
+        if ($openRepeatEntryIds === []) {
             return false;
         }
-        // The second entry of an open "repetida" already has its own flag.
-        return !isset($openRepeatEntryIds[$group->entries[0]->id]);
+        foreach ($group->entries as $entry) {
+            if (isset($openRepeatEntryIds[$entry->id])) {
+                $group->alertasAbertos[] = Flag::REPETIDA;
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -167,18 +194,15 @@ final class FlagDetector
 
         $shortestLapMs = $this->shortestLapIfCounted($group, $sameCarGroups);
         $expectedMs = $this->pace->expectedLapMs($entry->carro, $entry->tsMs);
-        $isImpossiblyShort = $shortestLapMs !== null
-            && $expectedMs !== null
-            && $shortestLapMs < $this->settings->fracaoVoltaMinima * $expectedMs;
 
-        if ($isImpossiblyShort) {
+        if ($shortestLapMs !== null && $this->settings->isImpossiblyShortLap($shortestLapMs, $expectedMs)) {
             $flag->sugestao = ['tipo' => Decision::ANULAR, 'passagem_id' => $entry->id];
             $flag->motivo = sprintf(
-                'Só %s registrou o carro %d, e contar esta passagem criaria uma volta de %d s, quando o esperado para este carro é cerca de %d s.',
+                'Só %s registrou o carro %d, e contar esta passagem criaria uma volta de %d s%s.',
                 $this->sourceName($entry->fonteId),
                 $entry->carro,
                 (int) round($shortestLapMs / 1000),
-                (int) round($expectedMs / 1000)
+                $expectedMs !== null ? sprintf(', quando o esperado para este carro é cerca de %d s', (int) round($expectedMs / 1000)) : ''
             );
         } else {
             $flag->motivo = sprintf(
@@ -191,18 +215,19 @@ final class FlagDetector
     }
 
     /**
-     * If this group were counted it would split one lap of the car in two.
+     * If this group were a pass it would split one lap of the car in two.
      * Returns the shorter of the two pieces (racing time), or null when the
-     * car has no other counted pass and the race has no start to measure from.
+     * car has no other pass to measure from.
      *
      * @param PassGroup[] $sameCarGroups in time order
      */
     private function shortestLapIfCounted(PassGroup $group, array $sameCarGroups): ?int
     {
-        $previousMs = $this->timeline->largadaMs;
+        // Only when the start itself is pass zero does a lap begin there.
+        $previousMs = $this->settings->firstPassIsLapZero() ? null : $this->timeline->largadaMs;
         $nextMs = null;
         foreach ($sameCarGroups as $other) {
-            if ($other === $group || !$other->contado) {
+            if ($other === $group || !$other->referencia) {
                 continue;
             }
             if ($other->tsMs <= $group->tsMs) {
@@ -250,22 +275,18 @@ final class FlagDetector
         }
         $lapStartMs = $lap->grupoAnterior->tsMs;
         $expectedMs = $this->pace->expectedLapMs($lap->carro, $lapStartMs);
-        if ($expectedMs === null) {
-            return;
-        }
         $racingMs = $this->timeline->racingMsBetween($lapStartMs, $group->tsMs);
-        if ($racingMs >= $this->settings->fracaoVoltaMinima * $expectedMs) {
+        if (!$this->settings->isImpossiblyShortLap($racingMs, $expectedMs)) {
             return;
         }
 
         $flag = new Flag(Flag::VOLTA_CURTA, [$lap->carro], $group->entryIds(), (string) $group->anchorEntryId());
         $flag->tsMs = $group->tsMs;
         $flag->motivo = sprintf(
-            'A volta %d do carro %d levou %d s, quando o esperado para este carro é cerca de %d s.',
-            $lap->numeroVolta,
+            'O carro %d foi registrado duas vezes com %d s de intervalo%s.',
             $lap->carro,
             (int) round($racingMs / 1000),
-            (int) round($expectedMs / 1000)
+            $expectedMs !== null ? sprintf(', quando o esperado para este carro é cerca de %d s por volta', (int) round($expectedMs / 1000)) : ''
         );
         $this->attach($flag, $group);
     }

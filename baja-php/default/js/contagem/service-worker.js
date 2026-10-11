@@ -85,6 +85,20 @@ async function deleteOldCaches() {
     }
 }
 
+/**
+ * Keeps a copy for later, and never lets that get in the way of answering.
+ * Writing to the cache can fail (storage full, quota taken away by the
+ * browser). The counter must then still get the page that the network just
+ * delivered; only the offline copy is missing, and the next load tries again.
+ */
+async function storeCopyIfPossible(cache, url, response) {
+    try {
+        await cache.put(url, response.clone());
+    } catch (storageError) {
+        // Nothing to do here; see above.
+    }
+}
+
 function fetchWithTimeout(request, timeoutMs) {
     const abortController = new AbortController();
     const timer = setTimeout(() => abortController.abort(), timeoutMs);
@@ -107,7 +121,7 @@ async function pageFromNetworkThenCache(request) {
         networkResponse = null;
     }
     if (networkResponse !== null && isUsableShell(networkResponse)) {
-        await cache.put(request.url, networkResponse.clone());
+        await storeCopyIfPossible(cache, request.url, networkResponse);
         return networkResponse;
     }
     const cachedResponse = await cache.match(request.url);
@@ -125,17 +139,34 @@ async function pageFromNetworkThenCache(request) {
     );
 }
 
-/** Scripts and styles: their URL carries the version, so the cache is final. */
+/**
+ * Scripts and styles. A URL with "?v=" names one exact version, so whatever
+ * the cache holds under it is final.
+ *
+ * A URL WITHOUT "?v=" comes from a browser too old for import maps: there,
+ * `import './local-store.js'` asks for the plain file name. This cache holds
+ * exactly one version of every file, the one this worker was installed with,
+ * so that is the answer: the modules then all belong to the same deploy, and
+ * the page loads with no network. (Going to the network instead would hit
+ * the 30-day HTTP cache and could mix old and new modules.)
+ */
 async function assetFromCacheThenNetwork(request) {
     const cache = await caches.open(CACHE_NAME);
-    const cachedResponse = await cache.match(request.url);
-    if (cachedResponse) {
-        return cachedResponse;
+    const exactVersion = await cache.match(request.url);
+    if (exactVersion) {
+        return exactVersion;
+    }
+    const asksForNoParticularVersion = !new URL(request.url).searchParams.has('v');
+    if (asksForNoParticularVersion) {
+        const currentVersion = await cache.match(request.url, { ignoreSearch: true });
+        if (currentVersion) {
+            return currentVersion;
+        }
     }
     try {
         const networkResponse = await fetch(request);
         if (networkResponse.ok) {
-            await cache.put(request.url, networkResponse.clone());
+            await storeCopyIfPossible(cache, request.url, networkResponse);
         }
         return networkResponse;
     } catch (networkError) {

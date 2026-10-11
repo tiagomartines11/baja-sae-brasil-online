@@ -22,8 +22,10 @@ use Baja\Tests\Contagem\Engine\Support\RaceScenario;
 final class TypoAndLoneEntryTest extends EngineTestCase
 {
     /**
-     * SITUATION: car 41 crosses the line. Counters 2 and 3 type 41. Counter 1
-     * swaps the digits and types 14. Car 14 exists but is nowhere near.
+     * SITUATION: car 41 crosses the line for the second time (everybody
+     * recorded its first crossing, the pass zero). Counters 2 and 3 type 41.
+     * Counter 1 swaps the digits and types 14. Car 14 exists but is nowhere
+     * near.
      *
      * WHAT WENT WRONG: a classic typo by counter 1.
      *
@@ -40,6 +42,7 @@ final class TypoAndLoneEntryTest extends EngineTestCase
         $race = RaceScenario::withCounters(3);
         $race->teamsPresent([14, 41]);
         $race->start('00:00');
+        $race->firstCrossing([41]);
         $race->pass(41, '03:10', [2, 3]);
         $typo = $race->entry(1, 14, '03:10');
 
@@ -51,7 +54,7 @@ final class TypoAndLoneEntryTest extends EngineTestCase
         $this->assertSame(1, $flag->fonteId, 'The flag is about counter 1.');
         $this->assertStringContainsString('Contagem 1', $flag->motivo);
         $this->assertStringContainsString('dígitos trocados', $flag->motivo);
-        $this->assertSame(0, $this->sourceCount($before, 41, 1), 'Before the fix counter 1 has no pass for car 41...');
+        $this->assertSame(1, $this->sourceCount($before, 41, 1), 'Before the fix counter 1 has only the first crossing of car 41...');
         $this->assertSame(1, $this->sourceCount($before, 14, 1), '...and one for car 14, which never passed.');
 
         $race->accept($flag);
@@ -59,7 +62,7 @@ final class TypoAndLoneEntryTest extends EngineTestCase
 
         $this->assertNoOpenFlags($after);
         $this->assertLapCounts([41 => 1, 14 => 0], $after);
-        $this->assertSame(1, $this->sourceCount($after, 41, 1));
+        $this->assertSame(2, $this->sourceCount($after, 41, 1));
         $this->assertSame(0, $this->sourceCount($after, 14, 1));
         $this->assertSame(1, $after->sourceStats[1]->trocas, 'The typo is remembered in counter 1\'s statistics.');
     }
@@ -113,7 +116,7 @@ final class TypoAndLoneEntryTest extends EngineTestCase
         $flag = $this->assertSingleOpenFlag($result, Flag::SOLITARIA);
         $this->assertSame(['tipo' => Decision::ANULAR, 'passagem_id' => $stray], $flag->sugestao);
         $this->assertStringContainsString('42 s', $flag->motivo);
-        $this->assertSame(6, $result->lapCount(5), 'The stray entry never counted as a lap.');
+        $this->assertSame(5, $result->lapCount(5), 'Six crossings are five laps; the stray entry never counted.');
 
         $race->accept($flag);
         $this->assertNoOpenFlags($race->run('20:00'));
@@ -146,7 +149,7 @@ final class TypoAndLoneEntryTest extends EngineTestCase
 
         $flag = $this->assertSingleOpenFlag($result, Flag::SOLITARIA);
         $this->assertNull($flag->sugestao, 'A plausible lone entry gets no default action.');
-        $this->assertSame(5, $result->lapCount(5), 'Not counted until a reviewer confirms it.');
+        $this->assertSame(4, $result->lapCount(5), 'Five agreed crossings are four laps; the lone one waits for a reviewer.');
     }
 
     /**

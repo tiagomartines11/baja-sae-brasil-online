@@ -26,7 +26,7 @@ use Baja\Session;
  *
  *   - if the volunteer has a forum account but has never used this system,
  *     their row in the `user` table is created;
- *   - they receive the permission "ZZT1_ZZL_CONT" (event, prova, "CONT"
+ *   - they receive the permission "00NE_ZZL_CONT" (event, prova, "CONT"
  *     for "contador"), which is what lets them into the count area;
  *   - when their last link in the prova is removed, that permission is
  *     removed again, and the phones they were using stop being accepted.
@@ -39,7 +39,7 @@ use Baja\Session;
 final class CounterLinksTest extends DbTestCase
 {
     private const CONTROLLER = 'zzt_controlador';
-    private const COUNTER_CODE = 'ZZT1_ZZL_CONT';
+    private const COUNTER_CODE = '00NE_ZZL_CONT';
 
     protected function setUp(): void
     {
@@ -47,7 +47,7 @@ final class CounterLinksTest extends DbTestCase
 
         // The controller of the prova: holds the prova's own code and, on
         // purpose, NOT the "admin" code.
-        $this->createUser(self::CONTROLLER, ['index', 'ZZT1_ZZL']);
+        $this->createUser(self::CONTROLLER, ['index', '00NE_ZZL']);
 
         // Stand-in for the forum: these two people have a forum account,
         // nobody else does.
@@ -84,7 +84,7 @@ final class CounterLinksTest extends DbTestCase
      * her to Contagem 1.
      *
      * EXPECTED: her row now exists, with "index" (needed to reach the
-     * start page at all) and "ZZT1_ZZL_CONT". Logged in, she counts as a
+     * start page at all) and "00NE_ZZL_CONT". Logged in, she counts as a
      * counter of the prova and NOT as its controller.
      */
     public function testLinkingCreatesTheUserRowAndGrantsTheCounterPermission(): void
@@ -102,18 +102,18 @@ final class CounterLinksTest extends DbTestCase
 
     /**
      * SITUATION: Bruno is already a judge of another prova (he holds
-     * "ZZT1_XYZ"). The controller links him to Contagem 1 as well.
+     * "00NE_XYZ"). The controller links him to Contagem 1 as well.
      *
      * EXPECTED: he gains the counter permission and keeps what he had.
      * Linking only ever adds that one code.
      */
     public function testLinkingAnExistingUserKeepsTheirOtherPermissions(): void
     {
-        $this->createUser('zzt_bruno', ['index', 'ZZT1_XYZ']);
+        $this->createUser('zzt_bruno', ['index', '00NE_XYZ']);
 
         CounterLinks::link($this->fontes[0], 'zzt_bruno', self::CONTROLLER);
 
-        $this->assertEqualsCanonicalizing(['index', 'ZZT1_XYZ', self::COUNTER_CODE], $this->permissionsOf('zzt_bruno'));
+        $this->assertEqualsCanonicalizing(['index', '00NE_XYZ', self::COUNTER_CODE], $this->permissionsOf('zzt_bruno'));
     }
 
     /**

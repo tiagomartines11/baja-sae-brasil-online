@@ -20,13 +20,17 @@ final class TotalsImport
 {
     private const MAX_LAPS = 9999;
     private const MAX_ERRORS_SHOWN = 10;
+    private const MAX_UPLOAD_BYTES = 200000;
 
     /**
      * Reads pasted text or the contents of a CSV file.
      *
      * Accepts one "car, laps" pair per line, separated by a comma, a
      * semicolon, a tab or spaces. Blank lines are skipped, and so is a first
-     * line that is clearly a header ("carro,voltas").
+     * line that is clearly a header ("carro,voltas"): one with no number in
+     * it at all. A first line such as "x12, 48" is a typo in a data line,
+     * not a header, and is reported instead of being silently dropped (the
+     * car would otherwise vanish from the comparison).
      *
      * @param int[] $validCars car numbers of the event
      * @return array<int, int> car => laps
@@ -47,12 +51,11 @@ final class TotalsImport
                 continue;
             }
             $fields = preg_split('/\s*[,;\t]\s*|\s+/', $line) ?: [];
-            $isHeader = !$sawData && !ctype_digit($fields[0] ?? '');
-            if ($isHeader) {
-                $sawData = true;
+            $isFirstLine = !$sawData;
+            $sawData = true;
+            if ($isFirstLine && self::looksLikeHeader($fields)) {
                 continue;
             }
-            $sawData = true;
 
             $error = self::lineError($fields, $validCars, $totals);
             if ($error !== null) {
@@ -73,6 +76,29 @@ final class TotalsImport
             throw new InvalidArgumentException('Nenhuma linha "carro, voltas" encontrada.');
         }
         return $totals;
+    }
+
+    /**
+     * The contents of an uploaded CSV file.
+     *
+     * @param array<string, mixed> $upload the $_FILES entry
+     * @throws InvalidArgumentException when the file did not arrive whole or is too big to be a list of totals
+     */
+    public static function readUpload(array $upload): string
+    {
+        if (($upload['error'] ?? null) !== UPLOAD_ERR_OK
+            || !is_string($upload['tmp_name'] ?? null)
+            || !is_uploaded_file($upload['tmp_name'])) {
+            throw new InvalidArgumentException('Não foi possível receber o arquivo.');
+        }
+        if ((int) ($upload['size'] ?? 0) > self::MAX_UPLOAD_BYTES) {
+            throw new InvalidArgumentException('Arquivo grande demais para uma lista de totais.');
+        }
+        $contents = file_get_contents($upload['tmp_name']);
+        if ($contents === false) {
+            throw new InvalidArgumentException('Não foi possível ler o arquivo.');
+        }
+        return $contents;
     }
 
     /**
@@ -100,6 +126,19 @@ final class TotalsImport
             $connection->rollBack();
             throw $failure;
         }
+    }
+
+    /**
+     * @param string[] $fields
+     */
+    private static function looksLikeHeader(array $fields): bool
+    {
+        foreach ($fields as $field) {
+            if (is_numeric($field)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -1,0 +1,131 @@
+<?php
+declare(strict_types=1);
+
+namespace Baja\Contagem\Service;
+
+use Baja\Contagem\Engine\RaceTimeline;
+use Baja\Contagem\Engine\Settings;
+use Baja\Model\ProvaQuery;
+
+/**
+ * The few facts about a race that every count page needs in every answer:
+ * when it started, whether it is stopped, which cars are in the pit lane,
+ * which car numbers exist, how long the matching window is.
+ *
+ * Phones ask every five seconds. These facts change a handful of times in a
+ * whole race, so they are kept in Redis and a heartbeat reads them without
+ * touching MySQL (it does not even load the prova, which is why this class
+ * takes the two ids). Whoever changes one of them (race control, the pit
+ * log, the settings page) calls forget(), and the next request rebuilds it.
+ * The short expiry covers changes made elsewhere, such as a team being
+ * marked present.
+ *
+ * Without Redis it is simply rebuilt on every request: slower, still right.
+ */
+final class RaceContext
+{
+    private const CACHE_SECONDS = 30;
+
+    private string $eventoId;
+    private string $provaId;
+    private string $key;
+
+    public function __construct(string $eventoId, string $provaId)
+    {
+        $this->eventoId = $eventoId;
+        $this->provaId = $provaId;
+        $this->key = 'contagem:' . $eventoId . ':' . $provaId . ':contexto';
+    }
+
+    /**
+     * @return array{largada_ms: ?int, encerramento_ms: ?int, bandeiras_vermelhas: array, box: array, valid_cars: array, janela_ms: int}
+     */
+    public function get(): array
+    {
+        $redis = RedisClient::get();
+        if ($redis !== null) {
+            try {
+                $cached = $redis->get($this->key);
+                $decoded = is_string($cached) ? json_decode($cached, true) : null;
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
+            } catch (\Throwable $error) {
+                error_log('Contagem\RaceContext: read failed: ' . $error->getMessage());
+            }
+        }
+
+        $context = $this->build();
+        if ($redis !== null) {
+            try {
+                $redis->setex($this->key, self::CACHE_SECONDS, (string) json_encode($context, JSON_UNESCAPED_UNICODE));
+            } catch (\Throwable $error) {
+                error_log('Contagem\RaceContext: write failed: ' . $error->getMessage());
+            }
+        }
+        return $context;
+    }
+
+    public function forget(): void
+    {
+        $redis = RedisClient::get();
+        if ($redis === null) {
+            return;
+        }
+        try {
+            $redis->del($this->key);
+        } catch (\Throwable $error) {
+            error_log('Contagem\RaceContext: delete failed: ' . $error->getMessage());
+        }
+    }
+
+    /**
+     * The race timeline described by a context (or by the same keys of a
+     * snapshot), for asking "what is the state right now?".
+     *
+     * @param array<string, mixed> $context
+     */
+    public static function timelineOf(array $context): RaceTimeline
+    {
+        $timeline = new RaceTimeline();
+        $timeline->largadaMs = isset($context['largada_ms']) ? (int) $context['largada_ms'] : null;
+        $timeline->encerramentoMs = isset($context['encerramento_ms']) ? (int) $context['encerramento_ms'] : null;
+        $timeline->redFlagIntervals = $context['bandeiras_vermelhas'] ?? [];
+        // JSON turns the car numbers into string keys; the engine wants integers.
+        foreach ($context['box'] ?? [] as $carro => $intervals) {
+            $timeline->pitIntervals[(int) $carro] = $intervals;
+        }
+        return $timeline;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function describeTimeline(RaceTimeline $timeline): array
+    {
+        return [
+            'largada_ms' => $timeline->largadaMs,
+            'encerramento_ms' => $timeline->encerramentoMs,
+            'bandeiras_vermelhas' => $timeline->redFlagIntervals,
+            'box' => $timeline->pitIntervals,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function build(): array
+    {
+        $prova = ProvaQuery::create()->findPk([$this->eventoId, $this->provaId]);
+        if ($prova === null) {
+            return self::describeTimeline(new RaceTimeline()) + ['valid_cars' => [], 'janela_ms' => (new Settings())->janelaMs];
+        }
+        $loader = new EngineInputLoader($prova);
+        $context = self::describeTimeline(RaceTimeline::fromOcorrencias($loader->loadOcorrencias()));
+
+        $context['valid_cars'] = [];
+        foreach ($loader->loadTeams(true) as $team) {
+            $context['valid_cars'][] = ['numero' => $team['numero'], 'nome' => $team['nome']];
+        }
+        $context['janela_ms'] = Settings::fromArray($prova->getParams()->contagem ?? null)->janelaMs;
+        return $context;
+    }
+}

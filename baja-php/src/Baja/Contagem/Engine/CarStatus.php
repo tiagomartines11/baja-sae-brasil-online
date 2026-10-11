@@ -53,11 +53,16 @@ final class CarStatus
     private function fillNumbers(CarState $state, array $laps): void
     {
         foreach ($laps as $lap) {
+            if (!$lap->isOfficialPass()) {
+                continue;
+            }
+            // Pass zero is an official pass (it is the car's "last pass"
+            // until the next one) but completes no lap.
+            $state->ultimaPassagemMs = $lap->tsMs;
             if (!$lap->isCounted()) {
                 continue;
             }
             $state->voltas = $lap->numeroVolta;
-            $state->ultimaPassagemMs = $lap->tsMs;
             $state->ultimaVoltaMs = $lap->tempoVoltaMs;
             if ($lap->elegivelMelhorVolta && ($state->melhorVoltaMs === null || $lap->tempoVoltaMs < $state->melhorVoltaMs)) {
                 $state->melhorVoltaMs = $lap->tempoVoltaMs;
@@ -80,54 +85,90 @@ final class CarStatus
 
     private function fillStatus(CarState $state, int $nowMs): void
     {
-        $raceState = $this->timeline->stateAt($nowMs);
-        if ($raceState === RaceTimeline::AGUARDANDO || $raceState === RaceTimeline::ENCERRADA) {
-            $state->status = CarState::FORA;
-            return;
+        $state->voltaEsperadaMs = $this->timeline->isRunningAt($nowMs)
+            ? $this->pace->expectedLapMs($state->carro, $nowMs)
+            : null;
+
+        [$state->status, $state->statusDesdeMs] = self::statusAt(
+            $nowMs,
+            $state->carro,
+            $state->ultimaPassagemMs,
+            $state->voltaEsperadaMs,
+            $this->timeline,
+            $this->settings,
+            fn(int $momentMs): bool => $this->availability->allSyncedThrough($momentMs)
+        );
+    }
+
+    /**
+     * The status rule itself, as a pure function of a few numbers, so that
+     * it exists in exactly one place: the engine uses it here, and whoever
+     * shows a stored snapshot later can ask again "and now?" without
+     * rebuilding the pace model.
+     *
+     * @param int|null $ultimaPassagemMs the car's last official pass, null when it has none
+     * @param int|null $voltaEsperadaMs what the pace model expects of this car, null when unknown
+     * @param callable(int): bool $allSyncedThrough tells whether every counting source has uploaded up to the given moment
+     * @return array{0: string, 1: ?int} [status (CarState::*), since when (ms) or null]
+     */
+    public static function statusAt(
+        int $nowMs,
+        int $carro,
+        ?int $ultimaPassagemMs,
+        ?int $voltaEsperadaMs,
+        RaceTimeline $timeline,
+        Settings $settings,
+        callable $allSyncedThrough
+    ): array {
+        if (!$timeline->isRunningAt($nowMs)) {
+            // Before the start and after the finish nobody is late.
+            return [CarState::FORA, null];
         }
 
-        $state->voltaEsperadaMs = $this->pace->expectedLapMs($state->carro, $nowMs);
-
-        $pitEntryMs = $this->timeline->pitEntryBefore($state->carro, $nowMs);
+        $pitEntryMs = $timeline->pitEntryBefore($carro, $nowMs);
         if ($pitEntryMs !== null) {
-            $state->status = CarState::NO_BOX;
-            $state->statusDesdeMs = $pitEntryMs;
-            return;
+            return [CarState::NO_BOX, $pitEntryMs];
         }
 
-        $state->status = CarState::CORRENDO;
-        if ($state->voltaEsperadaMs === null) {
+        if ($voltaEsperadaMs === null) {
             // Too early in the race to know what "late" means.
-            return;
+            return [CarState::CORRENDO, null];
         }
 
         // The stopwatch for "how long since this car last passed" does not
         // run during a red flag: nobody is passing then.
-        $lastSeenMs = $state->ultimaPassagemMs ?? (int) $this->timeline->largadaMs;
-        $racingSinceLastPassMs = $this->timeline->racingMsBetween($lastSeenMs, $nowMs);
+        // A car that just left the pit lane is known to have been there, so
+        // the wait is measured from whichever is later: its last pass or
+        // its last pit exit. Otherwise every pit stop would end "atrasado".
+        $lastSeenMs = $ultimaPassagemMs ?? (int) $timeline->largadaMs;
+        $lastPitExitMs = $timeline->lastPitExitBefore($carro, $nowMs);
+        if ($lastPitExitMs !== null && $lastPitExitMs > $lastSeenMs) {
+            $lastSeenMs = $lastPitExitMs;
+        }
+        $racingSinceLastSeenMs = $timeline->racingMsBetween($lastSeenMs, $nowMs);
 
         $thresholds = [
-            CarState::PARADO => $this->settings->fatorParado,
-            CarState::ATRASADO => $this->settings->fatorAtrasado,
+            CarState::PARADO => $settings->fatorParado,
+            CarState::ATRASADO => $settings->fatorAtrasado,
         ];
         foreach ($thresholds as $status => $factor) {
-            $allowedMs = (int) round($factor * $state->voltaEsperadaMs);
-            if ($racingSinceLastPassMs <= $allowedMs) {
+            $allowedMs = (int) round($factor * $voltaEsperadaMs);
+            if ($racingSinceLastSeenMs <= $allowedMs) {
                 continue;
             }
-            $thresholdMoment = $this->timeline->momentAfterRacing($lastSeenMs, $allowedMs);
+            $thresholdMoment = $timeline->momentAfterRacing($lastSeenMs, $allowedMs);
             if ($thresholdMoment === null) {
                 continue;
             }
             // If a counter has not uploaded up to that moment, the pass that
             // would prove the car is fine may be sitting in a phone.
-            if (!$this->availability->allSyncedThrough($thresholdMoment)) {
+            if (!$allSyncedThrough($thresholdMoment)) {
                 continue;
             }
-            $state->status = $status;
-            $state->statusDesdeMs = $thresholdMoment;
-            return;
+            return [$status, $thresholdMoment];
         }
+
+        return [CarState::CORRENDO, null];
     }
 
     /**

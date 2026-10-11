@@ -7,6 +7,8 @@ namespace Baja\Contagem\Engine\Data;
  * One row of contagem_volta: a pass group seen as a lap of its car.
  *
  * "contada" laps are numbered 1..N in time order and are the official count.
+ * "inicial" is the car's pass zero, numbered 0: an official pass that
+ * completes no lap (the counting line is after the start line).
  * "pendente" rows are pass groups that do not count yet (they await a second
  * source or a reviewer); they are numbered after the counted laps of the car
  * only so that the table's primary key stays unique.
@@ -14,6 +16,7 @@ namespace Baja\Contagem\Engine\Data;
 final class Lap
 {
     public const CONTADA = 'contada';
+    public const INICIAL = 'inicial';
     public const PENDENTE = 'pendente';
 
     public int $carro;
@@ -46,8 +49,15 @@ final class Lap
         $this->fontes = $fontes;
     }
 
+    /** True for a completed, official lap (pass zero is official but is not a lap). */
     public function isCounted(): bool
     {
         return $this->estado === self::CONTADA;
+    }
+
+    /** True for an official pass: a counted lap or the car's pass zero. */
+    public function isOfficialPass(): bool
+    {
+        return $this->estado === self::CONTADA || $this->estado === self::INICIAL;
     }
 }

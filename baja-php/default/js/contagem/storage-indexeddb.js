@@ -67,6 +67,11 @@ export async function openIndexedDbStorage(databaseName, indexedDbFactory = glob
     return {
         persistent: true,
 
+        /** For a connection that arrived after the page had stopped waiting for it. */
+        close() {
+            database.close();
+        },
+
         getAll(collectionName) {
             return inTransaction(database, collectionName, 'readonly', (objectStore, setResult) => {
                 const request = objectStore.getAll();

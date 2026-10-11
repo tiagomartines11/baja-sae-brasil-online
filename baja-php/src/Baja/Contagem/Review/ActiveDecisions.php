@@ -81,6 +81,11 @@ final class ActiveDecisions
         if (in_array($decision->tipo, self::ENTRY_TYPES, true)) {
             return $decision->passagemId;
         }
+        if ($decision->tipo === Decision::ADICIONAR) {
+            // The pass a reviewer added is shown as an entry whose id is
+            // minus the id of this decision (see DecisionApplier).
+            return -$decision->id;
+        }
         return null;
     }
 

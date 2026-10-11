@@ -84,7 +84,8 @@ final class Decision
         return $decision;
     }
 
-    public static function excluirFonte(int $id, int $fonteId, int $tsMs, int $tsFimMs): self
+    /** A null end means "until further notice". */
+    public static function excluirFonte(int $id, int $fonteId, ?int $tsMs, ?int $tsFimMs): self
     {
         $decision = new self($id, self::EXCLUIR_FONTE);
         $decision->fonteId = $fonteId;

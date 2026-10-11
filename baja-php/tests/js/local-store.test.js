@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 
 import { createMemoryStorage } from '../../default/js/contagem/storage-memory.js';
 import { LocalStore } from '../../default/js/contagem/local-store.js';
-import { createFlakyStorage } from './helpers/fakes.js';
+import { createFlakyStorage, createSlowStorage } from './helpers/fakes.js';
 
 function entry(uuid, car, tsDeviceMs = 1000) {
     return { uuid, car, ts_device_ms: tsDeviceMs, clock_offset_ms: null, typing_ms: 400, mode: 'teclado' };
@@ -220,4 +220,76 @@ test('what is on the disk cannot be changed by accident through an old object', 
 
     const afterReload = await LocalStore.open(disk);
     assert.equal(afterReload.findEntry('a').car, 41);
+});
+
+// ---------------------------------------------------------------------------
+// Two cars in the same instant
+// ---------------------------------------------------------------------------
+
+test('two cars recorded in the same instant get different sequence numbers, in typing order', async () => {
+    // Situation: two cars cross the line side by side. The counter taps tile
+    // 7 and tile 41 one right after the other, faster than the phone's
+    // storage answers. On top of that the storage finishes the SECOND write
+    // first (it makes no promise about the order).
+    //
+    // What used to go wrong: the sequence number was only "taken" after the
+    // disk had answered. Both entries looked at the counter while it still
+    // said 1, so both were stored as number 1, and after a reload nobody
+    // could tell which car had been typed first.
+    const disk = createSlowStorage(createMemoryStorage());
+    const store = await LocalStore.open(disk);
+    disk.holdWrites = true;
+
+    const writingCar7 = store.addEntry(entry('a', 7));
+    const writingCar41 = store.addEntry(entry('b', 41));
+    await disk.finishWrite(1);      // car 41 reaches the disk first...
+    await disk.finishWrite(0);      // ...car 7 a moment later
+    const [car7, car41] = await Promise.all([writingCar7, writingCar41]);
+
+    // Expected: 7 is number 1 and 41 is number 2, whatever the disk did.
+    assert.equal(car7.seq, 1);
+    assert.equal(car41.seq, 2);
+    // The list on the screen is in typing order...
+    assert.deepEqual(store.allEntries().map((item) => item.car), [7, 41]);
+    // ...and so is the list after a reload.
+    const afterReload = await LocalStore.open(disk);
+    assert.deepEqual(afterReload.allEntries().map((item) => item.car), [7, 41]);
+});
+
+test('a write that fails leaves a gap in the numbering, never a repeated number', async () => {
+    // Situation: the disk refuses one entry (the counter is told "NÃO
+    // REGISTRADO" and types it again). The next entries must still get
+    // numbers nobody else has.
+    const disk = createFlakyStorage(createMemoryStorage());
+    const store = await LocalStore.open(disk);
+    const first = await store.addEntry(entry('a', 7));
+
+    disk.failWrites = true;
+    await assert.rejects(() => store.addEntry(entry('b', 41)));
+    disk.failWrites = false;
+    const retyped = await store.addEntry(entry('c', 41));
+
+    // Expected: 1, then 3. Number 2 was used up by the failed attempt.
+    assert.deepEqual([first.seq, retyped.seq], [1, 3]);
+    assert.deepEqual(store.allEntries().map((item) => item.uuid), ['a', 'c']);
+});
+
+test('the store knows when something is still on its way to the disk', async () => {
+    // Situation: the counter pressed Enter; the phone's storage has not
+    // answered yet. The entry is in no list at this moment (rule 1: disk
+    // first), but it exists. The upload queue needs to know that, see
+    // "queue_empty" in sync-queue.test.js.
+    const disk = createSlowStorage(createMemoryStorage());
+    const store = await LocalStore.open(disk);
+    disk.holdWrites = true;
+    assert.equal(store.hasWriteInFlight(), false);
+
+    const writing = store.addEntry(entry('a', 7));
+    assert.equal(store.hasWriteInFlight(), true);
+    assert.equal(store.pendingCount(), 0, 'not in the list yet');
+
+    await disk.finishNextWrite();
+    await writing;
+    assert.equal(store.hasWriteInFlight(), false);
+    assert.equal(store.pendingCount(), 1);
 });

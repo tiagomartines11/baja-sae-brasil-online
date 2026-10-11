@@ -40,86 +40,92 @@ final class DuplicateFilter
     public array $openRepeatEntryIds = [];
 
     /**
-     * @param Entry[] $entries entries after decisions
+     * @param Entry[] $entriesInTimeOrder entries after decisions, in time order
      * @param array<int, true> $confirmedEntryIds entries a reviewer said to keep
      * @param array<int, Source> $sourcesById
      */
-    public static function filter(array $entries, Settings $settings, array $confirmedEntryIds, array $sourcesById): self
+    public static function filter(array $entriesInTimeOrder, Settings $settings, array $confirmedEntryIds, array $sourcesById): self
     {
         $result = new self();
+        $janelaMs = $settings->janelaMs;
 
-        $bySourceAndCar = [];
-        foreach ($entries as $entry) {
-            if ($entry->fonteId === Source::REVISOR_ID) {
+        /** @var array<int, array<int, Entry>> fonteId => carro => the last entry kept for that source and car */
+        $lastKeptBySourceAndCar = [];
+
+        foreach ($entriesInTimeOrder as $entry) {
+            $fonteId = $entry->fonteId;
+            if ($fonteId === Source::REVISOR_ID) {
                 // A pass added by a reviewer is deliberate; never second-guess it.
                 $result->keptEntries[] = $entry;
                 continue;
             }
-            $bySourceAndCar[$entry->fonteId . ':' . $entry->carro][] = $entry;
-        }
 
-        foreach ($bySourceAndCar as $sameSourceSameCar) {
-            if (count($sameSourceSameCar) > 1) {
-                usort($sameSourceSameCar, fn(Entry $a, Entry $b) => ($a->tsMs <=> $b->tsMs) ?: ($a->id <=> $b->id));
+            $lastKept = $lastKeptBySourceAndCar[$fonteId][$entry->carro] ?? null;
+            if ($lastKept === null || $entry->tsMs - $lastKept->tsMs >= $janelaMs) {
+                // The ordinary case: this source's first entry for the car in a while.
+                $result->keptEntries[] = $entry;
+                $lastKeptBySourceAndCar[$fonteId][$entry->carro] = $entry;
+                continue;
             }
-            $result->filterOneSequence($sameSourceSameCar, $settings, $confirmedEntryIds, $sourcesById);
+
+            if ($result->keepsRepeat($entry, $lastKept, $settings, $confirmedEntryIds, $sourcesById)) {
+                $result->keptEntries[] = $entry;
+                $lastKeptBySourceAndCar[$fonteId][$entry->carro] = $entry;
+            }
         }
 
         return $result;
     }
 
     /**
-     * @param Entry[] $sequence one source's entries for one car, in time order
+     * Deals with an entry that repeats `$lastKept` (same source, same car,
+     * inside the matching window). Returns true when the entry stays in the
+     * count, false when it was voided automatically.
+     *
      * @param array<int, true> $confirmedEntryIds
      * @param array<int, Source> $sourcesById
      */
-    private function filterOneSequence(array $sequence, Settings $settings, array $confirmedEntryIds, array $sourcesById): void
+    private function keepsRepeat(Entry $entry, Entry $lastKept, Settings $settings, array $confirmedEntryIds, array $sourcesById): bool
     {
-        $lastKept = null;
-        foreach ($sequence as $entry) {
-            if ($lastKept === null || $entry->tsMs - $lastKept->tsMs >= $settings->janelaMs) {
-                $this->keptEntries[] = $entry;
-                $lastKept = $entry;
-                continue;
-            }
+        $gapMs = $entry->tsMs - $lastKept->tsMs;
+        $fromAnotherDevice = $entry->dispositivoId !== $lastKept->dispositivoId;
+        $sourceName = isset($sourcesById[$entry->fonteId]) ? $sourcesById[$entry->fonteId]->nome : 'A contagem';
 
-            $gapMs = $entry->tsMs - $lastKept->tsMs;
-            $fromAnotherDevice = $entry->dispositivoId !== $lastKept->dispositivoId;
-            $sourceName = isset($sourcesById[$entry->fonteId]) ? $sourcesById[$entry->fonteId]->nome : 'A contagem';
-
-            if ($fromAnotherDevice || $gapMs <= $settings->duplicataMs) {
-                $this->autoVoidedEntryIds[] = $entry->id;
-                $this->autoVoidedCountBySource[$entry->fonteId] = ($this->autoVoidedCountBySource[$entry->fonteId] ?? 0) + 1;
-
-                $flag = new Flag(Flag::REPETIDA, [$entry->carro], [$lastKept->id, $entry->id], $lastKept->id . '-' . $entry->id);
-                $flag->fonteId = $entry->fonteId;
-                $flag->tsMs = $entry->tsMs;
-                $flag->autoResolvido = true;
-                $flag->motivo = $fromAnotherDevice
-                    ? sprintf('%s registrou o carro %d em dois aparelhos (troca de contador); a segunda passagem foi ignorada.', $sourceName, $entry->carro)
-                    : sprintf('%s registrou o carro %d duas vezes em %d s (toque duplo); a segunda passagem foi ignorada.', $sourceName, $entry->carro, (int) round($gapMs / 1000));
-                $this->flags[] = $flag;
-                continue;
-            }
-
-            // Kept: either a reviewer already said "keep both", or it stays
-            // in the count until a reviewer decides.
-            $this->keptEntries[] = $entry;
-            if (!isset($confirmedEntryIds[$entry->id])) {
-                $flag = new Flag(Flag::REPETIDA, [$entry->carro], [$entry->id, $lastKept->id], $lastKept->id . '-' . $entry->id);
-                $flag->fonteId = $entry->fonteId;
-                $flag->tsMs = $entry->tsMs;
-                $flag->sugestao = ['tipo' => Decision::ANULAR, 'passagem_id' => $entry->id];
-                $flag->motivo = sprintf(
-                    '%s registrou o carro %d duas vezes com %d s de intervalo, tempo curto demais para uma volta.',
-                    $sourceName,
-                    $entry->carro,
-                    (int) round($gapMs / 1000)
-                );
-                $this->flags[] = $flag;
-                $this->openRepeatEntryIds[$entry->id] = true;
-            }
-            $lastKept = $entry;
+        // A reviewer who pressed "keep both" on this entry overrules the
+        // automatic void, however close the two entries are, and has
+        // already answered the question an open flag would ask.
+        if (isset($confirmedEntryIds[$entry->id])) {
+            return true;
         }
+
+        if ($fromAnotherDevice || $gapMs <= $settings->duplicataMs) {
+            $this->autoVoidedEntryIds[] = $entry->id;
+            $this->autoVoidedCountBySource[$entry->fonteId] = ($this->autoVoidedCountBySource[$entry->fonteId] ?? 0) + 1;
+
+            $flag = new Flag(Flag::REPETIDA, [$entry->carro], [$lastKept->id, $entry->id], $lastKept->id . '-' . $entry->id);
+            $flag->fonteId = $entry->fonteId;
+            $flag->tsMs = $entry->tsMs;
+            $flag->autoResolvido = true;
+            $flag->motivo = $fromAnotherDevice
+                ? sprintf('%s registrou o carro %d em dois aparelhos (troca de contador); a segunda passagem foi ignorada.', $sourceName, $entry->carro)
+                : sprintf('%s registrou o carro %d duas vezes em %d s (toque duplo); a segunda passagem foi ignorada.', $sourceName, $entry->carro, (int) round($gapMs / 1000));
+            $this->flags[] = $flag;
+            return false;
+        }
+
+        // Odd enough to show to a reviewer. It stays in the count meanwhile.
+        $flag = new Flag(Flag::REPETIDA, [$entry->carro], [$entry->id, $lastKept->id], $lastKept->id . '-' . $entry->id);
+        $flag->fonteId = $entry->fonteId;
+        $flag->tsMs = $entry->tsMs;
+        $flag->sugestao = ['tipo' => Decision::ANULAR, 'passagem_id' => $entry->id];
+        $flag->motivo = sprintf(
+            '%s registrou o carro %d duas vezes com %d s de intervalo, tempo curto demais para uma volta.',
+            $sourceName,
+            $entry->carro,
+            (int) round($gapMs / 1000)
+        );
+        $this->flags[] = $flag;
+        $this->openRepeatEntryIds[$entry->id] = true;
+        return true;
     }
 }

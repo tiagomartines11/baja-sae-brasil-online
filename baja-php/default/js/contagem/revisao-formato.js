@@ -15,6 +15,7 @@ export const NOMES_DE_ALERTA = {
   no_box: 'Passagem com o carro no box',
   volta_curta: 'Volta curta demais',
   divergencia_total: 'Diferença para o total importado',
+  primeira_passagem_tardia: 'Primeira passagem tardia',
 };
 
 export const NOMES_DE_STATUS = {
@@ -84,6 +85,16 @@ export function tempoDeProva(tsMs, largadaMs) {
     return SEM_VALOR;
   }
   return relogio(tsMs - largadaMs);
+}
+
+// Wall-clock time of a moment, "14:03:27", in this computer's time zone.
+// Used where race time means nothing: a device seen before the start.
+export function horaDoDia(tsMs) {
+  if (tsMs === null || tsMs === undefined) {
+    return SEM_VALOR;
+  }
+  const data = new Date(tsMs);
+  return `${doisDigitos(data.getHours())}:${doisDigitos(data.getMinutes())}:${doisDigitos(data.getSeconds())}`;
 }
 
 // The opposite of relogio(): what a reviewer types in "adicionar passagem".

@@ -21,6 +21,14 @@ final class Stats
             return null;
         }
         $sorted = array_values($values);
+        if ($count === 3) {
+            // Nearly every median the engine takes is of the three times of
+            // one pass. The middle of three needs no sorting: it is the
+            // larger of "the smaller of the first two" and "the smaller of
+            // the third and the larger of the first two".
+            [$first, $second, $third] = $sorted;
+            return (float) max(min($first, $second), min(max($first, $second), $third));
+        }
         sort($sorted);
         $middle = intdiv($count, 2);
         if ($count % 2 === 1) {

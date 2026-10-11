@@ -58,6 +58,17 @@ export async function obtainDeviceToken({ store, requestToken, usuario }) {
 }
 
 /**
+ * The token on disk, when it may still be used, without asking anybody.
+ * For the one moment the page cannot wait for an answer: while it closes.
+ * @returns {?string}
+ */
+export function storedUsableToken(store) {
+    const stored = store.getMeta(META_DEVICE, null);
+    const revoked = store.getMeta(META_REVOKED, false);
+    return stored !== null && !revoked && typeof stored.token === 'string' ? stored.token : null;
+}
+
+/**
  * Handover on a shared phone with no network: the entries still have to reach
  * the server, so the previous (still valid) token keeps being used until a
  * new one can be issued.

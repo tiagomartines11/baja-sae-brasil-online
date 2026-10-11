@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    MODO, MAX_DIGITS, NumberBuffer, createPreferences, loadEntryMode, saveEntryMode,
+    MODO, MAX_DIGITS, TECLA, NumberBuffer, createPreferences, keyActionFor, loadEntryMode, saveEntryMode,
 } from '../../default/js/contagem/entry-modes.js';
 
 /** A minimal localStorage: getItem/setItem over a Map. */
@@ -161,4 +161,80 @@ test('leading zeros do not create a different car', () => {
     buffer.setText('007', 1000);
 
     assert.equal(buffer.confirm(1500).car, 7);
+});
+
+// ---------------------------------------------------------------------------
+// Keys pressed anywhere on the page
+// ---------------------------------------------------------------------------
+//
+// `keyActionFor(key, where)` answers one question: "this key was just pressed
+// somewhere on the page; does it belong to the car number?". `key` is what the
+// browser reports about the key press. `typedInNumberBox` says whether the
+// cursor was in the number box when it happened.
+
+const SOMEWHERE_ELSE = { mode: MODO.TECLADO, typedInNumberBox: false };
+
+test('in keyboard mode, digits typed after clicking elsewhere on the page still count', () => {
+    // Situation: a counter with a laptop uses the keyboard mode. Car 41
+    // passes; they typed 14 by mistake, so they click "desfazer" in the list
+    // with the mouse. The cursor has now left the number box. The next car,
+    // 7, is already coming, and they type 7 and Enter without looking.
+    //
+    // What used to go wrong: the page only listened to keys INSIDE the
+    // number box. "7" and Enter went nowhere, and car 7 was not counted,
+    // without any sign of it on the screen.
+    assert.deepEqual(keyActionFor({ key: '7' }, SOMEWHERE_ELSE), { tecla: TECLA.DIGITO, digito: '7' });
+    assert.deepEqual(keyActionFor({ key: 'Backspace' }, SOMEWHERE_ELSE), { tecla: TECLA.APAGAR, digito: null });
+    assert.deepEqual(keyActionFor({ key: 'Enter' }, SOMEWHERE_ELSE), { tecla: TECLA.REGISTRAR, digito: null });
+});
+
+test('in keyboard mode, a key typed inside the number box is left to the box', () => {
+    // Situation: the normal case, cursor in the number box. The box itself
+    // already puts the digit into the number.
+    const insideTheBox = { mode: MODO.TECLADO, typedInNumberBox: true };
+
+    // Expected: the page-wide listener stays out of it. Otherwise every digit
+    // would be entered twice and car 7 would become car 77.
+    assert.equal(keyActionFor({ key: '7' }, insideTheBox), null);
+    assert.equal(keyActionFor({ key: 'Enter' }, insideTheBox), null);
+});
+
+test('the on-screen keypad answers to a physical keyboard wherever the cursor is', () => {
+    // Situation: keypad mode on a tablet with a keyboard attached.
+    for (const typedInNumberBox of [false, true]) {
+        const where = { mode: MODO.TECLADO_TELA, typedInNumberBox };
+        assert.deepEqual(keyActionFor({ key: '4' }, where), { tecla: TECLA.DIGITO, digito: '4' });
+        assert.deepEqual(keyActionFor({ key: 'Enter' }, where), { tecla: TECLA.REGISTRAR, digito: null });
+    }
+});
+
+test('a key held down too long is counted once', () => {
+    // Situation: the counter rests a finger on "7", or leans on Enter. The
+    // keyboard then repeats the key many times a second, and the browser
+    // marks every repetition with `repeat: true`.
+    //
+    // Expected: the repetitions are ignored. Otherwise a long press would
+    // type 7777, or record the same car as several passes.
+    assert.equal(keyActionFor({ key: '7', repeat: true }, SOMEWHERE_ELSE), null);
+    assert.equal(keyActionFor({ key: 'Enter', repeat: true }, SOMEWHERE_ELSE), null);
+    assert.equal(keyActionFor({ key: 'Enter', repeat: true }, { mode: MODO.TECLADO_TELA, typedInNumberBox: false }), null);
+});
+
+test('browser shortcuts and other keys are not car numbers', () => {
+    // Situation: Ctrl+1 switches to the first browser tab, Alt+4 may close a
+    // window, and letters or the space bar mean nothing here.
+    assert.equal(keyActionFor({ key: '1', ctrlKey: true }, SOMEWHERE_ELSE), null);
+    assert.equal(keyActionFor({ key: '4', altKey: true }, SOMEWHERE_ELSE), null);
+    assert.equal(keyActionFor({ key: '2', metaKey: true }, SOMEWHERE_ELSE), null);
+    assert.equal(keyActionFor({ key: 'a' }, SOMEWHERE_ELSE), null);
+    assert.equal(keyActionFor({ key: ' ' }, SOMEWHERE_ELSE), null);
+});
+
+test('in tile mode the keyboard records nothing', () => {
+    // Situation: the counter chose one button per car. There is no number
+    // being typed, so a key press (a phone in a pocket with a keyboard case,
+    // say) must not turn into a pass.
+    const tiles = { mode: MODO.BLOCOS, typedInNumberBox: false };
+    assert.equal(keyActionFor({ key: '7' }, tiles), null);
+    assert.equal(keyActionFor({ key: 'Enter' }, tiles), null);
 });

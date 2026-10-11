@@ -84,6 +84,13 @@ final class RaceTimeline
         return self::CORRENDO;
     }
 
+    /** True between the start and the finish, red flags included: the race is "on". */
+    public function isRunningAt(int $tsMs): bool
+    {
+        $state = $this->stateAt($tsMs);
+        return $state === self::CORRENDO || $state === self::BANDEIRA_VERMELHA;
+    }
+
     /** Race clock: time since the start, frozen at the end. Null before the start. */
     public function elapsedMs(int $nowMs): ?int
     {
@@ -123,6 +130,18 @@ final class RaceTimeline
             }
         }
         return null;
+    }
+
+    /** When the car last left the pit lane at or before $tsMs, or null if it never did. */
+    public function lastPitExitBefore(int $carro, int $tsMs): ?int
+    {
+        $lastExit = null;
+        foreach ($this->pitIntervals[$carro] ?? [] as [$in, $out]) {
+            if ($out !== null && $out <= $tsMs && ($lastExit === null || $out > $lastExit)) {
+                $lastExit = $out;
+            }
+        }
+        return $lastExit;
     }
 
     /** @return int[] cars logged as in the pit lane at $tsMs, in ascending order */

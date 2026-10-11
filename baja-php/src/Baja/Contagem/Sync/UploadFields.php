@@ -51,6 +51,22 @@ final class UploadFields
         return $car;
     }
 
+    /**
+     * Is this a moment something could really have been recorded at?
+     *
+     * A phone whose clock is set to the wrong day, or a client sending
+     * seconds instead of milliseconds, would otherwise put entries years
+     * away from the race, where no review screen would ever show them.
+     * Up to a week old is accepted (a phone found in a bag after the event
+     * still uploads), and up to a day ahead (clock offsets are estimates).
+     */
+    public static function isPlausibleTime(int $tsMs, int $nowMs): bool
+    {
+        $weekMs = 7 * 24 * 3600 * 1000;
+        $dayMs = 24 * 3600 * 1000;
+        return $tsMs >= $nowMs - $weekMs && $tsMs <= $nowMs + $dayMs;
+    }
+
     /** @param mixed $value */
     public static function intOrNull($value): ?int
     {

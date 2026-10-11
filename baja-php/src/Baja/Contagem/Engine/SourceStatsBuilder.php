@@ -60,8 +60,18 @@ final class SourceStatsBuilder
 
         // A miss: a pass that counts thanks to the other sources, at a moment
         // when this source was expected and has nothing.
+        $countingSources = 0;
+        foreach ($sourcesById as $source) {
+            $countingSources += $source->recordsPasses() ? 1 : 0;
+        }
         foreach ($groups as $group) {
-            if (!$group->contado || count($group->realSourceIds()) < 2) {
+            $sourcesInGroup = count($group->entries);
+            // A pass every source recorded (nearly all of them) has no miss
+            // to look for.
+            if (!$group->contado || $sourcesInGroup < 2 || $sourcesInGroup >= $countingSources) {
+                continue;
+            }
+            if (count($group->realSourceIds()) < 2) {
                 continue;
             }
             foreach ($availability->expectedSourceIdsAt($group->primeiroTsMs) as $expectedSourceId) {

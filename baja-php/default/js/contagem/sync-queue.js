@@ -10,6 +10,8 @@
 // Dependencies arrive as arguments (store, send, clock, now) so the whole thing
 // runs under `node --test` with a fake server.
 
+import { buildSyncRequest, nothingIsWaiting } from './sync-request.js';
+
 export const CONEXAO = {
     CONECTANDO: 'conectando',
     ONLINE: 'online',
@@ -22,9 +24,13 @@ export const RESULTADO = {
     FALHA: 'falha',
     REVOGADO: 'revogado',
     OCUPADO: 'ocupado',
+    // Nothing was sent because this page has nothing it is allowed to say
+    // (shift ended, or memory-only storage with nothing waiting).
+    SILENCIO: 'silencio',
 };
 
-export const HEARTBEAT_INTERVAL_MS = 5000;
+// The one answer that means "this token is no longer accepted".
+const ERRO_TOKEN_INVALIDO = 'token_invalido';
 
 // Upper bound per request, so that a device coming back after an hour offline
 // sends several moderate requests instead of one enormous one.
@@ -37,6 +43,8 @@ const MAX_REQUESTS_PER_FLUSH = 50;
 const META_REVOKED = 'token_revogado';
 const META_LAST_SYNC = 'ultimo_sync_ms';
 const META_SERVER_INFO = 'servidor';
+const META_CLOCK = 'relogio';
+const META_SHIFT_ENDED = 'turno_encerrado';
 
 export class SyncQueue {
     /**
@@ -47,23 +55,35 @@ export class SyncQueue {
      * @param {function} options.now    () => device time in ms
      * @param {function} [options.onChange] called with the new state after anything changes
      * @param {number}   [options.maxBatch]
+     * @param {boolean}  [options.vouchesForHistory] false when the store is memory only
      */
-    constructor({ store, send, clock, now, onChange = null, maxBatch = DEFAULT_MAX_BATCH }) {
+    constructor({
+        store, send, clock, now, onChange = null, maxBatch = DEFAULT_MAX_BATCH, vouchesForHistory = true,
+    }) {
         this.store = store;
         this.send = send;
         this.clock = clock;
         this.now = now;
         this.onChange = onChange;
         this.maxBatch = maxBatch;
+        this.vouchesForHistory = vouchesForHistory;
 
         this.requestInFlight = false;
         this.flushPromise = null;
         this.flushRequestedMeanwhile = false;
-        this.heartbeatTimer = null;
 
         // A revoked token stays revoked across reloads: the mark is on disk.
         this.conexao = store.getMeta(META_REVOKED, false) ? CONEXAO.REVOGADO : CONEXAO.CONECTANDO;
+        // Device time at which the server refused the token during THIS page
+        // load (null when the mark was already on disk).
+        this.revokedAtMs = null;
+        // So does an ended shift: reopening the page must not quietly tell
+        // the server "I am counting again" before the person says so.
+        this.turnoEncerrado = store.getMeta(META_SHIFT_ENDED, false) === true;
         this.outrosUsuarios = [];
+
+        // The clock estimate saved before a reload (see applyAnswer).
+        clock.restore(store.getMeta(META_CLOCK, null), now());
     }
 
     /** Everything the status bar needs, in one object. */
@@ -74,6 +94,7 @@ export class SyncQueue {
             ultimoSyncMs: this.store.getMeta(META_LAST_SYNC, null),
             servidor: this.store.getMeta(META_SERVER_INFO, null),
             outrosUsuarios: this.outrosUsuarios,
+            turnoEncerrado: this.turnoEncerrado,
         };
     }
 
@@ -83,75 +104,87 @@ export class SyncQueue {
         }
     }
 
-    /** The request body, exactly as the contract of contagem_sync.php describes it. */
-    buildRequest() {
-        const offsetMs = this.clock.offsetMs();
-        const entries = this.store.unsentEntries().slice(0, this.maxBatch).map((record) => ({
-            uuid: record.uuid,
-            car: record.car,
-            ts_device_ms: record.ts_device_ms,
-            clock_offset_ms: record.clock_offset_ms,
-            typing_ms: record.typing_ms,
-            mode: record.mode,
-        }));
-        const voids = this.store.voidsReadyToSend().slice(0, this.maxBatch).map((record) => ({ uuid: record.uuid }));
-        const pitEvents = this.store.unsentPitEvents().slice(0, this.maxBatch).map((record) => ({
-            uuid: record.uuid,
-            car: record.car,
-            tipo: record.tipo,
-            ts_device_ms: record.ts_device_ms,
-            clock_offset_ms: record.clock_offset_ms,
-        }));
+    buildRequest({ encerrando = false } = {}) {
+        return buildSyncRequest({
+            store: this.store,
+            clock: this.clock,
+            now: this.now,
+            maxBatch: this.maxBatch,
+            vouchesForHistory: this.vouchesForHistory,
+            encerrando,
+        });
+    }
 
-        return {
-            entries,
-            voids,
-            pit_events: pitEvents,
-            device_now_ms: this.now(),
-            clock_offset_ms: offsetMs,
-            // "queue_empty" tells the server "you have everything I recorded
-            // up to device_now_ms", and the server then trusts this source up
-            // to that moment. We only say it when it is certainly true:
-            // nothing at all is waiting, and we know our clock offset (without
-            // it the server could not place device_now_ms on its own clock).
-            queue_empty: this.store.pendingCount() === 0 && offsetMs !== null,
-        };
+    /**
+     * Whether this page should stay quiet. An empty request is itself a
+     * statement ("I am here, counting, and this is all I have"), so it is
+     * not sent after the shift ended, nor from a memory-only page, which
+     * cannot know what this device recorded before. Data is never held back:
+     * as soon as something is waiting, it goes.
+     */
+    mustStaySilent() {
+        return (this.turnoEncerrado || !this.vouchesForHistory) && nothingIsWaiting(this.store);
     }
 
     /**
      * One request, one answer.
-     * @returns {Promise<{resultado: string, confirmados: number}>}
+     * @param {object}  [options]
+     * @param {boolean} [options.encerrando] ask the server to stop waiting for
+     *        this device (only honoured when nothing is left to upload)
+     * @returns {Promise<{resultado: string, confirmados: number, encerrado: boolean}>}
+     *          `encerrado`: the server answered a request that carried "encerrando"
      */
-    async syncOnce() {
+    async syncOnce({ encerrando = false } = {}) {
         if (this.conexao === CONEXAO.REVOGADO) {
-            return { resultado: RESULTADO.REVOGADO, confirmados: 0 };
+            return { resultado: RESULTADO.REVOGADO, confirmados: 0, encerrado: false };
+        }
+        if (!encerrando && this.mustStaySilent()) {
+            return { resultado: RESULTADO.SILENCIO, confirmados: 0, encerrado: false };
         }
         if (this.requestInFlight) {
             // Two overlapping requests would be harmless for the data (uuids),
             // but would waste a weak connection.
-            return { resultado: RESULTADO.OCUPADO, confirmados: 0 };
+            return { resultado: RESULTADO.OCUPADO, confirmados: 0, encerrado: false };
         }
 
         this.requestInFlight = true;
         try {
-            const request = this.buildRequest();
+            if (this.turnoEncerrado && !encerrando) {
+                // Something to upload appeared after the shift ended. Data
+                // is never held back: it goes, and the shift is open again.
+                await this.setShiftEnded(false);
+            }
+            const request = this.buildRequest({ encerrando });
             let response;
+            // Fallback timing for a `send` that does not measure its own.
+            const calledSendAtMs = this.now();
             try {
                 response = await this.send(request);
             } catch (networkError) {
                 return this.registerFailure();
             }
-            const receivedAtMs = this.now();
+            const answerSeenAtMs = this.now();
+            // The real transport reports the instants right around the
+            // fetch itself. Between "calledSendAtMs" and the fetch it may
+            // have spent seconds fetching a device token, and counting those
+            // as travel time would spoil the clock estimate.
+            const timing = {
+                sentAtMs: Number.isFinite(response.sentAtMs) ? response.sentAtMs : calledSendAtMs,
+                receivedAtMs: Number.isFinite(response.receivedAtMs) ? response.receivedAtMs : answerSeenAtMs,
+            };
 
-            if (response.status === 401) {
+            const body = response.body;
+            if (response.status === 401 && body && body.erro === ERRO_TOKEN_INVALIDO) {
                 return await this.registerRevoked();
             }
-            const body = response.body;
+            // Every other answer that is not a proper 200, INCLUDING any
+            // other 401 (a proxy or a captive Wi-Fi portal can produce one),
+            // is trouble on the way, not a decision about this device.
             if (response.status !== 200 || !body || !Array.isArray(body.stored_uuids)) {
                 return this.registerFailure();
             }
-            const confirmados = await this.applyAnswer(request, body, receivedAtMs);
-            return { resultado: RESULTADO.OK, confirmados };
+            const confirmados = await this.applyAnswer(request, body, timing);
+            return { resultado: RESULTADO.OK, confirmados, encerrado: request.encerrando === true };
         } finally {
             this.requestInFlight = false;
             this.notifyChange();
@@ -160,19 +193,24 @@ export class SyncQueue {
 
     registerFailure() {
         this.conexao = CONEXAO.OFFLINE;
-        return { resultado: RESULTADO.FALHA, confirmados: 0 };
+        return { resultado: RESULTADO.FALHA, confirmados: 0, encerrado: false };
     }
 
-    /** 401: stop for good. Nothing local is touched except the mark itself. */
+    /**
+     * The server said this token is no longer accepted: uploads stop. Nothing
+     * local is touched except the mark itself. From now on the heartbeat
+     * only asks, slowly, whether the device has been let back in (see
+     * sync-heartbeat.js).
+     */
     async registerRevoked() {
         this.conexao = CONEXAO.REVOGADO;
-        this.stopHeartbeat();
+        this.revokedAtMs = this.now();
         await this.store.setMeta(META_REVOKED, true);
-        return { resultado: RESULTADO.REVOGADO, confirmados: 0 };
+        return { resultado: RESULTADO.REVOGADO, confirmados: 0, encerrado: false };
     }
 
-    async applyAnswer(request, body, receivedAtMs) {
-        this.clock.addSample(request.device_now_ms, receivedAtMs, body.server_now_ms);
+    async applyAnswer(request, body, { sentAtMs, receivedAtMs }) {
+        const becameTheEstimate = this.clock.addSample(sentAtMs, receivedAtMs, body.server_now_ms);
 
         // Only uuids that were in THIS request and that the server named are
         // marked. Anything the server left out stays in the queue.
@@ -196,6 +234,11 @@ export class SyncQueue {
             cars_in_pit: Array.isArray(body.cars_in_pit) ? body.cars_in_pit : [],
         });
         await this.store.setMeta(META_LAST_SYNC, receivedAtMs);
+        if (becameTheEstimate) {
+            // So that a reload (also one with no network) starts with a
+            // known offset instead of "unknown".
+            await this.store.setMeta(META_CLOCK, this.clock.sampleToStore());
+        }
 
         this.outrosUsuarios = Array.isArray(body.outros_usuarios) ? body.outros_usuarios : [];
         this.conexao = CONEXAO.ONLINE;
@@ -243,27 +286,6 @@ export class SyncQueue {
     }
 
     /**
-     * Heartbeat: one flush every 5 s even with nothing to send. It is both the
-     * retry after a failure and what lets the server see this source is alive.
-     */
-    startHeartbeat(setIntervalFn = setInterval, clearIntervalFn = clearInterval, intervalMs = HEARTBEAT_INTERVAL_MS) {
-        this.stopHeartbeat();
-        if (this.conexao === CONEXAO.REVOGADO) {
-            return;
-        }
-        this.clearIntervalFn = clearIntervalFn;
-        this.heartbeatTimer = setIntervalFn(() => this.requestSync(), intervalMs);
-        this.requestSync();
-    }
-
-    stopHeartbeat() {
-        if (this.heartbeatTimer !== null) {
-            this.clearIntervalFn(this.heartbeatTimer);
-            this.heartbeatTimer = null;
-        }
-    }
-
-    /**
      * Called only after the server issued a NEW device token (which needs a
      * logged-in user who is still allowed on this source). The entries that
      * were waiting are then uploaded under the new token.
@@ -271,6 +293,18 @@ export class SyncQueue {
     async resumeWithNewToken() {
         await this.store.setMeta(META_REVOKED, false);
         this.conexao = CONEXAO.CONECTANDO;
+        this.revokedAtMs = null;
+        this.notifyChange();
+    }
+
+    /**
+     * Marks the shift as ended or open again (shift-control.js has the whole
+     * procedure). While it is ended, mustStaySilent() keeps every heartbeat
+     * from reaching the server. The mark is on disk: it survives a reload.
+     */
+    async setShiftEnded(ended) {
+        await this.store.setMeta(META_SHIFT_ENDED, ended);
+        this.turnoEncerrado = ended;
         this.notifyChange();
     }
 }

@@ -18,20 +18,19 @@ use Baja\Contagem\Engine\Data\Source;
 final class PassMatcher
 {
     /**
-     * @param Entry[] $entries
+     * @param Entry[] $entriesInTimeOrder already sorted by time (LapCounter does it once for every step)
      * @param array<int, true> $confirmedEntryIds
      * @return array<int, PassGroup[]> carro => its pass groups in time order
      */
-    public static function match(array $entries, int $janelaMs, array $confirmedEntryIds): array
+    public static function match(array $entriesInTimeOrder, int $janelaMs, array $confirmedEntryIds): array
     {
         $entriesByCar = [];
-        foreach ($entries as $entry) {
+        foreach ($entriesInTimeOrder as $entry) {
             $entriesByCar[$entry->carro][] = $entry;
         }
 
         $groupsByCar = [];
         foreach ($entriesByCar as $carro => $carEntries) {
-            usort($carEntries, fn(Entry $a, Entry $b) => ($a->tsMs <=> $b->tsMs) ?: ($a->id <=> $b->id));
             $groupsByCar[$carro] = self::matchOneCar($carEntries, $janelaMs, $confirmedEntryIds);
         }
 

@@ -20,15 +20,14 @@ export const pagina = {
   carros: document.getElementById('tabela-carros'),
   fontes: document.getElementById('estatisticas-fontes'),
   historico: document.getElementById('tabela-historico'),
+  historicoMais: document.getElementById('historico-mais'),
 };
 
 export const tela = {
-  estado: null,            // last full state from the server
-  estadosRecebidos: 0,     // how many full states arrived so far
+  estado: null,            // last full state from the server, with later "inalterado" answers folded in
   desvioMs: 0,             // server clock minus this computer's clock
   falhas: 0,               // polls failed in a row
   sessaoExpirada: false,
-  pollsDesdeCompleto: 0,
   selecao: null,           // {tipo: 'alerta', id} or {tipo: 'carro', numero}
   janela: null,            // timeline loaded for the selection
   janelaVersao: null,      // state version the timeline was loaded at
@@ -36,6 +35,10 @@ export const tela = {
   erroDaJanela: false,
   entradaSelecionadaId: null,
   modoManual: false,
+  motivo: '',              // optional reason typed for the next decision in the detail panel
+  historicoAntigo: [],     // older pages of the history, loaded on request
+  historicoHaMais: false,  // whether an even older page exists
+  historicoCarregando: false,
   ocupado: false,          // a decision is on its way; buttons are disabled
 };
 

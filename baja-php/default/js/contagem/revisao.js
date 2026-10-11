@@ -1,20 +1,33 @@
-// Review screen: entry module. Polls the server, keeps track of what is
-// selected and redraws. The state lives in revisao-tela.js, the decision
-// buttons in revisao-acoes.js, the drawing in the other revisao-*.js
-// modules, and the rules worth testing in the pure ones (revisao-fila.js,
-// revisao-decisoes.js, revisao-conexao.js, revisao-raias-logica.js).
+// Review screen: entry module. Polls the server and keeps track of what is
+// selected. The state lives in revisao-tela.js, the decision buttons in
+// revisao-acoes.js, what is redrawn when in revisao-desenho.js, the drawing
+// itself in the other revisao-*.js modules, and the rules worth testing in
+// the pure ones (revisao-fila.js, revisao-decisoes.js, revisao-conexao.js,
+// revisao-raias-logica.js).
 
 import { criarAcoes } from './revisao-acoes.js';
-import { SessaoExpirada, buscarCarro, buscarEstado, buscarJanela } from './revisao-api.js';
-import { desenharBarra, desenharFila } from './revisao-barra.js';
-import { aplicarResposta, avisoDeConexao, desvioDoServidorMs, proximoAtrasoMs, versaoParaPedir } from './revisao-conexao.js';
-import { desenharDetalheDeAlerta, desenharDetalheDeCarro } from './revisao-detalhe.js';
-import { el, estaDigitandoEm, substituir } from './revisao-dom.js';
-import { encontrarAlerta, janelaDoAlerta } from './revisao-fila.js';
-import { desenharFontes, desenharHistorico, desenharTabelaDeCarros } from './revisao-tabela.js';
-import { agoraServidorMs, mostrarAba, mostrarMensagem, pagina, semConexao, tela } from './revisao-tela.js';
+import { SessaoExpirada, buscarCarro, buscarEstado, buscarHistorico, buscarJanela } from './revisao-api.js';
+import { desenharBarra } from './revisao-barra.js';
+import {
+  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, desvioDoServidorMs, proximoAtrasoMs, versaoParaPedir,
+} from './revisao-conexao.js';
+import { alertaSelecionado, atualizarListaDeCarros, criarDesenho, janelaDesatualizada } from './revisao-desenho.js';
+import { estaDigitandoEm } from './revisao-dom.js';
+import { janelaDoAlerta } from './revisao-fila.js';
+import { agoraServidorMs, mostrarAba, mostrarMensagem, pagina, tela } from './revisao-tela.js';
 
-const acoes = criarAcoes({ receberEstado, desenharTudo, carregarJanela });
+// Puts the answers in order; see criarOrdemDePedidos().
+const ordem = criarOrdemDePedidos();
+
+const acoes = criarAcoes({
+  novoPedido: ordem.novo,
+  receberEstado,
+  // Wrapped: desenharTudo only exists once criarDesenho() below has run.
+  desenharTudo: () => desenharTudo(),
+  carregarJanela,
+  janelaDesatualizada,
+  atualizarAgora,
+});
 
 const acoesDoDetalhe = {
   aceitar: acoes.aceitar,
@@ -23,140 +36,63 @@ const acoesDoDetalhe = {
   acaoNaEntrada: acoes.acaoNaEntrada,
   adicionar: acoes.adicionar,
   alternarManual: () => { tela.modoManual = !tela.modoManual; desenharDetalhe(); },
+  anotarMotivo: (texto) => { tela.motivo = texto; },
   escolherEntrada: (id) => { tela.entradaSelecionadaId = tela.entradaSelecionadaId === id ? null : id; desenharDetalhe(); },
   recarregar: carregarJanela,
   fechar: () => { tela.selecao = null; tela.janela = null; desenharTudo(); mostrarAba('fila'); },
 };
 
-// ---- drawing ---------------------------------------------------------------
+const { desenharTudo, desenharDetalhe } = criarDesenho({
+  acoes,
+  acoesDoDetalhe,
+  escolherAlerta,
+  escolherCarro,
+  carregarHistoricoAntigo,
+});
 
-const alertaSelecionado = () => (tela.selecao?.tipo === 'alerta' ? encontrarAlerta(tela.estado, tela.selecao.id) : null);
-
-// True when the loaded timeline no longer matches the state.
-//
-// For a flag that means its entries changed (its signature is different):
-// the timeline is then reloaded on its own. For a car it means anything at
-// all changed; during a race that is every few seconds, and reloading a
-// whole race that often would be wasteful, so the panel offers a button.
-function janelaDesatualizada() {
-  if (tela.janela === null || !tela.selecao || !tela.estado) {
+// Takes a full state. `numero` is the number of the request it answers;
+// a state that answers an older request than one already applied is dropped.
+// Returns whether it was applied.
+function receberEstado(estado, numero) {
+  if (!ordem.aceitar(numero)) {
     return false;
   }
-  if (tela.selecao.tipo === 'carro') {
-    return tela.janelaVersao !== tela.estado.versao;
-  }
-  const alerta = alertaSelecionado();
-  return alerta !== null && alerta.assinatura !== tela.janelaAssinatura;
-}
-
-// The poll calls desenharTudo() every two seconds. Redrawing parts that did
-// not change would reset scroll positions and could swallow a click that
-// lands while a button is being replaced, so each part is redrawn only when
-// the things it shows are different. These two functions list those things.
-function chaveDasListas() {
-  const olhando = (tela.estado.alertas_abertos ?? []).map((alerta) => alerta.olhando ?? []);
-  // estadosRecebidos and not the version: a full state with the same
-  // version can still bring a source that went offline or a car now "parado".
-  return JSON.stringify([tela.estadosRecebidos, tela.selecao, tela.ocupado, semConexao(), olhando]);
-}
-
-function chaveDoDetalhe() {
-  return JSON.stringify([
-    tela.selecao, tela.estado.versao, tela.janelaVersao, tela.janela !== null, tela.erroDaJanela,
-    tela.entradaSelecionadaId, tela.modoManual, tela.ocupado, semConexao(), alertaSelecionado()?.olhando ?? null,
-  ]);
-}
-
-const desenhado = { listas: null, detalhe: null, selecao: null };
-
-function desenharDetalhe() {
-  if (!tela.estado) {
-    return;
-  }
-  // Keep the timeline where the reviewer scrolled it, unless the panel is
-  // about to show something else.
-  const raiasAntes = pagina.detalhe.querySelector('.raias');
-  const rolagemAnterior = raiasAntes && desenhado.selecao === tela.selecao ? raiasAntes.scrollLeft : null;
-  if (rolagemAnterior !== null) {
-    // Two frames: the timeline's own "centre on the flag" runs in the first.
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const raiasDepois = pagina.detalhe.querySelector('.raias');
-      if (raiasDepois) {
-        raiasDepois.scrollLeft = rolagemAnterior;
-      }
-    }));
-  }
-
-  const contexto = {
-    estado: tela.estado,
-    janela: tela.janela,
-    erroDaJanela: tela.erroDaJanela,
-    desatualizado: janelaDesatualizada(),
-    entradaSelecionadaId: tela.entradaSelecionadaId,
-    modoManual: tela.modoManual,
-    ocupado: tela.ocupado || semConexao(),
-    acoes: acoesDoDetalhe,
-  };
-  const alerta = alertaSelecionado();
-  const carro = tela.selecao?.tipo === 'carro'
-    ? (tela.estado.carros ?? []).find((linha) => linha.carro === tela.selecao.numero) ?? null
-    : null;
-
-  if (alerta) {
-    desenharDetalheDeAlerta(pagina.detalhe, { ...contexto, alerta });
-  } else if (carro) {
-    desenharDetalheDeCarro(pagina.detalhe, { ...contexto, carro });
-  } else if (tela.selecao?.tipo === 'alerta') {
-    // Somebody (or a late upload) made the flag go away while it was open.
-    tela.selecao = null;
-    tela.janela = null;
-    substituir(pagina.detalhe, el('p', { class: 'vazio' }, 'Este alerta não existe mais: foi resolvido. Escolha outro na fila.'));
-  } else {
-    substituir(pagina.detalhe, el('p', { class: 'vazio' }, 'Escolha um alerta na fila ou um carro na tabela.'));
-  }
-  desenhado.selecao = tela.selecao;
-  desenhado.detalhe = chaveDoDetalhe();
-}
-
-function desenharTudo() {
-  if (!tela.estado) {
-    return;
-  }
-  desenharBarra(pagina.barra, tela.estado, agoraServidorMs());
-
-  const chave = chaveDasListas();
-  if (chave !== desenhado.listas) {
-    const desligado = tela.ocupado || semConexao();
-    desenharFila(pagina.fila, tela.estado, tela.selecao?.tipo === 'alerta' ? tela.selecao.id : null, escolherAlerta);
-    desenharTabelaDeCarros(pagina.carros, tela.estado, tela.selecao?.tipo === 'carro' ? tela.selecao.numero : null, escolherCarro);
-    desenharHistorico(pagina.historico, tela.estado, desligado, acoes.desfazer);
-    // Redrawing a form somebody is typing in would erase what they typed.
-    if (!estaDigitandoEm(pagina.fontes)) {
-      desenharFontes(pagina.fontes, tela.estado, desligado, acoes.excluirFonte);
-    }
-    desenhado.listas = chave;
-  }
-  if (!estaDigitandoEm(pagina.detalhe) && chaveDoDetalhe() !== desenhado.detalhe) {
-    desenharDetalhe();
-  }
-}
-
-// The <datalist> behind every "número do carro" field.
-function atualizarListaDeCarros() {
-  let lista = document.getElementById('carros-validos');
-  if (!lista) {
-    lista = el('datalist', { id: 'carros-validos' });
-    document.body.appendChild(lista);
-  }
-  substituir(lista, (tela.estado.carros_validos ?? []).map((carro) => el('option', { value: carro.numero }, carro.equipe ?? '')));
-}
-
-function receberEstado(estado) {
+  const mudouDeVersao = !tela.estado || tela.estado.versao !== estado.versao;
   tela.estado = estado;
-  tela.estadosRecebidos += 1;
   tela.desvioMs = desvioDoServidorMs(estado.servidor_agora_ms, Date.now());
-  tela.pollsDesdeCompleto = 0;
+  if (mudouDeVersao) {
+    // The older pages were loaded for another calculation: a decision since
+    // then may have changed which of them are still in force.
+    tela.historicoAntigo = [];
+    tela.historicoHaMais = Boolean(estado.historico_ha_mais);
+  }
   atualizarListaDeCarros();
+  return true;
+}
+
+// "Carregar decisões mais antigas" in the history panel.
+async function carregarHistoricoAntigo() {
+  if (tela.historicoCarregando || !tela.estado) {
+    return;
+  }
+  const carregadas = [...(tela.estado.historico ?? []), ...tela.historicoAntigo];
+  if (carregadas.length === 0) {
+    return;
+  }
+  const versao = tela.estado.versao;
+  tela.historicoCarregando = true;
+  desenharTudo();
+  try {
+    const maisAntigas = await buscarHistorico(pagina.prova, carregadas[carregadas.length - 1].id);
+    if (tela.estado.versao === versao) {
+      tela.historicoAntigo = [...tela.historicoAntigo, ...(maisAntigas.linhas ?? [])];
+      tela.historicoHaMais = Boolean(maisAntigas.ha_mais);
+    }
+  } catch (erro) {
+    mostrarMensagem('Não foi possível carregar as decisões mais antigas. Tente de novo.', 'erro');
+  }
+  tela.historicoCarregando = false;
+  desenharTudo();
 }
 
 // ---- selection and its timeline ------------------------------------------
@@ -201,6 +137,7 @@ function selecionar(selecao) {
   tela.erroDaJanela = false;
   tela.entradaSelecionadaId = null;
   tela.modoManual = false;
+  tela.motivo = '';
   mostrarMensagem(null);
   desenharTudo();
   mostrarAba('alerta');
@@ -217,19 +154,31 @@ function escolherCarro(numero) {
 
 // ---- polling -------------------------------------------------------------------
 
-async function consultar() {
+let proximaConsulta = null;
+let consultando = false;
+
+// One poll. `pedirTudo` asks for the whole state even if the version is the
+// one the screen has.
+async function consultar(pedirTudo = false) {
+  clearTimeout(proximaConsulta);
+  if (consultando) {
+    return;
+  }
+  consultando = true;
+  const numero = ordem.novo();
   try {
-    const versao = versaoParaPedir(tela.estado, tela.pollsDesdeCompleto);
+    const versao = pedirTudo ? null : versaoParaPedir(tela.estado);
     const resposta = await buscarEstado(pagina.prova, versao, tela.selecao?.tipo === 'alerta' ? tela.selecao.id : null);
 
-    if (resposta.inalterado) {
+    if (tela.ocupado) {
+      // A decision is on its way and its own answer brings the state as it
+      // is AFTER the decision. This answer was made before that and would
+      // show the flag as still open; it is left unused.
+    } else if (!resposta.inalterado) {
+      receberEstado(resposta, numero);
+    } else if (ordem.aceitar(numero) && tela.estado && resposta.versao === tela.estado.versao) {
       tela.estado = aplicarResposta(tela.estado, resposta, pagina.usuario);
-      tela.pollsDesdeCompleto += 1;
-    } else if (!tela.ocupado && !(tela.estado && resposta.versao < tela.estado.versao)) {
-      // Skipped while a decision is on its way (its own answer brings the
-      // state) and when this answer is older than what a decision already
-      // brought: a slow poll must not put the screen back in the past.
-      receberEstado(resposta);
+      tela.desvioMs = desvioDoServidorMs(resposta.servidor_agora_ms, Date.now());
     }
     tela.falhas = 0;
     tela.sessaoExpirada = false;
@@ -244,10 +193,22 @@ async function consultar() {
     tela.sessaoExpirada = erro instanceof SessaoExpirada;
     desenharTudo();
   }
+  consultando = false;
   const aviso = avisoDeConexao(tela.falhas, tela.sessaoExpirada);
   pagina.avisoConexao.textContent = aviso ?? '';
   pagina.avisoConexao.className = aviso ? 'revisao-aviso erro' : 'revisao-aviso oculto';
-  setTimeout(consultar, proximoAtrasoMs(tela.falhas));
+  proximaConsulta = setTimeout(consultar, proximoAtrasoMs(tela.falhas));
+}
+
+// After a decision whose outcome is unknown: fetch the whole state now
+// instead of waiting for the next poll.
+function atualizarAgora() {
+  if (consultando) {
+    // A poll is on its way; ask again as soon as it is back.
+    proximaConsulta = setTimeout(() => consultar(true), 300);
+    return;
+  }
+  consultar(true);
 }
 
 // ---- wiring ----------------------------------------------------------------------
@@ -271,7 +232,8 @@ document.addEventListener('keydown', (evento) => {
   const atalhos = { a: acoes.aceitar, k: acoes.manterAmbas, v: acoes.anular };
   const acao = atalhos[evento.key.toLowerCase()];
   const alerta = alertaSelecionado();
-  if (acao && alerta && !alerta.auto_resolvido) {
+  // The actions themselves refuse while the timeline is missing or stale.
+  if (acao && alerta && !alerta.auto_resolvido && !tela.ocupado) {
     evento.preventDefault();
     acao();
   }

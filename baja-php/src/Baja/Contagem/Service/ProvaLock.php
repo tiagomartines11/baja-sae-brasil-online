@@ -7,21 +7,32 @@ use Baja\Model\Prova;
 use Propel\Runtime\Propel;
 
 /**
- * One lock per prova, held while raw data is stored and the engine result
- * is written out.
+ * A named lock for one prova.
  *
- * Without it two uploads arriving together could each run the engine on a
- * different snapshot and the slower one would overwrite contagem_volta and
- * the published scores with the older picture.
+ * Two are used:
  *
- * MySQL's GET_LOCK is used rather than a Redis lock because it is released
- * by the server when the connection dies: a PHP process killed half way
+ * - the COUNT lock (the default): held while raw data is stored and the
+ *   official count of the affected cars is written and published. Without
+ *   it two uploads arriving together could each count from a different
+ *   picture, and the slower one would overwrite the newer result.
+ * - the RECALCULATION lock ("recalculo"): held by whoever is running the
+ *   slow, whole-race recalculation, so that only one runs at a time. Nobody
+ *   waits for it: a request that finds it taken serves the previous result.
+ *
+ * MySQL's GET_LOCK is used rather than a Redis lock because the server
+ * releases it when the connection dies: a PHP process killed half way
  * through can never leave a race locked.
  */
 final class ProvaLock
 {
-    /** An engine run takes well under a second; ten is generous and still fails before nginx gives up. */
-    private const WAIT_SECONDS = 10;
+    /** For actions a person is waiting on (a decision, a race-control button). */
+    public const WAIT_FOR_A_PERSON_SECONDS = 10;
+
+    /**
+     * For uploads. A phone retries by itself a few seconds later, so it is
+     * better to tell it "busy" quickly than to keep a PHP worker waiting.
+     */
+    public const WAIT_FOR_AN_UPLOAD_SECONDS = 2;
 
     /**
      * How many times each lock is currently held by this process. Lets
@@ -33,19 +44,21 @@ final class ProvaLock
 
     private string $name;
 
-    public function __construct(Prova $prova)
+    public function __construct(Prova $prova, string $purpose = '')
     {
         // Lock names are global to the MySQL server, hence the prefix.
-        $this->name = 'contagem_' . $prova->getEventoId() . '_' . $prova->getProvaId();
+        $this->name = 'contagem_' . $prova->getEventoId() . '_' . $prova->getProvaId() . ($purpose !== '' ? '_' . $purpose : '');
     }
 
     /**
      * @return mixed whatever $work returns
-     * @throws \RuntimeException when the lock cannot be obtained in time
+     * @throws LockBusy when the lock cannot be obtained within $waitSeconds
      */
-    public function run(callable $work)
+    public function run(callable $work, int $waitSeconds = self::WAIT_FOR_A_PERSON_SECONDS)
     {
-        $this->acquire();
+        if (!$this->acquire($waitSeconds)) {
+            throw new LockBusy('Não foi possível obter a trava da contagem ' . $this->name);
+        }
         try {
             return $work();
         } finally {
@@ -53,19 +66,38 @@ final class ProvaLock
         }
     }
 
-    private function acquire(): void
+    /**
+     * Runs $work only if the lock is free right now.
+     *
+     * @return bool true when $work ran
+     */
+    public function runIfFree(callable $work): bool
+    {
+        if (!$this->acquire(0)) {
+            return false;
+        }
+        try {
+            $work();
+        } finally {
+            $this->release();
+        }
+        return true;
+    }
+
+    private function acquire(int $waitSeconds): bool
     {
         $depth = self::$depthByName[$this->name] ?? 0;
         if ($depth === 0) {
             $statement = Propel::getWriteConnection('resultados')->prepare('SELECT GET_LOCK(:name, :wait)');
-            $statement->execute([':name' => $this->name, ':wait' => self::WAIT_SECONDS]);
-            $granted = (int) $statement->fetchColumn();
+            $statement->execute([':name' => $this->name, ':wait' => $waitSeconds]);
+            $row = $statement->fetch(\PDO::FETCH_NUM);
             $statement->closeCursor();
-            if ($granted !== 1) {
-                throw new \RuntimeException('Não foi possível obter a trava da contagem ' . $this->name);
+            if (!is_array($row) || (int) $row[0] !== 1) {
+                return false;
             }
         }
         self::$depthByName[$this->name] = $depth + 1;
+        return true;
     }
 
     private function release(): void

@@ -18,6 +18,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { ClockEstimator } from '../../default/js/contagem/clock-estimator.js';
+import { postJson } from '../../default/js/contagem/http.js';
 import { createDevice, FakeClock, FakeServer } from './helpers/fakes.js';
 
 test('before any answer from the server the offset is unknown (null), not zero', () => {
@@ -223,20 +224,156 @@ test('a slow, lopsided connection gives a worse estimate that a later quick one 
     assert.equal(entry.clock_offset_ms, 2000);
 });
 
-test('after a reload the offset is unknown again until the first answer', async () => {
-    // Situation: the phone knew its offset; the page is reloaded with no
-    // network; the counter types a car.
+// ---------------------------------------------------------------------------
+// Reloads: the estimate is kept on the phone's disk
+// ---------------------------------------------------------------------------
+
+test('after a reload with no network the offset measured before is still known', async () => {
+    // Situation: the phone's clock is 2 s behind the server, and the phone
+    // has measured that. Then the page is reloaded in a spot with no signal
+    // (or the phone restarted the browser), and the counter types a car.
+    //
+    // What used to go wrong: the estimate lived only in the page's memory, so
+    // after the reload the page was back to "unknown". The race clock on the
+    // screen jumped by those 2 s, and every entry typed until the signal came
+    // back was stored without a corrected time.
     const clock = new FakeClock();
     const server = new FakeServer(clock, { serverAheadMs: 2000 });
     const device = await createDevice({ server, clock });
     await device.queue.syncOnce();
 
     server.behaviour = 'offline';
+    clock.advance(60_000);
     await device.reload();
     const { entry } = await device.type(41);
 
-    // Expected: null. The estimate is not carried across reloads on purpose:
-    // a reload is exactly when the phone's clock may have been changed (a
-    // restart, a new battery), and "unknown" is safer than "stale".
+    // Expected: the same +2000 as before the reload, on the clock the page
+    // uses for the race clock and on the new entry.
+    assert.equal(device.clockEstimator.offsetMs(), 2000);
+    assert.equal(entry.clock_offset_ms, 2000);
+});
+
+test('a phone that has never heard from the server still has no offset after a reload', async () => {
+    // Situation: the page was opened with no network, the counter typed a
+    // car, the page was reloaded, and the counter typed another car. There
+    // was never any answer from the server.
+    const device = await createDevice();
+    device.server.behaviour = 'offline';
+    await device.type(7);
+    await device.queue.syncOnce();
+    await device.reload();
+
+    const { entry } = await device.type(41);
+
+    // Expected: null, as before. Keeping the estimate across reloads must
+    // not turn "never measured" into a made-up number: the server fills in
+    // these entries later from the first real measurement.
+    assert.equal(device.clockEstimator.offsetMs(), null);
     assert.equal(entry.clock_offset_ms, null);
+});
+
+test('an estimate from long ago is not trusted after a reload', async () => {
+    // Situation: the phone measured its offset during the rehearsal on
+    // Friday. The page is opened again on Saturday, offline. Overnight the
+    // phone may well have corrected its own clock, and nothing on the phone
+    // can tell whether it did.
+    const estimator = new ClockEstimator();
+    estimator.addSample(10_000, 10_200, 12_100);
+    const stored = estimator.sampleToStore();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    const afterReload = new ClockEstimator();
+    const restored = afterReload.restore(stored, 10_200 + oneDayMs);
+
+    // Expected: "unknown" again; the first answer from the server measures afresh.
+    assert.equal(restored, false);
+    assert.equal(afterReload.offsetMs(), null);
+
+    // A device clock that now shows a time BEFORE the measurement was
+    // certainly changed, so that estimate is dropped as well.
+    assert.equal(new ClockEstimator().restore(stored, 5_000), false);
+    // And something on the disk that is not an estimate is ignored.
+    assert.equal(new ClockEstimator().restore({ offsetMs: 'two seconds' }, 10_300), false);
+    assert.equal(new ClockEstimator().restore(null, 10_300), false);
+});
+
+test('an estimate restored from the disk is replaced when the phone clock was changed meanwhile', async () => {
+    // Situation: offset +2000 measured and saved. While the page was closed
+    // the phone corrected its clock, so the true offset is now 0. The page is
+    // reopened, this time with network.
+    const clock = new FakeClock();
+    const server = new FakeServer(clock, { serverAheadMs: 2000 });
+    const device = await createDevice({ server, clock });
+    await device.queue.syncOnce();
+
+    server.serverAheadMs = 0;
+    clock.advance(60_000);
+    await device.reload();
+    assert.equal(device.clockEstimator.offsetMs(), 2000, 'starts from the stored estimate');
+    await device.queue.syncOnce();
+
+    // Expected: the first fresh measurement contradicts the stored one by
+    // far more than both uncertainties, so the stored one is dropped (the
+    // same rule as for a clock changed in the middle of the race).
+    assert.equal(device.clockEstimator.offsetMs(), 0);
+});
+
+// ---------------------------------------------------------------------------
+// Where the round trip is measured
+// ---------------------------------------------------------------------------
+
+test('time spent before the request actually leaves is not counted as travel time', async () => {
+    // Situation: before it can upload, the page first has to fetch its device
+    // token, which takes 3 seconds on a bad network. Only then does the real
+    // upload leave, and that one takes 100 ms there and 100 ms back. The
+    // phone's clock is exactly right (true offset 0).
+    //
+    // What used to go wrong: the stopwatch was started when the page began
+    // PREPARING the request. The round trip was measured as 3200 ms instead
+    // of 200 ms, and the "middle of the trip" landed 1.5 s too early, so the
+    // phone concluded that its clock was 1.5 s off.
+    const clock = new FakeClock();
+    const server = new FakeServer(clock);
+    const device = await createDevice({ server, clock });
+    server.send = async (requestBody) => {
+        clock.advance(3000);                    // fetching the token
+        const sentAtMs = clock.now();           // the upload leaves NOW
+        server.uploadDelayMs = 100;
+        server.downloadDelayMs = 100;
+        const answer = await server.handle(requestBody);
+        // The real transport (http.js) reports both instants like this.
+        return { ...answer, sentAtMs, receivedAtMs: clock.now() };
+    };
+
+    await device.queue.syncOnce();
+
+    // Expected: a 200 ms round trip and an offset of 0.
+    assert.equal(device.clockEstimator.roundTripMs(), 200);
+    assert.equal(device.clockEstimator.offsetMs(), 0);
+});
+
+test('the upload notes the time immediately before and immediately after the fetch', async () => {
+    // Situation: one upload through the real HTTP helper, with a pretend
+    // `fetch` that takes 80 ms to answer and whose body then takes another
+    // 500 ms to read (a slow download of a long answer).
+    const clock = new FakeClock(50_000);
+    const fakeFetch = async () => {
+        clock.advance(80);
+        return {
+            status: 200,
+            text: async () => {
+                clock.advance(500);
+                return '{"stored_uuids": []}';
+            },
+        };
+    };
+
+    const answer = await postJson(fakeFetch, 'contagem_sync.php', { body: { entries: [] }, now: clock.now });
+
+    // Expected: "sent" is the instant the fetch was called and "received"
+    // the instant its answer began to arrive. Reading the body afterwards
+    // is not part of the trip.
+    assert.equal(answer.sentAtMs, 50_000);
+    assert.equal(answer.receivedAtMs, 50_080);
+    assert.deepEqual(answer.body, { stored_uuids: [] });
 });

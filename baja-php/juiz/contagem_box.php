@@ -77,6 +77,7 @@ OfflineShell::printStatusBar($fonte->getNome(), 'Também registrando o box:');
     <footer class="rodape">
         <button type="button" id="btn-exportar" class="botao-secundario">Exportar meus dados</button>
         <a class="link-voltar" href="contagem.php?p=<?= htmlspecialchars(rawurlencode($provaId)) ?>">Voltar</a>
+        <?php OfflineShell::printFooterTools(); ?>
     </footer>
 </main>
 <?php

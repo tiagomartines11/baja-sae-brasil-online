@@ -6,6 +6,7 @@ $serviceContainer->initDatabaseMapFromDumps(array (
     'tablesByName' => 
     array (
       'config' => '\\Baja\\Model\\Map\\ConfigTableMap',
+      'contagem_arquivo' => '\\Baja\\Model\\Map\\ContagemArquivoTableMap',
       'contagem_decisao' => '\\Baja\\Model\\Map\\ContagemDecisaoTableMap',
       'contagem_dispositivo' => '\\Baja\\Model\\Map\\ContagemDispositivoTableMap',
       'contagem_fonte' => '\\Baja\\Model\\Map\\ContagemFonteTableMap',
@@ -30,6 +31,7 @@ $serviceContainer->initDatabaseMapFromDumps(array (
     'tablesByPhpName' => 
     array (
       '\\Config' => '\\Baja\\Model\\Map\\ConfigTableMap',
+      '\\ContagemArquivo' => '\\Baja\\Model\\Map\\ContagemArquivoTableMap',
       '\\ContagemDecisao' => '\\Baja\\Model\\Map\\ContagemDecisaoTableMap',
       '\\ContagemDispositivo' => '\\Baja\\Model\\Map\\ContagemDispositivoTableMap',
       '\\ContagemFonte' => '\\Baja\\Model\\Map\\ContagemFonteTableMap',

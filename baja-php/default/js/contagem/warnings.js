@@ -27,8 +27,8 @@ export function computeWarnings({ car, tsDeviceMs, ownEntries, validCars, janela
     const warnings = [];
     const windowMs = Number.isFinite(janelaMs) && janelaMs > 0 ? janelaMs : DEFAULT_JANELA_MS;
 
-    // Without a car list (never been online) we cannot call a number unknown.
-    if (Array.isArray(validCars) && !validCars.some((validCar) => validCar.numero === car)) {
+    // Without a car list we cannot call a number unknown (see carListIsKnown).
+    if (carListIsKnown(validCars) && !validCars.some((validCar) => validCar.numero === car)) {
         warnings.push({
             tipo: AVISO.NUMERO_DESCONHECIDO,
             mensagem: 'Número ' + car + ' não está na lista de carros. Registrado mesmo assim.',
@@ -50,6 +50,17 @@ export function computeWarnings({ car, tsDeviceMs, ownEntries, validCars, janela
     return warnings;
 }
 
+/**
+ * Whether we really know which cars are at the event. A missing list (never
+ * been online) and an EMPTY list both mean "unknown": an event with no car at
+ * all does not exist, so an empty list is a list that has not been filled in
+ * yet (teams not marked as present, for example). Treating it as "every
+ * number is invalid" would put a warning on every single entry.
+ */
+export function carListIsKnown(validCars) {
+    return Array.isArray(validCars) && validCars.length > 0;
+}
+
 /** An entry the counter undid no longer counts as "already typed". */
 function latestActiveEntryOfCar(ownEntries, car) {
     let latest = null;
@@ -66,7 +77,7 @@ function latestActiveEntryOfCar(ownEntries, car) {
 
 /** @returns {?string} team name for the big flash, or null for an unknown number */
 export function teamNameOf(car, validCars) {
-    if (!Array.isArray(validCars)) {
+    if (!carListIsKnown(validCars)) {
         return null;
     }
     const found = validCars.find((validCar) => validCar.numero === car);

@@ -141,3 +141,56 @@ export class NumberBuffer {
         return confirmed;
     }
 }
+
+export const TECLA = {
+    DIGITO: 'digito',
+    APAGAR: 'apagar',
+    REGISTRAR: 'registrar',
+};
+
+/**
+ * Decides what a key pressed ANYWHERE on the page means for the number being
+ * typed. Both keyboard modes need this: a counter who taps "desfazer", a
+ * checkbox or the page background moves the focus out of the number box, and
+ * the next car must still be typed blind, without looking for the box again.
+ *
+ * @param {object}  key
+ * @param {string}  key.key      `KeyboardEvent.key`
+ * @param {boolean} [key.repeat] true for the auto-repeat of a key held down
+ * @param {boolean} [key.ctrlKey]
+ * @param {boolean} [key.altKey]
+ * @param {boolean} [key.metaKey]
+ * @param {object}  context
+ * @param {string}  context.mode             one of MODO.*
+ * @param {boolean} context.typedInNumberBox the key went into the number box itself
+ * @returns {?{tecla: string, digito: ?string}} null when the page must leave the key alone
+ */
+export function keyActionFor(key, { mode, typedInNumberBox }) {
+    if (mode !== MODO.TECLADO && mode !== MODO.TECLADO_TELA) {
+        return null;
+    }
+    // In keyboard mode the number box handles its own typing (that is also
+    // the only path a phone's on-screen keyboard uses). Handling the key here
+    // as well would enter every digit twice.
+    if (mode === MODO.TECLADO && typedInNumberBox) {
+        return null;
+    }
+    // A key held down a moment too long must not become "77" or two passes.
+    if (key.repeat) {
+        return null;
+    }
+    // Ctrl+1, Alt+2... are browser shortcuts, not car numbers.
+    if (key.ctrlKey || key.altKey || key.metaKey) {
+        return null;
+    }
+    if (/^[0-9]$/.test(key.key)) {
+        return { tecla: TECLA.DIGITO, digito: key.key };
+    }
+    if (key.key === 'Backspace') {
+        return { tecla: TECLA.APAGAR, digito: null };
+    }
+    if (key.key === 'Enter') {
+        return { tecla: TECLA.REGISTRAR, digito: null };
+    }
+    return null;
+}

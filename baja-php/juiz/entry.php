@@ -64,7 +64,15 @@ foreach ($fields as $k=>$field) {
         <input type="submit" name="submit" id="submit1" value="Salvar" disabled /> &nbsp&nbsp&nbspOU&nbsp&nbsp&nbsp <input type="submit" name="submit" id="submit2" value="Salvar e Avançar" disabled /></th>
 </tr>
 <tr style="border: solid 2px black; height: 60px">
-    <th colspan="2"><input type="submit" name="delete" id="delete" value="Deletar Nota" /></th>
+    <?php if ($engineOwnedFields !== []) { // laps prova: the lap count in this row is not this page's to delete ?>
+        <th colspan="2">
+            <input type="submit" name="delete" id="delete" value="Limpar campos manuais"
+                   onclick="return confirm('Limpar os campos digitados deste carro? As voltas contadas não são alteradas.');" /><br />
+            <span style="font-size: 10px">Voltas, última passagem e melhor volta são da contagem de voltas e não são apagadas aqui.</span>
+        </th>
+    <?php } else { ?>
+        <th colspan="2"><input type="submit" name="delete" id="delete" value="Deletar Nota" /></th>
+    <?php } ?>
 </tr>
 <tr>
     <th colspan="2">

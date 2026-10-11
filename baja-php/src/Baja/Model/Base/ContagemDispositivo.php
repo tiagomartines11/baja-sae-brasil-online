@@ -118,6 +118,13 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
     protected $revogado_em_ms;
 
     /**
+     * The value for the fechado_em_ms field.
+     *
+     * @var        string|null
+     */
+    protected $fechado_em_ms;
+
+    /**
      * The value for the visto_em_ms field.
      *
      * @var        string|null
@@ -462,6 +469,16 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
     }
 
     /**
+     * Get the [fechado_em_ms] column value.
+     *
+     * @return string|null
+     */
+    public function getFechadoEmMs()
+    {
+        return $this->fechado_em_ms;
+    }
+
+    /**
      * Get the [visto_em_ms] column value.
      *
      * @return string|null
@@ -636,6 +653,26 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [fechado_em_ms] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setFechadoEmMs($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->fechado_em_ms !== $v) {
+            $this->fechado_em_ms = $v;
+            $this->modifiedColumns[ContagemDispositivoTableMap::COL_FECHADO_EM_MS] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Set the value of [visto_em_ms] column.
      *
      * @param string|null $v New value
@@ -752,13 +789,16 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ContagemDispositivoTableMap::translateFieldName('RevogadoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->revogado_em_ms = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ContagemDispositivoTableMap::translateFieldName('VistoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ContagemDispositivoTableMap::translateFieldName('FechadoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->fechado_em_ms = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ContagemDispositivoTableMap::translateFieldName('VistoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->visto_em_ms = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ContagemDispositivoTableMap::translateFieldName('SincronizadoAteMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemDispositivoTableMap::translateFieldName('SincronizadoAteMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->sincronizado_ate_ms = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemDispositivoTableMap::translateFieldName('PrimeiroDesvioMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ContagemDispositivoTableMap::translateFieldName('PrimeiroDesvioMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->primeiro_desvio_ms = (null !== $col) ? (string) $col : null;
 
             $this->resetModified();
@@ -768,7 +808,7 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 10; // 10 = ContagemDispositivoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 11; // 11 = ContagemDispositivoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemDispositivo'), 0, $e);
@@ -1026,6 +1066,9 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemDispositivoTableMap::COL_REVOGADO_EM_MS)) {
             $modifiedColumns[':p' . $index++]  = 'revogado_em_ms';
         }
+        if ($this->isColumnModified(ContagemDispositivoTableMap::COL_FECHADO_EM_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'fechado_em_ms';
+        }
         if ($this->isColumnModified(ContagemDispositivoTableMap::COL_VISTO_EM_MS)) {
             $modifiedColumns[':p' . $index++]  = 'visto_em_ms';
         }
@@ -1072,6 +1115,10 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
                         break;
                     case 'revogado_em_ms':
                         $stmt->bindValue($identifier, $this->revogado_em_ms, PDO::PARAM_INT);
+
+                        break;
+                    case 'fechado_em_ms':
+                        $stmt->bindValue($identifier, $this->fechado_em_ms, PDO::PARAM_INT);
 
                         break;
                     case 'visto_em_ms':
@@ -1170,12 +1217,15 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
                 return $this->getRevogadoEmMs();
 
             case 7:
-                return $this->getVistoEmMs();
+                return $this->getFechadoEmMs();
 
             case 8:
-                return $this->getSincronizadoAteMs();
+                return $this->getVistoEmMs();
 
             case 9:
+                return $this->getSincronizadoAteMs();
+
+            case 10:
                 return $this->getPrimeiroDesvioMs();
 
             default:
@@ -1213,9 +1263,10 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
             $keys[4] => $this->getRotulo(),
             $keys[5] => $this->getCriadoEmMs(),
             $keys[6] => $this->getRevogadoEmMs(),
-            $keys[7] => $this->getVistoEmMs(),
-            $keys[8] => $this->getSincronizadoAteMs(),
-            $keys[9] => $this->getPrimeiroDesvioMs(),
+            $keys[7] => $this->getFechadoEmMs(),
+            $keys[8] => $this->getVistoEmMs(),
+            $keys[9] => $this->getSincronizadoAteMs(),
+            $keys[10] => $this->getPrimeiroDesvioMs(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1311,12 +1362,15 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
                 $this->setRevogadoEmMs($value);
                 break;
             case 7:
-                $this->setVistoEmMs($value);
+                $this->setFechadoEmMs($value);
                 break;
             case 8:
-                $this->setSincronizadoAteMs($value);
+                $this->setVistoEmMs($value);
                 break;
             case 9:
+                $this->setSincronizadoAteMs($value);
+                break;
+            case 10:
                 $this->setPrimeiroDesvioMs($value);
                 break;
         } // switch()
@@ -1367,13 +1421,16 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
             $this->setRevogadoEmMs($arr[$keys[6]]);
         }
         if (array_key_exists($keys[7], $arr)) {
-            $this->setVistoEmMs($arr[$keys[7]]);
+            $this->setFechadoEmMs($arr[$keys[7]]);
         }
         if (array_key_exists($keys[8], $arr)) {
-            $this->setSincronizadoAteMs($arr[$keys[8]]);
+            $this->setVistoEmMs($arr[$keys[8]]);
         }
         if (array_key_exists($keys[9], $arr)) {
-            $this->setPrimeiroDesvioMs($arr[$keys[9]]);
+            $this->setSincronizadoAteMs($arr[$keys[9]]);
+        }
+        if (array_key_exists($keys[10], $arr)) {
+            $this->setPrimeiroDesvioMs($arr[$keys[10]]);
         }
 
         return $this;
@@ -1438,6 +1495,9 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ContagemDispositivoTableMap::COL_REVOGADO_EM_MS)) {
             $criteria->add(ContagemDispositivoTableMap::COL_REVOGADO_EM_MS, $this->revogado_em_ms);
+        }
+        if ($this->isColumnModified(ContagemDispositivoTableMap::COL_FECHADO_EM_MS)) {
+            $criteria->add(ContagemDispositivoTableMap::COL_FECHADO_EM_MS, $this->fechado_em_ms);
         }
         if ($this->isColumnModified(ContagemDispositivoTableMap::COL_VISTO_EM_MS)) {
             $criteria->add(ContagemDispositivoTableMap::COL_VISTO_EM_MS, $this->visto_em_ms);
@@ -1542,6 +1602,7 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         $copyObj->setRotulo($this->getRotulo());
         $copyObj->setCriadoEmMs($this->getCriadoEmMs());
         $copyObj->setRevogadoEmMs($this->getRevogadoEmMs());
+        $copyObj->setFechadoEmMs($this->getFechadoEmMs());
         $copyObj->setVistoEmMs($this->getVistoEmMs());
         $copyObj->setSincronizadoAteMs($this->getSincronizadoAteMs());
         $copyObj->setPrimeiroDesvioMs($this->getPrimeiroDesvioMs());
@@ -1939,6 +2000,7 @@ abstract class ContagemDispositivo implements ActiveRecordInterface
         $this->rotulo = null;
         $this->criado_em_ms = null;
         $this->revogado_em_ms = null;
+        $this->fechado_em_ms = null;
         $this->visto_em_ms = null;
         $this->sincronizado_ate_ms = null;
         $this->primeiro_desvio_ms = null;

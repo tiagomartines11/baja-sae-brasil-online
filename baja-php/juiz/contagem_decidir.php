@@ -1,18 +1,21 @@
 <?php
 namespace Baja\Juiz;
 
-use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Review\DecisionValidator;
 use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Service\ContagemService;
+use Baja\Contagem\Service\LockBusy;
 
 // Stores one reviewer decision. POST ?p= with a JSON body:
-//   {"decisao": {...}, "versao": n, "passagem_ids": [...], "assinatura": "...", "ultima_decisao_id": n}
+//   {"decisao": {...}, "passagem_ids": [...], "assinatura": "...", "ultima_decisao_id": n}
 // 200 with the new state, 409 with the fresh state when what the reviewer
-// was looking at changed, 400 for a malformed request.
+// was looking at changed, 400 for a request that makes no sense, 503 when
+// the count is busy. Every answer is JSON, so the screen can always tell
+// which of these happened.
 
+Pagina::beginJsonEndpoint();
 $prova = Pagina::provaOrRedirect();
-ContagemAccess::requireController($prova);
+Pagina::requireControllerJson($prova);
 
 if (!Pagina::isPost()) {
     header('Allow: POST');
@@ -29,11 +32,11 @@ if (!is_array($request)) {
 
 try {
     $response = DecisionValidator::decide(ContagemService::forProva($prova), $request, Pagina::username());
-} catch (\RuntimeException $failure) {
-    // Most likely the per-prova lock could not be had in time. Logged, and
-    // answered as JSON so the screen can say "try again" instead of
-    // mistaking an error page for an expired login.
-    error_log('contagem_decidir: ' . $failure->getMessage());
-    Pagina::sendJson(503, ['erro' => 'ocupado', 'mensagem' => 'O servidor não conseguiu concluir. A decisão pode não ter sido registrada: confira o histórico antes de repetir.']);
+} catch (LockBusy $busy) {
+    // Nothing was stored: the lock is taken before anything is written.
+    Pagina::sendJson(503, [
+        'erro' => 'ocupado',
+        'mensagem' => 'A contagem está ocupada com outra operação. A decisão NÃO foi registrada: tente de novo.',
+    ]);
 }
 Pagina::sendJson($response['status'], $response['body']);

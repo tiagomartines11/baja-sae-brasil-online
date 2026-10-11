@@ -300,3 +300,66 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
   .contagem-acao, .contagem-fonte { flex-direction: column; align-items: stretch; }
   .botao-grande { width: 100%; }
 }
+
+/* ---- round 2: publishing off, devices, pass zero, open-ended exclusions ---- */
+
+/* Publishing switched off must not be mistaken for a quiet moment. */
+.publicacao.desligada {
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: var(--fundo-vermelho);
+  border: 1px solid var(--cor-vermelha);
+  color: var(--cor-vermelha);
+}
+
+.chip-fonte .chip-dispositivos { color: var(--cor-ambar); }
+.chip-fonte.excluida { background: var(--fundo-vermelho); border-color: var(--cor-vermelha); }
+.chip-fonte .chip-excluida { color: var(--cor-vermelha); }
+
+.exclusao-aberta {
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: var(--fundo-vermelho);
+  border: 2px solid var(--cor-vermelha);
+  border-radius: 4px;
+  color: var(--cor-vermelha);
+}
+
+.dispositivos { list-style: none; margin: 6px 0; padding: 0; font-size: 13px; }
+.dispositivo { padding: 2px 0; }
+.dispositivo .situacao { padding: 0 6px; border-radius: 8px; background: var(--fundo-verde); color: var(--cor-verde); }
+.dispositivo.sem_contato .situacao, .dispositivo.silencioso .situacao { background: var(--fundo-ambar); color: var(--cor-ambar); }
+.dispositivo.fechado .situacao, .dispositivo.nunca .situacao { background: var(--cor-fundo); color: var(--cor-fraca); }
+.dispositivo.revogado .situacao { background: var(--fundo-vermelho); color: var(--cor-vermelha); }
+
+/* The pass zero is official but is not a lap: same green, marked with a 0. */
+.chip.passagem-zero { border-style: double; border-width: 3px; }
+.chip.passagem-zero::after {
+  content: "0";
+  position: absolute;
+  top: -7px;
+  right: -5px;
+  padding: 0 3px;
+  border-radius: 6px;
+  background: var(--cor-verde);
+  color: #fff;
+  font-size: 9px;
+  line-height: 12px;
+}
+/* Recorded and agreed on, yet outside the count by the rules of the race. */
+.chip.janela-largada, .chip.apos-encerramento {
+  border-style: dashed;
+  border-color: var(--cor-ambar);
+  background: var(--fundo-ambar);
+  color: var(--cor-ambar);
+}
+
+.campo-motivo { display: block; margin: 8px 0; font-size: 13px; color: var(--cor-fraca); }
+.campo-motivo input { max-width: 100%; }
+.acao-manual small { color: var(--cor-fraca); }
+
+.historico .titulo-secao th { text-align: left; background: var(--cor-fundo); color: var(--cor-fraca); font-size: 12px; }
+.historico tr.em-vigor td { background: var(--fundo-ambar); }
+#historico-mais { margin: 6px 0 12px; }
+
+.contagem-configuracoes select { max-width: 100%; }

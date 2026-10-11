@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Engine;
 
+use Baja\Contagem\Engine\Data\CountResult;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Flag;
+use Baja\Contagem\Engine\Data\Lap;
 use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
 
@@ -13,89 +15,90 @@ use Baja\Contagem\Engine\Data\Source;
  * The lap counting engine: raw entries in, official laps and review flags out.
  *
  * It is a pure function. It reads no database and no clock; everything it
- * needs is in the EngineInput, including "now". Every run recomputes the
- * whole race from the raw data, so there is no state to get out of step:
- * the answer after a correction is exactly the answer a fresh start would
- * give.
+ * needs is in the EngineInput, including "now". There is no state to get
+ * out of step: the answer after a correction is exactly the answer a fresh
+ * start would give.
  *
- * The steps, each in its own class:
+ * It has two entry points, because the two halves of its work have very
+ * different costs and urgency:
  *
- *   1. DecisionApplier   apply what people decided
- *   2. DuplicateFilter   drop double taps and handover duplicates
- *   3. PassMatcher       group entries of the same crossing
- *      PassTimeFuser     one pass time per group
- *   4. PublishRule       which groups are official laps
- *      LapBuilder        number and time the laps
- *   5. FlagDetector      what a reviewer should look at
- *   6. CarStatus         where each car stands now
+ * - countCars(): the official count of a few cars. Cheap, and all an upload
+ *   needs in order to publish VOLTAS and LAST at once. See LapCounter.
+ * - run(): the whole race, adding everything that needs the full picture:
+ *   lap times, the pace model, review flags, car status, statistics.
  */
 final class Engine
 {
+    /**
+     * Recounts only the given cars.
+     *
+     * The input must hold every entry that counts for those cars after
+     * decisions (so also entries typed as another car and reassigned to one
+     * of them); entries of other cars may be left out.
+     *
+     * @param int[] $cars
+     */
+    public static function countCars(EngineInput $input, array $cars): CountResult
+    {
+        $counter = LapCounter::count($input, $cars);
+        $result = new CountResult($counter->timeline);
+        $lapsByCar = $counter->buildLaps();
+        foreach ($cars as $carro) {
+            $result->lapsByCar[$carro] = $lapsByCar[$carro] ?? [];
+        }
+        return $result;
+    }
+
     public static function run(EngineInput $input): EngineResult
     {
         $settings = $input->settings;
-        $timeline = RaceTimeline::fromOcorrencias($input->ocorrencias);
+        $counter = LapCounter::count($input);
+        $timeline = $counter->timeline;
         $result = new EngineResult($timeline);
 
-        $sourcesById = [];
-        foreach ($input->sources as $source) {
-            $sourcesById[$source->id] = $source;
-        }
-
-        $applied = DecisionApplier::apply($input->entries, $input->decisions, $sourcesById);
-        $availability = new SourceAvailability($sourcesById, $applied, $settings->janelaMs);
-
-        // Lap N of a car is its Nth counted pass after the start, so entries
-        // from before the start (or while there is no start) take no part.
-        $entriesAfterStart = [];
-        if ($timeline->largadaMs !== null) {
-            foreach ($applied->entries as $entry) {
-                if ($entry->tsMs >= $timeline->largadaMs) {
-                    $entriesAfterStart[] = $entry;
-                }
-            }
-        }
-
-        $duplicates = DuplicateFilter::filter($entriesAfterStart, $settings, $applied->confirmedEntryIds, $sourcesById);
-        $result->autoVoidedEntryIds = $duplicates->autoVoidedEntryIds;
-        foreach ($duplicates->keptEntries as $entry) {
+        $result->autoVoidedEntryIds = $counter->duplicates->autoVoidedEntryIds;
+        foreach ($counter->duplicates->keptEntries as $entry) {
             $result->effectiveEntries[$entry->id] = $entry;
         }
 
-        $groupsByCar = PassMatcher::match($duplicates->keptEntries, $settings->janelaMs, $applied->confirmedEntryIds);
-        $groupsInTimeOrder = self::inTimeOrder($groupsByCar);
-        $fuser = PassTimeFuser::fuse($groupsInTimeOrder, $sourcesById);
+        $groupsInTimeOrder = self::inTimeOrder($counter->groupsByCar);
+        $fuser = PassTimeFuser::removeHabits($groupsInTimeOrder, $counter->sourcesById);
 
-        PublishRule::decide($groupsByCar, $settings, $availability);
-        $lapsByCar = LapBuilder::build($groupsByCar, $timeline);
-        $pace = new PaceModel($lapsByCar, $settings);
+        $lapsByCar = $counter->buildLaps();
+        // Flags and pace are judged against the default counting rule, so
+        // they are the same whichever publish mode is in force. When the
+        // default rule IS the one in force, the laps just built are those.
+        $referenceLapsByCar = $counter->ruleApplied === Settings::MODO_CONFIRMADAS
+            ? $lapsByCar
+            : LapBuilder::buildReference($counter->groupsByCar, $timeline, $settings);
+        $pace = new PaceModel($referenceLapsByCar, $settings);
 
-        $flagDetector = new FlagDetector($settings, $availability, $pace, $timeline, $sourcesById, $input->validCars);
-        $flags = $flagDetector->detect($groupsByCar, $groupsInTimeOrder, $lapsByCar, $duplicates->openRepeatEntryIds);
-        $flags = array_merge($flags, $duplicates->flags);
+        $flagDetector = new FlagDetector($settings, $counter->availability, $pace, $timeline, $counter->sourcesById, $input->validCars);
+        $flags = $flagDetector->detect($counter->groupsByCar, $groupsInTimeOrder, $referenceLapsByCar, $counter->duplicates->openRepeatEntryIds);
+        $flags = array_merge($flags, $counter->duplicates->flags);
 
         LapBuilder::markBestLapEligibility($lapsByCar, $settings, $pace);
 
-        $carStatus = new CarStatus($settings, $timeline, $pace, $availability);
-        $result->cars = $carStatus->build(self::carsToReport($input->validCars, $lapsByCar), $lapsByCar, $groupsByCar, $input->nowMs);
+        $carStatus = new CarStatus($settings, $timeline, $pace, $counter->availability);
+        $result->cars = $carStatus->build(self::carsToReport($input->validCars, $lapsByCar), $lapsByCar, $counter->groupsByCar, $input->nowMs);
 
-        $flags = array_merge($flags, self::totalsMismatchFlags($input, $sourcesById, $result));
+        $flags = array_merge($flags, self::totalsMismatchFlags($input, $counter->sourcesById, $result));
         $result->flags = self::inReviewOrder($flags, $result);
 
-        $result->groups = $groupsInTimeOrder;
+        $result->setGroups($groupsInTimeOrder);
         foreach ($lapsByCar as $laps) {
             foreach ($laps as $lap) {
                 $result->laps[] = $lap;
             }
         }
         $result->sourceStats = SourceStatsBuilder::build(
-            $sourcesById,
-            $duplicates->keptEntries,
+            $counter->sourcesById,
+            $counter->duplicates->keptEntries,
             $groupsInTimeOrder,
-            $applied,
-            $duplicates,
+            $counter->applied,
+            $counter->duplicates,
             $fuser,
-            $availability,
+            $counter->availability,
             $timeline,
             $settings,
             $input->nowMs
@@ -130,11 +133,11 @@ final class Engine
 
     /**
      * The teams present at the event, plus any other number that somehow
-     * earned counted laps (so a lap is never invisible). Without a team list
-     * every number that was typed is reported.
+     * earned an official pass (so a lap is never invisible). Without a team
+     * list every number that was typed is reported.
      *
      * @param int[] $validCars
-     * @param array<int, \Baja\Contagem\Engine\Data\Lap[]> $lapsByCar
+     * @param array<int, Lap[]> $lapsByCar
      * @return int[]
      */
     private static function carsToReport(array $validCars, array $lapsByCar): array
@@ -142,8 +145,8 @@ final class Engine
         $cars = array_fill_keys($validCars, true);
         $noTeamListGiven = $validCars === [];
         foreach ($lapsByCar as $carro => $laps) {
-            // Counted laps come first in each car's list.
-            if ($noTeamListGiven || ($laps !== [] && $laps[0]->isCounted())) {
+            // Official passes come first in each car's list.
+            if ($noTeamListGiven || ($laps !== [] && $laps[0]->isOfficialPass())) {
                 $cars[$carro] = true;
             }
         }
@@ -153,7 +156,9 @@ final class Engine
     }
 
     /**
-     * Imported paper totals that disagree with the official count.
+     * Imported paper totals that disagree with the official count, in
+     * either direction: a different number on paper, or a car with official
+     * laps that the paper list does not mention at all.
      *
      * @param array<int, Source> $sourcesById
      * @return Flag[]
@@ -163,23 +168,26 @@ final class Engine
         $flags = [];
         foreach ($input->totals as $fonteId => $totalsByCar) {
             $source = $sourcesById[$fonteId] ?? null;
-            if ($source === null || !$source->ativa) {
+            if ($source === null || !$source->ativa || $totalsByCar === []) {
                 continue;
             }
-            foreach ($totalsByCar as $carro => $importedLaps) {
+            $carsToCompare = array_keys($totalsByCar);
+            foreach ($result->cars as $carro => $car) {
+                if ($car->voltas > 0 && !isset($totalsByCar[$carro])) {
+                    $carsToCompare[] = $carro;
+                }
+            }
+            foreach ($carsToCompare as $carro) {
                 $officialLaps = $result->lapCount((int) $carro);
-                if ((int) $importedLaps === $officialLaps) {
+                $isOnPaper = isset($totalsByCar[$carro]);
+                if ($isOnPaper && (int) $totalsByCar[$carro] === $officialLaps) {
                     continue;
                 }
                 $flag = new Flag(Flag::DIVERGENCIA_TOTAL, [(int) $carro], [], $fonteId . '-' . $carro);
                 $flag->fonteId = (int) $fonteId;
-                $flag->motivo = sprintf(
-                    '%s informa %d voltas para o carro %d; a contagem oficial tem %d.',
-                    $source->nome,
-                    $importedLaps,
-                    $carro,
-                    $officialLaps
-                );
+                $flag->motivo = $isOnPaper
+                    ? sprintf('%s informa %d voltas para o carro %d; a contagem oficial tem %d.', $source->nome, $totalsByCar[$carro], $carro, $officialLaps)
+                    : sprintf('%s não lista o carro %d, que tem %d voltas na contagem oficial.', $source->nome, $carro, $officialLaps);
                 $flags[] = $flag;
             }
         }

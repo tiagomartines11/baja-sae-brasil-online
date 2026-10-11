@@ -1,7 +1,6 @@
 <?php
 namespace Baja\Juiz;
 
-use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\TimelineWindow;
 use Baja\Contagem\Service\ContagemService;
@@ -9,9 +8,11 @@ use Baja\Contagem\Service\ContagemService;
 // Lane timeline for the review screen. Read-only.
 //   GET ?p=&de=&ate=   every entry and event between two moments (ms since the epoch)
 //   GET ?p=&carro=     one car's whole race
+// Only the cars concerned are recounted; the whole engine never runs here.
 
+Pagina::beginJsonEndpoint();
 $prova = Pagina::provaOrRedirect();
-ContagemAccess::requireController($prova);
+Pagina::requireControllerJson($prova);
 
 $service = ContagemService::forProva($prova);
 $positiveInt = ['options' => ['min_range' => 1]];

@@ -36,7 +36,9 @@ use Propel\Runtime\Propel;
  * it is deleted again, so tests cannot affect each other and nothing is
  * left behind:
  *
- *   - an event "ZZT1" that no real event will ever be called;
+ *   - an event "00NE" (a "Nordeste stage of the year 2000", which never
+ *     existed). The id has the shape of a real one so that the web server
+ *     routes /00NE/... to it and tests can go through real HTTP;
  *   - three teams in it, with car numbers 11, 22 and 33;
  *   - a prova "ZZL" of type "laps", scored like a real endurance race:
  *     the car with the most laps gets 400 points and the others get
@@ -99,7 +101,13 @@ abstract class DbTestCase extends TestCase
         $this->newRequest();
 
         $this->helperDeviceIds = [];
-        Clock::freezeAt(null);
+
+        // The made-up race starts at a fixed moment in the past, and the
+        // server refuses entries timed more than a week away from "now" (a
+        // phone with its clock on the wrong day). So for the tests "now" is
+        // stopped one hour into that race; a test that cares about the time
+        // of day moves it with Clock::freezeAt().
+        Clock::freezeAt(self::RACE_START_MS + 3600 * 1000);
     }
 
     /**
@@ -180,6 +188,101 @@ abstract class DbTestCase extends TestCase
             $tsMs,
         ]);
         return (int) $connection->lastInsertId();
+    }
+
+    /**
+     * Counters 1 and 2 both record $car crossing the line at $tsMs. Two
+     * counters agreeing is what makes a pass official. Stored directly; the
+     * engine has not run yet when this returns.
+     *
+     * Remember the counting rule: a car's FIRST official pass is its "pass
+     * zero" and completes no lap (the counting line is after the start
+     * line). Its second official pass completes lap 1.
+     *
+     * @return int[] the ids of the two entries: [counter 1's, counter 2's]
+     */
+    protected function recordCountedPass(int $car, int $tsMs): array
+    {
+        return [
+            $this->addEntry($this->fontes[0], $car, $tsMs),
+            $this->addEntry($this->fontes[1], $car, $tsMs),
+        ];
+    }
+
+    /**
+     * Takes one of the prova's locks from a SECOND database connection and
+     * returns that connection; the lock is held until the returned object
+     * is destroyed (set the variable to null). This is how a test plays
+     * "another request is in the middle of its work right now".
+     *
+     * @param string $purpose '' for the count lock, 'recalculo' for the recalculation lock
+     */
+    protected function holdLockFromAnotherRequest(string $purpose = ''): \PDO
+    {
+        $other = new \PDO(
+            'mysql:host=' . getenv('PHPBB_DB_HOST') . ';dbname=baja_resultados',
+            (string) getenv('PHPBB_DB_USER'),
+            (string) getenv('PHPBB_DB_PASS'),
+            [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+        );
+        $statement = $other->prepare('SELECT GET_LOCK(?, 5)');
+        $statement->execute([$this->lockName($purpose)]);
+        $this->assertSame(1, (int) $statement->fetchColumn(), 'The test could not take the lock it wanted to hold.');
+        return $other;
+    }
+
+    /**
+     * Starts a second PHP process that plays "another request, running at
+     * the same time", and returns at once while it runs. See
+     * Support/another-request.php for the steps it understands. The test
+     * should finish with waitForAnotherRequest().
+     *
+     * @param array<int, array<int, mixed>> $steps
+     * @return resource the running process
+     */
+    protected function startAnotherRequest(array $steps)
+    {
+        $command = [PHP_BINARY, __DIR__ . '/Support/another-request.php', (string) json_encode($steps)];
+        $process = proc_open($command, [], $pipes);
+        $this->assertNotFalse($process, 'The second process could not be started.');
+        return $process;
+    }
+
+    /** @param resource $process */
+    protected function waitForAnotherRequest($process): void
+    {
+        $this->assertSame(0, proc_close($process), 'The second process ended with an error.');
+    }
+
+    /** The name MySQL knows one of the prova's locks by. */
+    protected function lockName(string $purpose = ''): string
+    {
+        return 'contagem_' . self::EVENTO_ID . '_' . self::PROVA_ID . ($purpose !== '' ? '_' . $purpose : '');
+    }
+
+    /**
+     * Runs one SQL statement directly. For setting up a situation the
+     * application itself would never produce in one step.
+     *
+     * @param array<int, mixed> $params
+     */
+    protected function executeSql(string $sql, array $params = []): void
+    {
+        Propel::getWriteConnection('resultados')->prepare($sql)->execute($params);
+    }
+
+    /**
+     * The first column of the first row of a query, or null when there is no row.
+     *
+     * @param array<int, mixed> $params
+     * @return mixed
+     */
+    protected function fetchValue(string $sql, array $params = [])
+    {
+        $statement = Propel::getWriteConnection('resultados')->prepare($sql);
+        $statement->execute($params);
+        $row = $statement->fetch(\PDO::FETCH_NUM);
+        return is_array($row) ? $row[0] : null;
     }
 
     /**
@@ -286,7 +389,7 @@ abstract class DbTestCase extends TestCase
      * a forum account "exist" for this system and says what it may do.
      *
      * @param string $username must start with "zzt_" so that tearDown() removes it
-     * @param string[] $permissions permission codes, e.g. ['index', 'ZZT1_ZZL']
+     * @param string[] $permissions permission codes, e.g. ['index', '00NE_ZZL']
      */
     protected function createUser(string $username, array $permissions): void
     {

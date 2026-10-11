@@ -22,7 +22,14 @@ final class Ocorrencia
         self::ENCERRAMENTO,
         self::BOX_ENTRADA,
         self::BOX_SAIDA,
+        self::CANCELAMENTO,
     ];
+
+    /**
+     * Removes the event named by `substituiId` and is nothing itself: the
+     * way to undo a race-control button pressed by mistake.
+     */
+    public const CANCELAMENTO = 'cancelamento';
 
     public const TIPOS_BOX = [self::BOX_ENTRADA, self::BOX_SAIDA];
 

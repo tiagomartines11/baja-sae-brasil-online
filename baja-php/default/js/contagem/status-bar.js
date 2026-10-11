@@ -2,29 +2,8 @@
 // the count page and the pit page. Reads nothing, decides nothing: it turns a
 // state object into text.
 
-import { CONEXAO } from './sync-queue.js';
 import { describeRaceClock, formatTimeOfDay } from './race-clock.js';
-
-const ROTULO_CONEXAO = {
-    [CONEXAO.CONECTANDO]: 'Conectando…',
-    [CONEXAO.ONLINE]: 'Conectado',
-    [CONEXAO.OFFLINE]: 'Sem conexão',
-    [CONEXAO.REVOGADO]: 'Envio bloqueado',
-};
-
-const TEXTO_REVOGADO = 'Este aparelho foi desconectado desta contagem e não envia mais nada. '
-    + 'Tudo o que você registrou continua guardado aqui. Toque em “Exportar meus dados” '
-    + 'e procure o responsável pela prova.';
-
-const TEXTO_SEM_DISCO = 'Este navegador não deixa guardar os registros no aparelho. '
-    + 'NÃO recarregue nem feche esta página enquanto houver registros na fila.';
-
-const TEXTO_PROBLEMA_TOKEN = {
-    sem_permissao: 'Você não tem mais permissão para esta contagem. Os registros ficam guardados '
-        + 'neste aparelho; procure o responsável pela prova.',
-    sem_sessao: 'Sua sessão expirou e este aparelho ainda não foi autorizado a enviar. '
-        + 'Os registros ficam guardados aqui. Entre novamente e reabra esta página.',
-};
+import { describeBanner, describeConnection } from './status-messages.js';
 
 export function createStatusBar(documentRef, config) {
     const element = (id) => documentRef.getElementById(id);
@@ -36,29 +15,42 @@ export function createStatusBar(documentRef, config) {
     const ultimoSync = element('st-ultimo-sync');
     const outros = element('st-outros');
     const avisoFixo = element('aviso-fixo');
-    const avisoFixoTexto = element('aviso-fixo-texto');
 
-    function bannerText(state, problems) {
-        if (state.conexao === CONEXAO.REVOGADO) {
-            return TEXTO_REVOGADO;
+    const avisoFixoTextos = element('aviso-fixo-textos');
+    const botaoTentarDeNovo = element('btn-reconectar');
+    let renderedBannerSignature = null;
+
+    function renderBanner(state, problems) {
+        const banner = describeBanner(state, problems);
+        // Redrawn only when it changed: this runs after every sync, and a
+        // screen reader would otherwise read the same warning again each time.
+        const signature = JSON.stringify(banner);
+        if (signature === renderedBannerSignature) {
+            return;
         }
-        if (!problems.storagePersistent) {
-            return TEXTO_SEM_DISCO;
+        renderedBannerSignature = signature;
+        avisoFixoTextos.replaceChildren();
+        for (const aviso of banner.avisos) {
+            const paragraph = documentRef.createElement('p');
+            paragraph.textContent = aviso;
+            avisoFixoTextos.appendChild(paragraph);
         }
-        return TEXTO_PROBLEMA_TOKEN[problems.tokenProblem] || null;
+        avisoFixo.hidden = banner.avisos.length === 0;
+        botaoTentarDeNovo.hidden = !banner.oferecerNovaTentativa;
     }
 
     return {
         /**
          * @param {object} state    SyncQueue.getState()
-         * @param {object} problems {tokenProblem: ?string, storagePersistent: boolean}
+         * @param {object} problems {tokenProblem: ?string, armazenamento: string}
          */
         render(state, problems) {
             const serverFonte = state.servidor && state.servidor.fonte;
             fonte.textContent = serverFonte && serverFonte.nome ? serverFonte.nome : config.fonte.nome;
 
-            conexao.textContent = ROTULO_CONEXAO[state.conexao];
-            conexao.className = 'conexao conexao-' + state.conexao;
+            const connectionClass = state.turnoEncerrado ? 'encerrado' : state.conexao;
+            conexao.textContent = describeConnection(state, problems);
+            conexao.className = 'conexao conexao-' + connectionClass;
 
             pendentes.textContent = String(state.pendentes);
             pendentes.parentElement.classList.toggle('tem-pendentes', state.pendentes > 0);
@@ -69,9 +61,7 @@ export function createStatusBar(documentRef, config) {
             // typed, and never anything about the other sources.
             outros.textContent = state.outrosUsuarios.length > 0 ? state.outrosUsuarios.join(', ') : 'ninguém';
 
-            const text = bannerText(state, problems);
-            avisoFixo.hidden = text === null;
-            avisoFixoTexto.textContent = text === null ? '' : text;
+            renderBanner(state, problems);
         },
 
         /** Called a few times per second; cheap on purpose. */

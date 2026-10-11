@@ -26,6 +26,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDispositivoQuery orderByRotulo($order = Criteria::ASC) Order by the rotulo column
  * @method     ChildContagemDispositivoQuery orderByCriadoEmMs($order = Criteria::ASC) Order by the criado_em_ms column
  * @method     ChildContagemDispositivoQuery orderByRevogadoEmMs($order = Criteria::ASC) Order by the revogado_em_ms column
+ * @method     ChildContagemDispositivoQuery orderByFechadoEmMs($order = Criteria::ASC) Order by the fechado_em_ms column
  * @method     ChildContagemDispositivoQuery orderByVistoEmMs($order = Criteria::ASC) Order by the visto_em_ms column
  * @method     ChildContagemDispositivoQuery orderBySincronizadoAteMs($order = Criteria::ASC) Order by the sincronizado_ate_ms column
  * @method     ChildContagemDispositivoQuery orderByPrimeiroDesvioMs($order = Criteria::ASC) Order by the primeiro_desvio_ms column
@@ -37,6 +38,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDispositivoQuery groupByRotulo() Group by the rotulo column
  * @method     ChildContagemDispositivoQuery groupByCriadoEmMs() Group by the criado_em_ms column
  * @method     ChildContagemDispositivoQuery groupByRevogadoEmMs() Group by the revogado_em_ms column
+ * @method     ChildContagemDispositivoQuery groupByFechadoEmMs() Group by the fechado_em_ms column
  * @method     ChildContagemDispositivoQuery groupByVistoEmMs() Group by the visto_em_ms column
  * @method     ChildContagemDispositivoQuery groupBySincronizadoAteMs() Group by the sincronizado_ate_ms column
  * @method     ChildContagemDispositivoQuery groupByPrimeiroDesvioMs() Group by the primeiro_desvio_ms column
@@ -81,6 +83,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDispositivo|null findOneByRotulo(string $rotulo) Return the first ChildContagemDispositivo filtered by the rotulo column
  * @method     ChildContagemDispositivo|null findOneByCriadoEmMs(string $criado_em_ms) Return the first ChildContagemDispositivo filtered by the criado_em_ms column
  * @method     ChildContagemDispositivo|null findOneByRevogadoEmMs(string $revogado_em_ms) Return the first ChildContagemDispositivo filtered by the revogado_em_ms column
+ * @method     ChildContagemDispositivo|null findOneByFechadoEmMs(string $fechado_em_ms) Return the first ChildContagemDispositivo filtered by the fechado_em_ms column
  * @method     ChildContagemDispositivo|null findOneByVistoEmMs(string $visto_em_ms) Return the first ChildContagemDispositivo filtered by the visto_em_ms column
  * @method     ChildContagemDispositivo|null findOneBySincronizadoAteMs(string $sincronizado_ate_ms) Return the first ChildContagemDispositivo filtered by the sincronizado_ate_ms column
  * @method     ChildContagemDispositivo|null findOneByPrimeiroDesvioMs(string $primeiro_desvio_ms) Return the first ChildContagemDispositivo filtered by the primeiro_desvio_ms column
@@ -95,6 +98,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDispositivo requireOneByRotulo(string $rotulo) Return the first ChildContagemDispositivo filtered by the rotulo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDispositivo requireOneByCriadoEmMs(string $criado_em_ms) Return the first ChildContagemDispositivo filtered by the criado_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDispositivo requireOneByRevogadoEmMs(string $revogado_em_ms) Return the first ChildContagemDispositivo filtered by the revogado_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemDispositivo requireOneByFechadoEmMs(string $fechado_em_ms) Return the first ChildContagemDispositivo filtered by the fechado_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDispositivo requireOneByVistoEmMs(string $visto_em_ms) Return the first ChildContagemDispositivo filtered by the visto_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDispositivo requireOneBySincronizadoAteMs(string $sincronizado_ate_ms) Return the first ChildContagemDispositivo filtered by the sincronizado_ate_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDispositivo requireOneByPrimeiroDesvioMs(string $primeiro_desvio_ms) Return the first ChildContagemDispositivo filtered by the primeiro_desvio_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -116,6 +120,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemDispositivo> findByCriadoEmMs(string|array<string> $criado_em_ms) Return ChildContagemDispositivo objects filtered by the criado_em_ms column
  * @method     ChildContagemDispositivo[]|Collection findByRevogadoEmMs(string|array<string> $revogado_em_ms) Return ChildContagemDispositivo objects filtered by the revogado_em_ms column
  * @psalm-method Collection&\Traversable<ChildContagemDispositivo> findByRevogadoEmMs(string|array<string> $revogado_em_ms) Return ChildContagemDispositivo objects filtered by the revogado_em_ms column
+ * @method     ChildContagemDispositivo[]|Collection findByFechadoEmMs(string|array<string> $fechado_em_ms) Return ChildContagemDispositivo objects filtered by the fechado_em_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemDispositivo> findByFechadoEmMs(string|array<string> $fechado_em_ms) Return ChildContagemDispositivo objects filtered by the fechado_em_ms column
  * @method     ChildContagemDispositivo[]|Collection findByVistoEmMs(string|array<string> $visto_em_ms) Return ChildContagemDispositivo objects filtered by the visto_em_ms column
  * @psalm-method Collection&\Traversable<ChildContagemDispositivo> findByVistoEmMs(string|array<string> $visto_em_ms) Return ChildContagemDispositivo objects filtered by the visto_em_ms column
  * @method     ChildContagemDispositivo[]|Collection findBySincronizadoAteMs(string|array<string> $sincronizado_ate_ms) Return ChildContagemDispositivo objects filtered by the sincronizado_ate_ms column
@@ -221,7 +227,7 @@ abstract class ContagemDispositivoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT dispositivo_id, fonte_id, token_hash, usuario, rotulo, criado_em_ms, revogado_em_ms, visto_em_ms, sincronizado_ate_ms, primeiro_desvio_ms FROM contagem_dispositivo WHERE dispositivo_id = :p0';
+        $sql = 'SELECT dispositivo_id, fonte_id, token_hash, usuario, rotulo, criado_em_ms, revogado_em_ms, fechado_em_ms, visto_em_ms, sincronizado_ate_ms, primeiro_desvio_ms FROM contagem_dispositivo WHERE dispositivo_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -569,6 +575,49 @@ abstract class ContagemDispositivoQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ContagemDispositivoTableMap::COL_REVOGADO_EM_MS, $revogadoEmMs, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the fechado_em_ms column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByFechadoEmMs(1234); // WHERE fechado_em_ms = 1234
+     * $query->filterByFechadoEmMs(array(12, 34)); // WHERE fechado_em_ms IN (12, 34)
+     * $query->filterByFechadoEmMs(array('min' => 12)); // WHERE fechado_em_ms > 12
+     * </code>
+     *
+     * @param mixed $fechadoEmMs The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByFechadoEmMs($fechadoEmMs = null, ?string $comparison = null)
+    {
+        if (is_array($fechadoEmMs)) {
+            $useMinMax = false;
+            if (isset($fechadoEmMs['min'])) {
+                $this->addUsingAlias(ContagemDispositivoTableMap::COL_FECHADO_EM_MS, $fechadoEmMs['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($fechadoEmMs['max'])) {
+                $this->addUsingAlias(ContagemDispositivoTableMap::COL_FECHADO_EM_MS, $fechadoEmMs['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemDispositivoTableMap::COL_FECHADO_EM_MS, $fechadoEmMs, $comparison);
 
         return $this;
     }

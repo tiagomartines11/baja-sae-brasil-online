@@ -66,16 +66,24 @@ final class EngineResult
         return isset($this->cars[$carro]) ? $this->cars[$carro]->voltas : 0;
     }
 
+    /** @var array<int, PassGroup> entry id => the group it is in */
+    private array $groupByEntryId = [];
+
+    /** @param PassGroup[] $groupsInTimeOrder */
+    public function setGroups(array $groupsInTimeOrder): void
+    {
+        $this->groups = $groupsInTimeOrder;
+        $this->groupByEntryId = [];
+        foreach ($groupsInTimeOrder as $group) {
+            foreach ($group->entries as $entry) {
+                $this->groupByEntryId[$entry->id] = $group;
+            }
+        }
+    }
+
     /** The pass group an entry ended up in, or null if it was voided or is before the start. */
     public function groupOfEntry(int $passagemId): ?PassGroup
     {
-        foreach ($this->groups as $group) {
-            foreach ($group->entries as $entry) {
-                if ($entry->id === $passagemId) {
-                    return $group;
-                }
-            }
-        }
-        return null;
+        return $this->groupByEntryId[$passagemId] ?? null;
     }
 }

@@ -182,11 +182,34 @@ final class OfflineShell
     <div class="barra-linha barra-outros"><?= htmlspecialchars($outrosRotulo) ?> <b id="st-outros">ninguém</b></div>
 </header>
 <div id="aviso-fixo" class="aviso-fixo" role="alert" hidden>
-    <p id="aviso-fixo-texto"></p>
-    <button type="button" id="btn-reconectar" class="botao-secundario">Tentar reconectar</button>
+    <div id="aviso-fixo-textos"></div>
+    <?php // Retries in place, never reloads; the script shows it only when a retry can help. ?>
+    <button type="button" id="btn-reconectar" class="botao-secundario" hidden>Tentar de novo</button>
 </div>
+<section id="turno-encerrado" class="turno-encerrado" role="status" hidden>
+    <h2>Turno encerrado</h2>
+    <p>Este aparelho avisou que parou de contar e não está mais enviando nada.
+       Tudo o que você registrou continua guardado aqui.</p>
+    <button type="button" id="btn-retomar-turno" class="botao-registrar">Retomar contagem</button>
+</section>
 <noscript><p class="aviso-fixo">Esta página precisa de JavaScript para funcionar.</p></noscript>
 <p id="carregando" class="carregando">Abrindo…</p>
+        <?php
+    }
+
+    /**
+     * Printed inside each page's footer: the "end my shift" button and the
+     * two lines that say whether this device is safe to count on.
+     */
+    public static function printFooterTools(): void
+    {
+        ?>
+<button type="button" id="btn-encerrar-turno" class="botao-secundario">Encerrar meu turno</button>
+<p id="turno-mensagem" class="turno-mensagem" aria-live="polite" hidden></p>
+<ul class="estado-aparelho">
+    <li id="st-armazenamento">Armazenamento protegido: verificando…</li>
+    <li id="st-copia-offline">Cópia offline: verificando…</li>
+</ul>
         <?php
     }
 

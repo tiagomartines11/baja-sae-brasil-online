@@ -15,7 +15,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  encontrarAlerta, estadoDaFonte, fontesDivergentes, janelaDoAlerta, ordenarFila, resumoDeAlertas,
+  dispositivosDaFonte, encontrarAlerta, estadoDaFonte, fontesDivergentes, janelaDoAlerta, ordenarFila,
+  resumoDeAlertas, resumoDosDispositivos,
 } from '../../default/js/contagem/revisao-fila.js';
 
 // A small helper so each test only writes the fields it cares about.
@@ -165,4 +166,63 @@ test('the open-flag counter is written in proper Portuguese', () => {
   assert.equal(resumoDeAlertas(0), 'nenhum alerta');
   assert.equal(resumoDeAlertas(1), '1 alerta');
   assert.equal(resumoDeAlertas(7), '7 alertas');
+});
+
+// ---- the pass zero ------------------------------------------------------------
+
+// SITUATION: the counting line is after the start line, so the first time a
+// car crosses it the car has not completed a lap: that crossing is its
+// "passagem zero". Car 41 has crossed 6 times: the pass zero and 5 laps.
+// All three counters typed all 6 crossings.
+//
+// WHAT WENT WRONG: the table compared each counter's 6 entries with the 5
+// official LAPS, so every cell of every car was highlighted as a
+// disagreement and the highlighting meant nothing.
+//
+// EXPECTED: the table shows 5 laps, and compares what the counters typed
+// with the car's 6 official PASSES. Nothing is highlighted. A counter who
+// really missed one (5 entries) is.
+test('counters are compared with official passes, which include the pass zero', () => {
+  const todosViram = { voltas: 5, passagens: 6, contagem_por_fonte: { 1: 6, 2: 6, 3: 6 }, totais_importados: {} };
+  assert.deepEqual(fontesDivergentes(todosViram, TRES_CONTADORES), []);
+
+  const contador2Perdeu = { voltas: 5, passagens: 6, contagem_por_fonte: { 1: 6, 2: 5, 3: 6 }, totais_importados: {} };
+  assert.deepEqual(fontesDivergentes(contador2Perdeu, TRES_CONTADORES), [2]);
+});
+
+test('a paper total is a number of laps and is still compared with the laps', () => {
+  const fontes = [{ id: 9, tipo: 'totais', ativa: true }];
+  const carro = { voltas: 5, passagens: 6, contagem_por_fonte: {}, totais_importados: { 9: 5 } };
+  assert.deepEqual(fontesDivergentes(carro, fontes), []);
+});
+
+// ---- the devices of a source ------------------------------------------------
+
+// SITUATION: Contagem 1 was counted on three phones during the race. Ana's
+// is working. Bruno's lost its signal ten minutes ago and the system has
+// stopped waiting for it. Carla pressed "Encerrar meu turno" when Ana took
+// over. A fourth phone, on Contagem 2, was revoked by the controller.
+//
+// EXPECTED: the status bar says, for Contagem 1, what is NOT simply
+// working ("1 silencioso, 1 turno encerrado") and nothing about the phone
+// that is fine. Contagem 2 says "1 revogado".
+test('the status bar names the devices of a source that are silent, closed or revoked', () => {
+  const estado = {
+    dispositivos: [
+      { id: 1, fonte_id: 1, usuario: 'ana', situacao: 'ativo' },
+      { id: 2, fonte_id: 1, usuario: 'bruno', situacao: 'silencioso' },
+      { id: 3, fonte_id: 1, usuario: 'carla', situacao: 'fechado' },
+      { id: 4, fonte_id: 2, usuario: 'davi', situacao: 'revogado' },
+    ],
+  };
+
+  assert.equal(dispositivosDaFonte(estado, 1).length, 3);
+  assert.equal(resumoDosDispositivos(dispositivosDaFonte(estado, 1)), '1 silencioso, 1 turno encerrado');
+  assert.equal(resumoDosDispositivos(dispositivosDaFonte(estado, 2)), '1 revogado');
+  assert.equal(resumoDosDispositivos([{ id: 1, fonte_id: 1, situacao: 'ativo' }]), '', 'nothing to say when all is well');
+});
+
+test('a source whose devices were all closed says nobody is expected, not a date', () => {
+  const fonte = { ativa: true, tipo: 'manual', stats: { visto_em_ms: 9000, offline: false, nada_a_esperar: true, sincronizado_ate_ms: null } };
+  assert.deepEqual(estadoDaFonte(fonte, 10000), { classe: 'ao-vivo', texto: 'sem dispositivo aberto' });
 });

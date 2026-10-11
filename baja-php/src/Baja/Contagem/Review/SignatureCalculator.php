@@ -17,9 +17,15 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * (another reviewer decided, a late upload joined the group) and the decision
  * is refused instead of being applied to a situation the reviewer never saw.
  *
- * Built once per engine result because the review state needs one signature
- * per flag and per timeline entry; indexing the result every time would cost
+ * Built once per engine run because the review state needs one signature
+ * per flag and per timeline entry; indexing the groups every time would cost
  * a full scan of the race for each of them.
+ *
+ * The full run (flags of the state) and the quick recount of a few cars
+ * (a car's timeline) must give the SAME signature for the same entry, or
+ * every click on a timeline would be refused. Both therefore build it from
+ * the same thing: the pass groups, which a car's recount produces exactly as
+ * the full run does.
  */
 final class SignatureCalculator
 {
@@ -33,21 +39,26 @@ final class SignatureCalculator
     private array $decisionIdsByEntry;
 
     /**
+     * @param PassGroup[] $groups every pass group of the cars concerned
      * @param Decision[] $decisions every decision of the prova
      */
-    public function __construct(EngineResult $result, array $decisions)
+    public function __construct(array $groups, array $decisions)
     {
-        foreach ($result->effectiveEntries as $entry) {
-            $this->entriesInUse[$entry->id] = $entry;
-        }
-        foreach ($result->groups as $group) {
+        foreach ($groups as $group) {
             foreach ($group->entries as $entry) {
-                // Passes added by a reviewer only exist inside their group.
                 $this->entriesInUse[$entry->id] = $entry;
                 $this->groupByEntry[$entry->id] = $group;
             }
         }
         $this->decisionIdsByEntry = ActiveDecisions::idsByEntry(ActiveDecisions::filter($decisions));
+    }
+
+    /**
+     * @param Decision[] $decisions every decision of the prova
+     */
+    public static function forResult(EngineResult $result, array $decisions): self
+    {
+        return new self($result->groups, $decisions);
     }
 
     /**

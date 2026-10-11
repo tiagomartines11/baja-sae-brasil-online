@@ -63,7 +63,7 @@ class ContagemFonteTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 8;
+    public const NUM_COLUMNS = 9;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ContagemFonteTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 8;
+    public const NUM_HYDRATE_COLUMNS = 9;
 
     /**
      * the column name for the fonte_id field
@@ -116,6 +116,11 @@ class ContagemFonteTableMap extends TableMap
     public const COL_ORDEM = 'contagem_fonte.ordem';
 
     /**
+     * the column name for the desativada_em_ms field
+     */
+    public const COL_DESATIVADA_EM_MS = 'contagem_fonte.desativada_em_ms';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -129,11 +134,11 @@ class ContagemFonteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['FonteId', 'EventoId', 'ProvaId', 'Nome', 'Tipo', 'QualidadeTempo', 'Ativa', 'Ordem', ],
-        self::TYPE_CAMELNAME     => ['fonteId', 'eventoId', 'provaId', 'nome', 'tipo', 'qualidadeTempo', 'ativa', 'ordem', ],
-        self::TYPE_COLNAME       => [ContagemFonteTableMap::COL_FONTE_ID, ContagemFonteTableMap::COL_EVENTO_ID, ContagemFonteTableMap::COL_PROVA_ID, ContagemFonteTableMap::COL_NOME, ContagemFonteTableMap::COL_TIPO, ContagemFonteTableMap::COL_QUALIDADE_TEMPO, ContagemFonteTableMap::COL_ATIVA, ContagemFonteTableMap::COL_ORDEM, ],
-        self::TYPE_FIELDNAME     => ['fonte_id', 'evento_id', 'prova_id', 'nome', 'tipo', 'qualidade_tempo', 'ativa', 'ordem', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, ]
+        self::TYPE_PHPNAME       => ['FonteId', 'EventoId', 'ProvaId', 'Nome', 'Tipo', 'QualidadeTempo', 'Ativa', 'Ordem', 'DesativadaEmMs', ],
+        self::TYPE_CAMELNAME     => ['fonteId', 'eventoId', 'provaId', 'nome', 'tipo', 'qualidadeTempo', 'ativa', 'ordem', 'desativadaEmMs', ],
+        self::TYPE_COLNAME       => [ContagemFonteTableMap::COL_FONTE_ID, ContagemFonteTableMap::COL_EVENTO_ID, ContagemFonteTableMap::COL_PROVA_ID, ContagemFonteTableMap::COL_NOME, ContagemFonteTableMap::COL_TIPO, ContagemFonteTableMap::COL_QUALIDADE_TEMPO, ContagemFonteTableMap::COL_ATIVA, ContagemFonteTableMap::COL_ORDEM, ContagemFonteTableMap::COL_DESATIVADA_EM_MS, ],
+        self::TYPE_FIELDNAME     => ['fonte_id', 'evento_id', 'prova_id', 'nome', 'tipo', 'qualidade_tempo', 'ativa', 'ordem', 'desativada_em_ms', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, ]
     ];
 
     /**
@@ -145,11 +150,11 @@ class ContagemFonteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['FonteId' => 0, 'EventoId' => 1, 'ProvaId' => 2, 'Nome' => 3, 'Tipo' => 4, 'QualidadeTempo' => 5, 'Ativa' => 6, 'Ordem' => 7, ],
-        self::TYPE_CAMELNAME     => ['fonteId' => 0, 'eventoId' => 1, 'provaId' => 2, 'nome' => 3, 'tipo' => 4, 'qualidadeTempo' => 5, 'ativa' => 6, 'ordem' => 7, ],
-        self::TYPE_COLNAME       => [ContagemFonteTableMap::COL_FONTE_ID => 0, ContagemFonteTableMap::COL_EVENTO_ID => 1, ContagemFonteTableMap::COL_PROVA_ID => 2, ContagemFonteTableMap::COL_NOME => 3, ContagemFonteTableMap::COL_TIPO => 4, ContagemFonteTableMap::COL_QUALIDADE_TEMPO => 5, ContagemFonteTableMap::COL_ATIVA => 6, ContagemFonteTableMap::COL_ORDEM => 7, ],
-        self::TYPE_FIELDNAME     => ['fonte_id' => 0, 'evento_id' => 1, 'prova_id' => 2, 'nome' => 3, 'tipo' => 4, 'qualidade_tempo' => 5, 'ativa' => 6, 'ordem' => 7, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, ]
+        self::TYPE_PHPNAME       => ['FonteId' => 0, 'EventoId' => 1, 'ProvaId' => 2, 'Nome' => 3, 'Tipo' => 4, 'QualidadeTempo' => 5, 'Ativa' => 6, 'Ordem' => 7, 'DesativadaEmMs' => 8, ],
+        self::TYPE_CAMELNAME     => ['fonteId' => 0, 'eventoId' => 1, 'provaId' => 2, 'nome' => 3, 'tipo' => 4, 'qualidadeTempo' => 5, 'ativa' => 6, 'ordem' => 7, 'desativadaEmMs' => 8, ],
+        self::TYPE_COLNAME       => [ContagemFonteTableMap::COL_FONTE_ID => 0, ContagemFonteTableMap::COL_EVENTO_ID => 1, ContagemFonteTableMap::COL_PROVA_ID => 2, ContagemFonteTableMap::COL_NOME => 3, ContagemFonteTableMap::COL_TIPO => 4, ContagemFonteTableMap::COL_QUALIDADE_TEMPO => 5, ContagemFonteTableMap::COL_ATIVA => 6, ContagemFonteTableMap::COL_ORDEM => 7, ContagemFonteTableMap::COL_DESATIVADA_EM_MS => 8, ],
+        self::TYPE_FIELDNAME     => ['fonte_id' => 0, 'evento_id' => 1, 'prova_id' => 2, 'nome' => 3, 'tipo' => 4, 'qualidade_tempo' => 5, 'ativa' => 6, 'ordem' => 7, 'desativada_em_ms' => 8, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, ]
     ];
 
     /**
@@ -218,6 +223,14 @@ class ContagemFonteTableMap extends TableMap
         'ContagemFonteTableMap::COL_ORDEM' => 'ORDEM',
         'COL_ORDEM' => 'ORDEM',
         'contagem_fonte.ordem' => 'ORDEM',
+        'DesativadaEmMs' => 'DESATIVADA_EM_MS',
+        'ContagemFonte.DesativadaEmMs' => 'DESATIVADA_EM_MS',
+        'desativadaEmMs' => 'DESATIVADA_EM_MS',
+        'contagemFonte.desativadaEmMs' => 'DESATIVADA_EM_MS',
+        'ContagemFonteTableMap::COL_DESATIVADA_EM_MS' => 'DESATIVADA_EM_MS',
+        'COL_DESATIVADA_EM_MS' => 'DESATIVADA_EM_MS',
+        'desativada_em_ms' => 'DESATIVADA_EM_MS',
+        'contagem_fonte.desativada_em_ms' => 'DESATIVADA_EM_MS',
     ];
 
     /**
@@ -245,6 +258,7 @@ class ContagemFonteTableMap extends TableMap
         $this->addColumn('qualidade_tempo', 'QualidadeTempo', 'VARCHAR', true, 8, 'humana');
         $this->addColumn('ativa', 'Ativa', 'BOOLEAN', true, 1, true);
         $this->addColumn('ordem', 'Ordem', 'INTEGER', true, null, 0);
+        $this->addColumn('desativada_em_ms', 'DesativadaEmMs', 'BIGINT', false, null, null);
     }
 
     /**
@@ -265,7 +279,7 @@ class ContagemFonteTableMap extends TableMap
     0 => ':prova_id',
     1 => ':prova_id',
   ),
-), 'CASCADE', 'CASCADE', null, false);
+), 'RESTRICT', 'CASCADE', null, false);
         $this->addRelation('ContagemFonteUsuario', '\\Baja\\Model\\ContagemFonteUsuario', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (
@@ -459,6 +473,7 @@ class ContagemFonteTableMap extends TableMap
             $criteria->addSelectColumn(ContagemFonteTableMap::COL_QUALIDADE_TEMPO);
             $criteria->addSelectColumn(ContagemFonteTableMap::COL_ATIVA);
             $criteria->addSelectColumn(ContagemFonteTableMap::COL_ORDEM);
+            $criteria->addSelectColumn(ContagemFonteTableMap::COL_DESATIVADA_EM_MS);
         } else {
             $criteria->addSelectColumn($alias . '.fonte_id');
             $criteria->addSelectColumn($alias . '.evento_id');
@@ -468,6 +483,7 @@ class ContagemFonteTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.qualidade_tempo');
             $criteria->addSelectColumn($alias . '.ativa');
             $criteria->addSelectColumn($alias . '.ordem');
+            $criteria->addSelectColumn($alias . '.desativada_em_ms');
         }
     }
 
@@ -494,6 +510,7 @@ class ContagemFonteTableMap extends TableMap
             $criteria->removeSelectColumn(ContagemFonteTableMap::COL_QUALIDADE_TEMPO);
             $criteria->removeSelectColumn(ContagemFonteTableMap::COL_ATIVA);
             $criteria->removeSelectColumn(ContagemFonteTableMap::COL_ORDEM);
+            $criteria->removeSelectColumn(ContagemFonteTableMap::COL_DESATIVADA_EM_MS);
         } else {
             $criteria->removeSelectColumn($alias . '.fonte_id');
             $criteria->removeSelectColumn($alias . '.evento_id');
@@ -503,6 +520,7 @@ class ContagemFonteTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.qualidade_tempo');
             $criteria->removeSelectColumn($alias . '.ativa');
             $criteria->removeSelectColumn($alias . '.ordem');
+            $criteria->removeSelectColumn($alias . '.desativada_em_ms');
         }
     }
 

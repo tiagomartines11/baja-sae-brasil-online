@@ -11,11 +11,38 @@ use Propel\Runtime\Propel;
  *
  * This is the one place in the application allowed to delete from the
  * append-only tables. It exists so that a rehearsal with made-up entries
- * can be cleared before the real race; the page that offers it asks for
- * confirmation first.
+ * can be cleared before the real race.
+ *
+ * Because a wrong click here would destroy the only record of a race, every
+ * row is first copied, as JSON, into contagem_arquivo. Nothing in the
+ * application reads that table; it is there to be queried by hand on the
+ * day somebody wipes the wrong race.
  */
 final class RaceReset
 {
+    /**
+     * The tables that are archived and emptied, with the columns copied and
+     * the condition that selects the rows of this prova.
+     */
+    private const TABLES = [
+        'contagem_decisao' => [
+            'columns' => ['decisao_id', 'tipo', 'passagem_id', 'fonte_id', 'equipe_numero', 'ts_ms', 'ts_fim_ms', 'desfaz_decisao_id', 'origem', 'usuario', 'motivo', 'criado_em_ms'],
+            'where' => 't.evento_id = :evento AND t.prova_id = :prova',
+        ],
+        'contagem_ocorrencia' => [
+            'columns' => ['ocorrencia_id', 'tipo', 'equipe_numero', 'ts_ms', 'usuario', 'criado_em_ms', 'substitui_id', 'uuid_cliente'],
+            'where' => 't.evento_id = :evento AND t.prova_id = :prova',
+        ],
+        'contagem_total' => [
+            'columns' => ['fonte_id', 'equipe_numero', 'voltas'],
+            'where' => 't.fonte_id IN (SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova)',
+        ],
+        'contagem_passagem' => [
+            'columns' => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_dispositivo_ms', 'desvio_relogio_ms', 'ts_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms'],
+            'where' => 't.fonte_id IN (SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova)',
+        ],
+    ];
+
     private string $eventoId;
     private string $provaId;
 
@@ -26,35 +53,57 @@ final class RaceReset
     }
 
     /**
-     * Removes entries, decisions, race-control and pit events and imported
-     * totals. Sources, counter links and devices stay: the same people
-     * count the real race on the same phones.
+     * Archives and then removes entries, decisions, race-control and pit
+     * events and imported totals. Sources, counter links and devices stay:
+     * the same people count the real race on the same phones.
+     *
+     * @return int how many rows were archived
      */
-    public function deleteRawData(): void
+    public function archiveAndDeleteRawData(string $usuario): int
     {
-        $sourcesOfProva = 'SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova';
+        $connection = Propel::getWriteConnection('resultados');
+        $prova = [':evento' => $this->eventoId, ':prova' => $this->provaId];
+        $nowMs = Clock::nowMs();
+        $archived = 0;
 
-        $statements = [
-            'DELETE FROM contagem_decisao WHERE evento_id = :evento AND prova_id = :prova',
-            'DELETE FROM contagem_ocorrencia WHERE evento_id = :evento AND prova_id = :prova',
-            'DELETE FROM contagem_total WHERE fonte_id IN (' . $sourcesOfProva . ')',
-            'DELETE FROM contagem_passagem WHERE fonte_id IN (' . $sourcesOfProva . ')',
+        $connection->beginTransaction();
+        try {
+            foreach (self::TABLES as $table => $definition) {
+                $jsonPairs = [];
+                foreach ($definition['columns'] as $column) {
+                    $jsonPairs[] = "'" . $column . "', t." . $column;
+                }
+                $archive = $connection->prepare(
+                    'INSERT INTO contagem_arquivo (evento_id, prova_id, arquivado_em_ms, arquivado_por, tabela, dados)
+                     SELECT :evento_arquivo, :prova_arquivo, :agora, :usuario, :tabela, JSON_OBJECT(' . implode(', ', $jsonPairs) . ')
+                       FROM ' . $table . ' t
+                      WHERE ' . $definition['where']
+                );
+                $archive->execute($prova + [
+                    ':evento_arquivo' => $this->eventoId,
+                    ':prova_arquivo' => $this->provaId,
+                    ':agora' => $nowMs,
+                    ':usuario' => $usuario,
+                    ':tabela' => $table,
+                ]);
+                $archived += $archive->rowCount();
+
+                $connection->prepare('DELETE t FROM ' . $table . ' t WHERE ' . $definition['where'])->execute($prova);
+            }
+
             // The devices' "synced through" marks describe data that is now
             // gone. Clearing them makes every source prove again that it is
             // up to date before its silence is trusted.
-            'UPDATE contagem_dispositivo SET sincronizado_ate_ms = NULL WHERE fonte_id IN (' . $sourcesOfProva . ')',
-        ];
+            $connection->prepare(
+                'UPDATE contagem_dispositivo SET sincronizado_ate_ms = NULL
+                  WHERE fonte_id IN (SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova)'
+            )->execute($prova);
 
-        $connection = Propel::getWriteConnection('resultados');
-        $connection->beginTransaction();
-        try {
-            foreach ($statements as $sql) {
-                $connection->prepare($sql)->execute([':evento' => $this->eventoId, ':prova' => $this->provaId]);
-            }
             $connection->commit();
         } catch (\Throwable $error) {
             $connection->rollBack();
             throw $error;
         }
+        return $archived;
     }
 }

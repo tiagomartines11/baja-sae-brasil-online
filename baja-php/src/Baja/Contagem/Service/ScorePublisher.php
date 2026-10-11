@@ -3,77 +3,117 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Service;
 
-use Baja\Contagem\Engine\Data\CarState;
+use Baja\Contagem\Engine\Data\CountResult;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\PublishedValues;
 use Baja\Contagem\Engine\RaceTimeline;
-use Baja\Model\Input;
-use Baja\Model\InputQuery;
+use Baja\Contagem\Engine\Settings;
+use Baja\Model\Map\InputTableMap;
 use Baja\Model\Prova;
 use Propel\Runtime\Propel;
 
 /**
- * Copies the engine's count into the scoring system: one Input row per car,
- * with the three fields the prova's formulas read.
+ * Copies the engine's numbers into the scoring system: one Input row per
+ * car, with the three fields the prova's formulas read.
  *
  *   VOLTAS  official lap count
- *   LAST    time of the last counted pass, whole seconds since the start
+ *   LAST    time of the last official pass, whole seconds since the start
  *   BEST    best eligible lap in whole seconds, 0 when there is none
  *
  * The rest of the application (results pages, the overlay, the points
  * formulas) only ever looks at Input, so this class is the single bridge
  * between lap counting and everything that was there before it.
+ *
+ * Three things it is careful about:
+ *
+ * - It changes only its own three keys inside `dados`, with one JSON_SET
+ *   statement per row. The same row holds fields typed by people (DESCLAS),
+ *   and a judge saving one at the same instant must never be overwritten.
+ * - The writes and the recalculation of points are one transaction. If the
+ *   recalculation fails, the counts are rolled back too: a lap count is
+ *   never visible without its points.
+ * - It stands back completely when the publish mode is "desligada" and
+ *   while the race has no start, so that switching a prova to lap counting,
+ *   or running beside the old spreadsheets, cannot touch existing results.
  */
 final class ScorePublisher
 {
-    public const FIELD_LAPS = 'VOLTAS';
-    public const FIELD_LAST_PASS = 'LAST';
-    public const FIELD_BEST_LAP = 'BEST';
-
     /** Fields this class owns. Entry pages show them read-only for laps provas. */
-    public const ENGINE_FIELDS = [self::FIELD_LAPS, self::FIELD_LAST_PASS, self::FIELD_BEST_LAP];
+    public const ENGINE_FIELDS = PublishedValues::KEYS;
 
     /** How many times points were recalculated in this process. Read by the tests. */
     private static int $refreshCount = 0;
 
     private Prova $prova;
+    private Settings $settings;
 
-    public function __construct(Prova $prova)
+    public function __construct(Prova $prova, Settings $settings)
     {
         $this->prova = $prova;
+        $this->settings = $settings;
     }
 
     /**
-     * @param bool $rewriteAll "Republicar tudo": write every row and always
-     *                         recalculate points, even if nothing differs
+     * After a quick recount of a few cars: publishes their VOLTAS and LAST.
+     * BEST is not known here (it needs the whole race) and is left alone.
+     *
+     * @param int[] $cars
      */
-    public function publish(EngineResult $result, bool $rewriteAll = false): PublishOutcome
+    public function publishCounts(CountResult $count, array $cars): PublishOutcome
     {
         $outcome = new PublishOutcome();
-        $largadaMs = $result->timeline->largadaMs;
-
-        if ($largadaMs === null) {
-            // A prova that was just switched to type "laps" may still hold
-            // totals imported the old way. Until race control starts a race
-            // here there is nothing of ours to publish, and writing zeros
-            // would wipe those totals.
-            $outcome->skippedNoStart = true;
-            if ($rewriteAll) {
-                $this->refreshPoints($outcome);
-            }
+        if (!$this->mayPublish($count->timeline, $outcome)) {
             return $outcome;
         }
+        $valuesByCar = [];
+        foreach ($cars as $carro) {
+            $valuesByCar[$carro] = [
+                PublishedValues::VOLTAS => $count->lapCount($carro),
+                PublishedValues::LAST => PublishedValues::lastPassSeconds($count->lastPassMs($carro), $count->timeline),
+            ];
+        }
+        return $this->write($valuesByCar, true, false, $outcome);
+    }
 
+    /**
+     * After a full recalculation: publishes BEST where it changed. Rows are
+     * never created for this; a car without a lap has no best lap.
+     *
+     * @param array<int, int> $bestSecondsByCar
+     */
+    public function publishBest(array $bestSecondsByCar, RaceTimeline $timeline): PublishOutcome
+    {
+        $outcome = new PublishOutcome();
+        if (!$this->mayPublish($timeline, $outcome)) {
+            return $outcome;
+        }
+        $valuesByCar = [];
+        foreach ($bestSecondsByCar as $carro => $bestSeconds) {
+            $valuesByCar[$carro] = [PublishedValues::BEST => $bestSeconds];
+        }
+        return $this->write($valuesByCar, false, false, $outcome);
+    }
+
+    /**
+     * Everything for every car, from a full run. Used after a change made by
+     * a person, which can touch any car, and by "Republicar tudo".
+     *
+     * @param bool $rewriteAll write every row and always recalculate points, even if nothing differs
+     */
+    public function publishAll(EngineResult $result, bool $rewriteAll = false): PublishOutcome
+    {
+        $outcome = new PublishOutcome();
+        if (!$this->mayPublish($result->timeline, $outcome)) {
+            return $outcome;
+        }
         $valuesByCar = [];
         foreach ($this->teamNumbers() as $carro) {
-            $valuesByCar[$carro] = self::valuesFor($result->cars[$carro] ?? null, $result->timeline);
+            $valuesByCar[$carro] = isset($result->cars[$carro])
+                ? PublishedValues::forCar($result->cars[$carro], $result->timeline)
+                : self::zeros();
         }
-
-        $this->writeValues($valuesByCar, $rewriteAll, true, $outcome);
-
-        // Recalculating points rereads every Input of the prova, so it only
-        // happens when a published number actually moved.
-        if ($rewriteAll || $outcome->anythingChanged()) {
+        $outcome = $this->write($valuesByCar, true, $rewriteAll, $outcome);
+        if ($rewriteAll && !$outcome->refreshRan) {
             $this->refreshPoints($outcome);
         }
         return $outcome;
@@ -81,21 +121,21 @@ final class ScorePublisher
 
     /**
      * Sets every existing row back to zero laps. Used by "Zerar corrida":
-     * once the race is wiped there is no start any more, publish() would
+     * once the race is wiped there is no start any more, publishing would
      * stand back, and the old numbers would stay on the results page.
      */
     public function publishZeros(): PublishOutcome
     {
         $outcome = new PublishOutcome();
+        if (!$this->settings->publishesToScoring()) {
+            $outcome->skippedPublishingOff = true;
+            return $outcome;
+        }
         $valuesByCar = [];
         foreach ($this->teamNumbers() as $carro) {
-            $valuesByCar[$carro] = self::valuesFor(null, null);
+            $valuesByCar[$carro] = self::zeros();
         }
-        $this->writeValues($valuesByCar, false, false, $outcome);
-        if ($outcome->anythingChanged()) {
-            $this->refreshPoints($outcome);
-        }
-        return $outcome;
+        return $this->write($valuesByCar, false, false, $outcome);
     }
 
     public static function refreshCount(): int
@@ -103,54 +143,111 @@ final class ScorePublisher
         return self::$refreshCount;
     }
 
-    /**
-     * @return array<string, int>
-     */
-    private static function valuesFor(?CarState $state, ?RaceTimeline $timeline): array
+    private function mayPublish(RaceTimeline $timeline, PublishOutcome $outcome): bool
     {
-        if ($state === null || $timeline === null || $state->voltas === 0) {
-            return [self::FIELD_LAPS => 0, self::FIELD_LAST_PASS => 0, self::FIELD_BEST_LAP => 0];
+        if (!$this->settings->publishesToScoring()) {
+            $outcome->skippedPublishingOff = true;
+            return false;
         }
-        // The rounding rules live with the engine, where they are tested
-        // without a database.
-        return PublishedValues::forCar($state, $timeline);
+        if ($timeline->largadaMs === null) {
+            // A prova that was just switched to type "laps" may still hold
+            // totals imported the old way. Until race control starts a race
+            // here there is nothing of ours to publish, and writing zeros
+            // would wipe those totals.
+            $outcome->skippedNoStart = true;
+            return false;
+        }
+        return true;
     }
 
     /**
-     * @param array<int, array<string, int>> $valuesByCar
+     * @param array<int, array<string, int>> $valuesByCar car => the fields to set (any subset of the three)
      * @param bool $createMissingRows false when only existing rows may be touched
      */
-    private function writeValues(array $valuesByCar, bool $rewriteAll, bool $createMissingRows, PublishOutcome $outcome): void
+    private function write(array $valuesByCar, bool $createMissingRows, bool $rewriteAll, PublishOutcome $outcome): PublishOutcome
     {
-        $rowsByCar = $this->existingRows();
+        $teams = array_fill_keys($this->teamNumbers(), true);
+        $existing = $this->existingData(array_keys($valuesByCar));
 
-        foreach ($valuesByCar as $carro => $values) {
-            $row = $rowsByCar[$carro] ?? null;
-
-            if ($row === null) {
-                // A car that has not completed a lap gets no row: an empty
-                // row would show it on the results page as if it had run.
-                if (!$createMissingRows || $values[self::FIELD_LAPS] === 0) {
+        $connection = Propel::getWriteConnection('resultados');
+        $connection->beginTransaction();
+        try {
+            foreach ($valuesByCar as $carro => $values) {
+                // A counter's typo may refer to a car that does not exist;
+                // Input has a foreign key to equipe, so it cannot hold a score.
+                if (!isset($teams[$carro])) {
                     continue;
                 }
-                $row = new Input();
-                $row->setEventoId($this->prova->getEventoId());
-                $row->setProvaId($this->prova->getProvaId());
-                $row->setEquipeId($carro);
-                $dados = [];
-            } else {
-                $dados = (array) $row->getDados();
-                if (!$rewriteAll && !self::differs($dados, $values)) {
+                $hasRow = array_key_exists($carro, $existing);
+                if (!$hasRow) {
+                    // A car that has not completed a lap gets no row: an
+                    // empty row would list it on the results page as if it
+                    // had run.
+                    if (!$createMissingRows || ($values[PublishedValues::VOLTAS] ?? 0) === 0) {
+                        continue;
+                    }
+                    $this->insertRow((int) $carro, array_merge(self::zeros(), $values));
+                } elseif ($rewriteAll || self::differs($existing[$carro], $values)) {
+                    $this->updateRow((int) $carro, $values);
+                } else {
                     continue;
                 }
+                $outcome->changedCars[] = (int) $carro;
             }
 
-            // Merge, never replace: the same row holds fields typed by
-            // people (DESCLAS, for one) that the engine knows nothing about.
-            $row->setDados(array_merge($dados, $values));
-            $row->save();
-            $outcome->changedCars[] = $carro;
+            // Recalculating points rereads every Input of the prova, so it
+            // only happens when a published number actually moved.
+            if ($outcome->anythingChanged()) {
+                $this->refreshPoints($outcome);
+            }
+            $connection->commit();
+        } catch (\Throwable $error) {
+            $connection->rollBack();
+            throw $error;
         }
+        return $outcome;
+    }
+
+    /** @param array<string, int> $values */
+    private function updateRow(int $carro, array $values): void
+    {
+        $assignments = '';
+        $params = [];
+        foreach ($values as $field => $value) {
+            $assignments .= ', ?, CAST(? AS SIGNED)';
+            $params[] = '$.' . $field;
+            $params[] = $value;
+        }
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            'UPDATE input
+                SET dados = JSON_SET(COALESCE(dados, JSON_OBJECT())' . $assignments . ')
+              WHERE evento_id = ? AND prova_id = ? AND equipe_id = ?'
+        );
+        $statement->execute(array_merge($params, [$this->prova->getEventoId(), $this->prova->getProvaId(), $carro]));
+    }
+
+    /** @param array<string, int> $values all three fields */
+    private function insertRow(int $carro, array $values): void
+    {
+        // ON DUPLICATE KEY: a judge may have created the row (saving DESCLAS)
+        // between our read and this statement. Then only our keys are set.
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            'INSERT INTO input (evento_id, prova_id, equipe_id, dados)
+             VALUES (?, ?, ?, JSON_OBJECT(?, CAST(? AS SIGNED), ?, CAST(? AS SIGNED), ?, CAST(? AS SIGNED)))
+             ON DUPLICATE KEY UPDATE dados = JSON_SET(COALESCE(dados, JSON_OBJECT()),
+                 ?, CAST(? AS SIGNED), ?, CAST(? AS SIGNED), ?, CAST(? AS SIGNED))'
+        );
+        $objectParams = [];
+        $setParams = [];
+        foreach (PublishedValues::KEYS as $field) {
+            array_push($objectParams, $field, $values[$field]);
+            array_push($setParams, '$.' . $field, $values[$field]);
+        }
+        $statement->execute(array_merge(
+            [$this->prova->getEventoId(), $this->prova->getProvaId(), $carro],
+            $objectParams,
+            $setParams
+        ));
     }
 
     /**
@@ -161,7 +258,7 @@ final class ScorePublisher
     {
         foreach ($values as $field => $value) {
             // A missing or non-numeric field counts as different, so a row
-            // created by hand ends up with all three fields filled in.
+            // created by hand ends up with the engine's fields filled in.
             if (!isset($dados[$field]) || !is_numeric($dados[$field])) {
                 return true;
             }
@@ -174,28 +271,30 @@ final class ScorePublisher
         return false;
     }
 
-    /** @return array<int, Input> existing rows of this prova keyed by car number */
-    private function existingRows(): array
+    /**
+     * @param int[] $cars
+     * @return array<int, array<string, mixed>> existing rows: car => decoded dados
+     */
+    private function existingData(array $cars): array
     {
-        $rows = InputQuery::create()
-            ->filterByEventoId($this->prova->getEventoId())
-            ->filterByProvaId($this->prova->getProvaId())
-            ->find();
-
-        $rowsByCar = [];
-        foreach ($rows as $row) {
-            $rowsByCar[(int) $row->getEquipeId()] = $row;
+        if ($cars === []) {
+            return [];
         }
-        return $rowsByCar;
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            'SELECT equipe_id, dados FROM input
+              WHERE evento_id = ? AND prova_id = ?
+                AND equipe_id IN (' . implode(', ', array_fill(0, count($cars), '?')) . ')'
+        );
+        $statement->execute(array_merge([$this->prova->getEventoId(), $this->prova->getProvaId()], array_map('intval', $cars)));
+
+        $rows = [];
+        foreach ($statement->fetchAll(\PDO::FETCH_NUM) as $row) {
+            $rows[(int) $row[0]] = (array) json_decode((string) ($row[1] ?? ''), true);
+        }
+        return $rows;
     }
 
-    /**
-     * Car numbers that can hold a score. A counter's typo may refer to a car
-     * that does not exist; Input has a foreign key to equipe, so such a
-     * number could not be saved and is simply not published.
-     *
-     * @return int[]
-     */
+    /** @return int[] car numbers that can hold a score */
     private function teamNumbers(): array
     {
         $statement = Propel::getReadConnection('resultados')->prepare(
@@ -205,8 +304,18 @@ final class ScorePublisher
         return array_map('intval', $statement->fetchAll(\PDO::FETCH_COLUMN));
     }
 
+    /** @return array<string, int> */
+    private static function zeros(): array
+    {
+        return array_fill_keys(PublishedValues::KEYS, 0);
+    }
+
     private function refreshPoints(PublishOutcome $outcome): void
     {
+        // The rows were just changed with plain SQL. Any Input object Propel
+        // is still holding from earlier in this request is out of date, and
+        // refreshVarsAndPontos() would recalculate from it.
+        InputTableMap::clearInstancePool();
         $this->prova->refreshVarsAndPontos();
         self::$refreshCount++;
         $outcome->refreshRan = true;

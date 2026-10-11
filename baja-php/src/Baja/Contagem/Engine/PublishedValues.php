@@ -9,6 +9,9 @@ use Baja\Contagem\Engine\Data\CarState;
  * The three numbers the scoring formulas read from `Input.dados` for a laps
  * prova. Kept here, next to the engine, so that what gets published is
  * decided by tested, database-free code.
+ *
+ * Times are published in whole seconds, rounded to the nearest: hand timing
+ * does not justify decimals. Both times are rounded the same way.
  */
 final class PublishedValues
 {
@@ -21,20 +24,30 @@ final class PublishedValues
     /**
      * @return array{VOLTAS: int, LAST: int, BEST: int}
      *   VOLTAS  counted laps
-     *   LAST    whole seconds from the start of the race to the last counted pass
+     *   LAST    whole seconds from the start of the race to the last official pass
      *   BEST    best eligible lap in whole seconds, 0 when there is none
      */
     public static function forCar(CarState $car, RaceTimeline $timeline): array
     {
-        $lastPassSeconds = 0;
-        if ($car->ultimaPassagemMs !== null && $timeline->largadaMs !== null) {
-            $lastPassSeconds = max(0, intdiv($car->ultimaPassagemMs - $timeline->largadaMs, 1000));
-        }
-
         return [
             self::VOLTAS => $car->voltas,
-            self::LAST => $lastPassSeconds,
-            self::BEST => $car->melhorVoltaMs !== null ? (int) round($car->melhorVoltaMs / 1000) : 0,
+            self::LAST => self::lastPassSeconds($car->ultimaPassagemMs, $timeline),
+            self::BEST => self::bestLapSeconds($car->melhorVoltaMs),
         ];
+    }
+
+    /** LAST: whole seconds from the start to the given pass; 0 when there is no pass or no start. */
+    public static function lastPassSeconds(?int $lastPassMs, RaceTimeline $timeline): int
+    {
+        if ($lastPassMs === null || $timeline->largadaMs === null) {
+            return 0;
+        }
+        return max(0, (int) round(($lastPassMs - $timeline->largadaMs) / 1000));
+    }
+
+    /** BEST: the best eligible lap in whole seconds; 0 when there is none. */
+    public static function bestLapSeconds(?int $bestLapMs): int
+    {
+        return $bestLapMs !== null ? (int) round($bestLapMs / 1000) : 0;
     }
 }

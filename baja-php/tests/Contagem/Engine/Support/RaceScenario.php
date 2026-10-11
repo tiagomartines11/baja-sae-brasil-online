@@ -3,11 +3,10 @@ declare(strict_types=1);
 
 namespace Baja\Tests\Contagem\Engine\Support;
 
-use Baja\Contagem\Engine\Data\Decision;
+use Baja\Contagem\Engine\Data\CountResult;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Entry;
-use Baja\Contagem\Engine\Data\Flag;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\Engine;
@@ -33,6 +32,9 @@ use Baja\Contagem\Engine\Settings;
  */
 final class RaceScenario
 {
+    // void(), reassign(), confirm(), addPass(), excludeSource(), undo(), accept()
+    use ReviewerActions;
+
     /** The moment "00:00" stands for. Any fixed date works; nothing depends on it. */
     public const CLOCK_ZERO_MS = 1760000000000;
 
@@ -45,8 +47,6 @@ final class RaceScenario
     private array $sources = [];
     /** @var Entry[] */
     private array $entries = [];
-    /** @var Decision[] */
-    private array $decisions = [];
     /** @var Ocorrencia[] */
     private array $ocorrencias = [];
     /** @var array<int, array<int, int>> */
@@ -57,7 +57,6 @@ final class RaceScenario
     private array $lastSeenSetByTest = [];
 
     private int $nextEntryId = 1;
-    private int $nextDecisionId = 1;
     private int $nextOcorrenciaId = 1;
 
     public function __construct()
@@ -135,21 +134,42 @@ final class RaceScenario
     }
 
     /**
+     * The first time each of these cars crosses the counting line after the
+     * start, recorded by every counter (or by the listed ones).
+     *
+     * WHY TESTS NEED IT: the counting line is after the start line, so a
+     * car's first crossing completes no lap. It is the car's "pass zero",
+     * and laps = official passes - 1. A test about "car 41's lap at 03:10"
+     * therefore first lets car 41 cross once, shortly after the start.
+     *
+     * @param int[] $cars
+     * @param int[]|null $seenBy source ids; by default every human counter
+     */
+    public function firstCrossing(array $cars, string $at = '00:20', ?array $seenBy = null): void
+    {
+        foreach ($cars as $car) {
+            $this->pass($car, $at, $seenBy);
+        }
+    }
+
+    /**
      * A field of well-behaved cars, so the engine has enough laps to know
      * the pace of the race (it needs at least eight recent laps before it
      * will say what a "normal" lap is).
      *
-     * Every car in $cars crosses the line every $lapSeconds, $laps times,
-     * and every counter records every pass. Cars follow each other
-     * $gapSeconds apart. The first car's first pass is at $firstPassAt.
+     * Every car in $cars crosses the line every $lapSeconds, $crossings
+     * times, and every counter records every crossing. Cars follow each
+     * other $gapSeconds apart. The first car's first crossing is at
+     * $firstPassAt. Remember that the first crossing is pass zero: six
+     * crossings are five laps.
      *
      * @param int[] $cars
      */
-    public function steadyField(array $cars, int $lapSeconds, int $laps, string $firstPassAt = '03:00', int $gapSeconds = 7): void
+    public function steadyField(array $cars, int $lapSeconds, int $crossings, string $firstPassAt = '03:00', int $gapSeconds = 7): void
     {
         $firstPassMs = self::ms($firstPassAt) - self::CLOCK_ZERO_MS;
         foreach (array_values($cars) as $position => $car) {
-            for ($lap = 0; $lap < $laps; $lap++) {
+            for ($lap = 0; $lap < $crossings; $lap++) {
                 $passSeconds = intdiv($firstPassMs, 1000) + $position * $gapSeconds + $lap * $lapSeconds;
                 $this->pass($car, self::clock($passSeconds));
             }
@@ -160,58 +180,6 @@ final class RaceScenario
     public static function clock(int $secondsAfterStart): string
     {
         return sprintf('%02d:%02d', intdiv($secondsAfterStart, 60), $secondsAfterStart % 60);
-    }
-
-    // ----- decisions, as a reviewer (or a counter) would make them -----
-
-    public function void(int $entryId, string $origem = Decision::ORIGEM_REVISOR): int
-    {
-        return $this->decide(Decision::anular($this->nextDecisionId, $entryId, $origem));
-    }
-
-    public function reassign(int $entryId, int $car): int
-    {
-        return $this->decide(Decision::reatribuir($this->nextDecisionId, $entryId, $car));
-    }
-
-    public function confirm(int $entryId): int
-    {
-        return $this->decide(Decision::confirmar($this->nextDecisionId, $entryId));
-    }
-
-    public function addPass(int $car, string $at): int
-    {
-        return $this->decide(Decision::adicionar($this->nextDecisionId, $car, self::ms($at)));
-    }
-
-    public function excludeSource(int $source, string $from, string $to): int
-    {
-        return $this->decide(Decision::excluirFonte($this->nextDecisionId, $source, self::ms($from), self::ms($to)));
-    }
-
-    /** Reverses an earlier decision (the "desfazer" button of the history panel). */
-    public function undo(int $decisionId): int
-    {
-        return $this->decide(Decision::desfazer($this->nextDecisionId, $decisionId));
-    }
-
-    /** The reviewer presses "aceitar sugestão" on a flag. */
-    public function accept(Flag $flag): int
-    {
-        if ($flag->sugestao === null) {
-            throw new \LogicException('The flag ' . $flag->id . ' has no suggestion to accept.');
-        }
-        $decision = new Decision($this->nextDecisionId, $flag->sugestao['tipo']);
-        $decision->passagemId = $flag->sugestao['passagem_id'] ?? null;
-        $decision->carro = $flag->sugestao['equipe_numero'] ?? null;
-        return $this->decide($decision);
-    }
-
-    private function decide(Decision $decision): int
-    {
-        $this->decisions[] = $decision;
-        $this->nextDecisionId++;
-        return $decision->id;
     }
 
     // ----- race control, pit log, connectivity -----
@@ -231,6 +199,28 @@ final class RaceScenario
     public function pitOut(int $car, string $at): int
     {
         return $this->ocorrencia(Ocorrencia::BOX_SAIDA, $at, $car);
+    }
+
+    /** Race control ends the race. */
+    public function finish(string $at): int
+    {
+        return $this->ocorrencia(Ocorrencia::ENCERRAMENTO, $at);
+    }
+
+    /**
+     * The controller switches a counter off on the settings page at $at.
+     * With null the counter is switched off and never took part at all.
+     */
+    public function deactivateSource(int $source, ?string $at): void
+    {
+        $this->sources[$source]->ativa = false;
+        $this->sources[$source]->desativadaEmMs = $at === null ? null : self::ms($at);
+    }
+
+    /** No device is open on this counter any more: nothing can still arrive from it. */
+    public function noDeviceOpen(int $source): void
+    {
+        $this->sources[$source]->sincronizadoAteMs = Source::NOTHING_TO_WAIT_FOR;
     }
 
     /**
@@ -265,6 +255,16 @@ final class RaceScenario
     public function run(string $now): EngineResult
     {
         return Engine::run($this->input($now));
+    }
+
+    /**
+     * The fast path an upload uses: recount only the given cars.
+     *
+     * @param int[] $cars
+     */
+    public function countCars(string $now, array $cars): CountResult
+    {
+        return Engine::countCars($this->input($now), $cars);
     }
 
     public function input(string $now): EngineInput

@@ -89,18 +89,75 @@ final class Pagina
         return Csrf::valido(self::csrfFormName($prova), is_string($sent) ? $sent : null);
     }
 
+    /** Output-buffer level opened by beginJsonEndpoint(); null when it was not called. */
+    private static ?int $jsonBufferLevel = null;
+
+    /**
+     * First line of every JSON endpoint.
+     *
+     * In development PHP prints notices and warnings into the response. One
+     * such line in front of the JSON makes the whole answer unreadable for
+     * the browser, which then cannot tell "decision stored" from "decision
+     * refused". So everything printed from here on is held back, and
+     * sendJson() throws it away (into the error log) before answering.
+     *
+     * An error nobody caught is answered as JSON too, for the same reason.
+     */
+    public static function beginJsonEndpoint(): void
+    {
+        ob_start();
+        self::$jsonBufferLevel = ob_get_level();
+        set_exception_handler(function (\Throwable $error): void {
+            error_log('contagem: ' . get_class($error) . ': ' . $error->getMessage() . ' em ' . $error->getFile() . ':' . $error->getLine());
+            self::sendJson(500, [
+                'erro' => 'interno',
+                'mensagem' => 'Erro no servidor. Não se sabe se a ação foi concluída: confira antes de repetir.',
+            ]);
+        });
+    }
+
+    /**
+     * Throws away whatever was printed since beginJsonEndpoint() and
+     * returns it, so the caller can log it. Empty when nothing was printed.
+     */
+    public static function discardStrayOutput(): string
+    {
+        $stray = '';
+        while (self::$jsonBufferLevel !== null && ob_get_level() >= self::$jsonBufferLevel) {
+            $stray = (string) ob_get_clean() . $stray;
+        }
+        self::$jsonBufferLevel = null;
+        return $stray;
+    }
+
     /**
      * @param array<string, mixed> $body
      * @return never
      */
     public static function sendJson(int $status, array $body): void
     {
+        $stray = self::discardStrayOutput();
+        if (trim($stray) !== '') {
+            error_log('contagem: saída inesperada descartada de uma resposta JSON: ' . mb_substr(trim($stray), 0, 500));
+        }
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
         // Race state must never be served from a cache.
         header('Cache-Control: no-store');
-        echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         exit;
+    }
+
+    /**
+     * For the JSON endpoints: answers 403 as JSON unless the user controls
+     * the prova. The HTML refusal of ContagemAccess::requireController()
+     * would reach the review screen as an unreadable answer.
+     */
+    public static function requireControllerJson(Prova $prova): void
+    {
+        if (!ContagemAccess::isController($prova)) {
+            self::sendJson(403, ['erro' => 'sem_acesso', 'mensagem' => 'Você não tem acesso a esta prova.']);
+        }
     }
 
     /**
