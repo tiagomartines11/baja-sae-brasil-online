@@ -57,7 +57,8 @@ const TIPOS_QUE_SOMAM_PASSAGEM = [
 //   no_box, no_abastecimento
 //                        "está correto" explained nothing: either the car
 //                        left (mark the exit) or the pass did not happen
-//                        (discard it)
+//                        (discard it). The pass is HELD meanwhile, and K
+//                        would count it while leaving the car logged inside
 const TIPOS_SEM_CONFIRMAR = ['repetida', 'tempo_desconhecido', 'no_box', 'no_abastecimento'];
 
 const ROTULOS_DE_CONTAR = {
@@ -156,8 +157,46 @@ export function areaDoAlerta(alerta) {
   return alerta?.tipo === 'no_abastecimento' ? 'abastecimento' : null;
 }
 
-export function rotuloDeMarcarSaida(area) {
-  return `Marcar saída do ${NOMES_DE_AREA[area] ?? area}`;
+// A pass at the line while the car is logged inside an area is HELD when
+// two or more counters agree on it: it does not count until a reviewer
+// either marks the exit (then it counts) or discards it. With one counter
+// only, the entry is a lone entry like any other: marking the exit closes
+// the stay but the pass still needs a second witness.
+//
+// So "marcar saída" adds a lap exactly when the flag's pass is held. The
+// server says that with "contagem_em_duvida: 'a_menos'"; a state from
+// before that key existed is judged by how many entries the pass has.
+export function marcarSaidaSomaVolta(alerta) {
+  if (areaDoAlerta(alerta) === null) {
+    return false;
+  }
+  if (alerta.contagem_em_duvida !== undefined) {
+    return alerta.contagem_em_duvida === 'a_menos';
+  }
+  return (alerta.passagem_ids ?? []).length >= 2;
+}
+
+// "Marcar saída do box (+1 volta)", or without the suffix when marking the
+// exit does not make the pass count. Called with an area alone it gives the
+// plain label.
+export function rotuloDeMarcarSaida(area, somaVolta = false) {
+  return `Marcar saída do ${NOMES_DE_AREA[area] ?? area}${somaVolta ? ' (+1 volta)' : ''}`;
+}
+
+// What is asked before "marcar saída"; null when it changes no count.
+export function perguntaAoMarcarSaida(alerta) {
+  const area = areaDoAlerta(alerta);
+  if (!marcarSaidaSomaVolta(alerta)) {
+    return null;
+  }
+  const carro = (alerta.carros ?? []).join(', ');
+  return `Marcar a saída do carro ${carro} do ${NOMES_DE_AREA[area]}? `
+    + 'A saída é registrada um segundo antes desta passagem e a parada é encerrada. '
+    + `A passagem, que hoje está retida, passa a CONTAR: o carro ${carro} ganha uma volta (+1 volta). `
+    // Seen in the browser: one missed exit holds EVERY later pass of the car,
+    // and one mark releases them all (3 laps became 8).
+    + 'Se houver passagens seguintes dele retidas pelo mesmo motivo, elas também passam a contar. '
+    + 'Se o carro não saiu e a passagem foi um engano dos contadores, use "Descartar esta passagem". Pode ser desfeito pelo histórico.';
 }
 
 // What A does on a flag: {rotulo, pergunta}. Null when the flag has no
@@ -168,7 +207,11 @@ export function rotuloDeMarcarSaida(area) {
 // and one key must not change a count by itself.
 export function acaoDeAceitar(alerta, estado = null) {
   const sugestao = alerta?.sugestao;
-  if (!sugestao) {
+  // A pass while the car is logged inside an area has NO default: both
+  // ways out change the race (one adds a lap, the other throws a pass
+  // away), and which is right is for a person to see. Whatever an older
+  // server suggests there is not offered on A.
+  if (!sugestao || areaDoAlerta(alerta) !== null) {
     return null;
   }
   const carros = (alerta.carros ?? []).join(', ');
@@ -187,9 +230,6 @@ export function acaoDeAceitar(alerta, estado = null) {
     }
     case 'anular':
       return { rotulo: alerta.tipo === 'repetida' ? 'Anular a segunda' : 'Aceitar sugestão', pergunta: null };
-    case 'marcar_saida':
-      // Changes no count: the pass stays as it is, the stay is closed.
-      return { rotulo: rotuloDeMarcarSaida(sugestao.area), pergunta: null };
     case 'descartar_passagem':
       return {
         rotulo: 'Descartar esta passagem',
@@ -264,19 +304,21 @@ export function rotuloDeDescartar(passagem, largadaMs) {
 //   {acao: 'descartar_passagem', passagem, rotulo}
 //   {acao: 'adicionar_passagem', rotulo}   opens the form where the time is typed
 // An action that is already what A does on this flag is left out.
+//
+// A pass while the car is logged inside an area always gets both of its
+// buttons, in this order: "Marcar saída do … (+1 volta)" (the suffix only
+// when it makes the pass count) and "Descartar esta passagem".
 export function acoesExtrasDoAlerta(alerta, largadaMs = null) {
   const sugerido = alerta?.sugestao?.tipo ?? null;
   const acoes = [];
   const area = areaDoAlerta(alerta);
 
   if (area !== null) {
-    if (sugerido !== 'marcar_saida' && decisaoMarcarSaida(alerta)) {
-      acoes.push({ acao: 'marcar_saida', rotulo: rotuloDeMarcarSaida(area) });
+    if (decisaoMarcarSaida(alerta)) {
+      acoes.push({ acao: 'marcar_saida', rotulo: rotuloDeMarcarSaida(area, marcarSaidaSomaVolta(alerta)) });
     }
-    if (sugerido !== 'descartar_passagem') {
-      for (const passagem of passagensParaDescartar({ ...alerta, passagens: [] })) {
-        acoes.push({ acao: 'descartar_passagem', passagem, rotulo: rotuloDeDescartar(passagem, largadaMs) });
-      }
+    for (const passagem of passagensParaDescartar({ ...alerta, passagens: [] })) {
+      acoes.push({ acao: 'descartar_passagem', passagem, rotulo: 'Descartar esta passagem' });
     }
   }
   if (alerta?.tipo === 'volta_curta') {
@@ -301,9 +343,9 @@ export function perguntaAoDescartar(alerta, passagem) {
   const qual = passagem.qual === null ? 'esta passagem' : `a ${passagem.qual} passagem`;
   const registros = passagem.registros === 1 ? 'O registro dela é anulado' : `Os ${passagem.registros} registros dela são anulados de uma vez`;
   // Only a pass that counts today takes a lap with it: one of the two of a
-  // short lap, or a pass two counters agree on while the car is logged inside.
-  const contaHoje = alerta.tipo === 'volta_curta' || alerta.contagem_em_duvida === 'a_mais'
-    || (areaDoAlerta(alerta) !== null && passagem.registros >= 2);
+  // short lap. A HELD pass (too close to the previous one, or typed while
+  // the car is logged in the pit lane) does not count, so nothing is lost.
+  const contaHoje = alerta.tipo === 'volta_curta' || alerta.contagem_em_duvida === 'a_mais';
   return `Descartar ${qual} do carro ${(alerta.carros ?? []).join(', ')}? ${registros}`
     + `${contaHoje ? ' e o carro perde uma volta' : ''}. Pode ser desfeito pelo histórico.`;
 }

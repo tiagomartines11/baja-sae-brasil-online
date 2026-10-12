@@ -300,21 +300,26 @@ final class SwapSuggestionTest extends EngineTestCase
      *
      * EXPECTED: neither story helps. Moving counter 3's entry would feed a
      * pass that is held because it probably did not happen ("never into a
-     * held group"), and car 9 cannot have passed again after 40 s. So this
-     * is not treated as a swap at all: counter 3's entry is an ordinary
-     * lone entry, with the suggestion to void it.
+     * held group"), and car 9 cannot have passed again after 40 s. Both
+     * cars are still flagged TOGETHER (a two-counter group next to the
+     * third counter's entry for another car is always shown as such): a
+     * "troca_provavel" about cars 9 and 4 and all three entries. The only
+     * suggestion is the one a lone entry at an impossible moment always
+     * gets: void it. Never "move it to car 4".
      */
     public function testNothingIsMovedIntoAHeldGroup(): void
     {
         $race = $this->steadyRace(['15:56']);
         $race->pass(9, '15:16');
-        $race->pass(4, '15:56', [1, 2]);
+        $others = $race->pass(4, '15:56', [1, 2]);
         $lone = $race->entry(3, 9, '15:56');
 
         $result = $race->run('20:00');
 
-        $this->assertSame([], $this->openFlags($result, Flag::TROCA_PROVAVEL));
-        $flag = $this->openFlags($result, Flag::SOLITARIA)[0];
+        $this->assertSame([], $this->openFlags($result, Flag::SOLITARIA));
+        $flag = $this->openFlags($result, Flag::TROCA_PROVAVEL)[0];
+        $this->assertSame([9, 4], $flag->carros);
+        $this->assertSame([$lone, $others[1], $others[2]], $flag->passagemIds);
         $this->assertSame(['tipo' => 'anular', 'passagem_id' => $lone], $flag->sugestao);
     }
 
@@ -496,5 +501,78 @@ final class SwapSuggestionTest extends EngineTestCase
         $flag = $this->openFlags($result, Flag::TROCA_PROVAVEL)[0];
         $this->assertSame($right, $flag->passagemIds[0]);
         $this->assertNull($flag->sugestao);
+    }
+
+    /**
+     * SITUATION (traced in a simulated race): cars 9 and 7 cross almost
+     * together, at 15:56 and 15:58.7. Counter 1 types both correctly.
+     * Counter 2 types 9, then "8" for car 7. Counter 3 types "8" for car
+     * 9, then 7. Car 8 is nowhere near: it crossed at 15:49... in this
+     * race, three minutes away from its next pass.
+     *
+     * WHAT WENT WRONG: car 9 counts (counters 1 and 2), car 7 counts
+     * (counters 1 and 3), and car 8 gets a pass two counters "agree" on,
+     * two seconds apart. Nobody is short, there is no lone entry, nothing
+     * was flagged, and car 8 was one lap over for good.
+     *
+     * EXPECTED: the count is what it is (no rule that looks at car 8 alone
+     * can know), but the pass is put in front of a person: EVERY counter
+     * who recorded car 8 is missing from an agreed pass of another car at
+     * that moment, so each may have typed 8 for the car it lacks. Seen from
+     * the entries alone the same can be said of cars 9 and 7 (any one of
+     * the three may be the one that did not pass), so there is ONE
+     * "troca_provavel" flag for the whole knot: about cars 7, 8 and 9 and
+     * all six entries, with no suggestion. Moving each "8" to the car its
+     * counter lacks removes the phantom and the flag.
+     *
+     * In a second race counter 3 does have car 9 (only counter 2's "8" is
+     * unexplained by a miss): one counter missing another car is an
+     * ordinary miss next to an ordinary pass, and nothing is flagged.
+     */
+    public function testAPassWhoseEveryWitnessLacksAnotherCarIsFlaggedOnAllTheCars(): void
+    {
+        foreach ([false, true] as $counter3HasCar9) {
+            $race = RaceScenario::withCounters(3);
+            $race->start('00:00');
+            $race->steadyField([1, 2, 3, 4, 5, 6, 10], 180, 6);
+            foreach (['03:49', '06:49', '09:49', '12:49', '18:49'] as $crossing) {
+                $race->pass(7, RaceScenario::clock((int) ((RaceScenario::ms($crossing) - RaceScenario::CLOCK_ZERO_MS) / 1000) + 10));
+                $race->pass(8, $crossing);
+                $race->pass(9, RaceScenario::clock((int) ((RaceScenario::ms($crossing) - RaceScenario::CLOCK_ZERO_MS) / 1000) + 7));
+            }
+            $race->pass(8, '15:20');
+            $race->pass(9, '15:56', $counter3HasCar9 ? [1, 2, 3] : [1, 2]);
+            $race->pass(7, '15:58.7', [1, 3]);
+            $forCar9 = $race->entry(3, 8, '15:57.2');
+            $forCar7 = $race->entry(2, 8, '15:59.2');
+
+            $result = $race->run('20:00');
+
+            $this->assertLapCounts([7 => 5, 9 => 5], $result);
+            if ($counter3HasCar9) {
+                $this->assertSame([], $this->openFlags($result, Flag::TROCA_PROVAVEL), 'One witness with a miss beside it is not enough.');
+                continue;
+            }
+            $phantom = $result->groupOfEntry($forCar9);
+            $this->assertSame([$forCar9, $forCar7], $phantom->entryIds());
+            $flag = $this->assertSingleOpenFlag($result, Flag::TROCA_PROVAVEL);
+            $cars = $flag->carros;
+            sort($cars);
+            $this->assertSame([7, 8, 9], $cars);
+            $this->assertContains($forCar9, $flag->passagemIds);
+            $this->assertContains($forCar7, $flag->passagemIds);
+            $this->assertCount(6, $flag->passagemIds, 'Every entry of the three passes: a decision may be about any of them.');
+            $this->assertNull($flag->sugestao);
+            $this->assertNull($flag->contagemEmDuvida);
+            $this->assertStringContainsString('Um desses carros pode não ter passado', $flag->motivo);
+            $before = $result->lapCount(8);
+
+            $race->reassign($forCar9, 9);
+            $race->reassign($forCar7, 7);
+            $fixed = $race->run('20:00');
+            $this->assertSame([], $this->openFlags($fixed, Flag::TROCA_PROVAVEL));
+            $this->assertCount(3, $fixed->groupOfEntry($forCar9)->entries);
+            $this->assertLessThanOrEqual($before, $fixed->lapCount(8));
+        }
     }
 }

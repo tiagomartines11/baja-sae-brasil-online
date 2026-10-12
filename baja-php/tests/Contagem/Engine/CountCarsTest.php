@@ -251,6 +251,8 @@ final class CountCarsTest extends EngineTestCase
      * - the start corrected to a later time (so more entries fall before
      *   it);
      * - a counter switched off mid-race, or one that never took part;
+     * - pit lane and fueling entries and exits at random moments (a pass
+     *   while the car is logged inside is held);
      * - a regular car turned "not classified";
      * - decisions: counters excluded for random intervals (some with no
      *   start or no end), passes added by a reviewer (some before the
@@ -356,6 +358,14 @@ final class CountCarsTest extends EngineTestCase
             $source = $input->sources[$switchedOff - 1];
             $source->ativa = false;
             $source->desativadaEmMs = $dice->getInt(0, 2) === 0 ? null : $this->randomMoment($race, $dice);
+        }
+        // Pit lane and fueling events at random moments for random cars,
+        // paired or not: passes fall inside the stays they make and are held.
+        $stopTypes = Ocorrencia::TIPOS_DE_PARADA;
+        for ($i = $dice->getInt(0, 12); $i > 0; $i--) {
+            $event = new Ocorrencia(200000 + $i, $stopTypes[$dice->getInt(0, 3)], $this->randomMoment($race, $dice), $input->validCars[$dice->getInt(0, count($input->validCars) - 1)]);
+            $event->inferida = $dice->getInt(0, 3) === 0;
+            $input->ocorrencias[] = $event;
         }
         if ($dice->getInt(0, 1) === 1) {
             // One of the regular cars turns out not to be classified.

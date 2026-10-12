@@ -328,8 +328,10 @@ final class ConfirmEffectTest extends EngineTestCase
     }
 
     /**
-     * SITUATION: flags about a pass that counts and merely looks odd:
-     * - "no_box": recorded at the line while logged in the pit lane;
+     * SITUATION: first a flag about a pass that does NOT count: "no_box",
+     * recorded at the line while logged in the pit lane, is held, so
+     * confirming it adds a pass (a 240 s lap here). Then flags about a pass
+     * that counts and merely looks odd:
      * - "volta_curta": a pass a reviewer added 30 seconds after one the
      *   counters agree on (a reviewer's word always counts, so the hold
      *   rule does not apply to it);
@@ -347,7 +349,7 @@ final class ConfirmEffectTest extends EngineTestCase
         $inThePits->pass(6, '03:00');
         $inThePits->pitIn(6, '05:00');
         $inThePits->pass(6, '07:00');
-        $this->assertSame(['nenhum', null], $this->effectOf($this->flagOfType($inThePits->run('08:00'), Flag::NO_BOX)));
+        $this->assertSame(['mais_uma_passagem', 240000], $this->effectOf($this->flagOfType($inThePits->run('08:00'), Flag::NO_BOX)));
 
         $shortLap = RaceScenario::withCounters(3);
         $shortLap->start('00:00');

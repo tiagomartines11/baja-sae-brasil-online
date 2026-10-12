@@ -112,19 +112,61 @@ test('entries for a car in the pit lane are only made up for cars that really ar
     }
 });
 
-test('wrong numbers are the ones fingers make', () => {
-    // 41 can become 14 (digits swapped), 42 (one key off) or 4 (a digit
-    // dropped). Nothing else, and never 41 itself.
-    const seen = new Set();
+/** Every wrong number drawn for a car over many attempts, with how often each came up. */
+function typosOf(car, carsInTheRace = new Set(), attempts = 4000) {
     const prng = new Prng(1);
-    for (let attempt = 0; attempt < 200; attempt++) {
-        seen.add(wrongNumberFor(41, prng));
+    const timesByNumber = new Map();
+    for (let attempt = 0; attempt < attempts; attempt++) {
+        const typed = wrongNumberFor(car, prng, carsInTheRace);
+        timesByNumber.set(typed, (timesByNumber.get(typed) ?? 0) + 1);
     }
-    assert.deepEqual([...seen].sort((a, b) => a - b), [4, 14, 42]);
+    return timesByNumber;
+}
 
-    // A single digit has no neighbour to swap with and nothing to drop.
-    assert.equal(wrongNumberFor(7, prng), 8);
-    assert.equal(wrongNumberFor(9, prng), 8);
+test('wrong numbers are the ones fingers make on a keypad', () => {
+    // Situation: a counter means 41 and slips.
+    // Expected: only these come out, and never 41 itself:
+    //   a key next to the 4 (1, 5, 7) or next to the 1 (2, 4): 11, 51, 71, 42, 44
+    //   the two digits swapped: 14
+    //   the first digit typed twice: 44 (the same as one of the above)
+    //   the second digit lost: 4
+    const typos = typosOf(41);
+
+    assert.deepEqual([...typos.keys()].sort((a, b) => a - b), [4, 11, 14, 42, 44, 51, 71]);
+});
+
+test('a key next to the right one is the commonest slip, a lost digit the rarest', () => {
+    // Why it matters: the simulation is used to measure how often two
+    // counters make the SAME mistake. That figure is only worth anything
+    // if the mistakes are spread the way real ones are.
+    const typos = typosOf(41);
+    const neighbourKey = typos.get(11) + typos.get(51) + typos.get(71) + typos.get(42);
+
+    assert.ok(neighbourKey > typos.get(14), 'neighbouring keys beat swapped digits');
+    assert.ok(typos.get(14) > typos.get(4), 'swapped digits beat a lost digit');
+    assert.ok(typos.get(4) < 4000 / 20, 'a lost digit is under one slip in twenty');
+});
+
+test('a lost digit never lands on a car of the race', () => {
+    // Situation: cars 4 and 40 to 49 are all in the race.
+    // What went wrong before: a lost digit turned every one of 40..49 into
+    // "4". Ten cars kept sending their typos to the same car, so "two
+    // counters typed the same wrong number" came up on car 4 several times
+    // more often than it would in a real race.
+    // Expected: with car 4 in the race, none of them is ever mistyped as
+    // 4. A lost digit that lands on no car is still simulated.
+    const race = new Set([4, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49]);
+    for (const car of [40, 41, 42, 43, 44, 45, 46, 47, 48, 49]) {
+        assert.equal(typosOf(car, race, 1000).has(4), false, 'car ' + car + ' is never typed as 4');
+    }
+    // Car 4 is not in this race: 41 may lose its digit, and "4" is then an unknown number.
+    assert.equal(typosOf(41, new Set([41, 42]), 1000).has(4), true);
+});
+
+test('a single-digit car is only ever mistyped as a key next to it', () => {
+    assert.deepEqual([...typosOf(7).keys()].sort((a, b) => a - b), [4, 8]);
+    // Nobody types "0" for a car: the 8 next to it has 0 as a neighbour, and that is left out.
+    assert.deepEqual([...typosOf(8).keys()].sort((a, b) => a - b), [5, 7, 9]);
 });
 
 test('in a compressed rehearsal the typing times shrink with the matching window', () => {

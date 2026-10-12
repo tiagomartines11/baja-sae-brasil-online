@@ -53,35 +53,36 @@ final class PassFlags
     /**
      * A pass at the line while the log of an area (the pit lane or the
      * fueling station) says the car is inside it. One of the two records is
-     * wrong, and how many counters saw the pass says which is more likely:
+     * wrong, and the engine does not guess which: there is NO suggestion.
      *
-     * - two or more counters agree on the pass: the car did cross the line,
-     *   so somebody missed its exit. Suggestion: record the exit, one
-     *   second before the pass ("marcar saída"). The pass stays counted.
-     * - one counter only: more likely an entry that should not exist.
-     *   Suggestion: discard the pass.
+     * - Two or more counters agree on the pass: it is HELD (HoldRule), not
+     *   counted. If the car did leave and nobody logged the exit, the
+     *   reviewer records it ("marcar saída"), and the pass then counts.
+     *   Otherwise the reviewer discards the pass.
+     * - One counter only: it did not count anyway; the flag names the counter.
      *
      * @param string $area RaceTimeline::AREA_BOX or RaceTimeline::AREA_ABASTECIMENTO
-     * @param bool|null $othersMissedIt for a pass only one counter has: true when the other counters
-     *   are known to have nothing there, false when one of them may still upload it; null when
-     *   the pass does not rest on one counter alone
      */
-    public function insideAnArea(PassGroup $group, string $area, ?bool $othersMissedIt): Flag
+    public function insideAnArea(PassGroup $group, string $area): Flag
     {
         $isPitLane = $area === RaceTimeline::AREA_BOX;
         $flag = $this->aboutGroup($isPitLane ? Flag::NO_BOX : Flag::NO_ABASTECIMENTO, $group);
-        $flag->motivo = sprintf(
-            'O carro %d foi registrado na linha enquanto constava como dentro do %s.',
-            $group->carro,
-            $isPitLane ? 'box' : 'abastecimento'
-        );
-        if ($othersMissedIt === null) {
-            $flag->sugestao = ['tipo' => 'marcar_saida', 'area' => $area, 'equipe_numero' => $group->carro, 'ts_ms' => $group->tsMs - 1000];
-            $flag->motivo .= ' Mais de uma contagem viu a passagem, então o mais provável é que a saída não tenha sido registrada.';
-        } elseif ($othersMissedIt) {
-            $flag->fonteId = $group->entries[0]->fonteId;
-            $flag->sugestao = ['tipo' => 'descartar_passagem', 'passagem_id' => $group->entries[0]->id];
-            $flag->motivo .= sprintf(' Só %s viu a passagem, então o mais provável é que ela não tenha acontecido.', $this->sourceName($group->entries[0]->fonteId));
+        $place = $isPitLane ? 'box' : 'abastecimento';
+        $flag->motivo = sprintf('O carro %d foi registrado na linha por %s enquanto constava como dentro do %s.', $group->carro, $this->sourceNames($group), $place);
+        if (count($group->realSourceIds()) === 1) {
+            $flag->fonteId = $group->realSourceIds()[0];
+            $flag->motivo .= ' Só uma contagem viu a passagem, e ela não está contada.';
+        } elseif ($group->contado) {
+            $flag->motivo .= ' No modo de publicação atual a passagem está contada mesmo assim.';
+        } else {
+            $flag->motivo .= sprintf(' Por isso a passagem ficou retida, fora da contagem. Se o carro saiu e a saída não foi registrada, marque a saída do %s (a passagem passa a contar); se a passagem não aconteceu, descarte-a.', $place);
+        }
+        if ($group->intervaloDesdeAnteriorMs !== null) {
+            $flag->motivo .= sprintf(
+                ' Além disso, ela está a %d s da passagem anterior do carro (a volta mínima plausível para ele é de %d s).',
+                (int) round($group->intervaloDesdeAnteriorMs / 1000),
+                (int) round((int) $group->voltaMinimaMs / 1000)
+            );
         }
         return $flag;
     }

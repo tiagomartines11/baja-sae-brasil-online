@@ -28,6 +28,14 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * that a held pass may be the real one (when the phantom came first); the
  * count is then still right, and the flag asks a person to look.
  *
+ * LOGGED INSIDE AN AREA. The same goes for a pass at the line while the pit
+ * log or the fueling log says the car is inside: one of the two records is
+ * wrong, and until a person says which, the pass is held (reason "no_box" or
+ * "no_abastecimento"). Recording the exit nobody logged ("marcar saída")
+ * puts the car outside at that moment, and the pass then counts by the
+ * ordinary rules. A pass held this way is not what later passes are
+ * measured from, like any held pass.
+ *
  * ONLY THE CAR'S OWN DATA. The rule looks at the car's own pass times and
  * the race's red flags, never at other cars or at the pace of the field, so
  * recounting one car alone gives exactly what a full run gives.
@@ -68,6 +76,9 @@ final class HoldRule
      */
     private static function holdAlongOneChain(array $groups, RaceTimeline $timeline, Settings $settings, bool $reference): void
     {
+        $carro = $groups[0]->carro;
+        // Most cars never stop: knowing that once spares two questions per pass.
+        $hasStays = isset($timeline->pitIntervals[$carro]) || isset($timeline->fuelIntervals[$carro]);
         $twoWindowsMs = 2 * $settings->janelaMs;
         $fraction = $settings->fracaoVoltaMinima;
         $raceWasStopped = $timeline->redFlagIntervals !== [];
@@ -86,6 +97,10 @@ final class HoldRule
             }
             $passMs = $group->tsMs;
             if ($previousPassMs === null) {
+                if ($hasStays && ($area = self::areaHoldingThePass($group, $timeline)) !== null) {
+                    self::hold($group, $reference, $area, null, null);
+                    continue;
+                }
                 // The car's first official pass has nothing to be too close to.
                 $previousPassMs = $passMs;
                 $previousAgreedMs = $passMs;
@@ -103,6 +118,14 @@ final class HoldRule
             }
             $isHeld = $gapMs < $minimumMs && !$group->confirmadoPorRevisor && !$group->adicionadoPorRevisor;
 
+            $area = $hasStays ? self::areaHoldingThePass($group, $timeline) : null;
+            if ($area !== null) {
+                // Held for being logged inside; when it is also too close
+                // to the previous pass, the flag can say both.
+                self::hold($group, $reference, $area, $isHeld ? $gapMs : null, $isHeld ? $minimumMs : null);
+                continue;
+            }
+
             $recentLaps[] = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
             if (isset($recentLaps[Settings::LAPS_FOR_MINIMUM_LAP])) {
                 array_shift($recentLaps);
@@ -110,14 +133,29 @@ final class HoldRule
             $previousAgreedMs = $passMs;
 
             if ($isHeld) {
-                self::hold($group, $reference, $gapMs, $minimumMs);
+                self::hold($group, $reference, PassGroup::RETIDA_PROXIMA_DEMAIS, $gapMs, $minimumMs);
                 continue;
             }
             $previousPassMs = $passMs;
         }
     }
 
-    private static function hold(PassGroup $group, bool $reference, int $gapMs, int $minimumMs): void
+    /**
+     * @return string|null PassGroup::RETIDA_NO_BOX or RETIDA_NO_ABASTECIMENTO when the car is logged
+     *   inside that area at the pass time and no reviewer vouched for the pass; null otherwise
+     */
+    private static function areaHoldingThePass(PassGroup $group, RaceTimeline $timeline): ?string
+    {
+        if ($group->confirmadoPorRevisor || $group->adicionadoPorRevisor) {
+            return null;
+        }
+        if ($timeline->isInPitAt($group->carro, $group->tsMs)) {
+            return PassGroup::RETIDA_NO_BOX;
+        }
+        return $timeline->isFuelingAt($group->carro, $group->tsMs) ? PassGroup::RETIDA_NO_ABASTECIMENTO : null;
+    }
+
+    private static function hold(PassGroup $group, bool $reference, string $reason, ?int $gapMs, ?int $minimumMs): void
     {
         if ($reference) {
             $group->referencia = false;
@@ -126,7 +164,7 @@ final class HoldRule
             $group->contado = false;
             $group->retida = true;
         }
-        $group->motivoRetencao = PassGroup::RETIDA_PROXIMA_DEMAIS;
+        $group->motivoRetencao = $reason;
         $group->intervaloDesdeAnteriorMs = $gapMs;
         $group->voltaMinimaMs = $minimumMs;
     }

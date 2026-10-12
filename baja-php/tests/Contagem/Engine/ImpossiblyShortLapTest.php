@@ -455,10 +455,11 @@ final class ImpossiblyShortLapTest extends EngineTestCase
      * SITUATION: car 6 is recorded by everybody at 03:00 and again at
      * 03:30, and the pit log says it entered the pit lane at 03:10.
      *
-     * EXPECTED: one flag, and the one that says most. The pass is held (it
-     * is 30 s after the previous one), which puts the car's count in
-     * doubt; the flag is "passagem_proxima_demais", and its reason also
-     * mentions that the car was logged in the pit lane.
+     * EXPECTED: one flag for the one doubtful pass, saying both things.
+     * The pass is held for being logged inside the pit lane (flag
+     * "no_box"), and the reason also says it is only 30 s after the car's
+     * previous pass. Recording an exit would not be enough to make it
+     * count: it would then be held for being too close.
      */
     public function testAHeldPassInsideThePitLaneGetsOneFlagThatSaysBoth(): void
     {
@@ -468,8 +469,12 @@ final class ImpossiblyShortLapTest extends EngineTestCase
         $race->pitIn(6, '03:10');
         $race->pass(6, '03:30');
 
-        $flag = $this->assertSingleOpenFlag($race->run('04:00'), Flag::PASSAGEM_PROXIMA_DEMAIS);
+        $flag = $this->assertSingleOpenFlag($race->run('04:00'), Flag::NO_BOX);
         $this->assertStringContainsString('dentro do box', $flag->motivo);
+        $this->assertStringContainsString('a 30 s da passagem anterior', $flag->motivo);
+
+        $race->inferredExit('box', 6, RaceScenario::ms('03:29'));
+        $this->assertSingleOpenFlag($race->run('04:00'), Flag::PASSAGEM_PROXIMA_DEMAIS);
     }
 
     /**

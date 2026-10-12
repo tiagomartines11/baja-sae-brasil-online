@@ -265,6 +265,86 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: the event's Enduro (prova "END") is a laps prova. The old
+     * spreadsheet is still running somewhere and keeps sending its totals
+     * to juiz/remote.php: "cars" (laps, best lap and last pass of each car)
+     * and "raceTime" (how long the race has been running, from which the
+     * endpoint sets the race clock of the results page).
+     *
+     * WHAT WENT WRONG: the endpoint wrote them whatever the publish mode.
+     * While the lap counting published the prova, the spreadsheet's 9 laps
+     * replaced the count's 4 until the car's next pass, and the race clock
+     * jumped to the spreadsheet's idea of the start.
+     *
+     * EXPECTED, through the real endpoint:
+     *   - while the count publishes ("confirmadas"): each of the two is
+     *     answered 409 and changes nothing, also when both come in one
+     *     request;
+     *   - with publishing off ("desligada"): both work as they always did,
+     *     and a field a judge typed (DESCLAS) stays in the row.
+     */
+    public function testTheSpreadsheetEndpointWritesTotalsAndClockOnlyWhilePublishingIsOff(): void
+    {
+        $key = (string) getenv('REMOTE_KEY');
+        if ($key === '') {
+            $this->markTestSkipped('REMOTE_KEY não está definido neste ambiente.');
+        }
+        $params = json_decode((string) $this->fetchValue(
+            'SELECT params FROM prova WHERE evento_id = ? AND prova_id = ?',
+            [self::EVENTO_ID, self::PROVA_ID]
+        ), true);
+        $setMode = function (string $mode) use (&$params): void {
+            $params['contagem'] = ['modo_publicacao' => $mode];
+            $this->executeSql('UPDATE prova SET params = ? WHERE evento_id = ? AND prova_id = ?', [json_encode($params), self::EVENTO_ID, 'END']);
+        };
+        // remote.php only ever speaks to the prova called END.
+        $this->executeSql(
+            'INSERT INTO prova (evento_id, prova_id, nome, status, params, tempo) VALUES (?, ?, ?, 0, ?, ?)',
+            [self::EVENTO_ID, 'END', 'Enduro (teste do remote)', json_encode($params), 1700000000]
+        );
+        $this->executeSql(
+            'INSERT INTO input (evento_id, prova_id, equipe_id, dados) VALUES (?, ?, ?, ?)',
+            [self::EVENTO_ID, 'END', self::CAR_A, json_encode(['VOLTAS' => 4, 'LAST' => 100, 'BEST' => 50, 'DESCLAS' => 'SIM'])]
+        );
+        $row = fn(): array => (array) json_decode((string) $this->fetchValue(
+            'SELECT dados FROM input WHERE evento_id = ? AND prova_id = ? AND equipe_id = ?',
+            [self::EVENTO_ID, 'END', self::CAR_A]
+        ), true);
+        $clock = fn(): int => (int) $this->fetchValue('SELECT tempo FROM prova WHERE evento_id = ? AND prova_id = ?', [self::EVENTO_ID, 'END']);
+        $send = fn(array $body): array => $this->request(
+            'POST', '/00NE/remote.php', [], (string) json_encode(['key' => $key] + $body),
+            self::JUIZ_SITE, ['Content-Type: application/json']
+        );
+        $cars = ['cars' => [['number' => self::CAR_A, 'laps' => 9, 'bestLapTime' => 61, 'lastPass' => 700]]];
+        $raceTime = ['raceTime' => 600];
+
+        // The count publishes: the spreadsheet is refused, whatever it sends.
+        $setMode('confirmadas');
+        foreach ([$cars, $raceTime, $cars + $raceTime] as $body) {
+            $answer = $send($body);
+            $this->assertSame(409, $answer['status'], json_encode(array_keys($body)));
+            $this->assertStringContainsString('REFUSED', $answer['body']);
+        }
+        $this->assertEquals(4, $row()['VOLTAS'], 'the count\'s laps were not overwritten');
+        $this->assertEquals(50, $row()['BEST']);
+        $this->assertSame(1700000000, $clock(), 'the race clock was not moved');
+
+        // Publishing off: the spreadsheet owns these values, as before.
+        $setMode('desligada');
+        $answer = $send($raceTime);
+        $this->assertSame(200, $answer['status']);
+        $this->assertEqualsWithDelta(time() - 600, $clock(), 5, 'the race clock follows the spreadsheet');
+
+        $answer = $send($cars);
+        $this->assertSame(200, $answer['status']);
+        $this->assertSame('OK', trim($answer['body']));
+        $this->assertEquals(9, $row()['VOLTAS']);
+        $this->assertEquals(61, $row()['BEST']);
+        $this->assertEquals(700, $row()['LAST']);
+        $this->assertSame('SIM', $row()['DESCLAS'], 'what the judge typed is still there');
+    }
+
+    /**
      * SITUATION: APTO is the classification field. Car A is blank, car B
      * was marked NÃO by the inspection, car C is SIM. The controller opens
      * the hub and presses "Marcar todos os presentes como aptos".

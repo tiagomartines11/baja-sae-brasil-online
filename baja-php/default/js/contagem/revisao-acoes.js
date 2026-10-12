@@ -4,7 +4,7 @@
 
 import { SessaoExpirada, enviarDecisao } from './revisao-api.js';
 import {
-  acaoDeAceitar, decisaoConfirmarAlerta, decisaoMarcarSaida, perguntaAoConfirmar, perguntaAoDescartar,
+  acaoDeAceitar, decisaoConfirmarAlerta, decisaoMarcarSaida, perguntaAoConfirmar, perguntaAoDescartar, perguntaAoMarcarSaida,
 } from './revisao-alertas.js';
 import {
   alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoConfirmar,
@@ -198,13 +198,19 @@ export function criarAcoes(ganchos) {
   }
 
   // "Marcar saída do box / do abastecimento": the car left and nobody
-  // logged it. Changes no count, so nothing is asked.
+  // logged it. When that makes the held pass count (+1 volta) it is asked
+  // about first, like everything else that changes a count.
   function marcarSaida() {
     const alerta = alertaQuePodeSerDecidido();
     const decisao = alerta ? decisaoMarcarSaida(alerta) : null;
-    if (decisao) {
-      enviarSobreAlerta(decisao, alerta);
+    if (!decisao) {
+      return;
     }
+    const pergunta = perguntaAoMarcarSaida(alerta);
+    if (pergunta !== null && !window.confirm(pergunta)) {
+      return;
+    }
+    enviarSobreAlerta(decisao, alerta);
   }
 
   // What must be asked before an action on one chip; null when nothing.
@@ -215,6 +221,13 @@ export function criarAcoes(ganchos) {
           + `Contá-lo dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta), poucos segundos depois da anterior. Contar mesmo assim?`;
       }
       if (entrada.grupo?.papel === 'retida') {
+        const motivo = entrada.grupo.motivo_retencao;
+        if (motivo === 'no_box' || motivo === 'no_abastecimento') {
+          const area = motivo === 'no_box' ? 'box' : 'abastecimento';
+          return `Esta passagem está RETIDA porque o carro ${entrada.carro} constava como dentro do ${area}. `
+            + `Contá-la assim dá ao carro MAIS UMA PASSAGEM (+1 volta) e ele CONTINUA constando como dentro do ${area}. `
+            + `Se o carro saiu, o certo é "Marcar saída do ${area}" no alerta. Contar mesmo assim?`;
+        }
         return 'Esta passagem está RETIDA: os contadores concordam, mas ela parece ser a mesma passagem de antes registrada de novo. '
           + `Contá-la dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta). Contar mesmo assim?`;
       }

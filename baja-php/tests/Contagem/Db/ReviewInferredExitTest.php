@@ -21,7 +21,9 @@ use Baja\Contagem\Service\Clock;
  * is flagged, its status says "no box" and its stop never ends.
  *
  * A reviewer who sees two counters record the car at the line knows it
- * left. "Marcar saída do box" stores an exit one second before that pass.
+ * left. Until somebody says so the pass is HELD (it does not count), since
+ * the log and the counters contradict each other. "Marcar saída do box"
+ * stores an exit one second before that pass, and the pass then counts.
  * The exit is an ordinary race event, marked as coming from a reviewer
  * ("inferida"), and a decision row is stored with it so that the history
  * shows who did it and can undo it.
@@ -58,18 +60,36 @@ final class ReviewInferredExitTest extends ReviewDbTestCase
      * SITUATION: as above. The reviewer presses "Marcar saída do box" on
      * the flag of the pass at 5:00.
      *
-     * WHAT WENT WRONG (before): the flag offered only "Está correto, parar
+     * WHAT WENT WRONG (round 3): the flag offered only "Está correto, parar
      * de avisar". The stay never ended.
+     *
+     * SINCE ROUND 4b the pass is HELD while the car is logged inside: car A
+     * has 0 laps, the flag says the count is in doubt ("a_menos") and has
+     * no suggestion, and the timeline shows the pass as held with the
+     * reason "no_box".
      *
      * EXPECTED: an exit is stored at 4:59 (one second before the pass),
      * attributed to the reviewer. The stay is closed: the engine has car A
-     * in the pit lane from 2:00 to 4:59 and not after. The lap count does
-     * not change. The timeline shows the exit as inferred, and the history
-     * has a "marcar_saida" decision that can be undone.
+     * in the pit lane from 2:00 to 4:59 and not after. The held pass now
+     * COUNTS: car A has 1 lap. The timeline shows the exit as inferred,
+     * and the history has a "marcar_saida" decision that can be undone.
      */
-    public function testMarkingTheExitClosesTheStayAndChangesNoCount(): void
+    public function testMarkingTheExitClosesTheStayAndTheHeldPassCounts(): void
     {
-        $lapsBefore = $this->carRow($this->freshScreen(), self::CAR_A)['voltas'];
+        $before = $this->freshScreen();
+        $this->assertSame(0, $this->carRow($before, self::CAR_A)['voltas'], 'the pass at 5:00 is held');
+        $flag = null;
+        foreach ($before['alertas_abertos'] as $open) {
+            if ($open['tipo'] === 'no_box') {
+                $flag = $open;
+            }
+        }
+        $this->assertNotNull($flag, 'the held pass is flagged');
+        $this->assertNull($flag['sugestao'], 'no default: a person decides');
+        $this->assertSame('a_menos', $flag['contagem_em_duvida']);
+        $this->newRequest();
+        $heldGroup = $this->groupOfEntry(self::CAR_A, $this->passAtTheLine[0]);
+        $this->assertSame(['retida', 'no_box', true], [$heldGroup['papel'], $heldGroup['motivo_retencao'], $heldGroup['soma_ao_confirmar']]);
         $this->assertTrue($this->engineTimeline()->isInPitAt(self::CAR_A, $this->at(500)), 'the log has the car inside');
 
         $answer = $this->markExit();
@@ -78,7 +98,9 @@ final class ReviewInferredExitTest extends ReviewDbTestCase
         $timeline = $this->engineTimeline();
         $this->assertSame([[$this->at(120), $this->at(299)]], $timeline->pitIntervals[self::CAR_A]);
         $this->assertFalse($timeline->isInPitAt(self::CAR_A, $this->at(500)));
-        $this->assertSame($lapsBefore, $this->carRow($answer['body']['estado'], self::CAR_A)['voltas'], 'marking an exit moves no count');
+        $this->assertSame(1, $this->carRow($answer['body']['estado'], self::CAR_A)['voltas'], 'with the exit marked, the pass counts');
+        $this->newRequest();
+        $this->assertSame('volta', $this->groupOfEntry(self::CAR_A, $this->passAtTheLine[0])['papel']);
 
         $this->assertSame('revisor', $this->fetchValue(
             'SELECT origem FROM contagem_ocorrencia WHERE evento_id = ? AND prova_id = ? AND tipo = ? AND ts_ms = ?',
@@ -123,6 +145,7 @@ final class ReviewInferredExitTest extends ReviewDbTestCase
 
         $this->assertSame(200, $undone['status']);
         $this->assertSame([[$this->at(120), null]], $this->engineTimeline()->pitIntervals[self::CAR_A]);
+        $this->assertSame(0, $this->carRow($undone['body']['estado'], self::CAR_A)['voltas'], 'the pass is held again');
         $this->assertSame([], $undone['body']['estado']['historico_em_vigor']);
         $this->assertSame(1, $this->countRows(
             'contagem_ocorrencia',
@@ -250,6 +273,23 @@ final class ReviewInferredExitTest extends ReviewDbTestCase
         }
         sort($watched);
         $this->assertSame($watched, $entriesOfCarB[$right], 'the three entries are one pass of car B');
+    }
+
+    /**
+     * The pass group of one entry, as the timeline of its car describes it.
+     *
+     * @return array<string, mixed>
+     */
+    private function groupOfEntry(int $car, int $entryId): array
+    {
+        foreach (TimelineWindow::forCar($this->service, $car)['raias'] as $lane) {
+            foreach ($lane['entradas'] as $entry) {
+                if ($entry['id'] === $entryId) {
+                    return (array) $entry['grupo'];
+                }
+            }
+        }
+        $this->fail('entry ' . $entryId . ' is not on the timeline of car ' . $car);
     }
 
     /** Presses "Marcar saída do box" on the flag of the pass at 5:00. */

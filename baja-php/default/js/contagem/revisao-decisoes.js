@@ -160,7 +160,9 @@ export function pedidoParaAlerta(decisao, alerta, estado, assinaturaDaJanela) {
 // `assinaturaDaJanela`: the signature the flag had when the timeline on
 // screen was loaded. A caller with no timeline sends the flag's own.
 export function pedidosDaSugestao(alerta, estado, assinaturaDaJanela = alerta?.assinatura ?? null) {
-  const decisao = decisaoAceitar(alerta);
+  // A flag whose A is not offered (no suggestion, or a pass while the car
+  // is logged inside an area, which has no default) sends nothing.
+  const decisao = acaoDeAceitar(alerta, estado) ? decisaoAceitar(alerta) : null;
   const pedidoDoAlerta = decisao ? pedidoParaAlerta(decisao, alerta, estado, assinaturaDaJanela) : null;
   return pedidoDoAlerta ? [pedidoDoAlerta] : [];
 }

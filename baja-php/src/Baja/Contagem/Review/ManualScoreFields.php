@@ -132,6 +132,23 @@ final class ManualScoreFields
     }
 
     /**
+     * May the spreadsheet (juiz/remote.php) write the race clock and the
+     * lap totals of this prova? Always for a prova that is not lap-counted.
+     * For a laps prova only while the count publishes nothing ("desligada"):
+     * otherwise the lap counting owns those values and writes them itself
+     * many times a minute.
+     */
+    public static function spreadsheetMayWrite(Prova $prova): bool
+    {
+        if (!self::isLapsProva($prova)) {
+            return true;
+        }
+        // Read afresh: the mode may have been changed a moment ago.
+        $prova->reload();
+        return !ContagemService::forProva($prova)->getSettings()->publishesToScoring();
+    }
+
+    /**
      * The spreadsheet's "truncate" (juiz/remote.php) on a laps prova: start
      * its totals again from nothing.
      *

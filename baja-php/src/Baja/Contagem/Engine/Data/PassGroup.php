@@ -13,6 +13,10 @@ final class PassGroup
     public const RETIDA_PROXIMA_DEMAIS = 'proxima_demais';
     /** Held because its entries are too far apart to be taken as one crossing. */
     public const RETIDA_DISPERSAO = 'dispersao';
+    /** Held because the pit log says the car was inside the pit lane at that moment. */
+    public const RETIDA_NO_BOX = 'no_box';
+    /** Held because the fueling log says the car was inside the fueling station at that moment. */
+    public const RETIDA_NO_ABASTECIMENTO = 'no_abastecimento';
 
     public int $carro;
 
@@ -96,10 +100,10 @@ final class PassGroup
      */
     public bool $retidaNaReferencia = false;
 
-    /** Only when held for being too close: racing time since the car's previous official pass, in ms. */
+    /** When the pass is (also) too close to the car's previous official pass: racing time since that pass, in ms. */
     public ?int $intervaloDesdeAnteriorMs = null;
 
-    /** Only when held for being too close: the shortest lap believable for this car at that moment, in ms. */
+    /** With `$intervaloDesdeAnteriorMs`: the shortest lap believable for this car at that moment, in ms. */
     public ?int $voltaMinimaMs = null;
 
     /** One of the entries has an estimated time (`Entry::TEMPO_ESTIMADO`). */

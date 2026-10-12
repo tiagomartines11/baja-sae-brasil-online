@@ -129,6 +129,8 @@ final class SyntheticReviewer
         Flag::DISPERSAO_ALTA,
         Flag::PASSAGEM_PROXIMA_DEMAIS,
         Flag::VOLTA_CURTA,
+        Flag::NO_BOX,
+        Flag::NO_ABASTECIMENTO,
     ];
 
     /**

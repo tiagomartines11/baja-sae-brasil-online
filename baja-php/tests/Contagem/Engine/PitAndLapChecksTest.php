@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace Baja\Tests\Contagem\Engine;
 
 use Baja\Contagem\Engine\Data\Flag;
+use Baja\Contagem\Engine\Data\Lap;
+use Baja\Contagem\Engine\Data\PassGroup;
+use Baja\Contagem\Engine\Settings;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Tests\Contagem\Engine\Support\EngineTestCase;
 use Baja\Tests\Contagem\Engine\Support\RaceScenario;
@@ -25,60 +28,116 @@ final class PitAndLapChecksTest extends EngineTestCase
      *
      * WHAT WENT WRONG: one of the two records is wrong. Either the counters
      * mistook another car for car 6, or the pit log has the wrong car or
-     * time.
+     * time. (The pass used to count, with a flag. Two counters typing the
+     * number of a car that is standing in the pit lane then gave that car
+     * a lap.)
      *
-     * EXPECTED: the lap counts (three counters agree), but a "no_box" flag
-     * marks it as unreliable, and the laps touching that pass cannot be a
-     * "best lap". Since several counters saw the car at the line, the
-     * suggestion is "marcar saída do box": record the exit nobody logged,
-     * one second before the pass. It changes no count. Once accepted, the
-     * car is out of the pit lane from then on and the flag is gone.
+     * EXPECTED: the pass is HELD, reason "no_box": no lap, a pending row, a
+     * "no_box" flag with no suggestion. Three ways out, each tested here:
+     * - the reviewer confirms the pass ("contar esta passagem"): it counts;
+     * - the reviewer records an exit just before the pass: the car is
+     *   outside then, and the pass counts by the ordinary rules;
+     * - the reviewer discards the pass: nothing counts, nothing is left.
+     * In "todas" mode every entry counts, so nothing is held there, and
+     * the flag says the car may have a lap too many.
      */
-    public function testAPassWhileTheCarIsLoggedInThePitLaneIsFlaggedAsUnreliable(): void
+    public function testAPassWhileTheCarIsLoggedInThePitLaneIsHeld(): void
+    {
+        $build = function (): array {
+            $race = RaceScenario::withCounters(3);
+            $race->start('00:00');
+            $race->pass(6, '03:00');
+            $race->pitIn(6, '05:00');
+            $entries = $race->pass(6, '07:00');
+            $race->pitOut(6, '09:00');
+            return [$race, $entries];
+        };
+
+        [$race, $entries] = $build();
+        $result = $race->run('10:00');
+        $flag = $this->assertSingleOpenFlag($result, Flag::NO_BOX);
+        $this->assertNull($flag->sugestao);
+        $this->assertSame([6], $flag->carros);
+        $this->assertSame(Flag::DUVIDA_A_MENOS, $flag->contagemEmDuvida);
+        $this->assertLapCounts([6 => 0], $result);
+        $this->assertSame(PassGroup::RETIDA_NO_BOX, $result->groupOfEntry($entries[1])->motivoRetencao);
+        $this->assertSame(Lap::PENDENTE, $result->laps[1]->estado);
+
+        $race->confirm($entries[1]);
+        $confirmed = $race->run('10:00');
+        $this->assertLapCounts([6 => 1], $confirmed);
+        $this->assertNoOpenFlags($confirmed);
+
+        [$race, $entries] = $build();
+        $race->inferredExit('box', 6, RaceScenario::ms('06:59'));
+        $withExit = $race->run('10:00');
+        $this->assertLapCounts([6 => 1], $withExit);
+        $this->assertNoOpenFlags($withExit);
+        $this->assertFalse($withExit->timeline->isInPitAt(6, RaceScenario::ms('07:00')));
+        $this->assertTrue($withExit->timeline->isInPitAt(6, RaceScenario::ms('06:58.999')));
+
+        [$race, $entries] = $build();
+        foreach ($entries as $entryId) {
+            $race->void($entryId);
+        }
+        $discarded = $race->run('10:00');
+        $this->assertLapCounts([6 => 0], $discarded);
+        $this->assertNoOpenFlags($discarded);
+
+        [$race] = $build();
+        $race->settings->modoPublicacao = Settings::MODO_TODAS;
+        $everything = $race->run('10:00');
+        $this->assertLapCounts([6 => 1], $everything);
+        $this->assertSame(Flag::DUVIDA_A_MAIS, $this->assertSingleOpenFlag($everything, Flag::NO_BOX)->contagemEmDuvida);
+    }
+
+    /**
+     * SITUATION: "fonte_principal" mode with counter 1 as the primary. Car
+     * 6 is logged into the pit lane at minute 5; counter 1 alone records it
+     * at the line at minute 7.
+     *
+     * EXPECTED: whatever the primary has counts in this mode, and the pit
+     * hold applies to it too: the pass is held, no lap.
+     */
+    public function testInFontePrincipalModeThePrimarysPassInsideThePitLaneIsHeldToo(): void
     {
         $race = RaceScenario::withCounters(3);
+        $race->settings->modoPublicacao = Settings::MODO_FONTE_PRINCIPAL;
+        $race->settings->fontePrincipalId = 1;
         $race->start('00:00');
         $race->pass(6, '03:00');
+        $outside = $race->entry(1, 6, '04:00');
         $race->pitIn(6, '05:00');
-        $race->pass(6, '07:00');
-        $race->pitOut(6, '09:00');
+        $inside = $race->entry(1, 6, '07:00');
 
         $result = $race->run('10:00');
 
-        $flag = $this->assertSingleOpenFlag($result, Flag::NO_BOX);
-        $this->assertSame(['tipo' => 'marcar_saida', 'area' => 'box', 'equipe_numero' => 6, 'ts_ms' => RaceScenario::ms('06:59')], $flag->sugestao);
-        $this->assertSame([6], $flag->carros);
         $this->assertLapCounts([6 => 1], $result);
-        $this->assertSame([Flag::NO_BOX], $result->laps[1]->grupo->alertasAbertos);
-        $this->assertFalse($result->laps[1]->elegivelMelhorVolta);
-
-        $race->accept($flag);
-        $fixed = $race->run('10:00');
-        $this->assertNoOpenFlags($fixed);
-        $this->assertLapCounts([6 => 1], $fixed);
-        $this->assertFalse($fixed->timeline->isInPitAt(6, RaceScenario::ms('07:00')));
-        $this->assertTrue($fixed->timeline->isInPitAt(6, RaceScenario::ms('06:58.999')));
+        $this->assertTrue($result->groupOfEntry($outside)->contado);
+        $this->assertTrue($result->groupOfEntry($inside)->retida);
+        $this->assertSame(PassGroup::RETIDA_NO_BOX, $result->groupOfEntry($inside)->motivoRetencao);
     }
 
     /**
      * SITUATION: car 6 is logged into the pit lane at minute 5 and nobody
      * ever logs it out. Only counter 1 records it at the line at minute 7.
      *
-     * EXPECTED: one counter against the pit log: the flag is "no_box" and
-     * the suggestion is to discard the pass ("descartar_passagem").
+     * EXPECTED: one counter against the pit log: the flag is "no_box",
+     * names the counter, and has no suggestion.
      */
-    public function testAPassOnlyOneCounterSawWhileInThePitLaneIsSuggestedForDiscarding(): void
+    public function testAPassOnlyOneCounterSawWhileInThePitLaneIsFlaggedWithoutASuggestion(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
         $race->pass(6, '03:00');
         $race->pitIn(6, '05:00');
-        $lone = $race->entry(1, 6, '07:00');
+        $race->entry(1, 6, '07:00');
 
         $flag = $this->assertSingleOpenFlag($race->run('10:00'), Flag::NO_BOX);
 
-        $this->assertSame(['tipo' => 'descartar_passagem', 'passagem_id' => $lone], $flag->sugestao);
-        $this->assertStringContainsString('Só Contagem 1', $flag->motivo);
+        $this->assertNull($flag->sugestao);
+        $this->assertSame(1, $flag->fonteId);
+        $this->assertStringContainsString('Contagem 1', $flag->motivo);
     }
 
     /**

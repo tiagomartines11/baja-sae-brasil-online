@@ -54,6 +54,18 @@ if (array_key_exists("truncate", $input) && $input["truncate"] == "all") {
     die("OK");
 }
 
+// On a laps prova the race clock and VOLTAS/LAST/BEST have ONE writer at a
+// time: the spreadsheet while the count's publish mode is "desligada", the
+// lap counting in every other mode. With both writing, each overwrote the
+// other's laps on every upload and the results page jumped between the two.
+// So "raceTime" and "cars" are refused while the count publishes, and the
+// request changes nothing (not even the half of it that could be applied).
+$writesTotals = array_key_exists("raceTime", $input) || array_key_exists("cars", $input);
+if ($writesTotals && !ManualScoreFields::spreadsheetMayWrite($prova)) {
+    header('HTTP/1.0 409 Conflict');
+    die("REFUSED: a contagem de voltas publica esta prova; a planilha so grava com a publicacao desligada");
+}
+
 if (array_key_exists("raceTime", $input)) {
     $prova->setTempo(time() - $input["raceTime"]);
     $prova->save();

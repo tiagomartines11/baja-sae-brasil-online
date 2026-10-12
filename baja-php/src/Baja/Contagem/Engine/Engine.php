@@ -83,8 +83,7 @@ final class Engine
             $counter->unknownTimeEntries,
             $counter->applied->confirmedEntryIds
         );
-        $flagDetector->describeRepeats($counter->duplicates->flags);
-        $flags = array_merge($flags, $counter->duplicates->flags);
+        $flags = array_merge($flags, $flagDetector->describeRepeats($counter->duplicates->flags));
 
         LapBuilder::markBestLapEligibility($lapsByCar, $settings, $pace);
 

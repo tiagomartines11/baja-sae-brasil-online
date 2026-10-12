@@ -233,7 +233,7 @@ final class EntryWriter
      * pit-log device.
      *
      * @param array<int, mixed> $events
-     * @return array{uuids: string[], new: int}
+     * @return array{uuids: string[], new: int, cars: int[]}
      */
     public function storeStopEvents(array $events): array
     {
@@ -301,7 +301,11 @@ final class EntryWriter
             $newCount++;
         }
 
-        return ['uuids' => $acknowledged, 'new' => $newCount];
+        // The cars of every acknowledged event, new or not (see the same
+        // remark in storeEntries()). A car's count depends on its stops: a
+        // pass while it is logged inside an area is held, and counts once
+        // its exit is recorded. So these cars must be recounted.
+        return ['uuids' => $acknowledged, 'new' => $newCount, 'cars' => array_values(array_unique(array_column($valid, 'car')))];
     }
 
     /**

@@ -234,8 +234,7 @@ final class HoldRuleTest extends EngineTestCase
 
     /**
      * SITUATION: a steady race. Car 1 leads; it has an informative flag (a
-     * pass while the pit log says it is in the pit lane, which counts all
-     * the same). Car 10, last, has a held pass, and car 9 has a pass a
+     * lone entry waiting for a reviewer). Car 10, last, has a held pass, and car 9 has a pass a
      * reviewer added too close to another (two official passes within the
      * minimum lap).
      *
@@ -250,17 +249,17 @@ final class HoldRuleTest extends EngineTestCase
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
         $race->steadyField([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 180, 6);
-        // Car 1 crosses at 03:00, ..., 18:00: logged into the pit lane just before its last pass.
-        $race->pitIn(1, '17:50');
+        // Car 1 crosses at 03:00, ..., 18:00: counter 2 alone has it once more, a lap later.
+        $race->entry(2, 1, '21:00');
         // Car 9 crosses at 03:56, ..., 18:56: a reviewer adds a pass 25 s after one of them.
         $race->addPass(9, '13:21');
         // Car 10 crosses at 04:03, ..., 19:03: two counters have it again 30 s after one of them.
         $race->pass(10, '13:33', [1, 2]);
 
-        $flags = $race->run('20:00')->openFlags();
+        $flags = $race->run('22:00')->openFlags();
 
         $this->assertSame(
-            [[Flag::VOLTA_CURTA, [9], 'a_mais'], [Flag::PASSAGEM_PROXIMA_DEMAIS, [10], 'a_menos'], [Flag::NO_BOX, [1], null]],
+            [[Flag::VOLTA_CURTA, [9], 'a_mais'], [Flag::PASSAGEM_PROXIMA_DEMAIS, [10], 'a_menos'], [Flag::SOLITARIA, [1], null]],
             array_map(fn(Flag $flag) => [$flag->tipo, $flag->carros, $flag->toArray()['contagem_em_duvida']], $flags)
         );
     }
@@ -316,5 +315,61 @@ final class HoldRuleTest extends EngineTestCase
         $this->assertSame(4000, $settings->agreementSpreadMs());
         $settings->janelaMs = 3000;
         $this->assertSame(3000, $settings->agreementSpreadMs());
+    }
+
+    /**
+     * SITUATION: car 9 passed at 03:00 and is logged into the pit lane at
+     * 05:00. At 06:00 two counters record it at the line (a wrong number:
+     * the car is standing in its pit). It is logged out at 06:10 and
+     * really crosses at 06:30, recorded by everybody.
+     *
+     * EXPECTED: the pass at 06:00 is held because the car is logged inside
+     * (it used to count, which put the car a lap ahead). And a pass held
+     * that way is not what the next one is measured from: the real pass at
+     * 06:30 is 210 s after the car's last OFFICIAL pass, not 30 s, so it
+     * counts. One lap.
+     */
+    public function testAPassHeldInsideThePitLaneIsNotWhatTheNextOneIsMeasuredFrom(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        $race->pass(9, '03:00');
+        $race->pitIn(9, '05:00');
+        $inside = $race->pass(9, '06:00', [1, 2]);
+        $race->pitOut(9, '06:10');
+        $real = $race->pass(9, '06:30');
+
+        $result = $race->run('08:00');
+
+        $this->assertSame(PassGroup::RETIDA_NO_BOX, $result->groupOfEntry($inside[1])->motivoRetencao);
+        $this->assertTrue($result->groupOfEntry($real[1])->contado);
+        $this->assertLapCounts([9 => 2], $result);
+        $this->assertSame(2, $race->countCars('08:00', [9])->lapCount(9));
+    }
+
+    /**
+     * SITUATION: car 9 starts the race from the pit lane: logged in at
+     * 00:05, out at 02:00. Everybody records it at the line at 00:20 (a
+     * wrong number, or a wrong log), and then at 03:20 and 06:20.
+     *
+     * EXPECTED: the rule also applies to what would be the car's FIRST
+     * pass: the one at 00:20 is held. Its pass zero is the crossing at
+     * 03:20, and it has one lap, not two.
+     */
+    public function testWhatWouldBeTheCarsFirstPassIsHeldTooWhileItIsLoggedInside(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->pitIn(9, '00:05');
+        $inside = $race->pass(9, '00:20');
+        $race->pitOut(9, '02:00');
+        $race->pass(9, '03:20');
+        $race->pass(9, '06:20');
+
+        $result = $race->run('07:00');
+
+        $this->assertTrue($result->groupOfEntry($inside[1])->retida);
+        $this->assertLapCounts([9 => 1], $result);
     }
 }

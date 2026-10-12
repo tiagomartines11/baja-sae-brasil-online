@@ -73,25 +73,79 @@ export function timingFor(janelaMs) {
     };
 }
 
+/** The keys next to each key of a numeric keypad (1 2 3 / 4 5 6 / 7 8 9 / 0). */
+const NEIGHBOUR_KEYS = {
+    1: [2, 4], 2: [1, 3, 5], 3: [2, 6],
+    4: [1, 5, 7], 5: [2, 4, 6, 8], 6: [3, 5, 9],
+    7: [4, 8], 8: [5, 7, 9, 0], 9: [6, 8],
+    0: [8],
+};
+
+/** How often each kind of slip happens, relative to the others. */
+const TYPO_WEIGHTS = { teclaVizinha: 6, digitosTrocados: 3, digitoRepetido: 1, digitoPerdido: 1 };
+
 /**
- * A wrong number for a car, the way fingers produce them: two digits
- * swapped (41 -> 14), one digit one key off (41 -> 42), or a digit dropped
- * (41 -> 4). Returns null when no variant gives a different, usable number.
+ * A wrong number for a car, the way fingers produce them on a keypad:
+ *
+ *   - a neighbouring key instead of one digit (41 -> 42, 41 -> 71): by far
+ *     the most common slip;
+ *   - two digits swapped (41 -> 14);
+ *   - one digit typed twice instead of the two (41 -> 44);
+ *   - a digit lost (41 -> 4), which is rare, and kept here only when the
+ *     shortened number is NOT a car of the race.
+ *
+ * That last condition matters for what the simulation measures. Every car
+ * from 40 to 49 loses its second digit to the same number, 4. Left
+ * unchecked, ten cars keep sending their typos to one car, and "two
+ * counters typed the same wrong number" becomes several times more
+ * frequent on single-digit cars than anything a real race shows. A lost
+ * digit that lands on no car is still simulated: it is an unknown number,
+ * which the review screen flags.
+ *
+ * @param {number} carro
+ * @param {Prng} prng
+ * @param {Set<number>} [carsInTheRace] numbers a lost digit must not land on
+ * @returns {?number} null when no variant gives a different, usable number
  */
-export function wrongNumberFor(carro, prng) {
-    const digits = String(carro).split('');
-    const variants = [];
-    if (digits.length >= 2 && digits[0] !== digits[1] && digits[1] !== '0') {
-        variants.push(Number([digits[1], digits[0], ...digits.slice(2)].join('')));
-    }
-    const lastDigit = Number(digits[digits.length - 1]);
-    const neighbour = lastDigit === 9 ? 8 : lastDigit + 1;
-    variants.push(Number([...digits.slice(0, -1), neighbour].join('')));
+export function wrongNumberFor(carro, prng, carsInTheRace = new Set()) {
+    const digits = String(carro).split('').map(Number);
+    const candidates = [];
+    const offer = (resultDigits, weight) => {
+        const number = Number(resultDigits.join(''));
+        // No leading zero: nobody types "04" for a car and means 4.
+        if (resultDigits[0] !== 0 && number > 0 && number !== carro) {
+            candidates.push({ number, weight });
+        }
+    };
+
+    digits.forEach((digit, position) => {
+        for (const neighbour of NEIGHBOUR_KEYS[digit]) {
+            const changed = [...digits];
+            changed[position] = neighbour;
+            offer(changed, TYPO_WEIGHTS.teclaVizinha);
+        }
+    });
     if (digits.length >= 2) {
-        variants.push(Number(digits.slice(0, -1).join('')));
+        offer([digits[1], digits[0], ...digits.slice(2)], TYPO_WEIGHTS.digitosTrocados);
+        offer([digits[0], digits[0], ...digits.slice(2)], TYPO_WEIGHTS.digitoRepetido);
+        const shortened = digits.slice(0, -1);
+        if (!carsInTheRace.has(Number(shortened.join('')))) {
+            offer(shortened, TYPO_WEIGHTS.digitoPerdido);
+        }
     }
-    const usable = variants.filter((number) => number > 0 && number !== carro);
-    return usable.length === 0 ? null : prng.pick(usable);
+    if (candidates.length === 0) {
+        return null;
+    }
+
+    // One draw, spread over the candidates in proportion to their weights.
+    let draw = prng.below(candidates.reduce((sum, candidate) => sum + candidate.weight, 0));
+    for (const candidate of candidates) {
+        draw -= candidate.weight;
+        if (draw < 0) {
+            return candidate.number;
+        }
+    }
+    return candidates[candidates.length - 1].number;
 }
 
 /**
@@ -123,7 +177,7 @@ export function planCounter({ roteiro, semente, fonteId, naoClassificados = [], 
         }
         let typed = carro;
         if (prng.chance(rates.numero_errado)) {
-            const wrong = wrongNumberFor(carro, prng);
+            const wrong = wrongNumberFor(carro, prng, racing);
             if (wrong !== null) {
                 typed = wrong;
                 noteError(ERRO.NUMERO_ERRADO, typedAtMs, carro, wrong);

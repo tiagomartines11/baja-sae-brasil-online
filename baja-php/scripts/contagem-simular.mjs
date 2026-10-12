@@ -28,13 +28,16 @@
 //      screen offers, then compares EVERY car (unclassified ones too)
 //      crossing by crossing with the laps export. Tolerated: a crossing
 //      that fewer than two counters typed for the right car; and what a
-//      shared mistake left wrong, PROVIDED a flag is open on a car it
-//      touched. Anything else fails. Also checked: LAST, and the stops in
-//      the public feed against the script.
+//      shared mistake left wrong, PROVIDED a flag is open on one of the
+//      cars whose count is wrong (the one with a lap too many, or the one
+//      a lap short), not merely on some other car the mistake touched.
+//      Anything else fails. Also checked: LAST, and the stops in the
+//      public feed against the script.
 //   5. Stage 2, the person: for what stage 1 tolerated, does what a
 //      reviewer does (counts the lone entry, adds the pass, moves a
-//      shared wrong number to the right car, voids a shared pit-lane
-//      entry). Then every car must equal the answer key exactly.
+//      shared wrong number to the right car, marks the pit exit the log
+//      missed so that the passes held for it count). Then every car must
+//      equal the answer key exactly.
 //   6. "Reconstruir" must change nothing: rebuild equals published.
 //
 // Exit code 0 when all of that holds, 1 otherwise.
@@ -47,6 +50,12 @@
 //
 //     node baja-php/scripts/contagem-simular.mjs --semente 42 --confirmar-publicacao END
 //
+// Several seeds at once, with a summary that says how many races passed,
+// how many failed, and how many passed only because something was
+// tolerated as the known limit:
+//
+//     node baja-php/scripts/contagem-simular.mjs --de 1 --ate 24 --confirmar-publicacao END
+//
 // Options: --semente N (default 1), --volta-media-s N (default 230),
 //          --velocidade N (default 240; a four-hour race in a minute),
 //          --contadores N (default 3), --evento 26BR, --prova END,
@@ -57,6 +66,8 @@
 //
 // Never point it at production.
 
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { generateRaceScript, raceDurationFor, AREA_BOX, AREA_ABASTECIMENTO } from '../default/js/contagem/simulacao-corrida.js';
 import { planCounter, planStopLog, withStableIds } from '../default/js/contagem/simulacao-contador.js';
 import { playPlan, mayStartSimulation } from '../default/js/contagem/simulacao-execucao.js';
@@ -64,6 +75,7 @@ import { trueLapCounts, injectedErrors } from '../default/js/contagem/simulacao-
 import {
     pedidosDaSugestao, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo,
 } from '../default/js/contagem/revisao-decisoes.js';
+import { decisaoMarcarSaida } from '../default/js/contagem/revisao-alertas.js';
 import {
     ClientDevice, Reviewer, runHelper, fail, matchCrossings, countedTimesByCar, raceClock, CROSSING_TOLERANCE_MS,
 } from './contagem-simular-lib.mjs';
@@ -92,6 +104,46 @@ const CHECKPOINTS = 5;
 // which is exactly what a simulation must not do by accident.
 if (!mayStartSimulation({ publica: true, provaId: PROVA, confirmacao: options['confirmar-publicacao'] })) {
     fail(`This run publishes a simulated race to the results of prova ${PROVA}. To confirm, add: --confirmar-publicacao ${PROVA}`);
+}
+
+/** The line the batch mode reads from each race. */
+const SUMMARY_MARK = 'RESUMO ';
+
+/** Ends the run of one race: one machine-readable line, then the exit code. */
+function finish(passed, how) {
+    console.log(SUMMARY_MARK + JSON.stringify({ semente: SEED, passou: passed, como: how, tolerados: toleratedAsKnownLimit }));
+    process.exit(passed ? 0 : 1);
+}
+
+// ------------------------------------------------------------ several seeds
+
+// `--de 1 --ate 24`: one race per seed, each in a process of its own, and
+// a summary at the end. A race in which something was TOLERATED as the
+// known limit (two counters making the same mistake, with a flag open on
+// the car whose count is wrong) passes, and is counted separately, so that
+// "24 of 24 passed" can never hide how often the limit was met.
+if (options.ate !== undefined) {
+    const firstSeed = Number(options.de ?? 1);
+    const lastSeed = Number(options.ate);
+    const passThrough = process.argv.slice(2).filter((arg, index, all) => !['--de', '--ate', '--semente'].includes(arg) && !['--de', '--ate', '--semente'].includes(all[index - 1]));
+    const results = [];
+    for (let seed = firstSeed; seed <= lastSeed; seed++) {
+        const run = spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--semente', String(seed), ...passThrough], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+        const summaryLine = run.stdout.split('\n').find((line) => line.startsWith(SUMMARY_MARK));
+        const summary = summaryLine ? JSON.parse(summaryLine.slice(SUMMARY_MARK.length)) : { semente: seed, passou: false, como: 'the run ended without a result', tolerados: 0 };
+        results.push(summary);
+        console.log(`seed ${seed}: ${summary.passou ? 'PASS' : 'FAIL'} (${summary.como})${summary.tolerados > 0 ? `; ${summary.tolerados} difference(s) tolerated as the known limit` : ''}`);
+        if (!summary.passou) console.log(run.stdout.split('\n').filter((line) => line.startsWith('  ')).slice(-12).join('\n'));
+    }
+    const passed = results.filter((result) => result.passou);
+    const tolerated = passed.filter((result) => result.tolerados > 0);
+    console.log(
+        `\n${results.length} races: ${passed.length} passed, ${results.length - passed.length} failed`
+        + (results.length > passed.length ? ` (seeds ${results.filter((result) => !result.passou).map((result) => result.semente).join(', ')})` : '') + '.\n'
+        + `Races that passed only because a difference was tolerated as the known limit: ${tolerated.length}`
+        + (tolerated.length > 0 ? ` (seeds ${tolerated.map((result) => result.semente).join(', ')})` : '') + '.',
+    );
+    process.exit(passed.length === results.length ? 0 : 1);
 }
 
 // ------------------------------------------------------------ the race
@@ -296,26 +348,72 @@ const openCounts = {};
 for (const flag of openFlags) openCounts[flag.tipo] = (openCounts[flag.tipo] ?? 0) + 1;
 console.log('Flags left open:', JSON.stringify(openCounts));
 
-/**
- * "Either right, or with an open flag": is a flag open on a car this
- * shared mistake touched (the car typed, or the car that really crossed),
- * around that moment? That flag is what leads a reviewer to it. A flag on
- * EVERY car touched cannot be asked for: when the third counter typed
- * nothing, the car that really crossed has no entry to hang a flag on.
- */
-function hasAnOpenFlagNear(group) {
-    const touched = new Set([group.typedCar, ...group.entries.map((entry) => entry.realCar).filter((car) => car !== null)]);
-    return openFlags.some((flag) => (flag.carros ?? []).some((car) => touched.has(car)) && Math.abs(flag.ts_ms - group.tsMs) <= 2 * LAP_MS);
+/** Is a flag open on this car around this moment? */
+function hasAnOpenFlagOn(car, aroundMs) {
+    return openFlags.some((flag) => (flag.carros ?? []).includes(car) && Math.abs(flag.ts_ms - aroundMs) <= 2 * LAP_MS);
 }
 
+/** The shared mistake behind a crossing that was not counted, if any (see the loop below for the two ways). */
+function mistakeBehindAMissingCrossing(car, crossingMs, witnesses) {
+    const mistypedAs = mistakes.find((group) => group.entries.some((entry) => entry.realCar === car && entry.crossingMs === crossingMs));
+    return mistypedAs ?? (witnesses >= 2 ? phantomSourceFor(car, crossingMs, 2 * LAP_MS) : undefined);
+}
+const mistakeBehindAPhantom = (car, passMs) => phantomSourceFor(car, passMs, setup.janela_ms + CROSSING_TOLERANCE_MS);
+
+/**
+ * Does the pit log, as it was typed, still have this car inside an area at
+ * this moment (its last logged event before it is an entry)? Then the
+ * engine holds the car's passes: a car in the pit lane cannot be on the
+ * track, so either the exit was missed or the passes are wrong, and a
+ * person decides. Returns the area, or null.
+ */
+function areaTheLogHasTheCarIn(car, atMs) {
+    for (const [index, area] of stopAreas.entries()) {
+        const before = stopPlans[index].acoes.filter((action) => action.carro === car && action.tsMs <= atMs);
+        if (before.length > 0 && before[before.length - 1].tipo === `${area}_entrada`) return area;
+    }
+    return null;
+}
+const flagOfAStay = (car, aroundMs) => openFlagsNow().find((flag) => (flag.tipo === 'no_box' || flag.tipo === 'no_abastecimento')
+    && (flag.carros ?? []).includes(car) && Math.abs(flag.ts_ms - aroundMs) <= CROSSING_TOLERANCE_MS);
+let openFlagsNow = () => openFlags;
+
 const afterSuggestions = await differencesPerCrossing(reviewer);
-const forAPerson = { loneCrossings: [], mistakes: new Set() };
-/** A difference caused by a shared mistake: tolerated with an open flag near it, a failure without. */
+const forAPerson = { loneCrossings: [], mistakes: new Set(), heldInAnArea: [] };
+// One shared mistake usually leaves TWO cars wrong: the car typed has a lap
+// too many, the car that really crossed is a lap short. "Either right, or
+// with an open flag" asks for a flag on the over-counted OR the
+// under-counted car: on one of the cars whose count is wrong, not on some
+// bystander the mistake merely touched. (A flag on both cannot be asked
+// for: when the third counter typed nothing, the car that really crossed
+// has no entry to hang a flag on.) So first: which wrong cars does each
+// shared mistake account for?
+const wrongCarsOf = new Map();
+for (const { car, missing, phantom } of afterSuggestions) {
+    const note = (group, aroundMs) => {
+        if (!group) return;
+        if (!wrongCarsOf.has(group)) wrongCarsOf.set(group, []);
+        wrongCarsOf.get(group).push({ car, aroundMs });
+    };
+    for (const crossingMs of missing) note(mistakeBehindAMissingCrossing(car, crossingMs, witnessesOf({ carro: car, tsMs: crossingMs })), crossingMs);
+    for (const passMs of phantom) note(mistakeBehindAPhantom(car, passMs), passMs);
+}
+/** The wrong car of this mistake that has an open flag, or undefined. */
+const flaggedWrongCarOf = (group) => (wrongCarsOf.get(group) ?? []).find(({ car, aroundMs }) => hasAnOpenFlagOn(car, aroundMs));
+
+/** How many differences of this race were tolerated as the known limit (two counters, one mistake). */
+let toleratedAsKnownLimit = 0;
+/** A difference caused by a shared mistake: tolerated when one of the cars it left wrong has an open flag, a failure without. */
 function judgeSharedMistake(group, what) {
     forAPerson.mistakes.add(group);
-    if (hasAnOpenFlagNear(group)) return `the known limit (${describeMistake(group)}), with a flag open on a car it touched`;
-    problems.push(`${what}: ${describeMistake(group)}, and no flag is open on any car it touched`);
-    return `NOT TOLERATED: ${describeMistake(group)}, with no open flag on any car it touched`;
+    const flagged = flaggedWrongCarOf(group);
+    if (flagged) {
+        toleratedAsKnownLimit++;
+        return `the known limit (${describeMistake(group)}), with a flag open on car ${flagged.car}`;
+    }
+    const wrongCars = [...new Set((wrongCarsOf.get(group) ?? []).map(({ car }) => car))].join(' and ');
+    problems.push(`${what}: ${describeMistake(group)}, and no flag is open on car ${wrongCars}`);
+    return `NOT TOLERATED: ${describeMistake(group)}, with no flag open on car ${wrongCars}`;
 }
 console.log(`\nStage 1 (suggestions only): ${afterSuggestions.length} car(s) differ from the script.`);
 for (const { car, missing, phantom } of afterSuggestions) {
@@ -331,6 +429,10 @@ for (const { car, missing, phantom } of afterSuggestions) {
             verdict = judgeSharedMistake(mistypedAs, `car ${car} is short`);
         } else if (witnesses >= 2 && heldBeside) {
             verdict = 'held beside a phantom pass; ' + judgeSharedMistake(heldBeside, `car ${car} has a real pass held`);
+        } else if (witnesses >= 2 && areaTheLogHasTheCarIn(car, crossingMs) !== null && flagOfAStay(car, crossingMs)) {
+            // Not the known limit: the rule working. The pit log missed an exit.
+            verdict = `held: the pit log still has the car in the ${areaTheLogHasTheCarIn(car, crossingMs)} (it missed the exit), with its flag open`;
+            forAPerson.heldInAnArea.push(crossing);
         } else if (witnesses >= 2) {
             verdict = 'NOT TOLERATED: two or more counters typed it right';
             problems.push(`car ${car} misses a crossing that ${witnesses} counters typed right`);
@@ -340,7 +442,7 @@ for (const { car, missing, phantom } of afterSuggestions) {
         console.log(`  car ${car}: crossing at ${raceClock(crossingMs, script.largadaMs)} not counted; ${verdict}`);
     }
     for (const passMs of phantom) {
-        const cause = phantomSourceFor(car, passMs, setup.janela_ms + CROSSING_TOLERANCE_MS);
+        const cause = mistakeBehindAPhantom(car, passMs);
         let verdict = 'NOT TOLERATED: no car crossed then and no two counters shared a mistake';
         if (cause) verdict = judgeSharedMistake(cause, `car ${car} has a pass that never happened`);
         else problems.push(`car ${car} has a counted pass at ${raceClock(passMs, script.largadaMs)} that never happened`);
@@ -386,12 +488,12 @@ if (problems.length > 0) {
     console.log('\nFAIL:');
     for (const problem of problems) console.log('  ' + problem);
     await helper('encerrar');
-    process.exit(1);
+    finish(false, 'failed at stage 1');
 }
 
 // ------------------------------------------------------------ stage 2: the person
 
-const byHand = { reassigned: 0, voided: 0, confirmed: 0, added: 0 };
+const byHand = { reassigned: 0, voided: 0, confirmed: 0, added: 0, exitsMarked: 0 };
 for (const group of forAPerson.mistakes) {
     for (const wanted of group.entries) {
         // Read afresh for every entry: each decision changes what the next chip looks like.
@@ -405,6 +507,17 @@ for (const group of forAPerson.mistakes) {
         const answer = await reviewer.decide(pedidoParaEntrada(decision, chip, await reviewer.state()));
         if (answer.stored) byHand[wanted.realCar !== null ? 'reassigned' : 'voided']++;
     }
+}
+// "Marcar saída": one mark closes the stay and frees every later pass of
+// that car held for it, so the earliest held pass of each stay is enough;
+// the others no longer have a flag when their turn comes.
+for (const crossing of forAPerson.heldInAnArea.sort((a, b) => a.tsMs - b.tsMs)) {
+    const currentState = await reviewer.state();
+    openFlagsNow = () => currentState.alertas_abertos ?? [];
+    const flag = flagOfAStay(crossing.carro, crossing.tsMs);
+    if (!flag) continue;
+    const answer = await reviewer.decide(pedidoParaAlerta(decisaoMarcarSaida(flag), flag, currentState, flag.assinatura ?? null));
+    if (answer.stored) byHand.exitsMarked++;
 }
 // What a shared mistake left wrong may be settled now; only what still differs needs more.
 const stillDiffering = await differencesPerCrossing(reviewer);
@@ -424,9 +537,10 @@ for (const { car, missing } of stillDiffering) {
         state = answer.state ?? await reviewer.state();
     }
 }
-const resolvedByHand = forAPerson.mistakes.size + forAPerson.loneCrossings.length;
+const resolvedByHand = forAPerson.mistakes.size + forAPerson.loneCrossings.length + forAPerson.heldInAnArea.length;
 console.log(
     `\nStage 2 (a person): for ${forAPerson.mistakes.size} shared mistake(s), moved ${byHand.reassigned} entries to the right car and voided ${byHand.voided}; `
+    + `marked ${byHand.exitsMarked} pit exit(s) the log had missed (${forAPerson.heldInAnArea.length} held passes); `
     + `counted ${byHand.confirmed} lone or held passes, added ${byHand.added} passes nobody typed right.`,
 );
 
@@ -439,7 +553,7 @@ if (afterAPerson.length > 0 || wrongTotals.length > 0) {
     for (const { car, missing, phantom } of afterAPerson) console.log(`  car ${car}: ${missing.length} crossing(s) not counted, ${phantom.length} counted pass(es) that never happened`);
     for (const [car, laps] of wrongTotals) console.log(`  car ${car}: true ${laps}, published ${finalPublished[car]?.voltas ?? 0}`);
     await helper('encerrar');
-    process.exit(1);
+    finish(false, 'still differs after the person stage');
 }
 
 // ------------------------------------------------------------ rebuild equals published
@@ -451,11 +565,11 @@ const lapsAfter = JSON.stringify(await reviewer.exportRows('voltas'));
 await helper('encerrar');
 if (JSON.stringify(rebuiltPublished) !== JSON.stringify(finalPublished) || lapsBefore !== lapsAfter) {
     console.log('\nFAIL: "Reconstruir" changed the result: the incremental count and a rebuild from the raw entries disagree.');
-    process.exit(1);
+    finish(false, 'rebuild differs from published');
 }
 
 const stage = resolvedByHand === 0
     ? 'after the suggestions alone'
-    : `after a person resolved ${forAPerson.loneCrossings.length} lone crossing(s) and ${forAPerson.mistakes.size} shared mistake(s)`;
+    : `after a person resolved ${forAPerson.loneCrossings.length} lone crossing(s), ${forAPerson.mistakes.size} shared mistake(s) and ${byHand.exitsMarked} missed pit exit(s)`;
 console.log(`\nPASS ${stage}: all ${answerKey.size} cars equal the answer key, crossing by crossing; rebuild equals published.`);
-process.exit(0);
+finish(true, stage);

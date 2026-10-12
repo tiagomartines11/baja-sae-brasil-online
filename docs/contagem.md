@@ -129,15 +129,18 @@ screen, feed, exports) but nothing is written to the official results:
 `Input.dados` is not touched, the race clock of the results page
 (`prova.tempo`) is not touched, points are not recalculated. The review
 screen says so in its status bar. `juiz/remote.php` keeps accepting the
-spreadsheet's totals. Its "truncate" empties only `VOLTAS`, `LAST` and
-`BEST` (the rows, with the classification and the other manual fields,
-stay), and is refused while the count itself is publishing.
+spreadsheet's totals, **in this mode only**: on a laps prova in any other
+publish mode its "cars", "raceTime" and "truncate" requests are refused
+(HTTP 409) and change nothing, so the spreadsheet and the count cannot both
+write the results. In `desligada`, "truncate" empties only `VOLTAS`, `LAST`
+and `BEST` (the rows, with the classification and the other manual fields,
+stay).
 
 In this mode the dashboard leaves `VOLTAS`, `LAST` and `BEST` editable, since
 the spreadsheet (or a person) owns them.
 
-Do not run both as writers on the same prova: they would overwrite each
-other's `VOLTAS`. To switch over, set the mode to `confirmadas`. The settings
+To switch over, set the mode to `confirmadas`; from then on the spreadsheet's
+writes are refused. The settings
 page asks for confirmation, because leaving `desligada` replaces what the
 spreadsheet published: every car's `VOLTAS`, `LAST` and `BEST` are written
 from the count, and the race clock of the results page (`prova.tempo`) is set
@@ -205,9 +208,15 @@ number of phones can log the same area.
 A car logged in either area is left out of the pace and best-lap
 calculations for that lap, and its "stopped" clock restarts when it leaves.
 The two areas are independent. A pass at the line while the car is logged
-inside is flagged (`no_box`, `no_abastecimento`): usually somebody missed the
-exit, and the reviewer presses **Marcar saída**; if the pass itself is the
-mistake, **Descartar esta passagem**. A second entry while a car is already
+inside is flagged (`no_box`, `no_abastecimento`) and **held: it does not
+count**, even when two counters agree on it, until a reviewer settles it.
+There is no default: either somebody missed the exit, and the reviewer
+presses **Marcar saída do box (+1 volta)**, which makes that pass (and any
+later pass of the car held for the same reason) count; or the pass itself is
+the mistake, and the reviewer presses **Descartar esta passagem**. One missed
+exit therefore holds every later lap of that car until it is marked: the
+flags are at the top of the queue ("pode estar com uma volta a menos") and
+should be dealt with first. A second entry while a car is already
 inside makes the OLDER entry the unpaired one (the exit in between was
 missed), so a missed exit cannot produce a stay that lasts hours; stays still
 open at the finish are closed there.
@@ -264,9 +273,9 @@ once. The person leaving then presses **Encerrar meu turno**.
 |---|---|
 | `passagem_proxima_demais` | Two counters agree on a pass, but it is closer to the car's previous official pass than a lap can be. **It is held: it does not count** until a reviewer says so. See [The hold rule](#the-hold-rule) |
 | `dispersao_alta` | The entries of one pass are further apart than honest entries are (`dispersao_alerta_ms`, 4 s). With three counters the two that agree count and the outlier stands alone; with only two, the pass is held |
-| `troca_provavel` | One counter typed car X alone while others recorded car Y at the same moment. Usually the lone entry is the typo. When the others' pass is held or impossibly short for Y and X was due, the flag says both readings and suggests the reverse: move the others' entries to X |
+| `troca_provavel` | One counter typed car X alone while others recorded car Y at the same moment. Usually the lone entry is the typo. When the others' pass is held or impossibly short for Y and X was due, the flag says both readings and suggests the reverse: move the others' entries to X. **Both cars are always flagged** when a two-counter pass coincides with another car's entry from the remaining counter, however plausible each looks. The same flag is raised, with no suggestion, for a two-counter pass in which every counter left out a car the others recorded at that moment: each of its entries may be a typo for that other car |
 | `solitaria` | Only one counter recorded this pass. It does not count |
-| `repetida` | Same counter, same car, twice within the matching window. Double taps and handover duplicates are voided automatically |
+| `repetida` | Same counter, same car, twice within the matching window. Double taps and handover duplicates are voided automatically. Not raised when both entries sit in passes other counters share: those are two candidate passes, and the later one is judged by the hold rule instead, so no suggestion can void an entry of an agreed pass |
 | `primeira_passagem_tardia` | The car's first pass came much later than the field's: its pass zero was probably missed |
 | `antes_da_largada` | Entries for a car shortly before the start (the start was moved, or a clock was early). Without them the car has lost its pass zero |
 | `no_encerramento` | A pass whose entries lie on both sides of the finish: the counters disagree on whether it was the last racing pass or the one after the flag |
@@ -274,7 +283,7 @@ once. The person leaving then presses **Encerrar meu turno**.
 | `tempo_desconhecido` | An entry whose time is only the device's own clock (or an API client that did not say how good its time is). Stored and shown, never counted or matched |
 | `carro_desconhecido` | The number belongs to no team of the event |
 | `carro_nao_classificado` | A pass for a car that is present but not classified. It does not count |
-| `no_box`, `no_abastecimento` | A pass while the log says the car is in the pit lane or at the fueling station. It still counts when two counters agree |
+| `no_box`, `no_abastecimento` | A pass while the log says the car is in the pit lane or at the fueling station. **It is held**, whatever the number of counters, until the exit is marked or the pass discarded |
 | `volta_curta` | Two official passes of a car closer together than a lap can be, in the cases the hold rule does not cover (a reviewer confirmed one, or the mode is `todas`). The flag names both passes |
 | `divergencia_total` | Imported paper totals differ from the official count, or do not list a car that has laps |
 
@@ -301,16 +310,17 @@ From `default/js/contagem/revisao-alertas.js`, which is what the screen runs.
 | `tempo_desconhecido` | none | none (an entry of unknown time never counts, even confirmed) | **Adicionar passagem…** (the reviewer types the time), then void the entry |
 | `carro_desconhecido` | none | Está correto, parar de avisar | reassign the entry from its chip |
 | `carro_nao_classificado` | none | **Contar mesmo assim (+1 volta)** | |
-| `no_box`, `no_abastecimento` | **Marcar saída do box / do abastecimento** when two or more counters agree on the pass; **Descartar esta passagem** (asks) when only one recorded it | none | the other of the two |
+| `no_box`, `no_abastecimento` | none: there is no default | none | **Marcar saída do box (+1 volta)** / **do abastecimento (+1 volta)**, which asks (without "(+1 volta)" and without a question when only one counter recorded the pass: it then still needs a second witness); **Descartar esta passagem** (asks) |
 | `volta_curta` | none | Está correto, parar de avisar | **Descartar a primeira passagem** / **a segunda passagem** (asks) |
 | `divergencia_total` | none | none | |
 
 "Marcar saída" records an exit for that car one second before the pass,
 attributed to the reviewer and shown on the lane as inferred. It closes the
-stay, so later passes of the car stop being flagged and its stop statistics
-and status follow; it changes no lap count. It is an ordinary event: race
-control lists it under "Saídas marcadas pela revisão" with "corrigir" and
-"cancelar", and it can be undone from the history.
+stay: the held pass counts, so do the car's later passes held for the same
+reason, and its stop statistics and status follow. It is an ordinary event:
+race control lists it under "Saídas marcadas pela revisão" with "corrigir"
+and "cancelar", and it can be undone from the history (the passes are then
+held again).
 
 ### The hold rule
 
@@ -355,20 +365,27 @@ counter's lone, correct entry suggests moving the two entries to car 41. But
 if it lands where a pass of car 14 is believable by car 14's own history (the
 car is stopped on track with no pit log, is on a long lap, or has fewer than
 three laps), nothing in that car's entries can tell it from a real pass: **it
-counts, and car 14 is one lap over until a person acts.** A flag is open on
-one of the two cars (`troca_provavel` stating both readings, without a
-suggestion when neither reading is clearly the better one). The same happens
-when two counters both type a car that is standing in the pit lane: by the
-rule for passes in the pit lane the pass counts on two counters' word, flagged
-`no_box`.
+counts, and car 14 is one lap over until a person acts.** Whenever a
+two-counter pass coincides with another car's entry from the remaining
+counter, both cars are flagged (`troca_provavel` stating both readings), and
+so is a two-counter pass in which every counter left out a car the others
+recorded at that moment. What cannot be flagged is the case with nothing
+beside it: the third counter typed nothing, and the other two typed the same
+wrong number.
 
 `scripts/contagem-invariante.mjs` measures this. Over 300 simulated
-real-scale races with the simulation's default error rates, no race had a car
-above the truth for any other reason (no crossing counted twice), 14 had one
-through a shared wrong number and 13 through a shared pit-lane entry. The
-simulation's wrong numbers are biased towards this (dropping a digit turns
-ten different cars into the same single-digit number), so real races should
-do better; the mechanism is real all the same.
+real-scale races (64 cars, three counters, the simulation's default error
+rates, wrong numbers weighted the way fingers slip on a keypad), no race had
+a car above the truth for any other reason (no crossing counted twice, and
+none through the pit lane), and 8 had one through a shared wrong number.
+
+**What the safe mode costs.** Held passes wait for a person. In the same 300
+races about 21 crossings per race were still uncounted at the end with no
+reviewer at all, nearly all of them behind a pit exit the (simulated) pit log
+missed: one missed exit holds every later pass of that car until somebody
+presses "Marcar saída". Before the pit-lane hold the figure was 1.3. The
+people at the pit lane exit matter more than before, and their flags are
+listed first for that reason.
 
 ### Car status
 
@@ -571,8 +588,14 @@ Two scripts run without a browser (see the top of each file):
   client modules, checks during the race that no car is ever above the truth
   before anybody reviews, accepts every suggestion, compares every car
   crossing by crossing with the script, plays the reviewer for what no
-  suggestion can settle, and ends with "rebuild equals published". It needs
-  the mode `confirmadas`, since publishing is what it checks.
+  suggestion can settle (lone entries, missed pit exits, shared wrong
+  numbers), and ends with "rebuild equals published". A difference caused by
+  two counters making the same mistake is tolerated only when a flag is open
+  on one of the cars that mistake left wrong (the over-counted or the
+  under-counted one; a flag on a bystander does not do). It needs the mode `confirmadas`,
+  since publishing is what it checks. With `--de 1 --ate 24` it runs one
+  race per seed and prints how many passed, failed, and passed only through
+  that tolerance.
 - `node baja-php/scripts/contagem-invariante.mjs --ate 300`: the invariant
   of [the hold rule](#the-hold-rule) over many simulated races, engine only,
   no database.
@@ -844,7 +867,7 @@ the start and never qualifies. Published times are whole seconds, rounded.
 
 | Folder | Content |
 |---|---|
-| `src/Baja/Contagem/Service/` | Loading, the two paths (`ContagemService`, `SnapshotService`), lap rows, score publishing, the public feed |
+| `src/Baja/Contagem/Service/` | `ContagemService` is the one door for pages and endpoints and only delegates: `Recount` (running the engine, lap rows, scores), `SnapshotService` and `FullRunSettlement` (the slow path), `SettingsChanges` and `TestPreset`, `RaceRecords` and `InferredExits` (events and decisions), `ScorePublisher`, `PublicFeed`, loading |
 | `src/Baja/Contagem/Sync/` | Upload endpoint logic, device tokens and heartbeats |
 | `src/Baja/Contagem/Access/` | Who may do what; counter links and the automatic `_CONT` permission |
 | `src/Baja/Contagem/Review/` | Review state, timelines, decision rules and conflict detection, race control, sources and settings forms |

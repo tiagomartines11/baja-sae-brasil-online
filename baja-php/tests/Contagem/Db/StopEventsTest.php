@@ -136,6 +136,44 @@ final class StopEventsTest extends DbTestCase
     }
 
     /**
+     * SITUATION: car 11 has its pass zero and is logged INTO the pit lane.
+     * Its exit is not logged yet (the volunteer at the exit is slow, or
+     * offline). The car goes out and crosses the line; both counters type
+     * it. A minute later the pit-log phone uploads the exit, timed before
+     * that crossing.
+     *
+     * EXPECTED:
+     *   - while the log says "inside", the pass is HELD: no lap is
+     *     published, even though two counters agree (a car in the pit lane
+     *     cannot be on the track; one of the two records is wrong, and a
+     *     person decides which);
+     *   - the moment the exit arrives, the lap is published. It is the
+     *     upload of the EXIT that must recount the car: no counter sends
+     *     anything more for it.
+     *
+     * WHAT WOULD GO WRONG: only uploads of passes recounted cars. The exit
+     * would be stored and the lap would stay unpublished until the next
+     * whole-race recalculation "corrected" it and reported a divergence.
+     */
+    public function testAnExitArrivingLaterReleasesThePassThatWasHeld(): void
+    {
+        $pitLog = $this->pitLogToken();
+        $counter1 = $this->issueToken($this->fontes[0]);
+        $counter2 = $this->issueToken($this->fontes[1]);
+        $this->recordCountedPass(self::CAR_A, $this->at(60));
+        $this->recompute();
+        $this->uploadStops($pitLog, [$this->stopEvent('box_entrada', self::CAR_A, 120)]);
+
+        $this->upload($counter1, [$this->entryPayload(self::newUuid(), self::CAR_A, $this->at(300))]);
+        $this->upload($counter2, [$this->entryPayload(self::newUuid(), self::CAR_A, $this->at(300))]);
+        $this->assertEquals(0, $this->publishedData(self::CAR_A)['VOLTAS'] ?? 0, 'held: the log still has the car inside');
+
+        $this->uploadStops($pitLog, [$this->stopEvent('box_saida', self::CAR_A, 240)]);
+
+        $this->assertEquals(1, $this->publishedData(self::CAR_A)['VOLTAS']);
+    }
+
+    /**
      * SITUATION: the prova has a classification field. Cars 11 and 22 are
      * classified; car 33 is present at the event but may not race.
      *

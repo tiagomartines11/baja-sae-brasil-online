@@ -16,7 +16,7 @@ import { startPage } from './page-setup.js';
 import { CountSession } from './count-session.js';
 import { generateUuid } from './uuid.js';
 import { buildEntriesCsv } from './csv-export.js';
-import { createFeedback, canVibrate } from './feedback.js';
+import { createFeedback, canVibrate, recordThenPrepareSound } from './feedback.js';
 import { carListIsKnown } from './warnings.js';
 import { createRecentList } from './contar-recentes.js';
 import { wireCountKeys } from './contar-teclas.js';
@@ -43,7 +43,7 @@ async function main() {
         getUnclassifiedCars: page.unclassifiedCars,
         getJanelaMs: page.janelaMs,
     });
-    const feedback = createFeedback({ preferences, windowRef: window });
+    const feedback = createFeedback({ preferences, windowRef: window, monotonicNow });
     const buffer = new NumberBuffer();
     const deviceHasTouch = window.matchMedia('(pointer: coarse)').matches;
     let currentMode = loadEntryMode(preferences, deviceHasTouch);
@@ -135,7 +135,9 @@ async function main() {
             // The entry controls are hidden; a stray Enter must not record.
             return;
         }
-        recordPass(pass.car, pass.typingMs).catch(() => {});
+        // First the pass (its time is taken and its disk write requested
+        // before recordPass returns), only then anything to do with sound.
+        recordThenPrepareSound(() => recordPass(pass.car, pass.typingMs), feedback).catch(() => {});
     }
 
     function confirmBuffer() {

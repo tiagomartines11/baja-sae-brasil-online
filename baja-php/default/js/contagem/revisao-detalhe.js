@@ -147,7 +147,9 @@ export function desenharDetalheDeAlerta(container, contexto) {
   const extras = acoesExtrasDoAlerta(alerta, estado.corrida.largada_ms).map((extra) => {
     switch (extra.acao) {
       case 'marcar_saida':
-        return el('button', { type: 'button', disabled: semDecisao, onclick: acoes.marcarSaida }, extra.rotulo);
+        return el('button', {
+          type: 'button', class: /\+1 volta/.test(extra.rotulo) ? 'soma-volta' : '', disabled: semDecisao, onclick: acoes.marcarSaida,
+        }, extra.rotulo);
       case 'descartar_passagem':
         return el('button', { type: 'button', disabled: semDecisao, onclick: () => acoes.descartarPassagem(extra.passagem) }, extra.rotulo);
       default:

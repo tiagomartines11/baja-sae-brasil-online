@@ -17,6 +17,12 @@ export function mensagemDeConflito(corpo) {
 // already written out ("motivo").
 export function descreverSugestao(alerta) {
   const sugestao = alerta?.sugestao;
+  if (alerta?.tipo === 'no_box' || alerta?.tipo === 'no_abastecimento') {
+    // No default on purpose (see acaoDeAceitar): the two ways out are put side by side.
+    const area = alerta.tipo === 'no_box' ? 'box' : 'abastecimento';
+    return `Sem sugestão automática. Se o carro saiu do ${area} e ninguém registrou, marque a saída; `
+      + 'se a passagem não aconteceu, descarte-a.';
+  }
   if (!sugestao) {
     return 'Sem sugestão automática: decida olhando a linha do tempo.';
   }

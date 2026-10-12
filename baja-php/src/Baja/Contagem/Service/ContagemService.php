@@ -3,15 +3,12 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Service;
 
+use Baja\Contagem\Engine\Data\CountResult;
 use Baja\Contagem\Engine\Data\Decision;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
-use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Engine;
-use Baja\Contagem\Engine\PublishedValues;
 use Baja\Contagem\Engine\Settings;
-use Baja\Model\ContagemDecisao;
-use Baja\Model\ContagemOcorrencia;
 use Baja\Model\Prova;
 
 /**
@@ -27,11 +24,22 @@ use Baja\Model\Prova;
  *
  * THE SLOW PATH: everything that needs the whole race (flags, lap times,
  * pace, best laps, statistics). snapshot() serves the last result of that
- * and recalculates it only when it is stale; see SnapshotService.
+ * and recalculates it only when it is stale; see SnapshotService and
+ * FullRunSettlement.
  *
  * A change made by a person (a decision, a race-control button, a setting)
  * can touch any car and must be visible to that person at once, so it does
  * both in one go: recomputeAndPublish().
+ *
+ * WHERE THE REST IS
+ *
+ *   Recount            running the engine, writing laps and scores
+ *   SettingsChanges    saving settings, the test preset, leaving a rehearsal
+ *   RaceRecords        storing race-control events and decisions
+ *   InferredExits      pit exits a reviewer marks
+ *   FullRunSettlement  what the slow path publishes and checks
+ *   PublishLog         when scores were last published; prova.tempo
+ *   ReconcileLog       corrections the slow path made to the fast path
  */
 final class ContagemService
 {
@@ -42,18 +50,39 @@ final class ContagemService
     private ChangeCounter $changes;
     private SnapshotService $snapshots;
     private RaceContext $context;
-    private ?PublishOutcome $lastPublishOutcome = null;
-    private ?RaceSnapshot $lastSnapshot = null;
+    private PublishLog $publishLog;
+    private ReconcileLog $reconcileLog;
+    private RaceRecords $records;
+    private SettingsChanges $settingsChanges;
+    private Recount $recount;
 
     private function __construct(Prova $prova)
     {
+        $eventoId = (string) $prova->getEventoId();
+        $provaId = (string) $prova->getProvaId();
+
         $this->prova = $prova;
         $this->loader = new EngineInputLoader($prova);
         $this->lapStore = new LapStore($prova);
         $this->countLock = new ProvaLock($prova);
-        $this->changes = new ChangeCounter((string) $prova->getEventoId(), (string) $prova->getProvaId());
+        $this->changes = new ChangeCounter($eventoId, $provaId);
         $this->snapshots = new SnapshotService($prova, $this, $this->changes);
-        $this->context = new RaceContext((string) $prova->getEventoId(), (string) $prova->getProvaId());
+        $this->context = new RaceContext($eventoId, $provaId);
+        $this->publishLog = new PublishLog($prova);
+        $this->reconcileLog = new ReconcileLog($eventoId, $provaId);
+        $this->records = new RaceRecords($prova);
+        $this->settingsChanges = new SettingsChanges($prova, $this, $this->publishLog);
+        $this->recount = new Recount(
+            $prova,
+            $this,
+            $this->loader,
+            $this->lapStore,
+            $this->changes,
+            $this->snapshots,
+            $this->context,
+            $this->publishLog,
+            $this->records
+        );
     }
 
     public static function forProva(Prova $prova): self
@@ -64,147 +93,6 @@ final class ContagemService
     public function getProva(): Prova
     {
         return $this->prova;
-    }
-
-    public function getSettings(): Settings
-    {
-        return Settings::fromArray($this->prova->getParams()->contagem ?? null);
-    }
-
-    /**
-     * Stores the settings in prova.params.contagem, leaving the rest of
-     * params alone, and applies them: a setting can change which passes
-     * count, so the whole race is recounted and republished.
-     */
-    public function saveSettings(Settings $settings): void
-    {
-        $this->withLock(function () use ($settings): void {
-            $this->prova->reload();
-            if ($this->getSettings()->permitirSimulacao && !$settings->permitirSimulacao) {
-                $this->refuseToLeaveSimulationBehind();
-                if ($this->hasSavedSettings()) {
-                    // Simulation off with the scaled-down timings still in
-                    // place would leave a real race with a one-second
-                    // matching window and nothing on screen to say so.
-                    throw new \InvalidArgumentException(
-                        'A predefinição de teste está aplicada. Use "Restaurar configurações salvas": ela devolve os tempos reais e desliga a simulação.'
-                    );
-                }
-            }
-            $this->storeSettings($settings);
-        });
-    }
-
-    /** True when the prova holds entries or stop events made by the simulation. */
-    public function hasSimulatedRows(): bool
-    {
-        $connection = \Propel\Runtime\Propel::getWriteConnection('resultados');
-        $statement = $connection->prepare(
-            'SELECT EXISTS (SELECT 1 FROM contagem_passagem p JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
-                             WHERE f.evento_id = :evento AND f.prova_id = :prova AND p.modo_entrada = :modo)
-                 OR EXISTS (SELECT 1 FROM contagem_ocorrencia o
-                             WHERE o.evento_id = :evento2 AND o.prova_id = :prova2 AND o.modo_entrada = :modo2)'
-        );
-        $statement->execute([
-            ':evento' => $this->prova->getEventoId(), ':prova' => $this->prova->getProvaId(), ':modo' => \Baja\Contagem\Sync\EntryWriter::MODE_SIMULATION,
-            ':evento2' => $this->prova->getEventoId(), ':prova2' => $this->prova->getProvaId(), ':modo2' => \Baja\Contagem\Sync\EntryWriter::MODE_SIMULATION,
-        ]);
-        $row = $statement->fetch(\PDO::FETCH_NUM);
-        return is_array($row) && (int) $row[0] === 1;
-    }
-
-    /**
-     * With simulation off, made-up passes left in the prova would be
-     * counted as a real race, and nothing would mark them any more.
-     */
-    private function refuseToLeaveSimulationBehind(): void
-    {
-        if ($this->hasSimulatedRows()) {
-            throw new \InvalidArgumentException(
-                'Esta prova tem registros de simulação. Use "Zerar corrida" (Controle de corrida) antes de desligar a simulação.'
-            );
-        }
-    }
-
-    /**
-     * "Predefinição de teste": replaces the time settings by ones scaled to
-     * a race with this average lap, and allows simulation. The settings in
-     * force before are kept, see restoreSavedSettings().
-     */
-    public function applyTestPreset(int $voltaMediaS): void
-    {
-        $this->withLock(function () use ($voltaMediaS): void {
-            $this->prova->reload();
-            TestPreset::remember($this->prova);
-            $this->storeSettings(TestPreset::applyTo($this->getSettings(), $voltaMediaS));
-        });
-    }
-
-    /**
-     * Leaves the test preset: puts back the TIME settings that were in
-     * force before it and switches simulation off. Every other setting is
-     * left as it is now.
-     *
-     * @param bool $confirmedPublishing the person has agreed that the counts start going to the official results
-     * @return bool false when there was nothing to put back
-     * @throws \InvalidArgumentException while simulated records exist (message for the person)
-     * @throws PublishingWouldStart when this would start publishing and that was not confirmed
-     */
-    public function restoreSavedSettings(bool $confirmedPublishing = false): bool
-    {
-        return $this->withLock(function () use ($confirmedPublishing): bool {
-            $this->prova->reload();
-            $restored = TestPreset::restored($this->prova);
-            if ($restored === null) {
-                return false;
-            }
-            $this->refuseToLeaveSimulationBehind();
-            if (!$this->getSettings()->publishesToScoring() && $restored->publishesToScoring() && !$confirmedPublishing) {
-                throw new PublishingWouldStart('Restaurar as configurações voltaria a publicar a contagem nos resultados oficiais.');
-            }
-            TestPreset::forget($this->prova);
-            $this->storeSettings($restored);
-            return true;
-        });
-    }
-
-    /** True while settings from before a test preset are kept, waiting to be restored. */
-    public function hasSavedSettings(): bool
-    {
-        return TestPreset::hasRemembered($this->prova);
-    }
-
-    /** The caller holds the lock. */
-    private function storeSettings(Settings $settings): void
-    {
-        $publishedBefore = $this->getSettings()->publishesToScoring();
-
-        $params = $this->prova->getParams() ?? new \stdClass();
-        $params->contagem = (object) $settings->toArray();
-        $this->prova->setParams($params);
-        $this->prova->save();
-        $result = $this->recomputeAndPublish();
-
-        if (!$publishedBefore && $settings->publishesToScoring()) {
-            // While publishing was off, starting the race here did not set
-            // the race clock of the results pages (the spreadsheet owned
-            // it). Now that the counts are ours, the clock must be too, or
-            // LAST would be measured from one start and shown against
-            // another.
-            $this->publishStartTime($result);
-        }
-    }
-
-    /**
-     * The start of the race is also kept in prova.tempo, in Unix seconds:
-     * the public results pages and the overlay take their race clock from
-     * that column.
-     */
-    private function publishStartTime(EngineResult $result): void
-    {
-        $startMs = $result->timeline->largadaMs;
-        $this->prova->setTempo($startMs === null ? null : intdiv($startMs, 1000));
-        $this->prova->save();
     }
 
     /**
@@ -220,6 +108,57 @@ final class ContagemService
     }
 
     // ------------------------------------------------------------------
+    // Settings (see SettingsChanges)
+    // ------------------------------------------------------------------
+
+    public function getSettings(): Settings
+    {
+        return Settings::fromArray($this->prova->getParams()->contagem ?? null);
+    }
+
+    /**
+     * Stores the settings and applies them: the whole race is recounted
+     * and republished.
+     *
+     * @throws \InvalidArgumentException with a message in Portuguese when the change is refused
+     */
+    public function saveSettings(Settings $settings): void
+    {
+        $this->settingsChanges->save($settings);
+    }
+
+    /** "Predefinição de teste": time settings scaled to this average lap; simulation allowed. */
+    public function applyTestPreset(int $voltaMediaS): void
+    {
+        $this->settingsChanges->applyTestPreset($voltaMediaS);
+    }
+
+    /**
+     * Leaves the test preset: the time settings from before it come back,
+     * simulation goes off, everything else stays.
+     *
+     * @return bool false when there was nothing to put back
+     * @throws \InvalidArgumentException while simulated records exist (message for the person)
+     * @throws PublishingWouldStart when this would start publishing and that was not confirmed
+     */
+    public function restoreSavedSettings(bool $confirmedPublishing = false): bool
+    {
+        return $this->settingsChanges->restore($confirmedPublishing);
+    }
+
+    /** True while the test preset is applied (settings from before it are kept, waiting to be restored). */
+    public function hasSavedSettings(): bool
+    {
+        return $this->settingsChanges->presetIsApplied();
+    }
+
+    /** True when the prova holds entries or stop events made by the simulation. */
+    public function hasSimulatedRows(): bool
+    {
+        return $this->settingsChanges->hasSimulatedRows();
+    }
+
+    // ------------------------------------------------------------------
     // The fast path
     // ------------------------------------------------------------------
 
@@ -231,18 +170,7 @@ final class ContagemService
      */
     public function recountCars(array $cars): PublishOutcome
     {
-        $cars = array_values(array_unique(array_map('intval', $cars)));
-        if ($cars === []) {
-            return new PublishOutcome();
-        }
-        $settings = $this->getSettings();
-        $count = Engine::countCars($this->loader->loadForCars($settings, $cars), $cars);
-
-        $this->lapStore->replaceCars($count->lapsByCar);
-        $outcome = (new ScorePublisher($this->prova, $settings))->publishCounts($count, $cars);
-        $this->notePublish($outcome);
-        $this->changes->markChanged();
-        return $outcome;
+        return $this->recount->forCars($cars);
     }
 
     // ------------------------------------------------------------------
@@ -263,54 +191,34 @@ final class ContagemService
 
     /**
      * Called by the slow path after a full run: fills in the lap timing
-     * columns, publishes BEST, and checks the fast path's work.
-     *
-     * The count lock is taken only for the publishing, and only briefly:
-     * recalculating points must not interleave with an upload doing the
-     * same. If an upload holds it, this waits for the next recalculation.
+     * columns, publishes BEST, and checks the fast path's work. See
+     * FullRunSettlement.
      *
      * @param int|null $changesSeen the change count the full run was computed from
      */
     public function settleFullRun(EngineResult $result, ?int $changesSeen): void
     {
-        $this->lapStore->updateTimingColumns($result->laps);
+        $settlement = new FullRunSettlement(
+            $this->prova,
+            $this,
+            $this->lapStore,
+            $this->changes,
+            $this->snapshots,
+            $this->publishLog,
+            $this->reconcileLog
+        );
+        $settlement->settle($result, $changesSeen);
+    }
 
-        try {
-            $this->withLock(function () use ($result, $changesSeen): void {
-                // Read again now that we hold the lock: publishing may have
-                // been switched off while the engine was running.
-                $this->prova->reload();
-                $publisher = new ScorePublisher($this->prova, $this->getSettings());
-
-                if ($changesSeen !== null && $this->changes->current() === $changesSeen) {
-                    // Nothing has changed since this run loaded the race, so
-                    // its counts are THE counts. Whatever the scoring system
-                    // holds that differs is a mistake of the fast path: it
-                    // is corrected here, and logged, because it should
-                    // never happen.
-                    $outcome = $publisher->reconcile($result);
-                    $this->reconcileLog()->add($outcome->corrections, Clock::nowMs());
-                    $this->notePublish($outcome);
-                    return;
-                }
-                if ($this->snapshots->storedHasSeenMoreThan($changesSeen)) {
-                    // A decision published a newer picture in the meantime.
-                    return;
-                }
-                // The race moved on while we computed. Counts are left to
-                // the fast path, which is ahead of us; a best lap is safe
-                // to publish, since it only ever improves or is corrected
-                // by the next run.
-                $bestSecondsByCar = [];
-                foreach ($result->cars as $carro => $state) {
-                    $bestSecondsByCar[$carro] = PublishedValues::bestLapSeconds($state->melhorVoltaMs);
-                }
-                $this->notePublish($publisher->publishBest($bestSecondsByCar, $result->timeline));
-            }, ProvaLock::WAIT_FOR_AN_UPLOAD_SECONDS);
-        } catch (LockBusy $busy) {
-            // Counts as a change, so the next recalculation tries again.
-            $this->changes->markChanged();
-        }
+    /**
+     * The corrections the check on the fast path made in the last day,
+     * newest first, for a visible warning on the review screen.
+     *
+     * @return array<int, array{carro: int, campo: string, publicado: mixed, calculado: int, quando_ms: int}>
+     */
+    public function lastReconcileCorrections(): array
+    {
+        return $this->reconcileLog->recent();
     }
 
     // ------------------------------------------------------------------
@@ -330,7 +238,7 @@ final class ContagemService
      *
      * @param int[] $cars
      */
-    public function countCarsOnly(array $cars): \Baja\Contagem\Engine\Data\CountResult
+    public function countCarsOnly(array $cars): CountResult
     {
         $cars = array_values(array_unique(array_map('intval', $cars)));
         return Engine::countCars($this->loader->loadForCars($this->getSettings(), $cars), $cars);
@@ -350,175 +258,85 @@ final class ContagemService
      */
     public function recomputeAndPublish(): EngineResult
     {
-        $changesSeen = $this->changes->current();
-        $input = $this->loadInput();
-        $result = Engine::run($input);
-
-        // Only the rows that differ, count and timing columns in one go: a
-        // decision usually touches one or two cars, and the lock is held
-        // while this runs.
-        $this->lapStore->replaceEveryCar($result->laps);
-        $publisher = new ScorePublisher($this->prova, $input->settings);
-        $outcome = $publisher->publishAll($result);
-        if ($outcome->skippedNoStart && $this->aStartWasEverRecorded()) {
-            // The race HAD a start and no longer has one (its only start
-            // was cancelled). The counts on the results page are ours and
-            // are now wrong, so they go back to zero. This is different
-            // from a prova that never started here, whose numbers may be
-            // imported totals and are left alone.
-            $outcome = $publisher->publishZeros();
-        }
-        $this->notePublish($outcome);
-        $this->context->refresh();
-
-        // The change count is raised first and the snapshot stored with the
-        // new value, so the snapshot counts as up to date.
-        $this->changes->markChanged();
-        $this->lastSnapshot = $this->snapshots->storeFromRun($input, $result, $changesSeen === null ? null : $changesSeen + 1);
-        return $result;
-    }
-
-    /** True when race control recorded a start for this race at any time, even one cancelled since. */
-    private function aStartWasEverRecorded(): bool
-    {
-        return \Baja\Model\ContagemOcorrenciaQuery::create()
-            ->filterByEventoId($this->prova->getEventoId())
-            ->filterByProvaId($this->prova->getProvaId())
-            ->filterByTipo(Ocorrencia::LARGADA)
-            ->count() > 0;
+        return $this->recount->wholeRace();
     }
 
     /** The snapshot stored by the last recomputeAndPublish() of this object, if any. */
     public function lastStoredSnapshot(): ?RaceSnapshot
     {
-        return $this->lastSnapshot;
+        return $this->recount->lastStoredSnapshot();
     }
 
     /** "Republicar tudo": rewrites every car's VOLTAS/LAST/BEST and recalculates points. */
     public function republishAll(): void
     {
-        $this->withLock(function (): void {
-            $input = $this->loadInput();
-            $outcome = (new ScorePublisher($this->prova, $input->settings))->publishAll(Engine::run($input), true);
-            $this->notePublish($outcome, true);
-            $this->changes->markChanged();
-        });
+        $this->recount->republishAll();
     }
 
     /** "Reconstruir": throws contagem_volta away and writes it again from the raw data. */
     public function rebuildLaps(): void
     {
-        $this->withLock(function (): void {
-            $this->lapStore->deleteAll();
-            $this->recomputeAndPublish();
-        });
+        $this->recount->rebuildLaps();
     }
 
     /**
-     * "Zerar corrida": archives and deletes the raw data of this prova
-     * (entries, decisions, race-control and pit events, imported totals),
+     * "Zerar corrida": archives and deletes the raw data of this prova,
      * sets the published counts back to zero and clears the start time.
      * Sources, counter links and devices are kept.
      */
     public function resetRace(string $usuario): void
     {
-        $this->withLock(function () use ($usuario): void {
-            (new RaceReset($this->prova))->archiveAndDeleteRawData($usuario);
-            $this->lapStore->deleteAll();
-
-            $settings = $this->getSettings();
-            $this->notePublish((new ScorePublisher($this->prova, $settings))->publishZeros(), true);
-            if ($settings->publishesToScoring()) {
-                $this->prova->setTempo(null);
-                $this->prova->save();
-            }
-            $this->context->refresh();
-            $this->snapshots->clear();
-            $this->reconcileLog()->clear();
-            $this->changes->markChanged();
-        });
+        $this->recount->resetRace($usuario, $this->reconcileLog);
     }
+
+    // ------------------------------------------------------------------
+    // Records people make (see RaceRecords, InferredExits)
+    // ------------------------------------------------------------------
 
     /**
      * Stores a race-control event and reruns everything. The caller must
-     * hold the lock.
-     *
-     * The start time of the race is also kept in prova.tempo, in Unix
-     * seconds: the public results pages and the overlay take their race
-     * clock from that column. It follows whatever start is in force after
-     * this event (a start can be moved, or cancelled).
+     * hold the lock. The race clock of the results pages (prova.tempo)
+     * follows whatever start is in force after this event.
      *
      * @param string $tipo one of Ocorrencia::TIPOS
      * @param int|null $substituiId the earlier event this one corrects or cancels, if any
      */
     public function recordOcorrencia(string $tipo, int $tsMs, ?int $carro, string $usuario, ?int $substituiId = null): void
     {
-        if (!in_array($tipo, Ocorrencia::TIPOS, true)) {
-            throw new \InvalidArgumentException('Tipo de ocorrência desconhecido: ' . $tipo);
-        }
-
-        $row = new ContagemOcorrencia();
-        $row->setEventoId($this->prova->getEventoId());
-        $row->setProvaId($this->prova->getProvaId());
-        $row->setTipo($tipo);
-        $row->setEquipeNumero($carro);
-        $row->setTsMs($tsMs);
-        $row->setUsuario($usuario);
-        $row->setCriadoEmMs(Clock::nowMs());
-        $row->setSubstituiId($substituiId);
-        $row->save();
-
+        $this->records->storeOcorrencia($tipo, $tsMs, $carro, $usuario, $substituiId);
         $result = $this->recomputeAndPublish();
-
         if ($this->getSettings()->publishesToScoring()) {
-            $this->publishStartTime($result);
+            $this->publishLog->publishStartTime($result);
         }
     }
 
     /**
-     * Gives an open-ended exclusion of a source an end ("the phone was
-     * fixed at 14:32"). The caller must hold the lock, and reruns the
-     * engine afterwards like after any decision.
-     *
-     * Decisions are never edited, so this is stored as two new ones: the
-     * open exclusion is undone, and a bounded one with the same source and
-     * the same start takes its place.
+     * Stores a correction and returns its id. Does not rerun the engine:
+     * the caller does that (recomputeAndPublish()) while still holding the
+     * lock, so it can answer with the state the decision produced.
+     */
+    public function storeDecision(Decision $decision, string $usuario, ?string $motivo): int
+    {
+        return $this->records->storeDecision($decision, $usuario, $motivo);
+    }
+
+    /**
+     * "Encerrar exclusão em h:mm:ss": replaces an open-ended exclusion of a
+     * source by one with an end. The caller holds the lock and reruns the
+     * engine afterwards.
      *
      * @return int the id of the new, bounded exclusion
      * @throws \InvalidArgumentException with a message in Portuguese, fit to show to the reviewer
      */
     public function closeOpenExclusion(int $decisaoId, int $tsFimMs, string $usuario, ?string $motivo): int
     {
-        $open = \Baja\Model\ContagemDecisaoQuery::create()->findPk($decisaoId);
-        $belongsHere = $open !== null
-            && $open->getEventoId() === $this->prova->getEventoId()
-            && $open->getProvaId() === $this->prova->getProvaId();
-        if (!$belongsHere || $open->getTipo() !== Decision::EXCLUIR_FONTE) {
-            throw new \InvalidArgumentException('Exclusão de fonte não encontrada.');
-        }
-        if ($open->getTsFimMs() !== null) {
-            throw new \InvalidArgumentException('Esta exclusão já tem um fim.');
-        }
-        $alreadyUndone = \Baja\Model\ContagemDecisaoQuery::create()
-            ->filterByTipo(Decision::DESFAZER)
-            ->filterByDesfazDecisaoId($decisaoId)
-            ->count() > 0;
-        if ($alreadyUndone) {
-            throw new \InvalidArgumentException('Esta exclusão já foi desfeita.');
-        }
-        if ($open->getTsMs() !== null && $tsFimMs <= (int) $open->getTsMs()) {
-            throw new \InvalidArgumentException('O fim da exclusão precisa ser depois do início.');
-        }
-
-        $this->storeDecision(Decision::desfazer(0, $decisaoId), $usuario, 'Substituída por uma exclusão com fim');
-        $bounded = Decision::excluirFonte(0, (int) $open->getFonteId(), $open->getTsMs() === null ? null : (int) $open->getTsMs(), $tsFimMs);
-        return $this->storeDecision($bounded, $usuario, $motivo ?? $open->getMotivo());
+        return $this->records->closeOpenExclusion($decisaoId, $tsFimMs, $usuario, $motivo);
     }
 
     /**
      * "Marcar saída do box" / "do abastecimento": records the exit nobody
      * logged, for a car that passed the line while logged inside an area.
-     * See InferredExits. The caller holds the lock and reruns the engine.
+     * The caller holds the lock and reruns the engine.
      *
      * @param string $area 'box' or 'abastecimento'
      * @return int the id of the new event
@@ -539,22 +357,6 @@ final class ContagemService
         InferredExits::cancel($this->prova, $decisaoId, $usuario);
     }
 
-    /**
-     * The corrections the check on the fast path made in the last day,
-     * newest first, for a visible warning on the review screen.
-     *
-     * @return array<int, array{carro: int, campo: string, publicado: mixed, calculado: int, quando_ms: int}>
-     */
-    public function lastReconcileCorrections(): array
-    {
-        return $this->reconcileLog()->recent();
-    }
-
-    private function reconcileLog(): ReconcileLog
-    {
-        return new ReconcileLog((string) $this->prova->getEventoId(), (string) $this->prova->getProvaId());
-    }
-
     // ------------------------------------------------------------------
     // Which cars take part
     // ------------------------------------------------------------------
@@ -566,8 +368,8 @@ final class ContagemService
     }
 
     /**
-     * Fills in the classification field for every present car that lacks
-     * it, and recounts: passes those cars already had now count.
+     * Fills in the classification field where it is blank, and recounts:
+     * passes those cars already had now count.
      *
      * @return array{marcados: int[], ja_nao: int[]} the cars now marked, and those left alone because their field was not blank
      */
@@ -580,32 +382,6 @@ final class ContagemService
             }
             return $outcome;
         });
-    }
-
-    /**
-     * Stores a correction and returns its id. Does not rerun the engine:
-     * the caller does that (recomputeAndPublish()) while still holding the
-     * lock, so it can answer with the state the decision produced.
-     */
-    public function storeDecision(Decision $decision, string $usuario, ?string $motivo): int
-    {
-        $row = new ContagemDecisao();
-        $row->setEventoId($this->prova->getEventoId());
-        $row->setProvaId($this->prova->getProvaId());
-        $row->setTipo($decision->tipo);
-        $row->setPassagemId($decision->passagemId);
-        $row->setFonteId($decision->fonteId);
-        $row->setEquipeNumero($decision->carro);
-        $row->setTsMs($decision->tsMs);
-        $row->setTsFimMs($decision->tsFimMs);
-        $row->setDesfazDecisaoId($decision->desfazDecisaoId);
-        $row->setOrigem($decision->origem);
-        $row->setUsuario($usuario);
-        $row->setMotivo($motivo);
-        $row->setCriadoEmMs(Clock::nowMs());
-        $row->save();
-
-        return (int) $row->getDecisaoId();
     }
 
     // ------------------------------------------------------------------
@@ -645,43 +421,12 @@ final class ContagemService
     /** When scores were last written to the scoring system; null if never (or unknown). */
     public function lastPublishedAtMs(): ?int
     {
-        $redis = RedisClient::get();
-        if ($redis === null) {
-            return null;
-        }
-        try {
-            $value = $redis->get($this->publishedAtKey());
-        } catch (\Throwable $error) {
-            return null;
-        }
-        return is_string($value) && $value !== '' ? (int) $value : null;
+        return $this->publishLog->lastPublishedAtMs();
     }
 
     /** What the most recent publish through this object did; null if none ran yet. */
     public function lastPublishOutcome(): ?PublishOutcome
     {
-        return $this->lastPublishOutcome;
-    }
-
-    private function notePublish(PublishOutcome $outcome, bool $always = false): void
-    {
-        $this->lastPublishOutcome = $outcome;
-        if (!$always && !$outcome->anythingChanged()) {
-            return;
-        }
-        $redis = RedisClient::get();
-        if ($redis === null) {
-            return;
-        }
-        try {
-            $redis->set($this->publishedAtKey(), (string) Clock::nowMs());
-        } catch (\Throwable $error) {
-            error_log('Contagem\ContagemService: could not record publish time: ' . $error->getMessage());
-        }
-    }
-
-    private function publishedAtKey(): string
-    {
-        return 'contagem:' . $this->prova->getEventoId() . ':' . $this->prova->getProvaId() . ':publicado_em_ms';
+        return $this->publishLog->lastOutcome();
     }
 }

@@ -63,6 +63,9 @@ final class FlagDetector
     /** @var array<int, true> ids of the EARLIER entry of each open "repetida" */
     private array $earlierRepeatEntryIds = [];
 
+    /** @var array<int, true> ids of the later entry of each "repetida" that turned out to be two passes, not a repeat */
+    private array $notRepeatsAfterAll = [];
+
     // What examining a lone entry can conclude, besides flagging it.
     private const NOT_LONE = 0;
     /** No other counter was supposed to be counting: the entry stands on its own. */
@@ -117,10 +120,9 @@ final class FlagDetector
     ): array {
         $openRepeatEntryIds = $duplicates->openRepeatEntryIds;
         $openRepeatCars = $duplicates->openRepeatCars;
-        foreach ($duplicates->flags as $repeatFlag) {
-            if (!$repeatFlag->autoResolvido) {
-                $this->earlierRepeatEntryIds[$repeatFlag->passagemIds[1]] = true;
-            }
+        $this->setAsideRepeatsThatAreTwoPasses($duplicates->flags, $groupsByCar);
+        foreach ($this->notRepeatsAfterAll as $laterEntryId => $unused) {
+            unset($openRepeatEntryIds[$laterEntryId]);
         }
         // This loop visits every pass group of the race; what it asks of
         // each one is kept as plain comparisons wherever possible.
@@ -192,8 +194,19 @@ final class FlagDetector
             } elseif ($group->retidaNaReferencia) {
                 $this->attach($this->heldPassFlag($group), $group);
             } elseif (isset($stops[$carro]) && ($area = $this->areaTheCarIsLoggedIn($carro, $group->tsMs)) !== null) {
-                $othersMissedIt = $lone === self::OTHERS_MISSED_IT ? true : ($lone === self::OTHERS_MAY_STILL_UPLOAD ? false : null);
-                $this->attach($this->passFlags->insideAnArea($group, $area, $othersMissedIt), $group);
+                $this->attach($this->passFlags->insideAnArea($group, $area), $group);
+            } elseif (
+                isset($group->entries[1]) && !isset($group->entries[2]) && !$group->adicionadoPorRevisor
+                && ($knot = $this->loneEntries->everyWitnessMayHaveMeantAnotherCar($group)) !== null
+            ) {
+                // One flag for the whole knot: the other passes in it are
+                // marked so that they do not raise the same flag again.
+                $this->attach($knot[0], $group);
+                foreach ($knot[1] as $otherPass) {
+                    if ($otherPass->alertasAbertos === []) {
+                        $otherPass->alertasAbertos[] = Flag::TROCA_PROVAVEL;
+                    }
+                }
             } elseif ($group->tempoEstimado) {
                 $this->attach($this->passFlags->estimatedTime($group), $group);
             }
@@ -255,11 +268,20 @@ final class FlagDetector
      *   this car just before it really passed), and voiding the later one
      *   would throw away the good record.
      *
+     * A "repetida" that turned out to be two passes (see
+     * setAsideRepeatsThatAreTwoPasses) is dropped here.
+     *
      * @param Flag[] $repeatFlags
+     * @return Flag[] the "repetida" flags that stand
      */
-    public function describeRepeats(array $repeatFlags): void
+    public function describeRepeats(array $repeatFlags): array
     {
+        $standing = [];
         foreach ($repeatFlags as $flag) {
+            if (!$flag->autoResolvido && isset($this->notRepeatsAfterAll[$flag->passagemIds[0]])) {
+                continue;
+            }
+            $standing[] = $flag;
             if ($flag->autoResolvido) {
                 $this->effect->describeEntryOutsideAnyGroup($flag, $flag->carros[0], (int) $flag->tsMs);
                 continue;
@@ -279,6 +301,62 @@ final class FlagDetector
             if ($earlierIsTheStray) {
                 $flag->sugestao = ['tipo' => Decision::ANULAR, 'passagem_id' => $earlierId];
                 $flag->motivo .= ' O segundo registro coincide com o das outras contagens; o que sobra é o primeiro.';
+            }
+        }
+        return $standing;
+    }
+
+    /**
+     * DuplicateFilter flags "the same counter, the same car, twice within
+     * the matching window" before anything is matched, and suggests voiding
+     * the later entry. That is right for a counter's double entry. It is
+     * wrong when EACH of the two entries sits in a group other counters
+     * agree on: then nobody typed anything twice. There are two candidate
+     * passes a few seconds apart, each seen by several people, and one of
+     * them is probably a wrong number (two counters typed this car for
+     * another one, just before this car really passed). That doubt has its
+     * own flag: the hold rule holds the later pass. A "repetida" per
+     * counter on top of it would suggest voiding each counter's entry of
+     * the later pass, which is usually the REAL one, and accepting those
+     * suggestions would dismantle it and leave the phantom counted with
+     * nothing open.
+     *
+     * So such a pair is not a "repetida": no flag, no suggestion. The
+     * later group is then examined like any other and gets the flag of a
+     * held pass.
+     *
+     * @param Flag[] $repeatFlags
+     * @param array<int, PassGroup[]> $groupsByCar
+     */
+    private function setAsideRepeatsThatAreTwoPasses(array $repeatFlags, array $groupsByCar): void
+    {
+        $pairsByCar = [];
+        foreach ($repeatFlags as $flag) {
+            if (!$flag->autoResolvido) {
+                $pairsByCar[$flag->carros[0]][] = $flag->passagemIds;
+            }
+        }
+        foreach ($pairsByCar as $carro => $pairs) {
+            $groupOfEntry = [];
+            foreach ($groupsByCar[$carro] ?? [] as $group) {
+                foreach ($group->entries as $entry) {
+                    $groupOfEntry[$entry->id] = $group;
+                }
+            }
+            foreach ($pairs as [$laterId, $earlierId]) {
+                $later = $groupOfEntry[$laterId] ?? null;
+                $earlier = $groupOfEntry[$earlierId] ?? null;
+                $areTwoSharedGroups = $later !== null && $earlier !== null && $later !== $earlier
+                    && count($later->realSourceIds()) >= 2 && count($earlier->realSourceIds()) >= 2
+                    // (A `dispersa` group is not counters agreeing: a repeat
+                    // that a late entry of another counter happens to sit
+                    // near is still a repeat.)
+                    && !$later->dispersa && !$earlier->dispersa;
+                if ($areTwoSharedGroups) {
+                    $this->notRepeatsAfterAll[$laterId] = true;
+                } else {
+                    $this->earlierRepeatEntryIds[$earlierId] = true;
+                }
             }
         }
     }
@@ -347,19 +425,18 @@ final class FlagDetector
         return self::OTHERS_MISSED_IT;
     }
 
-    /** The flag of a group that is held, by whichever rule held it. */
+    /** The flag of a group that is held, by whichever rule held it. One flag per pass, saying everything. */
     private function heldPassFlag(PassGroup $group): Flag
     {
-        $flag = $group->motivoRetencao === PassGroup::RETIDA_DISPERSAO
+        if ($group->motivoRetencao === PassGroup::RETIDA_NO_BOX) {
+            return $this->passFlags->insideAnArea($group, RaceTimeline::AREA_BOX);
+        }
+        if ($group->motivoRetencao === PassGroup::RETIDA_NO_ABASTECIMENTO) {
+            return $this->passFlags->insideAnArea($group, RaceTimeline::AREA_ABASTECIMENTO);
+        }
+        return $group->motivoRetencao === PassGroup::RETIDA_DISPERSAO
             ? $this->passFlags->spreadTooWide($group, $this->settings->agreementSpreadMs())
             : $this->passFlags->tooCloseToThePreviousPass($group);
-        // One flag per pass: when the car was also logged inside an area,
-        // this flag says so instead of a second one.
-        $area = $this->areaTheCarIsLoggedIn($group->carro, $group->tsMs);
-        if ($area !== null) {
-            $flag->motivo .= sprintf(' Neste momento o carro constava como dentro do %s.', $area === RaceTimeline::AREA_BOX ? 'box' : 'abastecimento');
-        }
-        return $flag;
     }
 
     /** @return string|null the area (RaceTimeline::AREA_*) whose log says the car is inside at that moment */

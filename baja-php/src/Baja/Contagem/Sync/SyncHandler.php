@@ -164,6 +164,8 @@ final class SyncHandler
                 $written = $writer->storeStopEvents($upload->pitEvents);
                 $result['stored_uuids'] = $written['uuids'];
                 $result['stop_events_stored'] = $written['new'] > 0;
+                // A stop changes which passes of that car are held.
+                $result['cars'] = $written['cars'];
             } elseif (in_array($device['fonte_tipo'], [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA], true)) {
                 $entries = $writer->storeEntries($upload->entries);
                 $voids = $writer->storeVoids($upload->voids);

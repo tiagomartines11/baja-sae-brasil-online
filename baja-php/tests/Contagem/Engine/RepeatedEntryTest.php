@@ -345,4 +345,72 @@ final class RepeatedEntryTest extends EngineTestCase
             $this->assertSame([$doubleTap], $race->run('02:00')->autoVoidedEntryIds, "Entries at $first and $second.");
         }
     }
+
+    /**
+     * SITUATION (found by the simulation runner): car 3 crosses at 12:00
+     * and counters 1 and 2 both type "6" for it (12:00.0 and 12:01.5);
+     * counter 3 types nothing. Car 6 really crosses nineteen seconds
+     * later, typed right by all three (12:19.0, 12:20.2, 12:19.9). So
+     * counters 1 and 2 each have car 6 twice within the 20 s window.
+     *
+     * WHAT WENT WRONG: besides holding the second pass (right), the engine
+     * raised a "repetida" for counter 1 and one for counter 2, each
+     * suggesting to void that counter's SECOND entry: its correct record
+     * of the real pass. Accepting every suggestion voided both, left
+     * counter 3's entry alone, then suggested voiding that too. The real
+     * pass was gone, the phantom stayed counted, and nothing was open.
+     *
+     * EXPECTED: when both of a counter's entries sit in groups that other
+     * counters share, it is not a repeated entry: it is two candidate
+     * passes. No "repetida" flag at all. The doubt has one flag, the held
+     * pass ("passagem_proxima_demais"), with no suggestion. No suggestion
+     * anywhere would void an entry of either pass, and after "accepting
+     * every suggestion" (there is none) the held pass is intact with its
+     * flag still open on car 6.
+     */
+    public function testACounterInTwoPassesOtherCountersShareIsNotARepeat(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([6]);
+        $race->pass(6, '06:00');
+        $phantom = [$race->entry(1, 6, '12:00'), $race->entry(2, 6, '12:01.5')];
+        $real = [$race->entry(1, 6, '12:19'), $race->entry(2, 6, '12:20.2'), $race->entry(3, 6, '12:19.9')];
+
+        $result = $race->run('13:00');
+
+        $this->assertSame($phantom, $result->groupOfEntry($phantom[0])->entryIds());
+        $this->assertCount(3, $result->groupOfEntry($real[0])->entries);
+        $this->assertSame([], array_filter($result->flags, fn(Flag $flag) => $flag->tipo === Flag::REPETIDA), 'Not a repeat: no "repetida" flag, open or not.');
+        $flag = $this->assertSingleOpenFlag($result, Flag::PASSAGEM_PROXIMA_DEMAIS);
+        $this->assertNull($flag->sugestao);
+        $this->assertContains($real[2], $flag->passagemIds);
+        $this->assertSame(Flag::DUVIDA_A_MENOS, $flag->contagemEmDuvida);
+        foreach ($result->flags as $anyFlag) {
+            $this->assertNull($anyFlag->sugestao, 'No suggestion touches either pass.');
+        }
+        $this->assertLapCounts([6 => 2], $result, 'The first crossing, 06:00 and the phantom; the real pass is held.');
+        $this->assertTrue($result->groupOfEntry($real[0])->retida);
+    }
+
+    /**
+     * SITUATION: the ordinary repeat next to it, to show where the line
+     * is: counters 1 and 2 record car 6 at 12:00; counter 1 alone types it
+     * again at 12:12.
+     *
+     * EXPECTED: the second entry stands alone, so this IS a repeated entry
+     * by counter 1: a "repetida" flag suggesting to void it.
+     */
+    public function testACounterAloneInItsSecondEntryIsStillARepeat(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([6]);
+        $race->pass(6, '12:00', [1, 2]);
+        $repeat = $race->entry(1, 6, '12:12');
+
+        $flag = $this->assertSingleOpenFlag($race->run('13:00'), Flag::REPETIDA);
+
+        $this->assertSame(['tipo' => 'anular', 'passagem_id' => $repeat], $flag->sugestao);
+    }
 }

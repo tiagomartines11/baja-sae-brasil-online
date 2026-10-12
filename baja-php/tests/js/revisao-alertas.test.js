@@ -20,8 +20,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, decisaoMarcarSaida, fraseDeDuvida, passagensParaDescartar,
-  perguntaAoConfirmar, perguntaAoDescartar, rotuloDeDescartar,
+  acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, decisaoMarcarSaida, fraseDeDuvida, marcarSaidaSomaVolta,
+  passagensParaDescartar, perguntaAoConfirmar, perguntaAoDescartar, perguntaAoMarcarSaida, rotuloDeDescartar,
 } from '../../default/js/contagem/revisao-alertas.js';
 import { aplicarResposta } from '../../default/js/contagem/revisao-conexao.js';
 import {
@@ -197,56 +197,111 @@ test('"+1 volta" is only promised where confirming really adds a pass', () => {
 // SITUATION: car 41 was logged INTO the pit lane and nobody logged it out.
 // Then counters 1 and 2 both see it cross the line (entries 10 and 11).
 //
-// WHAT WENT WRONG: the flag offered only "Está correto, parar de avisar".
-// The stay stayed open, so every later pass of car 41 was flagged again and
-// its status and stop statistics stayed wrong.
+// WHAT WENT WRONG (round 3): the flag offered only "Está correto, parar de
+// avisar". The stay stayed open, so every later pass of car 41 was flagged
+// again and its status and stop statistics stayed wrong.
 //
-// EXPECTED: A is "Marcar saída do box" (the server suggests it when two
-// counters agree: a missed exit is the likely cause). It records an exit one
-// second before the pass and changes no count, so nothing is asked. The
-// other choice, "Descartar esta passagem", has its own button and does ask.
-// There is no K.
-test('a pass seen by two counters while the car is logged in the pit lane: A marks the exit', () => {
+// SINCE ROUND 4b the pass is HELD while the flag is open: it does not count
+// until a person decides. That makes both ways out change the race, so
+// there is no default.
+//
+// EXPECTED: no A (and nothing to send for it), no K. Two buttons, always
+// both: "Marcar saída do box (+1 volta)", which asks first and says what it
+// does (the exit one second before the pass, the stay closed, the pass
+// counts), and "Descartar esta passagem", which asks too and does NOT say
+// the car loses a lap: a held pass was never counted.
+test('a pass seen by two counters while the car is logged in the pit lane: no default, two buttons', () => {
   const noBox = {
-    tipo: 'no_box', carros: [41], passagem_ids: [10, 11], ts_ms: LARGADA + 600000, efeito_de_confirmar: 'nenhum',
-    sugestao: { tipo: 'marcar_saida', area: 'box', equipe_numero: 41, ts_ms: LARGADA + 599000 },
+    tipo: 'no_box', carros: [41], passagem_ids: [10, 11], ts_ms: LARGADA + 600000, assinatura: 'sig',
+    sugestao: null, efeito_de_confirmar: 'mais_uma_passagem', contagem_em_duvida: 'a_menos',
   };
 
-  assert.deepEqual(acaoDeAceitar(noBox, ESTADO), { rotulo: 'Marcar saída do box', pergunta: null });
-  assert.deepEqual(decisaoAceitar(noBox), { tipo: 'marcar_saida', area: 'box', equipe_numero: 41, ts_ms: LARGADA + 599000 });
-  assert.equal(acaoDeConfirmar(noBox), null, 'no "está correto" any more');
+  assert.equal(acaoDeAceitar(noBox, ESTADO), null, 'A is drawn disabled');
+  assert.deepEqual(pedidosDaSugestao(noBox, ESTADO), [], 'and the A key sends nothing');
+  assert.equal(acaoDeConfirmar(noBox), null, 'no K, although confirming would add a pass');
 
   const extras = acoesExtrasDoAlerta(noBox, LARGADA);
-  assert.deepEqual(extras.map((extra) => extra.acao), ['descartar_passagem']);
-  assert.match(perguntaAoDescartar(noBox, extras[0].passagem), /Os 2 registros dela são anulados de uma vez e o carro perde uma volta/);
+  assert.deepEqual(extras.map((extra) => extra.rotulo), ['Marcar saída do box (+1 volta)', 'Descartar esta passagem']);
+
+  assert.equal(marcarSaidaSomaVolta(noBox), true);
+  const pergunta = perguntaAoMarcarSaida(noBox);
+  assert.match(pergunta, /um segundo antes desta passagem/);
+  assert.match(pergunta, /a parada é encerrada/);
+  assert.match(pergunta, /passa a CONTAR.*\(\+1 volta\)/);
+  assert.match(pergunta, /passagens seguintes dele retidas pelo mesmo motivo.*também passam a contar/);
+  assert.deepEqual(decisaoMarcarSaida(noBox), { tipo: 'marcar_saida', area: 'box', equipe_numero: 41, ts_ms: LARGADA + 599000 });
+
+  const descartar = perguntaAoDescartar(noBox, extras[1].passagem);
+  assert.match(descartar, /Os 2 registros dela são anulados de uma vez\./);
+  assert.doesNotMatch(descartar, /perde uma volta/, 'a held pass does not count today');
 
   // The request says which entries the reviewer was looking at, like any other.
-  const pedido = pedidoParaAlerta(decisaoAceitar(noBox), noBox, ESTADO, 'abc');
+  const pedido = pedidoParaAlerta(decisaoMarcarSaida(noBox), noBox, ESTADO, 'abc');
   assert.deepEqual(pedido.passagem_ids, [10, 11]);
   assert.equal(pedido.assinatura, 'abc');
 });
 
+// A server from before round 4b suggested "marcar saída" on such a flag. A
+// screen that is newer than the server must still not offer it on A.
+test('a suggestion on a pit-lane flag from an older server is not offered on A', () => {
+  const antigo = {
+    tipo: 'no_box', carros: [41], passagem_ids: [10, 11], ts_ms: LARGADA + 600000, assinatura: 'sig',
+    sugestao: { tipo: 'marcar_saida', area: 'box', equipe_numero: 41, ts_ms: LARGADA + 599000 },
+  };
+  assert.equal(acaoDeAceitar(antigo, ESTADO), null);
+  assert.deepEqual(pedidosDaSugestao(antigo, ESTADO), []);
+  assert.equal(marcarSaidaSomaVolta(antigo), true, 'no "contagem_em_duvida" key: two entries are taken for two counters');
+});
+
 // SITUATION: the same, at the fueling station, but only ONE counter typed
-// the pass (entry 20).
+// the pass (entry 20). That is a lone entry: it does not count, and it would
+// not count after the exit is marked either (it still needs a second
+// witness).
 //
-// EXPECTED: the server suggests discarding it (a stray entry is the likely
-// cause), and A asks before doing so. "Marcar saída do abastecimento" is
-// still there as the other button, worked out from the flag: the same car,
-// one second before the pass.
-test('a pass seen by one counter while the car is at the fueling station: A discards it, after asking', () => {
+// EXPECTED: the same two buttons, but "Marcar saída do abastecimento" has no
+// "(+1 volta)" and asks nothing, because it changes no count.
+test('a pass seen by one counter while the car is at the fueling station: marking the exit promises no lap', () => {
   const noAbastecimento = {
-    tipo: 'no_abastecimento', carros: [7], passagem_ids: [20], ts_ms: LARGADA + 900000, efeito_de_confirmar: 'mais_uma_passagem',
-    sugestao: { tipo: 'descartar_passagem', passagem_id: 20 },
+    tipo: 'no_abastecimento', carros: [7], passagem_ids: [20], ts_ms: LARGADA + 900000,
+    sugestao: null, efeito_de_confirmar: 'mais_uma_passagem', contagem_em_duvida: null,
   };
 
-  const aceitar = acaoDeAceitar(noAbastecimento, ESTADO);
-  assert.equal(aceitar.rotulo, 'Descartar esta passagem');
-  assert.match(aceitar.pergunta, /Descartar esta passagem do carro 7\?/);
-
-  assert.deepEqual(acoesExtrasDoAlerta(noAbastecimento, LARGADA).map((extra) => extra.rotulo), ['Marcar saída do abastecimento']);
+  assert.equal(acaoDeAceitar(noAbastecimento, ESTADO), null);
+  assert.deepEqual(acoesExtrasDoAlerta(noAbastecimento, LARGADA).map((extra) => extra.rotulo),
+    ['Marcar saída do abastecimento', 'Descartar esta passagem']);
+  assert.equal(marcarSaidaSomaVolta(noAbastecimento), false);
+  assert.equal(perguntaAoMarcarSaida(noAbastecimento), null, 'no count changes, nothing to ask');
   assert.deepEqual(decisaoMarcarSaida(noAbastecimento),
     { tipo: 'marcar_saida', area: 'abastecimento', equipe_numero: 7, ts_ms: LARGADA + 899000 });
   assert.equal(decisaoMarcarSaida({ tipo: 'solitaria', carros: [7], ts_ms: 1 }), null, 'only for a car logged inside an area');
+});
+
+// The chip of a pass held because the car was logged inside says so.
+test('a pass held because the car is logged in the pit lane says why on its chip', () => {
+  assert.match(descricaoDoPapel({ papel: 'retida', motivo_retencao: 'no_box' }), /RETIDA: o carro constava como dentro do box/);
+  assert.match(descricaoDoPapel({ papel: 'retida', motivo_retencao: 'no_abastecimento' }), /dentro do abastecimento/);
+});
+
+// SITUATION (a new shape of "troca provável"): counters 1 and 2 typed car
+// 14 (entries 101, 102) and each of them skipped car 41, which the others
+// saw. The flag names both cars, has no lone entry and no suggestion.
+//
+// EXPECTED: it is drawn like any flag without a suggestion: A disabled,
+// nothing sent for A, K as the server says, and no extra button that would
+// act on a pass by guesswork. The entries are moved one by one from their
+// chips.
+test('a swap flag with two cars and no suggestion offers no default', () => {
+  const troca = {
+    tipo: 'troca_provavel', carros: [14, 41], passagem_ids: [101, 102], assinatura: 'sig', sugestao: null,
+    efeito_de_confirmar: 'nenhum',
+  };
+  assert.equal(acaoDeAceitar(troca, ESTADO), null);
+  assert.deepEqual(pedidosDaSugestao(troca, ESTADO), []);
+  assert.deepEqual(acaoDeConfirmar(troca), { rotulo: 'Está correto, parar de avisar', maisUmaPassagem: false });
+  assert.deepEqual(acoesExtrasDoAlerta(troca, LARGADA), []);
+  assert.match(descreverSugestao(troca), /Sem sugestão automática/);
+  const chip = acoesDaEntrada({ id: 101, decisoes: [], grupo: { contado: true, passagem_ids: [101, 102], soma_ao_confirmar: false } });
+  assert.ok(chip.some((opcao) => opcao.acao === 'reatribuir'), 'each entry can be moved to the other car');
 });
 
 test('the lane says when an exit was marked by a reviewer, and the history says who did it', () => {
@@ -403,12 +458,10 @@ test('the request for a suggestion is built in one place, and says whether the s
   }]);
   assert.equal(sugestaoPedeConfirmacao(troca), true);
 
-  const saida = {
-    tipo: 'no_box', carros: [41], passagem_ids: [10, 11], assinatura: 'sig2', ts_ms: 5000,
-    sugestao: { tipo: 'marcar_saida', area: 'box', equipe_numero: 41, ts_ms: 4000 },
-  };
-  assert.deepEqual(pedidosDaSugestao(saida, ESTADO).map((pedido) => pedido.decisao), [saida.sugestao]);
-  assert.equal(sugestaoPedeConfirmacao(saida), false, 'marking an exit changes no count');
+  const anular = { tipo: 'repetida', carros: [30], passagem_ids: [200, 201], assinatura: 'sig2', sugestao: { tipo: 'anular', passagem_id: 201 } };
+  assert.deepEqual(pedidosDaSugestao(anular, ESTADO).map((pedido) => pedido.decisao), [anular.sugestao]);
+  assert.equal(sugestaoPedeConfirmacao(anular), false, 'voiding the second entry of a repeat is not asked about');
+  const saida = anular;
 
   const antes = { tipo: 'antes_da_largada', carros: [9], passagem_ids: [50], sugestao: { tipo: 'confirmar', passagem_id: 50 }, efeito_de_confirmar: 'mais_uma_passagem' };
   assert.equal(sugestaoPedeConfirmacao(antes), true);

@@ -7,6 +7,7 @@ use Baja\Contagem\Engine\CarStatus;
 use Baja\Contagem\Engine\Data\CarState;
 use Baja\Contagem\Engine\Data\Flag;
 use Baja\Contagem\Engine\Data\Ocorrencia;
+use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\RaceTimeline;
 use Baja\Contagem\Engine\Settings;
 use Baja\Tests\Contagem\Engine\Support\EngineTestCase;
@@ -225,76 +226,76 @@ final class FuelingTest extends EngineTestCase
 
     /**
      * SITUATION: car 6 made its first crossing at 03:00. The fueling log
-     * says it went in at 05:00 and came out at 09:00. At 07:00 all three
-     * counters record car 6 at the counting line.
+     * says it went in at 05:00 and nobody logs it out. All three counters
+     * record car 6 at the counting line at 07:00 and again at 10:00.
      *
      * WHAT WENT WRONG: one of the two records is wrong. Either the counters
-     * took another car for car 6, or the fueling log has the wrong car or
-     * time.
+     * took another car for car 6, or somebody missed the car leaving.
      *
-     * EXPECTED: the lap counts (three counters agree), and a
-     * "no_abastecimento" flag marks it. Three people saw the car at the
-     * line, so the likely story is that it had left the station and nobody
-     * logged the exit: the suggestion is "marcar saída", an exit one second
-     * before the pass. Confirming the flag adds nothing (the pass counts
-     * already); the lap cannot be a best lap.
+     * EXPECTED: the engine does not guess. Both passes are HELD (reason
+     * "no_abastecimento"): not counted, pending, each with a
+     * "no_abastecimento" flag that has NO suggestion, says the count may be
+     * a lap short and that confirming adds a pass.
      *
-     * After the reviewer accepts, the exit is an event like any other
-     * (marked as inferred): the stay ends there, the flag is gone, the
-     * count has not moved, and the real exit logged later at 09:00 is an
-     * exit with no entry.
+     * The reviewer who knows the car did leave records the exit nobody
+     * logged, one second before the first pass ("marcar saída", an
+     * ordinary exit event marked as inferred). From then on the car is
+     * outside: BOTH passes count by the ordinary rules, the flags are gone,
+     * and the lanes can show the exit as inferred.
      */
-    public function testAPassWhileTheCarIsLoggedInTheFuelingStationIsFlagged(): void
+    public function testAPassWhileTheCarIsLoggedInTheFuelingStationIsHeldUntilItsExitIsRecorded(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
         $race->pass(6, '03:00');
         $race->fuelIn(6, '05:00');
-        $race->pass(6, '07:00');
-        $race->fuelOut(6, '09:00');
+        $first = $race->pass(6, '07:00');
+        $second = $race->pass(6, '10:00');
 
-        $result = $race->run('10:00');
+        $result = $race->run('11:00');
 
-        $flag = $this->assertSingleOpenFlag($result, Flag::NO_ABASTECIMENTO);
+        $this->assertLapCounts([6 => 0], $result);
+        $held = $result->groupOfEntry($first[1]);
+        $this->assertTrue($held->retida);
+        $this->assertSame(PassGroup::RETIDA_NO_ABASTECIMENTO, $held->motivoRetencao);
+        $flags = $this->openFlags($result, Flag::NO_ABASTECIMENTO);
+        $this->assertCount(2, $flags);
+        $this->assertCount(2, $result->openFlags());
+        $flag = $flags[0];
         $this->assertSame([6], $flag->carros);
-        $this->assertCount(3, $flag->passagemIds);
+        $this->assertSame(array_values($first), $flag->passagemIds);
         $this->assertSame(RaceScenario::ms('07:00'), $flag->tsMs);
-        $this->assertSame(
-            ['tipo' => 'marcar_saida', 'area' => 'abastecimento', 'equipe_numero' => 6, 'ts_ms' => RaceScenario::ms('06:59')],
-            $flag->sugestao
-        );
-        $this->assertSame(Flag::EFEITO_NENHUM, $flag->efeitoDeConfirmar);
-        $this->assertNull($flag->contagemEmDuvida);
+        $this->assertNull($flag->sugestao, 'No default action: the reviewer chooses between the exit and discarding.');
+        $this->assertSame(Flag::EFEITO_MAIS_UMA_PASSAGEM, $flag->efeitoDeConfirmar);
+        $this->assertSame(Flag::DUVIDA_A_MENOS, $flag->contagemEmDuvida);
         $this->assertStringContainsString('abastecimento', $flag->motivo);
-        $this->assertLapCounts([6 => 1], $result);
-        $this->assertSame([Flag::NO_ABASTECIMENTO], $result->laps[1]->grupo->alertasAbertos);
-        $this->assertFalse($result->laps[1]->elegivelMelhorVolta);
+        $this->assertStringContainsString('ficou retida', $flag->motivo);
+        $this->assertSame(0, $race->countCars('11:00', [6])->lapCount(6), 'The fast path holds it too.');
 
-        $inferredExit = $race->accept($flag);
-        $fixed = $race->run('10:00');
+        $inferredExit = $race->inferredExit('abastecimento', 6, RaceScenario::ms('06:59'));
+        $fixed = $race->run('11:00');
         $this->assertNoOpenFlags($fixed);
-        $this->assertLapCounts([6 => 1], $fixed);
+        $this->assertLapCounts([6 => 2], $fixed);
+        $this->assertFalse($fixed->groupOfEntry($first[1])->retida);
+        $this->assertFalse($fixed->groupOfEntry($second[1])->retida);
+        $this->assertSame(2, $race->countCars('11:00', [6])->lapCount(6));
         $this->assertSame([[RaceScenario::ms('05:00'), RaceScenario::ms('06:59')]], $fixed->timeline->fuelIntervals[6]);
         $exits = array_values(array_filter($fixed->timeline->stopEvents, fn(array $event) => $event['ocorrencia_id'] === $inferredExit));
         $this->assertTrue($exits[0]['inferida'], 'The lanes can show it as an inferred exit.');
         $this->assertFalse($fixed->timeline->stopEvents[0]['inferida']);
-        $this->assertCount(1, $fixed->timeline->unpairedStops, 'The exit logged at 09:00 has no entry left to pair with.');
     }
 
     /**
      * SITUATION: the same stay, but only counter 2 records car 6 at the
-     * line at 07:00; the other two are online and have nothing. In a
-     * second race counter 3's phone is offline since 06:00, so nobody
-     * knows yet whether it has the pass.
+     * line at 07:00; the other two are online and have nothing.
      *
-     * EXPECTED: one counter against the log is more likely an entry that
-     * should not exist. The flag is still "no_abastecimento" (the log
-     * says more than "only one counter saw it"), it names the counter, and
-     * the suggestion is to discard the pass. Accepting voids the entry and
-     * empties the queue. While another counter may still upload the pass,
-     * the flag has no suggestion yet.
+     * EXPECTED: the flag is "no_abastecimento" (the log says more than
+     * "only one counter saw it"), names the counter, and has no
+     * suggestion. One counter's pass did not count anyway, so it is not
+     * "held" and the count is not in doubt on its account; confirming it
+     * would add a pass.
      */
-    public function testAPassOnlyOneCounterSawWhileTheCarIsLoggedInsideIsSuggestedForDiscarding(): void
+    public function testAPassOnlyOneCounterSawWhileTheCarIsLoggedInsideIsFlaggedWithoutASuggestion(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
@@ -305,20 +306,13 @@ final class FuelingTest extends EngineTestCase
         $result = $race->run('10:00');
 
         $flag = $this->assertSingleOpenFlag($result, Flag::NO_ABASTECIMENTO);
-        $this->assertSame(['tipo' => 'descartar_passagem', 'passagem_id' => $lone], $flag->sugestao);
+        $this->assertNull($flag->sugestao);
         $this->assertSame(2, $flag->fonteId);
-        $this->assertStringContainsString('Só Contagem 2', $flag->motivo);
+        $this->assertStringContainsString('Só uma contagem', $flag->motivo);
         $this->assertSame(Flag::EFEITO_MAIS_UMA_PASSAGEM, $flag->efeitoDeConfirmar);
+        $this->assertNull($flag->contagemEmDuvida);
+        $this->assertFalse($result->groupOfEntry($lone)->retida);
         $this->assertLapCounts([6 => 0], $result);
-
-        $race->syncedThrough(3, '06:00');
-        $this->assertNull($this->assertSingleOpenFlag($race->run('10:00'), Flag::NO_ABASTECIMENTO)->sugestao);
-        $race->syncedThrough(3, '10:00');
-
-        $race->accept($flag);
-        $fixed = $race->run('10:00');
-        $this->assertNoOpenFlags($fixed);
-        $this->assertLapCounts([6 => 0], $fixed);
     }
 
     /**

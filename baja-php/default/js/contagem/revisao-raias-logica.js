@@ -216,6 +216,14 @@ const MOTIVOS_FORA_DE_USO = {
   tempo_desconhecido: 'horário desconhecido: o aparelho não tinha o horário oficial; não entra na contagem sozinho',
 };
 
+// Why a pass two counters agree on is held back, for the chip's tooltip.
+const MOTIVOS_DE_RETENCAO = {
+  proxima_demais: 'RETIDA: perto demais da passagem anterior do carro para ser outra volta (não conta até um revisor confirmar)',
+  dispersao: 'RETIDA: os registros dos contadores estão afastados demais entre si para valerem como a mesma passagem (não conta até um revisor confirmar)',
+  no_box: 'RETIDA: o carro constava como dentro do box neste momento (não conta até um revisor marcar a saída do box ou descartar a passagem)',
+  no_abastecimento: 'RETIDA: o carro constava como dentro do abastecimento neste momento (não conta até um revisor marcar a saída do abastecimento ou descartar a passagem)',
+};
+
 // What the pass group of an entry is to the count, in words.
 export function descricaoDoPapel(grupo) {
   switch (grupo.papel) {
@@ -234,9 +242,7 @@ export function descricaoDoPapel(grupo) {
     case 'pendente':
       return 'ainda não conta como volta';
     case 'retida':
-      return grupo.motivo_retencao === 'dispersao'
-        ? 'RETIDA: os registros dos contadores estão afastados demais entre si para valerem como a mesma passagem (não conta até um revisor confirmar)'
-        : 'RETIDA: perto demais da passagem anterior do carro para ser outra volta (não conta até um revisor confirmar)';
+      return MOTIVOS_DE_RETENCAO[grupo.motivo_retencao] ?? MOTIVOS_DE_RETENCAO.proxima_demais;
     default:
       // An answer from before "papel" existed.
       return grupo.contado ? `volta ${grupo.numero_volta}` : 'ainda não conta como volta';

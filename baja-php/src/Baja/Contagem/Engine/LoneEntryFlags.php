@@ -33,7 +33,7 @@ use Baja\Contagem\Engine\Data\PassGroup;
  *      - the others' pass is doubtful and the lone entry's car was not
  *        due: no suggestion, both stories in the reason. (When the lone
  *        entry cannot be a pass of its car at all, an impossibly short
- *        lap, it is not treated as a swap; see 4.) The plain "move the
+ *        lap, the suggestion is to void it.) The plain "move the
  *        lone entry" is never suggested towards a pass that is in doubt:
  *        that would feed a pass that probably did not happen and leave
  *        the lone entry's car short with nothing open.
@@ -184,6 +184,58 @@ final class LoneEntryFlags
         return $nearest;
     }
 
+    /**
+     * The other shape of a wrong number: NO lone entry. Every counter who
+     * recorded this car is missing from an agreed pass of ANOTHER car at
+     * the same moment. Each of them may have typed this car's number for
+     * the car it lacks, and then this pass never happened, although two
+     * counters "agree" on it (it happened in a simulated race: cars 9 and
+     * 7 crossed together, one counter typed 8 for the 9 and another typed
+     * 8 for the 7, and car 8 gained a lap with nothing to see).
+     *
+     * The same is then true of the other passes in the knot: seen from the
+     * entries alone, any ONE of those cars may be the one that did not
+     * pass. So there is one flag for the whole knot, about every car and
+     * every entry in it, raised on the first of its passes.
+     *
+     * Flagged whatever the timing says, with no suggestion: it changes no
+     * count, it puts the passes in front of a person. Only when ALL the
+     * witnesses of a pass are in that situation: one counter missing
+     * another car is an ordinary miss next to an ordinary pass.
+     *
+     * @param PassGroup $group a group of exactly two counters' entries that no reviewer vouched for
+     * @return array{0: Flag, 1: PassGroup[]}|null the flag and the other passes of the knot
+     */
+    public function everyWitnessMayHaveMeantAnotherCar(PassGroup $group): ?array
+    {
+        $lacking = [];
+        $others = [];
+        foreach ($group->entries as $entry) {
+            $other = $this->swapFinder->agreedPassOfAnotherCarWithout($entry);
+            if ($other === null) {
+                return null;
+            }
+            $lacking[] = sprintf('%s não tem o carro %d', $this->passFlags->sourceName($entry->fonteId), $other->carro);
+            $others[spl_object_id($other)] = $other;
+        }
+        $cars = [$group->carro];
+        $entryIds = $group->entryIds();
+        foreach ($others as $other) {
+            $cars[] = $other->carro;
+            $entryIds = array_merge($entryIds, $other->entryIds());
+        }
+        $flag = new Flag(Flag::TROCA_PROVAVEL, array_values(array_unique($cars)), $entryIds, 'grupo-' . $group->anchorEntryId());
+        $flag->tsMs = $group->tsMs;
+        $flag->motivo = sprintf(
+            'Os carros %s foram registrados no mesmo momento, e todas as contagens que registraram o carro %d (%s) deixaram de registrar outro deles: %s. Um desses carros pode não ter passado: as contagens que o registraram teriam digitado o número dele no lugar do carro que lhes falta. Confira qual e mova os registros.',
+            implode(', ', array_unique($cars)),
+            $group->carro,
+            $this->passFlags->sourceNames($group),
+            implode('; ', $lacking)
+        );
+        return [$flag, array_values($others)];
+    }
+
     private function setApart(PassGroup $group, PassGroup $agreed): Flag
     {
         $entry = $group->entries[0];
@@ -202,17 +254,13 @@ final class LoneEntryFlags
         return $flag;
     }
 
-    /** Case 2 of the class comment; null when neither story is believable. */
-    private function swap(PassGroup $group, PassGroup $partner): ?Flag
+    /** Case 2 of the class comment. Both cars are always flagged together, whatever the timing says. */
+    private function swap(PassGroup $group, PassGroup $partner): Flag
     {
         $entry = $group->entries[0];
         $loneCarWasDue = $this->wasDueAtTheLine($group);
         $partnerIsHeld = $partner->retidaNaReferencia;
         $partnerIsDoubtful = $partnerIsHeld || $this->isTooCloseToAnotherAgreedPass($partner);
-
-        if ($partnerIsDoubtful && !$loneCarWasDue && $this->cannotBeAPassOfItsCar($group)) {
-            return null;
-        }
 
         $resemblance = DigitSimilarity::describe(DigitSimilarity::rank($entry->carro, $partner->carro));
         $sourceName = $this->passFlags->sourceName($entry->fonteId);
@@ -261,6 +309,20 @@ final class LoneEntryFlags
             return $flag;
         }
         $flag->passagemIds = array_merge([$entry->id], $partner->entryIds());
+        if (!$loneCarWasDue && $this->cannotBeAPassOfItsCar($group)) {
+            // Neither story helps: the others' pass is in doubt, and the
+            // lone entry cannot be a pass of its own car. Both cars are
+            // still shown together; the one safe thing to suggest is what a
+            // lone entry at an impossible moment always gets.
+            $flag->sugestao = ['tipo' => Decision::ANULAR, 'passagem_id' => $entry->id];
+            $flag->motivo = $bothStories . sprintf(
+                ' A passagem do carro %d está em dúvida, e o carro %d não pode ter passado neste momento (ficaria com uma volta curta demais); a sugestão é anular o registro de %s.',
+                $partner->carro,
+                $entry->carro,
+                $sourceName
+            );
+            return $flag;
+        }
         $flag->motivo = $bothStories . ($loneCarWasDue
             ? sprintf(' As duas leituras são plausíveis (uma passagem do carro %d também era esperada neste momento), então a decisão é do revisor.', $entry->carro)
             : sprintf(' A passagem do carro %d está em dúvida (perto demais de outra passagem dele), então não há sugestão: a decisão é do revisor.', $partner->carro));

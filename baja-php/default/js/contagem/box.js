@@ -20,7 +20,7 @@ import {
 } from './pit-session.js';
 import { generateUuid } from './uuid.js';
 import { buildPitEventsCsv } from './csv-export.js';
-import { createFeedback } from './feedback.js';
+import { createFeedback, recordThenPrepareSound } from './feedback.js';
 import { NumberBuffer } from './entry-modes.js';
 import { carListIsKnown, teamNameOf } from './warnings.js';
 import { createPitLists, describeGroups, describeTipo } from './box-listas.js';
@@ -35,7 +35,7 @@ async function main() {
 
     const session = new PitSession({ store, clock, generateUuid });
     const flow = new PitFlow({ preferences, fuelingEnabled: page.fuelingEnabled() });
-    const feedback = createFeedback({ preferences, windowRef: window });
+    const feedback = createFeedback({ preferences, windowRef: window, monotonicNow });
     const buffer = new NumberBuffer();
     const field = element('campo-numero');
     const tapGuard = new TapGuard();
@@ -107,7 +107,8 @@ async function main() {
         // lands on the car it was aimed at; then they are put in order.
         layoutHold.noteTap(car, nowMs);
         window.setTimeout(render, LAYOUT_HOLD_MS + 20);
-        recordEvent(car, tipo).catch(() => {});
+        // First the event, only then anything to do with sound (feedback.js).
+        recordThenPrepareSound(() => recordEvent(car, tipo), feedback).catch(() => {});
     }
 
     // ---- the choices: area, then entry or exit ----

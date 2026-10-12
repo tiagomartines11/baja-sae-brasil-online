@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Engine;
 
+use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\PassGroup;
 
 /**
@@ -83,6 +84,39 @@ final class SwapFinder
         if ($best !== null) {
             // One real pass can only explain one stray entry.
             $this->takenGroups[spl_object_id($best)] = true;
+        }
+        return $best;
+    }
+
+    /**
+     * A pass of another car, agreed by two or more counters, within the
+     * matching window of this entry, that the entry's own counter does not
+     * have: the car the counter may have meant. The closest in time, or
+     * null. (Unlike findPartnerFor, this claims nothing: several entries
+     * may point at the same pass.)
+     */
+    public function agreedPassOfAnotherCarWithout(Entry $entry): ?PassGroup
+    {
+        $firstIndex = Stats::countAtMost($this->groupTimes, $entry->tsMs - $this->janelaMs - 1);
+        $groupCount = count($this->groupsInTimeOrder);
+        $best = null;
+        $bestMs = PHP_INT_MAX;
+        for ($index = $firstIndex; $index < $groupCount; $index++) {
+            $candidate = $this->groupsInTimeOrder[$index];
+            if ($candidate->primeiroTsMs > $entry->tsMs + $this->janelaMs) {
+                break;
+            }
+            if ($candidate->carro === $entry->carro || $candidate->dispersa || $candidate->hasSource($entry->fonteId)) {
+                continue;
+            }
+            if ($this->carsThatTakePart !== [] && !isset($this->carsThatTakePart[$candidate->carro])) {
+                continue;
+            }
+            $distanceMs = abs($candidate->tsMs - $entry->tsMs);
+            if ($distanceMs < $bestMs && $distanceMs <= $this->janelaMs && count($candidate->realSourceIds()) >= 2) {
+                $best = $candidate;
+                $bestMs = $distanceMs;
+            }
         }
         return $best;
     }
