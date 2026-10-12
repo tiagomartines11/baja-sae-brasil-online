@@ -49,7 +49,8 @@ final class RaceControl
         'cancelada' => 'Ocorrência cancelada.',
         'restaurada' => 'Ocorrência restaurada: voltou a valer.',
         'saida_corrigida' => 'Horário da saída corrigido.',
-        'saida_cancelada' => 'Saída cancelada: o carro volta a constar como dentro da área.',
+        'saida_confirmada' => 'Saída confirmada: passou a constar no registro, marcada por você.',
+        'saida_cancelada' => 'Saída cancelada: no registro o carro volta a constar como dentro da área. Se as contagens mostram o carro dando voltas, o sistema volta a presumir a saída (veja "Saídas presumidas").',
         'republicado' => 'Todos os valores foram republicados.',
         'reconstruido' => 'As voltas foram reconstruídas.',
         'zerado' => 'A corrida foi zerada. Os dados apagados ficaram guardados no arquivo.',
@@ -99,6 +100,9 @@ final class RaceControl
             case 'corrigir_saida':
                 InferredExits::correct($service, $post, $username);
                 return 'saida_corrigida';
+            case 'confirmar_saida':
+                InferredExits::confirmAssumed($service, $post, $username);
+                return 'saida_confirmada';
             case 'cancelar_saida':
                 InferredExits::cancel($service, $post, $username);
                 return 'saida_cancelada';

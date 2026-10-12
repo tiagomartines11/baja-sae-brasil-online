@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Engine;
 
+use Baja\Contagem\Engine\Data\Ocorrencia;
+
 /**
  * Numbers about pit lane and fueling station stops, for the public feed and
  * the CSV export: is the car inside right now, how often it stopped, for
@@ -66,22 +68,60 @@ final class StopStats
      * they did happen. Two events at the same millisecond are listed with
      * the one recorded later first.
      *
-     * @return array<int, array{area: string, tipo: string, carro: int, ts_ms: int}>
+     * Each event says how it is known:
+     * - `inferida`: an exit a reviewer recorded ("marcar saída"), not the
+     *   person at the gate;
+     * - `presumida`: an exit nobody recorded at all. The engine assumed it
+     *   while counting, because the car was seen lapping (HoldRule). It is
+     *   stored nowhere and is listed at its assumed time. Every other
+     *   event has `presumida` false, so a consumer never has to ask
+     *   whether the key is there.
+     *
+     * An assumed exit is listed only while the log has NO exit for that
+     * stay. When the gate does log one (late), that event is the record
+     * and the list shows it alone: two exits for one stay would have an
+     * overlay announce the car leaving twice.
+     *
+     * @return array<int, array{area: string, tipo: string, carro: int, ts_ms: int, inferida: bool, presumida: bool}>
      */
     public static function recentEvents(RaceTimeline $timeline, int $limit): array
     {
         if ($limit <= 0) {
             return [];
         }
-        $recent = [];
-        foreach (array_reverse(array_slice($timeline->stopEvents, -$limit)) as $event) {
-            $recent[] = [
+        $events = [];
+        foreach ($timeline->stopEvents as $event) {
+            $events[] = [
                 'area' => $event['area'],
                 'tipo' => $event['tipo'],
                 'carro' => $event['carro'],
                 'ts_ms' => $event['ts_ms'],
+                'inferida' => $event['inferida'],
+                'presumida' => false,
             ];
         }
-        return $recent;
+        $hasAssumedExits = false;
+        foreach ($timeline->assumedExits as $exit) {
+            if ($exit['saida_registrada_ms'] !== null) {
+                continue;
+            }
+            $hasAssumedExits = true;
+            $events[] = [
+                'area' => $exit['area'],
+                'tipo' => $exit['area'] === RaceTimeline::AREA_BOX ? Ocorrencia::BOX_SAIDA : Ocorrencia::ABASTECIMENTO_SAIDA,
+                'carro' => $exit['carro'],
+                'ts_ms' => $exit['ts_ms'],
+                'inferida' => false,
+                'presumida' => true,
+            ];
+        }
+        if ($hasAssumedExits) {
+            // The logged events are in time order already; the assumed
+            // exits were appended and have to find their place. (usort is
+            // stable: events at the same millisecond keep their order.)
+            usort($events, fn(array $a, array $b) => $a['ts_ms'] <=> $b['ts_ms']);
+        }
+        return array_reverse(array_slice($events, -$limit));
     }
+
 }

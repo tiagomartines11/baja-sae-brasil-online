@@ -434,7 +434,7 @@ final class HoldRuleTest extends EngineTestCase
         $this->assertSame(7, $race->countCars('23:00', [9])->lapCount(9));
         $this->assertSame([[RaceScenario::ms('13:00'), RaceScenario::ms('15:59')]], $result->timeline->pitIntervals[9]);
         $this->assertSame(
-            [['area' => 'box', 'carro' => 9, 'ts_ms' => RaceScenario::ms('15:59'), 'entrada_ms' => RaceScenario::ms('13:00')]],
+            [['area' => 'box', 'carro' => 9, 'ts_ms' => RaceScenario::ms('15:59'), 'entrada_ms' => RaceScenario::ms('13:00'), 'saida_registrada_ms' => null]],
             $result->timeline->assumedExits
         );
         $this->assertFalse($result->timeline->isInPitAt(9, RaceScenario::ms('23:00')));

@@ -103,12 +103,14 @@ final class RaceTimeline
      * still had a car inside while the counters agreed on two passes of it
      * a lap apart (see HoldRule). Each is ['area', 'carro', 'ts_ms' (the
      * assumed exit: one second before the first of those passes),
-     * 'entrada_ms' (the entry of the stay it ends)]. They are not stored
+     * 'entrada_ms' (the entry of the stay it ends), 'saida_registrada_ms'
+     * (the exit the log has for that stay, later than the assumed one, or
+     * null when the log has none)]. They are not stored
      * anywhere: the stays above already end there, so everything that
      * reads this timeline agrees with the count. Only the cars that were
      * counted have theirs worked out.
      *
-     * @var array<int, array{area: string, carro: int, ts_ms: int, entrada_ms: int}>
+     * @var array<int, array{area: string, carro: int, ts_ms: int, entrada_ms: int, saida_registrada_ms: ?int}>
      */
     public array $assumedExits = [];
 
@@ -268,8 +270,11 @@ final class RaceTimeline
     public function assumeExit(string $area, int $carro, int $entryMs, int $exitMs): void
     {
         $stays = $area === self::AREA_ABASTECIMENTO ? $this->fuelIntervals[$carro] ?? [] : $this->pitIntervals[$carro] ?? [];
-        foreach ($stays as $index => [$inMs]) {
+        $loggedExitMs = null;
+        foreach ($stays as $index => [$inMs, $outMs]) {
             if ($inMs === $entryMs) {
+                // (A stay the finish closed has no exit in the log either.)
+                $loggedExitMs = $outMs !== null && $outMs !== $this->encerramentoMs ? $outMs : null;
                 $stays[$index][1] = max($entryMs, $exitMs);
             }
         }
@@ -278,7 +283,13 @@ final class RaceTimeline
         } else {
             $this->pitIntervals[$carro] = $stays;
         }
-        $this->assumedExits[] = ['area' => $area, 'carro' => $carro, 'ts_ms' => max($entryMs, $exitMs), 'entrada_ms' => $entryMs];
+        $this->assumedExits[] = [
+            'area' => $area,
+            'carro' => $carro,
+            'ts_ms' => max($entryMs, $exitMs),
+            'entrada_ms' => $entryMs,
+            'saida_registrada_ms' => $loggedExitMs,
+        ];
     }
 
     /**

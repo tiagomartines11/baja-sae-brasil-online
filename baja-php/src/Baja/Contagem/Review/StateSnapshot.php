@@ -91,6 +91,10 @@ final class StateSnapshot
             'configuracoes' => $input->settings->toArray(),
             'paradas_sem_par' => TimelineStops::describeUnpaired($result->timeline),
             'paradas_sem_horario' => TimelineStops::describeUnknownTime($result->timeline),
+            // Exits the engine assumed (the log had the car inside while it
+            // was plainly lapping). Nothing is stored for them; the screen
+            // offers "Confirmar saída", which stores one.
+            'saidas_presumidas' => TimelineStops::describeAssumedExits($result->timeline),
             'historico' => $history['linhas'],
             'historico_ha_mais' => $history['ha_mais'],
             'historico_em_vigor' => DecisionHistory::inForce($prova, $activeDecisionIds),

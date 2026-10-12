@@ -192,6 +192,8 @@ final class StopEventsTest extends DbTestCase
      * released passes (the very first pass is pass zero). After the next whole-race count,
      * the phone's answer no longer lists car 11 as inside, and the report
      * has one finished stay for it, ending one second before the 7:40 pass.
+     * The public feed lists that exit among the latest stops, marked
+     * "presumida".
      */
     public function testAnExitTheCountAssumedIsSeenByThePitPhoneAndTheStopsReport(): void
     {
@@ -223,6 +225,14 @@ final class StopEventsTest extends DbTestCase
         $this->assertSame(0, $row['box_dentro']);
         $this->assertSame(1, $row['box_paradas']);
         $this->assertSame(59000, $row['box_total_ms'], 'from 6:40 to one second before the 7:40 pass');
+
+        // The overlay's "latest stops" announces the exit, saying that
+        // nobody logged it.
+        $latest = $this->feedAt(721)['ultimas_paradas'][0];
+        $this->assertSame('box_saida', $latest['tipo']);
+        $this->assertSame(self::CAR_A, $latest['carro']);
+        $this->assertSame($this->at(459), $latest['ts_ms']);
+        $this->assertTrue($latest['presumida']);
     }
 
     /**

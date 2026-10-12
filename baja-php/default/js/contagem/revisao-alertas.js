@@ -59,7 +59,12 @@ const TIPOS_QUE_SOMAM_PASSAGEM = [
 //                        left (mark the exit) or the pass did not happen
 //                        (discard it). The pass is HELD meanwhile, and K
 //                        would count it while leaving the car logged inside
-const TIPOS_SEM_CONFIRMAR = ['repetida', 'tempo_desconhecido', 'no_box', 'no_abastecimento'];
+//   saida_presumida      the engine assumed an exit nobody logged and went on
+//                        counting. "Confirmar" there has one meaning, and
+//                        it is the button "Confirmar saída": the exit is
+//                        STORED. A K that only hid the flag would leave the
+//                        log wrong under the same word
+const TIPOS_SEM_CONFIRMAR = ['repetida', 'tempo_desconhecido', 'no_box', 'no_abastecimento', 'saida_presumida'];
 
 const ROTULOS_DE_CONTAR = {
   carro_nao_classificado: 'Contar mesmo assim (+1 volta)',
@@ -208,6 +213,36 @@ export function perguntaAoMarcarSaida(alerta) {
     + 'Se o carro não saiu e a passagem foi um engano dos contadores, use "Descartar esta passagem". Pode ser desfeito pelo histórico.';
 }
 
+// ---- an exit the engine assumed ------------------------------------------------
+//
+// The pit log had the car inside while two counters agreed on two passes of
+// it a lap apart. The engine assumed the exit nobody logged (one second
+// before the first of those passes), counted both, and raised the
+// informational flag "saida_presumida" on that first pass. Nothing is stored.
+//
+// The flag does not carry the area or the time of the exit; the state lists
+// every assumed exit ("saidas_presumidas": area, carro, ts_ms, entrada_ms).
+// The flag's is the latest one of its car at or before the flag's pass.
+// Null when the state has none (the log was put right meanwhile).
+export function saidaPresumidaDoAlerta(alerta, estado) {
+  if (alerta?.tipo !== 'saida_presumida' || alerta.ts_ms === null || alerta.ts_ms === undefined) {
+    return null;
+  }
+  const carro = (alerta.carros ?? [])[0];
+  const doCarro = (estado?.saidas_presumidas ?? [])
+    .filter((saida) => saida.carro === carro && saida.ts_ms <= alerta.ts_ms)
+    .sort((a, b) => b.ts_ms - a.ts_ms);
+  return doCarro[0] ?? null;
+}
+
+// "Confirmar saída": stores the assumed exit as an exit marked by the
+// reviewer, with the same decision "Marcar saída" uses. Null when the flag
+// has no assumed exit in the state.
+export function decisaoConfirmarSaida(alerta, estado) {
+  const saida = saidaPresumidaDoAlerta(alerta, estado);
+  return saida ? { tipo: 'marcar_saida', area: saida.area, equipe_numero: saida.carro, ts_ms: saida.ts_ms } : null;
+}
+
 // What A does on a flag: {rotulo, pergunta}. Null when the flag has no
 // suggestion (the button is then drawn disabled).
 //
@@ -312,15 +347,26 @@ export function rotuloDeDescartar(passagem, largadaMs) {
 //   {acao: 'marcar_saida', rotulo}
 //   {acao: 'descartar_passagem', passagem, rotulo}
 //   {acao: 'adicionar_passagem', rotulo}   opens the form where the time is typed
+//   {acao: 'confirmar_saida', rotulo}      on an exit the engine assumed; needs `estado`
 // An action that is already what A does on this flag is left out.
 //
 // A pass while the car is logged inside an area always gets both of its
 // buttons, in this order: "Marcar saída do … (+N voltas)" (the parenthesis
 // only when it makes passes count) and "Descartar esta passagem".
-export function acoesExtrasDoAlerta(alerta, largadaMs = null) {
+export function acoesExtrasDoAlerta(alerta, largadaMs = null, estado = null) {
   const sugerido = alerta?.sugestao?.tipo ?? null;
   const acoes = [];
   const area = areaDoAlerta(alerta);
+
+  if (alerta?.tipo === 'saida_presumida') {
+    // The car left (store the exit) or it did not (the pass did not happen).
+    if (decisaoConfirmarSaida(alerta, estado)) {
+      acoes.push({ acao: 'confirmar_saida', rotulo: 'Confirmar saída' });
+    }
+    for (const passagem of passagensParaDescartar({ ...alerta, passagens: [] })) {
+      acoes.push({ acao: 'descartar_passagem', passagem, rotulo: 'Descartar esta passagem' });
+    }
+  }
 
   if (area !== null) {
     if (decisaoMarcarSaida(alerta)) {
@@ -354,7 +400,8 @@ export function perguntaAoDescartar(alerta, passagem) {
   // Only a pass that counts today takes a lap with it: one of the two of a
   // short lap. A HELD pass (too close to the previous one, or typed while
   // the car is logged in the pit lane) does not count, so nothing is lost.
-  const contaHoje = alerta.tipo === 'volta_curta' || alerta.contagem_em_duvida === 'a_mais';
+  // A pass counted on an assumed exit counts today as well.
+  const contaHoje = alerta.tipo === 'volta_curta' || alerta.tipo === 'saida_presumida' || alerta.contagem_em_duvida === 'a_mais';
   return `Descartar ${qual} do carro ${(alerta.carros ?? []).join(', ')}? ${registros}`
     + `${contaHoje ? ' e o carro perde uma volta' : ''}. Pode ser desfeito pelo histórico.`;
 }

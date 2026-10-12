@@ -105,6 +105,15 @@ export function rotuloDaMarca(ocorrencia, nome) {
   if (ocorrencia.carro === null || ocorrencia.carro === undefined) {
     return { texto: nome, aviso: null };
   }
+  if (ocorrencia.presumida) {
+    // Not in the pit log at all: the engine assumed it, because the car was
+    // seen lapping. Neither logged nor marked by anybody, and it says so.
+    return {
+      texto: `${ocorrencia.carro} saída presumida`,
+      aviso: 'SAÍDA PRESUMIDA: ninguém registrou esta saída; o sistema a presumiu porque dois contadores viram o carro na linha '
+        + 'em duas passagens seguidas. "Confirmar saída", no alerta ou no controle de corrida, grava a saída',
+    };
+  }
   if (ocorrencia.inferida) {
     return {
       texto: `${ocorrencia.carro} ${nome} (inferida)`,

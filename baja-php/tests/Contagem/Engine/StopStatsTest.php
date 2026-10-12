@@ -296,9 +296,9 @@ final class StopStatsTest extends EngineTestCase
 
         $this->assertSame(
             [
-                ['area' => 'box', 'tipo' => Ocorrencia::BOX_ENTRADA, 'carro' => 3, 'ts_ms' => RaceScenario::ms('13:00')],
-                ['area' => 'box', 'tipo' => Ocorrencia::BOX_SAIDA, 'carro' => 5, 'ts_ms' => RaceScenario::ms('12:20')],
-                ['area' => 'abastecimento', 'tipo' => Ocorrencia::ABASTECIMENTO_SAIDA, 'carro' => 12, 'ts_ms' => RaceScenario::ms('12:10')],
+                ['area' => 'box', 'tipo' => Ocorrencia::BOX_ENTRADA, 'carro' => 3, 'ts_ms' => RaceScenario::ms('13:00'), 'inferida' => false, 'presumida' => false],
+                ['area' => 'box', 'tipo' => Ocorrencia::BOX_SAIDA, 'carro' => 5, 'ts_ms' => RaceScenario::ms('12:20'), 'inferida' => false, 'presumida' => false],
+                ['area' => 'abastecimento', 'tipo' => Ocorrencia::ABASTECIMENTO_SAIDA, 'carro' => 12, 'ts_ms' => RaceScenario::ms('12:10'), 'inferida' => false, 'presumida' => false],
             ],
             StopStats::recentEvents($timeline, 3)
         );
@@ -372,5 +372,112 @@ final class StopStatsTest extends EngineTestCase
         $race->pitIn(7, '11:00');
 
         $this->assertSame([$firstEntry, $exit], array_column($this->timelineOf($race)->unpairedStops, 'ocorrencia_id'));
+    }
+
+    /**
+     * Car 9 laps every three minutes, is logged INTO the pit lane at 13:00
+     * and never out, then is recorded by everybody at 16:00 and 19:00: the
+     * engine assumes it left at 15:59 (see HoldRuleTest). Car 4 enters the
+     * pit lane at 17:00.
+     */
+    private function raceWithAnAssumedExit(): RaceScenario
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        foreach (['00:20', '03:20', '06:20', '09:20', '12:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->pitIn(9, '13:00');
+        $race->pass(9, '16:00');
+        $race->pass(9, '19:00');
+        $race->pitIn(4, '17:00');
+        return $race;
+    }
+
+    /**
+     * SITUATION: the race above. An overlay shows the latest entries and
+     * exits ("últimas paradas").
+     *
+     * WHAT WENT WRONG (before): the exit the engine assumed is stored
+     * nowhere, so the list showed car 9 going in and never coming out,
+     * while its laps kept counting.
+     *
+     * EXPECTED: the assumed exit is listed as an exit from the pit lane at
+     * its assumed time, 15:59, in time order with the logged events (after
+     * car 9's entry, before car 4's), marked `presumida`. It is not
+     * `inferida` (no reviewer recorded it). Every logged event says
+     * `presumida` false. The log itself (`stopEvents`) is untouched: it
+     * holds the two entries and nothing else.
+     */
+    public function testAnExitTheEngineAssumedIsListedAmongTheLatestEventsMarkedAsPresumed(): void
+    {
+        $result = $this->raceWithAnAssumedExit()->run('20:00');
+
+        $this->assertSame(
+            [
+                ['area' => 'box', 'tipo' => Ocorrencia::BOX_ENTRADA, 'carro' => 4, 'ts_ms' => RaceScenario::ms('17:00'), 'inferida' => false, 'presumida' => false],
+                ['area' => 'box', 'tipo' => Ocorrencia::BOX_SAIDA, 'carro' => 9, 'ts_ms' => RaceScenario::ms('15:59'), 'inferida' => false, 'presumida' => true],
+                ['area' => 'box', 'tipo' => Ocorrencia::BOX_ENTRADA, 'carro' => 9, 'ts_ms' => RaceScenario::ms('13:00'), 'inferida' => false, 'presumida' => false],
+            ],
+            StopStats::recentEvents($result->timeline, 10)
+        );
+        $this->assertSame([4, 9], array_column(StopStats::recentEvents($result->timeline, 2), 'carro'), 'The limit counts the assumed exit like any event.');
+        $this->assertSame([Ocorrencia::BOX_ENTRADA, Ocorrencia::BOX_ENTRADA], array_column($result->timeline->stopEvents, 'tipo'));
+    }
+
+    /**
+     * SITUATION: the same race, after a reviewer pressed "Confirmar
+     * saída": a real exit, attributed to the reviewer, is now in the log
+     * at the assumed time (15:59).
+     *
+     * EXPECTED: the car is outside by the log from then on, so the engine
+     * assumes nothing any more. The exit is listed ONCE, as `inferida` and
+     * not `presumida`. The count is the same as before the confirmation.
+     */
+    public function testOnceTheExitIsConfirmedItIsListedOnceAsInferred(): void
+    {
+        $race = $this->raceWithAnAssumedExit();
+        $lapsBefore = $race->run('20:00')->lapCount(9);
+        $race->inferredExit('box', 9, RaceScenario::ms('15:59'));
+
+        $result = $race->run('20:00');
+
+        $this->assertSame([], $result->timeline->assumedExits);
+        $exitsOfCar9 = array_values(array_filter(
+            StopStats::recentEvents($result->timeline, 10),
+            fn(array $event) => $event['carro'] === 9 && $event['tipo'] === Ocorrencia::BOX_SAIDA
+        ));
+        $this->assertSame(
+            [['area' => 'box', 'tipo' => Ocorrencia::BOX_SAIDA, 'carro' => 9, 'ts_ms' => RaceScenario::ms('15:59'), 'inferida' => true, 'presumida' => false]],
+            $exitsOfCar9
+        );
+        $this->assertSame($lapsBefore, $result->lapCount(9));
+    }
+
+    /**
+     * SITUATION: the same race, but the person at the pit exit did log car
+     * 9 leaving, late: at 20:30, after the two passes that made the engine
+     * assume it had left at 15:59.
+     *
+     * EXPECTED: the count still goes by the assumed exit (the passes at
+     * 16:00 and 19:00 count, and the stay ends at 15:59). But the list
+     * shows ONE exit for that stay, the logged one: once the gate has
+     * recorded the car leaving, that event is the record, and an overlay
+     * must not announce the same car leaving twice.
+     */
+    public function testWhenTheLogHasALateExitForThatStayOnlyTheLoggedOneIsListed(): void
+    {
+        $race = $this->raceWithAnAssumedExit();
+        $race->pitOut(9, '20:30');
+
+        $result = $race->run('21:00');
+
+        $this->assertSame(6, $result->lapCount(9));
+        $this->assertSame(RaceScenario::ms('20:30'), $result->timeline->assumedExits[0]['saida_registrada_ms']);
+        $exitsOfCar9 = array_values(array_filter(
+            StopStats::recentEvents($result->timeline, 10),
+            fn(array $event) => $event['carro'] === 9 && $event['tipo'] === Ocorrencia::BOX_SAIDA
+        ));
+        $this->assertSame([[RaceScenario::ms('20:30'), false]], array_map(fn(array $event) => [$event['ts_ms'], $event['presumida']], $exitsOfCar9));
     }
 }

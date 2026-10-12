@@ -84,6 +84,7 @@ foreach (RaceEvents::inForce($ocorrencias) as $ocorrencia) {
     }
 }
 $inferredExits = InferredExits::inForce($prova);
+$assumedExits = InferredExits::assumed($service);
 $hasEverStarted = RaceControl::hasEverStarted($prova);
 $mayReset = $isAdmin || !$hasEverStarted;
 $publishingIsOff = !$service->getSettings()->publishesToScoring();
@@ -249,6 +250,44 @@ Pagina::printHeader($prova, 'Controle de corrida');
             <p class="contagem-dica">Estas linhas NÃO valem para a corrida. Uma ocorrência cancelada pode ser restaurada.</p>
             <table class="tablesorter contagem-tabela"><?= $tableHead ?><tbody><?php $eventRows($eventsOfHistory) ?></tbody></table>
         <?php } ?>
+    <?php } ?>
+</section>
+
+<section class="contagem-bloco">
+    <h2>Saídas presumidas</h2>
+    <p class="contagem-dica">
+        O registro do box ou do abastecimento ainda tinha o carro dentro, mas dois contadores o viram na linha em duas
+        passagens seguidas, a uma volta de distância. O sistema presumiu que ninguém registrou a saída: considera o carro
+        fora desde 1 s antes da primeira dessas passagens e contou as duas. Nada foi gravado. "Confirmar saída" grava essa
+        saída no seu nome (ela passa para a lista abaixo); não muda nenhuma contagem.
+    </p>
+    <?php if ($assumedExits === []) { ?>
+        <p>Nenhuma saída presumida.</p>
+    <?php } else { ?>
+        <table class="tablesorter contagem-tabela">
+            <thead><tr><th>Carro</th><th>Área</th><th>Entrada registrada</th><th>Saída presumida</th><th class="sorter-false">Confirmar</th></tr></thead>
+            <tbody>
+            <?php foreach ($assumedExits as $assumed) { ?>
+                <tr>
+                    <td><?= (int) $assumed['carro'] ?></td>
+                    <td><?= $h(InferredExits::AREA_LABELS[$assumed['area']] ?? $assumed['area']) ?> <span class="contagem-etiqueta">saída presumida</span></td>
+                    <td><?= $h(Pagina::formatClock((int) $assumed['entrada_ms'])) ?></td>
+                    <td><?= $h(Pagina::formatClock((int) $assumed['ts_ms'])) ?></td>
+                    <td class="sem-risco">
+                        <?php // No question: it changes no count, and "cancelar" in the list below takes it back. ?>
+                        <form method="POST" action="<?= $h($action) ?>">
+                            <?= $csrf ?>
+                            <input type="hidden" name="acao" value="confirmar_saida">
+                            <input type="hidden" name="area" value="<?= $h($assumed['area']) ?>">
+                            <input type="hidden" name="carro" value="<?= (int) $assumed['carro'] ?>">
+                            <input type="hidden" name="ts_ms" value="<?= (int) $assumed['ts_ms'] ?>">
+                            <button type="submit">Confirmar saída</button>
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
     <?php } ?>
 </section>
 

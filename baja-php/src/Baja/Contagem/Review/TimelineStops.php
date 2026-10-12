@@ -22,7 +22,13 @@ use Baja\Contagem\Engine\RaceTimeline;
  *     keeps it out of the pairing, and it has no place on a time axis, so it
  *     is listed apart ("paradas_sem_horario");
  *   - an exit a REVIEWER inferred from a pass at the line ("Marcar saída do
- *     box"): nobody at the pit lane logged it, and the lane says so.
+ *     box"): nobody at the pit lane logged it, and the lane says so;
+ *   - an exit the ENGINE assumed ("saída presumida"): the log had the car
+ *     inside while two counters agreed on two passes of it a lap apart, so
+ *     the count went on as if it had left one second before the first of
+ *     them. It is no row of the database. It is drawn where it ends the
+ *     stay, marked as assumed, until a person confirms it (it then becomes
+ *     an inferred exit) or the pit log is put right.
  */
 final class TimelineStops
 {
@@ -68,9 +74,49 @@ final class TimelineStops
                 'sem_par' => isset($unpairedIds[$ocorrencia->id]),
                 // An exit marked by a reviewer, not logged at the pit lane.
                 'inferida' => isset($inferredIds[$ocorrencia->id]),
+                'presumida' => false,
             ];
         }
-        usort($rows, fn(array $a, array $b) => [$a['ts_ms'], $a['id']] <=> [$b['ts_ms'], $b['id']]);
+        foreach (self::describeAssumedExits($timeline) as $assumed) {
+            $exitType = $assumed['area'] === self::BOX ? Ocorrencia::BOX_SAIDA : Ocorrencia::ABASTECIMENTO_SAIDA;
+            // Asked like a stored event: same car, same moment.
+            if (!$wantsOcorrencia(new Ocorrencia(0, $exitType, $assumed['ts_ms'], $assumed['carro']))) {
+                continue;
+            }
+            $rows[] = [
+                // Not a row of the database: there is nothing to point at.
+                'id' => null,
+                'tipo' => $exitType,
+                'carro' => $assumed['carro'],
+                'ts_ms' => $assumed['ts_ms'],
+                'area' => $assumed['area'],
+                'box' => $assumed['area'] === self::BOX,
+                'sem_par' => false,
+                'inferida' => false,
+                'presumida' => true,
+            ];
+        }
+        usort($rows, fn(array $a, array $b) => [$a['ts_ms'], $a['id'] ?? PHP_INT_MAX] <=> [$b['ts_ms'], $b['id'] ?? PHP_INT_MAX]);
+        return $rows;
+    }
+
+    /**
+     * The exits the engine assumed, oldest first.
+     *
+     * @return array<int, array{area: string, carro: int, ts_ms: int, entrada_ms: int}>
+     */
+    public static function describeAssumedExits(RaceTimeline $timeline): array
+    {
+        $rows = [];
+        foreach ($timeline->assumedExits ?? [] as $assumed) {
+            $rows[] = [
+                'area' => (string) $assumed['area'],
+                'carro' => (int) $assumed['carro'],
+                'ts_ms' => (int) $assumed['ts_ms'],
+                'entrada_ms' => (int) $assumed['entrada_ms'],
+            ];
+        }
+        usort($rows, fn(array $a, array $b) => [$a['ts_ms'], $a['carro']] <=> [$b['ts_ms'], $b['carro']]);
         return $rows;
     }
 

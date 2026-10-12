@@ -4,7 +4,7 @@
 
 import { SessaoExpirada, enviarDecisao } from './revisao-api.js';
 import {
-  acaoDeAceitar, decisaoConfirmarAlerta, decisaoMarcarSaida, perguntaAoConfirmar, perguntaAoDescartar, perguntaAoMarcarSaida,
+  acaoDeAceitar, decisaoConfirmarAlerta, decisaoConfirmarSaida, decisaoMarcarSaida, perguntaAoConfirmar, perguntaAoDescartar, perguntaAoMarcarSaida,
 } from './revisao-alertas.js';
 import {
   alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoConfirmar,
@@ -197,6 +197,17 @@ export function criarAcoes(ganchos) {
     }
   }
 
+  // "Confirmar saída" on an exit the engine assumed: the exit is stored in
+  // the reviewer's name. It changes no count (the passes after it were
+  // counted already) and can be undone from the history, so nothing is asked.
+  function confirmarSaida() {
+    const alerta = alertaQuePodeSerDecidido();
+    const decisao = alerta ? decisaoConfirmarSaida(alerta, tela.estado) : null;
+    if (decisao) {
+      enviarSobreAlerta(decisao, alerta);
+    }
+  }
+
   // "Marcar saída do box / do abastecimento": the car left and nobody
   // logged it. When that makes the held pass count (+1 volta) it is asked
   // about first, like everything else that changes a count.
@@ -338,6 +349,7 @@ export function criarAcoes(ganchos) {
     confirmarAlerta,
     descartarPassagem,
     marcarSaida,
+    confirmarSaida,
     anular,
     acaoNaEntrada,
     adicionar,

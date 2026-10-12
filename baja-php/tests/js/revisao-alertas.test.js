@@ -20,7 +20,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, decisaoMarcarSaida, fraseDeDuvida, passagensParaDescartar,
+  acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, decisaoConfirmarSaida, decisaoMarcarSaida, fraseDeDuvida, passagensParaDescartar,
   perguntaAoConfirmar, perguntaAoDescartar, perguntaAoMarcarSaida, rotuloDeDescartar, voltasAoMarcarSaida,
 } from '../../default/js/contagem/revisao-alertas.js';
 import { aplicarResposta } from '../../default/js/contagem/revisao-conexao.js';
@@ -516,4 +516,69 @@ test('the request for a suggestion is built in one place, and says whether the s
   // The screen sends the signature of the timeline it shows, not the flag's latest.
   assert.equal(pedidosDaSugestao(saida, ESTADO, 'da-janela')[0].assinatura, 'da-janela');
   assert.deepEqual(pedidosDaSugestao({ ...saida, sugestao: null }, ESTADO), []);
+});
+
+// ---- 4e: an exit the engine assumed ----------------------------------------------
+
+// SITUATION: car 11 was logged INTO the pit lane at 0:08:20 and nobody
+// logged it out. Two counters then saw it at the line at 0:08:46 (entries
+// 10 and 11) and again a lap later. The engine assumed the missed exit, one
+// second before the first of those passes, counted both, and raised the
+// informational flag "saida_presumida". Nothing is stored: the exit exists
+// only in the calculation.
+//
+// WHAT WENT WRONG: the flag had only K, "Está correto, parar de avisar".
+// That hid the flag and left the pit log wrong: the exit was still in no
+// record, and nobody's name was on it.
+//
+// EXPECTED: the flag offers "Confirmar saída". It sends the SAME decision as
+// "Marcar saída" (so the server stores an exit marked by the reviewer), for
+// the area and the moment the engine assumed, which the screen takes from
+// the state's list of assumed exits, not from the reason text. It asks
+// nothing, because it changes no count. There is no K and no A. "Descartar
+// esta passagem" is there for the other case (the car never left), and its
+// question says the car loses a lap, since that pass counts today.
+test('an exit the engine assumed can be confirmed, which stores it', () => {
+  const alerta = {
+    tipo: 'saida_presumida', carros: [11], passagem_ids: [10, 11], ts_ms: LARGADA + 526000, assinatura: 'sig',
+    sugestao: null, efeito_de_confirmar: 'nenhum', contagem_em_duvida: null,
+  };
+  const estado = {
+    ...ESTADO,
+    saidas_presumidas: [
+      { area: 'abastecimento', carro: 11, ts_ms: LARGADA + 100000, entrada_ms: LARGADA + 90000 }, // an earlier stay of the same car
+      { area: 'box', carro: 11, ts_ms: LARGADA + 525000, entrada_ms: LARGADA + 500000 },
+      { area: 'box', carro: 22, ts_ms: LARGADA + 525500, entrada_ms: LARGADA + 400000 },          // another car
+    ],
+  };
+
+  assert.deepEqual(decisaoConfirmarSaida(alerta, estado),
+    { tipo: 'marcar_saida', area: 'box', equipe_numero: 11, ts_ms: LARGADA + 525000 });
+
+  const extras = acoesExtrasDoAlerta(alerta, LARGADA, estado);
+  assert.deepEqual(extras.map((extra) => extra.rotulo), ['Confirmar saída', 'Descartar esta passagem']);
+  assert.equal(acaoDeConfirmar(alerta), null, 'no K: "confirmar" here means storing the exit');
+  assert.equal(acaoDeAceitar(alerta, estado), null);
+  assert.match(perguntaAoDescartar(alerta, extras[1].passagem), /perde uma volta/);
+  assert.match(descreverSugestao(alerta), /Confirmar saída/);
+
+  // Sent as a decision on the flag, with the entries the reviewer was looking at.
+  const pedido = pedidoParaAlerta(decisaoConfirmarSaida(alerta, estado), alerta, estado, 'abc');
+  assert.deepEqual(pedido.passagem_ids, [10, 11]);
+  assert.equal(pedido.decisao.tipo, 'marcar_saida');
+
+  // The pit log was put right meanwhile: nothing is assumed, nothing to confirm.
+  assert.equal(decisaoConfirmarSaida(alerta, { ...estado, saidas_presumidas: [] }), null);
+  assert.deepEqual(acoesExtrasDoAlerta(alerta, LARGADA, { ...estado, saidas_presumidas: [] }).map((extra) => extra.rotulo), ['Descartar esta passagem']);
+  assert.equal(decisaoConfirmarSaida({ ...alerta, tipo: 'no_box' }, estado), null, 'only on the flag of an assumed exit');
+});
+
+// EXPECTED: on the lane an assumed exit reads "saída presumida", and is told
+// apart from an exit somebody logged and from one a reviewer marked.
+test('the lane tells an assumed exit from a logged one and from one a reviewer marked', () => {
+  const presumida = rotuloDaMarca({ carro: 11, tipo: 'box_saida', presumida: true }, 'saiu');
+  assert.equal(presumida.texto, '11 saída presumida');
+  assert.match(presumida.aviso, /ninguém registrou esta saída/);
+  assert.equal(rotuloDaMarca({ carro: 11, tipo: 'box_saida', inferida: true }, 'saiu').texto, '11 saiu (inferida)');
+  assert.equal(rotuloDaMarca({ carro: 11, tipo: 'box_saida' }, 'saiu').texto, '11 saiu');
 });

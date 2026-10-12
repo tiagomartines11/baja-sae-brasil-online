@@ -74,6 +74,66 @@ final class InferredExits
     }
 
     /**
+     * Does the pit log, as stored, have the car inside the area at that
+     * moment? Whatever the engine assumed on top of the log is left out on
+     * purpose: an exit can be stored exactly while the log lacks one.
+     *
+     * @param \Baja\Contagem\Engine\Data\Ocorrencia[] $ocorrencias every stored event of the prova
+     */
+    public static function logHasCarInside(array $ocorrencias, string $area, int $carro, int $tsMs): bool
+    {
+        $log = RaceTimeline::fromOcorrencias($ocorrencias);
+        return $area === DecisionRequest::AREA_BOX ? $log->isInPitAt($carro, $tsMs) : $log->isFuelingAt($carro, $tsMs);
+    }
+
+    /**
+     * "Confirmar saída" in race control, on an exit the engine assumed: it
+     * is stored as an exit marked by this person, exactly as "Marcar saída"
+     * on the review screen stores one. From then on the log itself ends
+     * the stay, so the engine has nothing left to assume. No count changes:
+     * the passes after the assumed exit were counted already.
+     *
+     * @param array<string, mixed> $post area, carro, ts_ms of the assumed exit
+     */
+    public static function confirmAssumed(ContagemService $service, array $post, string $username): void
+    {
+        $area = is_string($post['area'] ?? null) ? $post['area'] : '';
+        $carro = filter_var($post['carro'] ?? null, FILTER_VALIDATE_INT);
+        $tsMs = filter_var($post['ts_ms'] ?? null, FILTER_VALIDATE_INT);
+        if (!isset(self::AREA_LABELS[$area]) || $carro === false || $tsMs === false || $tsMs > Clock::nowMs()) {
+            throw new InvalidArgumentException('Saída presumida inválida. Recarregue a página.');
+        }
+        $service->withLock(function () use ($service, $area, $carro, $tsMs, $username): void {
+            $ocorrencias = (new EngineInputLoader($service->getProva()))->loadOcorrencias();
+            if (!self::logHasCarInside($ocorrencias, $area, $carro, $tsMs)) {
+                // Somebody confirmed it first, or the pit log was put right.
+                throw new InvalidArgumentException('Esta saída já consta no registro do ' . self::AREA_LABELS[$area] . '. Recarregue a página.');
+            }
+            Propel::getWriteConnection('resultados')->transaction(function () use ($service, $area, $carro, $tsMs, $username): void {
+                $service->recordInferredExit($area, $carro, $tsMs, $username);
+                $mark = new Decision(0, DecisionRequest::MARCAR_SAIDA);
+                $mark->carro = $carro;
+                $mark->tsMs = $tsMs;
+                $service->storeDecision($mark, $username, $area);
+            });
+            $service->recomputeAndPublish();
+        });
+    }
+
+    /**
+     * The exits the engine is assuming right now, from the last full
+     * calculation (recalculated first when it is stale). Race control lists
+     * them apart from the exits people marked.
+     *
+     * @return array<int, array{area: string, carro: int, ts_ms: int, entrada_ms: int}>
+     */
+    public static function assumed(ContagemService $service): array
+    {
+        $state = $service->snapshot()->dados['estado'] ?? [];
+        return is_array($state['saidas_presumidas'] ?? null) ? $state['saidas_presumidas'] : [];
+    }
+
+    /**
      * "Cancelar" on a marked exit: the same as "Desfazer" in the history.
      * The car is logged inside again, and its passes are flagged again.
      *

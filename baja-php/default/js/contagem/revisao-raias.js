@@ -64,7 +64,7 @@ function desenharRaiaDeOcorrencias(raia, limites, opcoes) {
     const daParada = ocorrencia.carro !== null && ocorrencia.carro !== undefined;
     const rotulo = rotuloDaMarca(ocorrencia, nome);
     return el('span', {
-      class: `${daParada ? 'marca-box' : 'marca-corrida'} ${ocorrencia.tipo}${ocorrencia.sem_par ? ' sem-par' : ''}${ocorrencia.inferida ? ' inferida' : ''}`,
+      class: `${daParada ? 'marca-box' : 'marca-corrida'} ${ocorrencia.tipo}${ocorrencia.sem_par ? ' sem-par' : ''}${ocorrencia.inferida ? ' inferida' : ''}${ocorrencia.presumida ? ' presumida' : ''}`,
       style: { left: `${posicaoPx(ocorrencia.ts_ms, limites.de, opcoes.escala)}px` },
       title: titulo(ocorrencia.ts_ms) + (rotulo.aviso ? ` · ${rotulo.aviso}` : ''),
     }, rotulo.texto);

@@ -326,7 +326,7 @@ From `default/js/contagem/revisao-alertas.js`, which is what the screen runs.
 | `carro_desconhecido` | none | Está correto, parar de avisar | reassign the entry from its chip |
 | `carro_nao_classificado` | none | **Contar mesmo assim (+1 volta)** | |
 | `no_box`, `no_abastecimento` | none: there is no default | none | **Marcar saída do box (+N voltas)** / **do abastecimento (+N voltas)**, N being the held passes that start counting; it asks (no parenthesis and no question when only one counter recorded the pass: it then still needs a second witness); **Descartar esta passagem** (asks) |
-| `saida_presumida` | none | Está correto, parar de avisar | |
+| `saida_presumida` | none | none: hiding the flag would leave the log wrong | **Confirmar saída** (asks nothing: it changes no count); **Descartar esta passagem** (asks) |
 | `volta_curta` | none | Está correto, parar de avisar | **Descartar a primeira passagem** / **a segunda passagem** (asks) |
 | `divergencia_total` | none | none | |
 
@@ -337,6 +337,16 @@ reason, and its stop statistics and status follow. It is an ordinary event:
 race control lists it under "Saídas marcadas pela revisão" with "corrigir"
 and "cancelar", and it can be undone from the history (the passes are then
 held again).
+
+An exit the count assumed is shown as **saída presumida**: a dotted mark on
+the review lane where it ends the stay, and a list "Saídas presumidas" in
+race control, above the marked ones. It stays derived, worked out again on
+every count, until somebody presses **Confirmar saída** (on the
+`saida_presumida` flag or in race control). That stores it as an inferred
+exit like the one "Marcar saída" writes: the flag goes away, the count does
+not change, and the exit moves to "Saídas marcadas pela revisão". Cancelling
+it there puts the log back to "inside"; if the counters still show the car
+lapping, the count assumes the exit again and the flag returns.
 
 ### The hold rule
 
@@ -994,8 +1004,11 @@ now and since when, the number of completed stays, the total time inside
 (including a stay under way, so it keeps running between recalculations) and
 the duration of the last completed stay. And `ultimas_paradas`: the last ten
 entries and exits of both areas across the field, newest first, each
-`{area, tipo, carro, ts_ms}`. An unpaired event is listed there but is not a
-stay. The same numbers per car are in the CSV export "paradas" on Controle
+`{area, tipo, carro, ts_ms, inferida, presumida}`. `inferida` is an exit a
+reviewer marked; `presumida` is an exit nobody logged, which the count
+assumed (it is not in the log; if the gate logs that exit later, the logged
+one takes its place in the list). An unpaired event is listed there but is
+not a stay. The same numbers per car are in the CSV export "paradas" on Controle
 da corrida.
 
 ---

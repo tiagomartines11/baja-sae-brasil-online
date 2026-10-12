@@ -23,6 +23,10 @@ export function descreverSugestao(alerta) {
     return `Sem sugestão automática. Se o carro saiu do ${area} e ninguém registrou, marque a saída; `
       + 'se a passagem não aconteceu, descarte-a.';
   }
+  if (alerta?.tipo === 'saida_presumida') {
+    return 'Nada a corrigir na contagem. Se o carro saiu mesmo, use "Confirmar saída": a saída presumida fica gravada no seu nome '
+      + 'e o alerta fecha. Se ele não saiu, descarte a passagem.';
+  }
   if (!sugestao) {
     return 'Sem sugestão automática: decida olhando a linha do tempo.';
   }

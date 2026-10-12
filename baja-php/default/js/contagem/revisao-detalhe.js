@@ -144,8 +144,10 @@ export function desenharDetalheDeAlerta(container, contexto) {
   const duvida = fraseDeDuvida(alerta);
   const semHorario = alerta.tipo === 'tempo_desconhecido';
   // The other buttons of this kind of flag: mark the exit, discard a pass, add the pass by hand.
-  const extras = acoesExtrasDoAlerta(alerta, estado.corrida.largada_ms).map((extra) => {
+  const extras = acoesExtrasDoAlerta(alerta, estado.corrida.largada_ms, estado).map((extra) => {
     switch (extra.acao) {
+      case 'confirmar_saida':
+        return el('button', { type: 'button', class: 'primario', disabled: semDecisao, onclick: acoes.confirmarSaida }, extra.rotulo);
       case 'marcar_saida':
         return el('button', {
           type: 'button', class: /\(\+\d+ voltas?\)/.test(extra.rotulo) ? 'soma-volta' : '', disabled: semDecisao, onclick: acoes.marcarSaida,

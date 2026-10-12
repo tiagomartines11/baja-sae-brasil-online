@@ -116,10 +116,12 @@ final class DecisionResolver
         if ($tsMs > $recount->input->nowMs) {
             throw new InvalidArgumentException('O horário da saída está no futuro.');
         }
-        $inside = $request->area === DecisionRequest::AREA_BOX
-            ? $recount->timeline->isInPitAt($car, $tsMs)
-            : $recount->timeline->isFuelingAt($car, $tsMs);
-        if (!$inside) {
+        // Asked of the LOG, not of the recount's timeline: the engine may
+        // already have ASSUMED this very exit (the car was lapping), and its
+        // timeline then ends the stay there. "Confirmar saída" stores the
+        // exit the engine assumed, so what matters is whether the log
+        // itself still has the car inside.
+        if (!InferredExits::logHasCarInside($recount->input->ocorrencias, (string) $request->area, $car, $tsMs)) {
             throw DecisionConflict::dataChanged();
         }
         return ['area' => (string) $request->area, 'carro' => $car, 'ts_ms' => $tsMs];
