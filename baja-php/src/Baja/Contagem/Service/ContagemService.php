@@ -409,6 +409,23 @@ final class ContagemService
         return $this->context->get();
     }
 
+    /**
+     * Called when a whole-race count has just been stored. If it assumed
+     * other pit exits than the cached race context knows of, the context is
+     * rebuilt (it reads them from the snapshot just stored), so the pit-log
+     * phones stop listing a car the count has out on the track. It is not a
+     * change to the race: nothing needs counting again.
+     *
+     * @param array<int, array{area: string, carro: int, ts_ms: int, entrada_ms: int}> $assumedExits
+     */
+    public function tellRaceContextWhichExitsWereAssumed(array $assumedExits): void
+    {
+        $known = $this->context->get()['saidas_presumidas'] ?? [];
+        if (json_encode($known) !== json_encode($assumedExits)) {
+            $this->context->refresh();
+        }
+    }
+
     /** Tells the cached race context and the slow path that something changed. */
     public function markChanged(bool $raceContextToo = false): void
     {

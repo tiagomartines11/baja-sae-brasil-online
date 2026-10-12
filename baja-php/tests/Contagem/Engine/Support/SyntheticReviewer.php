@@ -139,7 +139,9 @@ final class SyntheticReviewer
      *
      * - a lone entry, a swap the engine could not decide, a held pass, two
      *   passes too close together: every entry of the flag is confirmed,
-     *   reassigned or voided, by what really crossed when it was typed;
+     *   reassigned or voided, by what really crossed when it was typed (and
+     *   voided when it is a second record of a crossing that counts
+     *   already);
      * - an estimated time: the video shows the pass where the group is, so
      *   "está correto" (confirm);
      * - an unknown time: the pass was counted from the other counters'
@@ -185,6 +187,22 @@ final class SyntheticReviewer
         }
         if ($realCar !== $result->effectiveEntries[$entryId]->carro) {
             return Decision::reatribuir($decisionId, $entryId, $realCar);
+        }
+        // The entry is right about the car. But if that very crossing is
+        // counted already from other counters' entries (this one was typed
+        // so late that it ended up somewhere else), it is a second record
+        // of a pass that counts: confirming it would count the pass twice.
+        $ownGroup = $result->groupOfEntry($entryId);
+        $crossing = $race->crossingBehindEntry($entryId);
+        foreach ($result->groups as $group) {
+            if ($group === $ownGroup || !$group->contado || $group->carro !== $realCar) {
+                continue;
+            }
+            foreach ($group->entries as $entry) {
+                if ($race->realCarBehindEntry($entry->id) === $realCar && $race->crossingBehindEntry($entry->id) === $crossing) {
+                    return Decision::anular($decisionId, $entryId);
+                }
+            }
         }
         return Decision::confirmar($decisionId, $entryId);
     }

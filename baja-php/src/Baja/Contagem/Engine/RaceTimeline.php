@@ -99,6 +99,20 @@ final class RaceTimeline
     public array $stopEvents = [];
 
     /**
+     * Exits the ENGINE assumed while counting, because the log of an area
+     * still had a car inside while the counters agreed on two passes of it
+     * a lap apart (see HoldRule). Each is ['area', 'carro', 'ts_ms' (the
+     * assumed exit: one second before the first of those passes),
+     * 'entrada_ms' (the entry of the stay it ends)]. They are not stored
+     * anywhere: the stays above already end there, so everything that
+     * reads this timeline agrees with the count. Only the cars that were
+     * counted have theirs worked out.
+     *
+     * @var array<int, array{area: string, carro: int, ts_ms: int, entrada_ms: int}>
+     */
+    public array $assumedExits = [];
+
+    /**
      * The rows still in force once corrections and cancellations were
      * resolved, oldest first (by id). A "cancelamento" is never in here.
      *
@@ -242,6 +256,29 @@ final class RaceTimeline
     public function overlapsFuelStay(int $carro, int $fromMs, int $toMs): bool
     {
         return StopLog::overlapsAny($this->fuelIntervals[$carro] ?? [], $fromMs, $toMs);
+    }
+
+    /**
+     * Ends the stay of a car that began at $entryMs at $exitMs instead of
+     * where the log ends it (or leaves it open), and remembers that the
+     * exit was assumed.
+     *
+     * @param string $area self::AREA_BOX or self::AREA_ABASTECIMENTO
+     */
+    public function assumeExit(string $area, int $carro, int $entryMs, int $exitMs): void
+    {
+        $stays = $area === self::AREA_ABASTECIMENTO ? $this->fuelIntervals[$carro] ?? [] : $this->pitIntervals[$carro] ?? [];
+        foreach ($stays as $index => [$inMs]) {
+            if ($inMs === $entryMs) {
+                $stays[$index][1] = max($entryMs, $exitMs);
+            }
+        }
+        if ($area === self::AREA_ABASTECIMENTO) {
+            $this->fuelIntervals[$carro] = $stays;
+        } else {
+            $this->pitIntervals[$carro] = $stays;
+        }
+        $this->assumedExits[] = ['area' => $area, 'carro' => $carro, 'ts_ms' => max($entryMs, $exitMs), 'entrada_ms' => $entryMs];
     }
 
     /**

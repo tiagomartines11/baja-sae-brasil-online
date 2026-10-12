@@ -6,20 +6,23 @@
 //
 // Two facts about browsers shape this:
 //
-//   - A page's audio (an "AudioContext") only works if it was switched on
-//     DURING a tap or a key press. iPhones are strict about it.
+//   - A page's audio (an "AudioContext") stays silent until `resume()` is
+//     called DURING a tap or a key press. iPhones are strict about it.
 //   - The audio API can misbehave badly. With an audio device that does not
-//     answer, a page was seen frozen for 20 seconds inside the first key
-//     press after a reload, and the typed number was lost in the freeze.
+//     answer, `new AudioContext()` was measured to take 20 seconds to return
+//     (Chromium, on a reloaded page). When that call was made inside the
+//     first key press, the page froze in the middle of counting.
 //
-// So the rule is: FIRST the pass (time taken, disk write requested), THEN the
-// audio, inside the same press; nothing ever waits for the audio; and audio
-// that does not start within 400 ms is given up on for that press.
+// So: the audio is CREATED WHEN THE PAGE LOADS, never in a key press. A
+// press only asks it to start, AFTER the pass was taken (time stamped, disk
+// write requested), and waits for nothing. Audio that is not running 400 ms
+// after the press is given up on for that press.
 //
 // `FakeWindow` below plays the browser. Its AudioContext can be told to
-// misbehave: `resume()` that never answers, that fails, that answers late; a
-// constructor that throws, or that "freezes the page" (the clock jumps while
-// it runs, which is all a frozen page looks like from the inside).
+// misbehave: `resume()` that never answers, that fails, that answers late or
+// answers without starting; a constructor that throws, or that "freezes the
+// page" (the clock jumps while it runs, which is all a frozen page looks like
+// from the inside); or no AudioContext at all.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -53,9 +56,11 @@ function createPhoneStorage() {
 /**
  * @param {object}  [options]
  * @param {string}  [options.resume] what `resume()` does: 'ok' (starts at
- *        once), 'never' (a promise that never settles), 'fails', or 'late'
- *        (starts when the test calls `fakeWindow.finishResumes()`)
- * @param {string}  [options.constructor] 'ok', 'throws' or 'freezes' (takes 20 s)
+ *        once), 'never' (a promise that never settles), 'fails', 'ignored'
+ *        (answers, but the audio stays suspended) or 'late' (starts when
+ *        the test calls `fakeWindow.finishResumes()`)
+ * @param {string}  [options.constructor] 'ok', 'throws', 'freezes' (takes
+ *        20 s) or 'missing' (a browser with no AudioContext at all)
  */
 function createFakeWindow({ withVibration = true, resume = 'ok', constructor = 'ok' } = {}) {
     const pendingResumes = [];
@@ -64,6 +69,9 @@ function createFakeWindow({ withVibration = true, resume = 'ok', constructor = '
         monotonicMs: 1000,
         audioContexts: [],
         constructorCalls: 0,
+        // Constructor calls made while a key press or tap was being handled. Must stay 0.
+        constructorCallsInsideAPress: 0,
+        insideAPress: false,
         resumeCalls: 0,
         vibrations: [],
         navigator: {},
@@ -81,6 +89,9 @@ function createFakeWindow({ withVibration = true, resume = 'ok', constructor = '
         constructor() {
             fakeWindow.onAudioCall('constructor');
             fakeWindow.constructorCalls++;
+            if (fakeWindow.insideAPress) {
+                fakeWindow.constructorCallsInsideAPress++;
+            }
             if (fakeWindow.behaviour.constructor === 'throws') {
                 throw new Error('simulated: no audio device');
             }
@@ -116,6 +127,7 @@ function createFakeWindow({ withVibration = true, resume = 'ok', constructor = '
             switch (fakeWindow.behaviour.resume) {
                 case 'never': return new Promise(() => {});
                 case 'fails': return Promise.reject(new Error('simulated: audio device error'));
+                case 'ignored': return Promise.resolve();
                 case 'late': return new Promise((resolve) => pendingResumes.push(() => { start(); resolve(); }));
                 default: start(); return Promise.resolve();
             }
@@ -130,6 +142,9 @@ function createFakeWindow({ withVibration = true, resume = 'ok', constructor = '
             return { gain: {}, connect() {} };
         }
     };
+    if (constructor === 'missing') {
+        delete fakeWindow.AudioContext;
+    }
     if (withVibration) {
         fakeWindow.navigator.vibrate = (pattern) => fakeWindow.vibrations.push(pattern);
     }
@@ -137,8 +152,9 @@ function createFakeWindow({ withVibration = true, resume = 'ok', constructor = '
 }
 
 /**
- * A counter's phone with the REAL store, session and feedback, and the
- * count page's own way of recording: `press(car)` is what a key press or a
+ * A counter's phone with the REAL store, session and feedback, wired as the
+ * count page wires them: the feedback is created while the page LOADS (which
+ * is when it creates the audio), and `press(car)` is what a key press or a
  * tap ends in (contar.js `recordTypedPass`), including the beep after the
  * disk write.
  */
@@ -157,29 +173,40 @@ async function createCountingPhone(windowOptions = {}, preferences = createPrefe
         feedback,
         preferences,
         /** Returns what the page's handler returns; the press itself is over when this returns. */
-        press: (car) => recordThenPrepareSound(() => recordPass(car), feedback),
+        press(car) {
+            fakeWindow.insideAPress = true;
+            try {
+                return recordThenPrepareSound(() => recordPass(car), feedback);
+            } finally {
+                // The handler has returned: the press is over, whatever is still pending.
+                fakeWindow.insideAPress = false;
+            }
+        },
     };
 }
-
-test('the audio is switched on inside the press, but only after the pass was taken', async () => {
-    // SITUATION: the counter types car 41 and presses Enter.
+test('the audio is created when the page loads; a press only starts it, after the pass was taken', async () => {
+    // SITUATION: the counter opens the page, types car 41 and presses Enter.
     //
-    // WHAT WENT WRONG: the audio was switched on by a listener that ran
-    // BEFORE the page's own handler of the same key press. When the audio
-    // call froze (no answer from the audio device), the page had not even
-    // looked at the key yet.
+    // WHAT WENT WRONG: the audio was created inside the first key press.
+    // With an audio device that did not answer, that one call took 20
+    // seconds, and the page stood frozen in the middle of counting.
     const phone = await createCountingPhone();
-    const seenWhenAudioWasFirstTouched = [];
+
+    // Before anybody touched anything: the audio exists, silent.
+    assert.equal(phone.fakeWindow.constructorCalls, 1);
+    assert.equal(phone.fakeWindow.audioContexts[0].state, 'suspended');
+    assert.equal(phone.fakeWindow.resumeCalls, 0);
+
+    const audioCallsDuringThePress = [];
     phone.fakeWindow.onAudioCall = (call) => {
-        seenWhenAudioWasFirstTouched.push({ call, writeRequested: phone.device.store.hasWriteInFlight() });
+        audioCallsDuringThePress.push({ call, writeRequested: phone.device.store.hasWriteInFlight() });
     };
     const pressedAt = phone.device.clock.serverNow();
 
     const recording = phone.press(41);
-    // The press is over here. The audio was created and resumed inside it...
-    assert.deepEqual(seenWhenAudioWasFirstTouched.map((seen) => seen.call), ['constructor', 'resume']);
-    // ...and by then the disk had already been asked to write the entry.
-    assert.deepEqual(seenWhenAudioWasFirstTouched.map((seen) => seen.writeRequested), [true, true]);
+    // The press is over here. The only audio call in it was `resume()`,
+    // and by then the disk had already been asked to write the entry.
+    assert.deepEqual(audioCallsDuringThePress, [{ call: 'resume', writeRequested: true }]);
 
     const { entry } = await recording;
     await settle();
@@ -188,37 +215,82 @@ test('the audio is switched on inside the press, but only after the pass was tak
     assert.equal(entry.ts_ms, pressedAt);
     assert.equal(phone.fakeWindow.beeps(), 1);
     assert.deepEqual(phone.fakeWindow.vibrations, [40]);
+    assert.equal(phone.fakeWindow.constructorCallsInsideAPress, 0);
+
+    // From now on the audio is running: later presses make no audio call
+    // at all before their beep.
+    await phone.press(7);
+    await settle();
+    assert.equal(phone.fakeWindow.resumeCalls, 1);
+    assert.equal(phone.fakeWindow.beeps(), 2);
     assert.deepEqual(unhandledRejections, []);
 });
 
-test('audio that never answers: every pass is recorded at once, the beeps are skipped', async () => {
+test('the key path makes no constructor call and awaits nothing, whatever the audio does', async () => {
+    // Every way the audio can be broken, one phone each. On each, the
+    // counter records three cars two seconds apart.
+    const brokenAudio = [
+        { resume: 'never' },
+        { resume: 'fails' },
+        { resume: 'ignored' },
+        { resume: 'late' },
+        { constructor: 'throws' },
+        { constructor: 'freezes' },
+        { constructor: 'missing' },
+    ];
+    for (const behaviour of brokenAudio) {
+        const phone = await createCountingPhone(behaviour);
+        const constructorCallsAtLoad = phone.fakeWindow.constructorCalls;
+        const label = JSON.stringify(behaviour);
+
+        // What the press calls for the sound returns nothing to wait for.
+        assert.equal(phone.feedback.prepararSom(), undefined, label);
+
+        for (const car of [41, 7, 12]) {
+            const pressedAt = phone.device.clock.serverNow();
+            const { entry } = await phone.press(car);
+            // Taken at once, with the time of the press: nothing waited.
+            assert.equal(entry.ts_ms, pressedAt, label);
+            phone.fakeWindow.monotonicMs += 2000;
+            phone.device.clock.advance(2000);
+        }
+        await settle();
+
+        // EXPECTED on every one: three entries, silence, and not one audio
+        // context created after the page had loaded.
+        assert.deepEqual(phone.device.store.allEntries().map((entry) => entry.car), [41, 7, 12], label);
+        assert.equal(phone.fakeWindow.beeps(), 0, label);
+        assert.equal(phone.fakeWindow.constructorCalls, constructorCallsAtLoad, label);
+        assert.equal(phone.fakeWindow.constructorCallsInsideAPress, 0, label);
+        assert.equal(phone.fakeWindow.vibrations.length, 3, label);
+    }
+    assert.deepEqual(unhandledRejections, []);
+});
+
+test('audio that never answers is asked a few times, one request at a time, then left alone', async () => {
     // SITUATION: the phone's audio is stuck (a Bluetooth speaker that went
     // away, an audio service that hangs): `resume()` returns a promise that
     // never settles. The counter records six cars, one every two seconds.
     const phone = await createCountingPhone({ resume: 'never' });
 
     for (const car of [41, 7, 12, 3, 5, 9]) {
-        const { entry } = await phone.press(car);
-        // Recorded at once: nothing waited for the audio.
-        assert.equal(entry.car, car);
+        await phone.press(car);
         phone.fakeWindow.monotonicMs += 2000;
         phone.device.clock.advance(2000);
     }
     await settle();
 
-    // EXPECTED: all six on the phone; no beep (and none queued to play
-    // later); the vibration still works. The page tried a fresh audio
-    // context a few times, one attempt at a time, then left the audio alone:
-    // nothing piles up behind a device that does not answer.
-    assert.deepEqual(phone.device.store.allEntries().map((entry) => entry.car), [41, 7, 12, 3, 5, 9]);
+    // EXPECTED: all six on the phone; no beep, and none queued to play
+    // later. The page asked the audio to start on three presses and then
+    // stopped asking: nothing piles up behind a device that does not answer.
+    assert.equal(phone.device.store.allEntries().length, 6);
     assert.equal(phone.fakeWindow.beeps(), 0);
-    assert.equal(phone.fakeWindow.vibrations.length, 6);
     assert.equal(phone.fakeWindow.resumeCalls, MAX_FAILED_STARTS);
-    assert.equal(phone.fakeWindow.constructorCalls, MAX_FAILED_STARTS);
+    assert.equal(phone.fakeWindow.constructorCalls, 1);
     assert.deepEqual(unhandledRejections, []);
 });
 
-test('quick presses while the audio is still starting do not stack attempts', async () => {
+test('quick presses while the audio is still starting do not stack requests', async () => {
     // SITUATION: as above, but the counter records three cars within 300 ms
     // (a bunch at the line).
     const phone = await createCountingPhone({ resume: 'never' });
@@ -228,41 +300,24 @@ test('quick presses while the audio is still starting do not stack attempts', as
         phone.fakeWindow.monotonicMs += 100;
     }
 
-    // EXPECTED: one attempt is under way and still within its 400 ms; the
-    // other presses did not start a second and a third.
+    // EXPECTED: one request is under way and still within its 400 ms; the
+    // other presses did not make a second and a third.
     assert.equal(phone.fakeWindow.resumeCalls, 1);
     assert.equal(phone.device.store.allEntries().length, 3);
 });
 
-test('an audio constructor that throws: the pass is recorded, and a later press tries again', async () => {
-    // SITUATION: the browser refuses to create audio at this moment.
+test('an audio constructor that throws at page load: the page counts, silently', async () => {
+    // SITUATION: the browser refuses to create audio.
     const phone = await createCountingPhone({ constructor: 'throws' });
 
     await phone.press(41);
     await phone.press(7);
+
+    // EXPECTED: it was tried once, while loading; no press tried again.
     assert.equal(phone.device.store.allEntries().length, 2);
     assert.equal(phone.fakeWindow.beeps(), 0);
-    assert.equal(phone.fakeWindow.constructorCalls, 2, 'each press tried once');
-
-    // The audio comes back: the next press gets it, and its beep.
-    phone.fakeWindow.behaviour.constructor = 'ok';
-    await phone.press(12);
-    await settle();
-
-    assert.equal(phone.fakeWindow.beeps(), 1);
-    assert.deepEqual(unhandledRejections, []);
-});
-
-test('audio that fails to start is not an error anybody has to handle', async () => {
-    // SITUATION: `resume()` returns a promise that is rejected.
-    const phone = await createCountingPhone({ resume: 'fails' });
-
-    await phone.press(41);
-    await phone.press(7);
-    await settle();
-
-    assert.equal(phone.device.store.allEntries().length, 2);
-    assert.equal(phone.fakeWindow.beeps(), 0);
+    assert.equal(phone.fakeWindow.constructorCalls, 1);
+    assert.equal(phone.fakeWindow.resumeCalls, 0);
     assert.deepEqual(unhandledRejections, []);
 });
 
@@ -297,37 +352,36 @@ test('audio that starts within the deadline plays the beep; later than that, the
     assert.deepEqual(unhandledRejections, []);
 });
 
-test('an audio call that froze the page is not made again, not even after a reload', async () => {
-    // SITUATION: `new AudioContext()` takes 20 seconds to return (seen in a
-    // browser whose audio device did not answer). It cannot be interrupted;
-    // the page only knows afterwards, from the clock. The counter reloads
-    // the page ("it froze") and types again.
+test('a constructor that blocked the page while loading is not called again on the next reload', async () => {
+    // SITUATION: `new AudioContext()` takes 20 seconds to return (measured
+    // in a browser whose audio device did not answer). It cannot be
+    // interrupted; the page only knows afterwards, from the clock. It
+    // happens while the page loads: the page opens 20 seconds late. The
+    // counter then reloads once more.
     const phoneStorage = createPhoneStorage();
     const phone = await createCountingPhone({ constructor: 'freezes' }, createPreferences(phoneStorage));
+    assert.equal(phone.fakeWindow.monotonicMs, 21_000, 'the 20 seconds were spent while loading');
 
-    // The pass that was being recorded when it froze is safe: its time was
-    // taken and its write requested before the audio was touched.
-    const pressedAt = phone.device.clock.serverNow();
+    // Once open, the page counts, and no key press costs any time.
     const { entry } = await phone.press(41);
-    assert.equal(entry.ts_ms, pressedAt);
-    // No second freeze on this page...
-    await phone.press(7);
-    assert.equal(phone.fakeWindow.constructorCalls, 1);
+    assert.equal(entry.car, 41);
+    assert.equal(phone.fakeWindow.monotonicMs, 21_000);
+    assert.equal(phone.fakeWindow.resumeCalls, 0, 'that audio is left alone');
 
-    // ...and none on the reloaded page: the phone remembers.
+    // The reloaded page opens at once: the phone remembers, and does not
+    // touch the audio.
     const reloaded = await createCountingPhone({ constructor: 'freezes' }, createPreferences(phoneStorage));
-    await reloaded.press(12);
     assert.equal(reloaded.fakeWindow.constructorCalls, 0);
+    assert.equal(reloaded.fakeWindow.monotonicMs, 1000);
+    await reloaded.press(12);
     assert.deepEqual(reloaded.fakeWindow.vibrations, [40], 'vibration is not affected');
 
-    // Ten minutes later the page may try the sound again (the speaker may
-    // be back).
+    // Ten minutes later a page that loads may try the sound again (the
+    // speaker may be back).
     const later = await createCountingPhone({}, createPreferences(phoneStorage));
+    assert.equal(later.fakeWindow.constructorCalls, 0);
     later.device.clock.advance(FROZEN_AUDIO_REST_MS + 1000);
-    const afterTheRest = createFeedback({
-        preferences: createPreferences(phoneStorage), windowRef: later.fakeWindow, now: later.device.clock.now,
-    });
-    afterTheRest.prepararSom();
+    createFeedback({ preferences: createPreferences(phoneStorage), windowRef: later.fakeWindow, now: later.device.clock.now });
     assert.equal(later.fakeWindow.constructorCalls, 1);
     assert.deepEqual(unhandledRejections, []);
 });
@@ -336,11 +390,8 @@ test('when the browser reports a failed audio device, a reloaded page does not t
     // SITUATION (reproduced in headless Chromium, which has no audio
     // device): the sound works at first. A minute later the browser reports
     // "the AudioContext encountered an error from the audio device". The
-    // counter reloads the page and types a car.
-    //
-    // WHAT WENT WRONG: the reloaded page created a new audio context at its
-    // first key press, and in that state `new AudioContext()` takes 20
-    // seconds to return. The page was frozen and the number lost.
+    // counter reloads the page. In that state `new AudioContext()` is the
+    // call that takes 20 seconds.
     const phoneStorage = createPhoneStorage();
     const phone = await createCountingPhone({}, createPreferences(phoneStorage));
     await phone.press(41);
@@ -349,17 +400,18 @@ test('when the browser reports a failed audio device, a reloaded page does not t
 
     phone.fakeWindow.audioContexts[0].reportDeviceError();
 
-    // On this page: no new context, no more beeps, counting goes on.
+    // On this page: no more beeps, no audio calls, counting goes on.
     await phone.press(7);
     assert.equal(phone.fakeWindow.constructorCalls, 1);
+    assert.equal(phone.fakeWindow.resumeCalls, 1);
     assert.equal(phone.device.store.allEntries().length, 2);
 
-    // On the reloaded page: the audio API is not called at all.
+    // The reloaded page opens at once and does not call the audio API.
     const reloaded = await createCountingPhone({ constructor: 'freezes' }, createPreferences(phoneStorage));
+    assert.equal(reloaded.fakeWindow.constructorCalls, 0);
+    assert.equal(reloaded.fakeWindow.monotonicMs, 1000, 'no time was lost in a blocked call');
     const { entry } = await reloaded.press(12);
     assert.equal(entry.car, 12);
-    assert.equal(reloaded.fakeWindow.constructorCalls, 0);
-    assert.equal(reloaded.fakeWindow.monotonicMs, 1000, 'no time was lost in a frozen call');
 });
 
 test('audio that the phone suspended is woken up by the next press that records', async () => {
@@ -373,7 +425,7 @@ test('audio that the phone suspended is woken up by the next press that records'
     await phone.press(7);
     await settle();
 
-    // EXPECTED: the same audio context, resumed again inside the press.
+    // EXPECTED: the same audio context, asked to start again inside the press.
     assert.equal(phone.fakeWindow.audioContexts.length, 1);
     assert.equal(phone.fakeWindow.resumeCalls, 2);
     assert.equal(context.beeps, 2);
@@ -381,14 +433,15 @@ test('audio that the phone suspended is woken up by the next press that records'
 
 test('a beep requested before any press is skipped quietly', () => {
     // Situation: cannot really happen (an entry needs a press), but a beep
-    // must never be able to break counting. Creating the audio here,
-    // outside a press, would only make a context that stays silent.
+    // must never be able to break counting. The audio exists but no press
+    // has started it; outside a press the browser would not let it start.
     const fakeWindow = createFakeWindow();
     const feedback = createFeedback({ preferences: createPreferences(null), windowRef: fakeWindow });
 
     feedback.erro();
 
-    assert.equal(fakeWindow.audioContexts.length, 0);
+    assert.equal(fakeWindow.beeps(), 0);
+    assert.equal(fakeWindow.resumeCalls, 0);
 });
 
 test('with the sound switch off the audio is not touched at all, and vibration still works', async () => {
@@ -401,7 +454,20 @@ test('with the sound switch off the audio is not touched at all, and vibration s
     await phone.press(41);
 
     assert.equal(phone.fakeWindow.constructorCalls, 0);
+    assert.equal(phone.fakeWindow.resumeCalls, 0);
     assert.deepEqual(phone.fakeWindow.vibrations, [40]);
+
+    // The counter turns "Som" on. The page makes its audio then (the
+    // switch's own handler calls carregarSom), not in the next key press,
+    // and makes it once.
+    preferences.set('som', true);
+    phone.feedback.carregarSom();
+    phone.feedback.carregarSom();
+    assert.equal(phone.fakeWindow.constructorCalls, 1);
+    await phone.press(7);
+    await settle();
+    assert.equal(phone.fakeWindow.constructorCallsInsideAPress, 0);
+    assert.equal(phone.fakeWindow.beeps(), 1);
 });
 
 test('a phone that cannot vibrate is recognised, so the page can hide the "Vibrar" switch', async () => {

@@ -250,13 +250,29 @@ final class Settings
         if ($lapCount < self::MIN_LAPS_FOR_MINIMUM_LAP) {
             return $minimumMs;
         }
+        $fromOwnLapsMs = (int) ($this->fracaoVoltaMinima * (int) self::normalLapMs($recentLapsMs));
+        return $fromOwnLapsMs > $minimumMs ? $fromOwnLapsMs : $minimumMs;
+    }
+
+    /**
+     * The car's normal lap, from its own recent laps (see above): the
+     * second shortest of the last five; with exactly three, the shortest.
+     * Null while the car has fewer than three laps.
+     *
+     * @param int[] $recentLapsMs the car's most recent laps, oldest first
+     */
+    public static function normalLapMs(array $recentLapsMs): ?int
+    {
+        $lapCount = count($recentLapsMs);
+        if ($lapCount < self::MIN_LAPS_FOR_MINIMUM_LAP) {
+            return null;
+        }
         if ($lapCount > self::LAPS_FOR_MINIMUM_LAP) {
             $recentLapsMs = array_slice($recentLapsMs, -self::LAPS_FOR_MINIMUM_LAP);
+            $lapCount = self::LAPS_FOR_MINIMUM_LAP;
         }
         sort($recentLapsMs);
-        $normalLapMs = $lapCount === self::MIN_LAPS_FOR_MINIMUM_LAP ? $recentLapsMs[0] : $recentLapsMs[1];
-        $fromOwnLapsMs = (int) ($this->fracaoVoltaMinima * $normalLapMs);
-        return $fromOwnLapsMs > $minimumMs ? $fromOwnLapsMs : $minimumMs;
+        return $lapCount === self::MIN_LAPS_FOR_MINIMUM_LAP ? $recentLapsMs[0] : $recentLapsMs[1];
     }
 
     /**

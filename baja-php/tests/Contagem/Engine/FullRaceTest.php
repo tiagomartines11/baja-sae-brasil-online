@@ -175,21 +175,21 @@ final class FullRaceTest extends EngineTestCase
         $this->assertNoUnclassifiedCarHasAnOfficialPass($race, $afterReview);
     }
 
-    /** @return array<string, array{0: string, 1: bool}> kind of mistake, and whether suggestions alone repair it */
+    /** @return array<string, array{0: string, 1: ?string}> kind of mistake, and the flag it leaves for a person (null: suggestions alone repair it) */
     public static function kindsOfMistake(): array
     {
         return [
-            'a counter misses a car' => [SyntheticMistakes::MISS, true],
-            'a counter types another number' => [SyntheticMistakes::TYPO, true],
-            'a double tap' => [SyntheticMistakes::DOUBLE_TAP, true],
-            'a repeat 8 to 15 s later' => [SyntheticMistakes::REPEAT, true],
-            'a counter types 6 to 12 s late' => [SyntheticMistakes::LATE, true],
-            'a counter types 22 to 30 s late' => [SyntheticMistakes::LATE_BEYOND_WINDOW, true],
-            'a typo onto a car that is itself passing' => [SyntheticMistakes::TYPO_ONTO_PASSING_CAR, true],
-            'a typo onto a car that passes one window away' => [SyntheticMistakes::WINDOW_EDGE_TYPO, true],
-            'a repeat plus a very late counter' => [SyntheticMistakes::REPEAT_AND_LATECOMER, true],
-            'two counters miss the same crossing' => [SyntheticMistakes::LONE_REAL_PASS, false],
-            'one misses and one mistypes the same crossing' => [SyntheticMistakes::MISS_AND_TYPO, false],
+            'a counter misses a car' => [SyntheticMistakes::MISS, null],
+            'a counter types another number' => [SyntheticMistakes::TYPO, null],
+            'a double tap' => [SyntheticMistakes::DOUBLE_TAP, null],
+            'a repeat 8 to 15 s later' => [SyntheticMistakes::REPEAT, null],
+            'a counter types 6 to 12 s late' => [SyntheticMistakes::LATE, null],
+            'a counter types 22 to 30 s late' => [SyntheticMistakes::LATE_BEYOND_WINDOW, null],
+            'a typo onto a car that is itself passing' => [SyntheticMistakes::TYPO_ONTO_PASSING_CAR, null],
+            'a typo onto a car that passes one window away' => [SyntheticMistakes::WINDOW_EDGE_TYPO, null],
+            'a repeat plus a very late counter' => [SyntheticMistakes::REPEAT_AND_LATECOMER, Flag::DISPERSAO_ALTA],
+            'two counters miss the same crossing' => [SyntheticMistakes::LONE_REAL_PASS, Flag::SOLITARIA],
+            'one misses and one mistypes the same crossing' => [SyntheticMistakes::MISS_AND_TYPO, Flag::SOLITARIA],
         ];
     }
 
@@ -213,12 +213,21 @@ final class FullRaceTest extends EngineTestCase
      * suggestions are NOT enough: at least one flag without a suggestion
      * stays open, and the count is only right once a person has settled it.
      *
+     * The repeat plus a very late counter needs a person too, for another
+     * reason. The repeat and the late entry end up together, ten seconds
+     * apart: a held, doubtful pass ("dispersao_alta"). It is not counted,
+     * so in "confirmadas" the count is right all along; but which of the
+     * two entries to void (here: both) is not something the engine lets a
+     * reviewer accept blindly, so each such pair waits for a person to
+     * look and void them.
+     *
      * In "confirmadas", whatever the kind, no car is ever ahead of the
      * truth before anybody reviews.
      */
     #[DataProvider('kindsOfMistake')]
-    public function testEachKindOfMistakeOnItsOwn(string $kind, bool $suggestionsAreEnough): void
+    public function testEachKindOfMistakeOnItsOwn(string $kind, ?string $flagLeftForAPerson): void
     {
+        $suggestionsAreEnough = $flagLeftForAPerson === null;
         $typos = [SyntheticMistakes::TYPO, SyntheticMistakes::TYPO_ONTO_PASSING_CAR, SyntheticMistakes::WINDOW_EDGE_TYPO];
         foreach ([Settings::MODO_CONFIRMADAS, Settings::MODO_TODAS] as $mode) {
             foreach (Settings::PASSAGENS_INICIAIS as $passagemInicial) {
@@ -250,7 +259,13 @@ final class FullRaceTest extends EngineTestCase
                             );
                         }
                     } else {
-                        $this->assertNotEmpty($this->openFlags($afterSuggestions, Flag::SOLITARIA), $context);
+                        $this->assertNotEmpty($this->openFlags($afterSuggestions, $flagLeftForAPerson), $context);
+                        foreach ($this->openFlags($afterSuggestions, $flagLeftForAPerson) as $flag) {
+                            $this->assertNull($flag->sugestao, $context);
+                        }
+                        if ($flagLeftForAPerson === Flag::DISPERSAO_ALTA && $mode === Settings::MODO_CONFIRMADAS) {
+                            $this->assertSame($truth, $this->officialCounts($afterSuggestions, $race), "$context A held pass does not count.");
+                        }
                     }
                     $afterTheVideo = SyntheticReviewer::settleEverythingWithTheVideo($race, $input);
                     $this->assertSame($truth, $this->officialCounts($afterTheVideo, $race), $context);

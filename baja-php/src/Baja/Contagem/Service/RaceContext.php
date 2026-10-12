@@ -5,6 +5,7 @@ namespace Baja\Contagem\Service;
 
 use Baja\Contagem\Engine\RaceTimeline;
 use Baja\Contagem\Engine\Settings;
+use Baja\Model\Prova;
 use Baja\Model\ProvaQuery;
 
 /**
@@ -131,6 +132,7 @@ final class RaceContext
         foreach ($context['abastecimento_paradas'] ?? [] as $carro => $intervals) {
             $timeline->fuelIntervals[(int) $carro] = $intervals;
         }
+        $timeline->assumedExits = $context['saidas_presumidas'] ?? [];
         return $timeline;
     }
 
@@ -145,7 +147,60 @@ final class RaceContext
             'bandeiras_vermelhas' => $timeline->redFlagIntervals,
             'box' => $timeline->pitIntervals,
             'abastecimento_paradas' => $timeline->fuelIntervals,
+            // Exits nobody logged, which the count assumed (see HoldRule).
+            // The stays above already end there; the list says which ones.
+            'saidas_presumidas' => $timeline->assumedExits,
         ];
+    }
+
+    /**
+     * Ends, in a timeline read from the log, the stays the last whole-race
+     * count assumed over.
+     *
+     * The log alone still has such a car inside: nobody logged its exit.
+     * The count decided it had left (the counters agreed on two passes a
+     * lap apart) and counts its laps. Without this, the pit-log phone would
+     * go on listing the car as inside and the stops report would show a
+     * stay that grows for the rest of the race, both contradicting the
+     * results page.
+     *
+     * An assumed exit is only applied while the log still has nothing
+     * better: once somebody logs or marks the real exit earlier than the
+     * assumed one, the log wins. (The next whole-race count drops the
+     * assumption anyway; this covers the seconds in between.)
+     *
+     * @param array<int, array{area: string, carro: int, ts_ms: int, entrada_ms: int}> $assumedExits
+     */
+    public static function applyAssumedExits(RaceTimeline $timeline, array $assumedExits): void
+    {
+        foreach ($assumedExits as $assumed) {
+            $area = (string) ($assumed['area'] ?? '');
+            $carro = (int) ($assumed['carro'] ?? 0);
+            $entryMs = (int) ($assumed['entrada_ms'] ?? 0);
+            $exitMs = (int) ($assumed['ts_ms'] ?? 0);
+            $stays = $area === RaceTimeline::AREA_ABASTECIMENTO
+                ? $timeline->fuelIntervals[$carro] ?? []
+                : $timeline->pitIntervals[$carro] ?? [];
+            foreach ($stays as [$inMs, $outMs]) {
+                $logHasNothingBetter = $outMs === null || $outMs > $exitMs;
+                if ($inMs === $entryMs && $logHasNothingBetter) {
+                    $timeline->assumeExit($area, $carro, $entryMs, $exitMs);
+                }
+            }
+        }
+    }
+
+    /**
+     * The exits the last whole-race count assumed, from the snapshot it
+     * left. Empty when there is no snapshot yet.
+     *
+     * @return array<int, array{area: string, carro: int, ts_ms: int, entrada_ms: int}>
+     */
+    private static function exitsTheLastCountAssumed(Prova $prova): array
+    {
+        $lastCount = (new SnapshotStore($prova))->getFeedPart();
+        $assumed = $lastCount['tempo_real']['corrida']['saidas_presumidas'] ?? [];
+        return is_array($assumed) ? $assumed : [];
     }
 
     /**
@@ -173,7 +228,9 @@ final class RaceContext
         $roster = CarRoster::forProva($prova);
         $nameAndNumber = fn(array $car): array => ['numero' => $car['numero'], 'nome' => $car['nome']];
 
-        $context = self::describeTimeline(RaceTimeline::fromOcorrencias($loader->loadOcorrencias()));
+        $timeline = RaceTimeline::fromOcorrencias($loader->loadOcorrencias());
+        self::applyAssumedExits($timeline, self::exitsTheLastCountAssumed($prova));
+        $context = self::describeTimeline($timeline);
         $context['valid_cars'] = array_values(array_map($nameAndNumber, $roster->classified()));
         $context['unclassified_cars'] = array_values(array_map($nameAndNumber, $roster->unclassified()));
         $context['janela_ms'] = $settings->janelaMs;

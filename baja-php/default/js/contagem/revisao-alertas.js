@@ -163,39 +163,48 @@ export function areaDoAlerta(alerta) {
 // only, the entry is a lone entry like any other: marking the exit closes
 // the stay but the pass still needs a second witness.
 //
-// So "marcar saída" adds a lap exactly when the flag's pass is held. The
-// server says that with "contagem_em_duvida: 'a_menos'"; a state from
-// before that key existed is judged by how many entries the pass has.
-export function marcarSaidaSomaVolta(alerta) {
+// One missed exit holds EVERY later pass of that stay, and one mark
+// releases them all (seen in a rehearsal: 3 laps became 8). The server
+// counts that for each such flag, in "voltas_ao_marcar_saida": how many
+// agreed held passes start counting if the exit is marked just before this
+// flag's pass. That number, and nothing else, is what the button promises.
+//
+// Returns 0 when marking the exit adds no lap, and when the server did not
+// say (one counter only, or a state from before the field existed): a
+// button must not promise laps on a guess.
+export function voltasAoMarcarSaida(alerta) {
   if (areaDoAlerta(alerta) === null) {
-    return false;
+    return 0;
   }
-  if (alerta.contagem_em_duvida !== undefined) {
-    return alerta.contagem_em_duvida === 'a_menos';
-  }
-  return (alerta.passagem_ids ?? []).length >= 2;
+  const voltas = alerta.voltas_ao_marcar_saida;
+  return Number.isInteger(voltas) && voltas > 0 ? voltas : 0;
 }
 
-// "Marcar saída do box (+1 volta)", or without the suffix when marking the
-// exit does not make the pass count. Called with an area alone it gives the
-// plain label.
-export function rotuloDeMarcarSaida(area, somaVolta = false) {
-  return `Marcar saída do ${NOMES_DE_AREA[area] ?? area}${somaVolta ? ' (+1 volta)' : ''}`;
+// "+1 volta", "+5 voltas".
+const maisVoltas = (voltas) => (voltas === 1 ? '+1 volta' : `+${voltas} voltas`);
+
+// "Marcar saída do box (+5 voltas)", "(+1 volta)", or without the
+// parenthesis when marking the exit makes no pass count. Called with an
+// area alone it gives the plain label.
+export function rotuloDeMarcarSaida(area, voltas = 0) {
+  return `Marcar saída do ${NOMES_DE_AREA[area] ?? area}${voltas > 0 ? ` (${maisVoltas(voltas)})` : ''}`;
 }
 
 // What is asked before "marcar saída"; null when it changes no count.
 export function perguntaAoMarcarSaida(alerta) {
   const area = areaDoAlerta(alerta);
-  if (!marcarSaidaSomaVolta(alerta)) {
+  const voltas = voltasAoMarcarSaida(alerta);
+  if (voltas === 0) {
     return null;
   }
   const carro = (alerta.carros ?? []).join(', ');
+  const efeito = voltas === 1
+    ? `A passagem, que hoje está retida, passa a CONTAR: o carro ${carro} ganha uma volta (+1 volta). `
+    : `Esta passagem e as seguintes dele retidas pelo mesmo motivo passam a CONTAR, ${voltas} ao todo: `
+      + `o carro ${carro} ganha ${voltas} voltas (${maisVoltas(voltas)}). `;
   return `Marcar a saída do carro ${carro} do ${NOMES_DE_AREA[area]}? `
     + 'A saída é registrada um segundo antes desta passagem e a parada é encerrada. '
-    + `A passagem, que hoje está retida, passa a CONTAR: o carro ${carro} ganha uma volta (+1 volta). `
-    // Seen in the browser: one missed exit holds EVERY later pass of the car,
-    // and one mark releases them all (3 laps became 8).
-    + 'Se houver passagens seguintes dele retidas pelo mesmo motivo, elas também passam a contar. '
+    + efeito
     + 'Se o carro não saiu e a passagem foi um engano dos contadores, use "Descartar esta passagem". Pode ser desfeito pelo histórico.';
 }
 
@@ -306,8 +315,8 @@ export function rotuloDeDescartar(passagem, largadaMs) {
 // An action that is already what A does on this flag is left out.
 //
 // A pass while the car is logged inside an area always gets both of its
-// buttons, in this order: "Marcar saída do … (+1 volta)" (the suffix only
-// when it makes the pass count) and "Descartar esta passagem".
+// buttons, in this order: "Marcar saída do … (+N voltas)" (the parenthesis
+// only when it makes passes count) and "Descartar esta passagem".
 export function acoesExtrasDoAlerta(alerta, largadaMs = null) {
   const sugerido = alerta?.sugestao?.tipo ?? null;
   const acoes = [];
@@ -315,7 +324,7 @@ export function acoesExtrasDoAlerta(alerta, largadaMs = null) {
 
   if (area !== null) {
     if (decisaoMarcarSaida(alerta)) {
-      acoes.push({ acao: 'marcar_saida', rotulo: rotuloDeMarcarSaida(area, marcarSaidaSomaVolta(alerta)) });
+      acoes.push({ acao: 'marcar_saida', rotulo: rotuloDeMarcarSaida(area, voltasAoMarcarSaida(alerta)) });
     }
     for (const passagem of passagensParaDescartar({ ...alerta, passagens: [] })) {
       acoes.push({ acao: 'descartar_passagem', passagem, rotulo: 'Descartar esta passagem' });

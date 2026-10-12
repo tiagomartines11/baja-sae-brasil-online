@@ -269,7 +269,7 @@ final class FuelingTest extends EngineTestCase
         $this->assertSame(Flag::EFEITO_MAIS_UMA_PASSAGEM, $flag->efeitoDeConfirmar);
         $this->assertSame(Flag::DUVIDA_A_MENOS, $flag->contagemEmDuvida);
         $this->assertStringContainsString('abastecimento', $flag->motivo);
-        $this->assertStringContainsString('ficou retida', $flag->motivo);
+        $this->assertStringContainsString('fica retida', $flag->motivo);
         $this->assertSame(0, $race->countCars('11:00', [6])->lapCount(6), 'The fast path holds it too.');
 
         $inferredExit = $race->inferredExit('abastecimento', 6, RaceScenario::ms('06:59'));

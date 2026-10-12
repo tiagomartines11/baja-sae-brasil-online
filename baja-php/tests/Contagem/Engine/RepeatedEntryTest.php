@@ -413,4 +413,42 @@ final class RepeatedEntryTest extends EngineTestCase
 
         $this->assertSame(['tipo' => 'anular', 'passagem_id' => $repeat], $flag->sugestao);
     }
+
+    /**
+     * SITUATION: counter 1 types car 6 at 12:00 (nobody else does), again
+     * at 12:12, and counter 3 types it at 12:19. The second and third
+     * entries end up together, seven seconds apart: a doubtful, held pass.
+     *
+     * WHAT WENT WRONG (before): this was a "repetida" whose suggestion
+     * voided one of counter 1's entries. With the other counter's entry so
+     * far from it, nobody can tell from here whether the repeat, the first
+     * entry or the late one is the stray, and a reviewer accepting the
+     * suggestion blindly could throw away the record of a real pass.
+     *
+     * EXPECTED: no "repetida". The held group has its "dispersao_alta"
+     * flag, with no suggestion, and no flag of this car suggests voiding
+     * an entry of that group.
+     */
+    public function testARepeatWhoseSecondEntrySitsInAWideUnagreedGroupHasNoSuggestion(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([6]);
+        $race->pass(6, '06:00');
+        $race->entry(1, 6, '12:00');
+        $repeat = $race->entry(1, 6, '12:12');
+        $late = $race->entry(3, 6, '12:19');
+
+        $result = $race->run('13:00');
+
+        $this->assertSame([$repeat, $late], $result->groupOfEntry($repeat)->entryIds());
+        $this->assertSame([], $this->openFlags($result, Flag::REPETIDA));
+        $wide = $this->openFlags($result, Flag::DISPERSAO_ALTA)[0];
+        $this->assertSame([$repeat, $late], $wide->passagemIds);
+        $this->assertNull($wide->sugestao);
+        foreach ($result->openFlags() as $flag) {
+            $voided = ($flag->sugestao['tipo'] ?? null) === 'anular' ? $flag->sugestao['passagem_id'] : null;
+            $this->assertNotContains($voided, [$repeat, $late]);
+        }
+    }
 }

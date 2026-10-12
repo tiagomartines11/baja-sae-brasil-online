@@ -35,6 +35,8 @@ async function main() {
 
     const session = new PitSession({ store, clock, generateUuid });
     const flow = new PitFlow({ preferences, fuelingEnabled: page.fuelingEnabled() });
+    // Creates the page's audio now, while the page is still loading: never
+    // inside a tap (see feedback.js).
     const feedback = createFeedback({ preferences, windowRef: window, monotonicNow });
     const buffer = new NumberBuffer();
     const field = element('campo-numero');

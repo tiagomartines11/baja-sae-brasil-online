@@ -65,6 +65,11 @@ final class SyntheticRace
      */
     private array $typedAtMsByEntryId = [];
 
+    /** @var array<int, ?int> entry id => the moment of the real crossing behind it, or null when there is none */
+    private array $crossingMsByEntryId = [];
+    /** The real crossing the counters are typing right now. */
+    private int $crossingBeingTypedMs = 0;
+
     private SyntheticRaceConfig $config;
     private Randomizer $random;
     private int $nextEntryId = 1;
@@ -133,6 +138,16 @@ final class SyntheticRace
     public function realCarBehindEntry(int $entryId): ?int
     {
         return $this->realCarByEntryId[$entryId] ?? null;
+    }
+
+    /**
+     * Which real crossing an entry is a record of (the moment the car was
+     * on the line), or null when nothing crossed. Two entries with the same
+     * car and the same moment are two records of ONE crossing.
+     */
+    public function crossingBehindEntry(int $entryId): ?int
+    {
+        return $this->crossingMsByEntryId[$entryId] ?? null;
     }
 
     /** @return int[] the cars that take part */
@@ -235,6 +250,7 @@ final class SyntheticRace
         }
 
         foreach ($this->track->passes as $passIndex => $pass) {
+            $this->crossingBeingTypedMs = $pass['tsMs'];
             for ($sourceId = 1; $sourceId <= $this->config->counters; $sourceId++) {
                 $typedAtMs = $pass['tsMs'] + $habitMs[$sourceId] + $this->random->getInt(-400, 400);
                 $mistake = $this->mistakes->actions[$passIndex][$sourceId] ?? null;
@@ -244,6 +260,7 @@ final class SyntheticRace
 
         // The unclassified cars are typed by everybody, with no mistakes.
         foreach ($this->track->unclassifiedPasses as $pass) {
+            $this->crossingBeingTypedMs = $pass['tsMs'];
             for ($sourceId = 1; $sourceId <= $this->config->counters; $sourceId++) {
                 $typedAtMs = $pass['tsMs'] + $habitMs[$sourceId] + $this->random->getInt(-400, 400);
                 $this->addEntry($sourceId, $this->deviceInUse($sourceId, $pass['tsMs']), $pass['car'], $typedAtMs, $pass['car']);
@@ -321,6 +338,7 @@ final class SyntheticRace
         $id = $this->nextEntryId++;
         $this->typedAtMsByEntryId[$id] = $tsMs;
         $this->realCarByEntryId[$id] = $realCar;
+        $this->crossingMsByEntryId[$id] = $realCar === null ? null : $this->crossingBeingTypedMs;
 
         $entry = new Entry($id, $sourceId, $device, $car, $tsMs);
         foreach ([Entry::TEMPO_ESTIMADO => $this->config->estimatedTimePeriods, Entry::TEMPO_DESCONHECIDO => $this->config->unknownTimePeriods] as $quality => $periods) {

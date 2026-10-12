@@ -106,6 +106,13 @@ final class PassGroup
     /** With `$intervaloDesdeAnteriorMs`: the shortest lap believable for this car at that moment, in ms. */
     public ?int $voltaMinimaMs = null;
 
+    /**
+     * Set on the first pass that counted because the engine ASSUMED the
+     * car had left an area whose log still had it inside: the area
+     * (RaceTimeline::AREA_BOX or AREA_ABASTECIMENTO). See HoldRule.
+     */
+    public ?string $saidaPresumida = null;
+
     /** One of the entries has an estimated time (`Entry::TEMPO_ESTIMADO`). */
     public bool $tempoEstimado = false;
 

@@ -72,10 +72,8 @@ final class PassFlags
         if (count($group->realSourceIds()) === 1) {
             $flag->fonteId = $group->realSourceIds()[0];
             $flag->motivo .= ' Só uma contagem viu a passagem, e ela não está contada.';
-        } elseif ($group->contado) {
-            $flag->motivo .= ' No modo de publicação atual a passagem está contada mesmo assim.';
         } else {
-            $flag->motivo .= sprintf(' Por isso a passagem ficou retida, fora da contagem. Se o carro saiu e a saída não foi registrada, marque a saída do %s (a passagem passa a contar); se a passagem não aconteceu, descarte-a.', $place);
+            $flag->motivo .= sprintf(' Por isso, pela regra de contagem padrão, a passagem fica retida, fora da contagem. Se o carro saiu e a saída não foi registrada, marque a saída do %s (a passagem passa a contar); se a passagem não aconteceu, descarte-a.', $place);
         }
         if ($group->intervaloDesdeAnteriorMs !== null) {
             $flag->motivo .= sprintf(
@@ -84,6 +82,28 @@ final class PassFlags
                 (int) round((int) $group->voltaMinimaMs / 1000)
             );
         }
+        return $flag;
+    }
+
+    /**
+     * Informational: the log of an area still had the car inside, the
+     * counters agreed on this pass and on another one lap later, and the
+     * engine assumed the exit nobody logged, one second before this pass.
+     * Nothing is held and no count is in doubt; the reviewer is told, and
+     * can discard the passes if the car never left.
+     */
+    public function assumedExit(PassGroup $group, string $area): Flag
+    {
+        $flag = new Flag(Flag::SAIDA_PRESUMIDA, [$group->carro], $group->entryIds(), (string) $group->anchorEntryId());
+        $flag->tsMs = $group->tsMs;
+        $place = $area === RaceTimeline::AREA_BOX ? 'box' : 'abastecimento';
+        $flag->motivo = sprintf(
+            'O carro %d constava como dentro do %s, mas as contagens (%s) o registraram na linha aqui e de novo uma volta depois. O sistema presumiu que a saída do %s não foi registrada: considerou o carro fora a partir de 1 s antes desta passagem e contou as passagens. Se o carro não saiu, descarte-as; se saiu, confirme para parar de avisar.',
+            $group->carro,
+            $place,
+            $this->sourceNames($group),
+            $place
+        );
         return $flag;
     }
 
@@ -128,12 +148,15 @@ final class PassFlags
         return $flag;
     }
 
-    /** One sentence: is the doubtful group out of the count (the usual case) or in it (the mode in force counts it)? */
+    /**
+     * One sentence saying the group is held. It is worded the same in
+     * every publish mode, like every reason: whether the mode in force
+     * counts the group anyway ("todas") is in the flag's
+     * `efeito_de_confirmar` and `contagem_em_duvida`, not in its text.
+     */
     private function heldOrCounted(PassGroup $group): string
     {
-        return $group->contado
-            ? 'No modo de publicação atual ela está contada mesmo assim.'
-            : 'Por isso ela ficou retida, fora da contagem.';
+        return 'Por isso, pela regra de contagem padrão, ela fica retida, fora da contagem.';
     }
 
     /** Of three or more counters' entries, the one furthest from the middle one; null when there are only two. */

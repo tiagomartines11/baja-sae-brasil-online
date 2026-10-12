@@ -57,7 +57,6 @@ final class HoldRuleTest extends EngineTestCase
         $flag = $this->assertSingleOpenFlag($result, Flag::PASSAGEM_PROXIMA_DEMAIS);
         $this->assertSame(Flag::DUVIDA_A_MAIS, $flag->contagemEmDuvida);
         $this->assertSame(Flag::EFEITO_NENHUM, $flag->efeitoDeConfirmar);
-        $this->assertStringContainsString('está contada mesmo assim', $flag->motivo);
         $group = $result->groupOfEntry($flag->passagemIds[0]);
         $this->assertFalse($group->retida, 'Not held in the count in force.');
         $this->assertTrue($group->retidaNaReferencia, 'Held under the default rule, which the flags are judged by.');
@@ -371,5 +370,259 @@ final class HoldRuleTest extends EngineTestCase
 
         $this->assertTrue($result->groupOfEntry($inside[1])->retida);
         $this->assertLapCounts([9 => 1], $result);
+    }
+
+    /**
+     * Car 9 laps every three minutes (00:20, 03:20, 06:20, 09:20, 12:20),
+     * then is logged INTO the pit lane at 13:00, and nobody ever logs it
+     * out.
+     */
+    private function carNineGoesIntoThePitLaneAndIsNeverLoggedOut(): RaceScenario
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        foreach (['00:20', '03:20', '06:20', '09:20', '12:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->pitIn(9, '13:00');
+        return $race;
+    }
+
+    /**
+     * SITUATION: the car above leaves the pit lane, nobody logs the exit,
+     * and it goes on lapping: everybody records it at 16:00, 19:00 and
+     * 22:00.
+     *
+     * WHAT WENT WRONG (with the plain pit-lane hold): one missed exit held
+     * EVERY later pass of the car until a reviewer noticed. In simulated
+     * races that was twenty uncounted crossings per race.
+     *
+     * EXPECTED:
+     * - at 17:00, with one pass inside the stay, that pass is held (a
+     *   single agreed pass may be a wrong number typed for a car standing
+     *   in its pit);
+     * - at 20:00 there is a second agreed pass one lap after the first.
+     *   The car is plainly lapping, so the engine assumes the exit nobody
+     *   logged, one second before the first of the two: both passes count,
+     *   and so does the one at 22:00. Seven laps in the end;
+     * - the stay ends at 15:59 on the timeline (so the car's status and the
+     *   stops report agree with the count), and the assumed exit is listed;
+     * - one informational flag, "saida_presumida", on the first pass: no
+     *   suggestion, nothing held, no count in doubt. Confirming that pass
+     *   silences it;
+     * - recounting car 9 alone gives the same laps at each step.
+     */
+    public function testASecondAgreedPassOneLapLaterMeansTheCarLeftAndBothCount(): void
+    {
+        $race = $this->carNineGoesIntoThePitLaneAndIsNeverLoggedOut();
+        $first = $race->pass(9, '16:00');
+
+        $oneInside = $race->run('17:00');
+        $this->assertLapCounts([9 => 4], $oneInside);
+        $this->assertSame(PassGroup::RETIDA_NO_BOX, $oneInside->groupOfEntry($first[1])->motivoRetencao);
+        $this->assertSame(4, $race->countCars('17:00', [9])->lapCount(9));
+        $this->assertSame([], $oneInside->timeline->assumedExits);
+
+        $race->pass(9, '19:00');
+        $twoInside = $race->run('20:00');
+        $this->assertLapCounts([9 => 6], $twoInside);
+        $this->assertSame(6, $race->countCars('20:00', [9])->lapCount(9));
+
+        $race->pass(9, '22:00');
+        $result = $race->run('23:00');
+        $this->assertLapCounts([9 => 7], $result);
+        $this->assertSame(7, $race->countCars('23:00', [9])->lapCount(9));
+        $this->assertSame([[RaceScenario::ms('13:00'), RaceScenario::ms('15:59')]], $result->timeline->pitIntervals[9]);
+        $this->assertSame(
+            [['area' => 'box', 'carro' => 9, 'ts_ms' => RaceScenario::ms('15:59'), 'entrada_ms' => RaceScenario::ms('13:00')]],
+            $result->timeline->assumedExits
+        );
+        $this->assertFalse($result->timeline->isInPitAt(9, RaceScenario::ms('23:00')));
+        $flag = $this->assertSingleOpenFlag($result, Flag::SAIDA_PRESUMIDA);
+        $this->assertSame([9], $flag->carros);
+        $this->assertSame(array_values($first), $flag->passagemIds);
+        $this->assertNull($flag->sugestao);
+        $this->assertNull($flag->contagemEmDuvida);
+        $this->assertSame(Flag::EFEITO_NENHUM, $flag->efeitoDeConfirmar);
+        $this->assertStringContainsString('presumiu', $flag->motivo);
+        $this->assertFalse($result->groupOfEntry($first[1])->retida);
+
+        $race->confirm($first[1]);
+        $confirmed = $race->run('23:00');
+        $this->assertNoOpenFlags($confirmed);
+        $this->assertLapCounts([9 => 7], $confirmed);
+    }
+
+    /** @return array<string, array{0: string[], 1: string}> the agreed passes typed while the car stands in its pit, and why they must stay held */
+    public static function phantomsForACarInItsPit(): array
+    {
+        return [
+            'ten minutes apart' => [['16:00', '26:00'], 'far more than a lap apart: unrelated'],
+            'four and a half minutes apart' => [['16:00', '20:31'], 'just over one and a half normal laps apart'],
+            'one minute apart' => [['16:00', '17:00'], 'sooner than the car could have lapped'],
+        ];
+    }
+
+    /**
+     * SITUATION: the same car, but it really IS standing in its pit. Twice
+     * two counters type its number by mistake for other cars (a shared
+     * wrong number): two "agreed" passes inside the stay.
+     *
+     * WHY IT MATTERS: the pit-lane hold exists for exactly these phantoms.
+     * If any second agreed pass released the first, two phantoms would
+     * give the car two laps.
+     *
+     * EXPECTED: "one lap later" is strict: no sooner than the car's
+     * minimum plausible lap (90 s here) and no later than one and a half
+     * of its normal laps (270 s). Outside that, both passes stay held, no
+     * exit is assumed, and the car keeps its four laps.
+     *
+     * @param string[] $phantomsAt
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('phantomsForACarInItsPit')]
+    public function testTwoAgreedPassesThatAreNotALapApartDoNotReleaseEachOther(array $phantomsAt, string $why): void
+    {
+        $race = $this->carNineGoesIntoThePitLaneAndIsNeverLoggedOut();
+        foreach ($phantomsAt as $at) {
+            $race->pass(9, $at, [1, 2]);
+        }
+
+        $result = $race->run('30:00');
+
+        $this->assertLapCounts([9 => 4], $result, $why);
+        $this->assertSame([], $result->timeline->assumedExits, $why);
+        $this->assertCount(2, $this->openFlags($result, Flag::NO_BOX), $why);
+    }
+
+    /**
+     * SITUATION: three more ways in which the release must NOT happen, and
+     * one in which it must:
+     * a) the second pass is exactly at the limit (270 s after the first):
+     *    released;
+     * b) the second "pass" rests on ONE counter: not agreed, no release;
+     * c) the two counters of the second pass are 8 s apart (a doubtful,
+     *    wide-spread group): not agreed, no release;
+     * d) the car has only two laps of its own before the stay, so nobody
+     *    knows what a lap of this car is: no release.
+     *
+     * EXPECTED: as said. In (b), (c) and (d) the first pass stays held.
+     */
+    public function testTheReleaseNeedsTwoAgreedPassesAndAKnownNormalLap(): void
+    {
+        $atTheLimit = $this->carNineGoesIntoThePitLaneAndIsNeverLoggedOut();
+        $atTheLimit->pass(9, '16:00');
+        $atTheLimit->pass(9, '20:30');
+        $this->assertLapCounts([9 => 6], $atTheLimit->run('21:00'));
+
+        $oneCounter = $this->carNineGoesIntoThePitLaneAndIsNeverLoggedOut();
+        $oneCounter->pass(9, '16:00');
+        $oneCounter->entry(2, 9, '19:00');
+        $this->assertLapCounts([9 => 4], $oneCounter->run('21:00'));
+
+        $wideSpread = $this->carNineGoesIntoThePitLaneAndIsNeverLoggedOut();
+        $wideSpread->pass(9, '16:00');
+        $wideSpread->entry(1, 9, '19:00');
+        $wideSpread->entry(2, 9, '19:08');
+        $this->assertLapCounts([9 => 4], $wideSpread->run('21:00'));
+
+        $newCar = RaceScenario::withCounters(3);
+        $newCar->start('00:00');
+        foreach (['00:20', '03:20', '06:20'] as $crossing) {
+            $newCar->pass(9, $crossing);
+        }
+        $newCar->pitIn(9, '07:00');
+        $newCar->pass(9, '10:00');
+        $newCar->pass(9, '13:00');
+        $this->assertLapCounts([9 => 2], $newCar->run('14:00'));
+    }
+
+    /**
+     * SITUATION: the car stands in its pit; two counters type its number
+     * by mistake at 16:00 (a phantom). Much later it does leave, unlogged,
+     * and laps: everybody records it at 30:00 and 33:00.
+     *
+     * EXPECTED: the phantom is not what the real passes are measured from.
+     * The pass at 30:00 is far too long after it to be "its next lap", so
+     * it becomes the new candidate; 33:00 is one lap after THAT, and those
+     * two are released with the exit assumed just before 30:00. The
+     * phantom at 16:00 stays held, with its flag: 6 laps, not 7.
+     */
+    public function testAPhantomInsideTheStayIsNotReleasedByTheRealPassesThatFollowMuchLater(): void
+    {
+        $race = $this->carNineGoesIntoThePitLaneAndIsNeverLoggedOut();
+        $phantom = $race->pass(9, '16:00', [1, 2]);
+        $race->pass(9, '30:00');
+        $race->pass(9, '33:00');
+
+        $result = $race->run('34:00');
+
+        $this->assertLapCounts([9 => 6], $result);
+        $this->assertTrue($result->groupOfEntry($phantom[1])->retida);
+        $this->assertSame(RaceScenario::ms('29:59'), $result->timeline->assumedExits[0]['ts_ms']);
+        $types = array_map(fn(Flag $flag) => $flag->tipo, $result->openFlags());
+        sort($types);
+        $this->assertSame([Flag::NO_BOX, Flag::SAIDA_PRESUMIDA], $types);
+    }
+
+    /**
+     * SITUATION: a car with no laps of its own yet is logged into the
+     * fueling station at 05:00 and never out. All three counters record it
+     * at 07:00, 10:00 and 13:00, and counter 2 alone at 16:00. (With no
+     * known normal lap, nothing is released: four flags.)
+     *
+     * EXPECTED: each flag says how many held passes would start counting
+     * if the exit were recorded just before ITS pass, for the button
+     * "Marcar saída (+N voltas)": 3, 2 and 1 for the agreed passes (that
+     * pass and the later ones held in the same stay), and 0 for the pass
+     * only one counter saw. Recording the exit before the second pass does
+     * exactly what its flag said: two more passes count.
+     */
+    public function testEachFlagOfAPassHeldInsideAnAreaSaysHowManyPassesAnExitWouldRelease(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->pass(6, '03:00');
+        $race->fuelIn(6, '05:00');
+        $race->pass(6, '07:00');
+        $race->pass(6, '10:00');
+        $race->pass(6, '13:00');
+        $race->entry(2, 6, '16:00');
+
+        $result = $race->run('17:00');
+
+        $flags = $this->openFlags($result, Flag::NO_ABASTECIMENTO);
+        usort($flags, fn(Flag $a, Flag $b) => $a->tsMs <=> $b->tsMs);
+        $this->assertSame([3, 2, 1, 0], array_map(fn(Flag $flag) => $flag->toArray()['voltas_ao_marcar_saida'], $flags));
+        $before = $result->lapCount(6);
+
+        $race->inferredExit('abastecimento', 6, RaceScenario::ms('09:59'));
+        $this->assertSame($before + 2, $race->run('17:00')->lapCount(6));
+    }
+
+    /**
+     * SITUATION: a race with ONE counter, whose word is all there is, so
+     * its passes count on their own. Car 9 laps, is logged into the pit
+     * lane and never out, and the counter records it twice more, a lap
+     * apart.
+     *
+     * EXPECTED: the release is for passes two or more counters agree on.
+     * One counter typing a number twice, a lap apart, is not that: both
+     * passes stay held and no exit is assumed.
+     */
+    public function testOneCountersWordDoesNotReleaseAPassHeldInsideThePitLane(): void
+    {
+        $race = RaceScenario::withCounters(1);
+        $race->start('00:00');
+        foreach (['00:20', '03:20', '06:20', '09:20', '12:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->pitIn(9, '13:00');
+        $race->pass(9, '16:00');
+        $race->pass(9, '19:00');
+
+        $result = $race->run('20:00');
+
+        $this->assertLapCounts([9 => 4], $result);
+        $this->assertSame([], $result->timeline->assumedExits);
     }
 }

@@ -43,6 +43,13 @@ final class Flag
     /** A pass the counters agree on, held because it is too close to the car's previous official pass. */
     public const PASSAGEM_PROXIMA_DEMAIS = 'passagem_proxima_demais';
 
+    /**
+     * Informational: the pit log (or the fueling log) still had the car
+     * inside, the counters agreed on two passes a lap apart, and the engine
+     * assumed the exit nobody logged and counted them. Holds nothing.
+     */
+    public const SAIDA_PRESUMIDA = 'saida_presumida';
+
     /** The car may have one lap too many: two counted passes closer than a believable lap. */
     public const DUVIDA_A_MAIS = 'a_mais';
     /** The car may have one lap too few: a pass is held and may be real. */
@@ -125,6 +132,15 @@ final class Flag
     public ?array $passagens = null;
 
     /**
+     * Only on "no_box" / "no_abastecimento": how many held passes of the car
+     * would start counting if its exit were recorded just before this
+     * flag's pass (this pass and the later ones held in the same stay; 0
+     * when only one counter saw this pass). The screen writes it on the
+     * button: "Marcar saída do box (+N voltas)".
+     */
+    public ?int $voltasAoMarcarSaida = null;
+
+    /**
      * @param int[] $carros
      * @param int[] $passagemIds
      */
@@ -154,6 +170,7 @@ final class Flag
             'volta_resultante_ms' => $this->voltaResultanteMs,
             'contagem_em_duvida' => $this->contagemEmDuvida,
             'passagens' => $this->passagens,
+            'voltas_ao_marcar_saida' => $this->voltasAoMarcarSaida,
         ];
     }
 }

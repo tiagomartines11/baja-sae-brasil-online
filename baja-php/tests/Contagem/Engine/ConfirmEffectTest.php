@@ -254,7 +254,10 @@ final class ConfirmEffectTest extends EngineTestCase
      * b) confirming the repeat makes it count: a 12-second lap;
      * c) the two entries are ten seconds apart, far more than counters who
      *    saw the same crossing differ by, so the group is held: the car
-     *    keeps its one lap, the flag says the count may be a lap short, and
+     *    keeps its one lap. There is no "repetida" flag for it, because
+     *    its suggestion (void the repeat) is not one to accept blindly
+     *    here; the one flag is "dispersao_alta", with no suggestion. It
+     *    says the count may be a lap short, and
      *    confirming would add a pass 17 s after the real one. Only in
      *    "todas" mode, where every entry counts, does the group count
      *    already; the flag then says confirming adds nothing and that the
@@ -290,7 +293,8 @@ final class ConfirmEffectTest extends EngineTestCase
         $repeatAndLatecomer->entry(3, 9, '03:22');
         $result = $repeatAndLatecomer->run('04:00');
         $this->assertLapCounts([9 => 1], $result);
-        $flag = $this->flagOfType($result, Flag::REPETIDA);
+        $flag = $this->flagOfType($result, Flag::DISPERSAO_ALTA);
+        $this->assertNull($flag->sugestao, 'Which of the two entries to void is for a person to say.');
         $this->assertSame(['mais_uma_passagem', 17000], $this->effectOf($flag));
         $this->assertSame(Flag::DUVIDA_A_MENOS, $flag->contagemEmDuvida);
         $this->assertCount(1, $result->openFlags(), 'One doubtful pass, one flag.');
@@ -298,7 +302,7 @@ final class ConfirmEffectTest extends EngineTestCase
         $repeatAndLatecomer->settings->modoPublicacao = Settings::MODO_TODAS;
         $result = $repeatAndLatecomer->run('04:00');
         $this->assertLapCounts([9 => 2], $result);
-        $flag = $this->flagOfType($result, Flag::REPETIDA);
+        $flag = $this->flagOfType($result, Flag::DISPERSAO_ALTA);
         $this->assertSame(['nenhum', null], $this->effectOf($flag));
         $this->assertSame(Flag::DUVIDA_A_MAIS, $flag->contagemEmDuvida);
     }
@@ -388,7 +392,7 @@ final class ConfirmEffectTest extends EngineTestCase
         $flag = new Flag(Flag::SOLITARIA, [9], [5], '5');
 
         $this->assertSame(
-            ['id', 'tipo', 'carros', 'passagem_ids', 'fonte_id', 'ts_ms', 'sugestao', 'motivo', 'auto_resolvido', 'prioridade', 'efeito_de_confirmar', 'volta_resultante_ms', 'contagem_em_duvida', 'passagens'],
+            ['id', 'tipo', 'carros', 'passagem_ids', 'fonte_id', 'ts_ms', 'sugestao', 'motivo', 'auto_resolvido', 'prioridade', 'efeito_de_confirmar', 'volta_resultante_ms', 'contagem_em_duvida', 'passagens', 'voltas_ao_marcar_saida'],
             array_keys($flag->toArray())
         );
         $this->assertNull($flag->toArray()['contagem_em_duvida']);

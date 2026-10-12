@@ -107,7 +107,7 @@ final class SnapshotService
         // between our look and our write, and ours (older) would land on
         // top of it. Decisions already hold this lock when they get here.
         try {
-            return $this->service->withLock(function () use ($snapshot, $input, $changesSeen): RaceSnapshot {
+            return $this->service->withLock(function () use ($snapshot, $input, $result, $changesSeen): RaceSnapshot {
                 // A slow recalculation that started BEFORE a decision can
                 // finish AFTER the decision stored its own, newer snapshot.
                 // Storing ours then would put the pre-decision race back on
@@ -117,6 +117,7 @@ final class SnapshotService
                     return $stored;
                 }
                 $this->store->put($snapshot, $input->settings->recalculoS * 1000);
+                $this->service->tellRaceContextWhichExitsWereAssumed($result->timeline->assumedExits);
                 return $snapshot;
             }, ProvaLock::WAIT_FOR_AN_UPLOAD_SECONDS);
         } catch (LockBusy $busy) {

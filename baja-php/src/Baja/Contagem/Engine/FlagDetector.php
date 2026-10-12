@@ -192,9 +192,13 @@ final class FlagDetector
                 // saying "count it" already.)
                 $this->attach($this->passFlags->unclassifiedCar($group), $group);
             } elseif ($group->retidaNaReferencia) {
-                $this->attach($this->heldPassFlag($group), $group);
+                $this->attach($this->heldPassFlag($group, $groupsByCar[$carro] ?? []), $group);
+            } elseif ($group->saidaPresumida !== null) {
+                $this->attach($this->passFlags->assumedExit($group, $group->saidaPresumida), $group);
             } elseif (isset($stops[$carro]) && ($area = $this->areaTheCarIsLoggedIn($carro, $group->tsMs)) !== null) {
-                $this->attach($this->passFlags->insideAnArea($group, $area), $group);
+                $areaFlag = $this->passFlags->insideAnArea($group, $area);
+                $areaFlag->voltasAoMarcarSaida = 0;
+                $this->attach($areaFlag, $group);
             } elseif (
                 isset($group->entries[1]) && !isset($group->entries[2]) && !$group->adicionadoPorRevisor
                 && ($knot = $this->loneEntries->everyWitnessMayHaveMeantAnotherCar($group)) !== null
@@ -347,12 +351,15 @@ final class FlagDetector
                 $later = $groupOfEntry[$laterId] ?? null;
                 $earlier = $groupOfEntry[$earlierId] ?? null;
                 $areTwoSharedGroups = $later !== null && $earlier !== null && $later !== $earlier
-                    && count($later->realSourceIds()) >= 2 && count($earlier->realSourceIds()) >= 2
-                    // (A `dispersa` group is not counters agreeing: a repeat
-                    // that a late entry of another counter happens to sit
-                    // near is still a repeat.)
-                    && !$later->dispersa && !$earlier->dispersa;
-                if ($areTwoSharedGroups) {
+                    && count($later->realSourceIds()) >= 2 && count($earlier->realSourceIds()) >= 2;
+                // The later entry sits with another counter's entry far
+                // from it (a `dispersa` group, held): the repeat and that
+                // entry may be one late crossing, two stray entries, or a
+                // real pass. Which entry to void is not something to
+                // accept blindly, so no "repetida" with its suggestion: the
+                // held group gets its "dispersao_alta" flag, with none.
+                $laterIsInAnUnagreedGroup = $later !== null && $later->dispersa;
+                if ($areTwoSharedGroups || $laterIsInAnUnagreedGroup) {
                     $this->notRepeatsAfterAll[$laterId] = true;
                 } else {
                     $this->earlierRepeatEntryIds[$earlierId] = true;
@@ -425,18 +432,50 @@ final class FlagDetector
         return self::OTHERS_MISSED_IT;
     }
 
-    /** The flag of a group that is held, by whichever rule held it. One flag per pass, saying everything. */
-    private function heldPassFlag(PassGroup $group): Flag
+    /**
+     * The flag of a group that is held, by whichever rule held it. One flag per pass, saying everything.
+     *
+     * @param PassGroup[] $groupsOfTheCar
+     */
+    private function heldPassFlag(PassGroup $group, array $groupsOfTheCar): Flag
     {
-        if ($group->motivoRetencao === PassGroup::RETIDA_NO_BOX) {
-            return $this->passFlags->insideAnArea($group, RaceTimeline::AREA_BOX);
-        }
-        if ($group->motivoRetencao === PassGroup::RETIDA_NO_ABASTECIMENTO) {
-            return $this->passFlags->insideAnArea($group, RaceTimeline::AREA_ABASTECIMENTO);
+        if ($group->motivoRetencao === PassGroup::RETIDA_NO_BOX || $group->motivoRetencao === PassGroup::RETIDA_NO_ABASTECIMENTO) {
+            $area = $group->motivoRetencao === PassGroup::RETIDA_NO_BOX ? RaceTimeline::AREA_BOX : RaceTimeline::AREA_ABASTECIMENTO;
+            $flag = $this->passFlags->insideAnArea($group, $area);
+            $flag->voltasAoMarcarSaida = $this->passesAnExitWouldRelease($group, $area, $groupsOfTheCar);
+            return $flag;
         }
         return $group->motivoRetencao === PassGroup::RETIDA_DISPERSAO
             ? $this->passFlags->spreadTooWide($group, $this->settings->agreementSpreadMs())
             : $this->passFlags->tooCloseToThePreviousPass($group);
+    }
+
+    /**
+     * How many held passes would start counting if the car's exit were
+     * recorded just before this pass: this one and the later ones held in
+     * the same stay, counting only passes two counters agree on that are
+     * not also too close to the car's previous pass. Zero when this pass
+     * itself rests on one counter.
+     *
+     * @param PassGroup[] $groupsOfTheCar
+     */
+    private function passesAnExitWouldRelease(PassGroup $group, string $area, array $groupsOfTheCar): int
+    {
+        $isAgreed = fn(PassGroup $pass): bool => count($pass->realSourceIds()) >= 2 && !$pass->dispersa && $pass->intervaloDesdeAnteriorMs === null;
+        if (!$isAgreed($group)) {
+            return 0;
+        }
+        $stayOf = fn(PassGroup $pass): ?int => $area === RaceTimeline::AREA_BOX
+            ? $this->timeline->pitEntryBefore($pass->carro, $pass->tsMs)
+            : $this->timeline->fuelEntryBefore($pass->carro, $pass->tsMs);
+        $stay = $stayOf($group);
+        $count = 0;
+        foreach ($groupsOfTheCar as $pass) {
+            if ($pass->tsMs >= $group->tsMs && $pass->motivoRetencao === $group->motivoRetencao && $pass->retidaNaReferencia && $isAgreed($pass) && $stayOf($pass) === $stay) {
+                $count++;
+            }
+        }
+        return $count;
     }
 
     /** @return string|null the area (RaceTimeline::AREA_*) whose log says the car is inside at that moment */

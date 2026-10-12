@@ -23,6 +23,7 @@ export const NOMES_DE_ALERTA = {
   carro_nao_classificado: 'Carro não classificado',
   no_abastecimento: 'Passagem com o carro no abastecimento',
   passagem_proxima_demais: 'Passagem retida: perto demais da anterior',
+  saida_presumida: 'Saída do box presumida: o registro não tem a saída',
   dispersao_alta: 'Registros afastados demais entre si',
 };
 

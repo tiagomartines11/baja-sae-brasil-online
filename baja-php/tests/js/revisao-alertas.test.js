@@ -20,8 +20,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, decisaoMarcarSaida, fraseDeDuvida, marcarSaidaSomaVolta,
-  passagensParaDescartar, perguntaAoConfirmar, perguntaAoDescartar, perguntaAoMarcarSaida, rotuloDeDescartar,
+  acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, decisaoMarcarSaida, fraseDeDuvida, passagensParaDescartar,
+  perguntaAoConfirmar, perguntaAoDescartar, perguntaAoMarcarSaida, rotuloDeDescartar, voltasAoMarcarSaida,
 } from '../../default/js/contagem/revisao-alertas.js';
 import { aplicarResposta } from '../../default/js/contagem/revisao-conexao.js';
 import {
@@ -213,7 +213,7 @@ test('"+1 volta" is only promised where confirming really adds a pass', () => {
 test('a pass seen by two counters while the car is logged in the pit lane: no default, two buttons', () => {
   const noBox = {
     tipo: 'no_box', carros: [41], passagem_ids: [10, 11], ts_ms: LARGADA + 600000, assinatura: 'sig',
-    sugestao: null, efeito_de_confirmar: 'mais_uma_passagem', contagem_em_duvida: 'a_menos',
+    sugestao: null, efeito_de_confirmar: 'mais_uma_passagem', contagem_em_duvida: 'a_menos', voltas_ao_marcar_saida: 1,
   };
 
   assert.equal(acaoDeAceitar(noBox, ESTADO), null, 'A is drawn disabled');
@@ -223,12 +223,11 @@ test('a pass seen by two counters while the car is logged in the pit lane: no de
   const extras = acoesExtrasDoAlerta(noBox, LARGADA);
   assert.deepEqual(extras.map((extra) => extra.rotulo), ['Marcar saída do box (+1 volta)', 'Descartar esta passagem']);
 
-  assert.equal(marcarSaidaSomaVolta(noBox), true);
+  assert.equal(voltasAoMarcarSaida(noBox), 1);
   const pergunta = perguntaAoMarcarSaida(noBox);
   assert.match(pergunta, /um segundo antes desta passagem/);
   assert.match(pergunta, /a parada é encerrada/);
-  assert.match(pergunta, /passa a CONTAR.*\(\+1 volta\)/);
-  assert.match(pergunta, /passagens seguintes dele retidas pelo mesmo motivo.*também passam a contar/);
+  assert.match(pergunta, /passa a CONTAR.*ganha uma volta \(\+1 volta\)/);
   assert.deepEqual(decisaoMarcarSaida(noBox), { tipo: 'marcar_saida', area: 'box', equipe_numero: 41, ts_ms: LARGADA + 599000 });
 
   const descartar = perguntaAoDescartar(noBox, extras[1].passagem);
@@ -250,7 +249,55 @@ test('a suggestion on a pit-lane flag from an older server is not offered on A',
   };
   assert.equal(acaoDeAceitar(antigo, ESTADO), null);
   assert.deepEqual(pedidosDaSugestao(antigo, ESTADO), []);
-  assert.equal(marcarSaidaSomaVolta(antigo), true, 'no "contagem_em_duvida" key: two entries are taken for two counters');
+  // Such a state does not say how many laps the exit would release, so the
+  // button promises none (see the test about the real number below).
+  assert.deepEqual(acoesExtrasDoAlerta(antigo, LARGADA).map((extra) => extra.rotulo), ['Marcar saída do box', 'Descartar esta passagem']);
+});
+
+// SITUATION: car 11 was logged into the pit lane at 0:08:20 and nobody
+// logged it out. It kept racing: five more crossings, each typed by all
+// three counters, each HELD because the log says the car is inside. Five
+// flags are open. The reviewer opens the first one.
+//
+// WHAT WENT WRONG: the button read "Marcar saída do box (+1 volta)". One
+// press released all five held passes: the car went from 3 laps to 8, and
+// the button had promised one.
+//
+// EXPECTED: the server says on each flag how many held passes the exit
+// would release ("voltas_ao_marcar_saida": 5 on the first flag, 2 on the
+// fourth, 1 on the last), and the button and its question carry exactly
+// that number. At the fueling station the wording is the fueling one. With
+// 0, or with no number at all (one counter only, or a state from before the
+// field existed), the button has no parenthesis and asks nothing: it must
+// not promise laps on a guess.
+test('the exit button shows how many laps marking the exit really adds', () => {
+  const noBox = (voltas) => ({
+    tipo: 'no_box', carros: [11], passagem_ids: [10, 11, 12], ts_ms: LARGADA + 526000, sugestao: null,
+    contagem_em_duvida: 'a_menos', ...(voltas === undefined ? {} : { voltas_ao_marcar_saida: voltas }),
+  });
+  const rotulo = (alerta) => acoesExtrasDoAlerta(alerta, LARGADA)[0].rotulo;
+
+  assert.equal(rotulo(noBox(5)), 'Marcar saída do box (+5 voltas)');
+  assert.equal(rotulo(noBox(2)), 'Marcar saída do box (+2 voltas)');
+  assert.equal(rotulo(noBox(1)), 'Marcar saída do box (+1 volta)');
+  assert.equal(rotulo(noBox(0)), 'Marcar saída do box');
+  assert.equal(rotulo(noBox(undefined)), 'Marcar saída do box', 'no number from the server: no promise');
+  assert.equal(rotulo({ ...noBox(3), tipo: 'no_abastecimento' }), 'Marcar saída do abastecimento (+3 voltas)');
+
+  const pergunta = perguntaAoMarcarSaida(noBox(5));
+  assert.match(pergunta, /Marcar a saída do carro 11 do box\?/);
+  assert.match(pergunta, /as seguintes dele retidas pelo mesmo motivo passam a CONTAR, 5 ao todo/);
+  assert.match(pergunta, /ganha 5 voltas \(\+5 voltas\)/);
+  assert.doesNotMatch(pergunta, /\+1 volta\b/);
+  assert.match(perguntaAoMarcarSaida({ ...noBox(2), tipo: 'no_abastecimento' }), /do abastecimento\?.*\(\+2 voltas\)/);
+
+  assert.equal(perguntaAoMarcarSaida(noBox(0)), null, 'no lap is added: nothing to ask');
+  assert.equal(perguntaAoMarcarSaida(noBox(undefined)), null);
+  // Only a whole number above zero is a number of laps.
+  for (const estranho of [-1, 1.5, '3', null]) {
+    assert.equal(voltasAoMarcarSaida(noBox(estranho)), 0, JSON.stringify(estranho));
+  }
+  assert.equal(voltasAoMarcarSaida({ tipo: 'solitaria', voltas_ao_marcar_saida: 4 }), 0, 'only for a car logged inside an area');
 });
 
 // SITUATION: the same, at the fueling station, but only ONE counter typed
@@ -263,13 +310,13 @@ test('a suggestion on a pit-lane flag from an older server is not offered on A',
 test('a pass seen by one counter while the car is at the fueling station: marking the exit promises no lap', () => {
   const noAbastecimento = {
     tipo: 'no_abastecimento', carros: [7], passagem_ids: [20], ts_ms: LARGADA + 900000,
-    sugestao: null, efeito_de_confirmar: 'mais_uma_passagem', contagem_em_duvida: null,
+    sugestao: null, efeito_de_confirmar: 'mais_uma_passagem', contagem_em_duvida: null, voltas_ao_marcar_saida: 0,
   };
 
   assert.equal(acaoDeAceitar(noAbastecimento, ESTADO), null);
   assert.deepEqual(acoesExtrasDoAlerta(noAbastecimento, LARGADA).map((extra) => extra.rotulo),
     ['Marcar saída do abastecimento', 'Descartar esta passagem']);
-  assert.equal(marcarSaidaSomaVolta(noAbastecimento), false);
+  assert.equal(voltasAoMarcarSaida(noAbastecimento), 0);
   assert.equal(perguntaAoMarcarSaida(noAbastecimento), null, 'no count changes, nothing to ask');
   assert.deepEqual(decisaoMarcarSaida(noAbastecimento),
     { tipo: 'marcar_saida', area: 'abastecimento', equipe_numero: 7, ts_ms: LARGADA + 899000 });

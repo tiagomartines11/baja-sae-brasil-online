@@ -211,12 +211,26 @@ The two areas are independent. A pass at the line while the car is logged
 inside is flagged (`no_box`, `no_abastecimento`) and **held: it does not
 count**, even when two counters agree on it, until a reviewer settles it.
 There is no default: either somebody missed the exit, and the reviewer
-presses **Marcar saída do box (+1 volta)**, which makes that pass (and any
-later pass of the car held for the same reason) count; or the pass itself is
-the mistake, and the reviewer presses **Descartar esta passagem**. One missed
-exit therefore holds every later lap of that car until it is marked: the
-flags are at the top of the queue ("pode estar com uma volta a menos") and
-should be dealt with first. A second entry while a car is already
+presses **Marcar saída do box (+N voltas)**, which makes that pass (and any
+later pass of the car held for the same reason) count, N being how many; or
+the pass itself is the mistake, and the reviewer presses **Descartar esta
+passagem**.
+
+**A missed exit settles itself when the car comes round again.** When a
+second pass that two counters agree on arrives one plausible lap after the
+held one (no sooner than the car's minimum plausible lap, no later than one
+and a half of its normal laps, and the car has three laps of its own to
+judge by), the count assumes the car left one second before the first of
+the two, and both count, as do its later passes. Nothing is stored: the
+count works the assumed exit out again every time, and the stays, the car
+status, the stops report and the pit-log phone's "cars inside" list all end
+that stay there. An informational flag, `saida_presumida`, stays open on the
+car so that somebody checks the pit log; it holds nothing. The upper bound
+is what keeps two wrong numbers typed for a car that really is standing in
+its pit from releasing each other, unless they happen to fall about a lap
+apart. A single held pass with nothing after it, a pass only one counter
+typed, and a car without three laps yet still wait for a person. A second
+entry while a car is already
 inside makes the OLDER entry the unpaired one (the exit in between was
 missed), so a missed exit cannot produce a stay that lasts hours; stays still
 open at the finish are closed there.
@@ -275,7 +289,7 @@ once. The person leaving then presses **Encerrar meu turno**.
 | `dispersao_alta` | The entries of one pass are further apart than honest entries are (`dispersao_alerta_ms`, 4 s). With three counters the two that agree count and the outlier stands alone; with only two, the pass is held |
 | `troca_provavel` | One counter typed car X alone while others recorded car Y at the same moment. Usually the lone entry is the typo. When the others' pass is held or impossibly short for Y and X was due, the flag says both readings and suggests the reverse: move the others' entries to X. **Both cars are always flagged** when a two-counter pass coincides with another car's entry from the remaining counter, however plausible each looks. The same flag is raised, with no suggestion, for a two-counter pass in which every counter left out a car the others recorded at that moment: each of its entries may be a typo for that other car |
 | `solitaria` | Only one counter recorded this pass. It does not count |
-| `repetida` | Same counter, same car, twice within the matching window. Double taps and handover duplicates are voided automatically. Not raised when both entries sit in passes other counters share: those are two candidate passes, and the later one is judged by the hold rule instead, so no suggestion can void an entry of an agreed pass |
+| `repetida` | Same counter, same car, twice within the matching window. Double taps and handover duplicates are voided automatically. Not raised when both entries sit in passes other counters share (those are two candidate passes, and the later one is judged by the hold rule), nor when the second entry sits in a widely spread group with another counter's late entry (that group is held with `dispersao_alta` and no suggestion): a suggestion never voids an entry another counter's entry may depend on |
 | `primeira_passagem_tardia` | The car's first pass came much later than the field's: its pass zero was probably missed |
 | `antes_da_largada` | Entries for a car shortly before the start (the start was moved, or a clock was early). Without them the car has lost its pass zero |
 | `no_encerramento` | A pass whose entries lie on both sides of the finish: the counters disagree on whether it was the last racing pass or the one after the flag |
@@ -283,7 +297,8 @@ once. The person leaving then presses **Encerrar meu turno**.
 | `tempo_desconhecido` | An entry whose time is only the device's own clock (or an API client that did not say how good its time is). Stored and shown, never counted or matched |
 | `carro_desconhecido` | The number belongs to no team of the event |
 | `carro_nao_classificado` | A pass for a car that is present but not classified. It does not count |
-| `no_box`, `no_abastecimento` | A pass while the log says the car is in the pit lane or at the fueling station. **It is held**, whatever the number of counters, until the exit is marked or the pass discarded |
+| `no_box`, `no_abastecimento` | A pass while the log says the car is in the pit lane or at the fueling station. **It is held**, whatever the number of counters, until the exit is marked, the pass discarded, or a second agreed pass arrives a lap later |
+| `saida_presumida` | Informational: the log had the car inside, the counters agreed on two passes a lap apart, and the count assumed the exit and counted both. Nothing is held |
 | `volta_curta` | Two official passes of a car closer together than a lap can be, in the cases the hold rule does not cover (a reviewer confirmed one, or the mode is `todas`). The flag names both passes |
 | `divergencia_total` | Imported paper totals differ from the official count, or do not list a car that has laps |
 
@@ -310,7 +325,8 @@ From `default/js/contagem/revisao-alertas.js`, which is what the screen runs.
 | `tempo_desconhecido` | none | none (an entry of unknown time never counts, even confirmed) | **Adicionar passagem…** (the reviewer types the time), then void the entry |
 | `carro_desconhecido` | none | Está correto, parar de avisar | reassign the entry from its chip |
 | `carro_nao_classificado` | none | **Contar mesmo assim (+1 volta)** | |
-| `no_box`, `no_abastecimento` | none: there is no default | none | **Marcar saída do box (+1 volta)** / **do abastecimento (+1 volta)**, which asks (without "(+1 volta)" and without a question when only one counter recorded the pass: it then still needs a second witness); **Descartar esta passagem** (asks) |
+| `no_box`, `no_abastecimento` | none: there is no default | none | **Marcar saída do box (+N voltas)** / **do abastecimento (+N voltas)**, N being the held passes that start counting; it asks (no parenthesis and no question when only one counter recorded the pass: it then still needs a second witness); **Descartar esta passagem** (asks) |
+| `saida_presumida` | none | Está correto, parar de avisar | |
 | `volta_curta` | none | Está correto, parar de avisar | **Descartar a primeira passagem** / **a segunda passagem** (asks) |
 | `divergencia_total` | none | none | |
 
@@ -380,12 +396,13 @@ a car above the truth for any other reason (no crossing counted twice, and
 none through the pit lane), and 8 had one through a shared wrong number.
 
 **What the safe mode costs.** Held passes wait for a person. In the same 300
-races about 21 crossings per race were still uncounted at the end with no
-reviewer at all, nearly all of them behind a pit exit the (simulated) pit log
-missed: one missed exit holds every later pass of that car until somebody
-presses "Marcar saída". Before the pit-lane hold the figure was 1.3. The
-people at the pit lane exit matter more than before, and their flags are
-listed first for that reason.
+races 2.9 crossings per race were still uncounted at the end with no
+reviewer at all. Before the pit-lane hold the figure was 1.3; with the hold
+and no way out but a reviewer it was 20.7, because one exit the (simulated)
+pit log missed held every later pass of that car. The assumed exit described
+under [Pit lane and fueling station](#pit-lane-and-fueling-station) brought it back
+down: what still waits is the one pass before the car's next lap proves it
+left, and the cars that never come round again.
 
 ### Car status
 

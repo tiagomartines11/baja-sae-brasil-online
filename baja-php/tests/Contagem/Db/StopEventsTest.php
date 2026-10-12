@@ -174,6 +174,58 @@ final class StopEventsTest extends DbTestCase
     }
 
     /**
+     * SITUATION: car 11 has run three laps of 100 seconds and is logged
+     * INTO the pit lane at 6:40. Nobody ever logs its exit. It goes back
+     * out: both counters type it at 7:40 and again, one lap later, at 9:20.
+     *
+     * The first of those passes is held (the log has the car inside). The
+     * second, a plausible lap after it, tells the count that the car left:
+     * it assumes an exit just before the first pass and counts both.
+     *
+     * WHAT WOULD GO WRONG: the assumed exit lived only inside the count.
+     * The pit-log phone and the stops report read the LOG, which still had
+     * the car inside: the phone went on listing it under "cars inside" and
+     * the report showed a stay growing for the rest of the race, while the
+     * results page had the car lapping.
+     *
+     * EXPECTED: VOLTAS is 5: three laps before the stop plus the two
+     * released passes (the very first pass is pass zero). After the next whole-race count,
+     * the phone's answer no longer lists car 11 as inside, and the report
+     * has one finished stay for it, ending one second before the 7:40 pass.
+     */
+    public function testAnExitTheCountAssumedIsSeenByThePitPhoneAndTheStopsReport(): void
+    {
+        Clock::freezeAt($this->at(700));
+        $pitLog = $this->pitLogToken();
+        $counter1 = $this->issueToken($this->fontes[0]);
+        $counter2 = $this->issueToken($this->fontes[1]);
+        foreach ([60, 160, 260, 360] as $seconds) {
+            $this->recordCountedPass(self::CAR_A, $this->at($seconds));
+        }
+        $this->recompute();
+        $this->uploadStops($pitLog, [$this->stopEvent('box_entrada', self::CAR_A, 400)]);
+
+        foreach ([460, 560] as $seconds) {
+            $this->upload($counter1, [$this->entryPayload(self::newUuid(), self::CAR_A, $this->at($seconds))]);
+            $this->upload($counter2, [$this->entryPayload(self::newUuid(), self::CAR_A, $this->at($seconds))]);
+        }
+        $this->assertEquals(5, $this->publishedData(self::CAR_A)['VOLTAS'], 'the second pass released both');
+
+        // The whole-race count that follows every change.
+        Clock::freezeAt($this->at(720));
+        $this->newRequest();
+        $this->service->snapshot();
+
+        $heartbeat = $this->uploadStops($pitLog, []);
+        $this->assertSame([], $heartbeat['body']['cars_in_pit'], 'the phone no longer lists the car as inside');
+
+        $row = array_values(array_filter(StopReport::rows($this->service), fn(array $row): bool => $row['numero'] === self::CAR_A))[0];
+        $this->assertSame(0, $row['box_dentro']);
+        $this->assertSame(1, $row['box_paradas']);
+        $this->assertSame(59000, $row['box_total_ms'], 'from 6:40 to one second before the 7:40 pass');
+    }
+
+    /**
      * SITUATION: the prova has a classification field. Cars 11 and 22 are
      * classified; car 33 is present at the event but may not race.
      *

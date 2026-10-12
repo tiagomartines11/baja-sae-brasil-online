@@ -190,7 +190,8 @@ export function chaveDoDetalhe(visao) {
   return JSON.stringify([
     visao.selecao ?? null,
     alerta ? [alerta.assinatura, alerta.olhando ?? [], alerta.motivo, alerta.sugestao ?? null,
-      alerta.efeito_de_confirmar ?? null, alerta.volta_resultante_ms ?? null, alerta.contagem_em_duvida ?? null] : null,
+      alerta.efeito_de_confirmar ?? null, alerta.volta_resultante_ms ?? null, alerta.contagem_em_duvida ?? null,
+      alerta.voltas_ao_marcar_saida ?? null] : null,
     carro ? [carro.voltas, carro.passagens ?? null, carro.status ?? null, carro.ultima_volta_ms ?? null,
       carro.melhor_volta_ms ?? null, carro.classificado ?? null] : null,
     visao.janelaCarregada, visao.janelaAssinatura ?? null, visao.desatualizada, visao.erroDaJanela,

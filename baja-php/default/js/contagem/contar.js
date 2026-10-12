@@ -43,6 +43,8 @@ async function main() {
         getUnclassifiedCars: page.unclassifiedCars,
         getJanelaMs: page.janelaMs,
     });
+    // Creates the page's audio now, while the page is still loading: never
+    // inside a key press (see feedback.js).
     const feedback = createFeedback({ preferences, windowRef: window, monotonicNow });
     const buffer = new NumberBuffer();
     const deviceHasTouch = window.matchMedia('(pointer: coarse)').matches;
@@ -257,7 +259,12 @@ async function main() {
     for (const [checkboxId, preferenceName] of [['opt-som', 'som'], ['opt-vibrar', 'vibrar']]) {
         const checkbox = element(checkboxId);
         checkbox.checked = preferences.get(preferenceName, true);
-        checkbox.addEventListener('change', () => preferences.set(preferenceName, checkbox.checked));
+        checkbox.addEventListener('change', () => {
+            preferences.set(preferenceName, checkbox.checked);
+            // A page that loaded with the sound off made no audio; turning
+            // "Som" on makes it here, not in the next key press.
+            feedback.carregarSom();
+        });
     }
 
     page.onState(() => {
