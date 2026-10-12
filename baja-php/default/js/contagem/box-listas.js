@@ -24,6 +24,7 @@ export function describeGroups(area, sentido) {
     const nome = NOME_AREA[area];
     if (sentido === SENTIDO.SAIDA) {
         return {
+            modo: 'SAÍDA do ' + nome,
             instrucao: 'SAÍDA do ' + nome + ': toque no carro que SAIU',
             primeiros: 'No ' + nome + ' agora',
             primeirosVazio: 'Nenhum carro no ' + nome + '.',
@@ -31,6 +32,7 @@ export function describeGroups(area, sentido) {
         };
     }
     return {
+        modo: 'ENTRADA no ' + nome,
         instrucao: 'ENTRADA no ' + nome + ': toque no carro que ENTROU',
         primeiros: 'Fora do ' + nome,
         primeirosVazio: 'Todos os carros estão no ' + nome + '.',
@@ -61,6 +63,7 @@ export function createPitLists({ element, getTeamName, onTapCar, timeZone }) {
         for (const carNumber of cars) {
             const tile = textNode('button', className, String(carNumber));
             tile.type = 'button';
+            tile.dataset.carro = String(carNumber);
             tile.title = getTeamName(carNumber);
             tile.addEventListener('click', () => {
                 tile.blur();
@@ -100,14 +103,22 @@ export function createPitLists({ element, getTeamName, onTapCar, timeZone }) {
          * @param {string} view.area
          * @param {string} view.sentido
          * @param {{primeiros: number[], outros: number[]}} view.groups from orderCarsForMode()
+         * @param {number[]} [view.tappedCars] cars tapped a moment ago that
+         *        are still drawn in their old place (see box-toques.js)
          * @param {Array}  view.recentEvents
          */
-        render({ area, sentido, groups, recentEvents }) {
+        render({ area, sentido, groups, tappedCars = [], recentEvents }) {
             renderRecent(recentEvents);
             // Redrawn only when something visible changed: this runs after
             // every sync, and a tile must not be swapped out from under a finger.
             const signature = JSON.stringify([area, sentido, groups]);
             if (signature === renderedSignature) {
+                // The tiles themselves are left alone; a tapped one only
+                // changes its look, so the tap is seen to have worked.
+                const tapped = new Set(tappedCars.map(String));
+                for (const tile of element('box-registro').querySelectorAll('.bloco')) {
+                    tile.classList.toggle('bloco-recem-tocado', tapped.has(tile.dataset.carro));
+                }
                 return;
             }
             renderedSignature = signature;

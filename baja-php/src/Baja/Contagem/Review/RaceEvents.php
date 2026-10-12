@@ -20,16 +20,16 @@ use Baja\Model\Prova;
  *   - a row of type "cancelamento" CANCELS it (the button was pressed by
  *     mistake, there was no such event).
  *
- * Either way the row pointed at stops counting, FOR AS LONG AS the row that
- * points at it counts itself. A correction that is cancelled gives the
- * original back; a cancellation that is cancelled ("restaurar") gives back
- * what it had removed. That is the rule of undoing a decision, and it is
- * applied the same way: newest row first (see resolve()).
+ * Either way the row pointed at stops counting, for as long as the row that
+ * points at it was not cancelled itself. A correction that is cancelled
+ * gives the original back; a cancellation that is cancelled ("restaurar")
+ * gives back what it had removed.
  *
- * The engine applies the same rule (RaceTimeline::fromOcorrencias); this
- * class exists so that the race control page can show what became of each
- * row and check an action before storing it. The checks themselves are in
- * RaceEventRules.
+ * WHICH rows are in force is decided in one place, the engine
+ * (RaceTimeline::rowsInForce); this class asks it. What it adds is what the
+ * race control page needs on top: what became of each row that is NOT in
+ * force, so the page can label it and offer the right button. The checks
+ * made before an action is stored are in RaceEventRules.
  */
 final class RaceEvents
 {
@@ -113,31 +113,35 @@ final class RaceEvents
     }
 
     /**
-     * For every row that does not count: the row that took it out.
+     * The standing cancellation of each cancelled row.
      *
-     * Rows are visited from the newest to the oldest. By the time a row is
-     * reached, everything that could have taken IT out has been seen, so a
-     * row that is out takes nothing out itself. That one rule gives:
-     * cancelling a correction brings the original back, and cancelling a
-     * cancellation restores the event.
+     * Rows are visited from the newest to the oldest. By the time a
+     * cancellation is reached, every row that could have cancelled IT has
+     * been seen, so a cancellation that was cancelled itself removes
+     * nothing: that is "restaurar".
+     *
+     * This is only used to say WHY a row is out (cancelled or corrected)
+     * and to find the cancellation "restaurar" must cancel. WHICH rows are
+     * in force is asked of the engine alone, see inForce().
      *
      * @param Ocorrencia[] $ocorrencias
-     * @return array<int, Ocorrencia> id of a row that is out => the row that took it out
+     * @return array<int, Ocorrencia> id of a cancelled row => the cancellation that stands against it
      */
-    public static function resolve(array $ocorrencias): array
+    private static function standingCancellations(array $ocorrencias): array
     {
         $newestFirst = $ocorrencias;
         usort($newestFirst, fn(Ocorrencia $a, Ocorrencia $b) => $b->id <=> $a->id);
 
-        $takenOutBy = [];
+        $cancelledBy = [];
         foreach ($newestFirst as $ocorrencia) {
-            if (isset($takenOutBy[$ocorrencia->id]) || $ocorrencia->substituiId === null) {
-                continue;
+            $isStandingCancellation = $ocorrencia->tipo === Ocorrencia::CANCELAMENTO
+                && $ocorrencia->substituiId !== null && !isset($cancelledBy[$ocorrencia->id]);
+            if ($isStandingCancellation) {
+                // The newest cancellation pointing at a target is the one that decides.
+                $cancelledBy[$ocorrencia->substituiId] ??= $ocorrencia;
             }
-            // The newest row pointing at a target is the one that decides.
-            $takenOutBy[$ocorrencia->substituiId] ??= $ocorrencia;
         }
-        return $takenOutBy;
+        return $cancelledBy;
     }
 
     /**
@@ -149,17 +153,36 @@ final class RaceEvents
      */
     public static function situations(array $ocorrencias): array
     {
-        $takenOutBy = self::resolve($ocorrencias);
+        $cancelledBy = self::standingCancellations($ocorrencias);
+        $inForceIds = [];
+        foreach (RaceTimeline::rowsInForce($ocorrencias) as $ocorrencia) {
+            $inForceIds[$ocorrencia->id] = true;
+        }
+        // A row is corrected when a row of its own kind points at it and
+        // was not cancelled. That row may have been corrected in turn: the
+        // chain still leads to one time in force, the newest.
+        $corrected = [];
+        foreach ($ocorrencias as $ocorrencia) {
+            $isCorrection = $ocorrencia->tipo !== Ocorrencia::CANCELAMENTO && $ocorrencia->substituiId !== null;
+            if ($isCorrection && !isset($cancelledBy[$ocorrencia->id])) {
+                $corrected[$ocorrencia->substituiId] = true;
+            }
+        }
 
         $situations = [];
         foreach ($ocorrencias as $ocorrencia) {
-            $killer = $takenOutBy[$ocorrencia->id] ?? null;
             if ($ocorrencia->tipo === Ocorrencia::CANCELAMENTO) {
-                $situations[$ocorrencia->id] = $killer === null ? self::CANCELAMENTO : self::CANCELAMENTO_DESFEITO;
-            } elseif ($killer === null) {
+                $situations[$ocorrencia->id] = isset($cancelledBy[$ocorrencia->id]) ? self::CANCELAMENTO_DESFEITO : self::CANCELAMENTO;
+            } elseif (isset($inForceIds[$ocorrencia->id])) {
                 $situations[$ocorrencia->id] = self::EM_VIGOR;
+            } elseif (isset($cancelledBy[$ocorrencia->id])) {
+                $situations[$ocorrencia->id] = self::CANCELADA;
+            } elseif (isset($corrected[$ocorrencia->id])) {
+                $situations[$ocorrencia->id] = self::CORRIGIDA;
             } else {
-                $situations[$ocorrencia->id] = $killer->tipo === Ocorrencia::CANCELAMENTO ? self::CANCELADA : self::CORRIGIDA;
+                // Not taken out by anything, and still not what the engine
+                // counts: an earlier start or finish under a later one.
+                $situations[$ocorrencia->id] = self::SUPERADA;
             }
         }
 
@@ -182,14 +205,25 @@ final class RaceEvents
     }
 
     /**
+     * The events that count, oldest row first.
+     *
+     * This is the engine's own answer (RaceTimeline::rowsInForce), with one
+     * start and one finish at most. The page used to work it out by itself, with a rule
+     * that differed in one case: a row corrected TWICE. The page then
+     * believed the first time was back in force beside the third, and
+     * refused the second correction of a red flag as "two red flags in a
+     * row". One implementation cannot disagree with itself.
+     *
      * @param Ocorrencia[] $ocorrencias
-     * @return Ocorrencia[] the events that count, oldest row first
+     * @return Ocorrencia[]
      */
     public static function inForce(array $ocorrencias): array
     {
+        // The engine's rows, minus an earlier start or finish under a later
+        // one: the engine keeps those too and simply reads the newest.
         $situations = self::situations($ocorrencias);
         $inForce = array_values(array_filter(
-            $ocorrencias,
+            RaceTimeline::rowsInForce($ocorrencias),
             fn(Ocorrencia $ocorrencia) => $situations[$ocorrencia->id] === self::EM_VIGOR
         ));
         usort($inForce, fn(Ocorrencia $a, Ocorrencia $b) => $a->id <=> $b->id);
@@ -204,8 +238,7 @@ final class RaceEvents
      */
     public static function cancellationOf(array $ocorrencias, int $ocorrenciaId): ?Ocorrencia
     {
-        $killer = self::resolve($ocorrencias)[$ocorrenciaId] ?? null;
-        return $killer !== null && $killer->tipo === Ocorrencia::CANCELAMENTO ? $killer : null;
+        return self::standingCancellations($ocorrencias)[$ocorrenciaId] ?? null;
     }
 
     /** Kept for callers of the old name; see RaceEventRules::inconsistency(). */

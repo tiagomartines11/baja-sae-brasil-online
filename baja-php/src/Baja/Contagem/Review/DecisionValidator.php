@@ -83,7 +83,14 @@ final class DecisionValidator
             }
 
             // All the rows of one decision are stored together or not at all.
-            $ids = Propel::getWriteConnection('resultados')->transaction($work);
+            try {
+                $ids = Propel::getWriteConnection('resultados')->transaction($work);
+            } catch (InvalidArgumentException $refused) {
+                // Refused while storing (an inferred exit that race control
+                // already took out, for example). The transaction undid
+                // whatever had been written.
+                return self::badRequest($refused->getMessage());
+            }
             $service->recomputeAndPublish();
 
             return [
@@ -117,7 +124,32 @@ final class DecisionValidator
             return fn(): array => [$service->closeOpenExclusion($exclusion->id, $until, $username, $motivo)];
         }
 
-        if ($parsed->tipo === DecisionRequest::DESCARTAR_PASSAGEM) {
+        if ($parsed->tipo === DecisionRequest::MARCAR_SAIDA) {
+            $exit = DecisionResolver::inferredExit($parsed, $recount);
+            DecisionConflicts::requireUnchanged($prova, $parsed, $recount);
+            return function () use ($service, $exit, $username): array {
+                // Two rows: the exit itself, an ordinary race event that
+                // race control lists and the engine pairs with the entry;
+                // and a decision, so that the history shows who marked it
+                // and "Desfazer" there takes the exit back.
+                $service->recordInferredExit($exit['area'], $exit['carro'], $exit['ts_ms'], $username);
+                $decision = new Decision(0, DecisionRequest::MARCAR_SAIDA);
+                $decision->carro = $exit['carro'];
+                $decision->tsMs = $exit['ts_ms'];
+                return [$service->storeDecision($decision, $username, $exit['area'])];
+            };
+        }
+
+        // Set when the decision undoes a "marcar saída": the exit goes with it.
+        $inferredExitToCancel = null;
+
+        if ($parsed->tipo === DecisionRequest::REATRIBUIR_GRUPO) {
+            $decisions = DecisionResolver::moveGroup($parsed, $input);
+            foreach ($decisions as $decision) {
+                DecisionConflicts::requireNew($prova, $decision, $input);
+            }
+            DecisionConflicts::requireUnchanged($prova, $parsed, $recount);
+        } elseif ($parsed->tipo === DecisionRequest::DESCARTAR_PASSAGEM) {
             // Asked first: when the pass is already gone because somebody
             // else discarded it, "já decidido por maria" (and a refreshed
             // screen) is the useful answer, not "this is not a pass".
@@ -132,12 +164,22 @@ final class DecisionValidator
             DecisionConflicts::requireNew($prova, $decision, $input);
             DecisionConflicts::requireUnchanged($prova, $parsed, $recount);
             $decisions = [$decision];
+
+            if ($decision->tipo === Decision::DESFAZER) {
+                $undone = ActiveDecisions::indexById($input->decisions)[(int) $decision->desfazDecisaoId] ?? null;
+                if ($undone !== null && $undone->tipo === DecisionRequest::MARCAR_SAIDA) {
+                    $inferredExitToCancel = $undone->id;
+                }
+            }
         }
 
-        return function () use ($service, $decisions, $username, $motivo): array {
+        return function () use ($service, $decisions, $username, $motivo, $inferredExitToCancel): array {
             $ids = [];
             foreach ($decisions as $decision) {
                 $ids[] = $service->storeDecision($decision, $username, $motivo);
+            }
+            if ($inferredExitToCancel !== null) {
+                $service->cancelInferredExit($inferredExitToCancel, $username);
             }
             return $ids;
         };

@@ -23,15 +23,21 @@ use Propel\Runtime\Propel;
 final class ClassificationWriter
 {
     /**
-     * @return int how many cars were changed (0 when the prova has no classification field)
+     * Only BLANK fields are filled in. A car somebody marked "NÃO" was
+     * decided about by a person, and one button must not overrule that;
+     * those cars are returned separately so the page can list them.
+     *
+     * @return array{marcados: int[], ja_nao: int[]} the cars now marked, and the cars left alone because their field was not blank
      */
-    public static function markAllPresent(Prova $prova, string $usuario): int
+    public static function markAllPresent(Prova $prova, string $usuario): array
     {
         $roster = CarRoster::forProva($prova);
         $field = $roster->classificationField();
         if ($field === null) {
-            return 0;
+            return ['marcados' => [], 'ja_nao' => []];
         }
+        $leftAlone = $roster->markedOtherwise();
+        $blank = array_diff_key($roster->unclassified(), array_flip($leftAlone));
 
         $connection = Propel::getWriteConnection('resultados');
         // Only this one key is set, with JSON_SET, for the reason given in
@@ -45,7 +51,7 @@ final class ClassificationWriter
 
         $connection->beginTransaction();
         try {
-            foreach ($roster->unclassified() as $car) {
+            foreach ($blank as $car) {
                 $write->execute([
                     $prova->getEventoId(),
                     $prova->getProvaId(),
@@ -71,6 +77,6 @@ final class ClassificationWriter
 
         // Rows were changed with plain SQL; Propel must not answer from memory.
         InputTableMap::clearInstancePool();
-        return count($roster->unclassified());
+        return ['marcados' => array_keys($blank), 'ja_nao' => array_values($leftAlone)];
     }
 }

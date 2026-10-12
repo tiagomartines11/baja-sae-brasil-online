@@ -25,20 +25,35 @@ use InvalidArgumentException;
  * needs the race and is checked afterwards, under the lock, by
  * DecisionResolver.
  *
- * Besides the engine's own decision types there are two that only the
- * review screen knows. Each is stored as ordinary decisions, in one step:
+ * Besides the engine's own decision types there are four that only the
+ * review screen knows. Each is stored in one step:
  *
  *   descartar_passagem  void every entry of the pass group that
  *                       "passagem_id" is in (a pass that did not happen)
  *   encerrar_exclusao   give an open-ended source exclusion
  *                       ("desfaz_decisao_id") an end at "ts_fim_ms"
+ *   reatribuir_grupo    move several entries ("passagem_ids" inside the
+ *                       decision) to the car "equipe_numero": two counters
+ *                       typed the same wrong number
+ *   marcar_saida        the car "equipe_numero" left the pit lane or the
+ *                       fueling station ("area") at "ts_ms" and nobody
+ *                       logged it: stores that exit as a race event, and a
+ *                       decision of this type so the history can undo it
  */
 final class DecisionRequest
 {
     public const DESCARTAR_PASSAGEM = 'descartar_passagem';
     public const ENCERRAR_EXCLUSAO = 'encerrar_exclusao';
+    public const REATRIBUIR_GRUPO = 'reatribuir_grupo';
+    /** The same word as Decision::MARCAR_SAIDA: this one is also the type of the row that is stored. */
+    public const MARCAR_SAIDA = 'marcar_saida';
+
+    public const AREA_BOX = 'box';
+    public const AREA_ABASTECIMENTO = 'abastecimento';
 
     private const MAX_WATCHED_ENTRIES = 500;
+    /** A pass has one entry per counter; more than this is not a pass. */
+    private const MAX_ENTRIES_MOVED_AT_ONCE = 20;
     private const MAX_REASON_LENGTH = 500;
 
     /** Which numbers each kind of decision must carry: key in the request => message when it is missing or not a number. */
@@ -51,6 +66,8 @@ final class DecisionRequest
         Decision::EXCLUIR_FONTE => ['fonte_id' => 'Fonte inválida.', 'ts_ms' => 'Início do intervalo inválido.'],
         Decision::DESFAZER => ['desfaz_decisao_id' => 'Decisão a desfazer inválida.'],
         self::ENCERRAR_EXCLUSAO => ['desfaz_decisao_id' => 'Exclusão a encerrar inválida.', 'ts_fim_ms' => 'Fim do intervalo inválido.'],
+        self::REATRIBUIR_GRUPO => ['equipe_numero' => 'Número de carro inválido.'],
+        self::MARCAR_SAIDA => ['equipe_numero' => 'Número de carro inválido.', 'ts_ms' => 'Horário inválido.'],
     ];
 
     /** Kinds of decision that are about one entry on the reviewer's screen. */
@@ -62,6 +79,12 @@ final class DecisionRequest
     public array $numeros = [];
 
     public ?string $motivo = null;
+
+    /** Only for "marcar_saida": AREA_BOX or AREA_ABASTECIMENTO. */
+    public ?string $area = null;
+
+    /** @var int[] only for "reatribuir_grupo": the entries to move */
+    public array $grupoIds = [];
 
     /** @var int[] the entries the reviewer was looking at */
     public array $passagemIds = [];
@@ -100,8 +123,19 @@ final class DecisionRequest
             }
         }
 
+        if ($tipo === self::MARCAR_SAIDA) {
+            $area = $raw['area'] ?? null;
+            if (!in_array($area, [self::AREA_BOX, self::AREA_ABASTECIMENTO], true)) {
+                throw new InvalidArgumentException('Área inválida: informe box ou abastecimento.');
+            }
+            $parsed->area = $area;
+        }
+
         $parsed->motivo = self::reason($raw['motivo'] ?? null);
         $parsed->passagemIds = self::watchedEntries($request['passagem_ids'] ?? []);
+        if ($tipo === self::REATRIBUIR_GRUPO) {
+            $parsed->grupoIds = self::entriesToMove($raw['passagem_ids'] ?? null, $parsed->passagemIds);
+        }
 
         $assinatura = $request['assinatura'] ?? null;
         $parsed->assinatura = is_string($assinatura) && $assinatura !== '' ? $assinatura : null;
@@ -167,6 +201,34 @@ final class DecisionRequest
             return null;
         }
         return mb_substr($value, 0, self::MAX_REASON_LENGTH);
+    }
+
+    /**
+     * The entries a "reatribuir_grupo" moves. Each must be one of the
+     * watched entries, for the reason given in parse(): the signature only
+     * vouches for those.
+     *
+     * @param mixed $value
+     * @param int[] $watched
+     * @return int[]
+     */
+    private static function entriesToMove($value, array $watched): array
+    {
+        if (!is_array($value) || $value === [] || count($value) > self::MAX_ENTRIES_MOVED_AT_ONCE) {
+            throw new InvalidArgumentException('Lista de passagens a trocar inválida.');
+        }
+        $ids = [];
+        foreach ($value as $id) {
+            // Never below zero: a pass added by a reviewer is not moved, it is removed and added again.
+            if (!self::isWholeNumber($id) || (int) $id <= 0) {
+                throw new InvalidArgumentException('Lista de passagens a trocar inválida.');
+            }
+            if (!in_array((int) $id, $watched, true)) {
+                throw new InvalidArgumentException('A passagem decidida não está entre as passagens observadas.');
+            }
+            $ids[(int) $id] = (int) $id;
+        }
+        return array_values($ids);
     }
 
     /**

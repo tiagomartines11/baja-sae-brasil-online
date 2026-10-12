@@ -21,9 +21,11 @@ import assert from 'node:assert/strict';
 import { Prng } from '../../default/js/contagem/simulacao-prng.js';
 import { generateRaceScript, AREA_BOX, AREA_ABASTECIMENTO } from '../../default/js/contagem/simulacao-corrida.js';
 import {
-    planCounter, planStopLog, wrongNumberFor, timingFor, ERRO, TAXAS_PADRAO,
+    planCounter, planStopLog, wrongNumberFor, timingFor, withStableIds, ERRO, TAXAS_PADRAO,
 } from '../../default/js/contagem/simulacao-contador.js';
-import { playPlan, windowFitsLap } from '../../default/js/contagem/simulacao-execucao.js';
+import {
+    playPlan, windowFitsLap, replayOverrunMs, mayStartSimulation,
+} from '../../default/js/contagem/simulacao-execucao.js';
 import { injectedErrors } from '../../default/js/contagem/simulacao-gabarito.js';
 
 const START_MS = 1_760_000_000_000;
@@ -316,6 +318,94 @@ test('"parar" stops the simulation, and a failed entry does not', async () => {
 
     assert.deepEqual(recorded, [7]);
     assert.deepEqual(result, { registradas: 1, falhas: 1 });
+});
+
+test('a clock that has no answer for a moment makes the race wait, not hang or skip', async () => {
+    // Situation: in live mode the race follows the page's official clock.
+    // For a few seconds the page has no official time (it is checking its
+    // clock against the server) and answers null.
+    // What went wrong in the first version: arithmetic on "no time" gave
+    // "not a number", and the loop spun without ever waiting.
+    // Expected: while there is no time nothing is recorded; when the clock
+    // is back the race carries on from where the clock says it is.
+    let officialMs = START_MS;
+    let waits = 0;
+    const recorded = [];
+    const player = playPlan({
+        acoes: THREE_ACTIONS,
+        registrar: async (action) => { recorded.push(action.carro); },
+        agora: () => (waits >= 1 && waits <= 3 ? null : officialMs),
+        esperar: async (ms) => { waits++; officialMs += ms; },
+        inicioCorridaMs: START_MS,
+    });
+
+    const result = await player.terminou;
+
+    assert.deepEqual(recorded, [7, 41, 7]);
+    assert.equal(result.falhas, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Running it twice, and the three refusals
+// ---------------------------------------------------------------------------
+
+test('the same action gets the same id every time, so running the simulation twice injects nothing twice', () => {
+    // Situation: a tab is reloaded in the middle of a rehearsal and the
+    // command is typed again. The plan is built again from scratch.
+    // What went wrong before: every record got a fresh random id, so the
+    // server stored the whole race a second time.
+    // Expected: each action has the same id as the first time. The server
+    // keeps one record per id, so the second copy is dropped.
+    const raceKey = { semente: 42, largadaMs: START_MS, voltaMediaMs: 240_000 };
+    const first = withStableIds(counter(1), raceKey, 1);
+    const again = withStableIds(counter(1), raceKey, 1);
+
+    assert.deepEqual(first.acoes.map((action) => action.uuid), again.acoes.map((action) => action.uuid));
+    assert.equal(new Set(first.acoes.map((action) => action.uuid)).size, first.acoes.length, 'no two actions share an id');
+    // The server accepts ids of 8 to 36 letters, digits and hyphens.
+    assert.ok(first.acoes.every((action) => /^[A-Za-z0-9-]{8,36}$/.test(action.uuid)));
+});
+
+test('another counter, another start or another seed gives other ids', () => {
+    // Otherwise counter 2's entries would be taken for copies of counter
+    // 1's, or this afternoon's rehearsal for a copy of this morning's.
+    const raceKey = { semente: 42, largadaMs: START_MS, voltaMediaMs: 240_000 };
+    const idOfFirstAction = (key, who) => withStableIds(counter(1), key, who).acoes[0].uuid;
+    const reference = idOfFirstAction(raceKey, 1);
+
+    assert.notEqual(idOfFirstAction(raceKey, 2), reference);
+    assert.notEqual(idOfFirstAction({ ...raceKey, largadaMs: START_MS + 1000 }, 1), reference);
+    assert.notEqual(idOfFirstAction({ ...raceKey, semente: 43 }, 1), reference);
+    assert.notEqual(idOfFirstAction({ ...raceKey, voltaMediaMs: 60_000 }, 1), reference);
+    assert.notEqual(withStableIds(planStopLog({ roteiro: race, semente: 42, area: AREA_BOX }), raceKey, AREA_BOX).acoes[0].uuid, reference);
+});
+
+test('a simulation does not start on a prova that publishes, unless the prova is named on purpose', () => {
+    // Situation: the prova's counts go to the official results.
+    // Expected: refused. Made-up passes must not reach the results page by
+    // accident. Typing the prova's own id as confirmation is the way to
+    // say "yes, on purpose"; anything else is not.
+    assert.equal(mayStartSimulation({ publica: true, provaId: 'END', confirmacao: undefined }), false);
+    assert.equal(mayStartSimulation({ publica: true, provaId: 'END', confirmacao: true }), false);
+    assert.equal(mayStartSimulation({ publica: true, provaId: 'END', confirmacao: 'XYZ' }), false);
+    assert.equal(mayStartSimulation({ publica: true, provaId: 'END', confirmacao: 'END' }), true);
+    // Publishing off ("desligada"): nothing to confirm.
+    assert.equal(mayStartSimulation({ publica: false, provaId: 'END', confirmacao: undefined }), true);
+    // A page that does not know yet (no answer from the server) is not told "go ahead".
+    assert.equal(mayStartSimulation({ publica: undefined, provaId: 'END', confirmacao: undefined }), false);
+});
+
+test('a replay must lie wholly in the past', () => {
+    // Situation: a replay of a four-hour race. The start on record is only
+    // three hours ago.
+    // Expected: an hour of the race would lie in the future; the command
+    // refuses and can say by how much the start is too late.
+    const fourHoursMs = 4 * 3_600_000;
+    const now = START_MS + 3 * 3_600_000;
+
+    assert.equal(replayOverrunMs(START_MS, fourHoursMs, now), 3_600_000);
+    // Started four hours and one minute ago: fine.
+    assert.ok(replayOverrunMs(START_MS, fourHoursMs, START_MS + fourHoursMs + 60_000) <= 0);
 });
 
 test('the simulation only starts when the matching window fits the lap', () => {

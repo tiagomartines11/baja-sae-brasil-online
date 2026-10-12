@@ -285,6 +285,68 @@ test('"Tentar de novo" asks at once, whatever was answered a moment ago', async 
     assert.equal(endpoint.calls, 2);
 });
 
+test('the half minute is counted from the question, not from the answer', async () => {
+    // SITUATION: blocked; the server takes 800 ms to answer. The page's
+    // timer fires every 5 seconds, so it tries at 0 s, 5 s, ... 30 s; and
+    // a browser timer is not exact: this time the tick at 30 s comes 3 ms
+    // early.
+    //
+    // WHAT WENT WRONG: the pause started when the ANSWER arrived (0.8 s),
+    // and had no slack. The attempt at 30 s was "too soon" on both counts.
+    // The server was really asked every 35 s, not every 30.
+    const store = await LocalStore.open(createMemoryStorage());
+    let monotonicMs = 1000;
+    let calls = 0;
+    const tokens = createTokenSource({
+        store,
+        requestToken: async () => {
+            calls++;
+            monotonicMs += 800;
+            return { status: 403, body: { erro: 'dispositivo_revogado' } };
+        },
+        usuario: 'equipe1',
+        monotonicNow: () => monotonicMs,
+    });
+    await assert.rejects(() => tokens.get());
+
+    // Still well inside the pause: no request.
+    monotonicMs = 1000 + REFUSAL_PAUSE_MS - 5000;
+    await assert.rejects(() => tokens.get());
+    assert.equal(calls, 1);
+
+    monotonicMs = 1000 + REFUSAL_PAUSE_MS - 3;
+    await assert.rejects(() => tokens.get());
+
+    assert.equal(calls, 2);
+});
+
+test('the heartbeat of a shut-out device asks at once: renew() has no pause of its own', async () => {
+    // SITUATION: the device's token was refused. The heartbeat asks for a
+    // new one every 30 s, on its own count (sync-heartbeat.js). One second
+    // ago the server said "blocked".
+    //
+    // WHAT WENT WRONG: the heartbeat went through get(), whose own 30 s
+    // pause swallowed every other attempt.
+    const store = await LocalStore.open(createMemoryStorage());
+    const endpoint = blockedEndpoint();
+    let monotonicMs = 1000;
+    const tokens = createTokenSource({
+        store, requestToken: endpoint.requestToken, usuario: 'equipe1', monotonicNow: () => monotonicMs,
+    });
+    await assert.rejects(() => tokens.get());
+
+    monotonicMs += 1000;
+    await assert.rejects(() => tokens.renew(), (error) => error.motivo === 'dispositivo_revogado');
+    assert.equal(endpoint.calls, 2, 'the server was really asked');
+
+    // Released: renew() answers true, meaning "a NEW token was issued".
+    endpoint.blocked = false;
+    monotonicMs += 1000;
+    assert.equal(await tokens.renew(), true);
+    // With a good token in hand nothing new is issued, and renew() says so.
+    assert.equal(await tokens.renew(), false);
+});
+
 test('trouble that is not a refusal (no network, expired session) is retried at every heartbeat', async () => {
     // Those can end at any second; waiting half a minute would only delay
     // the first upload.

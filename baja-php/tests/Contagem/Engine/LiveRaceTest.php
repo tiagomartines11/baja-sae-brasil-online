@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Baja\Tests\Contagem\Engine;
 
-use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Flag;
 use Baja\Contagem\Engine\Engine;
 use Baja\Tests\Contagem\Engine\Support\EngineTestCase;
@@ -18,10 +17,21 @@ use PHPUnit\Framework\Attributes\DataProvider;
  */
 final class LiveRaceTest extends EngineTestCase
 {
-    /** @return array<string, array{0: int}> */
+    /**
+     * Twelve races by default. To watch many more (each takes about a
+     * second), set the environment variable CONTAGEM_INVARIANT_SEEDS, e.g.
+     * to 300: the first six seeds stay, and seeds 2001, 2002, ... are added.
+     *
+     * @return array<string, array{0: int}>
+     */
     public static function seeds(): array
     {
-        return ['seed 1' => [1], 'seed 2' => [2], 'seed 3' => [3], 'seed 7' => [7], 'seed 2025' => [2025], 'seed 31337' => [31337]];
+        $cases = ['seed 1' => [1], 'seed 2' => [2], 'seed 3' => [3], 'seed 7' => [7], 'seed 2025' => [2025], 'seed 31337' => [31337]];
+        $howMany = max(count($cases), (int) (getenv('CONTAGEM_INVARIANT_SEEDS') ?: 12));
+        for ($seed = 2001; count($cases) < $howMany; $seed++) {
+            $cases["seed $seed"] = [$seed];
+        }
+        return $cases;
     }
 
     /**
@@ -31,11 +41,13 @@ final class LiveRaceTest extends EngineTestCase
      * moment (not with the final result).
      *
      * EXPECTED, at every look:
-     * - No car has more official laps than it had really completed by then.
-     *   The one exception is a car with an open "repetida" flag (a counter
-     *   repeated the car and another typed it very late, so two counters
-     *   agree on a crossing that never happened): it may be ahead by one lap
-     *   per such flag, and the flag is there to say so.
+     * - THE INVARIANT OF THE SAFE MODE: no car has more official laps than
+     *   it had really completed by then. No exceptions. (There used to be
+     *   one: a counter repeated the car and another typed it very late, so
+     *   two counters "agreed" on a crossing that never happened and the car
+     *   was a lap ahead until somebody reviewed it. Such a pass is now
+     *   held.) This is checked for the moment of the look, and for the
+     *   moment of every official pass the server knows of at that look.
      * - A car none of whose crossings were touched by a mistake has EXACTLY
      *   the laps it had really completed (give or take the second or two a
      *   counter needs to press Enter).
@@ -66,8 +78,7 @@ final class LiveRaceTest extends EngineTestCase
             foreach ($race->carNumbers() as $car) {
                 $laps = $result->lapCount($car);
                 $mostItCanHave = $race->truthLapsAt($car, $nowMs - SyntheticRace::EARLIEST_TYPING_MS);
-                $allowedAhead = $this->openRepeatFlagsFor($result, $car);
-                $this->assertLessThanOrEqual($mostItCanHave + $allowedAhead, $laps, "Car $car is ahead of the truth $where.");
+                $this->assertLessThanOrEqual($mostItCanHave, $laps, "Car $car is ahead of the truth $where.");
 
                 if (!isset($race->mistakes->carsTouched[$car])) {
                     $leastItMustHave = $race->truthLapsAt($car, $nowMs - SyntheticRace::LATEST_TYPING_MS);
@@ -78,6 +89,7 @@ final class LiveRaceTest extends EngineTestCase
                 $lapsAtPreviousLook[$car] = $laps;
             }
             $looksWithLaps += array_sum($lapsAtPreviousLook) > 0 ? 1 : 0;
+            $this->assertNoCarIsEverAheadOfTheTruth($race, $result, "Seed $seed, $where.");
 
             if ($isOffline) {
                 foreach ($result->openFlags() as $flag) {
@@ -91,16 +103,5 @@ final class LiveRaceTest extends EngineTestCase
         }
 
         $this->assertGreaterThan(40, $looksWithLaps, 'The race must have been under way at most of the looks.');
-    }
-
-    private function openRepeatFlagsFor(EngineResult $result, int $car): int
-    {
-        $count = 0;
-        foreach ($this->openFlags($result, Flag::REPETIDA) as $flag) {
-            if (in_array($car, $flag->carros, true)) {
-                $count++;
-            }
-        }
-        return $count;
     }
 }

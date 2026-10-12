@@ -64,8 +64,12 @@ test('on a lone entry and on a probable swap, K is labelled as what it does: one
 
 // EXPECTED: on the flags where the pass already counts, K only silences
 // the flag and is labelled so. The count does not move.
+//
+// (Round 4: "no_box" and "no_abastecimento" left this list. "Está correto"
+// explained nothing there; they now offer "marcar saída" and "descartar",
+// see revisao-alertas.test.js.)
 test('where the pass already counts, K is "está correto, parar de avisar"', () => {
-  for (const tipo of ['no_box', 'no_abastecimento', 'volta_curta', 'primeira_passagem_tardia', 'no_encerramento', 'tempo_estimado']) {
+  for (const tipo of ['volta_curta', 'primeira_passagem_tardia', 'no_encerramento', 'tempo_estimado']) {
     const alerta = { tipo, carros: [5], passagem_ids: [1, 2], efeito_de_confirmar: 'nenhum' };
     assert.deepEqual(acaoDeConfirmar(alerta), { rotulo: 'Está correto, parar de avisar', maisUmaPassagem: false }, tipo);
   }
@@ -82,9 +86,11 @@ test('on a pass of an unclassified car, K is "contar mesmo assim"', () => {
   assert.deepEqual(acaoDeConfirmar(alerta), { rotulo: 'Contar mesmo assim (+1 volta)', maisUmaPassagem: true });
 });
 
-test('on a pass typed just before the start, K is "contar como passagem inicial"', () => {
+// The label says "+1 volta" since round 4: making a pre-start pass the car's
+// initial pass raises every later lap of that car by one.
+test('on a pass typed just before the start, K is "contar como passagem inicial (+1 volta)"', () => {
   const alerta = { tipo: 'antes_da_largada', carros: [9], passagem_ids: [50], efeito_de_confirmar: 'mais_uma_passagem' };
-  assert.equal(acaoDeConfirmar(alerta).rotulo, 'Contar como passagem inicial');
+  assert.equal(acaoDeConfirmar(alerta).rotulo, 'Contar como passagem inicial (+1 volta)');
 });
 
 // The server says what confirming does ("efeito_de_confirmar"). A state
@@ -93,7 +99,8 @@ test('on a pass typed just before the start, K is "contar como passagem inicial"
 test('a flag that does not say what confirming does is judged by its type', () => {
   assert.equal(acaoDeConfirmar({ tipo: 'solitaria', passagem_ids: [1] }).maisUmaPassagem, true);
   assert.equal(acaoDeConfirmar({ tipo: 'troca_provavel', passagem_ids: [1] }).maisUmaPassagem, true);
-  assert.equal(acaoDeConfirmar({ tipo: 'no_box', passagem_ids: [1] }).maisUmaPassagem, false);
+  assert.equal(acaoDeConfirmar({ tipo: 'passagem_proxima_demais', passagem_ids: [1] }).maisUmaPassagem, true);
+  assert.equal(acaoDeConfirmar({ tipo: 'volta_curta', passagem_ids: [1] }).maisUmaPassagem, false);
 });
 
 test('K is not offered on a flag that is about no entry', () => {

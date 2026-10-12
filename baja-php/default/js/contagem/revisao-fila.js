@@ -24,12 +24,23 @@ function compararNuloPorUltimo(a, b) {
   return a - b;
 }
 
-// Order of the queue: first the flags that touch the top of the standings
-// (lowest "prioridade"), and among equals the oldest first, because an old
-// flag has been wrong on the public screen for longer. The id breaks the
-// last ties so the queue never reshuffles between two polls.
+// Is a car's official count possibly wrong right now because of this flag?
+export const contagemEmDuvida = (alerta) => alerta?.contagem_em_duvida === 'a_mais' || alerta?.contagem_em_duvida === 'a_menos';
+
+// Order of the queue:
+//   1. the flags that put a count in doubt (a held pass, two counted passes
+//      too close together): a standings number may be wrong while they are
+//      open, which an informational flag never means;
+//   2. then the flags that touch the top of the standings (lowest "prioridade");
+//   3. among equals the oldest first, because an old flag has been wrong on
+//      the public screen for longer.
+// The id breaks the last ties so the queue never reshuffles between two polls.
 export function ordenarFila(alertas) {
   return [...alertas].sort((a, b) => {
+    const porDuvida = Number(contagemEmDuvida(b)) - Number(contagemEmDuvida(a));
+    if (porDuvida !== 0) {
+      return porDuvida;
+    }
     const porPosicao = compararNuloPorUltimo(a.prioridade, b.prioridade);
     if (porPosicao !== 0) {
       return porPosicao;
@@ -162,6 +173,31 @@ export function fontesDivergentes(carro, fontes) {
     }
   }
   return divergentes;
+}
+
+// A car of the table that does not take part in the race: the short label
+// for its row and the sentence for its panel.
+//   present, not classified   the classification field is blank or NÃO
+//   registered, not present   a real team nobody marked as present at the
+//                             event. Calling this "número desconhecido" sent
+//                             reviewers looking for a typing mistake
+//   not registered            no team of the event has this number: a typo
+export function situacaoDoCarroFora(carro) {
+  if (carro.presente) {
+    return {
+      etiqueta: 'não classificado',
+      frase: 'Carro presente, mas NÃO classificado para esta prova: as passagens dele não contam, a não ser as que um revisor confirmar.',
+    };
+  }
+  // An answer from before "inscrito" existed says nothing: keep the old words.
+  if (carro.inscrito) {
+    return {
+      etiqueta: 'equipe não marcada como presente',
+      frase: 'Esta equipe é do evento, mas NÃO está marcada como presente: as passagens dela não contam. '
+        + 'Se o carro está na pista, marque a presença da equipe no cadastro do evento.',
+    };
+  }
+  return { etiqueta: 'número desconhecido', frase: 'Este número não é de nenhuma equipe do evento.' };
 }
 
 // The label of the open-flag counter: "nenhum alerta", "1 alerta", "7 alertas".

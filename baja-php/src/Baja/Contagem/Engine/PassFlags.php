@@ -13,8 +13,8 @@ use Baja\Contagem\Engine\Data\Source;
  * its own: what it is about and the sentence the reviewer reads.
  *
  * WHEN each of them is raised is decided by FlagDetector; this class only
- * knows how to word them. None of these has a suggestion: the engine can
- * point at the problem but cannot know which record is the wrong one.
+ * knows how to word them. Most have no suggestion: the engine can point at
+ * the problem but cannot know which record is the wrong one.
  */
 final class PassFlags
 {
@@ -50,20 +50,122 @@ final class PassFlags
         return $flag;
     }
 
-    /** A pass at the line while the pit log says the car is in the pit lane. */
-    public function inThePitLane(PassGroup $group): Flag
+    /**
+     * A pass at the line while the log of an area (the pit lane or the
+     * fueling station) says the car is inside it. One of the two records is
+     * wrong, and how many counters saw the pass says which is more likely:
+     *
+     * - two or more counters agree on the pass: the car did cross the line,
+     *   so somebody missed its exit. Suggestion: record the exit, one
+     *   second before the pass ("marcar saída"). The pass stays counted.
+     * - one counter only: more likely an entry that should not exist.
+     *   Suggestion: discard the pass.
+     *
+     * @param string $area RaceTimeline::AREA_BOX or RaceTimeline::AREA_ABASTECIMENTO
+     * @param bool|null $othersMissedIt for a pass only one counter has: true when the other counters
+     *   are known to have nothing there, false when one of them may still upload it; null when
+     *   the pass does not rest on one counter alone
+     */
+    public function insideAnArea(PassGroup $group, string $area, ?bool $othersMissedIt): Flag
     {
-        $flag = $this->aboutGroup(Flag::NO_BOX, $group);
-        $flag->motivo = sprintf('O carro %d foi registrado na linha enquanto constava como dentro do box.', $group->carro);
+        $isPitLane = $area === RaceTimeline::AREA_BOX;
+        $flag = $this->aboutGroup($isPitLane ? Flag::NO_BOX : Flag::NO_ABASTECIMENTO, $group);
+        $flag->motivo = sprintf(
+            'O carro %d foi registrado na linha enquanto constava como dentro do %s.',
+            $group->carro,
+            $isPitLane ? 'box' : 'abastecimento'
+        );
+        if ($othersMissedIt === null) {
+            $flag->sugestao = ['tipo' => 'marcar_saida', 'area' => $area, 'equipe_numero' => $group->carro, 'ts_ms' => $group->tsMs - 1000];
+            $flag->motivo .= ' Mais de uma contagem viu a passagem, então o mais provável é que a saída não tenha sido registrada.';
+        } elseif ($othersMissedIt) {
+            $flag->fonteId = $group->entries[0]->fonteId;
+            $flag->sugestao = ['tipo' => 'descartar_passagem', 'passagem_id' => $group->entries[0]->id];
+            $flag->motivo .= sprintf(' Só %s viu a passagem, então o mais provável é que ela não tenha acontecido.', $this->sourceName($group->entries[0]->fonteId));
+        }
         return $flag;
     }
 
-    /** A pass at the line while the fueling log says the car is in the fueling station. */
-    public function inTheFuelingStation(PassGroup $group): Flag
+    /**
+     * A pass the counters agree on, held by the hold rule: it comes sooner
+     * after the car's previous official pass than the car could have lapped.
+     */
+    public function tooCloseToThePreviousPass(PassGroup $group): Flag
     {
-        $flag = $this->aboutGroup(Flag::NO_ABASTECIMENTO, $group);
-        $flag->motivo = sprintf('O carro %d foi registrado na linha enquanto constava como dentro do abastecimento.', $group->carro);
+        $flag = $this->aboutGroup(Flag::PASSAGEM_PROXIMA_DEMAIS, $group);
+        $flag->motivo = sprintf(
+            'A passagem do carro %d registrada por %s está a %d s da passagem anterior dele, e a volta mínima plausível para este carro é de %d s. %s Se o carro passou mesmo, conte esta passagem; se é a mesma passagem registrada duas vezes, descarte-a.',
+            $group->carro,
+            $this->sourceNames($group),
+            (int) round((int) $group->intervaloDesdeAnteriorMs / 1000),
+            (int) round((int) $group->voltaMinimaMs / 1000),
+            $this->heldOrCounted($group)
+        );
         return $flag;
+    }
+
+    /**
+     * A group whose entries are too far apart to be taken as two counters
+     * agreeing, and in which no two entries are close: held. The flag names
+     * the entry furthest from the others when one stands out (three
+     * entries); with two there is no telling which one is off.
+     */
+    public function spreadTooWide(PassGroup $group, int $allowedMs): Flag
+    {
+        $flag = $this->aboutGroup(Flag::DISPERSAO_ALTA, $group);
+        $outlier = $this->entryFurthestFromTheOthers($group);
+        $flag->fonteId = $outlier === null ? null : $outlier->fonteId;
+        $flag->motivo = sprintf(
+            'Os registros do carro %d neste momento (%s) estão espalhados por %d s, mais que os %d s aceitos entre contagens que viram a mesma passagem%s. %s Se for uma passagem só, conte-a; se não, anule os registros errados.',
+            $group->carro,
+            $this->sourceNames($group),
+            (int) round($group->spreadMs() / 1000),
+            (int) round($allowedMs / 1000),
+            $outlier === null ? '' : sprintf('; o mais afastado é o de %s', $this->sourceName($outlier->fonteId)),
+            $this->heldOrCounted($group)
+        );
+        return $flag;
+    }
+
+    /** One sentence: is the doubtful group out of the count (the usual case) or in it (the mode in force counts it)? */
+    private function heldOrCounted(PassGroup $group): string
+    {
+        return $group->contado
+            ? 'No modo de publicação atual ela está contada mesmo assim.'
+            : 'Por isso ela ficou retida, fora da contagem.';
+    }
+
+    /** Of three or more counters' entries, the one furthest from the middle one; null when there are only two. */
+    private function entryFurthestFromTheOthers(PassGroup $group): ?Entry
+    {
+        $entries = [];
+        foreach ($group->entries as $entry) {
+            if ($entry->fonteId !== Source::REVISOR_ID) {
+                $entries[] = $entry;
+            }
+        }
+        $count = count($entries);
+        if ($count < 3) {
+            return null;
+        }
+        $middleMs = $entries[intdiv($count, 2)]->tsMs;
+        $first = $entries[0];
+        $last = $entries[$count - 1];
+        return $middleMs - $first->tsMs > $last->tsMs - $middleMs ? $first : $last;
+    }
+
+    /** The names of the real counters in a group, for a sentence: "Contagem 1 e Contagem 3". */
+    public function sourceNames(PassGroup $group): string
+    {
+        $names = [];
+        foreach ($group->realSourceIds() as $fonteId) {
+            $names[] = $this->sourceName($fonteId);
+        }
+        if (count($names) <= 1) {
+            return $names[0] ?? 'o revisor';
+        }
+        $last = array_pop($names);
+        return implode(', ', $names) . ' e ' . $last;
     }
 
     /**
@@ -114,8 +216,10 @@ final class PassFlags
 
     /**
      * An entry whose time is unknown: the phone had nothing to anchor its
-     * clock to. It is in no pass group and counts for nothing. Confirming
-     * it means accepting the time it carries.
+     * clock to. It is in no pass group and counts for nothing, and
+     * confirming it only stops this warning: the time it carries is the
+     * phone's own clock, which nobody can check. A reviewer who knows the
+     * car did pass adds a pass at the time they know.
      */
     public function unknownTime(Entry $entry): Flag
     {
@@ -123,7 +227,7 @@ final class PassFlags
         $flag->fonteId = $entry->fonteId;
         $flag->tsMs = $entry->tsMs;
         $flag->motivo = sprintf(
-            '%s registrou o carro %d sem horário confiável (o aparelho não tinha sincronizado); a passagem não entra na contagem. Confirme para contá-la no horário mostrado, ou anule.',
+            '%s registrou o carro %d sem horário confiável (o aparelho não tinha sincronizado); o registro não entra na contagem. Se o carro passou mesmo, adicione a passagem no horário certo; depois anule este registro.',
             $this->sourceName($entry->fonteId),
             $entry->carro
         );

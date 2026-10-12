@@ -20,6 +20,7 @@ use Baja\Contagem\Engine\Data\Source;
  *      PassTimeFuser     the pass time of each group
  *   4. PublishRule       which groups are official passes
  *      PassRoles         leave out the start crossing and late finishers
+ *      HoldRule          hold a pass that comes too soon after the previous one
  *
  * A car's count depends only on that car's own entries, on the decisions,
  * on which sources were switched on or excluded, and on whether the car is
@@ -32,8 +33,10 @@ use Baja\Contagem\Engine\Data\Source;
  * are grouped like the others and marked (see PassRoles). The one exception
  * to "grouped like the others" is an entry whose time is UNKNOWN: its time
  * means nothing, so matching it with anything would be a guess. It is set
- * aside in `$unknownTimeEntries` until a reviewer confirms it, which is the
- * reviewer accepting its time.
+ * aside in `$unknownTimeEntries` and never counts. Confirming it only stops
+ * the warning: the time shown is the phone's own clock, which the reviewer
+ * cannot check, so a reviewer who knows the car did pass ADDS a pass at the
+ * time they know instead.
  */
 final class LapCounter
 {
@@ -49,7 +52,7 @@ final class LapCounter
     public array $groupsByCar = [];
 
     /**
-     * Entries of unknown time that no reviewer confirmed: in no group, never counted.
+     * Entries of unknown time: in no group, never counted, confirmed or not.
      *
      * @var Entry[]
      */
@@ -77,14 +80,19 @@ final class LapCounter
 
         $entries = $counter->entriesInTimeOrder($onlyCars);
         $counter->duplicates = DuplicateFilter::filter($entries, $input->settings, $counter->applied->confirmedEntryIds, $counter->sourcesById, $counter->timeline->largadaMs);
-        $counter->groupsByCar = PassMatcher::match($counter->duplicates->keptEntries, $input->settings->janelaMs, $counter->applied->confirmedEntryIds);
+        $counter->groupsByCar = PassMatcher::match(
+            $counter->duplicates->keptEntries,
+            $input->settings->janelaMs,
+            $counter->applied->confirmedEntryIds,
+            $input->settings->agreementSpreadMs()
+        );
 
         foreach ($counter->groupsByCar as $groups) {
             PassTimeFuser::setPassTimes($groups, $counter->sourcesById);
         }
         $unclassifiedCars = array_fill_keys($input->unclassifiedCars, true);
         $counter->ruleApplied = PublishRule::decide($counter->groupsByCar, $input->settings, $counter->availability, $unclassifiedCars);
-        PassRoles::assign($counter->groupsByCar, $counter->timeline, $input->settings);
+        PassRoles::assign($counter->groupsByCar, $counter->timeline, $input->settings, $counter->ruleApplied);
 
         return $counter;
     }
@@ -123,15 +131,13 @@ final class LapCounter
             return [];
         }
         $wanted = $onlyCars === null ? null : array_fill_keys($onlyCars, true);
-        $confirmedEntryIds = $this->applied->confirmedEntryIds;
-
         $entries = [];
         $times = [];
         foreach ($this->applied->entries as $entry) {
             if ($wanted !== null && !isset($wanted[$entry->carro])) {
                 continue;
             }
-            if ($entry->qualidadeTempo === Entry::TEMPO_DESCONHECIDO && !isset($confirmedEntryIds[$entry->id])) {
+            if ($entry->qualidadeTempo === Entry::TEMPO_DESCONHECIDO) {
                 $this->unknownTimeEntries[] = $entry;
                 continue;
             }

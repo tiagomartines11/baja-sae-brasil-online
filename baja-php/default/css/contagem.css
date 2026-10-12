@@ -128,6 +128,14 @@ button {
     color: #000000;
 }
 
+/* A time is shown, but the page is checking it with the server. */
+.verificando {
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #ffe9a6;
+    color: #000000;
+}
+
 .conexao {
     padding: 1px 8px;
     border-radius: 4px;
@@ -432,6 +440,13 @@ button {
     background: #fff1d6;
 }
 
+/* Pit page: a car tapped a moment ago, still in its old place (the tiles do
+   not move under the finger; see box-toques.js). */
+.bloco-recem-tocado {
+    border-style: dashed;
+    opacity: 0.45;
+}
+
 /* The car chosen in two-tap mode, waiting for "Passou". */
 .bloco-selecionado,
 .bloco-selecionado:active {
@@ -560,6 +575,11 @@ button {
 
 .recente-hora {
     grid-area: hora;
+    /* Shares its cell with the state ("na fila") on the right. The long text
+       of a held record ("aguardando horário oficial") wraps instead of
+       running under it. */
+    justify-self: start;
+    max-width: 65%;
     font-size: 15px;
     font-variant-numeric: tabular-nums;
 }

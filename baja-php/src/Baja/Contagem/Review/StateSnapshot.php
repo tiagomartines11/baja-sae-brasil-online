@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Review;
 
-use Baja\Contagem\Engine\Data\CarState;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Flag;
@@ -35,6 +34,26 @@ use Baja\Contagem\Service\RaceSnapshot;
 final class StateSnapshot
 {
     /**
+     * Top-level keys of the stored half that change with every heartbeat of
+     * a phone although nothing about the race changed: when each device was
+     * last heard from and how far each has synced.
+     *
+     * The snapshot's token (Service\SnapshotService) is a digest of the
+     * stored half WITHOUT these keys. With them in, the token changed every
+     * few seconds and every review screen downloaded the whole state again
+     * for nothing. Whatever is under these keys is also sent with the small
+     * "inalterado" answer, worked out afresh (see liveParts()), so a screen
+     * that keeps its state still sees them move.
+     *
+     * A number that moves with the heartbeats must live under one of these
+     * keys and nowhere else in the stored half.
+     */
+    public const LIVE_KEYS = ['dispositivos', 'contato_das_fontes'];
+
+    /** The parts of a source's statistics that are contact, not count: kept under 'contato_das_fontes'. */
+    private const CONTACT_FIELDS = ['visto_em_ms', 'offline', 'sincronizado_ate_ms', 'nada_a_esperar'];
+
+    /**
      * The stored half. Called by Service\SnapshotBuilder after every full run.
      *
      * @return array<string, mixed>
@@ -58,16 +77,20 @@ final class StateSnapshot
         }
 
         $history = DecisionHistory::page($prova, $activeDecisionIds, null);
+        [$sources, $contactBySource] = self::withoutContact(SourceOverview::describeSources($input, $result));
 
         return [
-            'fontes' => SourceOverview::describeSources($input, $result),
+            'fontes' => $sources,
+            'contato_das_fontes' => $contactBySource,
             'dispositivos' => SourceOverview::describeDevices($prova, $input->settings, $input->nowMs),
             'alertas_abertos' => $openFlags,
             'alertas_resolvidos' => $resolvedFlags,
-            'carros' => self::describeCars($input, $result, $teams),
-            'carros_validos' => self::describeValidCars($input, $teams),
+            'carros' => CarTable::describe($input, $result, $teams),
+            'carros_validos' => CarTable::describeValidCars($input, $teams),
+            'sem_equipes_presentes' => CarTable::nobodyIsPresent($input),
             'configuracoes' => $input->settings->toArray(),
             'paradas_sem_par' => TimelineStops::describeUnpaired($result->timeline),
+            'paradas_sem_horario' => TimelineStops::describeUnknownTime($result->timeline),
             'historico' => $history['linhas'],
             'historico_ha_mais' => $history['ha_mais'],
             'historico_em_vigor' => DecisionHistory::inForce($prova, $activeDecisionIds),
@@ -96,19 +119,35 @@ final class StateSnapshot
             $state['carros'][$index]['status'] = $status['status'] ?? null;
             $state['carros'][$index]['status_desde_ms'] = $status['status_desde_ms'] ?? null;
         }
+        // The screen reads a source's contact from its statistics. It is
+        // stored apart (see LIVE_KEYS) and put back here: first as it was
+        // when the snapshot was made, then as it is right now.
+        $storedContact = is_array($state['contato_das_fontes'] ?? null) ? $state['contato_das_fontes'] : [];
         foreach ($state['fontes'] ?? [] as $index => $source) {
-            $contact = $live['contato_das_fontes'][(int) $source['id']] ?? null;
-            if ($contact !== null && is_array($source['stats'] ?? null)) {
-                $state['fontes'][$index]['stats'] = array_merge($source['stats'], $contact);
+            if (!is_array($source['stats'] ?? null)) {
+                continue;
             }
+            $fonteId = (int) $source['id'];
+            $state['fontes'][$index]['stats'] = array_merge(
+                $source['stats'],
+                $storedContact[$fonteId] ?? [],
+                $live['contato_das_fontes'][$fonteId] ?? []
+            );
         }
+        unset($state['contato_das_fontes']);
         $state['dispositivos'] = $live['dispositivos'];
 
-        foreach (['versao', 'calculado_em_ms', 'servidor_agora_ms', 'corrida', 'revisores', 'publicado_em_ms', 'publicacao_desligada', 'simulacao'] as $key) {
+        foreach (self::LIVE_STATE_KEYS as $key) {
             $state[$key] = $live[$key];
         }
         return $state;
     }
+
+    /** Keys of liveParts() that the full state carries under the same name. */
+    private const LIVE_STATE_KEYS = [
+        'versao', 'calculado_em_ms', 'servidor_agora_ms', 'corrida', 'revisores', 'publicado_em_ms',
+        'publicacao_desligada', 'simulacao', 'predefinicao_de_teste', 'correcoes_da_reconciliacao',
+    ];
 
     /**
      * Only what changes with time or with the viewer. This is the whole
@@ -152,7 +191,37 @@ final class StateSnapshot
             // Drives the permanent "SIMULAÇÃO" banner. Sent with every
             // answer, so the banner follows the setting within one poll.
             'simulacao' => $settings->permitirSimulacao,
+            // The test preset is applied: the time settings in force are
+            // NOT the real race's. Shown as a banner for as long as it lasts.
+            'predefinicao_de_teste' => $service->hasSavedSettings(),
+            // What the slow path had to put right in the published counts
+            // during the last day. It should never happen; when it does the
+            // reviewers are the ones who must know, not only the error log.
+            'correcoes_da_reconciliacao' => $service->lastReconcileCorrections(),
         ];
+    }
+
+    /**
+     * Takes the contact fields out of each source's statistics.
+     *
+     * @param array<int, array<string, mixed>> $sourceRows as made by SourceOverview::describeSources()
+     * @return array{0: array<int, array<string, mixed>>, 1: array<int, array<string, mixed>>} the rows without them, and fonteId => those fields
+     */
+    private static function withoutContact(array $sourceRows): array
+    {
+        $contactBySource = [];
+        foreach ($sourceRows as $index => $row) {
+            if (!is_array($row['stats'] ?? null)) {
+                continue;
+            }
+            foreach (self::CONTACT_FIELDS as $field) {
+                if (array_key_exists($field, $row['stats'])) {
+                    $contactBySource[(int) $row['id']][$field] = $row['stats'][$field];
+                    unset($sourceRows[$index]['stats'][$field]);
+                }
+            }
+        }
+        return [$sourceRows, $contactBySource];
     }
 
     /**
@@ -179,89 +248,6 @@ final class StateSnapshot
         $row = $flag->toArray();
         $row['assinatura'] = $signatures->forEntries($flag->passagemIds);
         return $row;
-    }
-
-    /**
-     * The car table, without each car's status: "atrasado" is a statement
-     * about this very second and is added by live().
-     *
-     * @param array<int, array{numero: int, nome: string, escola: string}> $teams
-     * @return array<int, array<string, mixed>> in standings order
-     */
-    private static function describeCars(EngineInput $input, EngineResult $result, array $teams): array
-    {
-        $officialPassesByCar = [];
-        foreach ($result->laps as $lap) {
-            if ($lap->isOfficialPass()) {
-                $officialPassesByCar[$lap->carro] = ($officialPassesByCar[$lap->carro] ?? 0) + 1;
-            }
-        }
-
-        $classified = array_fill_keys($input->validCars, true);
-        $unclassified = array_fill_keys($input->unclassifiedCars, true);
-
-        $rows = [];
-        foreach ($result->cars as $state) {
-            $row = $state->toArray();
-            unset($row['status'], $row['status_desde_ms']);
-            // Official passes are laps plus the car's pass zero. A counter
-            // types passes, so this is what each counter's own number is
-            // compared with.
-            $row['passagens'] = $officialPassesByCar[$state->carro] ?? 0;
-            // Takes part in the race: present at the event AND classified
-            // for this prova. A car that is not has entries only by mistake
-            // (or by a stale list on a phone); the table shows it apart.
-            $row['classificado'] = isset($classified[$state->carro]);
-            $row['presente'] = $row['classificado'] || isset($unclassified[$state->carro]);
-            $row['equipe'] = $teams[$state->carro]['nome'] ?? null;
-            $row['escola'] = $teams[$state->carro]['escola'] ?? null;
-
-            $imported = [];
-            foreach ($input->totals as $fonteId => $lapsByCar) {
-                if (isset($lapsByCar[$state->carro])) {
-                    $imported[$fonteId] = (int) $lapsByCar[$state->carro];
-                }
-            }
-            $row['totais_importados'] = $imported;
-            $rows[] = $row;
-            unset($unclassified[$state->carro]);
-        }
-
-        // The engine keeps a car that is not classified out of the
-        // standings altogether. It is listed all the same, after the
-        // others and with nothing counted, so that a reviewer can open its
-        // timeline and see what was typed for it.
-        ksort($unclassified);
-        foreach (array_keys($unclassified) as $carro) {
-            $row = (new CarState($carro))->toArray();
-            unset($row['status'], $row['status_desde_ms']);
-            $rows[] = $row + [
-                'passagens' => 0,
-                'equipe' => $teams[$carro]['nome'] ?? null,
-                'escola' => $teams[$carro]['escola'] ?? null,
-                'classificado' => false,
-                'presente' => true,
-                'totais_importados' => [],
-            ];
-        }
-        return $rows;
-    }
-
-    /**
-     * For the "reatribuir para…" and "adicionar passagem" inputs.
-     *
-     * @param array<int, array{numero: int, nome: string, escola: string}> $teams
-     * @return array<int, array{numero: int, equipe: ?string}>
-     */
-    private static function describeValidCars(EngineInput $input, array $teams): array
-    {
-        $cars = $input->validCars;
-        sort($cars);
-        $rows = [];
-        foreach ($cars as $car) {
-            $rows[] = ['numero' => $car, 'equipe' => $teams[$car]['nome'] ?? null];
-        }
-        return $rows;
     }
 
     /**

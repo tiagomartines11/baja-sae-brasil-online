@@ -75,7 +75,14 @@ final class Engine
         $pace = new PaceModel($referenceLapsByCar, $settings);
 
         $flagDetector = new FlagDetector($settings, $counter->availability, $pace, $timeline, $counter->sourcesById, $input->validCars, $input->unclassifiedCars);
-        $flags = $flagDetector->detect($counter->groupsByCar, $groupsInTimeOrder, $referenceLapsByCar, $counter->duplicates, $counter->unknownTimeEntries);
+        $flags = $flagDetector->detect(
+            $counter->groupsByCar,
+            $groupsInTimeOrder,
+            $referenceLapsByCar,
+            $counter->duplicates,
+            $counter->unknownTimeEntries,
+            $counter->applied->confirmedEntryIds
+        );
         $flagDetector->describeRepeats($counter->duplicates->flags);
         $flags = array_merge($flags, $counter->duplicates->flags);
 
@@ -194,8 +201,11 @@ final class Engine
     }
 
     /**
-     * Open flags first, the ones touching the top of the standings before
-     * the rest and older before newer; auto-resolved ones last, newest first.
+     * Open flags first: those that put a car's lap count in doubt (a held
+     * pass, two official passes too close together) before the merely
+     * informative ones; within each, the ones touching the top of the
+     * standings before the rest, and older before newer. Auto-resolved
+     * flags last, newest first.
      *
      * @param Flag[] $flags
      * @return Flag[]
@@ -217,6 +227,9 @@ final class Engine
             }
             if ($a->autoResolvido) {
                 return ($b->tsMs ?? 0) <=> ($a->tsMs ?? 0);
+            }
+            if (($a->contagemEmDuvida === null) !== ($b->contagemEmDuvida === null)) {
+                return $a->contagemEmDuvida === null ? 1 : -1;
             }
             if ($a->prioridade !== $b->prioridade) {
                 return $a->prioridade <=> $b->prioridade;

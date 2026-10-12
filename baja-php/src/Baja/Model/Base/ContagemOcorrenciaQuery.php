@@ -28,6 +28,10 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemOcorrenciaQuery orderByCriadoEmMs($order = Criteria::ASC) Order by the criado_em_ms column
  * @method     ChildContagemOcorrenciaQuery orderBySubstituiId($order = Criteria::ASC) Order by the substitui_id column
  * @method     ChildContagemOcorrenciaQuery orderByUuidCliente($order = Criteria::ASC) Order by the uuid_cliente column
+ * @method     ChildContagemOcorrenciaQuery orderByQualidadeTempo($order = Criteria::ASC) Order by the qualidade_tempo column
+ * @method     ChildContagemOcorrenciaQuery orderByTsDispositivoMs($order = Criteria::ASC) Order by the ts_dispositivo_ms column
+ * @method     ChildContagemOcorrenciaQuery orderByModoEntrada($order = Criteria::ASC) Order by the modo_entrada column
+ * @method     ChildContagemOcorrenciaQuery orderByOrigem($order = Criteria::ASC) Order by the origem column
  *
  * @method     ChildContagemOcorrenciaQuery groupByOcorrenciaId() Group by the ocorrencia_id column
  * @method     ChildContagemOcorrenciaQuery groupByEventoId() Group by the evento_id column
@@ -39,6 +43,10 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemOcorrenciaQuery groupByCriadoEmMs() Group by the criado_em_ms column
  * @method     ChildContagemOcorrenciaQuery groupBySubstituiId() Group by the substitui_id column
  * @method     ChildContagemOcorrenciaQuery groupByUuidCliente() Group by the uuid_cliente column
+ * @method     ChildContagemOcorrenciaQuery groupByQualidadeTempo() Group by the qualidade_tempo column
+ * @method     ChildContagemOcorrenciaQuery groupByTsDispositivoMs() Group by the ts_dispositivo_ms column
+ * @method     ChildContagemOcorrenciaQuery groupByModoEntrada() Group by the modo_entrada column
+ * @method     ChildContagemOcorrenciaQuery groupByOrigem() Group by the origem column
  *
  * @method     ChildContagemOcorrenciaQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildContagemOcorrenciaQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -73,6 +81,10 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemOcorrencia|null findOneByCriadoEmMs(string $criado_em_ms) Return the first ChildContagemOcorrencia filtered by the criado_em_ms column
  * @method     ChildContagemOcorrencia|null findOneBySubstituiId(string $substitui_id) Return the first ChildContagemOcorrencia filtered by the substitui_id column
  * @method     ChildContagemOcorrencia|null findOneByUuidCliente(string $uuid_cliente) Return the first ChildContagemOcorrencia filtered by the uuid_cliente column
+ * @method     ChildContagemOcorrencia|null findOneByQualidadeTempo(string $qualidade_tempo) Return the first ChildContagemOcorrencia filtered by the qualidade_tempo column
+ * @method     ChildContagemOcorrencia|null findOneByTsDispositivoMs(string $ts_dispositivo_ms) Return the first ChildContagemOcorrencia filtered by the ts_dispositivo_ms column
+ * @method     ChildContagemOcorrencia|null findOneByModoEntrada(string $modo_entrada) Return the first ChildContagemOcorrencia filtered by the modo_entrada column
+ * @method     ChildContagemOcorrencia|null findOneByOrigem(string $origem) Return the first ChildContagemOcorrencia filtered by the origem column
  *
  * @method     ChildContagemOcorrencia requirePk($key, ?ConnectionInterface $con = null) Return the ChildContagemOcorrencia by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemOcorrencia requireOne(?ConnectionInterface $con = null) Return the first ChildContagemOcorrencia matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -87,6 +99,10 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemOcorrencia requireOneByCriadoEmMs(string $criado_em_ms) Return the first ChildContagemOcorrencia filtered by the criado_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemOcorrencia requireOneBySubstituiId(string $substitui_id) Return the first ChildContagemOcorrencia filtered by the substitui_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemOcorrencia requireOneByUuidCliente(string $uuid_cliente) Return the first ChildContagemOcorrencia filtered by the uuid_cliente column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemOcorrencia requireOneByQualidadeTempo(string $qualidade_tempo) Return the first ChildContagemOcorrencia filtered by the qualidade_tempo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemOcorrencia requireOneByTsDispositivoMs(string $ts_dispositivo_ms) Return the first ChildContagemOcorrencia filtered by the ts_dispositivo_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemOcorrencia requireOneByModoEntrada(string $modo_entrada) Return the first ChildContagemOcorrencia filtered by the modo_entrada column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemOcorrencia requireOneByOrigem(string $origem) Return the first ChildContagemOcorrencia filtered by the origem column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildContagemOcorrencia[]|Collection find(?ConnectionInterface $con = null) Return ChildContagemOcorrencia objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildContagemOcorrencia> find(?ConnectionInterface $con = null) Return ChildContagemOcorrencia objects based on current ModelCriteria
@@ -111,6 +127,14 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemOcorrencia> findBySubstituiId(string|array<string> $substitui_id) Return ChildContagemOcorrencia objects filtered by the substitui_id column
  * @method     ChildContagemOcorrencia[]|Collection findByUuidCliente(string|array<string> $uuid_cliente) Return ChildContagemOcorrencia objects filtered by the uuid_cliente column
  * @psalm-method Collection&\Traversable<ChildContagemOcorrencia> findByUuidCliente(string|array<string> $uuid_cliente) Return ChildContagemOcorrencia objects filtered by the uuid_cliente column
+ * @method     ChildContagemOcorrencia[]|Collection findByQualidadeTempo(string|array<string> $qualidade_tempo) Return ChildContagemOcorrencia objects filtered by the qualidade_tempo column
+ * @psalm-method Collection&\Traversable<ChildContagemOcorrencia> findByQualidadeTempo(string|array<string> $qualidade_tempo) Return ChildContagemOcorrencia objects filtered by the qualidade_tempo column
+ * @method     ChildContagemOcorrencia[]|Collection findByTsDispositivoMs(string|array<string> $ts_dispositivo_ms) Return ChildContagemOcorrencia objects filtered by the ts_dispositivo_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemOcorrencia> findByTsDispositivoMs(string|array<string> $ts_dispositivo_ms) Return ChildContagemOcorrencia objects filtered by the ts_dispositivo_ms column
+ * @method     ChildContagemOcorrencia[]|Collection findByModoEntrada(string|array<string> $modo_entrada) Return ChildContagemOcorrencia objects filtered by the modo_entrada column
+ * @psalm-method Collection&\Traversable<ChildContagemOcorrencia> findByModoEntrada(string|array<string> $modo_entrada) Return ChildContagemOcorrencia objects filtered by the modo_entrada column
+ * @method     ChildContagemOcorrencia[]|Collection findByOrigem(string|array<string> $origem) Return ChildContagemOcorrencia objects filtered by the origem column
+ * @psalm-method Collection&\Traversable<ChildContagemOcorrencia> findByOrigem(string|array<string> $origem) Return ChildContagemOcorrencia objects filtered by the origem column
  *
  * @method     ChildContagemOcorrencia[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildContagemOcorrencia> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -210,7 +234,7 @@ abstract class ContagemOcorrenciaQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT ocorrencia_id, evento_id, prova_id, tipo, equipe_numero, ts_ms, usuario, criado_em_ms, substitui_id, uuid_cliente FROM contagem_ocorrencia WHERE ocorrencia_id = :p0';
+        $sql = 'SELECT ocorrencia_id, evento_id, prova_id, tipo, equipe_numero, ts_ms, usuario, criado_em_ms, substitui_id, uuid_cliente, qualidade_tempo, ts_dispositivo_ms, modo_entrada, origem FROM contagem_ocorrencia WHERE ocorrencia_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -655,6 +679,133 @@ abstract class ContagemOcorrenciaQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ContagemOcorrenciaTableMap::COL_UUID_CLIENTE, $uuidCliente, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the qualidade_tempo column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByQualidadeTempo('fooValue');   // WHERE qualidade_tempo = 'fooValue'
+     * $query->filterByQualidadeTempo('%fooValue%', Criteria::LIKE); // WHERE qualidade_tempo LIKE '%fooValue%'
+     * $query->filterByQualidadeTempo(['foo', 'bar']); // WHERE qualidade_tempo IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $qualidadeTempo The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByQualidadeTempo($qualidadeTempo = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($qualidadeTempo)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO, $qualidadeTempo, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the ts_dispositivo_ms column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByTsDispositivoMs(1234); // WHERE ts_dispositivo_ms = 1234
+     * $query->filterByTsDispositivoMs(array(12, 34)); // WHERE ts_dispositivo_ms IN (12, 34)
+     * $query->filterByTsDispositivoMs(array('min' => 12)); // WHERE ts_dispositivo_ms > 12
+     * </code>
+     *
+     * @param mixed $tsDispositivoMs The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByTsDispositivoMs($tsDispositivoMs = null, ?string $comparison = null)
+    {
+        if (is_array($tsDispositivoMs)) {
+            $useMinMax = false;
+            if (isset($tsDispositivoMs['min'])) {
+                $this->addUsingAlias(ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS, $tsDispositivoMs['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($tsDispositivoMs['max'])) {
+                $this->addUsingAlias(ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS, $tsDispositivoMs['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS, $tsDispositivoMs, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the modo_entrada column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByModoEntrada('fooValue');   // WHERE modo_entrada = 'fooValue'
+     * $query->filterByModoEntrada('%fooValue%', Criteria::LIKE); // WHERE modo_entrada LIKE '%fooValue%'
+     * $query->filterByModoEntrada(['foo', 'bar']); // WHERE modo_entrada IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $modoEntrada The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByModoEntrada($modoEntrada = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($modoEntrada)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemOcorrenciaTableMap::COL_MODO_ENTRADA, $modoEntrada, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the origem column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByOrigem('fooValue');   // WHERE origem = 'fooValue'
+     * $query->filterByOrigem('%fooValue%', Criteria::LIKE); // WHERE origem LIKE '%fooValue%'
+     * $query->filterByOrigem(['foo', 'bar']); // WHERE origem IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $origem The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByOrigem($origem = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($origem)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemOcorrenciaTableMap::COL_ORIGEM, $origem, $comparison);
 
         return $this;
     }

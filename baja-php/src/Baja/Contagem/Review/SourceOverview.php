@@ -112,16 +112,37 @@ final class SourceOverview
      * @param array<int, array<string, mixed>> $sourceRows as made by describeSources()
      * @param array<int, array<string, mixed>> $devices as made by describeDevices()
      * @param array<string, mixed> $liveNumbers the 'tempo_real' part of a snapshot
-     * @return array<int, array{visto_em_ms: ?int, offline: bool}> fonteId => contact
+     *
+     * It also says how far each source has synced, by the engine's rule
+     * (SourceLoader): the earliest mark among its open devices, unknown
+     * while an open device has never reported an empty queue, and "nothing
+     * to wait for" when no device is open. The snapshot's token does not
+     * change when only these numbers do (StateSnapshot::LIVE_KEYS), so the
+     * screen gets them from here with every answer.
+     *
+     * @return array<int, array{visto_em_ms: ?int, offline: bool, sincronizado_ate_ms: ?int, nada_a_esperar: bool}> fonteId => contact
      */
     public static function contactBySource(array $sourceRows, array $devices, Settings $settings, array $liveNumbers, int $nowMs): array
     {
         $lastSeenBySource = [];
+        $openDevicesBySource = [];
+        // A source with an open device that never reported an empty queue.
+        $unknownMarkBySource = [];
+        $earliestMarkBySource = [];
         foreach ($devices as $device) {
             $seenMs = $device['visto_em_ms'];
             $fonteId = (int) $device['fonte_id'];
             if ($seenMs !== null && $seenMs > ($lastSeenBySource[$fonteId] ?? 0)) {
                 $lastSeenBySource[$fonteId] = (int) $seenMs;
+            }
+            if (empty($device['aberto'])) {
+                continue;
+            }
+            $openDevicesBySource[$fonteId] = true;
+            if ($device['sincronizado_ate_ms'] === null) {
+                $unknownMarkBySource[$fonteId] = true;
+            } else {
+                $earliestMarkBySource[$fonteId] = min($earliestMarkBySource[$fonteId] ?? PHP_INT_MAX, (int) $device['sincronizado_ate_ms']);
             }
         }
 
@@ -135,9 +156,12 @@ final class SourceOverview
             $countsPasses = !empty($source['ativa'])
                 && in_array($source['tipo'] ?? '', [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA], true);
             $silent = $lastSeenMs === null || $nowMs - $lastSeenMs > $settings->fonteOfflineS * 1000;
+            $hasOpenDevice = isset($openDevicesBySource[$fonteId]);
             $contact[$fonteId] = [
                 'visto_em_ms' => $lastSeenMs,
                 'offline' => $countsPasses && $raceIsOn && $silent,
+                'sincronizado_ate_ms' => $hasOpenDevice && !isset($unknownMarkBySource[$fonteId]) ? $earliestMarkBySource[$fonteId] : null,
+                'nada_a_esperar' => !$hasOpenDevice,
             ];
         }
         return $contact;

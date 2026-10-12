@@ -16,6 +16,7 @@ use Propel\Runtime\Propel;
  *
  *   1. Nothing happens in a race before its start.
  *   2. Red flags and restarts come in pairs, in that order.
+ *   3. A race that was finished is neither stopped nor restarted.
  *
  * And one question that is not a refusal but needs a person's "yes":
  * moving the start later leaves entries before it, which then stop counting.
@@ -78,7 +79,38 @@ final class RaceEventRules
                 return 'A largada ficaria depois de ' . $label . ' já registrada (' . $when . '). Corrija ou cancele essa ocorrência primeiro.';
             }
         }
-        return self::pairingProblem($inForce);
+        return self::afterFinishProblem($inForce) ?? self::pairingProblem($inForce);
+    }
+
+    /**
+     * A red flag or a restart later than the finish. The usual cause is the
+     * wrong button after the race ("Bandeira vermelha" for "Encerrar"), and
+     * stored it would reopen a stoppage in a race that is over: the car
+     * statuses and the "after the finish" rule would both follow it.
+     *
+     * @param Ocorrencia[] $inForce
+     */
+    private static function afterFinishProblem(array $inForce): ?string
+    {
+        $finishMs = null;
+        foreach ($inForce as $ocorrencia) {
+            if ($ocorrencia->tipo === Ocorrencia::ENCERRAMENTO) {
+                // Of several finishes in force the most recently stored one counts.
+                $finishMs = $ocorrencia->tsMs;
+            }
+        }
+        if ($finishMs === null) {
+            return null;
+        }
+        foreach ($inForce as $ocorrencia) {
+            $stopsOrRestarts = $ocorrencia->tipo === Ocorrencia::BANDEIRA_VERMELHA || $ocorrencia->tipo === Ocorrencia::RELARGADA;
+            if ($stopsOrRestarts && $ocorrencia->tsMs > $finishMs) {
+                return 'A corrida foi encerrada em ' . Pagina::formatClock($finishMs) . ': não cabe '
+                    . mb_strtolower(RaceEvents::LABELS[$ocorrencia->tipo]) . ' depois disso (' . Pagina::formatClock($ocorrencia->tsMs) . '). '
+                    . 'Se a corrida não acabou, cancele o encerramento primeiro; se o horário está errado, corrija-o.';
+            }
+        }
+        return null;
     }
 
     /**
@@ -115,24 +147,34 @@ final class RaceEventRules
     }
 
     /**
-     * Entries that count as part of the race today and would be BEFORE a
-     * start moved to $newStartMs: the start pack, typically, when a start is
-     * corrected a few seconds later.
+     * Entries that would be BEFORE a start at $newStartMs and are not
+     * before the start in force today: the start pack, typically, when a
+     * start is moved a few seconds later. With no start in force today
+     * (the first start, or a start recorded again after the only one was
+     * cancelled) that is every entry typed before the new start.
      *
+     * Asked of the write connection and meant to be called while holding
+     * the count lock: the numbers are then the ones the action will really
+     * leave behind, not the ones of a page drawn a minute ago.
+     *
+     * @param int|null $currentStartMs the start in force, or null when the race has none
      * @return array{registros: int, carros: int}
      */
-    public static function entriesLeftBeforeStart(Prova $prova, int $currentStartMs, int $newStartMs): array
+    public static function entriesLeftBeforeStart(Prova $prova, ?int $currentStartMs, int $newStartMs): array
     {
-        if ($newStartMs <= $currentStartMs) {
+        if ($currentStartMs !== null && $newStartMs <= $currentStartMs) {
             return ['registros' => 0, 'carros' => 0];
         }
         $statement = Propel::getWriteConnection('resultados')->prepare(
             'SELECT COUNT(*) AS registros, COUNT(DISTINCT p.equipe_numero) AS carros
                FROM contagem_passagem p
                JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
-              WHERE f.evento_id = ? AND f.prova_id = ? AND p.ts_ms >= ? AND p.ts_ms < ?'
+              WHERE f.evento_id = ? AND f.prova_id = ? AND p.ts_ms >= ? AND p.ts_ms < ?
+                AND p.qualidade_tempo <> ?'
         );
-        $statement->execute([$prova->getEventoId(), $prova->getProvaId(), $currentStartMs, $newStartMs]);
+        // An entry of unknown time carries its phone's own guess: where it
+        // falls says nothing, and it never counts by itself anyway.
+        $statement->execute([$prova->getEventoId(), $prova->getProvaId(), $currentStartMs ?? 0, $newStartMs, 'desconhecido']);
         $row = $statement->fetch(\PDO::FETCH_ASSOC) ?: [];
         return ['registros' => (int) ($row['registros'] ?? 0), 'carros' => (int) ($row['carros'] ?? 0)];
     }

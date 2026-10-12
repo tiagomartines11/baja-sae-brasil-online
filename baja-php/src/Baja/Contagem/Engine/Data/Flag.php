@@ -34,6 +34,20 @@ final class Flag
     /** A pass at the line while the car was logged as inside the fueling station. */
     public const NO_ABASTECIMENTO = 'no_abastecimento';
 
+    /**
+     * The counters' entries for one crossing are further apart than
+     * `dispersao_alerta_ms`: either one entry set apart from the two that
+     * agree, or a whole group that is held because nobody agrees closely.
+     */
+    public const DISPERSAO_ALTA = 'dispersao_alta';
+    /** A pass the counters agree on, held because it is too close to the car's previous official pass. */
+    public const PASSAGEM_PROXIMA_DEMAIS = 'passagem_proxima_demais';
+
+    /** The car may have one lap too many: two counted passes closer than a believable lap. */
+    public const DUVIDA_A_MAIS = 'a_mais';
+    /** The car may have one lap too few: a pass is held and may be real. */
+    public const DUVIDA_A_MENOS = 'a_menos';
+
     /** Confirming the flag only silences it: the count stays as it is. */
     public const EFEITO_NENHUM = 'nenhum';
     /** Confirming the flag gives the car one more official pass. */
@@ -94,6 +108,23 @@ final class Flag
     public ?int $voltaResultanteMs = null;
 
     /**
+     * Whether the car's official count is in doubt right now because of what
+     * this flag is about: null (it is not), DUVIDA_A_MAIS or DUVIDA_A_MENOS.
+     * Such flags come first in the review queue.
+     */
+    public ?string $contagemEmDuvida = null;
+
+    /**
+     * Only for "volta_curta": the two passes that are too close together,
+     * the earlier one first, each as ['passagem_ids' => int[], 'ts_ms' => int].
+     * Either may be the wrong one; the screen lets the reviewer choose which
+     * to discard.
+     *
+     * @var array<int, array{passagem_ids: int[], ts_ms: int}>|null
+     */
+    public ?array $passagens = null;
+
+    /**
      * @param int[] $carros
      * @param int[] $passagemIds
      */
@@ -121,6 +152,8 @@ final class Flag
             'prioridade' => $this->prioridade === PHP_INT_MAX ? null : $this->prioridade,
             'efeito_de_confirmar' => $this->efeitoDeConfirmar,
             'volta_resultante_ms' => $this->voltaResultanteMs,
+            'contagem_em_duvida' => $this->contagemEmDuvida,
+            'passagens' => $this->passagens,
         ];
     }
 }

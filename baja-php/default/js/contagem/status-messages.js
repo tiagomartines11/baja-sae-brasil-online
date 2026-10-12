@@ -23,6 +23,7 @@ const TEXTO_DISPOSITIVO_BLOQUEADO = 'Este aparelho foi bloqueado nesta contagem 
 const MOTIVO_SEM_CONFIRMACAO = 'sem_confirmacao';
 const TEXTO_MOTIVO_RECUSA = {
     simulacao_nao_permitida: 'a simulação não está permitida nesta prova',
+    abastecimento_desligado: 'o abastecimento está desligado nesta prova',
     [MOTIVO_SEM_CONFIRMACAO]: 'o servidor não confirmou o recebimento',
 };
 

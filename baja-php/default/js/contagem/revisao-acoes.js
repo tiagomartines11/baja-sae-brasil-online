@@ -4,10 +4,13 @@
 
 import { SessaoExpirada, enviarDecisao } from './revisao-api.js';
 import {
-  alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoConfirmar, decisaoConfirmarAlerta,
+  acaoDeAceitar, decisaoConfirmarAlerta, decisaoMarcarSaida, perguntaAoConfirmar, perguntaAoDescartar,
+} from './revisao-alertas.js';
+import {
+  alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoConfirmar,
   decisaoDescartarPassagem, decisaoDesfazer, decisaoEncerrarExclusao, decisaoExcluirFonte, decisaoReatribuir,
-  mensagemDeConflito, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo, perguntaSobreVoltaCurta,
-  podeDecidirSobreAlerta, problemaAoAdicionar, problemaAoEncerrarExclusao, voltaCurtaAoContar,
+  entradasDaDecisao, mensagemDeConflito, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo, pedidosDaSugestao,
+  podeDecidirSobreAlerta, problemaAoAdicionar, problemaAoEncerrarExclusao,
 } from './revisao-decisoes.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { interpretarTempoDeProva } from './revisao-formato.js';
@@ -110,12 +113,48 @@ export function criarAcoes(ganchos) {
     return alerta;
   }
 
-  function decidirSobreAlerta(montarDecisao) {
-    const alerta = alertaQuePodeSerDecidido();
-    const decisao = alerta ? montarDecisao(alerta) : null;
-    if (decisao) {
-      enviar(pedidoParaAlerta(comMotivo(decisao, tela.motivo), alerta, tela.estado, tela.janelaAssinatura));
+  // Sends a decision taken on the selected flag.
+  //
+  // Normally the reviewer was looking at the flag's entries and the request
+  // says so. When the decision is about ONE entry that is on the timeline
+  // but is not one of the flag's (the other pass of a short lap, a chip the
+  // reviewer clicked), it is sent as a decision on that entry, with that
+  // entry's own signature. Anything else cannot be checked by the server
+  // and is not sent.
+  function enviarSobreAlerta(decisao, alerta) {
+    const comRazao = comMotivo(decisao, tela.motivo);
+    const pedidoDoAlerta = pedidoParaAlerta(comRazao, alerta, tela.estado, tela.janelaAssinatura);
+    if (pedidoDoAlerta) {
+      enviar(pedidoDoAlerta);
+      return;
     }
+    const alvos = entradasDaDecisao(decisao);
+    const entrada = alvos.length === 1 ? encontrarEntrada(tela.janela, alvos[0]) : null;
+    if (entrada) {
+      enviar(pedidoParaEntrada(comRazao, entrada, tela.estado));
+      return;
+    }
+    mostrarMensagem('Esta ação envolve registros que não estão neste alerta. Use os registros da linha do tempo, um a um.', 'erro');
+  }
+
+  // A. Asks first whenever accepting gives a car a pass or takes one away.
+  function aceitar() {
+    const alerta = alertaQuePodeSerDecidido();
+    const acao = alerta ? acaoDeAceitar(alerta, tela.estado) : null;
+    const decisao = acao ? decisaoAceitar(alerta) : null;
+    if (!decisao) {
+      return;
+    }
+    if (acao.pergunta !== null && !window.confirm(acao.pergunta)) {
+      return;
+    }
+    // The same builder the simulation runner uses (see pedidosDaSugestao).
+    const pedidos = pedidosDaSugestao({ ...alerta, sugestao: comMotivo(decisao, tela.motivo) }, tela.estado, tela.janelaAssinatura);
+    if (pedidos.length > 0) {
+      enviar(pedidos[0]);
+      return;
+    }
+    enviarSobreAlerta(decisao, alerta);
   }
 
   function anular() {
@@ -128,55 +167,64 @@ export function criarAcoes(ganchos) {
       mostrarMensagem('Clique primeiro no registro que deve ser anulado.', 'informacao');
       return;
     }
-    const decisao = comMotivo(decisaoAnular(alvo), tela.motivo);
-    const pedidoDoAlerta = pedidoParaAlerta(decisao, alerta, tela.estado, tela.janelaAssinatura);
-    if (pedidoDoAlerta) {
-      enviar(pedidoDoAlerta);
-      return;
-    }
-    // The chip clicked is on the timeline but is not one of the flag's
-    // entries: it is voided as that one entry, with its own signature.
-    const entrada = encontrarEntrada(tela.janela, alvo);
-    if (entrada) {
-      enviar(pedidoParaEntrada(decisao, entrada, tela.estado));
-    }
+    enviarSobreAlerta(decisaoAnular(alvo), alerta);
   }
 
-  // K. Asks first when it would give the car a lap too short to be real.
+  // K. Asks first when it makes a pass typed before the start the car's
+  // initial pass, and when it would give the car a lap too short to be real.
   function confirmarAlerta() {
     const alerta = alertaQuePodeSerDecidido();
     const decisao = alerta ? decisaoConfirmarAlerta(alerta) : null;
     if (!decisao) {
       return;
     }
-    const voltaCurtaMs = voltaCurtaAoContar(alerta, tela.estado);
-    if (voltaCurtaMs !== null && !window.confirm(perguntaSobreVoltaCurta(voltaCurtaMs))) {
+    const pergunta = perguntaAoConfirmar(alerta, tela.estado);
+    if (pergunta !== null && !window.confirm(pergunta)) {
       return;
     }
-    enviar(pedidoParaAlerta(comMotivo(decisao, tela.motivo), alerta, tela.estado, tela.janelaAssinatura));
+    enviarSobreAlerta(decisao, alerta);
   }
 
-  // "Descartar esta passagem" on a flag: every entry of the flag's pass.
-  function descartarPassagem() {
+  // "Descartar ... passagem" on a flag: every entry of the pass chosen.
+  // `passagem` is one item of passagensParaDescartar().
+  function descartarPassagem(passagem) {
     const alerta = alertaQuePodeSerDecidido();
-    const ids = alerta?.passagem_ids ?? [];
-    if (ids.length === 0) {
+    if (!alerta || !passagem) {
       return;
     }
-    const pergunta = `Descartar esta passagem do carro ${(alerta.carros ?? []).join(', ')}? `
-      + `Os ${ids.length} registros dela são anulados de uma vez e o carro perde uma volta. Pode ser desfeito pelo histórico.`;
-    if (window.confirm(pergunta)) {
-      enviar(pedidoParaAlerta(comMotivo(decisaoDescartarPassagem(ids[0]), tela.motivo), alerta, tela.estado, tela.janelaAssinatura));
+    if (window.confirm(perguntaAoDescartar(alerta, passagem))) {
+      enviarSobreAlerta(decisaoDescartarPassagem(passagem.passagemId), alerta);
+    }
+  }
+
+  // "Marcar saída do box / do abastecimento": the car left and nobody
+  // logged it. Changes no count, so nothing is asked.
+  function marcarSaida() {
+    const alerta = alertaQuePodeSerDecidido();
+    const decisao = alerta ? decisaoMarcarSaida(alerta) : null;
+    if (decisao) {
+      enviarSobreAlerta(decisao, alerta);
     }
   }
 
   // What must be asked before an action on one chip; null when nothing.
   function perguntaDaEntrada(opcao, entrada) {
     if (opcao.acao === 'confirmar' && opcao.maisUmaPassagem) {
-      return entrada.anulada_auto
-        ? `Este registro foi anulado automaticamente como repetição (toque duplo ou troca de contador). `
-          + `Contá-lo dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta), poucos segundos depois da anterior. Contar mesmo assim?`
-        : `Contar esta passagem dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta) com base neste único registro. Contar?`;
+      if (entrada.anulada_auto) {
+        return 'Este registro foi anulado automaticamente como repetição (toque duplo ou troca de contador). '
+          + `Contá-lo dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta), poucos segundos depois da anterior. Contar mesmo assim?`;
+      }
+      if (entrada.grupo?.papel === 'retida') {
+        return 'Esta passagem está RETIDA: os contadores concordam, mas ela parece ser a mesma passagem de antes registrada de novo. '
+          + `Contá-la dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta). Contar mesmo assim?`;
+      }
+      if (entrada.grupo?.papel === 'antes_da_largada') {
+        return `Este registro é de ANTES da largada. Contá-lo faz dele a passagem inicial do carro ${entrada.carro}: `
+          + 'todas as voltas dele sobem em 1 (+1 volta). Contar?';
+      }
+      const registros = (entrada.grupo?.passagem_ids ?? []).length;
+      return `Contar esta passagem dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta)`
+        + `${registros > 1 ? '' : ' com base neste único registro'}. Contar?`;
     }
     if (opcao.acao === 'descartar_passagem') {
       return `Descartar esta passagem do carro ${entrada.carro}? Os ${opcao.registros} registros dela são anulados de uma vez. `
@@ -273,9 +321,10 @@ export function criarAcoes(ganchos) {
   }
 
   return {
-    aceitar: () => decidirSobreAlerta(decisaoAceitar),
+    aceitar,
     confirmarAlerta,
     descartarPassagem,
+    marcarSaida,
     anular,
     acaoNaEntrada,
     adicionar,

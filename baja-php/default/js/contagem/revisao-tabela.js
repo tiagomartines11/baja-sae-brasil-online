@@ -5,7 +5,8 @@ import { el, substituir } from './revisao-dom.js';
 import {
   AVISO_TEMPO_DE_VOLTA, NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, idade, relogio, tempoDeProva,
 } from './revisao-formato.js';
-import { NOMES_DE_SITUACAO, dispositivosDaFonte, fontesDivergentes } from './revisao-fila.js';
+import { NOMES_DE_SITUACAO, dispositivosDaFonte, fontesDivergentes, situacaoDoCarroFora } from './revisao-fila.js';
+import { descreverParada } from './revisao-raias-logica.js';
 import { descreverDecisao, exclusoesAbertas } from './revisao-decisoes.js';
 
 export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscolherCarro) {
@@ -57,7 +58,9 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
     el('td', { class: 'num' }, carro.posicao ?? SEM_VALOR),
     el('td', { class: 'num carro' }, carro.carro),
     el('td', { title: carro.escola ?? '' }, carro.equipe ?? '',
-      foraDaProva ? el('span', { class: 'etiqueta-fora' }, carro.presente ? ' não classificado' : ' número desconhecido') : null),
+      // With nobody marked present the warning above the table says it once.
+      foraDaProva && !(estado.sem_equipes_presentes && carro.inscrito)
+        ? el('span', { class: 'etiqueta-fora' }, ` ${situacaoDoCarroFora(carro).etiqueta}`) : null),
     el('td', {
       class: 'num voltas',
       title: passagemZero ? `${carro.voltas} voltas + a passagem zero = ${carro.passagens} passagens oficiais` : '',
@@ -70,7 +73,16 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
       carro.status_desde_ms ? ` desde ${tempoDeProva(carro.status_desde_ms, largada)}` : ''));
   });
 
-  substituir(tabela, cabecalho, el('tbody', {}, linhas));
+  // No team at all is marked present: then every number typed is "not a
+  // present team". That is ONE problem, with the attendance list, and it is
+  // said once, here, instead of as a label on every car.
+  const semPresentes = estado.sem_equipes_presentes
+    ? el('tr', { class: 'aviso-tabela' }, el('td', { colspan: 8 + fontes.length, role: 'alert' },
+      el('strong', {}, 'Nenhuma equipe está marcada como presente neste evento. '),
+      'Por isso nenhuma passagem conta e todo número digitado gera alerta. Marque a presença das equipes no cadastro do evento; a contagem se ajusta sozinha.'))
+    : null;
+
+  substituir(tabela, cabecalho, el('tbody', {}, semPresentes, linhas));
 }
 
 function numero(valor) {
@@ -186,11 +198,25 @@ function blocoDeParadasSemPar(estado) {
     el('p', { class: 'vazio' }, 'Não entram como parada nas estatísticas até terem as duas pontas.'));
 }
 
+// Pit and fueling events of unknown time, for the whole race. The engine
+// keeps them out of the pairing; somebody has to know they exist.
+function blocoDeParadasSemHorario(estado) {
+  const semHorario = estado.paradas_sem_horario ?? [];
+  if (semHorario.length === 0) {
+    return null;
+  }
+  return el('div', { class: 'bloco-fonte paradas-sem-par' },
+    el('h3', {}, `Box e abastecimento: ${semHorario.length} registro(s) sem horário`),
+    el('ul', { class: 'dispositivos' }, semHorario.map((parada) => el('li', {}, descreverParada(parada)))),
+    el('p', { class: 'vazio' }, 'O aparelho não tinha o horário oficial. Não entram em nenhuma parada; confira com quem registrou.'));
+}
+
 // acoes: {excluirFonte(fonte, de, ate, motivo), encerrarExclusao(decisao, ate), desfazer(decisao)}
 export function desenharFontes(container, estado, ocupado, acoes) {
   substituir(container,
     (estado.fontes ?? []).map((fonte) => blocoDaFonte(fonte, estado, ocupado, acoes)),
-    blocoDeParadasSemPar(estado));
+    blocoDeParadasSemPar(estado),
+    blocoDeParadasSemHorario(estado));
 }
 
 function linhaDoHistorico(decisao, estado, ocupado, aoDesfazer, classeExtra = '') {
@@ -199,7 +225,7 @@ function linhaDoHistorico(decisao, estado, ocupado, aoDesfazer, classeExtra = ''
   const temLargada = largada !== null && largada !== undefined;
 
   let detalhe = '';
-  if (decisao.tipo === 'adicionar') {
+  if (decisao.tipo === 'adicionar' || decisao.tipo === 'marcar_saida') {
     detalhe = ` em ${tempoDeProva(decisao.ts_ms, largada)}`;
   } else if (decisao.tipo === 'excluir_fonte' && temLargada) {
     const fim = decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined ? null : relogio(decisao.ts_fim_ms - largada);
@@ -211,7 +237,8 @@ function linhaDoHistorico(decisao, estado, ocupado, aoDesfazer, classeExtra = ''
     el('td', { class: 'num' }, `#${decisao.id}`),
     el('td', {}, `há ${idade(estado.servidor_agora_ms - decisao.criado_em_ms)}`),
     el('td', {}, decisao.usuario ?? SEM_VALOR, decisao.origem === 'contador' ? ' (contador)' : ''),
-    el('td', {}, descreverDecisao(decisao, nomeDaFonte) + detalhe, decisao.motivo ? ` — ${decisao.motivo}` : ''),
+    // The "motivo" of a marked exit is its area, already said in the sentence.
+    el('td', {}, descreverDecisao(decisao, nomeDaFonte) + detalhe, decisao.motivo && decisao.tipo !== 'marcar_saida' ? ` — ${decisao.motivo}` : ''),
     el('td', {},
       decisao.pode_desfazer
         ? el('button', { type: 'button', disabled: ocupado, onclick: () => aoDesfazer(decisao) }, 'Desfazer')
@@ -235,7 +262,7 @@ export function desenharHistorico(elementos, estado, paginas, ocupado, acoes) {
   const corpo = [];
   if (emVigor.length > 0) {
     corpo.push(el('tr', { class: 'titulo-secao' },
-      el('th', { colspan: colunas }, `Em vigor: exclusões de fonte e passagens adicionadas (${emVigor.length})`)));
+      el('th', { colspan: colunas }, `Em vigor: exclusões de fonte, passagens adicionadas e saídas marcadas (${emVigor.length})`)));
     corpo.push(emVigor.map((decisao) => linhaDoHistorico(decisao, estado, ocupado, acoes.desfazer, 'em-vigor')));
     corpo.push(el('tr', { class: 'titulo-secao' }, el('th', { colspan: colunas }, 'Todas as decisões, da mais recente para a mais antiga')));
   }

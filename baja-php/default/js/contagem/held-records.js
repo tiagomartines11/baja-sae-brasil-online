@@ -1,7 +1,8 @@
 // Gives held records their final time.
 //
-// A record is HELD when it was typed while this page had no anchor (see
-// server-clock.js): its `ts_ms` is null and it is not uploaded. There are two
+// A record is HELD when it was typed while this page had no anchor it could
+// trust (none yet, or one in doubt; see server-clock.js): its `ts_ms` is null
+// and it is not uploaded. There are two
 // ways out, and each record takes exactly one of them, once:
 //
 //   - the page gets an anchor in the SAME page load: the time is worked out
@@ -28,11 +29,11 @@ export async function resolveRecordsOfEarlierLoads(store, clock) {
 
 /**
  * Called before every request and after every answer. Does nothing while the
- * page still has no anchor.
+ * page has no anchor, or has one that is in doubt (see ServerClock.checkMonotonic).
  * @returns {Promise<number>} how many records got their time just now
  */
 export async function resolveHeldRecords(store, clock) {
-    if (!clock.hasAnchor()) {
+    if (!clock.canStamp()) {
         return 0;
     }
     let resolved = 0;

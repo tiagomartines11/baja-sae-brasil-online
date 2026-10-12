@@ -9,6 +9,11 @@ namespace Baja\Contagem\Engine\Data;
  */
 final class PassGroup
 {
+    /** Held because it is closer to the car's previous official pass than a believable lap. */
+    public const RETIDA_PROXIMA_DEMAIS = 'proxima_demais';
+    /** Held because its entries are too far apart to be taken as one crossing. */
+    public const RETIDA_DISPERSAO = 'dispersao';
+
     public int $carro;
 
     /** @var Entry[] in time order; at most one per source */
@@ -66,6 +71,36 @@ final class PassGroup
      * the car's pass zero (the start was recorded a little late).
      */
     public bool $antesDaLargada = false;
+
+    /**
+     * The counters' entries in this group are further apart than
+     * `dispersao_alerta_ms` and no two of them agree closely: they may not be
+     * the same crossing at all. Such a group does not count by agreement.
+     */
+    public bool $dispersa = false;
+
+    /**
+     * Held: the counters agree on it (or the publish mode would count it),
+     * yet it is not an official pass, because it is too doubtful to count
+     * without a person looking. Confirming it makes it count. Says why in
+     * `$motivoRetencao`. This is about the count in force (`contado`).
+     */
+    public bool $retida = false;
+
+    /** Why the group is held: one of the RETIDA_* constants. Null when it is not. */
+    public ?string $motivoRetencao = null;
+
+    /**
+     * The same as `$retida` when the race is judged under the default
+     * counting rule, which is what flags look at (see `$referencia`).
+     */
+    public bool $retidaNaReferencia = false;
+
+    /** Only when held for being too close: racing time since the car's previous official pass, in ms. */
+    public ?int $intervaloDesdeAnteriorMs = null;
+
+    /** Only when held for being too close: the shortest lap believable for this car at that moment, in ms. */
+    public ?int $voltaMinimaMs = null;
 
     /** One of the entries has an estimated time (`Entry::TEMPO_ESTIMADO`). */
     public bool $tempoEstimado = false;
@@ -140,6 +175,21 @@ final class PassGroup
     public function anchorEntryId(): int
     {
         return min($this->entryIds());
+    }
+
+    /** Time between the first and the last entry of the real counters, in ms. */
+    public function spreadMs(): int
+    {
+        $first = null;
+        $last = null;
+        foreach ($this->entries as $entry) {
+            if ($entry->fonteId === Source::REVISOR_ID) {
+                continue;
+            }
+            $first ??= $entry->tsMs;
+            $last = $entry->tsMs;
+        }
+        return $first === null ? 0 : $last - $first;
     }
 
     /** True when a reviewer vouched for this group: confirmed it, or added the pass. */

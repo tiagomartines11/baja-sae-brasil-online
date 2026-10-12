@@ -7,7 +7,9 @@ use Baja\Contagem\Engine\Data\Decision;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Flag;
+use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Engine;
+use Baja\Contagem\Engine\RaceTimeline;
 
 /**
  * Two reviewers for synthetic races.
@@ -39,10 +41,7 @@ final class SyntheticReviewer
                 if ($flag->sugestao === null) {
                     continue;
                 }
-                $decision = new Decision(self::nextDecisionId($input), $flag->sugestao['tipo']);
-                $decision->passagemId = $flag->sugestao['passagem_id'] ?? null;
-                $decision->carro = $flag->sugestao['equipe_numero'] ?? null;
-                $input->decisions[] = $decision;
+                self::accept($input, $result, $flag->sugestao);
                 $accepted++;
             }
             if ($accepted === 0) {
@@ -50,6 +49,54 @@ final class SyntheticReviewer
             }
         }
         throw new \LogicException('Accepting suggestions kept producing new suggestions for ten rounds.');
+    }
+
+    /**
+     * Stores a suggestion the way the review screen does. Most are one
+     * decision. Three are not:
+     *
+     * - "reatribuir_grupo" is one "reatribuir" per entry named;
+     * - "descartar_passagem" is one "anular" per entry of the pass group
+     *   the named entry is in;
+     * - "marcar_saida" records an exit from the pit lane or the fueling
+     *   station, attributed to the reviewer (an inferred exit).
+     *
+     * @param array<string, mixed> $suggestion
+     */
+    public static function accept(EngineInput $input, EngineResult $result, array $suggestion): void
+    {
+        $nextId = self::nextDecisionId($input);
+        switch ($suggestion['tipo']) {
+            case 'reatribuir_grupo':
+                foreach ($suggestion['passagem_ids'] as $offset => $entryId) {
+                    $input->decisions[] = Decision::reatribuir($nextId + $offset, $entryId, $suggestion['equipe_numero']);
+                }
+                return;
+            case 'descartar_passagem':
+                $group = $result->groupOfEntry($suggestion['passagem_id']);
+                foreach ($group === null ? [] : $group->entryIds() as $offset => $entryId) {
+                    $input->decisions[] = Decision::anular($nextId + $offset, $entryId);
+                }
+                return;
+            case 'marcar_saida':
+                $highestId = 0;
+                foreach ($input->ocorrencias as $ocorrencia) {
+                    $highestId = max($highestId, $ocorrencia->id);
+                }
+                $exit = new Ocorrencia(
+                    $highestId + 1,
+                    $suggestion['area'] === RaceTimeline::AREA_BOX ? Ocorrencia::BOX_SAIDA : Ocorrencia::ABASTECIMENTO_SAIDA,
+                    $suggestion['ts_ms'],
+                    $suggestion['equipe_numero']
+                );
+                $exit->inferida = true;
+                $input->ocorrencias[] = $exit;
+                return;
+        }
+        $decision = new Decision($nextId, $suggestion['tipo']);
+        $decision->passagemId = $suggestion['passagem_id'] ?? null;
+        $decision->carro = $suggestion['equipe_numero'] ?? null;
+        $input->decisions[] = $decision;
     }
 
     /**
@@ -75,11 +122,22 @@ final class SyntheticReviewer
         throw new \LogicException('The video reviewer kept finding lone entries for ten rounds.');
     }
 
+    /** Flags the video settles entry by entry: each entry is what really crossed, another car, or nothing. */
+    private const SETTLED_ENTRY_BY_ENTRY = [
+        Flag::SOLITARIA,
+        Flag::TROCA_PROVAVEL,
+        Flag::DISPERSAO_ALTA,
+        Flag::PASSAGEM_PROXIMA_DEMAIS,
+        Flag::VOLTA_CURTA,
+    ];
+
     /**
      * What the reviewer with the video does about one flag that has no
      * suggestion:
      *
-     * - a lone entry: confirm, reassign or void it, by what really crossed;
+     * - a lone entry, a swap the engine could not decide, a held pass, two
+     *   passes too close together: every entry of the flag is confirmed,
+     *   reassigned or voided, by what really crossed when it was typed;
      * - an estimated time: the video shows the pass where the group is, so
      *   "está correto" (confirm);
      * - an unknown time: the pass was counted from the other counters'
@@ -94,13 +152,15 @@ final class SyntheticReviewer
     {
         $isLoneEntry = count($flag->passagemIds) === 1;
         $nextId = self::nextDecisionId($input);
-        if ($flag->tipo === Flag::SOLITARIA && $isLoneEntry) {
-            return [self::whatTheVideoShows($race, $input, $result, $flag->passagemIds[0])];
+        if (in_array($flag->tipo, self::SETTLED_ENTRY_BY_ENTRY, true) || ($flag->tipo === Flag::TEMPO_ESTIMADO && $isLoneEntry)) {
+            $decisions = [];
+            foreach ($flag->passagemIds as $offset => $entryId) {
+                $decisions[] = self::whatTheVideoShows($race, $result, $entryId, $nextId + $offset);
+            }
+            return $decisions;
         }
         if ($flag->tipo === Flag::TEMPO_ESTIMADO) {
-            return [$isLoneEntry
-                ? self::whatTheVideoShows($race, $input, $result, $flag->passagemIds[0])
-                : Decision::confirmar($nextId, $flag->passagemIds[0])];
+            return [Decision::confirmar($nextId, $flag->passagemIds[0])];
         }
         if ($flag->tipo === Flag::TEMPO_DESCONHECIDO) {
             return [Decision::anular($nextId, $flag->passagemIds[0])];
@@ -115,9 +175,8 @@ final class SyntheticReviewer
         return [];
     }
 
-    private static function whatTheVideoShows(SyntheticRace $race, EngineInput $input, EngineResult $result, int $entryId): Decision
+    private static function whatTheVideoShows(SyntheticRace $race, EngineResult $result, int $entryId, int $decisionId): Decision
     {
-        $decisionId = self::nextDecisionId($input);
         $realCar = $race->realCarBehindEntry($entryId);
         if ($realCar === null) {
             return Decision::anular($decisionId, $entryId);

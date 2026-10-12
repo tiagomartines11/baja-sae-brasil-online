@@ -15,6 +15,13 @@ namespace Baja\Contagem\Engine\Data;
  *   adicionar      carro, tsMs                 add a pass nobody recorded
  *   excluir_fonte  fonteId, tsMs, tsFimMs      ignore a source between two times
  *   desfazer       desfazDecisaoId             reverse an earlier decision
+ *   marcar_saida   carro, tsMs                 a reviewer inferred an exit from
+ *                                              the pit lane or the fueling
+ *                                              station; the exit itself is an
+ *                                              ocorrência, and this row is only
+ *                                              its line in the history (so it
+ *                                              can be undone). The engine
+ *                                              ignores it.
  */
 final class Decision
 {
@@ -24,6 +31,7 @@ final class Decision
     public const ADICIONAR = 'adicionar';
     public const EXCLUIR_FONTE = 'excluir_fonte';
     public const DESFAZER = 'desfazer';
+    public const MARCAR_SAIDA = 'marcar_saida';
 
     public const TIPOS = [
         self::ANULAR,
@@ -32,6 +40,7 @@ final class Decision
         self::ADICIONAR,
         self::EXCLUIR_FONTE,
         self::DESFAZER,
+        self::MARCAR_SAIDA,
     ];
 
     public const ORIGEM_CONTADOR = 'contador';

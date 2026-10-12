@@ -38,15 +38,25 @@ export class CountSession {
      * @param {string}  pass.mode      one of MODO.* ('simulacao' for a simulated pass)
      * @param {?number} [pass.tsMs]    the time of the pass, in SERVER time, when
      *        it is not "right now" (the simulation). Leave it out for a real pass.
+     * @param {?string} [pass.uuid]    the simulation names its records, so
+     *        that a script run twice records each pass once: a pass whose
+     *        uuid this device already holds is NOT recorded again, and the
+     *        entry it already has is returned (with no warnings). Leave it
+     *        out for a real pass.
      * @returns {Promise<{entry: object, avisos: Array, nomeEquipe: ?string}>}
      *          Rejects when the entry could NOT be written to the device; the
      *          caller must then tell the counter it was not recorded.
      */
-    async recordPass({ car, typingMs, mode, tsMs = null }) {
+    async recordPass({ car, typingMs, mode, tsMs = null, uuid = null }) {
         // Before anything slow: this is the instant that counts.
         const time = Number.isFinite(tsMs) ? this.clock.stampAt(tsMs) : this.clock.stamp();
         const validCars = this.getValidCars();
         const unclassifiedCars = this.getUnclassifiedCars();
+
+        const alreadyRecorded = uuid === null ? undefined : this.store.findEntry(uuid);
+        if (alreadyRecorded) {
+            return { entry: alreadyRecorded, avisos: [], nomeEquipe: teamNameOf(alreadyRecorded.car, validCars, unclassifiedCars) };
+        }
 
         // Warnings look at the entries that existed BEFORE this one.
         const avisos = computeWarnings({
@@ -62,7 +72,7 @@ export class CountSession {
         // is null only when this page has no anchor yet; the entry is then
         // held and gets its time once (see held-records.js).
         const entry = await this.store.addEntry({
-            uuid: this.generateUuid(),
+            uuid: uuid === null ? this.generateUuid() : uuid,
             car,
             typing_ms: typingMs,
             mode,

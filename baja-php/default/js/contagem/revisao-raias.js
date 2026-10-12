@@ -5,8 +5,8 @@
 import { el } from './revisao-dom.js';
 import { relogio } from './revisao-formato.js';
 import {
-  classesDoChip, comHorarioConhecido, descricaoDoChip, distribuirEmLinhas, entradasDeHorarioDesconhecido,
-  limitesDaJanela, marcasDeTempo, posicaoPx, raiasDeOcorrencias,
+  classesDoChip, comHorarioConhecido, descreverParada, descricaoDoChip, distribuirEmLinhas, entradasDeHorarioDesconhecido,
+  limitesDaJanela, marcasDeTempo, posicaoPx, raiasDeOcorrencias, rotuloDaMarca,
 } from './revisao-raias-logica.js';
 
 const LARGURA_DO_CHIP_PX = 40;
@@ -62,13 +62,12 @@ function desenharRaiaDeOcorrencias(raia, limites, opcoes) {
   const marcas = raia.marcas.map((ocorrencia) => {
     const nome = NOMES_DE_OCORRENCIA[ocorrencia.tipo] ?? ocorrencia.tipo;
     const daParada = ocorrencia.carro !== null && ocorrencia.carro !== undefined;
+    const rotulo = rotuloDaMarca(ocorrencia, nome);
     return el('span', {
-      class: `${daParada ? 'marca-box' : 'marca-corrida'} ${ocorrencia.tipo}${ocorrencia.sem_par ? ' sem-par' : ''}`,
+      class: `${daParada ? 'marca-box' : 'marca-corrida'} ${ocorrencia.tipo}${ocorrencia.sem_par ? ' sem-par' : ''}${ocorrencia.inferida ? ' inferida' : ''}`,
       style: { left: `${posicaoPx(ocorrencia.ts_ms, limites.de, opcoes.escala)}px` },
-      title: titulo(ocorrencia.ts_ms) + (ocorrencia.sem_par
-        ? ' · SEM PAR: falta a entrada ou a saída correspondente (quem registrava na outra ponta não marcou)'
-        : ''),
-    }, daParada ? `${ocorrencia.carro} ${nome}${ocorrencia.sem_par ? ' (sem par)' : ''}` : nome);
+      title: titulo(ocorrencia.ts_ms) + (rotulo.aviso ? ` · ${rotulo.aviso}` : ''),
+    }, rotulo.texto);
   });
 
   return el('div', { class: `raia ${raia.classe}` },
@@ -91,6 +90,19 @@ function desenharHorarioDesconhecido(janela, opcoes) {
       title: `${entrada.raia} · ${descricaoDoChip(entrada)}`,
       onclick: () => opcoes.aoEscolherEntrada(entrada.id),
     }, String(entrada.carro))));
+}
+
+// Pit and fueling events whose time nobody knows: the engine pairs none of
+// them, so they are no stay and have no place on the lanes. Listed, flagged.
+function desenharParadasSemHorario(janela) {
+  const paradas = janela.paradas_sem_horario ?? [];
+  if (paradas.length === 0) {
+    return null;
+  }
+  return el('div', { class: 'horario-desconhecido paradas-sem-horario', role: 'note' },
+    el('strong', {}, 'Box e abastecimento sem horário: '),
+    paradas.map(descreverParada).join('; '),
+    '. O aparelho não tinha o horário oficial: estes registros não entram em nenhuma parada. Confira com quem registrou.');
 }
 
 function desenharRegua(limites, opcoes) {
@@ -120,8 +132,10 @@ function desenharRegua(limites, opcoes) {
 //   aoEscolherEntrada(id)  called when a chip is clicked
 export function desenharRaias(janela, opcoes) {
   const limites = limitesDaJanela(janela);
+  const paradasSemHorario = desenharParadasSemHorario(janela);
   if (limites === null) {
-    return desenharHorarioDesconhecido(janela, opcoes) ?? el('p', { class: 'vazio' }, 'Nenhum registro neste período.');
+    const soltos = [desenharHorarioDesconhecido(janela, opcoes), paradasSemHorario].filter(Boolean);
+    return soltos.length > 0 ? el('div', {}, soltos) : el('p', { class: 'vazio' }, 'Nenhum registro neste período.');
   }
 
   const larguraPx = posicaoPx(limites.ate, limites.de, opcoes.escala) + LARGURA_DO_CHIP_PX;
@@ -142,5 +156,5 @@ export function desenharRaias(janela, opcoes) {
       rolagem.scrollLeft = Math.max(0, alvo - rolagem.clientWidth / 2);
     });
   }
-  return desconhecidos ? el('div', {}, rolagem, desconhecidos) : rolagem;
+  return desconhecidos || paradasSemHorario ? el('div', {}, rolagem, desconhecidos, paradasSemHorario) : rolagem;
 }

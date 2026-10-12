@@ -18,10 +18,11 @@ use Propel\Runtime\Propel;
  *   hundreds of decisions and the screen is redrawn from every answer, so
  *   only the newest page travels with the state; older pages are fetched
  *   when the reviewer asks.
- * - inForce(): every "excluir fonte" and "adicionar passagem" still in
- *   force, however old. These two change the count for as long as they
- *   stand and are not attached to any entry on a timeline, so the history
- *   is the only place to see and undo them. They must never scroll away.
+ * - inForce(): every "excluir fonte", "adicionar passagem" and "marcar
+ *   saída" still in force, however old. These change the race for as long
+ *   as they stand and are not attached to any entry on a timeline, so the
+ *   history is the only place to see and undo them. They must never scroll
+ *   away.
  *
  * The engine's Decision objects deliberately carry no username (the engine
  * does not care who decided), so this reads the people-facing columns
@@ -66,7 +67,7 @@ final class DecisionHistory
     }
 
     /**
-     * Every source exclusion and every added pass still in force, newest first.
+     * Every source exclusion, added pass and marked exit still in force, newest first.
      *
      * @param array<int, true> $activeDecisionIds
      * @return array<int, array<string, mixed>>
@@ -75,7 +76,7 @@ final class DecisionHistory
     {
         $sql = 'SELECT ' . self::COLUMNS . '
                   FROM contagem_decisao
-                 WHERE evento_id = :evento AND prova_id = :prova AND tipo IN (:excluir, :adicionar)
+                 WHERE evento_id = :evento AND prova_id = :prova AND tipo IN (:excluir, :adicionar, :saida)
                  ORDER BY decisao_id DESC';
         $statement = Propel::getConnection('resultados')->prepare($sql);
         $statement->execute([
@@ -83,6 +84,8 @@ final class DecisionHistory
             ':prova' => $prova->getProvaId(),
             ':excluir' => Decision::EXCLUIR_FONTE,
             ':adicionar' => Decision::ADICIONAR,
+            // An exit a reviewer marked is attached to no entry either.
+            ':saida' => DecisionRequest::MARCAR_SAIDA,
         ]);
 
         $rows = [];

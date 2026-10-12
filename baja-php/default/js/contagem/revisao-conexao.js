@@ -90,6 +90,12 @@ export function historicoAposResposta(estadoAnterior, estadoNovo, paginas) {
   return { antigas: [], haMais: Boolean(estadoNovo.historico_ha_mais) };
 }
 
+// What an "inalterado" answer carries under the same name as the full state.
+const CHAVES_AO_VIVO = [
+  'servidor_agora_ms', 'calculado_em_ms', 'corrida', 'dispositivos', 'revisores', 'publicado_em_ms',
+  'publicacao_desligada', 'simulacao', 'predefinicao_de_teste', 'correcoes_da_reconciliacao',
+];
+
 function comQuemEstaOlhando(alertas, olhando) {
   return alertas.map((alerta) => ({ ...alerta, olhando: olhando[alerta.id] ?? [] }));
 }
@@ -138,7 +144,7 @@ export function aplicarResposta(estadoAtual, resposta, meuUsuario = null) {
     ));
   }
   // The same keys the full state has; taken over only when the answer brings them.
-  for (const chave of ['servidor_agora_ms', 'calculado_em_ms', 'corrida', 'dispositivos', 'revisores', 'publicado_em_ms', 'publicacao_desligada', 'simulacao']) {
+  for (const chave of CHAVES_AO_VIVO) {
     if (resposta[chave] !== undefined) {
       novo[chave] = resposta[chave];
     }
@@ -160,6 +166,8 @@ export function chaveAoVivo(estado) {
     estado.corrida?.estado ?? null,
     estado.publicacao_desligada ?? false,
     estado.simulacao ?? false,
+    estado.predefinicao_de_teste ?? false,
+    (estado.correcoes_da_reconciliacao ?? []).map((correcao) => [correcao.carro, correcao.campo, correcao.quando_ms]),
   ]);
 }
 
@@ -182,7 +190,7 @@ export function chaveDoDetalhe(visao) {
   return JSON.stringify([
     visao.selecao ?? null,
     alerta ? [alerta.assinatura, alerta.olhando ?? [], alerta.motivo, alerta.sugestao ?? null,
-      alerta.efeito_de_confirmar ?? null, alerta.volta_resultante_ms ?? null] : null,
+      alerta.efeito_de_confirmar ?? null, alerta.volta_resultante_ms ?? null, alerta.contagem_em_duvida ?? null] : null,
     carro ? [carro.voltas, carro.passagens ?? null, carro.status ?? null, carro.ultima_volta_ms ?? null,
       carro.melhor_volta_ms ?? null, carro.classificado ?? null] : null,
     visao.janelaCarregada, visao.janelaAssinatura ?? null, visao.desatualizada, visao.erroDaJanela,

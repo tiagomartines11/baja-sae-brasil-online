@@ -6,7 +6,7 @@
 // station ("abastecimento"). In each, a car ENTERS and LEAVES. Usually two
 // people do it, one at each end, each on a phone: one in "Entrada" mode, the
 // other in "Saída" mode. After the mode is chosen, one tap on a car is one
-// event.
+// event. (Which taps count and when the tiles move: box-toques.js.)
 
 export const AREA = { BOX: 'box', ABASTECIMENTO: 'abastecimento' };
 export const AREAS = [AREA.BOX, AREA.ABASTECIMENTO];
@@ -89,12 +89,13 @@ export function orderCarsForMode({ listedCars, carsInside, sentido }) {
 export const PASSO = { AREA: 'area', SENTIDO: 'sentido', CARROS: 'carros' };
 
 /**
- * The choices in front of the car tiles. Every time the page is opened it
- * asks again (area first, when the prova has a fueling station; then entry
- * or exit), offering what this device used last. Asking each time is on
- * purpose: yesterday's "Saída" silently applied to today's first tap would
- * log the opposite of what happened. After that both stay visible as
- * switches and can be changed with one tap.
+ * The choices in front of the car tiles: the area (when the prova has a
+ * fueling station), then entry or exit. A device that has never chosen is
+ * asked. A device that has opens DIRECTLY in the mode it used last: the
+ * person at the pit exit who reloads the page, or whose phone restarts,
+ * must be recording exits again at the first tap, not answering questions
+ * while a car leaves. The page says which mode it opened in (see box.js),
+ * and both choices stay visible as switches, one tap to change.
  */
 export class PitFlow {
     /**
@@ -105,9 +106,12 @@ export class PitFlow {
     constructor({ preferences, fuelingEnabled }) {
         this.preferences = preferences;
         this.fuelingEnabled = fuelingEnabled === true;
-        // With one area only there is nothing to ask.
-        this.area = this.fuelingEnabled ? null : AREA.BOX;
-        this.sentido = null;
+        const remembered = this.lembrado();
+        // With one area only there is nothing to choose.
+        this.area = this.fuelingEnabled ? remembered.area : AREA.BOX;
+        this.sentido = remembered.sentido;
+        /** True when no question was asked: the page went straight to the cars. */
+        this.abriuNoModoLembrado = this.passo() === PASSO.CARROS;
     }
 
     passo() {
@@ -117,7 +121,7 @@ export class PitFlow {
         return this.sentido === null ? PASSO.SENTIDO : PASSO.CARROS;
     }
 
-    /** What this device chose last time (highlighted on the opening choice). */
+    /** What this device chose last time (null for what it never chose). */
     lembrado() {
         const area = this.preferences.get('box_area', null);
         const sentido = this.preferences.get('box_sentido', null);
@@ -196,13 +200,17 @@ export class PitSession {
      * @param {?number} [pitEvent.tsMs] the time of the event, in SERVER time,
      *        when it is not "right now" (the simulation)
      * @param {?string} [pitEvent.mode] 'simulacao' for a simulated event; left out otherwise
+     * @param {?string} [pitEvent.uuid] the simulation names its records, so
+     *        that a script run twice records each event once: an event
+     *        whose uuid this device already holds is NOT recorded again, and
+     *        the record it already has is returned
      */
-    recordEvent({ car, tipo, tsMs = null, mode = null }) {
+    recordEvent({ car, tipo, tsMs = null, mode = null, uuid = null }) {
         if (partsOfTipo(tipo) === null) {
             return Promise.reject(new Error('Unknown pit event type: ' + tipo));
         }
         const time = Number.isFinite(tsMs) ? this.clock.stampAt(tsMs) : this.clock.stamp();
-        const record = { uuid: this.generateUuid(), car, tipo, ...time };
+        const record = { uuid: uuid === null ? this.generateUuid() : uuid, car, tipo, ...time };
         if (mode !== null) {
             record.mode = mode;
         }

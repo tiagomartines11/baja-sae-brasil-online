@@ -227,4 +227,39 @@ final class DecisionTest extends EngineTestCase
 
         $this->assertSame(47, $race->run('04:00')->groupOfEntry($typo)->carro);
     }
+
+    /**
+     * SITUATION: a reviewer pressed "marcar saída do box" for car 9. The
+     * exit itself is stored as a race event; the decision table only keeps
+     * a line of type "marcar_saida" for the history, so that it can be
+     * undone there.
+     *
+     * EXPECTED: the engine ignores a decision of that type: the count and
+     * the flags are exactly what they are without it. It is one of the
+     * known decision types.
+     */
+    public function testTheHistoryLineOfAnInferredExitChangesNothingInTheCount(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        $race->pass(9, '03:00');
+        $lone = $race->entry(2, 9, '06:00');
+        $without = $race->run('07:00');
+
+        $input = $race->input('07:00');
+        $line = new Decision(50, Decision::MARCAR_SAIDA);
+        $line->carro = 9;
+        $line->tsMs = RaceScenario::ms('05:59');
+        $line->passagemId = $lone;
+        $input->decisions[] = $line;
+        $with = \Baja\Contagem\Engine\Engine::run($input);
+
+        $this->assertContains(Decision::MARCAR_SAIDA, Decision::TIPOS);
+        $this->assertSame($without->lapCount(9), $with->lapCount(9));
+        $this->assertSame(
+            array_map(fn($flag) => $flag->toArray(), $without->flags),
+            array_map(fn($flag) => $flag->toArray(), $with->flags)
+        );
+    }
 }

@@ -9,6 +9,8 @@ export const pagina = {
   usuario: document.body.dataset.usuario,
   barra: document.getElementById('barra-estado'),
   faixaSimulacao: document.getElementById('faixa-simulacao'),
+  faixaPredefinicao: document.getElementById('faixa-predefinicao'),
+  avisoReconciliacao: document.getElementById('aviso-reconciliacao'),
   avisoConexao: document.getElementById('aviso-conexao'),
   avisoMensagem: document.getElementById('aviso-mensagem'),
   detalhe: document.getElementById('painel-detalhe'),

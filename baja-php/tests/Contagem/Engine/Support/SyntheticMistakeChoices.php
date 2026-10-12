@@ -113,6 +113,27 @@ final class SyntheticMistakeChoices
         return null;
     }
 
+    /**
+     * A car that crosses the line between 15 and 25 seconds before or after
+     * the given crossing, and not closer than that: its real entries are
+     * then about one matching window away from the stray entry.
+     */
+    public function carPassingAtTheWindowEdge(int $passIndex): ?int
+    {
+        $car = $this->track->passes[$passIndex]['car'];
+        $tooClose = $this->track->carsPassingAround($passIndex, 15000);
+        $atTheEdge = [];
+        foreach (array_keys($this->track->carsPassingAround($passIndex, 25000)) as $other) {
+            if ($other !== $car && !isset($tooClose[$other])) {
+                $atTheEdge[] = $other;
+            }
+        }
+        if ($atTheEdge === []) {
+            return null;
+        }
+        return $atTheEdge[$this->random->getInt(0, count($atTheEdge) - 1)];
+    }
+
     public function carPassingNear(int $passIndex): ?int
     {
         $car = $this->track->passes[$passIndex]['car'];

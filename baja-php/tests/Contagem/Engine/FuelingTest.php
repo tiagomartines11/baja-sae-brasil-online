@@ -233,8 +233,16 @@ final class FuelingTest extends EngineTestCase
      * time.
      *
      * EXPECTED: the lap counts (three counters agree), and a
-     * "no_abastecimento" flag marks it. It has no suggestion; confirming it
-     * adds nothing (the pass counts already); the lap cannot be a best lap.
+     * "no_abastecimento" flag marks it. Three people saw the car at the
+     * line, so the likely story is that it had left the station and nobody
+     * logged the exit: the suggestion is "marcar saída", an exit one second
+     * before the pass. Confirming the flag adds nothing (the pass counts
+     * already); the lap cannot be a best lap.
+     *
+     * After the reviewer accepts, the exit is an event like any other
+     * (marked as inferred): the stay ends there, the flag is gone, the
+     * count has not moved, and the real exit logged later at 09:00 is an
+     * exit with no entry.
      */
     public function testAPassWhileTheCarIsLoggedInTheFuelingStationIsFlagged(): void
     {
@@ -251,12 +259,66 @@ final class FuelingTest extends EngineTestCase
         $this->assertSame([6], $flag->carros);
         $this->assertCount(3, $flag->passagemIds);
         $this->assertSame(RaceScenario::ms('07:00'), $flag->tsMs);
-        $this->assertNull($flag->sugestao);
+        $this->assertSame(
+            ['tipo' => 'marcar_saida', 'area' => 'abastecimento', 'equipe_numero' => 6, 'ts_ms' => RaceScenario::ms('06:59')],
+            $flag->sugestao
+        );
         $this->assertSame(Flag::EFEITO_NENHUM, $flag->efeitoDeConfirmar);
+        $this->assertNull($flag->contagemEmDuvida);
         $this->assertStringContainsString('abastecimento', $flag->motivo);
         $this->assertLapCounts([6 => 1], $result);
         $this->assertSame([Flag::NO_ABASTECIMENTO], $result->laps[1]->grupo->alertasAbertos);
         $this->assertFalse($result->laps[1]->elegivelMelhorVolta);
+
+        $inferredExit = $race->accept($flag);
+        $fixed = $race->run('10:00');
+        $this->assertNoOpenFlags($fixed);
+        $this->assertLapCounts([6 => 1], $fixed);
+        $this->assertSame([[RaceScenario::ms('05:00'), RaceScenario::ms('06:59')]], $fixed->timeline->fuelIntervals[6]);
+        $exits = array_values(array_filter($fixed->timeline->stopEvents, fn(array $event) => $event['ocorrencia_id'] === $inferredExit));
+        $this->assertTrue($exits[0]['inferida'], 'The lanes can show it as an inferred exit.');
+        $this->assertFalse($fixed->timeline->stopEvents[0]['inferida']);
+        $this->assertCount(1, $fixed->timeline->unpairedStops, 'The exit logged at 09:00 has no entry left to pair with.');
+    }
+
+    /**
+     * SITUATION: the same stay, but only counter 2 records car 6 at the
+     * line at 07:00; the other two are online and have nothing. In a
+     * second race counter 3's phone is offline since 06:00, so nobody
+     * knows yet whether it has the pass.
+     *
+     * EXPECTED: one counter against the log is more likely an entry that
+     * should not exist. The flag is still "no_abastecimento" (the log
+     * says more than "only one counter saw it"), it names the counter, and
+     * the suggestion is to discard the pass. Accepting voids the entry and
+     * empties the queue. While another counter may still upload the pass,
+     * the flag has no suggestion yet.
+     */
+    public function testAPassOnlyOneCounterSawWhileTheCarIsLoggedInsideIsSuggestedForDiscarding(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->pass(6, '03:00');
+        $race->fuelIn(6, '05:00');
+        $lone = $race->entry(2, 6, '07:00');
+
+        $result = $race->run('10:00');
+
+        $flag = $this->assertSingleOpenFlag($result, Flag::NO_ABASTECIMENTO);
+        $this->assertSame(['tipo' => 'descartar_passagem', 'passagem_id' => $lone], $flag->sugestao);
+        $this->assertSame(2, $flag->fonteId);
+        $this->assertStringContainsString('Só Contagem 2', $flag->motivo);
+        $this->assertSame(Flag::EFEITO_MAIS_UMA_PASSAGEM, $flag->efeitoDeConfirmar);
+        $this->assertLapCounts([6 => 0], $result);
+
+        $race->syncedThrough(3, '06:00');
+        $this->assertNull($this->assertSingleOpenFlag($race->run('10:00'), Flag::NO_ABASTECIMENTO)->sugestao);
+        $race->syncedThrough(3, '10:00');
+
+        $race->accept($flag);
+        $fixed = $race->run('10:00');
+        $this->assertNoOpenFlags($fixed);
+        $this->assertLapCounts([6 => 0], $fixed);
     }
 
     /**
@@ -381,17 +443,19 @@ final class FuelingTest extends EngineTestCase
      * EXPECTED: nothing is refused and nothing blocks. The events that have
      * no partner are listed in `unpairedStops`, in time order, each with
      * its area, type, car, time and row id, for the review screen to show:
-     * the pit exit of car 5, the SECOND fueling entry of car 6, and its
-     * second exit. Car 6 has one fueling stay, 05:00-06:00. Car 5 has no
-     * pit stay and is never "in the pit lane".
+     * the pit exit of car 5, the FIRST fueling entry of car 6 (a car that
+     * enters again must have left in between, so the older entry is the
+     * one whose exit was missed), and its second exit. Car 6 has one
+     * fueling stay, 05:30-06:00. Car 5 has no pit stay and is never "in the
+     * pit lane".
      */
     public function testEventsWithNoPartnerAreListedAndBlockNothing(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
         $exitWithNoEntry = $race->pitOut(5, '04:00');
-        $race->fuelIn(6, '05:00');
-        $secondEntry = $race->fuelIn(6, '05:30');
+        $firstEntry = $race->fuelIn(6, '05:00');
+        $race->fuelIn(6, '05:30');
         $race->fuelOut(6, '06:00');
         $secondExit = $race->fuelOut(6, '06:30');
 
@@ -399,13 +463,13 @@ final class FuelingTest extends EngineTestCase
 
         $this->assertSame(
             [
-                ['area' => 'box', 'tipo' => Ocorrencia::BOX_SAIDA, 'carro' => 5, 'ts_ms' => RaceScenario::ms('04:00'), 'ocorrencia_id' => $exitWithNoEntry],
-                ['area' => 'abastecimento', 'tipo' => Ocorrencia::ABASTECIMENTO_ENTRADA, 'carro' => 6, 'ts_ms' => RaceScenario::ms('05:30'), 'ocorrencia_id' => $secondEntry],
-                ['area' => 'abastecimento', 'tipo' => Ocorrencia::ABASTECIMENTO_SAIDA, 'carro' => 6, 'ts_ms' => RaceScenario::ms('06:30'), 'ocorrencia_id' => $secondExit],
+                ['area' => 'box', 'tipo' => Ocorrencia::BOX_SAIDA, 'carro' => 5, 'ts_ms' => RaceScenario::ms('04:00'), 'ocorrencia_id' => $exitWithNoEntry, 'inferida' => false],
+                ['area' => 'abastecimento', 'tipo' => Ocorrencia::ABASTECIMENTO_ENTRADA, 'carro' => 6, 'ts_ms' => RaceScenario::ms('05:00'), 'ocorrencia_id' => $firstEntry, 'inferida' => false],
+                ['area' => 'abastecimento', 'tipo' => Ocorrencia::ABASTECIMENTO_SAIDA, 'carro' => 6, 'ts_ms' => RaceScenario::ms('06:30'), 'ocorrencia_id' => $secondExit, 'inferida' => false],
             ],
             $timeline->unpairedStops
         );
-        $this->assertSame([6 => [[RaceScenario::ms('05:00'), RaceScenario::ms('06:00')]]], $timeline->fuelIntervals);
+        $this->assertSame([6 => [[RaceScenario::ms('05:30'), RaceScenario::ms('06:00')]]], $timeline->fuelIntervals);
         $this->assertSame([], $timeline->pitIntervals);
         $this->assertFalse($timeline->isInPitAt(5, RaceScenario::ms('03:00')));
         $this->assertFalse($timeline->isInPitAt(5, RaceScenario::ms('05:00')));

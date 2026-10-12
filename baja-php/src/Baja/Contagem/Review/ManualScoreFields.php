@@ -126,6 +126,55 @@ final class ManualScoreFields
         });
     }
 
+    public static function isLapsProva(Prova $prova): bool
+    {
+        return $prova->getType() == ContagemAccess::PROVA_TYPE;
+    }
+
+    /**
+     * The spreadsheet's "truncate" (juiz/remote.php) on a laps prova: start
+     * its totals again from nothing.
+     *
+     * It used to delete every score row of the prova. Those rows also hold
+     * the fields people type, among them the classification field, so every
+     * car silently left the race, and nothing recounted. Here only VOLTAS,
+     * LAST and BEST are emptied, the rows stay, and the race clock the
+     * spreadsheet set is cleared as before. The classification is not
+     * touched, so no recount is needed.
+     *
+     * Refused while the lap counting publishes: those three fields are then
+     * the count's, and "Zerar corrida" is the way to empty them.
+     *
+     * @return bool false when refused; nothing was changed
+     * @throws \Baja\Contagem\Service\LockBusy when the count is busy for too long
+     */
+    public static function truncateSpreadsheetFields(Prova $prova): bool
+    {
+        $service = ContagemService::forProva($prova);
+
+        return $service->withLock(function () use ($prova, $service): bool {
+            // Read under the lock: the mode may have been changed a moment ago.
+            $prova->reload();
+            if ($service->getSettings()->publishesToScoring()) {
+                return false;
+            }
+            InputTableMap::clearInstancePool();
+            $rows = InputQuery::create()
+                ->filterByEventoId($prova->getEventoId())
+                ->filterByProvaId($prova->getProvaId())
+                ->find();
+            foreach ($rows as $row) {
+                $row->setDados(array_merge((array) $row->getDados(), array_fill_keys(ScorePublisher::ENGINE_FIELDS, null)));
+                $row->save();
+            }
+            $prova->setTempo(null);
+            $prova->setTotals(null);
+            $prova->save();
+            $prova->refreshVarsAndPontos();
+            return true;
+        });
+    }
+
     /** The row as it is in the database right now, not as Propel remembers it. */
     private static function freshRow(Prova $prova, int $equipeId): ?Input
     {

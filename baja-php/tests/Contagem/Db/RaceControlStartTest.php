@@ -121,11 +121,13 @@ final class RaceControlStartTest extends ReviewDbTestCase
 
         $question = $this->questionOf(['acao' => 'largar_agora']);
         $this->assertStringContainsString('já tem largada', $question->getMessage());
-        $this->assertStringContainsString('3 registros de 1 carro ', $question->getMessage());
 
-        // "Yes, replace" alone is not enough while entries would be left behind.
+        // "Yes, replace" alone is not enough while entries would be left
+        // behind: a second question carries the numbers (since round 4 the
+        // two are asked one after the other; see RaceControlRulesTest).
         $question = $this->questionOf(['acao' => 'largar_agora', RaceControl::CAMPO_CONFIRMAR => '1']);
         $this->assertSame(RaceControl::CAMPO_CONFIRMAR_REGISTROS, $question->campo);
+        $this->assertStringContainsString('3 registros de 1 carro ', $question->getMessage());
         $this->assertSame(self::RACE_START_MS, $this->startMs());
     }
 

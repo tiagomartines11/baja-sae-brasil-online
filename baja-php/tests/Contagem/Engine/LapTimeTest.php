@@ -27,11 +27,13 @@ final class LapTimeTest extends EngineTestCase
     /**
      * SITUATION: car 7 crosses the line every three minutes and everybody
      * presses Enter on time, except once: at the third crossing counter 3
-     * was distracted and pressed Enter six seconds late.
+     * was distracted and pressed Enter three seconds late. (Three seconds
+     * is still "the same crossing"; beyond `dispersao_alerta_ms`, 4 s, the
+     * entry would be set apart from the other two: see MatchingTest.)
      *
      * EXPECTED: the pass time of that crossing is still 09:00 sharp. The
      * fused time is the middle value (median) of the three, so one late
-     * press cannot drag it. The spread between counters (6 s) is remembered,
+     * press cannot drag it. The spread between counters (3 s) is remembered,
      * and it makes the two laps touching that crossing (lap 2, which ends
      * there, and lap 3, which starts there) ineligible for best lap.
      */
@@ -42,15 +44,16 @@ final class LapTimeTest extends EngineTestCase
         $race->pass(7, '03:00');
         $race->pass(7, '06:00');
         $race->pass(7, '09:00', [1, 2]);
-        $race->entry(3, 7, '09:06');
+        $race->entry(3, 7, '09:03');
         $race->pass(7, '12:00');
 
         $result = $race->run('13:00');
 
         $lapEndingThere = $result->laps[2];
+        $this->assertSame(3, $lapEndingThere->fontes, 'All three entries are one pass.');
         $this->assertSame(RaceScenario::ms('09:00'), $lapEndingThere->tsMs);
         $this->assertSame(180000, $lapEndingThere->tempoVoltaMs);
-        $this->assertSame(6000, $lapEndingThere->dispersaoMs);
+        $this->assertSame(3000, $lapEndingThere->dispersaoMs);
         $this->assertFalse($lapEndingThere->elegivelMelhorVolta, 'The lap ending at the disputed crossing is not eligible.');
         $this->assertFalse($result->laps[3]->elegivelMelhorVolta, 'Nor is the lap that starts from it.');
         $this->assertTrue($result->laps[1]->elegivelMelhorVolta, 'A lap with both ends agreed is eligible.');

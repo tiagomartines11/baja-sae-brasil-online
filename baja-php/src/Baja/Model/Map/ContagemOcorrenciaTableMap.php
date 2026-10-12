@@ -63,7 +63,7 @@ class ContagemOcorrenciaTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 10;
+    public const NUM_COLUMNS = 14;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ContagemOcorrenciaTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 10;
+    public const NUM_HYDRATE_COLUMNS = 14;
 
     /**
      * the column name for the ocorrencia_id field
@@ -126,6 +126,26 @@ class ContagemOcorrenciaTableMap extends TableMap
     public const COL_UUID_CLIENTE = 'contagem_ocorrencia.uuid_cliente';
 
     /**
+     * the column name for the qualidade_tempo field
+     */
+    public const COL_QUALIDADE_TEMPO = 'contagem_ocorrencia.qualidade_tempo';
+
+    /**
+     * the column name for the ts_dispositivo_ms field
+     */
+    public const COL_TS_DISPOSITIVO_MS = 'contagem_ocorrencia.ts_dispositivo_ms';
+
+    /**
+     * the column name for the modo_entrada field
+     */
+    public const COL_MODO_ENTRADA = 'contagem_ocorrencia.modo_entrada';
+
+    /**
+     * the column name for the origem field
+     */
+    public const COL_ORIGEM = 'contagem_ocorrencia.origem';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -139,11 +159,11 @@ class ContagemOcorrenciaTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['OcorrenciaId', 'EventoId', 'ProvaId', 'Tipo', 'EquipeNumero', 'TsMs', 'Usuario', 'CriadoEmMs', 'SubstituiId', 'UuidCliente', ],
-        self::TYPE_CAMELNAME     => ['ocorrenciaId', 'eventoId', 'provaId', 'tipo', 'equipeNumero', 'tsMs', 'usuario', 'criadoEmMs', 'substituiId', 'uuidCliente', ],
-        self::TYPE_COLNAME       => [ContagemOcorrenciaTableMap::COL_OCORRENCIA_ID, ContagemOcorrenciaTableMap::COL_EVENTO_ID, ContagemOcorrenciaTableMap::COL_PROVA_ID, ContagemOcorrenciaTableMap::COL_TIPO, ContagemOcorrenciaTableMap::COL_EQUIPE_NUMERO, ContagemOcorrenciaTableMap::COL_TS_MS, ContagemOcorrenciaTableMap::COL_USUARIO, ContagemOcorrenciaTableMap::COL_CRIADO_EM_MS, ContagemOcorrenciaTableMap::COL_SUBSTITUI_ID, ContagemOcorrenciaTableMap::COL_UUID_CLIENTE, ],
-        self::TYPE_FIELDNAME     => ['ocorrencia_id', 'evento_id', 'prova_id', 'tipo', 'equipe_numero', 'ts_ms', 'usuario', 'criado_em_ms', 'substitui_id', 'uuid_cliente', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ]
+        self::TYPE_PHPNAME       => ['OcorrenciaId', 'EventoId', 'ProvaId', 'Tipo', 'EquipeNumero', 'TsMs', 'Usuario', 'CriadoEmMs', 'SubstituiId', 'UuidCliente', 'QualidadeTempo', 'TsDispositivoMs', 'ModoEntrada', 'Origem', ],
+        self::TYPE_CAMELNAME     => ['ocorrenciaId', 'eventoId', 'provaId', 'tipo', 'equipeNumero', 'tsMs', 'usuario', 'criadoEmMs', 'substituiId', 'uuidCliente', 'qualidadeTempo', 'tsDispositivoMs', 'modoEntrada', 'origem', ],
+        self::TYPE_COLNAME       => [ContagemOcorrenciaTableMap::COL_OCORRENCIA_ID, ContagemOcorrenciaTableMap::COL_EVENTO_ID, ContagemOcorrenciaTableMap::COL_PROVA_ID, ContagemOcorrenciaTableMap::COL_TIPO, ContagemOcorrenciaTableMap::COL_EQUIPE_NUMERO, ContagemOcorrenciaTableMap::COL_TS_MS, ContagemOcorrenciaTableMap::COL_USUARIO, ContagemOcorrenciaTableMap::COL_CRIADO_EM_MS, ContagemOcorrenciaTableMap::COL_SUBSTITUI_ID, ContagemOcorrenciaTableMap::COL_UUID_CLIENTE, ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO, ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS, ContagemOcorrenciaTableMap::COL_MODO_ENTRADA, ContagemOcorrenciaTableMap::COL_ORIGEM, ],
+        self::TYPE_FIELDNAME     => ['ocorrencia_id', 'evento_id', 'prova_id', 'tipo', 'equipe_numero', 'ts_ms', 'usuario', 'criado_em_ms', 'substitui_id', 'uuid_cliente', 'qualidade_tempo', 'ts_dispositivo_ms', 'modo_entrada', 'origem', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ]
     ];
 
     /**
@@ -155,11 +175,11 @@ class ContagemOcorrenciaTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['OcorrenciaId' => 0, 'EventoId' => 1, 'ProvaId' => 2, 'Tipo' => 3, 'EquipeNumero' => 4, 'TsMs' => 5, 'Usuario' => 6, 'CriadoEmMs' => 7, 'SubstituiId' => 8, 'UuidCliente' => 9, ],
-        self::TYPE_CAMELNAME     => ['ocorrenciaId' => 0, 'eventoId' => 1, 'provaId' => 2, 'tipo' => 3, 'equipeNumero' => 4, 'tsMs' => 5, 'usuario' => 6, 'criadoEmMs' => 7, 'substituiId' => 8, 'uuidCliente' => 9, ],
-        self::TYPE_COLNAME       => [ContagemOcorrenciaTableMap::COL_OCORRENCIA_ID => 0, ContagemOcorrenciaTableMap::COL_EVENTO_ID => 1, ContagemOcorrenciaTableMap::COL_PROVA_ID => 2, ContagemOcorrenciaTableMap::COL_TIPO => 3, ContagemOcorrenciaTableMap::COL_EQUIPE_NUMERO => 4, ContagemOcorrenciaTableMap::COL_TS_MS => 5, ContagemOcorrenciaTableMap::COL_USUARIO => 6, ContagemOcorrenciaTableMap::COL_CRIADO_EM_MS => 7, ContagemOcorrenciaTableMap::COL_SUBSTITUI_ID => 8, ContagemOcorrenciaTableMap::COL_UUID_CLIENTE => 9, ],
-        self::TYPE_FIELDNAME     => ['ocorrencia_id' => 0, 'evento_id' => 1, 'prova_id' => 2, 'tipo' => 3, 'equipe_numero' => 4, 'ts_ms' => 5, 'usuario' => 6, 'criado_em_ms' => 7, 'substitui_id' => 8, 'uuid_cliente' => 9, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ]
+        self::TYPE_PHPNAME       => ['OcorrenciaId' => 0, 'EventoId' => 1, 'ProvaId' => 2, 'Tipo' => 3, 'EquipeNumero' => 4, 'TsMs' => 5, 'Usuario' => 6, 'CriadoEmMs' => 7, 'SubstituiId' => 8, 'UuidCliente' => 9, 'QualidadeTempo' => 10, 'TsDispositivoMs' => 11, 'ModoEntrada' => 12, 'Origem' => 13, ],
+        self::TYPE_CAMELNAME     => ['ocorrenciaId' => 0, 'eventoId' => 1, 'provaId' => 2, 'tipo' => 3, 'equipeNumero' => 4, 'tsMs' => 5, 'usuario' => 6, 'criadoEmMs' => 7, 'substituiId' => 8, 'uuidCliente' => 9, 'qualidadeTempo' => 10, 'tsDispositivoMs' => 11, 'modoEntrada' => 12, 'origem' => 13, ],
+        self::TYPE_COLNAME       => [ContagemOcorrenciaTableMap::COL_OCORRENCIA_ID => 0, ContagemOcorrenciaTableMap::COL_EVENTO_ID => 1, ContagemOcorrenciaTableMap::COL_PROVA_ID => 2, ContagemOcorrenciaTableMap::COL_TIPO => 3, ContagemOcorrenciaTableMap::COL_EQUIPE_NUMERO => 4, ContagemOcorrenciaTableMap::COL_TS_MS => 5, ContagemOcorrenciaTableMap::COL_USUARIO => 6, ContagemOcorrenciaTableMap::COL_CRIADO_EM_MS => 7, ContagemOcorrenciaTableMap::COL_SUBSTITUI_ID => 8, ContagemOcorrenciaTableMap::COL_UUID_CLIENTE => 9, ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO => 10, ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS => 11, ContagemOcorrenciaTableMap::COL_MODO_ENTRADA => 12, ContagemOcorrenciaTableMap::COL_ORIGEM => 13, ],
+        self::TYPE_FIELDNAME     => ['ocorrencia_id' => 0, 'evento_id' => 1, 'prova_id' => 2, 'tipo' => 3, 'equipe_numero' => 4, 'ts_ms' => 5, 'usuario' => 6, 'criado_em_ms' => 7, 'substitui_id' => 8, 'uuid_cliente' => 9, 'qualidade_tempo' => 10, 'ts_dispositivo_ms' => 11, 'modo_entrada' => 12, 'origem' => 13, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ]
     ];
 
     /**
@@ -246,6 +266,37 @@ class ContagemOcorrenciaTableMap extends TableMap
         'COL_UUID_CLIENTE' => 'UUID_CLIENTE',
         'uuid_cliente' => 'UUID_CLIENTE',
         'contagem_ocorrencia.uuid_cliente' => 'UUID_CLIENTE',
+        'QualidadeTempo' => 'QUALIDADE_TEMPO',
+        'ContagemOcorrencia.QualidadeTempo' => 'QUALIDADE_TEMPO',
+        'qualidadeTempo' => 'QUALIDADE_TEMPO',
+        'contagemOcorrencia.qualidadeTempo' => 'QUALIDADE_TEMPO',
+        'ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO' => 'QUALIDADE_TEMPO',
+        'COL_QUALIDADE_TEMPO' => 'QUALIDADE_TEMPO',
+        'qualidade_tempo' => 'QUALIDADE_TEMPO',
+        'contagem_ocorrencia.qualidade_tempo' => 'QUALIDADE_TEMPO',
+        'TsDispositivoMs' => 'TS_DISPOSITIVO_MS',
+        'ContagemOcorrencia.TsDispositivoMs' => 'TS_DISPOSITIVO_MS',
+        'tsDispositivoMs' => 'TS_DISPOSITIVO_MS',
+        'contagemOcorrencia.tsDispositivoMs' => 'TS_DISPOSITIVO_MS',
+        'ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS' => 'TS_DISPOSITIVO_MS',
+        'COL_TS_DISPOSITIVO_MS' => 'TS_DISPOSITIVO_MS',
+        'ts_dispositivo_ms' => 'TS_DISPOSITIVO_MS',
+        'contagem_ocorrencia.ts_dispositivo_ms' => 'TS_DISPOSITIVO_MS',
+        'ModoEntrada' => 'MODO_ENTRADA',
+        'ContagemOcorrencia.ModoEntrada' => 'MODO_ENTRADA',
+        'modoEntrada' => 'MODO_ENTRADA',
+        'contagemOcorrencia.modoEntrada' => 'MODO_ENTRADA',
+        'ContagemOcorrenciaTableMap::COL_MODO_ENTRADA' => 'MODO_ENTRADA',
+        'COL_MODO_ENTRADA' => 'MODO_ENTRADA',
+        'modo_entrada' => 'MODO_ENTRADA',
+        'contagem_ocorrencia.modo_entrada' => 'MODO_ENTRADA',
+        'Origem' => 'ORIGEM',
+        'ContagemOcorrencia.Origem' => 'ORIGEM',
+        'origem' => 'ORIGEM',
+        'contagemOcorrencia.origem' => 'ORIGEM',
+        'ContagemOcorrenciaTableMap::COL_ORIGEM' => 'ORIGEM',
+        'COL_ORIGEM' => 'ORIGEM',
+        'contagem_ocorrencia.origem' => 'ORIGEM',
     ];
 
     /**
@@ -275,6 +326,10 @@ class ContagemOcorrenciaTableMap extends TableMap
         $this->addColumn('criado_em_ms', 'CriadoEmMs', 'BIGINT', true, null, null);
         $this->addColumn('substitui_id', 'SubstituiId', 'BIGINT', false, null, null);
         $this->addColumn('uuid_cliente', 'UuidCliente', 'CHAR', false, 36, null);
+        $this->addColumn('qualidade_tempo', 'QualidadeTempo', 'VARCHAR', true, 12, 'exato');
+        $this->addColumn('ts_dispositivo_ms', 'TsDispositivoMs', 'BIGINT', false, null, null);
+        $this->addColumn('modo_entrada', 'ModoEntrada', 'VARCHAR', false, 16, null);
+        $this->addColumn('origem', 'Origem', 'VARCHAR', false, 16, null);
     }
 
     /**
@@ -450,6 +505,10 @@ class ContagemOcorrenciaTableMap extends TableMap
             $criteria->addSelectColumn(ContagemOcorrenciaTableMap::COL_CRIADO_EM_MS);
             $criteria->addSelectColumn(ContagemOcorrenciaTableMap::COL_SUBSTITUI_ID);
             $criteria->addSelectColumn(ContagemOcorrenciaTableMap::COL_UUID_CLIENTE);
+            $criteria->addSelectColumn(ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO);
+            $criteria->addSelectColumn(ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS);
+            $criteria->addSelectColumn(ContagemOcorrenciaTableMap::COL_MODO_ENTRADA);
+            $criteria->addSelectColumn(ContagemOcorrenciaTableMap::COL_ORIGEM);
         } else {
             $criteria->addSelectColumn($alias . '.ocorrencia_id');
             $criteria->addSelectColumn($alias . '.evento_id');
@@ -461,6 +520,10 @@ class ContagemOcorrenciaTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.criado_em_ms');
             $criteria->addSelectColumn($alias . '.substitui_id');
             $criteria->addSelectColumn($alias . '.uuid_cliente');
+            $criteria->addSelectColumn($alias . '.qualidade_tempo');
+            $criteria->addSelectColumn($alias . '.ts_dispositivo_ms');
+            $criteria->addSelectColumn($alias . '.modo_entrada');
+            $criteria->addSelectColumn($alias . '.origem');
         }
     }
 
@@ -489,6 +552,10 @@ class ContagemOcorrenciaTableMap extends TableMap
             $criteria->removeSelectColumn(ContagemOcorrenciaTableMap::COL_CRIADO_EM_MS);
             $criteria->removeSelectColumn(ContagemOcorrenciaTableMap::COL_SUBSTITUI_ID);
             $criteria->removeSelectColumn(ContagemOcorrenciaTableMap::COL_UUID_CLIENTE);
+            $criteria->removeSelectColumn(ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO);
+            $criteria->removeSelectColumn(ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS);
+            $criteria->removeSelectColumn(ContagemOcorrenciaTableMap::COL_MODO_ENTRADA);
+            $criteria->removeSelectColumn(ContagemOcorrenciaTableMap::COL_ORIGEM);
         } else {
             $criteria->removeSelectColumn($alias . '.ocorrencia_id');
             $criteria->removeSelectColumn($alias . '.evento_id');
@@ -500,6 +567,10 @@ class ContagemOcorrenciaTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.criado_em_ms');
             $criteria->removeSelectColumn($alias . '.substitui_id');
             $criteria->removeSelectColumn($alias . '.uuid_cliente');
+            $criteria->removeSelectColumn($alias . '.qualidade_tempo');
+            $criteria->removeSelectColumn($alias . '.ts_dispositivo_ms');
+            $criteria->removeSelectColumn($alias . '.modo_entrada');
+            $criteria->removeSelectColumn($alias . '.origem');
         }
     }
 

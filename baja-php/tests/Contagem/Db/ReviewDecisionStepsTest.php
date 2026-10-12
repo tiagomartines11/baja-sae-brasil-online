@@ -67,18 +67,23 @@ final class ReviewDecisionStepsTest extends ReviewDbTestCase
     /**
      * SITUATION: car A's passes at 1:00 and 2:40 are fine. At 3:10, only 30
      * seconds after the previous one, a pass typed by ALL THREE counters
-     * appears: the car was pushed backwards over the line. That raises
-     * "volta curta". The pass did not happen.
+     * appears: the car was pushed backwards over the line. The pass did not
+     * happen.
      *
-     * WHAT WENT WRONG: the reviewer had to void three entries with three
-     * clicks. After the first click the pass still counted (two counters
-     * left); after the second it became a lone entry with a new flag. For
-     * as long as that took, the published count was wrong in a new way.
+     * WHAT WENT WRONG (round 3): the reviewer had to void three entries
+     * with three clicks. After the first click the pass still counted (two
+     * counters left); after the second it became a lone entry with a new
+     * flag. For as long as that took, the published count was wrong in a
+     * new way.
+     *
+     * SINCE ROUND 4 such a pass is HELD by the engine instead of counted:
+     * the car has 1 lap while the flag "passagem_proxima_demais" is open,
+     * not 2. Discarding it must still be one step.
      *
      * EXPECTED: "descartar esta passagem" stores a void for each of the
-     * three entries in ONE answer; the car goes from 2 laps to 1 and no
-     * new flag about those entries appears. Each void is an ordinary
-     * decision in the history and can be undone on its own.
+     * three entries in ONE answer; the car stays at 1 lap and no flag
+     * about those entries is left. Each void is an ordinary decision in
+     * the history and can be undone on its own.
      */
     public function testDiscardingAPassVoidsEveryEntryOfItInOneStep(): void
     {
@@ -90,7 +95,12 @@ final class ReviewDecisionStepsTest extends ReviewDbTestCase
         $this->syncAll($this->at(290));
         Clock::freezeAt($this->at(300));
         $state = $this->freshScreen();
-        $this->assertSame(2, $this->carRow($state, $car)['voltas']);
+        $this->assertSame(1, $this->carRow($state, $car)['voltas'], 'the pass 30 s after the previous one is held, not counted');
+        $aboutTheGhost = array_values(array_filter(
+            $state['alertas_abertos'],
+            fn(array $flag) => array_intersect($flag['passagem_ids'], $ghost) !== []
+        ));
+        $this->assertNotSame([], $aboutTheGhost, 'the held pass is flagged');
 
         $answer = $this->decide(['tipo' => 'descartar_passagem', 'passagem_id' => $ghost[0]], $ghost, $this->currentSignatureOf($ghost));
 

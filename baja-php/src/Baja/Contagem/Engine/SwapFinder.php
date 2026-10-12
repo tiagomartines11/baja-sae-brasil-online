@@ -25,9 +25,16 @@ final class SwapFinder
     /** @var array<int, true> spl_object_id of groups already paired with a stray entry */
     private array $takenGroups = [];
 
-    /** @param PassGroup[] $groupsInTimeOrder */
-    public function __construct(array $groupsInTimeOrder, int $janelaMs)
+    /** @var array<int, true> the cars an entry may be moved to; empty = any number */
+    private array $carsThatTakePart;
+
+    /**
+     * @param PassGroup[] $groupsInTimeOrder
+     * @param array<int, true> $carsThatTakePart the classified teams; empty when the team list is not known
+     */
+    public function __construct(array $groupsInTimeOrder, int $janelaMs, array $carsThatTakePart = [])
     {
+        $this->carsThatTakePart = $carsThatTakePart;
         $this->groupsInTimeOrder = $groupsInTimeOrder;
         foreach ($groupsInTimeOrder as $group) {
             $this->groupTimes[] = $group->primeiroTsMs;
@@ -38,8 +45,8 @@ final class SwapFinder
     /**
      * The pass group the lone entry most probably belongs to, or null.
      *
-     * A candidate is a group for another car, inside the matching window,
-     * with no entry from the lone entry's source. Among candidates the
+     * A candidate is a group for another car that takes part, inside the
+     * matching window, with no entry from the lone entry's source. Among candidates the
      * closest in time wins (compared in whole seconds, since typing delays
      * make finer differences meaningless), then the most similar number.
      */
@@ -86,6 +93,11 @@ final class SwapFinder
             return false;
         }
         if (isset($this->takenGroups[spl_object_id($candidate)])) {
+            return false;
+        }
+        // Two counters agreeing on a number that is no team, or on a car
+        // that is not classified, are not a pass to move anything onto.
+        if ($this->carsThatTakePart !== [] && !isset($this->carsThatTakePart[$candidate->carro])) {
             return false;
         }
         $entryCount = count($candidate->entries);

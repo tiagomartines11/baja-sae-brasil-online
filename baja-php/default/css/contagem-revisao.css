@@ -428,3 +428,26 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 
 /* Something with an explanation behind it (hover): lap times, above all. */
 .com-dica { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+
+/* ---- Round 4 ---- */
+
+/* A flag that puts a published lap count in doubt: first in the queue, and marked. */
+.item-fila.em-duvida { border-left: 4px solid var(--cor-vermelha); }
+.item-fila .duvida { grid-column: 1 / -1; font-size: 12px; font-weight: bold; color: var(--cor-vermelha); }
+.contagem-em-duvida { margin: 6px 0; padding: 6px 10px; background: var(--fundo-vermelho); border: 1px solid var(--cor-vermelha); border-radius: 4px; color: var(--cor-vermelha); }
+
+/* A pass held back until a reviewer decides: two counters agree, the count does not move. */
+.chip.retida { border-style: dashed; border-width: 2px; border-color: var(--cor-vermelha); background: var(--fundo-ambar); color: var(--cor-vermelha); }
+
+/* An exit nobody logged at the pit lane: a reviewer marked it from a pass at the line. */
+.marca-box.inferida { border: 1px dashed var(--cor-ambar); background: var(--fundo-ambar); color: var(--cor-ambar); font-style: italic; }
+
+/* Pit and fueling events of unknown time, listed under the lanes. */
+.paradas-sem-horario { border-style: dashed; }
+
+/* The test preset is applied: same weight as the simulation banner, its own colour. */
+.contagem-predefinicao { background: var(--fundo-ambar); border-color: var(--cor-ambar); color: var(--cor-ambar); }
+.contagem-predefinicao a { color: inherit; font-weight: bold; }
+
+/* "No team is marked present": said once, above the car rows. */
+tr.aviso-tabela td { background: var(--fundo-ambar); color: var(--cor-ambar); white-space: normal; }

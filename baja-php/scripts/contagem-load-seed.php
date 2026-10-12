@@ -44,8 +44,8 @@ foreach (['Pos', 'EquipeNum', 'Equipe'] as $constant) {
 const RACE_AGE_SECONDS = 12000;
 const BASE_LAP_SECONDS = 170;
 
-if (Env::isProduction()) {
-    fwrite(STDERR, "Refusing to run: this is a production environment.\n");
+if (PHP_SAPI !== 'cli' || !Env::isDevelopment()) {
+    fwrite(STDERR, "Refusing to run: this is not a development environment (ENV is not \"dev\"), or not the command line.\n");
     exit(1);
 }
 [$eventoId, $provaId] = [$argv[1] ?? '', $argv[2] ?? ''];

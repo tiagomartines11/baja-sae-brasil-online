@@ -5,7 +5,9 @@ namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Service\ContagemService;
+use Baja\Contagem\Service\PublishingWouldStart;
 use Baja\Contagem\Service\ScorePublisher;
+use Baja\Contagem\Service\TestPreset;
 use Baja\Contagem\Sync\DeviceTokens;
 use Baja\Model\ContagemFonte;
 use Baja\Model\Prova;
@@ -22,9 +24,10 @@ final class SourceSettings
     /** Form field: "I was told switching publishing on overwrites the official results, and said yes". */
     public const CAMPO_CONFIRMAR_PUBLICACAO = 'confirmar_publicacao';
 
-    /** Shortest and longest average lap the test preset accepts, in seconds. */
-    private const MIN_TEST_LAP_S = 10;
-    private const MAX_TEST_LAP_S = 3600;
+    /** What switching publishing on does, said the same way wherever it is asked. */
+    private const PUBLISHING_STARTS = 'a contagem passa a gravar na pontuação oficial: VOLTAS, LAST e BEST de todos os carros '
+        . 'e o horário de largada da prova são sobrescritos agora com os valores da contagem, no lugar do que a planilha publicou. '
+        . 'Não há como desfazer pela tela.';
 
     /** The one sentence that explains the block to a controller. */
     public const BLOCK_RULE = 'Quem teve um dispositivo revogado não recebe novo acesso a esta fonte até ser vinculado de novo '
@@ -50,14 +53,31 @@ final class SourceSettings
         }
         $settings = SettingsForm::fromPost($post, $countingIds, $activeCountingIds, array_keys(self::classificationChoices($service->getProva())));
 
-        $switchesPublishingOn = !$service->getSettings()->publishesToScoring() && $settings->publishesToScoring();
+        $current = $service->getSettings();
+        $switchesSimulationOff = $current->permitirSimulacao && !$settings->permitirSimulacao;
+        if ($switchesSimulationOff) {
+            // saveSettings() refuses both of these. Said here in the page's
+            // own words, each with the button that gets the person out.
+            if ($service->hasSavedSettings()) {
+                throw new InvalidArgumentException(
+                    'A predefinição de teste está aplicada: desligar só "Permitir simulação" deixaria os tempos do ensaio valendo numa corrida de verdade. '
+                        . 'Use "Restaurar valores salvos", no fim desta página: ele devolve os tempos anteriores e desliga a simulação. Nada foi alterado.'
+                );
+            }
+            if ($service->hasSimulatedRows()) {
+                throw new InvalidArgumentException(
+                    'Esta prova tem registros de simulação. Com a simulação desligada eles passariam a contar como uma corrida de verdade. '
+                        . 'Use "Zerar corrida" em Controle de corrida e depois desligue a simulação. Nada foi alterado.'
+                );
+            }
+        }
+
+        $switchesPublishingOn = !$current->publishesToScoring() && $settings->publishesToScoring();
         if ($switchesPublishingOn && ($post[self::CAMPO_CONFIRMAR_PUBLICACAO] ?? '') !== '1') {
             // Until now the spreadsheet (or a person) wrote these values.
             // From this save on the count does, at once and for every car.
             throw new ConfirmationNeeded(
-                'A publicação está DESLIGADA. Ao ligá-la, a contagem passa a gravar na pontuação oficial: VOLTAS, LAST e BEST de todos os carros '
-                    . 'e o horário de largada da prova são sobrescritos agora com os valores da contagem, no lugar do que a planilha publicou. '
-                    . 'Não há como desfazer pela tela.',
+                'A publicação está DESLIGADA. Ao ligá-la, ' . self::PUBLISHING_STARTS,
                 self::CAMPO_CONFIRMAR_PUBLICACAO,
                 'Ligar a publicação e sobrescrever'
             );
@@ -94,20 +114,44 @@ final class SourceSettings
      */
     public static function applyTestPreset(ContagemService $service, array $post): int
     {
+        // The limits are the preset's own. A value outside them used to be
+        // accepted and silently replaced by the nearest limit: 3600 s was
+        // applied as 600 s and the page said "aplicada".
         $lapS = filter_var($post['volta_media_s'] ?? null, FILTER_VALIDATE_INT);
-        if ($lapS === false || $lapS < self::MIN_TEST_LAP_S || $lapS > self::MAX_TEST_LAP_S) {
+        if ($lapS === false || $lapS < TestPreset::SHORTEST_LAP_S || $lapS > TestPreset::LONGEST_LAP_S) {
             throw new InvalidArgumentException(
-                'Volta média: informe os segundos de uma volta, entre ' . self::MIN_TEST_LAP_S . ' e ' . self::MAX_TEST_LAP_S . '.'
+                'Volta média: informe os segundos de uma volta, entre ' . TestPreset::SHORTEST_LAP_S . ' e ' . TestPreset::LONGEST_LAP_S
+                    . '. Nada foi alterado.'
             );
         }
         $service->applyTestPreset($lapS);
         return $lapS;
     }
 
-    /** @throws InvalidArgumentException when no saved values exist */
-    public static function restore(ContagemService $service): void
+    /**
+     * "Restaurar valores salvos": the time settings from before the preset
+     * come back and simulation is switched off.
+     *
+     * @param array<string, mixed> $post
+     * @throws ConfirmationNeeded when restoring would switch publishing on and the person was not asked yet
+     * @throws InvalidArgumentException when no saved values exist, or simulated records are still in the prova
+     */
+    public static function restore(ContagemService $service, array $post = []): void
     {
-        if (!$service->restoreSavedSettings()) {
+        $confirmed = ($post[self::CAMPO_CONFIRMAR_PUBLICACAO] ?? '') === '1';
+        try {
+            $restored = $service->restoreSavedSettings($confirmed);
+        } catch (PublishingWouldStart $wouldPublish) {
+            // The same question as when leaving "desligada" by hand: a
+            // rehearsal's counts must not reach the official results unasked.
+            throw new ConfirmationNeeded(
+                'Restaurar os valores salvos LIGA a publicação: ' . self::PUBLISHING_STARTS
+                    . ' Se a prova ainda tem dados de um ensaio, use "Zerar corrida" antes.',
+                self::CAMPO_CONFIRMAR_PUBLICACAO,
+                'Restaurar e ligar a publicação'
+            );
+        }
+        if (!$restored) {
             throw new InvalidArgumentException('Não há valores salvos para restaurar: nenhuma predefinição de teste está aplicada.');
         }
     }

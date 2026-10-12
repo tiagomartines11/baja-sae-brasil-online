@@ -43,9 +43,8 @@ final class PublicFeed
             return null;
         }
 
-        $snapshot = (new SnapshotStore($prova))->get();
         $settings = Settings::fromArray($prova->getParams()->contagem ?? null);
-        $feed = self::assemble($eventoId, $provaId, $snapshot, $settings, Clock::nowMs());
+        $feed = self::assemble($eventoId, $provaId, (new SnapshotStore($prova))->getFeedPart(), $settings, Clock::nowMs());
 
         $json = (string) json_encode($feed, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         self::writeCache($cacheKey, $json);
@@ -92,10 +91,10 @@ final class PublicFeed
     /**
      * @return array<string, mixed>
      */
-    private static function assemble(string $eventoId, string $provaId, ?RaceSnapshot $snapshot, Settings $settings, int $nowMs): array
+    private static function assemble(string $eventoId, string $provaId, ?array $snapshotPart, Settings $settings, int $nowMs): array
     {
-        $live = $snapshot !== null ? ($snapshot->dados['tempo_real'] ?? []) : [];
-        $stored = $snapshot !== null ? ($snapshot->dados['feed'] ?? []) : [];
+        $live = $snapshotPart['tempo_real'] ?? [];
+        $stored = $snapshotPart['feed'] ?? [];
         $statusByCar = LiveStatus::ofCars($live, $settings, $nowMs);
         $race = LiveStatus::ofRace($live, $nowMs);
 
@@ -115,7 +114,10 @@ final class PublicFeed
             'gerado_em_ms' => $nowMs,
             // When the numbers below were last recalculated; a consumer can
             // tell a quiet race from a stalled feed.
-            'calculado_em_ms' => $snapshot !== null ? $snapshot->geradoEmMs : null,
+            'calculado_em_ms' => $snapshotPart['gerado_em_ms'] ?? null,
+            // True while the prova accepts simulated passes: a consumer
+            // must not show such a race as a real one.
+            'simulacao' => $settings->permitirSimulacao,
             'corrida' => [
                 'largada_ms' => $race['largada_ms'],
                 'encerramento_ms' => $race['encerramento_ms'],

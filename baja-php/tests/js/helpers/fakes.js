@@ -10,7 +10,9 @@ import { createMemoryStorage } from '../../../default/js/contagem/storage-memory
 import { LocalStore } from '../../../default/js/contagem/local-store.js';
 import { ServerClock } from '../../../default/js/contagem/server-clock.js';
 import { SyncQueue } from '../../../default/js/contagem/sync-queue.js';
+import { runClockGuard } from '../../../default/js/contagem/clock-guard.js';
 import { SyncHeartbeat } from '../../../default/js/contagem/sync-heartbeat.js';
+import { createTokenSource } from '../../../default/js/contagem/device-token.js';
 import { CountSession } from '../../../default/js/contagem/count-session.js';
 import { PitSession } from '../../../default/js/contagem/pit-session.js';
 
@@ -203,6 +205,13 @@ export class FakeServer {
         // Network delay of each leg of the trip, in ms of true time.
         this.uploadDelayMs = 0;
         this.downloadDelayMs = 0;
+        // Time the server itself spends on a request, between reading its
+        // clock on arrival and reading it again just before answering.
+        this.processingDelayMs = 0;
+        // False plays an older server, whose answer has `server_now_ms` only.
+        this.sendsBothTimes = true;
+        // Anything else a test wants in the answer (newer fields of the contract).
+        this.extraAnswerFields = {};
         // When set, only the first N new entries of a request are stored.
         this.storeAtMostPerRequest = null;
 
@@ -240,6 +249,7 @@ export class FakeServer {
             throw new Error('simulated: no network');
         }
         this.deviceClock.advance(this.uploadDelayMs);
+        const serverReceivedMs = this.deviceClock.serverNow();
         // A copy, like a real server that parsed the JSON it received.
         const request = JSON.parse(JSON.stringify(requestBody));
 
@@ -302,7 +312,8 @@ export class FakeServer {
                 voidedUuids.push(voidRequest.uuid);
             }
         }
-        const serverNowMs = this.deviceClock.serverNow();
+        this.deviceClock.advance(this.processingDelayMs);
+        const serverSentMs = this.deviceClock.serverNow();
         this.deviceClock.advance(this.downloadDelayMs);
 
         if (this.behaviour === 'answer_lost') {
@@ -313,7 +324,9 @@ export class FakeServer {
             body: {
                 stored_uuids: storedUuids,
                 voided_uuids: voidedUuids,
-                server_now_ms: serverNowMs,
+                server_now_ms: serverReceivedMs,
+                ...(this.sendsBothTimes ? { server_received_ms: serverReceivedMs, server_sent_ms: serverSentMs } : {}),
+                ...this.extraAnswerFields,
                 race: this.race,
                 fonte: { id: 3, nome: 'Contagem 1', tipo: 'manual' },
                 valid_cars: this.validCars,
@@ -352,10 +365,10 @@ export class FakeServer {
  */
 export async function createDevice({
     server = null, clock = new FakeClock(), disk = createMemoryStorage(), maxBatch, uuidPrefix = 'uuid',
-    vouchesForHistory = true, renewToken = null, anchored = true,
+    vouchesForHistory = true, renewToken = null, requestToken = null, anchored = true,
 } = {}) {
     const fakeServer = server || new FakeServer(clock);
-    const device = { clock, disk, server: fakeServer, stateChanges: [], pageLoads: 0 };
+    const device = { clock, disk, server: fakeServer, stateChanges: [], pageLoads: 0, tokenProblem: null };
 
     async function boot({ anchored: bootAnchored = false } = {}) {
         device.pageLoads++;
@@ -375,8 +388,24 @@ export async function createDevice({
         });
         // The 5-second timer. Tests that need it call device.heartbeat.start()
         // with a pretend setInterval, or device.heartbeat.tick() directly.
+        // With `requestToken` the device gets the REAL token source, wired
+        // as page-setup.js wires it: `device.tokenProblem` is what the
+        // page's warning banner is drawn from.
+        if (requestToken !== null) {
+            device.tokenSource = createTokenSource({
+                store: device.store,
+                requestToken,
+                usuario: 'equipe1',
+                monotonicNow: device.serverClock.monotonicNow,
+                onOutcome: (motivo) => {
+                    device.tokenProblem = motivo;
+                },
+            });
+        }
         device.heartbeat = new SyncHeartbeat({
-            queue: device.queue, now: device.serverClock.monotonicNow, renewToken,
+            queue: device.queue,
+            now: device.serverClock.monotonicNow,
+            renewToken: requestToken !== null ? () => device.tokenSource.renew() : renewToken,
         });
         // As the page does on opening (see SyncQueue.prepare).
         await device.queue.prepare();
@@ -420,6 +449,8 @@ export async function createDevice({
         const monoMs = device.serverClock.monotonicNow();
         device.serverClock.addSample(monoMs, monoMs, clock.serverNow());
     };
+    /** The page's once-a-second timer firing once (see page-setup.js). */
+    device.runClockGuardTimer = () => runClockGuard(device.serverClock, device.queue);
     /** The counter types a car number and presses Enter. */
     device.type = (car, mode = 'teclado') => device.session.recordPass({ car, typingMs: 500, mode });
     await boot({ anchored });

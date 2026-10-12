@@ -245,15 +245,21 @@ final class ConfirmEffectTest extends EngineTestCase
      *    "repetida": the entry is kept, alone in a group of its own);
      * c) as (b), and counter 3 typed car 9 very late, 22 s after the
      *    crossing, landing in the same group as the repeat: two counters
-     *    now "agree" on a second pass, which therefore counts.
+     *    now seem to "agree" on a second pass. (This used to count, and
+     *    gave the car a lap it never drove.)
      *
      * EXPECTED:
      * a) confirming the dropped entry brings it back as a pass of its own,
      *    2 s after the real one;
      * b) confirming the repeat makes it count: a 12-second lap;
-     * c) the second group counts already, so confirming adds nothing. (The
-     *    screen offers no "keep" for repeats; this is the truth it works
-     *    from.)
+     * c) the two entries are ten seconds apart, far more than counters who
+     *    saw the same crossing differ by, so the group is held: the car
+     *    keeps its one lap, the flag says the count may be a lap short, and
+     *    confirming would add a pass 17 s after the real one. Only in
+     *    "todas" mode, where every entry counts, does the group count
+     *    already; the flag then says confirming adds nothing and that the
+     *    car may have a lap too many. (The screen offers no "keep" for
+     *    repeats; this is the truth it works from.)
      */
     public function testRepeatedEntries(): void
     {
@@ -283,8 +289,18 @@ final class ConfirmEffectTest extends EngineTestCase
         $repeatAndLatecomer->entry(1, 9, '03:12');
         $repeatAndLatecomer->entry(3, 9, '03:22');
         $result = $repeatAndLatecomer->run('04:00');
+        $this->assertLapCounts([9 => 1], $result);
+        $flag = $this->flagOfType($result, Flag::REPETIDA);
+        $this->assertSame(['mais_uma_passagem', 17000], $this->effectOf($flag));
+        $this->assertSame(Flag::DUVIDA_A_MENOS, $flag->contagemEmDuvida);
+        $this->assertCount(1, $result->openFlags(), 'One doubtful pass, one flag.');
+
+        $repeatAndLatecomer->settings->modoPublicacao = Settings::MODO_TODAS;
+        $result = $repeatAndLatecomer->run('04:00');
         $this->assertLapCounts([9 => 2], $result);
-        $this->assertSame(['nenhum', null], $this->effectOf($this->flagOfType($result, Flag::REPETIDA)));
+        $flag = $this->flagOfType($result, Flag::REPETIDA);
+        $this->assertSame(['nenhum', null], $this->effectOf($flag));
+        $this->assertSame(Flag::DUVIDA_A_MAIS, $flag->contagemEmDuvida);
     }
 
     /**
@@ -314,7 +330,9 @@ final class ConfirmEffectTest extends EngineTestCase
     /**
      * SITUATION: flags about a pass that counts and merely looks odd:
      * - "no_box": recorded at the line while logged in the pit lane;
-     * - "volta_curta": two agreed passes 30 seconds apart;
+     * - "volta_curta": a pass a reviewer added 30 seconds after one the
+     *   counters agree on (a reviewer's word always counts, so the hold
+     *   rule does not apply to it);
      * - "primeira_passagem_tardia": a first pass a lap later than the
      *   field's;
      * - "divergencia_total": paper totals that disagree.
@@ -333,8 +351,9 @@ final class ConfirmEffectTest extends EngineTestCase
 
         $shortLap = RaceScenario::withCounters(3);
         $shortLap->start('00:00');
+        $shortLap->pass(6, '00:20');
         $shortLap->pass(6, '03:00');
-        $shortLap->pass(6, '03:30');
+        $shortLap->addPass(6, '03:30');
         $this->assertSame(['nenhum', null], $this->effectOf($this->flagOfType($shortLap->run('04:00'), Flag::VOLTA_CURTA)));
 
         $lateFirstPass = RaceScenario::withCounters(3);
@@ -357,16 +376,24 @@ final class ConfirmEffectTest extends EngineTestCase
     /**
      * EXPECTED: the two keys are part of what every flag sends to the
      * review screen, next to the keys it always had, and a flag that says
-     * nothing about them defaults to the harmless answer.
+     * nothing about them defaults to the harmless answer. The same goes for
+     * the two keys of round 4: whether the car's count is in doubt
+     * ("contagem_em_duvida": null, "a_mais" or "a_menos") and, for a short
+     * lap, the two passes it lies between ("passagens").
      */
     public function testTheTwoKeysAreAlwaysSent(): void
     {
         $flag = new Flag(Flag::SOLITARIA, [9], [5], '5');
 
         $this->assertSame(
-            ['id', 'tipo', 'carros', 'passagem_ids', 'fonte_id', 'ts_ms', 'sugestao', 'motivo', 'auto_resolvido', 'prioridade', 'efeito_de_confirmar', 'volta_resultante_ms'],
+            ['id', 'tipo', 'carros', 'passagem_ids', 'fonte_id', 'ts_ms', 'sugestao', 'motivo', 'auto_resolvido', 'prioridade', 'efeito_de_confirmar', 'volta_resultante_ms', 'contagem_em_duvida', 'passagens'],
             array_keys($flag->toArray())
         );
+        $this->assertNull($flag->toArray()['contagem_em_duvida']);
+        $this->assertNull($flag->toArray()['passagens']);
+        $this->assertSame(['a_mais', 'a_menos'], [Flag::DUVIDA_A_MAIS, Flag::DUVIDA_A_MENOS]);
+        $flag->contagemEmDuvida = Flag::DUVIDA_A_MENOS;
+        $this->assertSame('a_menos', $flag->toArray()['contagem_em_duvida']);
         $this->assertSame('nenhum', $flag->toArray()['efeito_de_confirmar']);
         $this->assertNull($flag->toArray()['volta_resultante_ms']);
         $this->assertSame(['nenhum', 'mais_uma_passagem'], [Flag::EFEITO_NENHUM, Flag::EFEITO_MAIS_UMA_PASSAGEM]);

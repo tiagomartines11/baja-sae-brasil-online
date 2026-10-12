@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Contagem\Sync;
 
 use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Engine\Settings;
 use Baja\Contagem\Service\ChangeCounter;
 use Baja\Contagem\Service\Clock;
 use Baja\Contagem\Service\ContagemService;
@@ -112,7 +113,7 @@ final class SyncHandler
                 }
                 $prova->reload();
 
-                $stored = self::store($current, $upload, $heartbeat, $nowMs, $service->getSettings()->permitirSimulacao);
+                $stored = self::store($current, $upload, $heartbeat, $nowMs, $service->getSettings());
                 if ($stored['stop_events_stored']) {
                     $service->markChanged(true);
                 }
@@ -140,7 +141,7 @@ final class SyncHandler
      * @param array<string, mixed> $device
      * @return array{stored_uuids: string[], voided_uuids: string[], cars: int[], stop_events_stored: bool, refused: array}
      */
-    private static function store(array $device, UploadContents $upload, DeviceHeartbeat $heartbeat, int $nowMs, bool $simulationAllowed): array
+    private static function store(array $device, UploadContents $upload, DeviceHeartbeat $heartbeat, int $nowMs, Settings $settings): array
     {
         $writer = new EntryWriter(
             $device['fonte_id'],
@@ -149,7 +150,7 @@ final class SyncHandler
             $device['prova_id'],
             $device['usuario'],
             $nowMs,
-            $simulationAllowed
+            $settings
         );
         $result = ['stored_uuids' => [], 'voided_uuids' => [], 'cars' => [], 'stop_events_stored' => false, 'refused' => []];
 
@@ -217,6 +218,13 @@ final class SyncHandler
                 'voided_uuids' => $voidedUuids,
                 'refused' => $refused,
                 'server_now_ms' => $nowMs,
+                // The page anchors its clock to the middle of the trip. With
+                // both ends of our own work it can leave that work out: an
+                // upload that waited a second for the lock would otherwise
+                // look like a second of network delay, half of it wrongly
+                // counted in each direction.
+                'server_received_ms' => $nowMs,
+                'server_sent_ms' => max($nowMs, Clock::nowMs()),
                 'race' => [
                     'largada_ms' => $timeline->largadaMs,
                     'encerramento_ms' => $timeline->encerramentoMs,
@@ -232,6 +240,10 @@ final class SyncHandler
                 'janela_ms' => $context['janela_ms'] ?? null,
                 'abastecimento' => (bool) ($context['abastecimento'] ?? false),
                 'simulacao' => (bool) ($context['simulacao'] ?? false),
+                // For the simulation's own checks: whether counts go to the
+                // official results, and which crossing is "pass zero".
+                'publica' => (bool) ($context['publica'] ?? true),
+                'passagem_inicial' => $context['passagem_inicial'] ?? null,
                 'encerrado' => $heartbeat->closedTheDevice(),
                 'outros_usuarios' => SourcePresence::noteAndListOthers($device['fonte_id'], $device['dispositivo_id'], $device['usuario'], $nowMs),
                 'cars_in_pit' => $isStopLogDevice ? $timeline->carsInPitAt($nowMs) : [],

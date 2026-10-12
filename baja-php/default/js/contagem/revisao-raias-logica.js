@@ -84,6 +84,42 @@ export function raiasDeOcorrencias(janela) {
   return raias;
 }
 
+const NOMES_DE_PARADA = {
+  box_entrada: 'entrou no box',
+  box_saida: 'saiu do box',
+  abastecimento_entrada: 'entrou no abastecimento',
+  abastecimento_saida: 'saiu do abastecimento',
+};
+
+// "carro 12 entrou no box": a pit or fueling event, in words.
+export function descreverParada(parada) {
+  return `carro ${parada.carro} ${NOMES_DE_PARADA[parada.tipo] ?? parada.tipo}`;
+}
+
+// What a mark of the pit or fueling lane says, and its tooltip's warning.
+//   texto   "12 saiu", "12 saiu (inferida)", "12 entrou (sem par)"
+//   aviso   null, or the sentence that explains the marker
+// An INFERRED exit was not logged at the pit lane: a reviewer marked it
+// from a pass at the line, one second before that pass.
+export function rotuloDaMarca(ocorrencia, nome) {
+  if (ocorrencia.carro === null || ocorrencia.carro === undefined) {
+    return { texto: nome, aviso: null };
+  }
+  if (ocorrencia.inferida) {
+    return {
+      texto: `${ocorrencia.carro} ${nome} (inferida)`,
+      aviso: 'INFERIDA: saída marcada por um revisor a partir de uma passagem do carro na linha; ninguém a registrou na hora',
+    };
+  }
+  if (ocorrencia.sem_par) {
+    return {
+      texto: `${ocorrencia.carro} ${nome} (sem par)`,
+      aviso: 'SEM PAR: falta a entrada ou a saída correspondente (quem registrava na outra ponta não marcou)',
+    };
+  }
+  return { texto: `${ocorrencia.carro} ${nome}`, aviso: null };
+}
+
 // Horizontal position of a moment, in pixels from the left edge.
 export function posicaoPx(tsMs, deMs, escalaPxPorSegundo) {
   return Math.round(((tsMs - deMs) / 1000) * escalaPxPorSegundo);
@@ -156,6 +192,8 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
     classes.push('janela-largada');
   } else if (papel === 'apos_encerramento') {
     classes.push('apos-encerramento');
+  } else if (papel === 'retida') {
+    classes.push('retida');
   }
   if (entrada.qualidade_tempo === 'estimado') {
     classes.push('tempo-estimado');
@@ -195,6 +233,10 @@ export function descricaoDoPapel(grupo) {
       return `volta ${grupo.numero_volta}`;
     case 'pendente':
       return 'ainda não conta como volta';
+    case 'retida':
+      return grupo.motivo_retencao === 'dispersao'
+        ? 'RETIDA: os registros dos contadores estão afastados demais entre si para valerem como a mesma passagem (não conta até um revisor confirmar)'
+        : 'RETIDA: perto demais da passagem anterior do carro para ser outra volta (não conta até um revisor confirmar)';
     default:
       // An answer from before "papel" existed.
       return grupo.contado ? `volta ${grupo.numero_volta}` : 'ainda não conta como volta';

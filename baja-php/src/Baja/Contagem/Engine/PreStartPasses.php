@@ -41,6 +41,7 @@ final class PreStartPasses
 
     private Settings $settings;
     private RaceTimeline $timeline;
+    private ?PassFlags $passFlags;
 
     /** @var array<int, Lap[]> laps under the default counting rule */
     private array $referenceLapsByCar;
@@ -55,8 +56,9 @@ final class PreStartPasses
      * @param array<int, Lap[]> $referenceLapsByCar each car's official passes under the default rule
      * @param array<int, true> $validCars cars that take part; empty = every car
      */
-    public function __construct(Settings $settings, RaceTimeline $timeline, array $referenceLapsByCar, array $validCars)
+    public function __construct(Settings $settings, RaceTimeline $timeline, array $referenceLapsByCar, array $validCars, ?PassFlags $passFlags = null)
     {
+        $this->passFlags = $passFlags;
         $this->settings = $settings;
         $this->timeline = $timeline;
         $this->referenceLapsByCar = $referenceLapsByCar;
@@ -81,8 +83,9 @@ final class PreStartPasses
     /**
      * The flag for a car's last group before the start.
      *
-     * The suggestion is to confirm it, unless that would create a first lap
-     * too short to be real: then the group is more likely warm-up, the
+     * The suggestion is to confirm it (only for a group two counters agree
+     * on, and only once the field's median first lap is known: accepting it
+     * adds a lap), unless that would create a first lap too short to be real: then the group is more likely warm-up, the
      * car's real first crossing is the one already counted, and the
      * reviewer is told so without a suggestion. "Too short" is judged
      * against the field's median first lap, because this early in a race
@@ -109,13 +112,29 @@ final class PreStartPasses
             return $flag;
         }
 
-        $flag->sugestao = ['tipo' => Decision::CONFIRMAR, 'passagem_id' => $anchorEntryId];
         $flag->motivo = sprintf(
             'O carro %d foi registrado %d s antes da largada. Se a largada foi marcada com atraso, esta é a passagem inicial dele; sem ela o carro fica com uma volta a menos.',
             $group->carro,
             $secondsBefore
         );
+        // Accepting the suggestion gives the car a lap. That is only
+        // offered on two counters' word, and once the field's first laps
+        // can tell a first crossing from warm-up.
+        if (count($group->realSourceIds()) < 2) {
+            $flag->motivo .= sprintf(' Só %s a registrou, então não há sugestão: confira antes de contar.', $this->sourceName($group));
+        } elseif ($this->medianFirstLapMs === null) {
+            $flag->motivo .= ' Ainda não há primeiras voltas suficientes para dizer se é a passagem inicial ou aquecimento, então por enquanto não há sugestão.';
+        } else {
+            $flag->sugestao = ['tipo' => Decision::CONFIRMAR, 'passagem_id' => $anchorEntryId];
+        }
         return $flag;
+    }
+
+    /** The name of the one counter that recorded the group, when the detector told us the names. */
+    private function sourceName(PassGroup $group): string
+    {
+        $fonteId = $group->realSourceIds()[0] ?? null;
+        return $fonteId !== null && $this->passFlags !== null ? $this->passFlags->sourceName($fonteId) : 'uma contagem';
     }
 
     /**

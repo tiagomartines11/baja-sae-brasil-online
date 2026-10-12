@@ -13,37 +13,40 @@
 //     S + (m - M).
 //
 // How the anchor is measured (midpoint method): we note the monotonic time
-// when a request leaves and when its answer arrives. The server read its
-// clock somewhere in between; the best single guess is the middle, and the
-// guess is wrong by at most half the round trip. So the answer with the
-// SHORTEST round trip gives the best anchor and is the one kept.
+// when a request leaves and when its answer arrives, and the server writes
+// in its answer when the request arrived and when the answer left. The
+// middle of the server's two times happened at the middle of ours, give or
+// take half the time spent travelling. So the answer with the SHORTEST trip
+// gives the best anchor and is the one kept.
 //
-// The system clock is kept only as a witness: its reading goes along with
-// each entry for the audit trail, and it is the fallback for the one case
-// nothing else can cover (see resolveEarlierLoad).
+// The monotonic clock has one known fault: on some phones it stands still
+// while the device sleeps. It can LOSE time; it never jumps ahead. The guard
+// (checkMonotonic) watches for that, with the system clock as its witness.
+// The system clock's reading also goes along with each entry for the audit
+// trail, and it is the fallback for the two cases nothing else can cover
+// (see resolveHeld and resolveEarlierLoad).
+
+import { sampleFrom, contradictsAnchor, isMoreCertainThanAnchor, provesNothingWasLost } from './anchor-samples.js';
 
 export const QUALIDADE_TEMPO = {
     EXATO: 'exato',                // from an anchor of this page load
-    ESTIMADO: 'estimado',          // from the system clock and a remembered anchor
+    ESTIMADO: 'estimado',          // with the help of the system clock
     DESCONHECIDO: 'desconhecido',  // raw system clock; nothing to correct it with
+};
+
+/** What estado() answers; the status bar words the official time from it. */
+export const ESTADO_RELOGIO = {
+    SEM_ANCORA: 'sem_ancora',    // this page load has not heard from the server yet
+    OK: 'ok',
+    VERIFICANDO: 'verificando',  // the anchor is in doubt until the next answer
 };
 
 // A remembered anchor older than this (relative to the entry) is not used.
 export const PERSISTED_ANCHOR_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
-// On some phones the monotonic clock stops while the device sleeps. When the
-// two clocks disagree by more than this about how much time went by, the
-// anchor can no longer be trusted.
+// The system clock may run ahead of the monotonic clock by this much between
+// two checks before the guard suspects that the monotonic clock stood still.
 export const MONOTONIC_GUARD_TOLERANCE_MS = 2000;
-
-// A crystal in a phone may run fast or slow by a few parts in 100 000. An
-// anchor therefore gets a little less certain as it ages (0.1 ms per second,
-// 360 ms per hour), which lets a fresh, slightly slower answer replace a
-// very old, very quick one.
-const DRIFT_PER_MS = 0.0001;
-
-// Extra tolerance before deciding that a new answer CONTRADICTS the anchor.
-const CONTRADICTION_MARGIN_MS = 500;
 
 export class ServerClock {
     /**
@@ -58,9 +61,16 @@ export class ServerClock {
         this.loadId = loadId;
         /** @type {?{serverMs: number, monoMs: number, rttMs: number}} */
         this.anchor = null;
-        // Goes up each time the monotonic clock is caught misbehaving. Two
-        // monotonic readings can only be subtracted inside one segment.
+        // Goes up each time the guard suspects the monotonic clock stood
+        // still. Two monotonic readings can be subtracted without a second
+        // thought only inside one segment.
         this.segment = 0;
+        // The oldest segment the anchor is good for: from there to now the
+        // monotonic clock is known to have run without a gap.
+        this.anchorGoodFromSegment = 0;
+        // Not null while the anchor is SUSPECT (see checkMonotonic).
+        /** @type {?{smallestExcessMs: number}} */
+        this.suspicion = null;
         /** The anchor remembered from an earlier page load (see restorePersisted). */
         this.persisted = null;
         this.lastCheck = { monoMs: monotonicNow(), deviceMs: now() };
@@ -70,89 +80,151 @@ export class ServerClock {
         return this.anchor !== null;
     }
 
-    /** @returns {?number} the server's time right now; null until the first anchor of this page load */
+    /** Whether a time can be worked out right now: an anchor, and no doubt about it. */
+    canStamp() {
+        return this.anchor !== null && this.suspicion === null;
+    }
+
+    /** @returns {string} one of ESTADO_RELOGIO.* */
+    estado() {
+        if (this.anchor === null) {
+            return ESTADO_RELOGIO.SEM_ANCORA;
+        }
+        return this.suspicion === null ? ESTADO_RELOGIO.OK : ESTADO_RELOGIO.VERIFICANDO;
+    }
+
+    /**
+     * The server's time right now, FOR SHOWING: null until the first anchor
+     * of this page load. While the anchor is suspect this keeps answering
+     * from it (the screen says "verificando"); if the monotonic clock did
+     * stand still, the answer is behind the truth by that much, never ahead.
+     * @returns {?number}
+     */
     serverNowMs() {
         return this.anchor === null ? null : this.serverTimeAt(this.monotonicNow());
+    }
+
+    /** The server's time right now, FOR RECORDING AND PROMISING: null also while the anchor is suspect. */
+    trustedServerNowMs() {
+        return this.canStamp() ? this.serverNowMs() : null;
     }
 
     serverTimeAt(monoMs) {
         return Math.round(this.anchor.serverMs + (monoMs - this.anchor.monoMs));
     }
 
-    /** Round trip of the anchor in use (null when none). */
+    /** Travel time of the answer behind the anchor in use (null when none). */
     roundTripMs() {
         return this.anchor === null ? null : this.anchor.rttMs;
     }
 
     /**
-     * @param {number} sentMonoMs     monotonic time when the request left
-     * @param {number} receivedMonoMs monotonic time when the answer arrived
-     * @param {number} serverNowMs    server time written in the answer
+     * @param {number} sentMonoMs       monotonic time when the request left
+     * @param {number} receivedMonoMs   monotonic time when the answer arrived
+     * @param {number} serverReceivedMs server time when the request reached it
+     * @param {number} [serverSentMs]   server time when the answer left; a
+     *        server that writes one time only is taken to answer instantly
      * @returns {boolean} whether this answer became the anchor in use
      */
-    addSample(sentMonoMs, receivedMonoMs, serverNowMs) {
-        const rttMs = receivedMonoMs - sentMonoMs;
-        if (!Number.isFinite(serverNowMs) || !Number.isFinite(rttMs) || rttMs < 0) {
+    addSample(sentMonoMs, receivedMonoMs, serverReceivedMs, serverSentMs = serverReceivedMs) {
+        const sample = sampleFrom(sentMonoMs, receivedMonoMs, serverReceivedMs, serverSentMs);
+        if (sample === null) {
             return false;
         }
-        const candidate = { serverMs: serverNowMs, monoMs: (sentMonoMs + receivedMonoMs) / 2, rttMs };
-        if (this.anchor === null || this.isBetterThanAnchor(candidate)) {
-            this.anchor = candidate;
+        if (this.anchor === null) {
+            return this.takeNewAnchor(sample);
+        }
+        if (this.suspicion !== null) {
+            return this.settleSuspicion(sample);
+        }
+        if (contradictsAnchor(this.anchor, sample) || isMoreCertainThanAnchor(this.anchor, sample)) {
+            this.anchor = sample;
             return true;
         }
         return false;
     }
 
-    isBetterThanAnchor(candidate) {
-        const ageMs = candidate.monoMs - this.anchor.monoMs;
-        const anchorUncertaintyMs = this.anchor.rttMs / 2 + Math.abs(ageMs) * DRIFT_PER_MS;
-        const candidateUncertaintyMs = candidate.rttMs / 2;
-        // What the anchor says the server's clock should read at that moment.
-        const predictedServerMs = this.anchor.serverMs + ageMs;
-        const disagreementMs = Math.abs(candidate.serverMs - predictedServerMs);
-        // If the two disagree by more than both uncertainties together, they
-        // cannot both be right: the monotonic clock misbehaved without the
-        // guard noticing, and the older reading is the one that is stale.
-        if (disagreementMs > anchorUncertaintyMs + candidateUncertaintyMs + CONTRADICTION_MARGIN_MS) {
-            return true;
-        }
-        return candidateUncertaintyMs < anchorUncertaintyMs;
+    /** An anchor that owes nothing to an earlier one: good from the current segment on. */
+    takeNewAnchor(sample) {
+        this.anchor = sample;
+        this.anchorGoodFromSegment = this.segment;
+        this.suspicion = null;
+        return true;
     }
 
     /**
-     * The guard of brief 6.5. Called every second and before every stamp:
-     * compares how far each clock moved since the last call. They normally
-     * agree to a few milliseconds. When they do not, one of them jumped or
-     * stood still, and we cannot tell which, so the anchor is thrown away
-     * and the next sync takes a new one.
+     * The first answer after the guard's doubt decides it. The question is
+     * "did the monotonic clock lose time?", and the server's clock answers:
      *
-     * @returns {boolean} true when the anchor was discarded just now
+     *   - the server's time is what the suspect anchor predicts: nothing was
+     *     lost (it was the system clock that jumped ahead). The anchor is
+     *     trusted again, for everything since before the doubt;
+     *   - it is not, or this answer travelled too slowly to tell: the
+     *     monotonic clock is taken to have stood still. This answer becomes
+     *     a new anchor, good only from the doubt onwards. Replacing a good
+     *     anchor costs a little precision for a while; keeping a stale one
+     *     would cost every later pass a constant error.
+     */
+    settleSuspicion(sample) {
+        if (!provesNothingWasLost(this.anchor, sample, this.suspicion.smallestExcessMs)) {
+            return this.takeNewAnchor(sample);
+        }
+        this.suspicion = null;
+        if (isMoreCertainThanAnchor(this.anchor, sample)) {
+            this.anchor = sample;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * The guard. Called every second, when the page comes back to the front,
+     * around every request and before every stamp: compares how far each
+     * clock moved since the last call. They normally agree to a few
+     * milliseconds. When they do not:
+     *
+     *   - the system clock moved LESS than the monotonic one, or went back:
+     *     the system clock was changed. The monotonic clock cannot run
+     *     ahead, so nothing the page times with was touched: do nothing.
+     *   - the system clock moved MORE: either the monotonic clock stood
+     *     still (a phone that slept) or the system clock was set forward.
+     *     From here the two look the same. The anchor becomes SUSPECT: no
+     *     time is worked out from it (new records are held) until the next
+     *     answer from the server settles it (see settleSuspicion).
+     *
+     * @returns {boolean} true when a doubt arose just now; the caller should
+     *          ask the server at once instead of waiting for the heartbeat
      */
     checkMonotonic() {
         const monoMs = this.monotonicNow();
         const deviceMs = this.now();
-        const monoAdvanceMs = monoMs - this.lastCheck.monoMs;
-        const deviceAdvanceMs = deviceMs - this.lastCheck.deviceMs;
+        const excessMs = (deviceMs - this.lastCheck.deviceMs) - (monoMs - this.lastCheck.monoMs);
         this.lastCheck = { monoMs, deviceMs };
-        if (Math.abs(deviceAdvanceMs - monoAdvanceMs) <= MONOTONIC_GUARD_TOLERANCE_MS) {
+        if (!(excessMs > MONOTONIC_GUARD_TOLERANCE_MS)) {
             return false;
         }
-        this.anchor = null;
+        // Records made from now on are on the far side of a possible gap.
         this.segment++;
+        if (this.anchor !== null) {
+            const earlierExcessMs = this.suspicion === null ? Infinity : this.suspicion.smallestExcessMs;
+            this.suspicion = { smallestExcessMs: Math.min(excessMs, earlierExcessMs) };
+        }
+        // With no anchor there is nothing to doubt, and nothing to settle it
+        // with later: the first anchor will be good from this segment on.
         return true;
     }
 
     /**
      * The time fields of a record made RIGHT NOW (the Enter press, the tap).
-     * With an anchor the final time is known at once. Without one the record
-     * is HELD: `ts_ms` is null, and resolveHeld() fills it in later from the
-     * monotonic reading taken here.
+     * With a trusted anchor the final time is known at once. Without one the
+     * record is HELD: `ts_ms` is null, and resolveHeld() fills it in later
+     * from the monotonic reading taken here.
      */
     stamp() {
         this.checkMonotonic();
         const monoMs = this.monotonicNow();
         const witness = this.witnessFields(monoMs);
-        if (this.anchor === null) {
+        if (!this.canStamp()) {
             return { ...witness, ts_ms: null, time_quality: null, anchor: null };
         }
         return { ...witness, ...this.exactTimeAt(monoMs) };
@@ -201,22 +273,24 @@ export class ServerClock {
     }
 
     /**
-     * The final time of a record HELD in this page load (brief 6.3).
+     * The final time of a record HELD in this page load.
      *
-     * @returns {?object} `{ts_ms, time_quality, anchor}`, or null while there is still no anchor
+     * @returns {?object} `{ts_ms, time_quality, anchor}`, or null while
+     *          there is no anchor, or the one there is is suspect
      */
     resolveHeld(record) {
-        if (this.anchor === null) {
+        if (!this.canStamp()) {
             return null;
         }
-        if (record.clock_segment === this.segment) {
-            // Same stretch of monotonic clock as the anchor: exact, the
-            // record simply happened a known number of milliseconds earlier.
+        if (record.clock_segment >= this.anchorGoodFromSegment) {
+            // No gap in the monotonic clock between the record and the
+            // anchor: exact, the record simply happened a known number of
+            // milliseconds before (or after) it.
             return this.exactTimeAt(record.mono_ms);
         }
-        // The monotonic clock misbehaved between the record and the anchor,
-        // so the two readings cannot be subtracted. The system clock bridges
-        // the gap, and the result says so.
+        // The monotonic clock stood still between the record and the
+        // anchor, so the two readings cannot be subtracted. The system
+        // clock bridges the gap, and the result says so.
         const ageMs = record.ts_device_ms - this.now();
         return {
             ts_ms: this.serverNowMs() + ageMs,
@@ -227,9 +301,9 @@ export class ServerClock {
 
     /**
      * The final time of a record made in an EARLIER page load that never got
-     * an anchor (brief 6.4): typed with no network, then the page was
-     * reloaded or the phone restarted, still with no network. The monotonic
-     * clock of that page load is gone, so only the system clock is left.
+     * an anchor: typed with no network, then the page was reloaded or the
+     * phone restarted, still with no network. The monotonic clock of that
+     * page load is gone, so only the system clock is left.
      */
     resolveEarlierLoad(record) {
         const remembered = this.persisted;
@@ -250,9 +324,10 @@ export class ServerClock {
      * What to write to the disk after each sync: "the server said S when
      * this device's SYSTEM clock said D". It is all a later page load can use.
      * @returns {?{server_ms: number, device_ms: number, rtt_ms: number}}
+     *          null while there is no anchor worth remembering
      */
     anchorToPersist() {
-        if (this.anchor === null) {
+        if (!this.canStamp()) {
             return null;
         }
         return { server_ms: this.serverNowMs(), device_ms: this.now(), rtt_ms: Math.round(this.anchor.rttMs) };
@@ -266,34 +341,4 @@ export class ServerClock {
             && Number.isFinite(stored.rtt_ms);
         this.persisted = usable ? { server_ms: stored.server_ms, device_ms: stored.device_ms, rtt_ms: stored.rtt_ms } : null;
     }
-}
-
-/**
- * Milliseconds between two records of this device (positive when `later` is
- * the later one), read from the best clock the two have in common. It is
- * used for the "same car again too soon" warning, nothing else.
- *
- *   - both have a final server time: that is the truth;
- *   - both made in the same stretch of the same page load: the monotonic clock;
- *   - same page load, but the guard fired in between (one of the two clocks
- *     jumped, and nobody can tell which): the SHORTER of the two readings.
- *     A warning shown for nothing costs a glance; a double entry that gets
- *     no warning costs a reviewer's time later;
- *   - otherwise: the system clock.
- */
-export function elapsedBetween(earlier, later) {
-    if (Number.isFinite(earlier.ts_ms) && Number.isFinite(later.ts_ms)) {
-        return later.ts_ms - earlier.ts_ms;
-    }
-    const deviceMs = later.ts_device_ms - earlier.ts_device_ms;
-    const samePageLoad = earlier.page_load !== undefined && earlier.page_load === later.page_load
-        && Number.isFinite(earlier.mono_ms) && Number.isFinite(later.mono_ms);
-    if (!samePageLoad) {
-        return deviceMs;
-    }
-    const monoMs = later.mono_ms - earlier.mono_ms;
-    if (earlier.clock_segment === later.clock_segment) {
-        return monoMs;
-    }
-    return Math.abs(monoMs) <= Math.abs(deviceMs) ? monoMs : deviceMs;
 }

@@ -54,6 +54,21 @@ final class Ocorrencia
     /** The row this one corrects or cancels, if any. */
     public ?int $substituiId;
 
+    /**
+     * How good the time of a pit lane or fueling event is: 'exato',
+     * 'estimado' or 'desconhecido' (the same words as `Entry::TEMPO_*`). An
+     * event of unknown time carries whatever the phone's clock said, so it
+     * is listed for the reviewer and never paired into a stay.
+     */
+    public string $qualidadeTempo = Entry::TEMPO_EXATO;
+
+    /**
+     * True for an exit nobody logged at the gate: a reviewer inferred it
+     * from a pass at the line ("marcar saída do box"). It is an exit like
+     * any other; the review lanes show it as inferred.
+     */
+    public bool $inferida = false;
+
     public function __construct(int $id, string $tipo, int $tsMs, ?int $carro = null, ?int $substituiId = null)
     {
         $this->id = $id;

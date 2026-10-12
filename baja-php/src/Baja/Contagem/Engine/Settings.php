@@ -85,6 +85,13 @@ final class Settings
     /** Sources must agree within this for a lap to be eligible for best lap. */
     public int $dispersaoMaxMs = 2000;
 
+    /**
+     * How far apart honest entries for one crossing can be. Entries of
+     * different counters further apart than this are not taken as agreeing:
+     * see PassMatcher and the flag "dispersao_alta".
+     */
+    public int $dispersaoAlertaMs = 4000;
+
     /** A source silent for longer than this is shown as offline. */
     public int $fonteOfflineS = 60;
 
@@ -133,6 +140,7 @@ final class Settings
         $settings->duplicataMs = self::positiveInt($raw, 'duplicata_ms', $settings->duplicataMs);
         $settings->janelaRitmoS = self::positiveInt($raw, 'janela_ritmo_s', $settings->janelaRitmoS);
         $settings->dispersaoMaxMs = self::positiveInt($raw, 'dispersao_max_ms', $settings->dispersaoMaxMs);
+        $settings->dispersaoAlertaMs = self::positiveInt($raw, 'dispersao_alerta_ms', $settings->dispersaoAlertaMs);
         $settings->fonteOfflineS = self::positiveInt($raw, 'fonte_offline_s', $settings->fonteOfflineS);
         $settings->recalculoS = self::positiveInt($raw, 'recalculo_s', $settings->recalculoS);
         $settings->dispositivoAusenteS = self::positiveInt($raw, 'dispositivo_ausente_s', $settings->dispositivoAusenteS);
@@ -172,6 +180,7 @@ final class Settings
             'fator_atrasado' => $this->fatorAtrasado,
             'fator_parado' => $this->fatorParado,
             'dispersao_max_ms' => $this->dispersaoMaxMs,
+            'dispersao_alerta_ms' => $this->dispersaoAlertaMs,
             'fonte_offline_s' => $this->fonteOfflineS,
             'recalculo_s' => $this->recalculoS,
             'dispositivo_ausente_s' => $this->dispositivoAusenteS,
@@ -205,6 +214,59 @@ final class Settings
             return true;
         }
         return $expectedMs !== null && $lapMs < $this->fracaoVoltaMinima * $expectedMs;
+    }
+
+    /** How many of a car's most recent laps say what a normal lap is for it. */
+    public const LAPS_FOR_MINIMUM_LAP = 5;
+
+    /** With fewer laps than this a car has no "normal lap" yet. */
+    public const MIN_LAPS_FOR_MINIMUM_LAP = 3;
+
+    /**
+     * The shortest lap that is still believable for one car: two matching
+     * windows, or the configured fraction of the car's own normal lap when
+     * that is longer. A pass closer than this to the car's previous
+     * official pass is held instead of counted (see HoldRule).
+     *
+     * THE CAR'S NORMAL LAP is the SECOND SHORTEST of its last five laps.
+     * Not the median: a car that breaks down or stops twice in a few laps
+     * has a median lap of seven minutes, and its next ordinary lap would
+     * then be "too short" and be held, which makes the lap after it look
+     * twice as long, and so on. Not the shortest either: a phantom pass
+     * that did get counted leaves one very short lap behind, and must not
+     * lower the bar for the pass that follows it. A car needs three laps
+     * to have a normal lap at all; with exactly three, two of which may
+     * well be long ones, it is the shortest of the three.
+     *
+     * It is worked out from the car's own laps and nothing else, so that
+     * recounting one car alone gives the same answer as a full run.
+     *
+     * @param int[]|null $recentLapsMs the car's most recent laps, oldest first
+     */
+    public function minimumPlausibleLapMs(?array $recentLapsMs): int
+    {
+        $minimumMs = 2 * $this->janelaMs;
+        $lapCount = $recentLapsMs === null ? 0 : count($recentLapsMs);
+        if ($lapCount < self::MIN_LAPS_FOR_MINIMUM_LAP) {
+            return $minimumMs;
+        }
+        if ($lapCount > self::LAPS_FOR_MINIMUM_LAP) {
+            $recentLapsMs = array_slice($recentLapsMs, -self::LAPS_FOR_MINIMUM_LAP);
+        }
+        sort($recentLapsMs);
+        $normalLapMs = $lapCount === self::MIN_LAPS_FOR_MINIMUM_LAP ? $recentLapsMs[0] : $recentLapsMs[1];
+        $fromOwnLapsMs = (int) ($this->fracaoVoltaMinima * $normalLapMs);
+        return $fromOwnLapsMs > $minimumMs ? $fromOwnLapsMs : $minimumMs;
+    }
+
+    /**
+     * The spread beyond which entries of different counters are not taken as
+     * the same crossing without a person looking. Never wider than the
+     * matching window itself.
+     */
+    public function agreementSpreadMs(): int
+    {
+        return $this->dispersaoAlertaMs < $this->janelaMs ? $this->dispersaoAlertaMs : $this->janelaMs;
     }
 
     public function firstPassIsLapZero(): bool

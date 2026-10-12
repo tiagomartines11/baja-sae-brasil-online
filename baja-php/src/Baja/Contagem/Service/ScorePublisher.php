@@ -150,7 +150,12 @@ final class ScorePublisher
             foreach ([PublishedValues::VOLTAS, PublishedValues::LAST] as $field) {
                 $published = $dados[$field] ?? null;
                 $computed = $valuesByCar[$carro][$field];
-                if ($published === null || $published != $computed) {
+                // A row a judge created by saving another field (the
+                // classification, say) has no lap count yet. "Nothing" and
+                // a computed zero are the same statement, not a divergence.
+                $differs = $published === null ? $computed !== 0 : $published != $computed;
+                if ($differs) {
+                    $outcome->corrections[] = ['carro' => (int) $carro, 'campo' => $field, 'publicado' => $published, 'calculado' => $computed];
                     error_log(sprintf(
                         'Contagem\ScorePublisher: %s/%s carro %d: %s publicado era %s, o cálculo completo dá %d. Corrigido.',
                         $this->prova->getEventoId(),

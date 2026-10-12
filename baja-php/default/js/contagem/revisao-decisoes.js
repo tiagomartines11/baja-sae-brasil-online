@@ -2,6 +2,8 @@
 // expects, and turns the server's refusals into sentences.
 // Pure functions, tested with `node --test`.
 //
+import { acaoDeAceitar } from './revisao-alertas.js';
+
 // A request always says what the reviewer was looking at ("passagem_ids"
 // and their "assinatura"). If any of it changed on the server in the
 // meantime the decision is refused with HTTP 409 instead of being applied
@@ -16,80 +18,6 @@ export function decisaoAceitar(alerta) {
     return null;
   }
   return { ...alerta.sugestao };
-}
-
-// ---- the K button ---------------------------------------------------------
-//
-// K means "confirmar" on the flag's first entry. What that DOES depends on
-// the flag, and the button has to say it:
-//
-//   - on most flags the pass already counts, and confirming only tells the
-//     engine to stop flagging it;
-//   - on a lone entry, a probable swap, an unclassified car and the like the
-//     pass does not count yet, and confirming gives the car ONE MORE PASS on
-//     a single counter's word.
-//
-// The second kind used to be labelled "Manter ambas" like the first, and a
-// reviewer who meant "leave it alone" added a lap. The server says which
-// kind a flag is ("efeito_de_confirmar"); for a flag from before that
-// existed the type decides.
-
-const TIPOS_QUE_SOMAM_PASSAGEM = [
-  'solitaria', 'troca_provavel', 'carro_nao_classificado', 'antes_da_largada', 'tempo_desconhecido',
-];
-
-const ROTULOS_DE_CONTAR = {
-  carro_nao_classificado: 'Contar mesmo assim (+1 volta)',
-  antes_da_largada: 'Contar como passagem inicial',
-};
-
-// What K does on a flag. Null when the flag has no K at all:
-//   - "repetida": the two choices are to void the second entry (A or V) or
-//     to say it was another car; "keep both" would count the car twice;
-//   - a flag about no entry.
-// Otherwise {rotulo, maisUmaPassagem}.
-export function acaoDeConfirmar(alerta) {
-  if (!alerta || alerta.tipo === 'repetida' || (alerta.passagem_ids ?? []).length === 0) {
-    return null;
-  }
-  const efeito = alerta.efeito_de_confirmar
-    ?? (TIPOS_QUE_SOMAM_PASSAGEM.includes(alerta.tipo) ? 'mais_uma_passagem' : 'nenhum');
-  if (efeito === 'mais_uma_passagem') {
-    return { rotulo: ROTULOS_DE_CONTAR[alerta.tipo] ?? 'Contar esta passagem (+1 volta)', maisUmaPassagem: true };
-  }
-  return { rotulo: 'Está correto, parar de avisar', maisUmaPassagem: false };
-}
-
-// The decision K sends, or null when the flag has no K.
-export function decisaoConfirmarAlerta(alerta) {
-  return acaoDeConfirmar(alerta) ? { tipo: 'confirmar', passagem_id: alerta.passagem_ids[0] } : null;
-}
-
-// The same rule as the engine's Settings::isImpossiblyShortLap(): under two
-// matching windows whatever the pace, or under the configured fraction of
-// the lap expected of that car.
-export function voltaImpossivelmenteCurta(voltaMs, configuracoes, voltaEsperadaMs) {
-  if (voltaMs === null || voltaMs === undefined) {
-    return false;
-  }
-  const janelaMs = Number(configuracoes?.janela_ms) || 20000;
-  if (voltaMs < 2 * janelaMs) {
-    return true;
-  }
-  const fracao = Number(configuracoes?.fracao_volta_minima) || 0.5;
-  return voltaEsperadaMs !== null && voltaEsperadaMs !== undefined && voltaMs < fracao * voltaEsperadaMs;
-}
-
-// Must the reviewer be asked "are you sure?" before K on this flag? Yes
-// when K adds a pass and the lap it creates is impossibly short. Returns
-// that lap in ms (for the question), or null when no question is needed.
-export function voltaCurtaAoContar(alerta, estado) {
-  if (!acaoDeConfirmar(alerta)?.maisUmaPassagem) {
-    return null;
-  }
-  const voltaMs = alerta.volta_resultante_ms ?? null;
-  const carro = (estado?.carros ?? []).find((linha) => linha.carro === (alerta.carros ?? [])[0]);
-  return voltaImpossivelmenteCurta(voltaMs, estado?.configuracoes, carro?.volta_esperada_ms ?? null) ? voltaMs : null;
 }
 
 // Which entry "Anular" (V) acts on:
@@ -139,6 +67,15 @@ export function decisaoDesfazer(decisaoId) {
 // that `passagemId` is in, in one step.
 export function decisaoDescartarPassagem(passagemId) {
   return { tipo: 'descartar_passagem', passagem_id: passagemId };
+}
+
+// The entries a decision is about: one ("passagem_id"), or several for
+// "reatribuir_grupo" ("passagem_ids"). Empty for a decision about no entry.
+export function entradasDaDecisao(decisao) {
+  if (Array.isArray(decisao?.passagem_ids)) {
+    return decisao.passagem_ids;
+  }
+  return decisao?.passagem_id === undefined || decisao?.passagem_id === null ? [] : [decisao.passagem_id];
 }
 
 // "Encerrar exclusão em h:mm:ss": the open-ended exclusion `decisaoId` gets
@@ -203,11 +140,36 @@ export function podeDecidirSobreAlerta({ janelaCarregada, desatualizada }) {
 // so such a decision has to be sent as a decision on that one chip instead.
 export function pedidoParaAlerta(decisao, alerta, estado, assinaturaDaJanela) {
   const ids = [...(alerta.passagem_ids ?? [])];
-  const alvo = decisao?.passagem_id;
-  if (alvo !== undefined && alvo !== null && !ids.includes(alvo)) {
+  if (entradasDaDecisao(decisao).some((alvo) => !ids.includes(alvo))) {
     return null;
   }
   return pedido(decisao, estado, ids, assinaturaDaJanela ?? null);
+}
+
+// What "Aceitar sugestão" (A) sends for a flag: the list of request bodies
+// for contagem_decidir.php, in order. Today always one request (a suggestion
+// that moves several entries is still ONE decision, stored in one step), and
+// [] when the flag has no suggestion or its suggestion cannot be sent as a
+// decision on the flag (it names an entry that is not one of the flag's).
+//
+// No question is asked here; see sugestaoPedeConfirmacao(). The screen and
+// the simulation runner (scripts/contagem-simular.mjs) both build their
+// requests with this, so the runner accepts suggestions exactly as a
+// reviewer's click does.
+//
+// `assinaturaDaJanela`: the signature the flag had when the timeline on
+// screen was loaded. A caller with no timeline sends the flag's own.
+export function pedidosDaSugestao(alerta, estado, assinaturaDaJanela = alerta?.assinatura ?? null) {
+  const decisao = decisaoAceitar(alerta);
+  const pedidoDoAlerta = decisao ? pedidoParaAlerta(decisao, alerta, estado, assinaturaDaJanela) : null;
+  return pedidoDoAlerta ? [pedidoDoAlerta] : [];
+}
+
+// Does the screen ask "are you sure?" before sending the flag's suggestion?
+// True for every suggestion that gives a car a pass or takes one away.
+// `estado` is only needed for the wording, not for the answer.
+export function sugestaoPedeConfirmacao(alerta, estado = null) {
+  return (acaoDeAceitar(alerta, estado)?.pergunta ?? null) !== null;
 }
 
 // A decision taken on one chip of the timeline.
@@ -248,17 +210,56 @@ export function exclusoesAbertas(estado) {
     && (decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined));
 }
 
+// The entries of open "repetida" flags that are the REPEAT: the later one
+// of each pair. "Está correto, parar de avisar" on such an entry is "keep
+// both" under another name, and the flag itself has no such button for that
+// reason; the chip must not bring it back.
+export function repeticoesEmAberto(estado) {
+  const ids = new Set();
+  for (const alerta of estado?.alertas_abertos ?? []) {
+    if (alerta.tipo !== 'repetida') {
+      continue;
+    }
+    if (alerta.sugestao?.tipo === 'anular' && alerta.sugestao.passagem_id) {
+      ids.add(alerta.sugestao.passagem_id);
+    } else {
+      (alerta.passagem_ids ?? []).slice(1).forEach((id) => ids.add(id));
+    }
+  }
+  return ids;
+}
+
+// Would "confirmar" on this entry give its car one more official pass?
+//   - an entry the engine voided as a repeat: yes, it comes back as a pass;
+//   - an entry in a pass group: what the server says ("soma_ao_confirmar":
+//     pending, held, or typed before the start). A pass the rules of the
+//     race leave out (start window, after the finish) stays out whoever
+//     confirms it, so the button must not promise a lap there.
+export function confirmarSomaPassagem(entrada) {
+  if (entrada.grupo) {
+    return entrada.grupo.soma_ao_confirmar ?? !entrada.grupo.contado;
+  }
+  return Boolean(entrada.anulada_auto);
+}
+
 // Returns the list of actions offered for a timeline entry:
 //   {acao: 'remover', decisaoId}    a pass added by a reviewer: undo the addition
 //   {acao: 'restaurar', decisaoId}  an entry somebody voided: undo the void
 //   {acao: 'desfazer_troca', decisaoId}  a reassigned entry: back to the typed car
 //   {acao: 'anular'} {acao: 'reatribuir'}
-//   {acao: 'confirmar', maisUmaPassagem}  true when the entry's pass does not
-//        count today, so confirming it gives the car one more pass (a double
-//        tap the engine voided, a lone entry, a pass before the start)
+//   {acao: 'confirmar', maisUmaPassagem}  true when confirming gives the car
+//        one more pass (see confirmarSomaPassagem)
 //   {acao: 'descartar_passagem', registros}  void the whole pass group at
 //        once; offered when the pass has more than one entry
-export function acoesDaEntrada(entrada) {
+//
+// "confirmar" is NOT offered:
+//   - on the later entry of an open repeat (`repeticoes`, see repeticoesEmAberto);
+//   - on an entry of unknown time: it cannot count (nobody knows when it
+//     was), the pass is added by hand with a typed time instead;
+//   - on an entry that is in no pass and was not voided as a repeat (its
+//     source was off or excluded, or it is before the start): there is
+//     nothing to confirm.
+export function acoesDaEntrada(entrada, repeticoes = new Set()) {
   if (entrada.adicionada_por_revisor) {
     // Its id is minus the id of the "adicionar" decision that created it.
     return [{ acao: 'remover', decisaoId: -entrada.id }];
@@ -273,8 +274,12 @@ export function acoesDaEntrada(entrada) {
   if (troca) {
     acoes.push({ acao: 'desfazer_troca', decisaoId: troca.id });
   }
-  if (!decisoes.some((decisao) => decisao.tipo === 'confirmar')) {
-    acoes.push({ acao: 'confirmar', maisUmaPassagem: !entrada.grupo?.contado });
+  const podeConfirmar = !decisoes.some((decisao) => decisao.tipo === 'confirmar')
+    && !repeticoes.has(entrada.id)
+    && entrada.qualidade_tempo !== 'desconhecido'
+    && (Boolean(entrada.grupo) || Boolean(entrada.anulada_auto));
+  if (podeConfirmar) {
+    acoes.push({ acao: 'confirmar', maisUmaPassagem: confirmarSomaPassagem(entrada) });
   }
   const registrosDoGrupo = (entrada.grupo?.passagem_ids ?? []).length;
   if (registrosDoGrupo > 1) {
@@ -286,3 +291,6 @@ export function acoesDaEntrada(entrada) {
 export {
   descreverDecisao, descreverSugestao, mensagemDeConflito, perguntaSobreVoltaCurta,
 } from './revisao-frases.js';
+export {
+  acaoDeConfirmar, decisaoConfirmarAlerta, voltaCurtaAoContar, voltaImpossivelmenteCurta,
+} from './revisao-alertas.js';

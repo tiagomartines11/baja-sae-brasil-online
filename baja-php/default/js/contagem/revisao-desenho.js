@@ -7,6 +7,7 @@ import { chaveAoVivo, chaveDoDetalhe as chaveDoPainel } from './revisao-conexao.
 import { podeDecidirSobreAlerta } from './revisao-decisoes.js';
 import { desenharDetalheDeAlerta, desenharDetalheDeCarro } from './revisao-detalhe.js';
 import { el, estaDigitandoEm, substituir } from './revisao-dom.js';
+import { avisoDeReconciliacao } from './revisao-frases.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { desenharFontes, desenharHistorico, desenharTabelaDeCarros } from './revisao-tabela.js';
 import { agoraServidorMs, horarioOficialMs, pagina, semConexao, tela } from './revisao-tela.js';
@@ -141,6 +142,14 @@ export function criarDesenho(ganchos) {
     desenharBarra(pagina.barra, tela.estado, agoraServidorMs(), horarioOficialMs());
     // Permanent while the prova accepts simulated entries.
     pagina.faixaSimulacao?.classList.toggle('oculto', !tela.estado.simulacao);
+    // Permanent while the test preset is applied: the time settings are a rehearsal's.
+    pagina.faixaPredefinicao?.classList.toggle('oculto', !tela.estado.predefinicao_de_teste);
+    // The fast count and the full count disagreed, and the full one won.
+    const reconciliacao = avisoDeReconciliacao(tela.estado.correcoes_da_reconciliacao, agoraServidorMs());
+    if (pagina.avisoReconciliacao) {
+      pagina.avisoReconciliacao.textContent = reconciliacao ?? '';
+      pagina.avisoReconciliacao.className = reconciliacao ? 'revisao-aviso erro' : 'revisao-aviso oculto';
+    }
 
     const chave = chaveDasListas();
     if (chave !== desenhado.listas) {

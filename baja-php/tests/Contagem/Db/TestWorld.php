@@ -179,7 +179,10 @@ final class TestWorld
                 $prefix . 'feed',
                 $prefix . 'mudancas',
                 $prefix . 'contexto',
-                $prefix . 'snapshot'
+                $prefix . 'snapshot',
+                $prefix . 'snapshot_feed',
+                $prefix . 'snapshot_resumo',
+                $prefix . 'correcoes'
             );
         }
         // The snapshot also has a copy in a local file (see SnapshotStore).

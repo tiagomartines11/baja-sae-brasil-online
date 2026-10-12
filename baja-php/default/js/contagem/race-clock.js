@@ -96,9 +96,24 @@ export function formatTimeOfDay(timestampMs, timeZone = null) {
     return timeFormatterFor(timeZone).format(new Date(timestampMs));
 }
 
-/** Text of "Horário oficial" (brief 6.7). */
-export function describeOfficialTime(serverNowMs, timeZone = null) {
-    return Number.isFinite(serverNowMs) ? formatTimeOfDay(serverNowMs, timeZone) : TEXTO_SINCRONIZANDO;
+export const TEXTO_VERIFICANDO = 'verificando';
+
+/**
+ * Text of "Horário oficial".
+ *
+ * @param {?number} serverNowMs ServerClock.serverNowMs()
+ * @param {?string} [timeZone]
+ * @param {?string} [estadoRelogio] ServerClock.estado(). While it is
+ *        'verificando' the page doubts its anchor (see server-clock.js): the
+ *        time is still shown, since it is the best there is and usually
+ *        right, but it says so. "sincronizando…" is only for no time at all.
+ */
+export function describeOfficialTime(serverNowMs, timeZone = null, estadoRelogio = null) {
+    if (!Number.isFinite(serverNowMs)) {
+        return TEXTO_SINCRONIZANDO;
+    }
+    const time = formatTimeOfDay(serverNowMs, timeZone);
+    return estadoRelogio === TEXTO_VERIFICANDO ? time + ' (' + TEXTO_VERIFICANDO + ')' : time;
 }
 
 /**

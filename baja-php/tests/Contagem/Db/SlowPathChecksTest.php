@@ -111,6 +111,104 @@ final class SlowPathChecksTest extends DbTestCase
         $log = (string) file_get_contents($this->errorLogPath);
         $this->assertStringContainsString('carro ' . self::CAR_A, $log);
         $this->assertStringContainsString('VOLTAS', $log);
+
+        // A line in a server log reaches nobody on race day, so the review
+        // screen is given the same fact to show.
+        $shown = $this->service->lastReconcileCorrections();
+        $this->assertCount(1, $shown);
+        $this->assertEquals(
+            ['carro' => self::CAR_A, 'campo' => 'VOLTAS', 'publicado' => 7, 'calculado' => 2, 'quando_ms' => $this->at(610)],
+            $shown[0]
+        );
+    }
+
+    /**
+     * SITUATION: a slow recalculation has finished computing and is about
+     * to store its snapshot. At that very moment another request holds the
+     * count lock (a reviewer's decision is being applied).
+     *
+     * WHAT WENT WRONG BEFORE: "is the stored snapshot newer than mine?" and
+     * "store mine" were two separate steps with no lock around them. The
+     * decision could store its snapshot between the two, and the older one
+     * landed on top of it.
+     *
+     * EXPECTED: the check and the write happen under the count lock. While
+     * somebody else holds it, the recalculation does not store at all: the
+     * stored snapshot stays as it was, and the next request tries again.
+     */
+    public function testASnapshotIsOnlyStoredWhileHoldingTheCountLock(): void
+    {
+        $this->oneMorePass(self::CAR_A, 60);
+        $storedBefore = $this->snapshotAt(610);
+        $this->oneMorePass(self::CAR_A, 240);
+        Clock::freezeAt($this->at(620));
+        $this->newRequest();
+        $input = $this->service->loadInput();
+        $result = \Baja\Contagem\Engine\Engine::run($input);
+        $snapshots = new \Baja\Contagem\Service\SnapshotService($this->prova, $this->service, new ChangeCounter(self::EVENTO_ID, self::PROVA_ID));
+
+        $theDecision = $this->holdLockFromAnotherRequest();
+        $computed = $snapshots->storeFromRun($input, $result, $this->changesNow());
+        $theDecision = null;
+
+        $this->assertSame($this->at(620), $computed->geradoEmMs, 'the request that computed it still gets its answer');
+        $this->assertSame($storedBefore->geradoEmMs, (new \Baja\Contagem\Service\SnapshotStore($this->prova))->get()->geradoEmMs, 'but nothing was stored');
+    }
+
+    /**
+     * SITUATION: a judge saved car 22's classification on the scores page
+     * before the car has turned a lap. Its score row exists and holds that
+     * one field: no VOLTAS, no LAST.
+     *
+     * WHAT WENT WRONG BEFORE: the check on the fast path read "no VOLTAS"
+     * as "differs from the computed 0" and reported a divergence, one
+     * false alarm per such car and recalculation.
+     *
+     * EXPECTED: nothing is reported. "Nothing published" and "zero laps"
+     * say the same thing.
+     */
+    public function testACarWithoutAPublishedCountAndWithoutLapsIsNotADivergence(): void
+    {
+        $this->setManualField(self::CAR_B, 'APTO', 'SIM');
+        $this->oneMorePass(self::CAR_A, 60);
+
+        $this->snapshotAt(610);
+
+        $this->assertSame([], $this->service->lastPublishOutcome()->correctedCars);
+        $this->assertSame([], $this->service->lastReconcileCorrections());
+        $this->assertSame('', (string) file_get_contents($this->errorLogPath));
+    }
+
+    /**
+     * SITUATION: car 11 has two published laps. Race control then cancels
+     * the only start of the race (it asks for a specific confirmation
+     * first, promising that the published results are cleared).
+     *
+     * WHAT WENT WRONG BEFORE: nothing was cleared. Without a start the
+     * publisher stood back completely, as it does for a prova that never
+     * started, and the two laps stayed on the results page.
+     *
+     * EXPECTED: the published count goes to zero. (A prova that never had
+     * a start here is still left alone: its numbers may be imported.)
+     */
+    public function testCancellingTheOnlyStartClearsThePublishedCounts(): void
+    {
+        $this->oneMorePass(self::CAR_A, 60);
+        $this->oneMorePass(self::CAR_A, 240);
+        $this->oneMorePass(self::CAR_A, 410);
+        $this->assertEquals(2, $this->publishedData(self::CAR_A)['VOLTAS']);
+        $startId = (int) $this->fetchValue(
+            'SELECT ocorrencia_id FROM contagem_ocorrencia WHERE evento_id = ? AND prova_id = ? AND tipo = ?',
+            [self::EVENTO_ID, self::PROVA_ID, 'largada']
+        );
+
+        $this->newRequest();
+        $this->service->withLock(function () use ($startId): void {
+            $this->service->recordOcorrencia('cancelamento', $this->at(0), null, self::USER_PREFIX . 'controle', $startId);
+        });
+
+        $this->assertEquals(0, $this->publishedData(self::CAR_A)['VOLTAS']);
+        $this->assertEquals(0, $this->publishedData(self::CAR_A)['LAST']);
     }
 
     /**

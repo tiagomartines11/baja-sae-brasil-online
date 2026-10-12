@@ -6,6 +6,7 @@ namespace Baja\Contagem\Sync;
 use Baja\Contagem\Engine\Data\Decision;
 use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\Ocorrencia;
+use Baja\Contagem\Engine\Settings;
 use Propel\Runtime\Propel;
 
 /**
@@ -44,11 +45,16 @@ final class EntryWriter
     private ?string $usuario;
     private int $nowMs;
     private bool $simulationAllowed;
+    private bool $fuelingInUse;
 
     /** @var array<int, array{uuid: string, motivo: string}> entries that will never be stored, with the reason */
     public array $refused = [];
 
-    public function __construct(int $fonteId, int $dispositivoId, string $eventoId, string $provaId, ?string $usuario, int $nowMs, bool $simulationAllowed)
+    /**
+     * @param Settings $settings the prova's settings as read INSIDE the count lock:
+     *        whether simulated records and fueling events are accepted
+     */
+    public function __construct(int $fonteId, int $dispositivoId, string $eventoId, string $provaId, ?string $usuario, int $nowMs, Settings $settings)
     {
         $this->fonteId = $fonteId;
         $this->dispositivoId = $dispositivoId;
@@ -56,7 +62,8 @@ final class EntryWriter
         $this->provaId = $provaId;
         $this->usuario = $usuario;
         $this->nowMs = $nowMs;
-        $this->simulationAllowed = $simulationAllowed;
+        $this->simulationAllowed = $settings->permitirSimulacao;
+        $this->fuelingInUse = $settings->abastecimento;
     }
 
     /**
@@ -87,7 +94,7 @@ final class EntryWriter
             }
             $acknowledged[] = $uuid;
             $cars[$car] = true;
-            $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'ts_ms' => $tsMs, 'raw' => $entry];
+            $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'raw' => $entry] + self::storableTime($tsMs, $entry);
         }
 
         $alreadyStored = $this->existingValues(
@@ -119,10 +126,10 @@ final class EntryWriter
                 $entry['uuid'],
                 $entry['car'],
                 $entry['ts_ms'],
-                self::timeQualityOf($raw),
+                $entry['quality'],
                 // For audit only: the device's own clock and the anchor the
                 // page derived ts_ms from. Nothing computes with them.
-                UploadFields::intOrNull($raw['ts_device_ms'] ?? null) ?? $entry['ts_ms'],
+                $entry['ts_device_ms'],
                 UploadFields::intOrNull($anchor['server_ms'] ?? null),
                 self::boundedInt($anchor['rtt_ms'] ?? null),
                 UploadFields::intOrNull($anchor['age_ms'] ?? null),
@@ -243,15 +250,20 @@ final class EntryWriter
             if ($car === null || $tsMs === null || !in_array($tipo, Ocorrencia::TIPOS_DE_PARADA, true)) {
                 continue;
             }
-            // The table has no column for the mode of a stop event, so a
-            // simulated one cannot be told apart once stored. All the more
-            // reason to keep it out of a prova that is not a rehearsal.
             if ($this->isForbiddenSimulation($event)) {
                 $this->refused[] = ['uuid' => $uuid, 'motivo' => 'simulacao_nao_permitida'];
                 continue;
             }
+            // A phone whose page was opened before the fueling station was
+            // switched off may still offer that area. Stored, its events
+            // would change car statuses and lap times of a race that is
+            // not supposed to have a fueling station at all.
+            if (in_array($tipo, Ocorrencia::TIPOS_ABASTECIMENTO, true) && !$this->fuelingInUse) {
+                $this->refused[] = ['uuid' => $uuid, 'motivo' => 'abastecimento_desligado'];
+                continue;
+            }
             $acknowledged[] = $uuid;
-            $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'tipo' => $tipo, 'ts_ms' => $tsMs];
+            $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'tipo' => $tipo, 'raw' => $event] + self::storableTime($tsMs, $event);
         }
 
         $alreadyStored = $this->existingValues(
@@ -262,8 +274,9 @@ final class EntryWriter
 
         $insert = Propel::getWriteConnection('resultados')->prepare(
             'INSERT INTO contagem_ocorrencia
-                 (evento_id, prova_id, tipo, equipe_numero, ts_ms, usuario, criado_em_ms, uuid_cliente)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                 (evento_id, prova_id, tipo, equipe_numero, ts_ms, usuario, criado_em_ms, uuid_cliente,
+                  qualidade_tempo, ts_dispositivo_ms, modo_entrada)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
         $newCount = 0;
@@ -271,6 +284,7 @@ final class EntryWriter
             if (isset($alreadyStored[$key])) {
                 continue;
             }
+            $mode = $event['raw']['mode'] ?? null;
             $insert->execute([
                 $this->eventoId,
                 $this->provaId,
@@ -280,11 +294,43 @@ final class EntryWriter
                 $this->usuario,
                 $this->nowMs,
                 $event['uuid'],
+                $event['quality'],
+                $event['ts_device_ms'],
+                is_string($mode) && preg_match('/^[a-z_]{1,16}$/', $mode) === 1 ? $mode : null,
             ]);
             $newCount++;
         }
 
         return ['uuids' => $acknowledged, 'new' => $newCount];
+    }
+
+    /**
+     * The three time columns of a record, from what the client sent.
+     *
+     * A time that cannot be computed with (negative, or so large that
+     * arithmetic on it overflows; see UploadFields::TIME_LIMIT_MS) is still
+     * not a reason to refuse the record. It is stored with the nearest
+     * usable time, marked as of unknown time (so it is never counted or
+     * paired automatically), and the value the client sent is kept beside
+     * it for whoever investigates.
+     *
+     * @param array<string, mixed> $record the element of the request
+     * @return array{ts_ms: int, quality: string, ts_device_ms: int}
+     */
+    private static function storableTime(int $tsMs, array $record): array
+    {
+        if (!UploadFields::isUsableTime($tsMs)) {
+            return [
+                'ts_ms' => UploadFields::clampTime($tsMs),
+                'quality' => Entry::TEMPO_DESCONHECIDO,
+                'ts_device_ms' => $tsMs,
+            ];
+        }
+        return [
+            'ts_ms' => $tsMs,
+            'quality' => self::timeQualityOf($record),
+            'ts_device_ms' => UploadFields::intOrNull($record['ts_device_ms'] ?? null) ?? $tsMs,
+        ];
     }
 
     /**

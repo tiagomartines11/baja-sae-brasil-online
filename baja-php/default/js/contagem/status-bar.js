@@ -2,7 +2,7 @@
 // the count page and the pit page. Reads nothing, decides nothing: it turns a
 // state object into text.
 
-import { describeOfficialTime, describeRaceClock, formatTimeOfDay } from './race-clock.js';
+import { describeOfficialTime, describeRaceClock, formatTimeOfDay, TEXTO_VERIFICANDO } from './race-clock.js';
 import { describeBanner, describeConnection } from './status-messages.js';
 
 export function createStatusBar(documentRef, config) {
@@ -78,12 +78,14 @@ export function createStatusBar(documentRef, config) {
          * Called a few times per second; cheap on purpose.
          * @param {?number} serverNowMs ServerClock.serverNowMs(): null until
          *        this page load has heard from the server
+         * @param {?string} [estadoRelogio] ServerClock.estado()
          */
-        renderClock(state, serverNowMs) {
+        renderClock(state, serverNowMs, estadoRelogio = null) {
             const race = state.servidor ? state.servidor.race : null;
             const description = describeRaceClock(race, serverNowMs);
-            horarioOficial.textContent = describeOfficialTime(serverNowMs, config.fuso || null);
+            horarioOficial.textContent = describeOfficialTime(serverNowMs, config.fuso || null, estadoRelogio);
             horarioOficial.classList.toggle('sincronizando', serverNowMs === null);
+            horarioOficial.classList.toggle('verificando', serverNowMs !== null && estadoRelogio === TEXTO_VERIFICANDO);
             relogio.textContent = description.texto;
             estadoCorrida.textContent = description.rotulo;
             estadoCorrida.className = 'estado-corrida estado-' + description.estado;

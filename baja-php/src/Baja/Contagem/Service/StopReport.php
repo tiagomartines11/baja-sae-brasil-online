@@ -31,7 +31,8 @@ final class StopReport
         $timeline = RaceContext::timelineOf($service->raceContext());
 
         $rows = [];
-        foreach ($service->loadTeams(true) as $carro => $team) {
+        // The cars of the race: present AND classified, as everywhere else.
+        foreach ($service->carRoster()->classified() as $carro => $team) {
             $row = ['numero' => $carro, 'equipe' => $team['nome']];
             foreach (self::AREAS as $area => $prefix) {
                 $stats = StopStats::forCar($timeline, $area, (int) $carro, $nowMs);

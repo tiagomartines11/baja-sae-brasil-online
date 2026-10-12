@@ -20,6 +20,13 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * - a reviewer's word counts (a confirmed group, an added pass);
  * - a car that is present but not classified gets no official pass on the
  *   counters' word alone, however many of them agree.
+ *
+ * AGREEMENT MEANS CLOSE TOGETHER. Counters who saw the same crossing type
+ * it within a few seconds of each other. A group whose entries are spread
+ * wider than `dispersao_alerta_ms` with no two of them close (PassMatcher
+ * marks it `dispersa`) is not two counters agreeing: it is two entries that
+ * may or may not be the same crossing. It is HELD: not counted, shown as
+ * pending and flagged, until a reviewer confirms it.
  */
 final class PublishRule
 {
@@ -76,6 +83,11 @@ final class PublishRule
                     // it by agreement.
                     $group->contado = $group->referencia;
                 }
+                if ($group->dispersa && !$group->referencia) {
+                    $group->retidaNaReferencia = true;
+                    $group->retida = !$group->contado;
+                    $group->motivoRetencao = PassGroup::RETIDA_DISPERSAO;
+                }
             }
         }
         return $mode;
@@ -89,8 +101,9 @@ final class PublishRule
         }
         // Two entries are two sources: a group holds at most one entry per
         // source, and the reviewer's own (an added pass) was dealt with above.
+        // They agree unless they are too far apart to be taken as one crossing.
         if (count($group->entries) >= 2) {
-            return true;
+            return !$group->dispersa;
         }
 
         // A single source is enough only when it is the only one that was

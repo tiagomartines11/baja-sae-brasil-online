@@ -433,4 +433,40 @@ final class RaceControlTest extends EngineTestCase
 
         $this->assertSame(RaceScenario::ms('00:00'), $race->run('06:00')->timeline->largadaMs);
     }
+
+    /**
+     * SITUATION: the race-control page needs to know which rows are in
+     * force, for instance to offer "corrigir" on them. A red flag at 05:00
+     * was corrected to 06:00, and that correction was corrected again to
+     * 06:30. A restart at 08:00 was corrected to 08:10 and the correction
+     * cancelled.
+     *
+     * WHAT WENT WRONG (before): the page had its own idea of "in force",
+     * which skipped every row that had ever been corrected. After one
+     * correction the event could not be corrected again.
+     *
+     * EXPECTED: there is ONE answer, `RaceTimeline::rowsInForce()`, and the
+     * timeline itself uses it. In force, oldest first: the start, the
+     * ORIGINAL restart (its correction was cancelled) and the LAST
+     * correction of the red flag. The rows may be given in any order.
+     */
+    public function testThereIsOneDefinitionOfTheRowsInForce(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $start = $race->start('00:00');
+        $flag = $race->redFlag('05:00');
+        $restart = $race->restart('08:00');
+        $firstCorrection = $race->correct($flag, '06:00');
+        $secondCorrection = $race->correct($firstCorrection, '06:30');
+        $restartCorrection = $race->correct($restart, '08:10');
+        $race->cancel($restartCorrection);
+        $input = $race->input('10:00');
+
+        $inForce = RaceTimeline::rowsInForce(array_reverse($input->ocorrencias));
+
+        $this->assertSame([$start, $restart, $secondCorrection], array_map(fn(Ocorrencia $o) => $o->id, $inForce));
+        $timeline = $race->run('10:00')->timeline;
+        $this->assertSame($inForce, $timeline->eventosEmVigor);
+        $this->assertSame([[RaceScenario::ms('06:30'), RaceScenario::ms('08:00')]], $timeline->redFlagIntervals);
+    }
 }

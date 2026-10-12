@@ -3,8 +3,9 @@
 // Background: at the pit lane, and at the fueling station when the prova has
 // one, volunteers record every car that enters and every car that leaves.
 // Usually two people do it, one at each end, each on a phone: one records
-// entries, the other exits. The page opens on a choice (which area, then
-// entry or exit); after that ONE TAP ON A CAR IS ONE EVENT.
+// entries, the other exits. A phone that has never chosen is asked (which
+// area, then entry or exit); one that has opens in the mode it used last.
+// After that ONE TAP ON A CAR IS ONE EVENT (which taps count: box-toques.test.js).
 //
 // The page shows which cars are inside right now. That list comes from the
 // server (`cars_in_pit`, `cars_in_fuel`), but the server only knows the
@@ -55,7 +56,7 @@ test('area and direction together give the event type of the upload contract', (
 });
 
 // ---------------------------------------------------------------------------
-// The page opens on a choice (brief 8.1 and 8.4)
+// The choices in front of the car tiles
 // ---------------------------------------------------------------------------
 
 test('without a fueling station the page asks one thing: entry or exit', () => {
@@ -99,22 +100,56 @@ test('the mode stays a switch: one person doing both ends changes it with one ta
     assert.equal(flow.tipo(), TIPO_PARADA.ABASTECIMENTO_SAIDA);
 });
 
-test('the phone remembers the last choice, but a reopened page still asks', () => {
-    // SITUATION: yesterday this phone recorded exits. Today the page is
-    // opened again, perhaps by somebody standing at the entry.
+test('a reopened page goes straight to the mode this phone used last', () => {
+    // SITUATION: the marshal at the pit exit is recording exits. The phone
+    // restarts (or the page is reloaded) while a car is on its way out.
+    //
+    // WHAT WENT WRONG: the page asked "entry or exit?" again every time it
+    // was opened, and only highlighted the last answer. The car left while
+    // the marshal was answering.
     const phoneStorage = createPhoneStorage();
-    const yesterday = new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: false });
-    yesterday.chooseSentido(SENTIDO.SAIDA);
+    const before = new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: false });
+    assert.equal(before.abriuNoModoLembrado, false, 'a phone that never chose is asked');
+    before.chooseSentido(SENTIDO.SAIDA);
 
-    const today = new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: false });
+    const reopened = new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: false });
 
-    // EXPECTED: the page knows what was used last (it highlights that
-    // button), but nothing is chosen until the person taps: yesterday's
-    // "Saída" silently applied to today's first tap would log the opposite
-    // of what happened.
-    assert.equal(today.lembrado().sentido, SENTIDO.SAIDA);
-    assert.equal(today.passo(), PASSO.SENTIDO);
-    assert.equal(today.tipo(), null);
+    // EXPECTED: no question; the first tap records an exit. The flow says
+    // that it assumed the mode, so the page can tell the marshal.
+    assert.equal(reopened.passo(), PASSO.CARROS);
+    assert.equal(reopened.tipo(), TIPO_PARADA.BOX_SAIDA);
+    assert.equal(reopened.abriuNoModoLembrado, true);
+});
+
+test('with a fueling station, the remembered area is reopened too', () => {
+    const phoneStorage = createPhoneStorage();
+    const before = new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: true });
+    before.chooseArea(AREA.ABASTECIMENTO);
+    before.chooseSentido(SENTIDO.ENTRADA);
+
+    const reopened = new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: true });
+    assert.equal(reopened.tipo(), TIPO_PARADA.ABASTECIMENTO_ENTRADA);
+
+    // The same phone on a prova WITHOUT a fueling station: the remembered
+    // area means nothing there; the pit lane, in the remembered direction.
+    const otherProva = new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: false });
+    assert.equal(otherProva.tipo(), TIPO_PARADA.BOX_ENTRADA);
+});
+
+test('what the phone does not remember is still asked', () => {
+    // SITUATION: this phone only ever worked on provas without a fueling
+    // station, so it remembers "Saída" but no area. This prova has one.
+    const phoneStorage = createPhoneStorage();
+    new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: false }).chooseSentido(SENTIDO.SAIDA);
+
+    const flow = new PitFlow({ preferences: createPreferences(phoneStorage), fuelingEnabled: true });
+
+    // EXPECTED: the area is asked (guessing it would log the wrong place);
+    // the direction is not asked again.
+    assert.equal(flow.passo(), PASSO.AREA);
+    assert.equal(flow.abriuNoModoLembrado, false);
+    flow.chooseArea(AREA.BOX);
+    assert.equal(flow.tipo(), TIPO_PARADA.BOX_SAIDA);
 });
 
 test('the fueling area cannot be chosen when the prova does not log it', () => {
@@ -277,6 +312,9 @@ test('the headings say in words which area and which direction the next tap reco
     const entryToPitLane = describeGroups(AREA.BOX, SENTIDO.ENTRADA);
 
     assert.equal(exitFromFueling.instrucao, 'SAÍDA do abastecimento: toque no carro que SAIU');
+    // The short form, for "Aberto como da última vez neste aparelho: …".
+    assert.equal(exitFromFueling.modo, 'SAÍDA do abastecimento');
+    assert.equal(entryToPitLane.modo, 'ENTRADA no box');
     assert.equal(exitFromFueling.primeiros, 'No abastecimento agora');
     assert.equal(entryToPitLane.instrucao, 'ENTRADA no box: toque no carro que ENTROU');
     assert.equal(entryToPitLane.outros, 'Outros (já estão no box)');

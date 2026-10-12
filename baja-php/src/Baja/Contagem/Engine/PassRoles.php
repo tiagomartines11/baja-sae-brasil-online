@@ -44,6 +44,14 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * whether a car crossed twice on its way in. With "nenhuma" nothing after
  * the finish counts.
  *
+ * TOO SOON AFTER THE PREVIOUS PASS
+ *
+ * Between those two, HoldRule holds back the passes that come sooner after
+ * the car's previous official pass than the car could have lapped. It runs
+ * here because it needs to know which groups before the start are passes,
+ * and because a held pass must not use up the one pass allowed after the
+ * finish.
+ *
  * Passes left out stay visible on the car's timeline.
  *
  * Every rule is applied twice, independently: once to what counts in the
@@ -57,8 +65,9 @@ final class PassRoles
 {
     /**
      * @param array<int, PassGroup[]> $groupsByCar each car's groups in time order
+     * @param string $ruleApplied the counting rule in force (what PublishRule::decide returned)
      */
-    public static function assign(array $groupsByCar, RaceTimeline $timeline, Settings $settings): void
+    public static function assign(array $groupsByCar, RaceTimeline $timeline, Settings $settings, string $ruleApplied = Settings::MODO_CONFIRMADAS): void
     {
         $startWindowEndsMs = null;
         if (!$settings->firstPassIsLapZero() && $settings->janelaLargadaS > 0 && $timeline->largadaMs !== null) {
@@ -68,25 +77,32 @@ final class PassRoles
         $passesAllowedAfterFinish = $settings->aposEncerramento === Settings::APOS_PROXIMA_PASSAGEM ? 1 : 0;
 
         foreach ($groupsByCar as $groups) {
-            $countedPassesStillAllowed = $passesAllowedAfterFinish;
-            $referencePassesStillAllowed = $passesAllowedAfterFinish;
             if ($timeline->largadaMs !== null && $groups[0]->primeiroTsMs < $timeline->largadaMs) {
                 self::assignBeforeTheStart($groups, $timeline->largadaMs, $settings);
             }
+            if ($startWindowEndsMs !== null) {
+                foreach ($groups as $group) {
+                    if ($group->primeiroTsMs >= $startWindowEndsMs) {
+                        break;
+                    }
+                    if (!$group->antesDaLargada) {
+                        $group->dentroDaJanelaDeLargada = true;
+                        $group->contado = false;
+                        $group->referencia = false;
+                        $group->foraDaReferencia = true;
+                    }
+                }
+            }
 
+            HoldRule::applyToCar($groups, $timeline, $settings, $ruleApplied);
+
+            if ($timeline->encerramentoMs === null) {
+                continue;
+            }
+            $countedPassesStillAllowed = $passesAllowedAfterFinish;
+            $referencePassesStillAllowed = $passesAllowedAfterFinish;
             foreach ($groups as $group) {
-                if ($group->antesDaLargada) {
-                    continue;
-                }
-                if ($startWindowEndsMs !== null && $group->primeiroTsMs < $startWindowEndsMs) {
-                    $group->dentroDaJanelaDeLargada = true;
-                    $group->contado = false;
-                    $group->referencia = false;
-                    $group->foraDaReferencia = true;
-                    continue;
-                }
-
-                if ($timeline->encerramentoMs === null || $group->tsMs <= $timeline->encerramentoMs) {
+                if ($group->antesDaLargada || $group->dentroDaJanelaDeLargada || $group->tsMs <= $timeline->encerramentoMs) {
                     continue;
                 }
                 if (self::isLeftOutAfterFinish($group->contado, $countedPassesStillAllowed)) {

@@ -15,6 +15,14 @@ use Baja\Contagem\Engine\RaceTimeline;
  * entry, a second entry with no exit. Those are stored like any other and
  * shown here marked "sem par" (unpaired). They never block anything; the
  * reviewer just has to be able to see that the log has a hole.
+ *
+ * Two more kinds of event are told apart:
+ *
+ *   - an event of UNKNOWN TIME (its phone had no usable clock): the engine
+ *     keeps it out of the pairing, and it has no place on a time axis, so it
+ *     is listed apart ("paradas_sem_horario");
+ *   - an exit a REVIEWER inferred from a pass at the line ("Marcar saída do
+ *     box"): nobody at the pit lane logged it, and the lane says so.
  */
 final class TimelineStops
 {
@@ -30,17 +38,22 @@ final class TimelineStops
     {
         // A row that another row corrected or cancelled was a mistake; the
         // engine ignores it and so does the timeline.
-        $takenOut = RaceEvents::resolve($ocorrencias);
+        $inForce = [];
+        foreach (RaceTimeline::rowsInForce($ocorrencias) as $ocorrencia) {
+            $inForce[$ocorrencia->id] = true;
+        }
         $unpairedIds = [];
         foreach ($timeline->unpairedStops as $unpaired) {
             $unpairedIds[(int) $unpaired['ocorrencia_id']] = true;
         }
 
+        $inferredIds = self::inferredIds($ocorrencias);
+
         $rows = [];
         foreach ($ocorrencias as $ocorrencia) {
             // A cancellation is nothing itself; it only removes its target.
             $isCancellation = $ocorrencia->tipo === Ocorrencia::CANCELAMENTO;
-            if ($isCancellation || isset($takenOut[$ocorrencia->id]) || !$wantsOcorrencia($ocorrencia)) {
+            if ($isCancellation || !isset($inForce[$ocorrencia->id]) || self::hasUnknownTime($ocorrencia) || !$wantsOcorrencia($ocorrencia)) {
                 continue;
             }
             $area = self::areaOf($ocorrencia->tipo);
@@ -53,6 +66,8 @@ final class TimelineStops
                 'area' => $area,
                 'box' => $area === self::BOX,
                 'sem_par' => isset($unpairedIds[$ocorrencia->id]),
+                // An exit marked by a reviewer, not logged at the pit lane.
+                'inferida' => isset($inferredIds[$ocorrencia->id]),
             ];
         }
         usort($rows, fn(array $a, array $b) => [$a['ts_ms'], $a['id']] <=> [$b['ts_ms'], $b['id']]);
@@ -109,6 +124,61 @@ final class TimelineStops
         }
         usort($rows, fn(array $a, array $b) => [$a['ts_ms'], $a['carro']] <=> [$b['ts_ms'], $b['carro']]);
         return $rows;
+    }
+
+    /**
+     * Pit and fueling events of unknown time. The engine pairs none of
+     * them: an entry whose time nobody knows cannot open a stay. They are
+     * listed so that somebody notices and logs the stop again by hand.
+     *
+     * @param int[]|null $cars only these cars; null for every car
+     * @return array<int, array{area: string, tipo: string, carro: int, ocorrencia_id: int}> by car, then by row
+     */
+    public static function describeUnknownTime(RaceTimeline $timeline, ?array $cars = null): array
+    {
+        $rows = [];
+        foreach ($timeline->unknownTimeStops ?? [] as $stop) {
+            if ($cars !== null && !in_array((int) $stop['carro'], $cars, true)) {
+                continue;
+            }
+            $rows[] = [
+                'area' => (string) $stop['area'],
+                'tipo' => (string) $stop['tipo'],
+                'carro' => (int) $stop['carro'],
+                'ocorrencia_id' => (int) $stop['ocorrencia_id'],
+            ];
+        }
+        usort($rows, fn(array $a, array $b) => [$a['carro'], $a['ocorrencia_id']] <=> [$b['carro'], $b['ocorrencia_id']]);
+        return $rows;
+    }
+
+    /**
+     * Ids of the exits a reviewer inferred. A correction of such an exit
+     * (a new time typed in race control) is still an inferred exit: nobody
+     * at the pit lane saw it either.
+     *
+     * @param Ocorrencia[] $ocorrencias
+     * @return array<int, true>
+     */
+    public static function inferredIds(array $ocorrencias): array
+    {
+        $oldestFirst = $ocorrencias;
+        usort($oldestFirst, fn(Ocorrencia $a, Ocorrencia $b) => $a->id <=> $b->id);
+
+        $inferred = [];
+        foreach ($oldestFirst as $ocorrencia) {
+            $correctsAnInferredExit = $ocorrencia->tipo !== Ocorrencia::CANCELAMENTO
+                && $ocorrencia->substituiId !== null && isset($inferred[$ocorrencia->substituiId]);
+            if (($ocorrencia->inferida ?? false) || $correctsAnInferredExit) {
+                $inferred[$ocorrencia->id] = true;
+            }
+        }
+        return $inferred;
+    }
+
+    private static function hasUnknownTime(Ocorrencia $ocorrencia): bool
+    {
+        return ($ocorrencia->qualidadeTempo ?? 'exato') === 'desconhecido';
     }
 
     private static function areaOf(string $tipo): ?string

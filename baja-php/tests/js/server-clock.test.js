@@ -19,8 +19,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    ServerClock, elapsedBetween, MONOTONIC_GUARD_TOLERANCE_MS, PERSISTED_ANCHOR_MAX_AGE_MS,
+    ServerClock, ESTADO_RELOGIO, MONOTONIC_GUARD_TOLERANCE_MS, PERSISTED_ANCHOR_MAX_AGE_MS,
 } from '../../default/js/contagem/server-clock.js';
+import { elapsedBetween } from '../../default/js/contagem/record-elapsed.js';
 import { FakeClock } from './helpers/fakes.js';
 
 function createClock(fakeClock = new FakeClock(), loadId = 'load-1') {
@@ -222,7 +223,7 @@ test('while both clocks advance together, the guard leaves the anchor alone', ()
     assert.equal(world.serverClock.hasAnchor(), true);
 });
 
-test('a monotonic clock that stood still makes the guard discard the anchor', () => {
+test('a monotonic clock that stood still makes the anchor suspect, and the next answer replaces it', () => {
     // SITUATION: the phone sleeps for a minute. On some phones
     // `performance.now()` does not count that minute.
     //
@@ -232,13 +233,137 @@ test('a monotonic clock that stood still makes the guard discard the anchor', ()
     exchange(world, 10, 10);
     world.fakeClock.sleepWithStalledMonotonic(60_000);
 
-    const discarded = world.serverClock.checkMonotonic();
+    const doubtArose = world.serverClock.checkMonotonic();
 
     // EXPECTED: the system clock says 60 s went by, the monotonic clock says
-    // none did. They cannot both be right, so the anchor is thrown away and
-    // the page is back to "no server time" until the next answer.
-    assert.equal(discarded, true);
-    assert.equal(world.serverClock.serverNowMs(), null);
+    // none did. Either it stood still or the system clock was set forward;
+    // the page cannot know. The anchor is SUSPECT: still shown (here it is
+    // a minute behind), not used for any record, not vouched for.
+    assert.equal(doubtArose, true);
+    assert.equal(world.serverClock.estado(), ESTADO_RELOGIO.VERIFICANDO);
+    assert.equal(world.serverClock.serverNowMs(), world.fakeClock.serverNow() - 60_000);
+    assert.equal(world.serverClock.trustedServerNowMs(), null);
+    assert.equal(world.serverClock.anchorToPersist(), null);
+    assert.equal(world.serverClock.stamp().ts_ms, null);
+
+    // The next answer: the server is a minute ahead of what the anchor
+    // predicts. The monotonic clock did stand still; a new anchor is taken.
+    const becameAnchor = exchange(world, 10, 10);
+    assert.equal(becameAnchor, true);
+    assert.equal(world.serverClock.estado(), ESTADO_RELOGIO.OK);
+    assert.equal(world.serverClock.serverNowMs(), world.fakeClock.serverNow());
+});
+
+test('a system clock set forward makes the anchor suspect, and the next answer restores it', () => {
+    // SITUATION: the best anchor of the day (4 ms round trip). Somebody
+    // sets the phone's clock one hour ahead. To the guard this looks
+    // exactly like the test above. A pass is typed, then a slow answer
+    // (400 ms round trip) arrives.
+    const world = createClock();
+    exchange(world, 2, 2);
+    world.fakeClock.advance(5000);
+    world.fakeClock.stepWallClock(3_600_000);
+    assert.equal(world.serverClock.checkMonotonic(), true);
+    world.fakeClock.advance(3000);
+    const passedAt = world.fakeClock.serverNow();
+    const held = world.serverClock.stamp();
+    assert.equal(held.ts_ms, null, 'held while in doubt');
+    assert.equal(world.serverClock.resolveHeld(held), null, 'and not resolved from a suspect anchor');
+
+    const becameAnchor = exchange(world, 200, 200);
+
+    // EXPECTED: the server's time is what the anchor predicted, so the
+    // monotonic clock lost nothing. The good anchor stays in use (the slow
+    // answer confirmed it, it does not replace it), and the pass typed
+    // during the doubt gets its time from the monotonic clock: exact.
+    assert.equal(becameAnchor, false);
+    assert.equal(world.serverClock.estado(), ESTADO_RELOGIO.OK);
+    assert.equal(world.serverClock.roundTripMs(), 4);
+    const time = world.serverClock.resolveHeld(held);
+    assert.equal(time.ts_ms, passedAt);
+    assert.equal(time.time_quality, 'exato');
+});
+
+test('a system clock that went BACKWARDS, or ran slow, is none of the guard\'s business', () => {
+    // WHY: the monotonic clock can lose time but never jumps ahead. So when
+    // the system clock moved LESS than the monotonic one, it is the system
+    // clock that was changed, and no pass is timed with it.
+    //
+    // WHAT WENT WRONG BEFORE: the guard compared the two with Math.abs and
+    // threw the anchor away for a step in either direction.
+    const world = createClock();
+    exchange(world, 10, 10);
+
+    for (const stepMs of [-2100, -2100, -3_600_000, -86_400_000]) {
+        world.fakeClock.advance(1000);
+        world.fakeClock.stepWallClock(stepMs);
+        assert.equal(world.serverClock.checkMonotonic(), false);
+    }
+
+    // EXPECTED: same anchor, same stretch of monotonic clock, right time.
+    assert.equal(world.serverClock.estado(), ESTADO_RELOGIO.OK);
+    assert.equal(world.serverClock.segment, 0);
+    assert.equal(world.serverClock.serverNowMs(), world.fakeClock.serverNow());
+    const time = world.serverClock.stamp();
+    assert.equal(time.ts_ms, world.fakeClock.serverNow());
+    assert.equal(time.time_quality, 'exato');
+});
+
+test('a short stall seen through a slow network is not mistaken for "nothing happened"', () => {
+    // SITUATION: the monotonic clock lost 2.5 s (just over the guard's
+    // tolerance). The answer that must settle it took 3 s, all of it on the
+    // way back, so by itself it cannot place the server's time to better
+    // than 1.5 s. It reads only 1 s away from what the anchor predicts,
+    // which the usual "do these two contradict each other?" test accepts.
+    const world = createClock();
+    exchange(world, 5, 5);
+    world.fakeClock.sleepWithStalledMonotonic(2500);
+    world.serverClock.checkMonotonic();
+
+    exchange(world, 0, 3000);
+
+    // EXPECTED: this answer cannot tell "lost 2.5 s" from "lost nothing",
+    // so the anchor is replaced. Keeping it would shift every later pass by
+    // 2.5 s for good; replacing it costs at most the new answer's own
+    // uncertainty, until a quicker answer comes.
+    assert.equal(world.serverClock.estado(), ESTADO_RELOGIO.OK);
+    assert.equal(world.serverClock.roundTripMs(), 3000);
+    assert.ok(Math.abs(world.serverClock.serverNowMs() - world.fakeClock.serverNow()) <= 1500);
+});
+
+test('with no anchor yet, the clock says so in its own state', () => {
+    const world = createClock();
+    assert.equal(world.serverClock.estado(), ESTADO_RELOGIO.SEM_ANCORA);
+    // A doubt with nothing to doubt: still "no anchor", not "checking".
+    world.fakeClock.sleepWithStalledMonotonic(60_000);
+    world.serverClock.checkMonotonic();
+    assert.equal(world.serverClock.estado(), ESTADO_RELOGIO.SEM_ANCORA);
+    exchange(world, 10, 10);
+    assert.equal(world.serverClock.estado(), ESTADO_RELOGIO.OK);
+});
+
+test('the time the server spent on the request is not counted as travel', () => {
+    // SITUATION: 30 ms there, 500 ms of work on the server, 30 ms back. The
+    // answer carries both of the server's readings.
+    const world = createClock();
+    const sentMonoMs = world.serverClock.monotonicNow();
+    world.fakeClock.advance(30);
+    const serverReceivedMs = world.fakeClock.serverNow();
+    world.fakeClock.advance(500);
+    const serverSentMs = world.fakeClock.serverNow();
+    world.fakeClock.advance(30);
+
+    world.serverClock.addSample(sentMonoMs, world.serverClock.monotonicNow(), serverReceivedMs, serverSentMs);
+
+    // EXPECTED: the middle of the server's two readings is paired with the
+    // middle of ours: exact here. The round trip is the 60 ms of travel.
+    assert.equal(world.serverClock.serverNowMs(), world.fakeClock.serverNow());
+    assert.equal(world.serverClock.roundTripMs(), 60);
+    // Readings that cannot be (the answer left before the request arrived,
+    // or the server worked longer than the whole trip took) are not used.
+    const other = createClock();
+    assert.equal(other.serverClock.addSample(0, 100, 5000, 4000), false);
+    assert.equal(other.serverClock.addSample(0, 100, 5000, 9000), false);
 });
 
 test('a disagreement inside the tolerance is ignored', () => {

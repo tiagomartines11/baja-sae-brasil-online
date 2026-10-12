@@ -59,7 +59,37 @@ final class RaceContext
                 error_log('Contagem\RaceContext: read failed: ' . $error->getMessage());
             }
         }
-        return $this->refresh();
+        return $this->fillIfStillEmpty();
+    }
+
+    /**
+     * The cache was empty: builds the context and stores it ONLY IF nobody
+     * stored one meanwhile ("SET NX"). The somebody would be refresh(),
+     * called right after a change: its copy is newer than what this request
+     * just read from the database, and must not be overwritten by it.
+     *
+     * @return array<string, mixed>
+     */
+    private function fillIfStillEmpty(): array
+    {
+        $context = $this->build();
+        $redis = RedisClient::get();
+        if ($redis === null) {
+            return $context;
+        }
+        try {
+            $json = (string) json_encode($context, JSON_UNESCAPED_UNICODE);
+            $stored = $redis->set($this->key, $json, ['nx', 'ex' => self::CACHE_SECONDS]);
+            if ($stored === false) {
+                $newer = json_decode((string) $redis->get($this->key), true);
+                if (is_array($newer)) {
+                    return $newer;
+                }
+            }
+        } catch (\Throwable $error) {
+            error_log('Contagem\RaceContext: write failed: ' . $error->getMessage());
+        }
+        return $context;
     }
 
     /**
@@ -149,6 +179,8 @@ final class RaceContext
         $context['janela_ms'] = $settings->janelaMs;
         $context['abastecimento'] = $settings->abastecimento;
         $context['simulacao'] = $settings->permitirSimulacao;
+        $context['publica'] = $settings->publishesToScoring();
+        $context['passagem_inicial'] = $settings->passagemInicial;
         return $context;
     }
 }

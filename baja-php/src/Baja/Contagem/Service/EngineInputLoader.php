@@ -96,23 +96,32 @@ final class EngineInputLoader
         return $teams;
     }
 
+    /** `contagem_ocorrencia.origem` of an exit recorded by a reviewer (see ContagemService::recordInferredExit()). */
+    public const ORIGEM_REVISOR = 'revisor';
+
     /** @return Ocorrencia[] oldest first */
     public function loadOcorrencias(): array
     {
-        $sql = 'SELECT ocorrencia_id, tipo, ts_ms, equipe_numero, substitui_id
+        $sql = 'SELECT ocorrencia_id, tipo, ts_ms, equipe_numero, substitui_id, qualidade_tempo, origem
                   FROM contagem_ocorrencia
                  WHERE evento_id = :evento AND prova_id = :prova
               ORDER BY ocorrencia_id';
 
         $ocorrencias = [];
         foreach ($this->fetchAll($sql, $this->provaParams()) as $row) {
-            $ocorrencias[] = new Ocorrencia(
+            $ocorrencia = new Ocorrencia(
                 (int) $row['ocorrencia_id'],
                 (string) $row['tipo'],
                 (int) $row['ts_ms'],
                 self::nullableInt($row['equipe_numero']),
                 self::nullableInt($row['substitui_id'])
             );
+            // A stop event of unknown time is kept out of the pairing of
+            // entries and exits; an exit a reviewer inferred from a pass at
+            // the line is shown as such.
+            $ocorrencia->qualidadeTempo = (string) $row['qualidade_tempo'];
+            $ocorrencia->inferida = $row['origem'] === self::ORIGEM_REVISOR;
+            $ocorrencias[] = $ocorrencia;
         }
         return $ocorrencias;
     }

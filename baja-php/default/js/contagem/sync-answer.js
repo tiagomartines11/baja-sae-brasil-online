@@ -24,7 +24,28 @@ function serverInfoFrom(body) {
         cars_in_fuel: Array.isArray(body.cars_in_fuel) ? body.cars_in_fuel : [],
         abastecimento: body.abastecimento === true,
         simulacao: body.simulacao === true,
+        // Read by the race simulation (simulacao*.js), not by the pages:
+        // whether this prova's counts go to the official results (an older
+        // server that does not say is taken to publish), and what counts as
+        // a car's first pass.
+        publica: body.publica !== false,
+        passagem_inicial: typeof body.passagem_inicial === 'string' ? body.passagem_inicial : null,
     };
+}
+
+/**
+ * When the request reached the server and when the answer left it, on the
+ * server's clock. The time in between is the server working, not the network,
+ * and the clock takes it out of the round trip (see ServerClock.addSample).
+ * An older server writes one time only (`server_now_ms`, read on arrival).
+ */
+function serverTimesOf(body) {
+    const receivedMs = body.server_received_ms;
+    const sentMs = body.server_sent_ms;
+    if (Number.isFinite(receivedMs) && Number.isFinite(sentMs) && sentMs >= receivedMs) {
+        return { receivedMs, sentMs };
+    }
+    return { receivedMs: body.server_now_ms, sentMs: body.server_now_ms };
 }
 
 /**
@@ -75,12 +96,14 @@ async function applyRefusals({ store, tracker, request, body, stored, voided }) 
  */
 export async function applySyncAnswer({ store, clock, tracker, request, body, timing }) {
     if (timing.usable !== false) {
-        clock.addSample(timing.sentMonoMs, timing.receivedMonoMs, body.server_now_ms);
+        const serverTimes = serverTimesOf(body);
+        clock.addSample(timing.sentMonoMs, timing.receivedMonoMs, serverTimes.receivedMs, serverTimes.sentMs);
     }
     // First thing after the anchor: the records that were waiting for it.
     const carimbados = await resolveHeldRecords(store, clock);
-    // Null only when this answer could not be used as an anchor either.
-    const answeredAtServerMs = clock.serverNowMs();
+    // Null when this answer could not be used as an anchor either, and while
+    // the anchor there is is in doubt: no time is written down from those.
+    const answeredAtServerMs = clock.trustedServerNowMs();
 
     // Only uuids that were in THIS request and that the server named are
     // marked. Anything the server left out stays in the queue.

@@ -106,6 +106,7 @@ export function closingBeaconBody(queue, token) {
         store: queue.store,
         clock: queue.clock,
         vouchesForHistory: queue.vouchesForHistory,
+        suppressQueueEmpty: queue.marcaDeFilaSuprimida,
         token,
     });
 }

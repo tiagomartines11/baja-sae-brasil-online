@@ -73,6 +73,51 @@ abstract class EngineTestCase extends TestCase
         $this->assertSame($expectedLapsByCar, $actual, $message);
     }
 
+    /**
+     * THE INVARIANT OF THE SAFE MODE: with nobody reviewing, no car is ever
+     * ahead of the truth. Checked for every official pass of every car, at
+     * the moment that pass became official: when the engine says "this is
+     * the car's N-th pass", the car must really have crossed the line N
+     * times by then. A pass two counters agree on became official when the
+     * SECOND of them typed it (its pass time, the median, can be a second
+     * or two earlier when one entry is a stray that happens to sit right
+     * before the real one). A counter may press Enter up to 0.9 s before
+     * the car is on the line; the comparison allows for that. Because
+     * every pass is checked at its own moment, this covers every moment of
+     * the race, not only the moment the result was computed.
+     *
+     * @return int how many official passes were checked
+     */
+    protected function assertNoCarIsEverAheadOfTheTruth(SyntheticRace $race, EngineResult $result, string $where = ''): int
+    {
+        $passesSoFar = [];
+        $checked = 0;
+        foreach ($result->laps as $lap) {
+            if (!$lap->isOfficialPass()) {
+                continue;
+            }
+            $car = $lap->carro;
+            $passesSoFar[$car] = ($passesSoFar[$car] ?? 0) + 1;
+            $entries = $lap->grupo === null ? [] : $lap->grupo->entries;
+            $officialSinceMs = max($lap->tsMs, isset($entries[1]) ? $entries[1]->tsMs : $lap->tsMs);
+            $reallyCrossed = $race->truePassesBy($car, $officialSinceMs - SyntheticRace::EARLIEST_TYPING_MS);
+            $this->assertLessThanOrEqual(
+                $reallyCrossed,
+                $passesSoFar[$car],
+                sprintf(
+                    'Car %d has %d official passes by second %.1f of the race, and had really crossed %d times. %s',
+                    $car,
+                    $passesSoFar[$car],
+                    ($officialSinceMs - SyntheticRace::START_MS) / 1000,
+                    $reallyCrossed,
+                    $where
+                )
+            );
+            $checked++;
+        }
+        return $checked;
+    }
+
     /** How many passes of a car one counter has, after corrections. */
     protected function sourceCount(EngineResult $result, int $car, int $source): int
     {

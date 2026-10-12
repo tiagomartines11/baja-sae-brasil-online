@@ -12,6 +12,7 @@ ContagemAccess::requireController($prova);
 
 $h = [Pagina::class, 'h'];
 $simulationIsOn = Pagina::simulationBanner($prova) !== '';
+$presetIsApplied = Pagina::testPresetBanner($prova) !== '';
 
 // /js/ is cached for 30 days. The entry module gets a version in its URL,
 // but the modules it imports are named inside the files, so the import map
@@ -46,7 +47,14 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
 <p class="contagem-simulacao<?= $simulationIsOn ? '' : ' oculto' ?>" id="faixa-simulacao" role="alert">
     <strong>SIMULAÇÃO</strong> Esta prova aceita passagens simuladas. Desligue "Permitir simulação" em Fontes e configurações antes da corrida de verdade.
 </p>
+<?php // Permanent while the test preset is applied; kept in step with the server like the one above. ?>
+<p class="contagem-simulacao contagem-predefinicao<?= $presetIsApplied ? '' : ' oculto' ?>" id="faixa-predefinicao" role="alert">
+    <strong>PREDEFINIÇÃO DE TESTE APLICADA</strong> Os tempos da contagem estão ajustados para um ensaio e NÃO são os da corrida de verdade.
+    Antes da corrida, use "Restaurar valores salvos" em Fontes e configurações.
+</p>
 <header class="revisao-barra" id="barra-estado" aria-live="polite"></header>
+<?php // Filled by the script when the recalculation had to correct a published count. ?>
+<div class="revisao-aviso oculto" id="aviso-reconciliacao" role="alert"></div>
 <div class="revisao-aviso oculto" id="aviso-conexao" role="alert"></div>
 <div class="revisao-aviso oculto" id="aviso-mensagem" role="status"></div>
 

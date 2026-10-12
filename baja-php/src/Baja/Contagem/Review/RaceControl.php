@@ -36,6 +36,8 @@ final class RaceControl
     public const CAMPO_CONFIRMAR_REGISTROS = 'confirmar_registros';
     /** Form field: "I was told this leaves the race with no start, and said yes". */
     public const CAMPO_CONFIRMAR_SEM_LARGADA = 'confirmar_sem_largada';
+    public const CAMPO_CONFIRMAR_PREDEFINICAO = StartRules::CAMPO_CONFIRMAR_PREDEFINICAO;
+    public const CAMPO_INSTANTE = StartRules::CAMPO_INSTANTE;
 
     /** Confirmation texts, keyed by the codes handle() returns. */
     public const MESSAGES = [
@@ -46,6 +48,8 @@ final class RaceControl
         'corrigida' => 'Horário corrigido.',
         'cancelada' => 'Ocorrência cancelada.',
         'restaurada' => 'Ocorrência restaurada: voltou a valer.',
+        'saida_corrigida' => 'Horário da saída corrigido.',
+        'saida_cancelada' => 'Saída cancelada: o carro volta a constar como dentro da área.',
         'republicado' => 'Todos os valores foram republicados.',
         'reconstruido' => 'As voltas foram reconstruídas.',
         'zerado' => 'A corrida foi zerada. Os dados apagados ficaram guardados no arquivo.',
@@ -67,7 +71,13 @@ final class RaceControl
 
         switch ($action) {
             case 'largar_agora':
-                self::recordEvent($service, Ocorrencia::LARGADA, Clock::nowMs(), $username, null, $post);
+                $clickMs = StartRules::clickInstant($post) ?? Clock::nowMs();
+                try {
+                    self::recordEvent($service, Ocorrencia::LARGADA, $clickMs, $username, null, $post, true);
+                } catch (ConfirmationNeeded $question) {
+                    $question->campos[self::CAMPO_INSTANTE] = (string) $clickMs;
+                    throw $question;
+                }
                 return Ocorrencia::LARGADA;
             case 'registrar':
                 $tipo = is_string($post['tipo'] ?? null) ? $post['tipo'] : '';
@@ -86,6 +96,12 @@ final class RaceControl
             case 'restaurar':
                 self::restoreEvent($service, $post, $username);
                 return 'restaurada';
+            case 'corrigir_saida':
+                InferredExits::correct($service, $post, $username);
+                return 'saida_corrigida';
+            case 'cancelar_saida':
+                InferredExits::cancel($service, $post, $username);
+                return 'saida_cancelada';
             default:
                 return RaceMaintenance::handle($service, $action, $post, $username, $isAdmin);
         }
@@ -123,6 +139,7 @@ final class RaceControl
      *
      * @param int|null $substituiId the row this one corrects, if any
      * @param array<string, mixed> $post the form, for the confirmation fields
+     * @param bool $isLiveClick "Largar agora": the time is the click itself, not a time somebody typed
      */
     private static function recordEvent(
         ContagemService $service,
@@ -130,13 +147,15 @@ final class RaceControl
         int $tsMs,
         string $username,
         ?int $substituiId,
-        array $post
+        array $post,
+        bool $isLiveClick = false
     ): void {
-        $service->withLock(function () use ($service, $tipo, $tsMs, $username, $substituiId, $post): void {
+        $service->withLock(function () use ($service, $tipo, $tsMs, $username, $substituiId, $post, $isLiveClick): void {
             $ocorrencias = RaceEvents::toOcorrencias(RaceEvents::load($service->getProva()));
             $startMs = RaceEventRules::startMs($ocorrencias);
             $isCorrection = $substituiId !== null;
             $confirmed = self::said($post, self::CAMPO_CONFIRMAR);
+            $newEvent = new Ocorrencia(PHP_INT_MAX, $tipo, $tsMs, null, $substituiId);
 
             if ($tipo !== Ocorrencia::LARGADA && $startMs === null) {
                 throw new InvalidArgumentException('A corrida ainda não largou.');
@@ -148,59 +167,19 @@ final class RaceControl
                 throw new InvalidArgumentException('Confirme o encerramento da corrida.');
             }
             if ($tipo === Ocorrencia::LARGADA) {
-                self::checkStart($service->getProva(), $startMs, $tsMs, $isCorrection, $post);
+                StartRules::checkStart($service, $startMs, $tsMs, $isCorrection, $post);
             }
-            self::requireConsistentWith($ocorrencias, new Ocorrencia(PHP_INT_MAX, $tipo, $tsMs, null, $substituiId));
+            self::requireConsistentWith($ocorrencias, $newEvent);
+            // The very first "Largar agora" asks nothing: every entry typed
+            // so far is before it by definition (counters warming up), and a
+            // question would stand between the controller and the start.
+            $isFirstLiveStart = $isLiveClick && $startMs === null;
+            if (!$isFirstLiveStart) {
+                StartRules::requireMoveConfirmed($service->getProva(), $ocorrencias, $newEvent, $post);
+            }
 
             $service->recordOcorrencia($tipo, $tsMs, null, $username, $substituiId);
         });
-    }
-
-    /**
-     * What a new or corrected start has to pass.
-     *
-     * @param int|null $currentStartMs the start in force, if the race has one
-     * @param array<string, mixed> $post
-     */
-    private static function checkStart(Prova $prova, ?int $currentStartMs, int $tsMs, bool $isCorrection, array $post): void
-    {
-        if ($tsMs > Clock::nowMs()) {
-            // The usual cause is a wrong day or "PM" for "AM" in the time
-            // field. A start in the future would put every entry typed until
-            // then before the start: no car would have a single pass.
-            throw new InvalidArgumentException(
-                'O horário da largada (' . Pagina::formatClock($tsMs) . ') está no futuro. Confira a data e a hora.'
-            );
-        }
-        if ($currentStartMs === null) {
-            return;
-        }
-        $affected = RaceEventRules::entriesLeftBeforeStart($prova, $currentStartMs, $tsMs);
-        $leftOut = $affected['registros'] > 0
-            ? ' ' . ucfirst(RaceEventRules::describeEntriesLeftOut($affected))
-                . ' ficariam ANTES da nova largada e deixariam de contar (aparecem na revisão como "antes da largada").'
-            : '';
-
-        if (!$isCorrection && !self::said($post, self::CAMPO_CONFIRMAR)) {
-            // The page asks before sending. This catches the page that was
-            // opened before somebody else started the race, and the second
-            // click of a double click.
-            throw new ConfirmationNeeded(
-                'A corrida já tem largada (' . Pagina::formatClock($currentStartMs) . '). Confirme para substituir o horário.' . $leftOut,
-                self::CAMPO_CONFIRMAR,
-                'Substituir a largada'
-            );
-        }
-        if ($affected['registros'] > 0 && !self::said($post, self::CAMPO_CONFIRMAR_REGISTROS)) {
-            // Moving the start a few seconds later is how the start pack
-            // used to vanish: every car lost a lap and nothing said so.
-            throw new ConfirmationNeeded(
-                'A largada passaria de ' . Pagina::formatClock($currentStartMs) . ' para ' . Pagina::formatClock($tsMs) . '.' . $leftOut
-                    . ' Confirme se é isso mesmo.',
-                self::CAMPO_CONFIRMAR_REGISTROS,
-                'Mover a largada mesmo assim'
-            );
-        }
     }
 
     /**
@@ -236,7 +215,8 @@ final class RaceControl
             $prova = $service->getProva();
             $target = self::requireEvent($prova, $post['ocorrencia_id'] ?? null, [RaceEvents::EM_VIGOR, RaceEvents::SUPERADA]);
             $ocorrencias = RaceEvents::toOcorrencias(RaceEvents::load($prova));
-            self::requireConsistentWith($ocorrencias, new Ocorrencia(PHP_INT_MAX, Ocorrencia::CANCELAMENTO, $target->tsMs, null, $target->id));
+            $cancellation = new Ocorrencia(PHP_INT_MAX, Ocorrencia::CANCELAMENTO, $target->tsMs, null, $target->id);
+            self::requireConsistentWith($ocorrencias, $cancellation);
 
             $leavesNoStart = RaceEventRules::cancellingLeavesNoStart($ocorrencias, $target);
             if ($leavesNoStart && !self::said($post, self::CAMPO_CONFIRMAR_SEM_LARGADA)) {
@@ -248,6 +228,10 @@ final class RaceControl
                     'Cancelar a única largada'
                 );
             }
+
+            // Cancelling a correction or a second start brings an older
+            // start back, which may be later than the one in force.
+            StartRules::requireMoveConfirmed($prova, $ocorrencias, $cancellation, $post);
 
             // The cancellation carries the time of what it cancels, so that
             // it sorts next to it wherever events are listed by time.
@@ -271,10 +255,9 @@ final class RaceControl
             if ($cancellation === null) {
                 throw new InvalidArgumentException('Esta ocorrência não está cancelada. Recarregue a página.');
             }
-            self::requireConsistentWith(
-                $ocorrencias,
-                new Ocorrencia(PHP_INT_MAX, Ocorrencia::CANCELAMENTO, $target->tsMs, null, $cancellation->id)
-            );
+            $restoration = new Ocorrencia(PHP_INT_MAX, Ocorrencia::CANCELAMENTO, $target->tsMs, null, $cancellation->id);
+            self::requireConsistentWith($ocorrencias, $restoration);
+            StartRules::requireMoveConfirmed($prova, $ocorrencias, $restoration, $post);
             $service->recordOcorrencia(Ocorrencia::CANCELAMENTO, $target->tsMs, null, $username, $cancellation->id);
         });
     }

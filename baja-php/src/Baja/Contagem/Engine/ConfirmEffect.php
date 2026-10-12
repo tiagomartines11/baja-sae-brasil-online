@@ -77,6 +77,30 @@ final class ConfirmEffect
         // rule lap 1 does begin at the start, but it is not a full lap of
         // the track (the counting line is after the start line), so however
         // short it is, it is not "too short to be real" and is left out.
+        [$beforeMs, $afterMs] = $this->lapsAroundPassAt($carro, $tsMs, $itself, $amongPassesInForce);
+        if ($beforeMs === null || $afterMs === null) {
+            return $beforeMs ?? $afterMs;
+        }
+        return min($beforeMs, $afterMs);
+    }
+
+    /** Racing time from the car's previous pass (under the default rule) to $tsMs; null when it has none. */
+    public function lapBeforePassAt(int $carro, int $tsMs, ?PassGroup $itself): ?int
+    {
+        return $this->lapsAroundPassAt($carro, $tsMs, $itself, false)[0];
+    }
+
+    /** Racing time from $tsMs to the car's next pass (under the default rule); null when it has none yet. */
+    public function lapAfterPassAt(int $carro, int $tsMs, ?PassGroup $itself): ?int
+    {
+        return $this->lapsAroundPassAt($carro, $tsMs, $itself, false)[1];
+    }
+
+    /**
+     * @return array{0: ?int, 1: ?int} racing time since the car's previous pass and until its next one
+     */
+    private function lapsAroundPassAt(int $carro, int $tsMs, ?PassGroup $itself, bool $amongPassesInForce): array
+    {
         $previousMs = null;
         $nextMs = null;
         foreach ($this->groupsByCar[$carro] ?? [] as $other) {
@@ -89,14 +113,10 @@ final class ConfirmEffect
                 $nextMs = $other->tsMs;
             }
         }
-
-        $pieces = [];
-        if ($previousMs !== null) {
-            $pieces[] = $this->timeline->racingMsBetween($previousMs, $tsMs);
-        }
-        if ($nextMs !== null) {
-            $pieces[] = $this->timeline->racingMsBetween($tsMs, $nextMs);
-        }
-        return $pieces === [] ? null : min($pieces);
+        return [
+            $previousMs === null ? null : $this->timeline->racingMsBetween($previousMs, $tsMs),
+            $nextMs === null ? null : $this->timeline->racingMsBetween($tsMs, $nextMs),
+        ];
     }
+
 }

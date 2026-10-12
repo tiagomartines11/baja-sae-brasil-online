@@ -22,6 +22,8 @@ export const NOMES_DE_ALERTA = {
   tempo_desconhecido: 'Horário desconhecido',
   carro_nao_classificado: 'Carro não classificado',
   no_abastecimento: 'Passagem com o carro no abastecimento',
+  passagem_proxima_demais: 'Passagem retida: perto demais da anterior',
+  dispersao_alta: 'Registros afastados demais entre si',
 };
 
 export const NOMES_DE_STATUS = {

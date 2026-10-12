@@ -27,10 +27,11 @@ use Baja\Contagem\Engine\Data\Ocorrencia;
  *
  * THE TWO AREAS. The pit lane ("box") and the fueling station
  * ("abastecimento") are logged the same way and are independent: a car can
- * be in both at once. An exit with no entry before it, or a second entry
- * with no exit in between, is an unpaired event. It is listed and never
- * blocks anything; pairing is by time, so the missing half makes a stay of
- * it whenever it arrives.
+ * be in both at once. An exit with no entry before it, or an entry followed
+ * by another entry with no exit in between, is an unpaired event. It is
+ * listed and never blocks anything; pairing is by time, so the missing half
+ * makes a stay of it whenever it arrives. A car still inside when the race
+ * ends is taken to have left at the finish. See StopLog.
  */
 final class RaceTimeline
 {
@@ -71,18 +72,29 @@ final class RaceTimeline
     public array $fuelIntervals = [];
 
     /**
-     * Stop events that have no partner: an exit with no entry, or a second
-     * entry with no exit. In time order.
+     * Stop events that have no partner: an exit with no entry, or an entry
+     * that was followed by another entry with no exit in between. In time
+     * order. `inferida` is true for an exit a reviewer inferred.
      *
-     * @var array<int, array{area: string, tipo: string, carro: int, ts_ms: int, ocorrencia_id: int}>
+     * @var array<int, array{area: string, tipo: string, carro: int, ts_ms: int, ocorrencia_id: int, inferida: bool}>
      */
     public array $unpairedStops = [];
 
     /**
-     * Every pit lane and fueling station event in force, paired or not, in
-     * time order. Same shape as `$unpairedStops`.
+     * Stop events whose time is unknown (`Ocorrencia::$qualidadeTempo` is
+     * "desconhecido"): the `ts_ms` they carry is the phone's own clock. They
+     * are kept out of the pairing and out of `$stopEvents`, and listed here
+     * so the review screen can show them. Same shape as `$unpairedStops`.
      *
-     * @var array<int, array{area: string, tipo: string, carro: int, ts_ms: int, ocorrencia_id: int}>
+     * @var array<int, array{area: string, tipo: string, carro: int, ts_ms: int, ocorrencia_id: int, inferida: bool}>
+     */
+    public array $unknownTimeStops = [];
+
+    /**
+     * Every pit lane and fueling station event in force with a usable time,
+     * paired or not, in time order. Same shape as `$unpairedStops`.
+     *
+     * @var array<int, array{area: string, tipo: string, carro: int, ts_ms: int, ocorrencia_id: int, inferida: bool}>
      */
     public array $stopEvents = [];
 
@@ -100,7 +112,7 @@ final class RaceTimeline
     public static function fromOcorrencias(array $ocorrencias): self
     {
         $timeline = new self();
-        $valid = self::inForce($ocorrencias);
+        $valid = self::rowsInForce($ocorrencias);
         $timeline->eventosEmVigor = $valid;
 
         // Among several starts (race control edited the start time) the most
@@ -119,10 +131,11 @@ final class RaceTimeline
 
         $timeline->buildRedFlagIntervals($byTime);
 
-        $stops = StopLog::pair($byTime);
+        $stops = StopLog::pair($byTime, $timeline->encerramentoMs);
         $timeline->pitIntervals = $stops->stays[self::AREA_BOX];
         $timeline->fuelIntervals = $stops->stays[self::AREA_ABASTECIMENTO];
         $timeline->unpairedStops = $stops->unpaired;
+        $timeline->unknownTimeStops = $stops->unknownTime;
         $timeline->stopEvents = $stops->events;
 
         return $timeline;
@@ -307,10 +320,15 @@ final class RaceTimeline
      * oldest (see the class comment). By the time a row is reached, every
      * later row that could cancel or correct it has already been seen.
      *
-     * @param Ocorrencia[] $ocorrencias
-     * @return Ocorrencia[] the rows in force, ordered by id, oldest first
+     * This is THE definition of "in force". The race-control page asks
+     * here too instead of working it out again: two implementations once
+     * disagreed about a correction of a correction, and an event could not
+     * be corrected twice.
+     *
+     * @param Ocorrencia[] $ocorrencias every row of the race, in any order
+     * @return Ocorrencia[] the rows in force, ordered by id, oldest first; never a "cancelamento"
      */
-    private static function inForce(array $ocorrencias): array
+    public static function rowsInForce(array $ocorrencias): array
     {
         $newestFirst = $ocorrencias;
         usort($newestFirst, fn(Ocorrencia $a, Ocorrencia $b) => $b->id <=> $a->id);

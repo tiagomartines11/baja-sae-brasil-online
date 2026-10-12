@@ -56,6 +56,8 @@ export class LocalStore {
         // Writes of NEW facts (an entry, a pit event, an undo) that were
         // handed to the disk and have not come back yet.
         this.writesInFlight = 0;
+        // uuid -> promise of the record, for records being written right now.
+        this.addsInFlight = new Map();
     }
 
     /** Reads everything the adapter holds. This is what happens on a reload. */
@@ -104,7 +106,30 @@ export class LocalStore {
      *        HELD until this page has an anchor (see server-clock.js).
      * @returns {Promise<object>} the stored record, with its local marks
      */
-    async addEntry(entry) {
+    addEntry(entry) {
+        return this.addOnce(this.entries, entry.uuid, () => this.writeNewEntry(entry));
+    }
+
+    /**
+     * One uuid, one record. Adding a uuid this store already holds, or is
+     * writing at this very moment, changes nothing and gives back the
+     * record that is (or is about to be) there. Real key presses always
+     * bring a fresh uuid; the race simulation names its records so that a
+     * script run twice does not record everything twice.
+     */
+    addOnce(records, uuid, writeNewRecord) {
+        const existing = records.find((record) => record.uuid === uuid);
+        if (existing) {
+            return Promise.resolve(existing);
+        }
+        if (!this.addsInFlight.has(uuid)) {
+            const write = writeNewRecord().finally(() => this.addsInFlight.delete(uuid));
+            this.addsInFlight.set(uuid, write);
+        }
+        return this.addsInFlight.get(uuid);
+    }
+
+    async writeNewEntry(entry) {
         const record = {
             ...entry,
             // Taken (and used up) right here, before the first `await`. A
@@ -193,7 +218,11 @@ export class LocalStore {
     // ---- pit events (entries and exits on the pit and fueling page) ----
 
     /** @param {object} pitEvent `{uuid, car, tipo}` plus the time fields, as in addEntry */
-    async addPitEvent(pitEvent) {
+    addPitEvent(pitEvent) {
+        return this.addOnce(this.pitEvents, pitEvent.uuid, () => this.writeNewPitEvent(pitEvent));
+    }
+
+    async writeNewPitEvent(pitEvent) {
         // Same rule as addEntry: the sequence number is taken before waiting.
         const record = {
             ...pitEvent, seq: this.nextSequence++, sent: false, sent_at_ms: null, refused: false, refused_reason: null,

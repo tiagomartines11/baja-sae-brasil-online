@@ -91,13 +91,14 @@ async function main() {
      * @param {object}  [options]
      * @param {?number} [options.tsMs] time of the pass in SERVER time; left out = right now
      * @param {string}  [options.modo] how it was entered; left out = the mode on screen
+     * @param {?string} [options.uuid] simulation only: see CountSession.recordPass
      */
-    async function recordPass(car, typingMs, { tsMs = null, modo = currentMode } = {}) {
+    async function recordPass(car, typingMs, { tsMs = null, modo = currentMode, uuid = null } = {}) {
         const simulated = modo === MODO_SIMULACAO;
         let result;
         try {
             // The time of the pass is taken inside, first thing.
-            result = await session.recordPass({ car, typingMs, mode: modo, tsMs });
+            result = await session.recordPass({ car, typingMs, mode: modo, tsMs, uuid });
         } catch (storageError) {
             // The only case in which a typed number is NOT kept. It must be
             // impossible to miss.
@@ -289,10 +290,22 @@ async function main() {
          * @param {?number} [pass.tsMs]     intended time, SERVER time in ms; left out = now
          * @param {string}  [pass.modo]     'simulacao' unless given
          * @param {?number} [pass.typingMs]
+         * @param {?string} [pass.uuid]     the record is stored under exactly
+         *        this uuid; the same uuid a second time records nothing and
+         *        returns the entry already there
          * @returns {Promise<{entry: object, avisos: Array, nomeEquipe: ?string}>}
          */
-        registrarPassagem({ car, tsMs = null, modo = MODO_SIMULACAO, typingMs = null }) {
-            return recordPass(car, typingMs, { tsMs, modo });
+        registrarPassagem({ car, tsMs = null, modo = MODO_SIMULACAO, typingMs = null, uuid = null }) {
+            return recordPass(car, typingMs, { tsMs, modo, uuid });
+        },
+        /**
+         * While true, this page never tells the server "you have everything
+         * up to now" (a replay injects passes that lie in the past; see
+         * SyncQueue.suprimirMarcaDeFila). Switch it off when the replay ends.
+         * @param {boolean} suprimir
+         */
+        suprimirMarcaDeFila(suprimir) {
+            queue.suprimirMarcaDeFila(suprimir);
         },
     });
 }

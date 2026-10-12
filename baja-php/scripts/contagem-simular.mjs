@@ -1,9 +1,11 @@
 // A whole simulated race against the DEV stack, with no browser, checked
 // against its answer key.
 //
-// It uses the same simulation modules the count pages load
+// It uses the modules the pages load: the simulation's own
 // (default/js/contagem/simulacao-*.js), so the race and each counter's
-// mistakes are exactly the ones a browser would play for the same seed.
+// mistakes are exactly what a browser plays for the same seed; and the
+// count page's local store, upload queue and server clock, so the client
+// is exercised too. Only the screens are missing.
 //
 // WHAT IT DOES
 //
@@ -11,34 +13,42 @@
 //      scripts/contagem-simular-apoio.php): WIPES the prova's lap counting
 //      data, starts a race far enough in the past to hold the whole race,
 //      and creates a device for each counter and one for the pit log.
-//   2. Replays the race: N counters, the pit lane and (when the prova logs
-//      it) the fueling station, each with their own injected mistakes.
-//      Entries are uploaded to the real upload address with their
-//      intended times, `velocidade` times faster than real time.
-//   3. Plays the reviewer: logs in, reads the review state, and accepts
-//      every suggestion through the real decision address, until no flag
-//      offers one.
-//   4. Compares the lap counts in the scoring system with the answer key.
-//      A car may still be short, by exactly the crossings that fewer than
-//      two counters typed right (no suggestion can make those official),
-//      or over, by exactly the false passes on which two counters typed
-//      the same wrong number. Any other difference fails the run.
-//   5. For those crossings only, plays the person a reviewer is: counts
-//      the lone entry, adds the pass, or reassigns the shared typo. Then
-//      every car must match.
-//      Exit code 0 when they do, 1 otherwise. The output says which of the
-//      two stages the race needed.
+//   2. Replays the race, `velocidade` times faster than real time: N
+//      counters, the pit lane and (when the prova logs it) the fueling
+//      station, each with their own injected mistakes.
+//   3. THE INVARIANT. Several times during the replay and at its end,
+//      before any reviewer has done anything: no car may have more
+//      published laps than it has really completed. The one known way to
+//      break it is two counters making the SAME mistake at the same
+//      moment (the same wrong number, or the same car standing in the pit
+//      lane); the runner knows every injected mistake, reports such a
+//      case as the known limit, and fails on a car that is over for any
+//      other reason.
+//   4. Stage 1, the suggestions: accepts every suggestion the review
+//      screen offers, then compares EVERY car (unclassified ones too)
+//      crossing by crossing with the laps export. Tolerated: a crossing
+//      that fewer than two counters typed for the right car; and what a
+//      shared mistake left wrong, PROVIDED a flag is open on a car it
+//      touched. Anything else fails. Also checked: LAST, and the stops in
+//      the public feed against the script.
+//   5. Stage 2, the person: for what stage 1 tolerated, does what a
+//      reviewer does (counts the lone entry, adds the pass, moves a
+//      shared wrong number to the right car, voids a shared pit-lane
+//      entry). Then every car must equal the answer key exactly.
+//   6. "Reconstruir" must change nothing: rebuild equals published.
 //
-// BEFORE RUNNING IT
+// Exit code 0 when all of that holds, 1 otherwise.
 //
-// Switch "Permitir simulação" on for the prova (settings page). The runner
-// refuses otherwise and never changes a setting itself. Use the prova's
-// real time settings: this is a replay at real scale.
+// BEFORE RUNNING IT: on the settings page switch "Permitir simulação" on;
+// the publish mode must be "confirmadas" and the time settings the real
+// ones (this is a replay at real scale). The runner refuses otherwise and
+// never changes a setting. Since the prova publishes, the prova's id must
+// be given as confirmation:
 //
-//     node baja-php/scripts/contagem-simular.mjs --semente 42
+//     node baja-php/scripts/contagem-simular.mjs --semente 42 --confirmar-publicacao END
 //
 // Options: --semente N (default 1), --volta-media-s N (default 230),
-//          --velocidade N (default 120; a four-hour race in two minutes),
+//          --velocidade N (default 240; a four-hour race in a minute),
 //          --contadores N (default 3), --evento 26BR, --prova END,
 //          --domain baja.local, --container baja-app,
 //          --revisor juiz1 (a seeded dev user, password 123456),
@@ -47,12 +57,16 @@
 //
 // Never point it at production.
 
-import { execFile } from 'node:child_process';
 import { generateRaceScript, raceDurationFor, AREA_BOX, AREA_ABASTECIMENTO } from '../default/js/contagem/simulacao-corrida.js';
-import { planCounter, planStopLog } from '../default/js/contagem/simulacao-contador.js';
-import { playPlan } from '../default/js/contagem/simulacao-execucao.js';
+import { planCounter, planStopLog, withStableIds } from '../default/js/contagem/simulacao-contador.js';
+import { playPlan, mayStartSimulation } from '../default/js/contagem/simulacao-execucao.js';
 import { trueLapCounts, injectedErrors } from '../default/js/contagem/simulacao-gabarito.js';
-import { pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo } from '../default/js/contagem/revisao-decisoes.js';
+import {
+    pedidosDaSugestao, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo,
+} from '../default/js/contagem/revisao-decisoes.js';
+import {
+    ClientDevice, Reviewer, runHelper, fail, matchCrossings, countedTimesByCar, raceClock, CROSSING_TOLERANCE_MS,
+} from './contagem-simular-lib.mjs';
 
 const options = Object.fromEntries(process.argv.slice(2).reduce((pairs, arg, index, all) => {
     if (arg.startsWith('--')) pairs.push([arg.slice(2), all[index + 1]]);
@@ -60,402 +74,388 @@ const options = Object.fromEntries(process.argv.slice(2).reduce((pairs, arg, ind
 }, []));
 const SEED = Number(options.semente ?? 1);
 const LAP_MS = Number(options['volta-media-s'] ?? 230) * 1000;
-const SPEED = Number(options.velocidade ?? 120);
+const SPEED = Number(options.velocidade ?? 240);
 const COUNTERS = Number(options.contadores ?? 3);
 const EVENTO = options.evento ?? '26BR';
 const PROVA = options.prova ?? 'END';
 const DOMAIN = options.domain ?? 'baja.local';
 const CONTAINER = options.container ?? 'baja-app';
-const REVIEWER = options.revisor ?? 'juiz1';
 const RATES = options.taxas ? JSON.parse(options.taxas) : {};
 
 const JUIZ = `http://juiz.${DOMAIN}/${EVENTO}/`;
-const FORUM = `http://forum.${DOMAIN}/`;
-const SYNC_URL = `${JUIZ}contagem_sync.php`;
-/** Entries per upload; a phone coming back from an hour offline sends batches like this. */
-const BATCH_SIZE = 50;
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const RESULTADOS = `http://resultados.${DOMAIN}/`;
+const helper = (...args) => runHelper(CONTAINER, EVENTO, PROVA, ...args);
+/** How many times during the replay the invariant is checked, besides the end. */
+const CHECKPOINTS = 5;
 
-function fail(message) {
-    console.error(message);
-    process.exit(1);
+// This runner needs the prova to publish (it compares published counts),
+// which is exactly what a simulation must not do by accident.
+if (!mayStartSimulation({ publica: true, provaId: PROVA, confirmacao: options['confirmar-publicacao'] })) {
+    fail(`This run publishes a simulated race to the results of prova ${PROVA}. To confirm, add: --confirmar-publicacao ${PROVA}`);
 }
 
-/** Runs the PHP helper inside the app container and returns what it printed, parsed. */
-function helper(...args) {
-    return new Promise((resolve) => {
-        const command = ['exec', CONTAINER, 'php', 'scripts/contagem-simular-apoio.php', EVENTO, PROVA, ...args.map(String)];
-        execFile('docker', command, { timeout: 120000 }, (error, stdout, stderr) => {
-            if (error) fail(`The set-up helper failed: ${stderr.trim() || error.message}`);
-            resolve(JSON.parse(stdout));
-        });
-    });
-}
-
-// ------------------------------------------------------------ uploading
-
-/** A simulated device: what it has to send, and the sending. */
-class Device {
-    constructor(name, token) {
-        this.name = name;
-        this.token = token;
-        this.waiting = [];
-        this.sent = 0;
-    }
-
-    async post(body) {
-        // "ocupado" (503) means the count was busy and nothing was stored:
-        // the same batch is simply sent again, as a phone does.
-        for (let attempt = 1; attempt <= 20; attempt++) {
-            const response = await fetch(SYNC_URL, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
-            if (response.status === 200) return response.json();
-            if (response.status !== 503) fail(`${this.name}: upload refused with HTTP ${response.status}: ${await response.text()}`);
-            await sleep(200 * attempt);
-        }
-        return fail(`${this.name}: the server stayed busy for twenty attempts.`);
-    }
-
-    /** Sends what is waiting, in batches, under the given key of the request body. */
-    async flush(listName) {
-        while (this.waiting.length > 0) {
-            const batch = this.waiting.slice(0, BATCH_SIZE);
-            const answer = await this.post({ entries: [], voids: [], pit_events: [], [listName]: batch, now_ms: Date.now(), queue_empty: false });
-            if (answer.refused?.length > 0) fail(`${this.name}: the server refused entries: ${JSON.stringify(answer.refused[0])}`);
-            const stored = new Set(answer.stored_uuids);
-            if (!batch.every((record) => stored.has(record.uuid))) fail(`${this.name}: the server did not acknowledge a whole batch.`);
-            this.waiting.splice(0, batch.length);
-            this.sent += batch.length;
-        }
-    }
-
-    /** "My queue is empty, and it is now": lets the engine conclude that what this device did not send, it did not see. */
-    sayEverythingWasSent() {
-        return this.post({ entries: [], voids: [], pit_events: [], now_ms: Date.now(), queue_empty: true });
-    }
-}
-
-/** What a count page uploads for one key press, with the time the simulation intends. */
-function entryRecord(action) {
-    return {
-        uuid: crypto.randomUUID(), car: action.carro, mode: 'simulacao', typing_ms: null,
-        ts_ms: action.tsMs, time_quality: 'exato', ts_device_ms: action.tsMs, anchor: null,
-    };
-}
-
-function stopRecord(action) {
-    return {
-        uuid: crypto.randomUUID(), car: action.carro, tipo: action.tipo, mode: 'simulacao',
-        ts_ms: action.tsMs, time_quality: 'exato', ts_device_ms: action.tsMs,
-    };
-}
-
-/** Plays one plan into a device, uploading as it goes. */
-async function playInto(device, plan, listName, toRecord, raceStartMs) {
-    const player = playPlan({
-        acoes: plan.acoes,
-        registrar: async (action) => { device.waiting.push(toRecord(action)); },
-        agora: () => performance.now(),
-        esperar: async (ms) => { await device.flush(listName); await sleep(ms); },
-        velocidade: SPEED,
-        inicioCorridaMs: raceStartMs,
-    });
-    await player.terminou;
-    await device.flush(listName);
-}
-
-// ------------------------------------------------------------ reviewing
-
-async function login(username) {
-    const response = await fetch(`${FORUM}app.php/baja/login`, {
-        method: 'POST', redirect: 'manual',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ username, password: '123456', redirect: `${JUIZ}index.php` }),
-    });
-    // The forum may set the same cookie twice in one answer; a browser keeps the last.
-    const cookieByName = new Map();
-    for (const line of response.headers.getSetCookie()) {
-        const pair = line.split(';')[0];
-        cookieByName.set(pair.slice(0, pair.indexOf('=')), pair);
-    }
-    if (cookieByName.size === 0) fail(`Could not log in as ${username}.`);
-    return [...cookieByName.values()].join('; ');
-}
-
-/** The review state as the review screen polls it. */
-async function reviewState(cookie) {
-    const response = await fetch(`${JUIZ}contagem_estado.php?p=${PROVA}`, { headers: { Cookie: cookie } });
-    if (response.status !== 200) fail(`The review state answered HTTP ${response.status}. Is ${REVIEWER} a controller of this prova?`);
-    return response.json();
-}
-
-/**
- * Accepts every suggestion the review screen offers, one at a time, the
- * way a reviewer pressing "aceitar sugestão" does. Each decision changes
- * the race, so the state is read again after each one.
- *
- * @returns {Promise<{accepted: object, leftOver: Array}>} how many of each flag type were accepted, and the flags that remain
- */
-async function acceptEverySuggestion(reviewer) {
-    const accepted = {};
-    const refusedFlagIds = new Set();
-    let state = await reviewState(reviewer.cookie);
-    // Far more than any race needs; only here so that a bug cannot loop for ever.
-    for (let round = 0; round < 5000; round++) {
-        const flag = (state.alertas_abertos ?? []).find((candidate) => candidate.sugestao && !refusedFlagIds.has(candidate.id));
-        if (!flag) break;
-        const answer = await sendDecision(reviewer, pedidoParaAlerta({ ...flag.sugestao }, flag, state, flag.assinatura ?? null));
-        if (answer.stored) {
-            accepted[flag.tipo] = (accepted[flag.tipo] ?? 0) + 1;
-        } else {
-            // 409: what the flag was about changed under us (an earlier
-            // decision resolved it too). Not accepted; do not try it again.
-            refusedFlagIds.add(flag.id);
-        }
-        state = answer.state ?? await reviewState(reviewer.cookie);
-    }
-    return { accepted, state };
-}
-
-/** Logs the reviewer in and fetches what the review screen needs to send decisions. */
-async function openReviewScreen() {
-    const cookie = await login(REVIEWER);
-    const page = await (await fetch(`${JUIZ}contagem_revisao.php?p=${PROVA}`, { headers: { Cookie: cookie } })).text();
-    const csrf = /data-csrf="([^"]+)"/.exec(page)?.[1];
-    if (!csrf) fail('The review page did not carry a CSRF token: the reviewer login did not work.');
-    return { cookie, csrf };
-}
-
-/**
- * One decision through the real decision address.
- *
- * @returns {Promise<{stored: boolean, state: ?object}>} `state` is the fresh review state the answer carried, if any
- */
-async function sendDecision(reviewer, request) {
-    for (let attempt = 1; attempt <= 20; attempt++) {
-        const response = await fetch(`${JUIZ}contagem_decidir.php?p=${PROVA}`, {
-            method: 'POST',
-            headers: { Cookie: reviewer.cookie, 'Content-Type': 'application/json', 'X-Contagem-Csrf': reviewer.csrf },
-            body: JSON.stringify(request),
-        });
-        // 503: the count was busy and nothing was stored. Try again.
-        if (response.status === 503) {
-            await sleep(300);
-            continue;
-        }
-        const body = await response.json();
-        return { stored: response.status === 200, state: body.estado ?? null };
-    }
-    return fail('The decision endpoint stayed busy for twenty attempts.');
-}
-
-/**
- * The crossings of a car that fewer than two counters typed for the right
- * car. With the rule "a pass counts when two counters agree" no suggestion
- * can make these official: only a person can, looking at the timeline.
- *
- * @param {Set<string>} alreadyFixed crossings ("car:time") put right by reassigning agreed typos
- */
-function underWitnessedCrossings(car, alreadyFixed = new Set()) {
-    return script.travessias.filter((crossing) => crossing.carro === car).filter((crossing) => {
-        if (alreadyFixed.has(`${crossing.carro}:${crossing.tsMs}`)) return false;
-        const sawIt = counterPlans.filter((plan) => plan.acoes.some(
-            (action) => action.carro === car && Math.abs(action.tsMs - crossing.tsMs) <= 1500,
-        )).length;
-        return sawIt < 2;
-    });
-}
-
-/**
- * The rare double mistake: two (or three) counters typed THE SAME wrong
- * number for one crossing. Two witnesses then agree on a pass that never
- * happened: the wrong car gets a lap and the right car loses one. The
- * engine cannot know; it shows the result as a lap that is too short
- * (`volta_curta`), for a person to sort out.
- *
- * @returns {Array<{realCar: number, typedCar: number, crossingMs: number, entries: Array<{fonteId: number, tsMs: number}>}>}
- */
-function agreedTypos() {
-    const byCrossing = new Map();
-    for (const plan of counterPlans) {
-        for (const error of plan.erros.filter((candidate) => candidate.tipo === 'numero_errado')) {
-            const crossing = script.travessias.find(
-                (candidate) => candidate.carro === error.carro && Math.abs(candidate.tsMs - error.tsMs) <= 1500,
-            );
-            const key = `${error.carro}:${crossing.tsMs}:${error.digitado}`;
-            const group = byCrossing.get(key) ?? { realCar: error.carro, typedCar: error.digitado, crossingMs: crossing.tsMs, entries: [] };
-            group.entries.push({ fonteId: error.fonteId, tsMs: error.tsMs });
-            byCrossing.set(key, group);
-        }
-    }
-    return [...byCrossing.values()].filter((group) => group.entries.length >= 2);
-}
-
-/**
- * Plays the person again: reassigns each entry of an agreed typo to the car
- * that really crossed ("era outro carro" on the chip).
- *
- * @returns {Promise<number>} how many entries were reassigned
- */
-async function reassignAgreedTypos(reviewer, typos) {
-    let reassigned = 0;
-    for (const typo of typos) {
-        for (const wanted of typo.entries) {
-            // Read afresh for every entry: each decision changes what the
-            // next chip looks like, and the server refuses a decision made
-            // on a picture that is no longer current.
-            const timeline = await (await fetch(`${JUIZ}contagem_janela.php?p=${PROVA}&carro=${typo.typedCar}`, { headers: { Cookie: reviewer.cookie } })).json();
-            const chips = (timeline.raias ?? []).flatMap((lane) => lane.entradas ?? []);
-            const chip = chips.find((candidate) => candidate.fonte_id === wanted.fonteId && candidate.ts_ms === wanted.tsMs);
-            if (!chip) {
-                console.log(`  (typo of source ${wanted.fonteId} for car ${typo.realCar} not found on car ${typo.typedCar}'s timeline)`);
-                continue;
-            }
-            const state = await reviewState(reviewer.cookie);
-            const request = pedidoParaEntrada({ tipo: 'reatribuir', passagem_id: chip.id, equipe_numero: typo.realCar }, chip, state);
-            const answer = await sendDecision(reviewer, request);
-            if (answer.stored) reassigned++;
-            else console.log(`  (reassigning entry ${chip.id} to car ${typo.realCar} was refused)`);        }
-    }
-    return reassigned;
-}
-
-/**
- * Plays the person: for a crossing that only one counter recorded, press
- * "Contar esta passagem (+1 volta)" on its lone-entry flag; for one nobody
- * recorded for the right car, "adicionar passagem" at the true time. The
- * answer key stands in for the person's own knowledge of the race.
- *
- * @returns {Promise<{confirmed: number, added: number}>}
- */
-async function resolveAsAPerson(reviewer, state, crossings) {
-    let confirmed = 0;
-    let added = 0;
-    for (const crossing of crossings) {
-        const loneFlag = (state.alertas_abertos ?? []).find((flag) => flag.tipo === 'solitaria'
-            && (flag.carros ?? []).includes(crossing.carro)
-            && Math.abs(flag.ts_ms - crossing.tsMs) <= 1500
-            && (flag.passagem_ids ?? []).length > 0);
-        const request = loneFlag
-            ? pedidoParaAlerta({ tipo: 'confirmar', passagem_id: loneFlag.passagem_ids[0] }, loneFlag, state, loneFlag.assinatura ?? null)
-            : pedidoSemAlvo({ tipo: 'adicionar', equipe_numero: crossing.carro, ts_ms: crossing.tsMs }, state);
-        const answer = await sendDecision(reviewer, request);
-        if (answer.stored && loneFlag) confirmed++;
-        if (answer.stored && !loneFlag) added++;
-        state = answer.state ?? await reviewState(reviewer.cookie);
-    }
-    return { confirmed, added };
-}
-
-/** The cars whose published lap count differs from the answer key. */
-async function differencesFromTheAnswerKey(answerKey) {
-    const published = await helper('publicado');
-    const differences = [];
-    for (const [car, trueLaps] of answerKey) {
-        const publishedLaps = published[car] ?? 0;
-        if (publishedLaps !== trueLaps) differences.push({ car, trueLaps, publishedLaps });
-    }
-    return differences;
-}
-
-// ------------------------------------------------------------ the run
+// ------------------------------------------------------------ the race
 
 const durationMs = raceDurationFor(LAP_MS);
-// The whole race lies in the past, with a minute to spare.
-const startMs = Date.now() - durationMs - 60000;
-console.log(`Simulation: seed ${SEED}, average lap ${LAP_MS / 1000} s, ${COUNTERS} counters, replay ${SPEED}x against ${JUIZ} (prova ${PROVA})`);
-
-const setup = await helper('preparar', startMs, COUNTERS);
+// The whole race must lie in the past, pit stops included: a car that
+// starts its last lap just before the end may break down and stop on it,
+// and leaves the pit lane several laps' worth of time after the end.
+const AFTER_THE_END_MS = 6 * LAP_MS + 60000;
+const setup = await helper('preparar', Date.now() - durationMs - AFTER_THE_END_MS, COUNTERS);
 const script = generateRaceScript({
     semente: SEED, carros: setup.carros, voltaMediaMs: LAP_MS, largadaMs: setup.largada_ms, abastecimento: setup.abastecimento,
 });
+const raceKey = { semente: SEED, largadaMs: script.largadaMs, voltaMediaMs: LAP_MS };
+console.log(`Simulation: seed ${SEED}, average lap ${LAP_MS / 1000} s, ${COUNTERS} counters, replay ${SPEED}x against ${JUIZ} (prova ${PROVA})`);
 console.log(`${script.carros.length} cars, ${script.travessias.length} crossings, ${script.paradas.length} stops, ${script.abandonos.length} retirements`);
 
-const counterPlans = setup.fontes.map((source) => planCounter({
+const counterPlans = setup.fontes.map((source) => withStableIds(planCounter({
     roteiro: script, semente: SEED, fonteId: source.id,
     naoClassificados: setup.nao_classificados, janelaMs: setup.janela_ms, taxas: RATES,
-}));
+}), raceKey, source.id));
 const stopAreas = setup.abastecimento ? [AREA_BOX, AREA_ABASTECIMENTO] : [AREA_BOX];
-const stopPlans = stopAreas.map((area) => planStopLog({ roteiro: script, semente: SEED, area }));
+const stopPlans = stopAreas.map((area) => withStableIds(planStopLog({ roteiro: script, semente: SEED, area }), raceKey, area));
 
-const counterDevices = setup.fontes.map((source) => new Device(source.nome, source.token));
-// The two areas are logged from the same kind of device; one token serves both here.
-const stopDevices = stopAreas.map((area) => new Device(`pit log (${area})`, setup.box_token));
+const carList = setup.carros.map((numero) => ({ numero, nome: `Carro ${numero}` }));
+const openDevice = (name, token) => ClientDevice.open({ name, syncUrl: `${JUIZ}contagem_sync.php`, token, cars: carList, janelaMs: setup.janela_ms });
+const counterDevices = [];
+for (const source of setup.fontes) counterDevices.push(await openDevice(source.nome, source.token));
+const pitDevice = await openDevice('pit log', setup.box_token);
+const allDevices = [...counterDevices, pitDevice];
+
+const truthAt = (ateMs) => trueLapCounts(script, { passagemInicial: setup.passagem_inicial, ateMs });
+
+/**
+ * THE INVARIANT: with no reviewer action, no car has more published laps
+ * than it has really completed by that moment.
+ *
+ * @param {number} upToMs every action planned up to this race time has been uploaded
+ * @returns {Promise<Array<{car: number, upToMs: number, voltas: number, truth: number}>>} the cars that are over
+ */
+async function carsAboveTheTruth(upToMs) {
+    for (const device of allDevices) await device.flushEverything();
+    const published = await helper('publicado');
+    // A crossing typed up to this moment happened at most half a second later.
+    const truth = truthAt(upToMs + 1000);
+    return Object.entries(published)
+        .filter(([car, { voltas }]) => voltas > (truth.get(Number(car)) ?? 0))
+        .map(([car, { voltas }]) => ({ car: Number(car), upToMs, voltas, truth: truth.get(Number(car)) ?? 0 }));
+}
+
+// One merged plan, so that "everything up to now" is the same moment for
+// every device when the invariant is checked.
+const merged = [
+    ...counterPlans.flatMap((plan, index) => plan.acoes.map((action) => ({ ...action, record: () => counterDevices[index].recordPass(action) }))),
+    ...stopPlans.flatMap((plan) => plan.acoes.map((action) => ({ ...action, record: () => pitDevice.recordStop(action) }))),
+].sort((a, b) => a.tsMs - b.tsMs);
+const checkpointTimes = Array.from({ length: CHECKPOINTS }, (unused, index) => script.largadaMs + Math.trunc((durationMs * (index + 1)) / (CHECKPOINTS + 1)));
+const violations = [];
+let recorded = 0;
 
 const replayStartedAt = Date.now();
-await Promise.all([
-    ...counterPlans.map((plan, index) => playInto(counterDevices[index], plan, 'entries', entryRecord, script.largadaMs)),
-    ...stopPlans.map((plan, index) => playInto(stopDevices[index], plan, 'pit_events', stopRecord, script.largadaMs)),
-]);
-for (const device of counterDevices) await device.sayEverythingWasSent();
-const uploaded = [...counterDevices, ...stopDevices].reduce((sum, device) => sum + device.sent, 0);
-console.log(`Replay done in ${Math.round((Date.now() - replayStartedAt) / 1000)} s: ${uploaded} records uploaded`);
+await playPlan({
+    acoes: merged,
+    registrar: async (action) => {
+        if (checkpointTimes.length > 0 && action.tsMs > checkpointTimes[0]) {
+            violations.push(...await carsAboveTheTruth(checkpointTimes.shift()));
+        }
+        await action.record();
+        // Uploading as it goes, in the batches a phone would send.
+        if (++recorded % 300 === 0) await Promise.all(allDevices.map((device) => device.queue.flush()));
+    },
+    agora: () => performance.now(),
+    esperar: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    velocidade: SPEED,
+    inicioCorridaMs: script.largadaMs,
+}).terminou;
+for (const device of allDevices) await device.sayEverythingWasSent();
+violations.push(...await carsAboveTheTruth(script.fimMs));
+const refused = allDevices.reduce((sum, device) => sum + device.refusedCount(), 0);
+console.log(`Replay done in ${Math.round((Date.now() - replayStartedAt) / 1000)} s: ${merged.length} records through the client modules, ${refused} refused`);
 
 const errors = injectedErrors([...counterPlans, ...stopPlans]);
 const errorCounts = {};
 for (const error of errors) errorCounts[error.tipo] = (errorCounts[error.tipo] ?? 0) + 1;
 console.log('Injected mistakes:', JSON.stringify(errorCounts));
 
-const reviewer = await openReviewScreen();
-const { accepted, state: stateAfterSuggestions } = await acceptEverySuggestion(reviewer);
+// ------------------------------------------------------------ what the plans say
+
+/** How many counters typed this crossing for the right car. */
+function witnessesOf(crossing) {
+    return counterPlans.filter((plan) => plan.acoes.some(
+        (action) => action.carro === crossing.carro && Math.abs(action.tsMs - crossing.tsMs) <= 1500,
+    )).length;
+}
+
+/**
+ * THE KNOWN LIMIT of "a pass counts when two counters agree": two counters
+ * making the SAME mistake at the same moment. Either both type the same
+ * wrong number for one crossing, or both type a car that is standing in the
+ * pit lane. Two witnesses then agree on a pass of `typedCar` that never
+ * happened. Each group found here is such a moment, from the injected
+ * mistakes: who typed what, and for a wrong number, which car really crossed.
+ *
+ * @returns {Array<{typedCar: number, tsMs: number, entries: Array<{fonteId: number, tsMs: number, realCar: ?number, crossingMs: ?number}>}>}
+ */
+function sharedMistakes() {
+    const byTypedCar = new Map();
+    counterPlans.forEach((plan, index) => {
+        for (const error of plan.erros.filter((candidate) => candidate.tipo === 'numero_errado' || candidate.tipo === 'no_box')) {
+            const crossing = error.tipo === 'numero_errado'
+                ? script.travessias.find((candidate) => candidate.carro === error.carro && Math.abs(candidate.tsMs - error.tsMs) <= 1500)
+                : null;
+            const entry = { counter: index, fonteId: setup.fontes[index].id, tsMs: error.tsMs, realCar: crossing ? error.carro : null, crossingMs: crossing ? crossing.tsMs : null };
+            if (!byTypedCar.has(error.digitado)) byTypedCar.set(error.digitado, []);
+            byTypedCar.get(error.digitado).push(entry);
+        }
+    });
+    const groups = [];
+    for (const [typedCar, entries] of byTypedCar) {
+        entries.sort((a, b) => a.tsMs - b.tsMs);
+        let current = [];
+        for (const entry of [...entries, null]) {
+            // Entries within one matching window of the first belong together.
+            if (entry !== null && (current.length === 0 || entry.tsMs - current[0].tsMs <= setup.janela_ms)) {
+                current.push(entry);
+                continue;
+            }
+            if (new Set(current.map((member) => member.counter)).size >= 2) {
+                groups.push({ typedCar, tsMs: current[0].tsMs, entries: current });
+            }
+            current = entry === null ? [] : [entry];
+        }
+    }
+    return groups;
+}
+const mistakes = sharedMistakes();
+const describeMistake = (group) => (group.entries.some((entry) => entry.realCar !== null)
+    ? `${group.entries.length} counters typed ${group.typedCar} for car ${group.entries.find((entry) => entry.realCar !== null).realCar}`
+    : `${group.entries.length} counters typed car ${group.typedCar} while it stood in the pit lane`);
+/** The shared mistake that put a phantom pass on this car around this moment, if any. */
+const phantomSourceFor = (car, aroundMs, withinMs) => mistakes.find((group) => group.typedCar === car && Math.abs(group.tsMs - aroundMs) <= withinMs);
+
+const problems = [];
+if (refused > 0) problems.push(`${refused} records were refused by the server`);
+if (violations.length === 0) {
+    console.log(`Invariant held at ${CHECKPOINTS} points during the race and at the end: no car above the truth.`);
+} else {
+    console.log(`\nWith no reviewer action, ${violations.length} time(s) a car had more laps than it had run:`);
+    for (const violation of violations) {
+        // Any shared mistake on that car so far explains one lap too many.
+        const cause = mistakes.find((group) => group.typedCar === violation.car && group.tsMs <= violation.upToMs);
+        console.log(`  car ${violation.car}: published ${violation.voltas}, true ${violation.truth} at ${raceClock(violation.upToMs, script.largadaMs)}; `
+            + (cause ? `the known limit: ${describeMistake(cause)}` : 'UNEXPLAINED'));
+        if (!cause) problems.push(`the invariant was broken for car ${violation.car} with no shared mistake to explain it`);
+    }
+}
+
+/**
+ * Every car, crossing by crossing, against the laps export.
+ *
+ * @returns {Promise<Array<{car: number, missing: number[], phantom: number[]}>>} only the cars with a difference
+ */
+async function differencesPerCrossing(reviewer) {
+    const counted = countedTimesByCar(await reviewer.exportRows('voltas'));
+    const everyCar = new Set([...script.carros, ...setup.nao_classificados, ...counted.keys()]);
+    const differences = [];
+    for (const car of [...everyCar].sort((a, b) => a - b)) {
+        const trueTimes = script.travessias.filter((crossing) => crossing.carro === car).map((crossing) => crossing.tsMs);
+        const { missing, phantom } = matchCrossings(trueTimes, counted.get(car) ?? []);
+        if (missing.length > 0 || phantom.length > 0) differences.push({ car, missing, phantom });
+    }
+    return differences;
+}
+
+// ------------------------------------------------------------ stage 1: the suggestions
+
+const reviewer = await Reviewer.login({ juizUrl: JUIZ, forumUrl: `http://forum.${DOMAIN}/`, prova: PROVA, username: options.revisor ?? 'juiz1' });
+const accepted = {};
+const notAccepted = new Set();
+let state = await reviewer.state();
+// Far more rounds than any race needs; only so that a bug cannot loop for ever.
+for (let round = 0; round < 5000; round++) {
+    const flag = (state.alertas_abertos ?? []).find((candidate) => candidate.sugestao && !notAccepted.has(candidate.id));
+    if (!flag) break;
+    const requests = pedidosDaSugestao(flag, state);
+    // No request: the screen would need the loaded timeline to act on this
+    // one (the suggestion names an entry outside the flag). Left for a person.
+    let everyRequestStored = requests.length > 0;
+    for (const request of requests) {
+        const answer = await reviewer.decide(request);
+        everyRequestStored &&= answer.stored;
+        state = answer.state ?? await reviewer.state();
+    }
+    // Refused (409): what the flag was about changed under us, because an
+    // earlier decision resolved it too. Do not try that flag again.
+    if (everyRequestStored) accepted[flag.tipo] = (accepted[flag.tipo] ?? 0) + 1;
+    else notAccepted.add(flag.id);
+}
 console.log('Suggestions accepted, by flag type:', JSON.stringify(accepted));
-const leftOverCounts = {};
-for (const flag of stateAfterSuggestions.alertas_abertos ?? []) leftOverCounts[flag.tipo] = (leftOverCounts[flag.tipo] ?? 0) + 1;
-console.log('Flags left for a person (no suggestion):', JSON.stringify(leftOverCounts));
+const openFlags = state.alertas_abertos ?? [];
+const openCounts = {};
+for (const flag of openFlags) openCounts[flag.tipo] = (openCounts[flag.tipo] ?? 0) + 1;
+console.log('Flags left open:', JSON.stringify(openCounts));
 
-// ------------------------------------------------------------ the verdict
-//
-// Stage 1: after the suggestions alone. Any car that still differs must be
-// short by EXACTLY the number of its crossings that fewer than two counters
-// typed right; anything else is a bug and fails the run at once.
-//
-// Stage 2: a person resolves those crossings (see resolveAsAPerson). After
-// that every car must equal the answer key.
-
-const answerKey = trueLapCounts(script, { passagemInicial: setup.passagem_inicial });
-const afterSuggestions = await differencesFromTheAnswerKey(answerKey);
-if (afterSuggestions.length === 0) {
-    console.log(`\nPASS after the suggestions alone: the published lap count of all ${answerKey.size} cars equals the answer key.`);
-    process.exit(0);
+/**
+ * "Either right, or with an open flag": is a flag open on a car this
+ * shared mistake touched (the car typed, or the car that really crossed),
+ * around that moment? That flag is what leads a reviewer to it. A flag on
+ * EVERY car touched cannot be asked for: when the third counter typed
+ * nothing, the car that really crossed has no entry to hang a flag on.
+ */
+function hasAnOpenFlagNear(group) {
+    const touched = new Set([group.typedCar, ...group.entries.map((entry) => entry.realCar).filter((car) => car !== null)]);
+    return openFlags.some((flag) => (flag.carros ?? []).some((car) => touched.has(car)) && Math.abs(flag.ts_ms - group.tsMs) <= 2 * LAP_MS);
 }
 
-console.log(`\nAfter the suggestions alone, ${afterSuggestions.length} of ${answerKey.size} cars differ from the answer key:`);
-const typos = agreedTypos();
-let unexplained = 0;
-for (const { car, trueLaps, publishedLaps } of afterSuggestions) {
-    const weak = underWitnessedCrossings(car).length;
-    const falsePasses = typos.filter((typo) => typo.typedCar === car).length;
-    // Short by the crossings too few counters typed right, over by the
-    // false passes two counters agreed on. Nothing else is acceptable.
-    const explained = publishedLaps - trueLaps === falsePasses - weak;
-    if (!explained) unexplained++;
-    console.log(
-        `  car ${car}: true ${trueLaps}, published ${publishedLaps}; crossings fewer than two counters typed right: ${weak}`
-        + `; false passes two counters agreed on: ${falsePasses}` + (explained ? '' : '   <-- NOT explained by these'),
-    );
+const afterSuggestions = await differencesPerCrossing(reviewer);
+const forAPerson = { loneCrossings: [], mistakes: new Set() };
+/** A difference caused by a shared mistake: tolerated with an open flag near it, a failure without. */
+function judgeSharedMistake(group, what) {
+    forAPerson.mistakes.add(group);
+    if (hasAnOpenFlagNear(group)) return `the known limit (${describeMistake(group)}), with a flag open on a car it touched`;
+    problems.push(`${what}: ${describeMistake(group)}, and no flag is open on any car it touched`);
+    return `NOT TOLERATED: ${describeMistake(group)}, with no open flag on any car it touched`;
 }
-if (unexplained > 0) {
-    console.log(`\nFAIL: ${unexplained} car(s) differ for a reason other than the two above.`);
+console.log(`\nStage 1 (suggestions only): ${afterSuggestions.length} car(s) differ from the script.`);
+for (const { car, missing, phantom } of afterSuggestions) {
+    for (const crossingMs of missing) {
+        const crossing = { carro: car, tsMs: crossingMs };
+        const witnesses = witnessesOf(crossing);
+        // This crossing itself was mistyped by two counters, or a phantom on
+        // this car got the car's own real pass held beside it.
+        const mistypedAs = mistakes.find((group) => group.entries.some((entry) => entry.realCar === car && entry.crossingMs === crossingMs));
+        const heldBeside = phantomSourceFor(car, crossingMs, 2 * LAP_MS);
+        let verdict = `tolerated: only ${witnesses} counter(s) typed it right`;
+        if (mistypedAs) {
+            verdict = judgeSharedMistake(mistypedAs, `car ${car} is short`);
+        } else if (witnesses >= 2 && heldBeside) {
+            verdict = 'held beside a phantom pass; ' + judgeSharedMistake(heldBeside, `car ${car} has a real pass held`);
+        } else if (witnesses >= 2) {
+            verdict = 'NOT TOLERATED: two or more counters typed it right';
+            problems.push(`car ${car} misses a crossing that ${witnesses} counters typed right`);
+        } else {
+            forAPerson.loneCrossings.push(crossing);
+        }
+        console.log(`  car ${car}: crossing at ${raceClock(crossingMs, script.largadaMs)} not counted; ${verdict}`);
+    }
+    for (const passMs of phantom) {
+        const cause = phantomSourceFor(car, passMs, setup.janela_ms + CROSSING_TOLERANCE_MS);
+        let verdict = 'NOT TOLERATED: no car crossed then and no two counters shared a mistake';
+        if (cause) verdict = judgeSharedMistake(cause, `car ${car} has a pass that never happened`);
+        else problems.push(`car ${car} has a counted pass at ${raceClock(passMs, script.largadaMs)} that never happened`);
+        console.log(`  car ${car}: counted pass at ${raceClock(passMs, script.largadaMs)} with no crossing; ${verdict}`);
+    }
+}
+
+// LAST: for every car that is right, the published time of its last pass.
+const published = await helper('publicado');
+const wrongCars = new Set(afterSuggestions.map((difference) => difference.car));
+for (const car of script.carros.filter((candidate) => !wrongCars.has(candidate))) {
+    const lastCrossing = script.travessias.filter((crossing) => crossing.carro === car).at(-1);
+    if (!lastCrossing) continue;
+    const trueSeconds = (lastCrossing.tsMs - script.largadaMs) / 1000;
+    if (Math.abs((published[car]?.last ?? 0) - trueSeconds) > CROSSING_TOLERANCE_MS / 1000 + 1) {
+        problems.push(`car ${car}: LAST is ${published[car]?.last}, its last crossing was at ${Math.round(trueSeconds)} s`);
+    }
+}
+for (const car of setup.nao_classificados) {
+    if ((published[car]?.voltas ?? 0) !== 0) problems.push(`unclassified car ${car} has ${published[car].voltas} published laps`);
+}
+
+// Stops: completed stays per car in the public feed, against the script.
+// A stay is complete when its entry was logged and its exit was logged OR
+// marked by the reviewer (the "Marcar saída" suggestions accepted above
+// close stays whose exit the pit log missed). So the feed must show at
+// least the stays with both ends logged, and at most those with an entry.
+const feed = await (await fetch(`${RESULTADOS}contagem_feed.php?evt=${EVENTO}&p=${PROVA}`)).json();
+stopAreas.forEach((area, index) => {
+    const logged = (carro, tipo, aroundMs) => stopPlans[index].acoes.some((action) => action.carro === carro && action.tipo === tipo && action.tsMs >= aroundMs && action.tsMs <= aroundMs + 21000);
+    for (const row of feed.carros ?? []) {
+        const stops = script.paradas.filter((stop) => stop.area === area && stop.carro === row.numero);
+        const withEntry = stops.filter((stop) => logged(stop.carro, `${area}_entrada`, stop.entradaMs));
+        const withBothEnds = withEntry.filter((stop) => logged(stop.carro, `${area}_saida`, stop.saidaMs));
+        const shown = row[area]?.paradas ?? 0;
+        if (shown < withBothEnds.length || shown > withEntry.length) {
+            problems.push(`car ${row.numero}: the feed shows ${shown} completed ${area} stay(s); the log has both ends of ${withBothEnds.length} and the entry of ${withEntry.length}`);
+        }
+    }
+});
+
+if (problems.length > 0) {
+    console.log('\nFAIL:');
+    for (const problem of problems) console.log('  ' + problem);
+    await helper('encerrar');
     process.exit(1);
 }
 
-const reassigned = await reassignAgreedTypos(reviewer, typos);
-const fixedByReassigning = new Set(typos.map((typo) => `${typo.realCar}:${typo.crossingMs}`));
-const stillDiffering = await differencesFromTheAnswerKey(answerKey);
-const crossingsForAPerson = stillDiffering.flatMap(({ car }) => underWitnessedCrossings(car, fixedByReassigning));
-const byHand = await resolveAsAPerson(reviewer, await reviewState(reviewer.cookie), crossingsForAPerson);
-console.log(
-    `A person then reassigned ${reassigned} entries of ${typos.length} typo(s) two counters shared, `
-    + `counted ${byHand.confirmed} lone entries and added ${byHand.added} passes nobody recorded for the right car.`,
-);
-const afterAPerson = await differencesFromTheAnswerKey(answerKey);
-if (afterAPerson.length === 0) {
-    console.log(`\nPASS after a person resolved ${typos.length + crossingsForAPerson.length} crossing(s): all ${answerKey.size} cars equal the answer key.`);
-    process.exit(0);
+// ------------------------------------------------------------ stage 2: the person
+
+const byHand = { reassigned: 0, voided: 0, confirmed: 0, added: 0 };
+for (const group of forAPerson.mistakes) {
+    for (const wanted of group.entries) {
+        // Read afresh for every entry: each decision changes what the next chip looks like.
+        const chip = (await reviewer.chipsOf(group.typedCar)).find((candidate) => candidate.fonte_id === wanted.fonteId && candidate.ts_ms === wanted.tsMs);
+        if (!chip || chip.carro !== group.typedCar || chip.anulada) continue;
+        // A wrong number goes to the car that really crossed ("era outro
+        // carro"); an entry for a car that stood in the pit lane is voided.
+        const decision = wanted.realCar !== null
+            ? { tipo: 'reatribuir', passagem_id: chip.id, equipe_numero: wanted.realCar }
+            : { tipo: 'anular', passagem_id: chip.id };
+        const answer = await reviewer.decide(pedidoParaEntrada(decision, chip, await reviewer.state()));
+        if (answer.stored) byHand[wanted.realCar !== null ? 'reassigned' : 'voided']++;
+    }
 }
-console.log(`\nFAIL: ${afterAPerson.length} car(s) still differ after a person resolved the lone crossings:`);
-for (const { car, trueLaps, publishedLaps } of afterAPerson) console.log(`  car ${car}: true ${trueLaps}, published ${publishedLaps}`);
-process.exit(1);
+// What a shared mistake left wrong may be settled now; only what still differs needs more.
+const stillDiffering = await differencesPerCrossing(reviewer);
+state = await reviewer.state();
+for (const { car, missing } of stillDiffering) {
+    for (const crossingMs of missing) {
+        // "Contar esta passagem" on a flag about a lone or held pass of that
+        // car at that moment; "adicionar passagem" when nobody typed it.
+        const flag = (state.alertas_abertos ?? []).find((candidate) => (candidate.carros ?? []).includes(car)
+            && candidate.efeito_de_confirmar === 'mais_uma_passagem'
+            && Math.abs(candidate.ts_ms - crossingMs) <= CROSSING_TOLERANCE_MS && (candidate.passagem_ids ?? []).length > 0);
+        const request = flag
+            ? pedidoParaAlerta({ tipo: 'confirmar', passagem_id: flag.passagem_ids[0] }, flag, state, flag.assinatura ?? null)
+            : pedidoSemAlvo({ tipo: 'adicionar', equipe_numero: car, ts_ms: crossingMs }, state);
+        const answer = await reviewer.decide(request);
+        if (answer.stored) byHand[flag ? 'confirmed' : 'added']++;
+        state = answer.state ?? await reviewer.state();
+    }
+}
+const resolvedByHand = forAPerson.mistakes.size + forAPerson.loneCrossings.length;
+console.log(
+    `\nStage 2 (a person): for ${forAPerson.mistakes.size} shared mistake(s), moved ${byHand.reassigned} entries to the right car and voided ${byHand.voided}; `
+    + `counted ${byHand.confirmed} lone or held passes, added ${byHand.added} passes nobody typed right.`,
+);
+
+const afterAPerson = await differencesPerCrossing(reviewer);
+const finalPublished = await helper('publicado');
+const answerKey = truthAt(null);
+const wrongTotals = [...answerKey].filter(([car, laps]) => (finalPublished[car]?.voltas ?? 0) !== laps);
+if (afterAPerson.length > 0 || wrongTotals.length > 0) {
+    console.log('\nFAIL: after a person resolved what stage 1 left, the race still differs from the answer key:');
+    for (const { car, missing, phantom } of afterAPerson) console.log(`  car ${car}: ${missing.length} crossing(s) not counted, ${phantom.length} counted pass(es) that never happened`);
+    for (const [car, laps] of wrongTotals) console.log(`  car ${car}: true ${laps}, published ${finalPublished[car]?.voltas ?? 0}`);
+    await helper('encerrar');
+    process.exit(1);
+}
+
+// ------------------------------------------------------------ rebuild equals published
+
+const lapsBefore = JSON.stringify(await reviewer.exportRows('voltas'));
+await helper('reconstruir');
+const rebuiltPublished = await helper('publicado');
+const lapsAfter = JSON.stringify(await reviewer.exportRows('voltas'));
+await helper('encerrar');
+if (JSON.stringify(rebuiltPublished) !== JSON.stringify(finalPublished) || lapsBefore !== lapsAfter) {
+    console.log('\nFAIL: "Reconstruir" changed the result: the incremental count and a rebuild from the raw entries disagree.');
+    process.exit(1);
+}
+
+const stage = resolvedByHand === 0
+    ? 'after the suggestions alone'
+    : `after a person resolved ${forAPerson.loneCrossings.length} lone crossing(s) and ${forAPerson.mistakes.size} shared mistake(s)`;
+console.log(`\nPASS ${stage}: all ${answerKey.size} cars equal the answer key, crossing by crossing; rebuild equals published.`);
+process.exit(0);

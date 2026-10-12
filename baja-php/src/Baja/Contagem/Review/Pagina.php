@@ -6,6 +6,7 @@ namespace Baja\Contagem\Review;
 use Baja\Certificado\Insercao\Csrf;
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Engine\Settings;
+use Baja\Contagem\Service\ContagemService;
 use Baja\Juiz\Template;
 use Baja\Model\Prova;
 use Baja\Session;
@@ -203,6 +204,24 @@ final class Pagina
         echo '<div class="contagem-pagina">';
         echo self::navigation($prova, $title);
         echo self::simulationBanner($prova);
+        echo self::testPresetBanner($prova);
+    }
+
+    /**
+     * The banner of every controller page while the test preset is applied.
+     * The preset shrinks the matching window and the other time settings to
+     * a lap of a few seconds; a real race started under it would be counted
+     * with a window too short for people typing by hand.
+     */
+    public static function testPresetBanner(Prova $prova): string
+    {
+        if (!ContagemService::forProva($prova)->hasSavedSettings()) {
+            return '';
+        }
+        return '<p class="contagem-simulacao contagem-predefinicao" role="alert"><strong>PREDEFINIÇÃO DE TESTE APLICADA</strong> '
+            . 'Os tempos da contagem estão ajustados para um ensaio e NÃO são os da corrida de verdade. '
+            . 'Antes da corrida, use "Restaurar valores salvos" em '
+            . '<a href="contagem_fontes.php?p=' . self::h(rawurlencode($prova->getProvaId())) . '">Fontes e configurações</a>.</p>';
     }
 
     /**
@@ -232,9 +251,12 @@ final class Pagina
         foreach ($post as $name => $value) {
             // The token is added fresh below; anything that is not plain
             // text has no business in these forms.
-            if ($name === Csrf::CAMPO || !is_string($value)) {
+            if ($name === Csrf::CAMPO || !is_string($value) || isset($question->campos[$name])) {
                 continue;
             }
+            $fields .= '<input type="hidden" name="' . self::h($name) . '" value="' . self::h($value) . '">';
+        }
+        foreach ($question->campos as $name => $value) {
             $fields .= '<input type="hidden" name="' . self::h($name) . '" value="' . self::h($value) . '">';
         }
         return '<form method="POST" action="' . self::h($action) . '" class="contagem-acao contagem-confirmacao">'

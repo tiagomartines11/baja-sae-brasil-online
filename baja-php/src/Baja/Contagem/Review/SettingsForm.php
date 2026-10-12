@@ -56,6 +56,7 @@ final class SettingsForm
     /** Whole-number fields that must be above zero: key => [label, hint]. */
     public const INTEGER_FIELDS = [
         'janela_ms' => ['Janela de agrupamento (ms)', 'Registros do mesmo carro mais próximos que isto são a mesma passagem.'],
+        'dispersao_alerta_ms' => ['Dispersão que gera alerta (ms)', 'Registros da mesma passagem mais afastados entre si que isto geram alerta: contadores honestos digitam quase juntos. Com só duas fontes assim afastadas, a passagem fica retida até um revisor decidir.'],
         'duplicata_ms' => ['Janela de toque duplo (ms)', 'Repetição da mesma fonte dentro deste tempo é anulada sozinha.'],
         'janela_ritmo_s' => ['Janela do ritmo (s)', 'Quanto tempo para trás o ritmo da prova é calculado.'],
         'dispersao_max_ms' => ['Dispersão máxima para melhor volta (ms)', 'As fontes precisam concordar dentro disto para a volta valer como melhor volta.'],

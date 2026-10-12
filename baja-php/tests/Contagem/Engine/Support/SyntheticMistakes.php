@@ -12,8 +12,12 @@ use Random\Randomizer;
  *
  * Harmless, or repaired by accepting the engine's suggestions:
  *   miss, typo, double_tap, repeat, late, late_beyond_window,
- *   typo_onto_passing_car, repeat_and_latecomer, and two simple mistakes by
- *   two counters on neighbouring crossings.
+ *   typo_onto_passing_car, window_edge_typo, repeat_and_latecomer, and two
+ *   simple mistakes by two counters on neighbouring crossings.
+ *
+ * Never counted by itself, but may need a person to clear the flag:
+ *   a typo for a car that could itself have been at the line just then (the
+ *   engine cannot tell who typed the wrong number, and says so).
  *
  * Only a person can settle (the engine flags them, with no suggestion, and
  * the car stays one lap short until somebody looks at the video):
@@ -26,8 +30,9 @@ use Random\Randomizer;
  *
  * - Unrelated mistakes are at least a minute apart. The combinations above
  *   are the deliberate exceptions.
- * - Two counters never invent the SAME wrong number at the same moment:
- *   that is indistinguishable from a real pass, for any system.
+ * - Two counters never invent the SAME wrong number at the same moment,
+ *   unless the race asks for it (shared_typo, off by default): that is
+ *   indistinguishable from a real pass, for any system.
  * - During a handover the source being handed over makes no mistakes (two
  *   people are watching the line for it).
  * - A counter whose phone is stamping estimated times makes no mistakes
@@ -48,6 +53,8 @@ final class SyntheticMistakes
     public const LONE_REAL_PASS = 'lone_real_pass';
     public const MISS_AND_TYPO = 'miss_and_typo';
     public const REPEAT_AND_LATECOMER = 'repeat_and_latecomer';
+    public const WINDOW_EDGE_TYPO = 'window_edge_typo';
+    public const SHARED_TYPO = 'shared_typo';
     public const NEIGHBOURS = 'neighbours';
 
     private const SIMPLE_KINDS = [self::MISS, self::TYPO, self::DOUBLE_TAP, self::LATE];
@@ -73,6 +80,13 @@ final class SyntheticMistakes
 
     /** @var array<int, array{car: int, tsMs: int}> the crossings only a person can settle */
     public array $momentsOnlyAPersonCanSettle = [];
+
+    /**
+     * Every shared typo: two counters typed `wrongCar` when `realCar` crossed at `tsMs`.
+     *
+     * @var array<int, array{realCar: int, wrongCar: int, tsMs: int}>
+     */
+    public array $sharedTypos = [];
 
     /** How many times two counters made simple mistakes on neighbouring crossings. */
     public int $neighbouringMistakes = 0;
@@ -167,7 +181,7 @@ final class SyntheticMistakes
         }
 
         $pass = $this->track->passes[$passIndex];
-        $twoCounters = in_array($kind, [self::LONE_REAL_PASS, self::MISS_AND_TYPO, self::REPEAT_AND_LATECOMER], true);
+        $twoCounters = in_array($kind, [self::LONE_REAL_PASS, self::MISS_AND_TYPO, self::REPEAT_AND_LATECOMER, self::SHARED_TYPO], true);
         $counters = $this->choices->countersFreeAt($pass['tsMs'], $twoCounters ? 2 : 1, []);
         if ($counters === null || ($twoCounters && $this->config->counters < 3)) {
             return false;
@@ -197,6 +211,22 @@ final class SyntheticMistakes
                     return false;
                 }
                 $this->actions[$passIndex][$first] = ['does' => self::TYPES_ANOTHER_CAR, 'car' => $otherCar];
+                break;
+            case self::WINDOW_EDGE_TYPO:
+                $otherCar = $this->choices->carPassingAtTheWindowEdge($passIndex);
+                if ($otherCar === null) {
+                    return false;
+                }
+                $this->actions[$passIndex][$first] = ['does' => self::TYPES_ANOTHER_CAR, 'car' => $otherCar];
+                break;
+            case self::SHARED_TYPO:
+                $wrongCar = $this->choices->wrongCarFor($passIndex, []);
+                if ($wrongCar === null) {
+                    return false;
+                }
+                $this->actions[$passIndex][$first] = ['does' => self::TYPES_ANOTHER_CAR, 'car' => $wrongCar];
+                $this->actions[$passIndex][$second] = ['does' => self::TYPES_ANOTHER_CAR, 'car' => $wrongCar];
+                $this->sharedTypos[] = ['realCar' => $pass['car'], 'wrongCar' => $wrongCar, 'tsMs' => $pass['tsMs']];
                 break;
             case self::LONE_REAL_PASS:
                 $this->actions[$passIndex][$first] = ['does' => self::DOES_NOT_TYPE];

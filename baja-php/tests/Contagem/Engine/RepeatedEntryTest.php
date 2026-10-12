@@ -288,4 +288,61 @@ final class RepeatedEntryTest extends EngineTestCase
         $samePhone->settings->duplicataMs = 15000;
         $this->assertNoOpenFlags($samePhone->run('04:00'));
     }
+
+    /**
+     * SITUATION: the start is recorded at 01:00. Counter 1 types car 5 one
+     * second before it (warm-up, or a finger a little early) and again two
+     * seconds later, when the car really crosses. Counters 2 and 3 type the
+     * crossing once.
+     *
+     * WHAT WENT WRONG (before): two entries of one counter two seconds
+     * apart are a "double tap", and the LATER one was voided automatically.
+     * Here that was counter 1's only entry of the race: the one before the
+     * start is not a pass.
+     *
+     * EXPECTED: what is typed before the start cannot make the first entry
+     * after it a double tap. Nothing is voided; the car's pass zero has all
+     * three counters; the entry before the start stands alone, marked as
+     * such. No "repetida" flag is raised for it.
+     */
+    public function testAnEntryJustAfterTheStartIsNotADoubleTapOfOneTypedJustBeforeIt(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('01:00');
+        $beforeTheStart = $race->entry(1, 5, '00:59');
+        $afterTheStart = $race->entry(1, 5, '01:01');
+        $race->entry(2, 5, '01:01.5');
+        $race->entry(3, 5, '01:02');
+
+        $result = $race->run('02:00');
+
+        $this->assertSame([], $result->autoVoidedEntryIds);
+        $passZero = $result->groupOfEntry($afterTheStart);
+        $this->assertCount(3, $passZero->entries);
+        $this->assertSame(0, $passZero->numeroVolta);
+        $this->assertTrue($result->groupOfEntry($beforeTheStart)->antesDaLargada);
+        $this->assertCount(1, $result->groupOfEntry($beforeTheStart)->entries);
+        $this->assertSame([], array_filter($result->flags, fn(Flag $flag) => $flag->tipo === Flag::REPETIDA));
+        $this->assertSame(3, $result->cars[5]->contagemPorFonte[1] + $result->cars[5]->contagemPorFonte[2] + $result->cars[5]->contagemPorFonte[3]);
+    }
+
+    /**
+     * SITUATION: the same double entry, both halves AFTER the start (01:01
+     * and 01:03), and in another race both BEFORE it (00:57 and 00:59).
+     *
+     * EXPECTED: the exception is only for a pair on two sides of the start.
+     * In both of these races the later entry is voided as a double tap, as
+     * always.
+     */
+    public function testADoubleTapOnOneSideOfTheStartIsStillVoided(): void
+    {
+        foreach ([['01:01', '01:03'], ['00:57', '00:59']] as [$first, $second]) {
+            $race = RaceScenario::withCounters(3);
+            $race->start('01:00');
+            $race->entry(1, 5, $first);
+            $doubleTap = $race->entry(1, 5, $second);
+
+            $this->assertSame([$doubleTap], $race->run('02:00')->autoVoidedEntryIds, "Entries at $first and $second.");
+        }
+    }
 }

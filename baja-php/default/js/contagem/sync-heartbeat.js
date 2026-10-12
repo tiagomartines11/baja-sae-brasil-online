@@ -6,7 +6,8 @@
 // allowed to speak: see SyncQueue.mustStaySilent.)
 //
 // After the server has refused this device's token ("revogado") the same
-// timer does something else, and much more slowly: it asks for a NEW token.
+// timer does something else: it asks for a NEW token, once at its next tick
+// (at most 5 seconds after the refusal) and from then on every 30 seconds.
 // The server issues one only to a logged-in user who is allowed on this
 // source, so the request succeeds exactly when a controller has linked the
 // counter again. The page then heals by itself: no reload, and the entries
@@ -19,6 +20,9 @@ export const HEARTBEAT_INTERVAL_MS = 5000;
 // How often a revoked device asks whether it has been let back in. Slow on
 // purpose: "revoked" is a decision by a person, and it rarely changes.
 export const REVOKED_RETRY_INTERVAL_MS = 30000;
+
+// How much earlier than planned a timer tick may come and still count as "on time".
+export const TIMER_SLACK_MS = 500;
 
 export class SyncHeartbeat {
     /**
@@ -38,6 +42,10 @@ export class SyncHeartbeat {
         this.clearIntervalFn = null;
         this.recoveryInFlight = false;
         this.lastRecoveryAttemptMs = null;
+        // The moment the server refuses the token, ask why (and whether a
+        // new one is to be had) instead of waiting for the next tick: the
+        // counter should read "bloqueado pelo responsável" right away.
+        queue.onRevoked = () => this.tick();
     }
 
     /** Starts the timer and does the first round at once. */
@@ -89,24 +97,36 @@ export class SyncHeartbeat {
             this.recoveryInFlight = false;
         }
         if (!newTokenIssued) {
+            // The answer may have said WHY this device is shut out
+            // ("bloqueado pelo responsável"). The page redraws its warning
+            // from that now, not when somebody presses a button.
+            this.queue.notifyChange();
             return false;
         }
+        // Let back in: should the device be refused again later, that is a
+        // new story, and its first question is asked at once.
+        this.lastRecoveryAttemptMs = null;
         await this.queue.resumeWithNewToken();
         this.queue.requestSync();
         return true;
     }
 
     /**
-     * The pause runs from the last attempt, or from the refusal itself when
-     * it happened while this page was open. A page that OPENS already revoked
-     * has neither, and asks at once: the person may have reopened it exactly
+     * The pause runs from the last attempt. Before the first attempt there
+     * is none: a device that has just been refused, or a page that opens
+     * already revoked, asks at once. That first answer is how the page
+     * learns the reason, and the person may have reopened the page exactly
      * because they were told they are linked again.
      */
     isTooSoonToAskAgain(nowMs) {
-        const pauseStartsMs = [this.lastRecoveryAttemptMs, this.queue.revokedAtMs]
-            .filter((timestampMs) => timestampMs !== null);
-        // Math.abs: a device clock that jumped backwards must not turn the
-        // pause into "never again".
-        return pauseStartsMs.some((startMs) => Math.abs(nowMs - startMs) < REVOKED_RETRY_INTERVAL_MS);
+        if (this.lastRecoveryAttemptMs === null) {
+            return false;
+        }
+        // Math.abs: a clock that jumped backwards must not turn the pause
+        // into "never again". The slack: this is called from a 5-second
+        // timer, and a browser timer fires a few milliseconds early as often
+        // as late. Without it the tick "at 30 s" arrives at 29.998 s every
+        // other time, and the real pause becomes 35 s.
+        return Math.abs(nowMs - this.lastRecoveryAttemptMs) < REVOKED_RETRY_INTERVAL_MS - TIMER_SLACK_MS;
     }
 }

@@ -47,6 +47,8 @@ final class TestPreset
         $settings->duplicataMs = max(400, (int) round($defaults->duplicataMs * $scale));
         $settings->janelaRitmoS = max(4 * $lapS, (int) round($defaults->janelaRitmoS * $scale));
         $settings->dispersaoMaxMs = max(500, (int) round($defaults->dispersaoMaxMs * $scale));
+        // Never wider than the matching window, or it could not warn of anything.
+        $settings->dispersaoAlertaMs = min($settings->janelaMs, max(600, (int) round($defaults->dispersaoAlertaMs * $scale)));
         $settings->fonteOfflineS = max(10, (int) round($defaults->fonteOfflineS * $scale));
         $settings->dispositivoAusenteS = max(30, (int) round($defaults->dispositivoAusenteS * $scale));
         $settings->recalculoS = max(1, min($defaults->recalculoS, intdiv($lapS, 4)));
@@ -59,12 +61,26 @@ final class TestPreset
      */
     public static function applyTo(Settings $current, int $voltaMediaS): Settings
     {
-        $preset = self::forLap($voltaMediaS);
-        $settings = clone $current;
-        foreach (['janelaMs', 'duplicataMs', 'janelaRitmoS', 'dispersaoMaxMs', 'fonteOfflineS', 'dispositivoAusenteS', 'recalculoS'] as $name) {
-            $settings->$name = $preset->$name;
-        }
+        $settings = self::withTimeSettingsOf($current, self::forLap($voltaMediaS));
         $settings->permitirSimulacao = true;
+        return $settings;
+    }
+
+    /**
+     * The settings the preset touches, and nothing else. Leaving the preset
+     * puts back exactly these: whatever a person changed meanwhile on the
+     * settings page (the publish mode, the classification field, the
+     * primary source, the fueling station) is theirs and stays.
+     */
+    public const TIME_SETTINGS = ['janelaMs', 'duplicataMs', 'janelaRitmoS', 'dispersaoMaxMs', 'dispersaoAlertaMs', 'fonteOfflineS', 'dispositivoAusenteS', 'recalculoS'];
+
+    /** $current with the time settings taken from $source. */
+    private static function withTimeSettingsOf(Settings $current, Settings $source): Settings
+    {
+        $settings = clone $current;
+        foreach (self::TIME_SETTINGS as $name) {
+            $settings->$name = $source->$name;
+        }
         return $settings;
     }
 
@@ -79,17 +95,29 @@ final class TestPreset
         $prova->setParams($params);
     }
 
-    /** The settings kept by remember(), removed from the prova; null when there are none. */
-    public static function takeRemembered(Prova $prova): ?Settings
+    /**
+     * What the settings become when the preset is left: the current ones,
+     * with the time settings kept by remember() put back and simulation
+     * switched off. Null when no copy is kept. Changes nothing.
+     */
+    public static function restored(Prova $prova): ?Settings
     {
         $params = $prova->getParams() ?? new \stdClass();
         if (!isset($params->contagem_salvo)) {
             return null;
         }
-        $saved = Settings::fromArray($params->contagem_salvo);
+        $current = Settings::fromArray($params->contagem ?? null);
+        $settings = self::withTimeSettingsOf($current, Settings::fromArray($params->contagem_salvo));
+        $settings->permitirSimulacao = false;
+        return $settings;
+    }
+
+    /** Throws the kept copy away. */
+    public static function forget(Prova $prova): void
+    {
+        $params = $prova->getParams() ?? new \stdClass();
         unset($params->contagem_salvo);
         $prova->setParams($params);
-        return $saved;
     }
 
     public static function hasRemembered(Prova $prova): bool

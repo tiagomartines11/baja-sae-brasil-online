@@ -10,6 +10,7 @@ import { claimSingleTab, ABA } from './single-tab.js';
 import { LocalStore } from './local-store.js';
 import { ServerClock } from './server-clock.js';
 import { SyncQueue, CONEXAO } from './sync-queue.js';
+import { runClockGuard } from './clock-guard.js';
 import { SyncHeartbeat } from './sync-heartbeat.js';
 import { createTokenSource } from './device-token.js';
 import { createPageInfo } from './page-info.js';
@@ -22,7 +23,7 @@ import { keepScreenAwake, registerOfflineShell, requestPersistentStorage, warnBe
 import { wireShiftButtons, wireDeviceStatus } from './page-extras.js';
 
 const CLOCK_REFRESH_MS = 250;
-// How often the monotonic clock is checked against the system clock (brief 6.5).
+// How often the monotonic clock is checked against the system clock.
 const CLOCK_GUARD_MS = 1000;
 
 // The one global this feature puts on `window`, and only while the prova
@@ -174,7 +175,7 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
     function renderStatus() {
         const state = queue.getState();
         statusBar.render(state, problems, info.simulationAllowed());
-        statusBar.renderClock(state, clock.serverNowMs());
+        statusBar.renderClock(state, clock.serverNowMs(), clock.estado());
         shiftButtons.render(state);
         updateSimulationGlobal();
         for (const listener of stateListeners) {
@@ -196,9 +197,7 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
         queue,
         // Monotonic: the 30-second pause must not depend on a clock that can be set.
         now: monotonicNow,
-        // True only when the server issued a NEW token, which it does for a
-        // logged-in user who is (again) allowed on this source.
-        renewToken: async () => (await tokenSource.get()).issuedNow,
+        renewToken: () => tokenSource.renew(),
     });
     // Records an earlier page load left without a time get one now, before
     // anything is shown or uploaded (brief 6.4).
@@ -207,15 +206,14 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
     const shiftButtons = wireShiftButtons({ windowRef, documentRef, queue, store, syncUrl: config.endpoints.sync });
 
     renderStatus();
-    windowRef.setInterval(() => statusBar.renderClock(queue.getState(), clock.serverNowMs()), CLOCK_REFRESH_MS);
-    // Brief 6.5: a phone whose monotonic clock stood still while it slept
-    // (or whose system clock was changed) loses its anchor here, and asks
-    // the server for a new one at once instead of at the next heartbeat.
-    windowRef.setInterval(() => {
-        if (clock.checkMonotonic()) {
-            queue.requestSync();
-        }
-    }, CLOCK_GUARD_MS);
+    windowRef.setInterval(
+        () => statusBar.renderClock(queue.getState(), clock.serverNowMs(), clock.estado()),
+        CLOCK_REFRESH_MS,
+    );
+    // A phone whose monotonic clock may have stood still while it slept
+    // gets its anchor marked suspect here, and asks the server at once
+    // (instead of at the next heartbeat) to settle it.
+    windowRef.setInterval(() => runClockGuard(clock, queue), CLOCK_GUARD_MS);
 
     heartbeat.start(windowRef.setInterval.bind(windowRef), windowRef.clearInterval.bind(windowRef));
     if (!storedOnDisk) {
@@ -231,7 +229,7 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
         if (documentRef.visibilityState === 'visible') {
             // Coming back from the background is exactly when the phone may
             // have slept; check the clocks before the first tap.
-            clock.checkMonotonic();
+            runClockGuard(clock, queue);
             queue.requestSync();
         }
     });

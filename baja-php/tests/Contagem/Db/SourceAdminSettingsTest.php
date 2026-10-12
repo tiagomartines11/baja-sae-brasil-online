@@ -8,6 +8,7 @@ use Baja\Contagem\Review\ConfirmationNeeded;
 use Baja\Contagem\Review\SourceAdmin;
 use Baja\Contagem\Review\SourceSettings;
 use Baja\Contagem\Service\Clock;
+use Baja\Contagem\Service\TestPreset;
 use Baja\Contagem\Sync\DeviceTokens;
 use Baja\Model\ContagemDispositivoQuery;
 use InvalidArgumentException;
@@ -123,6 +124,113 @@ final class SourceAdminSettingsTest extends ReviewDbTestCase
         } catch (InvalidArgumentException $refusal) {
             $this->assertStringContainsString('Não há valores salvos', $refusal->getMessage());
         }
+    }
+
+    /**
+     * SITUATION: a controller wants a rehearsal with long laps and types
+     * 3600 (an hour) as the average lap of the test preset.
+     *
+     * WHAT WENT WRONG: the form accepted anything from 10 to 3600, and the
+     * preset then silently used its own limit: 3600 was applied as 600 and
+     * the page said "predefinição aplicada".
+     *
+     * EXPECTED: the form has the preset's own limits. A value outside them
+     * is refused, the sentence names the limits, and nothing is applied.
+     * The limits themselves are accepted.
+     */
+    public function testTheTestPresetRefusesALapOutsideItsLimitsInsteadOfClampingIt(): void
+    {
+        foreach (['3600', (string) (TestPreset::LONGEST_LAP_S + 1), (string) (TestPreset::SHORTEST_LAP_S - 1), 'abc', ''] as $typed) {
+            $this->newRequest();
+            try {
+                SourceSettings::applyTestPreset($this->service, ['volta_media_s' => $typed]);
+                $this->fail('"' . $typed . '" was accepted as the average lap');
+            } catch (InvalidArgumentException $refusal) {
+                $this->assertStringContainsString('entre ' . TestPreset::SHORTEST_LAP_S . ' e ' . TestPreset::LONGEST_LAP_S, $refusal->getMessage());
+            }
+            $this->newRequest();
+            $this->assertFalse($this->service->hasSavedSettings(), 'nothing was applied for "' . $typed . '"');
+        }
+
+        $this->newRequest();
+        SourceSettings::applyTestPreset($this->service, ['volta_media_s' => (string) TestPreset::LONGEST_LAP_S]);
+        $this->assertTrue($this->storedSettings()->permitirSimulacao);
+    }
+
+    /**
+     * SITUATION: the test preset is applied (short time settings, and
+     * "Permitir simulação" on). After the rehearsal a controller opens the
+     * settings form, unticks "Permitir simulação" and saves.
+     *
+     * WHAT WENT WRONG: that was accepted. The banner went away and the
+     * rehearsal's two-second matching window stayed in force for the real
+     * race, with nothing left on screen to say so.
+     *
+     * EXPECTED: the save is refused and the sentence says which button to
+     * use instead ("Restaurar valores salvos"). Everything else in the
+     * form can still be saved while the preset is applied.
+     */
+    public function testSimulationCannotBeSwitchedOffAloneWhileThePresetIsApplied(): void
+    {
+        $this->newRequest();
+        SourceSettings::applyTestPreset($this->service, ['volta_media_s' => '60']);
+        $presetWindow = $this->storedSettings()->janelaMs;
+
+        try {
+            $this->saveSettingsForm(['permitir_simulacao' => '']);
+            $this->fail('simulation was switched off with the preset still applied');
+        } catch (InvalidArgumentException $refusal) {
+            $this->assertStringContainsString('Restaurar valores salvos', $refusal->getMessage());
+            $this->assertStringContainsString('Nada foi alterado', $refusal->getMessage());
+        }
+        $this->assertTrue($this->storedSettings()->permitirSimulacao);
+        $this->assertSame($presetWindow, $this->storedSettings()->janelaMs);
+
+        $this->saveSettingsForm(['fator_atrasado' => '1,7']);
+        $this->assertSame(1.7, $this->storedSettings()->fatorAtrasado);
+    }
+
+    /**
+     * SITUATION: simulation was switched on by hand (no preset) and a
+     * simulated race was played into the prova: its entries are stored with
+     * the mode "simulacao". The controller unticks "Permitir simulação".
+     *
+     * WHAT WENT WRONG: with the setting off, nothing marked those made-up
+     * passes any more: they would have counted as the real race.
+     *
+     * EXPECTED: refused, and the sentence sends the person to "Zerar
+     * corrida". Restoring a preset is refused for the same reason. Once the
+     * simulated entries are gone the setting can be switched off.
+     */
+    public function testSimulationCannotBeSwitchedOffWhileSimulatedEntriesExist(): void
+    {
+        $this->changeSettings(['permitir_simulacao' => true]);
+        $entryId = $this->addEntry($this->fontes[0], self::CAR_A, $this->at(60));
+        $this->executeSql('UPDATE contagem_passagem SET modo_entrada = ? WHERE passagem_id = ?', ['simulacao', $entryId]);
+
+        try {
+            $this->saveSettingsForm(['permitir_simulacao' => '']);
+            $this->fail('simulation was switched off with simulated entries in the prova');
+        } catch (InvalidArgumentException $refusal) {
+            $this->assertStringContainsString('Zerar corrida', $refusal->getMessage());
+        }
+        $this->assertTrue($this->storedSettings()->permitirSimulacao);
+
+        $this->newRequest();
+        SourceSettings::applyTestPreset($this->service, ['volta_media_s' => '60']);
+        try {
+            $this->newRequest();
+            SourceSettings::restore($this->service, []);
+            $this->fail('the preset was restored with simulated entries in the prova');
+        } catch (InvalidArgumentException $refusal) {
+            $this->assertStringContainsString('Zerar corrida', $refusal->getMessage());
+        }
+        $this->assertTrue($this->service->hasSavedSettings(), 'the saved values are still kept');
+
+        $this->executeSql('DELETE FROM contagem_passagem WHERE passagem_id = ?', [$entryId]);
+        $this->newRequest();
+        SourceSettings::restore($this->service, []);
+        $this->assertFalse($this->storedSettings()->permitirSimulacao);
     }
 
     /**

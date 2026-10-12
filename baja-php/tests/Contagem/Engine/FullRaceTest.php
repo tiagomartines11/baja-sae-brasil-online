@@ -72,14 +72,19 @@ final class FullRaceTest extends EngineTestCase
      *
      * WHAT WENT WRONG: everything the generator knows how to do. Among it:
      * - a counter repeats a car and a second counter types the same car
-     *   very late, so two counters "agree" on a crossing that never
-     *   happened and the car gets a lap too many;
+     *   very late, so two counters seem to "agree" on a crossing that
+     *   never happened;
+     * - a counter types a car's number 20 seconds before that car really
+     *   passes, so the stray entry sits one matching window away from the
+     *   real ones;
      * - a real crossing that two of the three counters got wrong, so it
      *   rests on one counter's word.
      *
      * EXPECTED, in three steps:
-     * 1. Before anybody reviews anything, the count is wrong for some car.
-     * 2. After a reviewer accepts every suggestion, every extra lap is gone.
+     * 1. Before anybody reviews anything, the count is wrong for some car,
+     *    but ONLY EVER SHORT: no car is ahead of the truth, at any moment
+     *    of the race. (The safe mode must never over-count on its own.)
+     * 2. After a reviewer accepts every suggestion, still nobody is ahead.
      *    What is left is exactly what no algorithm can settle: each crossing
      *    that rests on one counter's word still waits, its car is one lap
      *    short, and a flag WITHOUT a suggestion points at it. The engine
@@ -109,6 +114,10 @@ final class FullRaceTest extends EngineTestCase
         $unreviewed = Engine::run($input);
         $beforeReview = $this->officialCounts($unreviewed, $race);
         $this->assertNotSame($truth, $beforeReview, 'Unreviewed, the count is expected to be wrong somewhere.');
+        $this->assertNoCarIsEverAheadOfTheTruth($race, $unreviewed, 'Unreviewed.');
+        foreach ($truth as $car => $trueLaps) {
+            $this->assertLessThanOrEqual($trueLaps, $beforeReview[$car], "Unreviewed, car $car is ahead of the truth.");
+        }
         $this->assertTheRaceDayTroubleIsThereAndFlagged($race, $unreviewed, $passagemInicial);
 
         $afterSuggestions = SyntheticReviewer::acceptEverySuggestion($input);
@@ -117,7 +126,12 @@ final class FullRaceTest extends EngineTestCase
             $expectedAfterSuggestions[$car] -= $lapsWaiting;
         }
         $this->assertSame($expectedAfterSuggestions, $this->officialCounts($afterSuggestions, $race));
-        $this->assertNotSame($beforeReview, $this->officialCounts($afterSuggestions, $race), 'Accepting the suggestions must have changed the count.');
+        $this->assertNoCarIsEverAheadOfTheTruth($race, $afterSuggestions, 'After accepting every suggestion.');
+        if ($passagemInicial === Settings::INICIAL_PRIMEIRA_PASSAGEM) {
+            // The cars whose first crossing was typed before the recorded
+            // start got their lap back.
+            $this->assertNotSame($beforeReview, $this->officialCounts($afterSuggestions, $race), 'Accepting the suggestions must have changed the count.');
+        }
         foreach ($race->mistakes->momentsOnlyAPersonCanSettle as $moment) {
             $this->assertTrue(
                 $this->hasOpenFlagWithoutSuggestion($afterSuggestions, $moment['car'], $moment['tsMs']),
@@ -172,6 +186,7 @@ final class FullRaceTest extends EngineTestCase
             'a counter types 6 to 12 s late' => [SyntheticMistakes::LATE, true],
             'a counter types 22 to 30 s late' => [SyntheticMistakes::LATE_BEYOND_WINDOW, true],
             'a typo onto a car that is itself passing' => [SyntheticMistakes::TYPO_ONTO_PASSING_CAR, true],
+            'a typo onto a car that passes one window away' => [SyntheticMistakes::WINDOW_EDGE_TYPO, true],
             'a repeat plus a very late counter' => [SyntheticMistakes::REPEAT_AND_LATECOMER, true],
             'two counters miss the same crossing' => [SyntheticMistakes::LONE_REAL_PASS, false],
             'one misses and one mistypes the same crossing' => [SyntheticMistakes::MISS_AND_TYPO, false],
@@ -184,14 +199,27 @@ final class FullRaceTest extends EngineTestCase
      * and under both rules for the first pass.
      *
      * EXPECTED: for the kinds the engine can judge, accepting the
-     * suggestions gives the true count and an empty queue. For the two
-     * kinds that leave a real crossing on one counter's word, suggestions
-     * are NOT enough: at least one flag without a suggestion stays open,
-     * and the count is only right once a person has settled it.
+     * suggestions gives the true count and an empty queue. One exception
+     * to "empty": a wrong number typed for a car that was itself due at
+     * the line just then (it happens when that car is on a long lap). Two
+     * counters say one car and one says another, both could be true, and
+     * the engine says so instead of guessing: a "troca_provavel" with no
+     * suggestion stays open. The count is right all the same, and the
+     * reviewer with the video closes it. (In "confirmadas"; in "todas",
+     * where the stray entry counts meanwhile, the video also fixes the
+     * count.)
+     *
+     * For the two kinds that leave a real crossing on one counter's word,
+     * suggestions are NOT enough: at least one flag without a suggestion
+     * stays open, and the count is only right once a person has settled it.
+     *
+     * In "confirmadas", whatever the kind, no car is ever ahead of the
+     * truth before anybody reviews.
      */
     #[DataProvider('kindsOfMistake')]
     public function testEachKindOfMistakeOnItsOwn(string $kind, bool $suggestionsAreEnough): void
     {
+        $typos = [SyntheticMistakes::TYPO, SyntheticMistakes::TYPO_ONTO_PASSING_CAR, SyntheticMistakes::WINDOW_EDGE_TYPO];
         foreach ([Settings::MODO_CONFIRMADAS, Settings::MODO_TODAS] as $mode) {
             foreach (Settings::PASSAGENS_INICIAIS as $passagemInicial) {
                 foreach ([11, 12, 13] as $seed) {
@@ -201,21 +229,166 @@ final class FullRaceTest extends EngineTestCase
                     $input = $race->input();
                     $input->settings->modoPublicacao = $mode;
                     $input->settings->passagemInicial = $passagemInicial;
+                    $context = "Mode $mode, $passagemInicial, seed $seed.";
+                    if ($mode === Settings::MODO_CONFIRMADAS) {
+                        $this->assertNoCarIsEverAheadOfTheTruth($race, Engine::run($input), $context);
+                    }
 
                     $afterSuggestions = SyntheticReviewer::acceptEverySuggestion($input);
-                    $context = "Mode $mode, $passagemInicial, seed $seed.";
                     if ($suggestionsAreEnough) {
-                        $this->assertSame($truth, $this->officialCounts($afterSuggestions, $race), $context);
-                        $this->assertNoOpenFlags($afterSuggestions, $context);
-                        continue;
+                        // (In "todas" an entry counts until it is moved or
+                        // voided, so there an undecided swap is also a lap
+                        // in the wrong place until a person decides.)
+                        if ($mode === Settings::MODO_CONFIRMADAS || $afterSuggestions->openFlags() === []) {
+                            $this->assertSame($truth, $this->officialCounts($afterSuggestions, $race), $context);
+                        }
+                        foreach ($afterSuggestions->openFlags() as $flag) {
+                            $isUndecidedSwap = $flag->tipo === Flag::TROCA_PROVAVEL && $flag->sugestao === null;
+                            $this->assertTrue(
+                                $isUndecidedSwap && in_array($kind, $typos, true),
+                                "$context The review queue should be empty, but for swaps the engine cannot decide: {$flag->id} ({$flag->motivo})"
+                            );
+                        }
+                    } else {
+                        $this->assertNotEmpty($this->openFlags($afterSuggestions, Flag::SOLITARIA), $context);
                     }
-                    $this->assertNotEmpty($this->openFlags($afterSuggestions, Flag::SOLITARIA), $context);
                     $afterTheVideo = SyntheticReviewer::settleEverythingWithTheVideo($race, $input);
                     $this->assertSame($truth, $this->officialCounts($afterTheVideo, $race), $context);
                     $this->assertNoOpenFlags($afterTheVideo, $context);
                 }
             }
         }
+    }
+
+    /**
+     * Sixty seeds by default. To try many more, set the environment
+     * variable CONTAGEM_INVARIANT_SEEDS, e.g. to 600.
+     *
+     * @return array<string, array{0: int}>
+     */
+    public static function invariantSeeds(): array
+    {
+        $howMany = max(1, (int) (getenv('CONTAGEM_INVARIANT_SEEDS') ?: 60));
+        $cases = [];
+        for ($seed = 1001; $seed <= 1000 + $howMany; $seed++) {
+            $cases["seed $seed"] = [$seed];
+        }
+        return $cases;
+    }
+
+    /**
+     * THE INVARIANT, for many races: in the safe mode ("confirmadas"), with
+     * no reviewer action, a car's official count never exceeds its true
+     * count at that moment.
+     *
+     * SITUATION: whole races with every kind of mistake one counter can
+     * make and the three kinds two counters make on one crossing, a
+     * handover, a finish and all the race-day trouble, under both rules
+     * for the first pass. Nobody reviews anything.
+     *
+     * EXPECTED: for every official pass of every car, the car had really
+     * crossed the line at least that many times by then; and at the end no
+     * car has more laps than it drove. (Before the matcher went by
+     * closeness and the hold rule existed, a stray entry one window before
+     * a real pass, or a repeat plus a late counter, made two passes out of
+     * one crossing; with a real-size field that happened in more than a
+     * third of the races.)
+     */
+    #[DataProvider('invariantSeeds')]
+    public function testInTheSafeModeNoCarIsEverAheadOfTheTruth(int $seed): void
+    {
+        $config = SyntheticRaceConfig::withSeed($seed)->withFinish()->withRaceDayTrouble();
+        // Three times the usual share of the mistakes that used to split a
+        // crossing in two.
+        $config->windowEdgeTypoRate = 0.01;
+        $config->repeatAndLatecomerRate = 0.01;
+        $config->typoOntoPassingCarRate = 0.01;
+        $race = SyntheticRace::generate($config);
+
+        foreach (Settings::PASSAGENS_INICIAIS as $passagemInicial) {
+            $input = $race->input();
+            $input->settings->passagemInicial = $passagemInicial;
+            $result = Engine::run($input);
+
+            $checked = $this->assertNoCarIsEverAheadOfTheTruth($race, $result, "Seed $seed, $passagemInicial.");
+            $this->assertGreaterThan(900, $checked, 'The race must have been counted at all.');
+            foreach ($race->truthLaps($passagemInicial) as $car => $trueLaps) {
+                $this->assertLessThanOrEqual($trueLaps, $result->lapCount($car), "Seed $seed, $passagemInicial: car $car has more laps than it drove.");
+            }
+        }
+    }
+
+    /**
+     * SITUATION: the one mistake no two-of-three count can always catch.
+     * Two counters type the SAME wrong number for a crossing: 14 when car
+     * 41 passed. The third types 41. So two counters "agree" on a pass of
+     * car 14, which is somewhere else on the track, and car 41's real pass
+     * rests on one counter's word. One-hour races with nothing but this
+     * mistake, about once every hundred crossings.
+     *
+     * WHAT WENT WRONG (before): car 14 got the phantom pass, the engine
+     * suggested moving the third counter's CORRECT entry onto car 14 as
+     * well, and accepting every suggestion left car 41 a lap short and car
+     * 14 a lap over with an empty queue.
+     *
+     * EXPECTED:
+     * - most phantoms are caught by the hold rule: they land where car 14
+     *   cannot be (too soon after its previous pass), are held, and the
+     *   suggestion is the reverse one: move the two entries to car 41;
+     * - whatever the reviewer who only accepts suggestions ends up with,
+     *   each shared typo is either RIGHT for both cars or has an OPEN FLAG
+     *   on one of them. Never "wrong and nothing to see";
+     * - across these eight races both things happen: some shared typos are
+     *   put right by the suggestions alone, and some are left for a person
+     *   (the limit of two-of-three agreement is real, and visible);
+     * - the reviewer with the video gets every car's count right and
+     *   empties the queue.
+     */
+    public function testASharedTypoEndsRightOrWithAnOpenFlagOnACarItTouched(): void
+    {
+        $outcomes = [];
+        foreach ([21, 22, 23, 24, 25, 26, 27, 28] as $seed) {
+            $outcomes = array_merge($outcomes, $this->outcomesOfTheSharedTyposOfOneRace($seed));
+        }
+        $this->assertContains('right', $outcomes, 'No shared typo was repaired by the suggestions alone.');
+        $this->assertContains('flag', $outcomes, 'No shared typo was left to a person.');
+    }
+
+    /**
+     * @return string[] for each shared typo of the race: 'right' (both cars' counts are right after
+     *   accepting every suggestion) or 'flag' (an open flag is left on one of the two cars)
+     */
+    private function outcomesOfTheSharedTyposOfOneRace(int $seed): array
+    {
+        $config = SyntheticRaceConfig::withSeed($seed)->withOnly(SyntheticMistakes::SHARED_TYPO, 0.01);
+        $config->raceMinutes = 60;
+        $race = SyntheticRace::generate($config);
+        $this->assertNotEmpty($race->mistakes->sharedTypos);
+        $truth = $race->truthLaps(Settings::INICIAL_PRIMEIRA_PASSAGEM);
+        $input = $race->input();
+
+        $afterSuggestions = SyntheticReviewer::acceptEverySuggestion($input);
+        $counts = $this->officialCounts($afterSuggestions, $race);
+        $outcomes = [];
+        foreach ($race->mistakes->sharedTypos as $typo) {
+            $bothRight = $counts[$typo['realCar']] === $truth[$typo['realCar']] && $counts[$typo['wrongCar']] === $truth[$typo['wrongCar']];
+            $hasOpenFlag = false;
+            foreach ($afterSuggestions->openFlags() as $flag) {
+                if (array_intersect($flag->carros, [$typo['realCar'], $typo['wrongCar']]) !== []) {
+                    $hasOpenFlag = true;
+                }
+            }
+            $this->assertTrue(
+                $bothRight || $hasOpenFlag,
+                sprintf('Seed %d: cars %d and %d are wrong after a shared typo and no flag is open on either.', $seed, $typo['realCar'], $typo['wrongCar'])
+            );
+            $outcomes[] = $hasOpenFlag ? 'flag' : 'right';
+        }
+
+        $afterTheVideo = SyntheticReviewer::settleEverythingWithTheVideo($race, $input);
+        $this->assertSame($truth, $this->officialCounts($afterTheVideo, $race), "Seed $seed.");
+        $this->assertNoOpenFlags($afterTheVideo, "Seed $seed.");
+        return $outcomes;
     }
 
     /**
@@ -249,21 +422,8 @@ final class FullRaceTest extends EngineTestCase
 
     private function configWithOnly(string $kind, int $seed): SyntheticRaceConfig
     {
-        $config = SyntheticRaceConfig::withSeed($seed)->withoutHumanErrors();
+        $config = SyntheticRaceConfig::withSeed($seed)->withOnly($kind, 0.01);
         $config->raceMinutes = 60;
-        $rateProperty = [
-            SyntheticMistakes::MISS => 'missRate',
-            SyntheticMistakes::TYPO => 'typoRate',
-            SyntheticMistakes::DOUBLE_TAP => 'doubleTapRate',
-            SyntheticMistakes::REPEAT => 'repeatRate',
-            SyntheticMistakes::LATE => 'lateRate',
-            SyntheticMistakes::LATE_BEYOND_WINDOW => 'lateBeyondWindowRate',
-            SyntheticMistakes::TYPO_ONTO_PASSING_CAR => 'typoOntoPassingCarRate',
-            SyntheticMistakes::REPEAT_AND_LATECOMER => 'repeatAndLatecomerRate',
-            SyntheticMistakes::LONE_REAL_PASS => 'loneRealPassRate',
-            SyntheticMistakes::MISS_AND_TYPO => 'missAndTypoRate',
-        ][$kind];
-        $config->$rateProperty = 0.01;
         return $config;
     }
 

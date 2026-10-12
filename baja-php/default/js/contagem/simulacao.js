@@ -17,16 +17,23 @@
 // off. Everything typed by the simulation goes through the page's own
 // recording function (`window.contagemPagina`), so it is stored, queued
 // and uploaded exactly like a key press, marked with the mode "simulacao".
+//
+// THREE REFUSALS, each with a sentence saying what to do:
+//   - the prova publishes to the official results (set "modo de publicação"
+//     to "desligada", or pass `confirmarPublicacao: '<id da prova>'`);
+//   - the time settings do not fit the lap (apply the test preset);
+//   - a replay whose race would not lie wholly in the past.
+// The simulation never changes a setting itself.
 
-import { generateRaceScript, AREA_BOX, AREA_ABASTECIMENTO } from './simulacao-corrida.js';
-import { planCounter, planStopLog } from './simulacao-contador.js';
-import { playPlan, windowFitsLap } from './simulacao-execucao.js';
+import { generateRaceScript, raceDurationFor, AREA_BOX, AREA_ABASTECIMENTO } from './simulacao-corrida.js';
+import { planCounter, planStopLog, withStableIds } from './simulacao-contador.js';
+import { playPlan, windowFitsLap, replayOverrunMs, mayStartSimulation } from './simulacao-execucao.js';
 import { trueLapCounts, injectedErrors, lapCountsCsv, errorsCsv, raceTime } from './simulacao-gabarito.js';
 
 const PAGE_API = 'contagemPagina';
 const TIPO_CONTAR = 'contar';
 
-/** The simulation running in this tab, if any: {roteiro, planos, execucoes, opcoes}. */
+/** The simulation running in this tab, if any: {roteiro, planos, execucoes, opcoes, api}. */
 let running = null;
 
 class SimulationRefused extends Error {}
@@ -43,6 +50,11 @@ function numbersOf(cars) {
     return (cars || []).map((car) => car.numero);
 }
 
+/** What the last answer of the server said about the prova (kept by the page). */
+function serverInfoOf(api) {
+    return api.armazenamento.getMeta('servidor', null) || {};
+}
+
 /**
  * Everything the script is built from. The start is the REAL start the
  * server knows ("Largar agora" in race control), so every tab uses the
@@ -52,8 +64,8 @@ function scriptFor(api, { semente, voltaMediaS }) {
     if (!Number.isInteger(semente) || !Number.isInteger(voltaMediaS) || voltaMediaS <= 0) {
         throw new SimulationRefused('Informe a semente e a volta média em números inteiros: contagemSimular({semente: 42, voltaMediaS: 60}).');
     }
-    const serverInfo = api.armazenamento.getMeta('servidor', null);
-    const largadaMs = serverInfo && serverInfo.race ? serverInfo.race.largada_ms : null;
+    const race = serverInfoOf(api).race;
+    const largadaMs = race ? race.largada_ms : null;
     if (largadaMs === null || largadaMs === undefined) {
         throw new SimulationRefused('A corrida ainda não tem largada. Dê a largada no controle de prova e aguarde esta página sincronizar.');
     }
@@ -70,39 +82,22 @@ function scriptFor(api, { semente, voltaMediaS }) {
     });
 }
 
-/**
- * The page's official time as a clock that always has an answer. For a
- * moment now and then the page has no anchor (it discards one that looks
- * wrong and takes a new one at the next contact); until then the last
- * official time is carried forward with the monotonic clock.
- */
-function officialClock(api, monotonicNow) {
-    let lastOfficialMs = api.relogio.serverNowMs();
-    let readAtMonoMs = monotonicNow();
-    return () => {
-        const officialMs = api.relogio.serverNowMs();
-        if (officialMs !== null) {
-            lastOfficialMs = officialMs;
-            readAtMonoMs = monotonicNow();
-            return officialMs;
-        }
-        return lastOfficialMs + (monotonicNow() - readAtMonoMs);
-    };
-}
-
 /** The plans this page plays: one counter, or the people at the two stop areas. */
 function plansFor(api, roteiro, { semente, taxas, area }) {
+    const race = { semente, largadaMs: roteiro.largadaMs, voltaMediaMs: roteiro.voltaMediaMs };
     if (api.tipo === TIPO_CONTAR) {
+        const fonteId = api.config.fonte.id;
+        const plano = planCounter({
+            roteiro,
+            semente,
+            fonteId,
+            naoClassificados: numbersOf(api.naoClassificados()),
+            janelaMs: api.janelaMs(),
+            taxas,
+        });
         return [{
-            plano: planCounter({
-                roteiro,
-                semente,
-                fonteId: api.config.fonte.id,
-                naoClassificados: numbersOf(api.naoClassificados()),
-                janelaMs: api.janelaMs(),
-                taxas,
-            }),
-            registrar: (action) => api.registrarPassagem({ car: action.carro, tsMs: action.tsMs }),
+            plano: withStableIds(plano, race, fonteId),
+            registrar: (action) => api.registrarPassagem({ car: action.carro, tsMs: action.tsMs, uuid: action.uuid }),
         }];
     }
     const areas = [AREA_BOX, AREA_ABASTECIMENTO].filter((candidate) => {
@@ -110,9 +105,39 @@ function plansFor(api, roteiro, { semente, taxas, area }) {
         return wanted && (candidate === AREA_BOX || api.abastecimento());
     });
     return areas.map((oneArea) => ({
-        plano: planStopLog({ roteiro, semente, area: oneArea, taxas }),
-        registrar: (action) => api.registrarParada({ car: action.carro, tipo: action.tipo, tsMs: action.tsMs }),
+        plano: withStableIds(planStopLog({ roteiro, semente, area: oneArea, taxas }), race, oneArea),
+        registrar: (action) => api.registrarParada({ car: action.carro, tipo: action.tipo, tsMs: action.tsMs, uuid: action.uuid }),
     }));
+}
+
+/** Throws, with the sentence for the person, when this simulation must not start. */
+function refuseIfUnsafe(api, roteiro, opcoes, isReplay, officialNowMs) {
+    const provaId = api.config.prova_id;
+    if (!mayStartSimulation({ publica: serverInfoOf(api).publica, provaId, confirmacao: opcoes.confirmarPublicacao })) {
+        throw new SimulationRefused(
+            'Esta prova está publicando a contagem nos resultados oficiais. Mude o "modo de publicação" para "desligada" '
+            + 'antes de simular. Se a intenção é mesmo publicar uma corrida simulada, repita o comando com '
+            + 'confirmarPublicacao: \'' + provaId + '\'.'
+        );
+    }
+    if (!windowFitsLap(api.janelaMs(), roteiro.voltaMediaMs)) {
+        // The simulation never changes settings by itself: a person must.
+        throw new SimulationRefused(
+            'As configurações de tempo não servem para uma volta média de ' + opcoes.voltaMediaS + ' s '
+            + '(janela de ' + api.janelaMs() + ' ms). Em Configurações da contagem, aplique a "Predefinição de teste" '
+            + 'para volta média de ' + opcoes.voltaMediaS + ' s e aguarde esta página sincronizar.'
+        );
+    }
+    if (isReplay) {
+        const overrunMs = replayOverrunMs(roteiro.largadaMs, raceDurationFor(roteiro.voltaMediaMs), officialNowMs);
+        if (overrunMs > 0) {
+            throw new SimulationRefused(
+                'Um replay precisa estar inteiro no passado: esta corrida dura ' + raceTime(roteiro.fimMs, roteiro.largadaMs)
+                + ' e a largada registrada é recente demais. No controle de prova, corrija a largada para pelo menos '
+                + raceTime(roteiro.fimMs, roteiro.largadaMs) + ' antes de agora (faltam ' + raceTime(overrunMs, 0) + ').'
+            );
+        }
+    }
 }
 
 /**
@@ -123,6 +148,7 @@ function plansFor(api, roteiro, { semente, taxas, area }) {
  * @param {number} [opcoes.velocidade] given = replay: the race is played this many times faster than real time
  * @param {object} [opcoes.taxas]      error rates per thousand (see simulacao-contador.js)
  * @param {string} [opcoes.area]       pit page only: 'box', 'abastecimento' or 'ambas' (default)
+ * @param {string} [opcoes.confirmarPublicacao] the prova's id, to simulate on a prova that publishes
  * @returns {{parar: function, terminou: Promise}}
  */
 function simular(windowRef, opcoes = {}) {
@@ -131,36 +157,31 @@ function simular(windowRef, opcoes = {}) {
         throw new SimulationRefused('Já há uma simulação rodando nesta aba. Use contagemSimular.parar() ou recarregue a página.');
     }
     const roteiro = scriptFor(api, opcoes);
-    const voltaMediaMs = opcoes.voltaMediaS * 1000;
-    if (!windowFitsLap(api.janelaMs(), voltaMediaMs)) {
-        // The simulation never changes settings by itself: a person must.
-        throw new SimulationRefused(
-            'As configurações de tempo não servem para uma volta média de ' + opcoes.voltaMediaS + ' s '
-            + '(janela de ' + api.janelaMs() + ' ms). Em Configurações da contagem, aplique a "Predefinição de teste" '
-            + 'para volta média de ' + opcoes.voltaMediaS + ' s e aguarde esta página sincronizar.'
-        );
-    }
-    const serverNowMs = api.relogio.serverNowMs();
-    if (serverNowMs === null) {
+    const officialNowMs = api.relogio.serverNowMs();
+    if (officialNowMs === null) {
         throw new SimulationRefused('Esta página ainda não sincronizou o horário com o servidor. Aguarde e tente de novo.');
     }
-
     const isReplay = Number.isFinite(opcoes.velocidade) && opcoes.velocidade > 0;
+    refuseIfUnsafe(api, roteiro, opcoes, isReplay, officialNowMs);
+
     const plans = plansFor(api, roteiro, opcoes);
-    const monotonicNow = () => windowRef.performance.now();
+    if (isReplay) {
+        // A replay types passes of hours ago. "My queue is empty, I have
+        // sent everything up to now" would then be said between two of
+        // them, and the server would conclude this counter missed every
+        // pass the replay has not reached yet.
+        api.suprimirMarcaDeFila(true);
+    }
     const execucoes = plans.map(({ plano, registrar }) => playPlan({
         acoes: plano.acoes,
         registrar,
-        // A live race follows the OFFICIAL clock, the same one every tab
-        // and the server share, so the tabs stay in step with each other
-        // and with the race clock on screen for as long as the race lasts.
-        // A replay only needs "how much real time has passed".
-        agora: isReplay ? monotonicNow : officialClock(api, monotonicNow),
+        // A live race follows the OFFICIAL clock, the one every tab and
+        // the server share. A replay only needs "how much real time has passed".
+        agora: isReplay ? () => windowRef.performance.now() : () => api.relogio.serverNowMs(),
         esperar: (ms) => new Promise((resolve) => windowRef.setTimeout(resolve, ms)),
         velocidade: isReplay ? opcoes.velocidade : 1,
-        // Live: the race's time is the server's time, so a tab that joins
-        // late first catches up with what it "missed". Replay: from the start.
-        inicioCorridaMs: isReplay ? roteiro.largadaMs : serverNowMs,
+        // Live: a tab that joins late first catches up with what it "missed".
+        inicioCorridaMs: isReplay ? roteiro.largadaMs : officialNowMs,
         aoProgredir: (played, total) => {
             if (played === total || played % 200 === 0) {
                 windowRef.console.log('Simulação: ' + played + ' de ' + total + ' registros.');
@@ -168,8 +189,9 @@ function simular(windowRef, opcoes = {}) {
         },
     }));
 
-    running = { roteiro, planos: plans.map((plan) => plan.plano), execucoes, opcoes };
+    running = { roteiro, planos: plans.map((plan) => plan.plano), execucoes, opcoes, api };
     const terminou = Promise.all(execucoes.map((execucao) => execucao.terminou)).then((results) => {
+        api.suprimirMarcaDeFila(false);
         windowRef.console.log('Simulação terminada nesta aba.', results);
         return results;
     });
@@ -186,6 +208,7 @@ function parar(windowRef) {
         return;
     }
     running.execucoes.forEach((execucao) => execucao.parar());
+    running.api.suprimirMarcaDeFila(false);
     running = null;
     windowRef.console.log('Simulação interrompida nesta aba. O que já foi registrado continua registrado.');
 }
@@ -221,7 +244,11 @@ function gabarito(windowRef, opcoes = {}) {
     // with a moment already fully uploaded); a replay lies wholly in the past.
     const isReplay = Number.isFinite(used.velocidade) && used.velocidade > 0;
     const asOfMs = Number.isFinite(opcoes.ateMs) ? opcoes.ateMs : api.relogio.serverNowMs();
-    const laps = trueLapCounts(roteiro, { ateMs: isReplay ? null : asOfMs });
+    const laps = trueLapCounts(roteiro, {
+        // Which crossing completes lap 1 depends on the prova's counting rule.
+        passagemInicial: serverInfoOf(api).passagem_inicial || undefined,
+        ateMs: isReplay ? null : asOfMs,
+    });
     const errors = injectedErrors(plans);
 
     windowRef.console.log('Voltas verdadeiras por carro' + (isReplay ? '' : ' (até agora)') + ':');

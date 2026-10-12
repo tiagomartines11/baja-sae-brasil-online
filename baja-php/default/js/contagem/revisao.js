@@ -35,6 +35,7 @@ const acoesDoDetalhe = {
   aceitar: acoes.aceitar,
   confirmarAlerta: acoes.confirmarAlerta,
   descartarPassagem: acoes.descartarPassagem,
+  marcarSaida: acoes.marcarSaida,
   // "Era outro carro…" on a repeat: opens the entry's own box, where the
   // field to move it to another car is.
   eraOutroCarro: (id) => { tela.entradaSelecionadaId = id; desenharDetalhe(); },

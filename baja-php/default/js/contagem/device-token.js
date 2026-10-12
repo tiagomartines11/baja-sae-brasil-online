@@ -21,6 +21,7 @@ export const MOTIVO = {
 // often. The "no" is a decision by a controller; knocking every 5 seconds
 // would not change it, and half a minute is soon enough to notice a "yes".
 export const REFUSAL_PAUSE_MS = 30000;
+const TIMER_SLACK_MS = 500;
 const MOTIVOS_DE_RECUSA = [MOTIVO.SEM_PERMISSAO, MOTIVO.DISPOSITIVO_REVOGADO];
 
 export class TokenUnavailableError extends Error {
@@ -117,9 +118,16 @@ export function createTokenSource({ store, requestToken, usuario, monotonicNow, 
     return {
         /** @returns {Promise<{token: string, issuedNow: boolean}>} */
         async get() {
-            if (lastRefusal !== null && Math.abs(monotonicNow() - lastRefusal.atMs) < REFUSAL_PAUSE_MS) {
+            // (The slack: get() is called from a 5-second timer, and a tick
+            // that comes 2 ms early must not cost another 5 seconds.)
+            if (lastRefusal !== null && Math.abs(monotonicNow() - lastRefusal.atMs) < REFUSAL_PAUSE_MS - TIMER_SLACK_MS) {
                 throw new TokenUnavailableError(lastRefusal.motivo);
             }
+            // The pause is counted from the moment of ASKING, not from the
+            // answer. The page's timer fires every 5 s; counted from the
+            // answer (a moment later), the tick at 30 s would come "too
+            // soon" every time and the real wait would be 35 s.
+            const askedAtMs = monotonicNow();
             try {
                 const result = await obtainDeviceToken({ store, requestToken, usuario });
                 lastRefusal = null;
@@ -127,7 +135,7 @@ export function createTokenSource({ store, requestToken, usuario, monotonicNow, 
                 return result;
             } catch (tokenError) {
                 const motivo = tokenError.motivo || null;
-                lastRefusal = MOTIVOS_DE_RECUSA.includes(motivo) ? { motivo, atMs: monotonicNow() } : null;
+                lastRefusal = MOTIVOS_DE_RECUSA.includes(motivo) ? { motivo, atMs: askedAtMs } : null;
                 onOutcome(motivo);
                 throw tokenError;
             }
@@ -135,6 +143,20 @@ export function createTokenSource({ store, requestToken, usuario, monotonicNow, 
         /** "Tentar de novo": the next get() asks the server whatever was answered before. */
         forgetRefusal() {
             lastRefusal = null;
+        },
+        /**
+         * For the heartbeat of a device whose token was refused: asks the
+         * server NOW, whatever it answered before. The heartbeat keeps its
+         * own 30-second pace (sync-heartbeat.js); a second pause in here
+         * would swallow every other one of its attempts.
+         *
+         * @returns {Promise<boolean>} true only when the server issued a NEW
+         *          token, which it does for a logged-in user who is (again)
+         *          allowed on this source
+         */
+        async renew() {
+            lastRefusal = null;
+            return (await this.get()).issuedNow;
         },
     };
 }

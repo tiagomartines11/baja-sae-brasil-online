@@ -96,6 +96,7 @@ final class SnapshotStore
         if ($redis !== null) {
             try {
                 $redis->set($this->redisKey, $json);
+                $redis->set($this->redisKey . '_feed', self::feedJsonOf($snapshot));
                 $redis->set($this->redisKey . '_resumo', (string) json_encode([
                     'gerado_em_ms' => $snapshot->geradoEmMs,
                     'mudancas' => $snapshot->mudancas,
@@ -114,12 +115,48 @@ final class SnapshotStore
         }
     }
 
+    /**
+     * The part of the snapshot the public feed needs: the feed rows and the
+     * numbers for the race clock and car status. Kept under a key of its
+     * own because the feed is read far more often than anything else, and
+     * the whole snapshot (with the review screen's state in it) is some
+     * hundreds of kilobytes to decode for nothing.
+     *
+     * @return array{gerado_em_ms: int, feed: array, tempo_real: array}|null
+     */
+    public function getFeedPart(): ?array
+    {
+        $redis = RedisClient::get();
+        if ($redis !== null) {
+            try {
+                $part = json_decode((string) $redis->get($this->redisKey . '_feed'), true);
+                if (is_array($part) && isset($part['gerado_em_ms'])) {
+                    return $part;
+                }
+            } catch (\Throwable $error) {
+                error_log('Contagem\SnapshotStore: Redis read failed: ' . $error->getMessage());
+            }
+        }
+        // Redis is empty or away: the whole snapshot (Redis or the file copy) has the same.
+        $snapshot = $this->get();
+        return $snapshot === null ? null : json_decode(self::feedJsonOf($snapshot), true);
+    }
+
+    private static function feedJsonOf(RaceSnapshot $snapshot): string
+    {
+        return (string) json_encode([
+            'gerado_em_ms' => $snapshot->geradoEmMs,
+            'feed' => $snapshot->dados['feed'] ?? [],
+            'tempo_real' => $snapshot->dados['tempo_real'] ?? [],
+        ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
     public function clear(): void
     {
         $redis = RedisClient::get();
         if ($redis !== null) {
             try {
-                $redis->del($this->redisKey, $this->redisKey . '_resumo');
+                $redis->del($this->redisKey, $this->redisKey . '_resumo', $this->redisKey . '_feed');
             } catch (\Throwable $error) {
                 error_log('Contagem\SnapshotStore: Redis delete failed: ' . $error->getMessage());
             }

@@ -134,6 +134,35 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
     protected $uuid_cliente;
 
     /**
+     * The value for the qualidade_tempo field.
+     *
+     * Note: this column has a database default value of: 'exato'
+     * @var        string
+     */
+    protected $qualidade_tempo;
+
+    /**
+     * The value for the ts_dispositivo_ms field.
+     *
+     * @var        string|null
+     */
+    protected $ts_dispositivo_ms;
+
+    /**
+     * The value for the modo_entrada field.
+     *
+     * @var        string|null
+     */
+    protected $modo_entrada;
+
+    /**
+     * The value for the origem field.
+     *
+     * @var        string|null
+     */
+    protected $origem;
+
+    /**
      * @var        ChildProva
      */
     protected $aProva;
@@ -147,10 +176,23 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
     protected $alreadyInSave = false;
 
     /**
+     * Applies default values to this object.
+     * This method should be called from the object's constructor (or
+     * equivalent initialization method).
+     * @see __construct()
+     */
+    public function applyDefaultValues(): void
+    {
+        $this->qualidade_tempo = 'exato';
+    }
+
+    /**
      * Initializes internal state of Baja\Model\Base\ContagemOcorrencia object.
+     * @see applyDefaults()
      */
     public function __construct()
     {
+        $this->applyDefaultValues();
     }
 
     /**
@@ -473,6 +515,46 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
     }
 
     /**
+     * Get the [qualidade_tempo] column value.
+     *
+     * @return string
+     */
+    public function getQualidadeTempo()
+    {
+        return $this->qualidade_tempo;
+    }
+
+    /**
+     * Get the [ts_dispositivo_ms] column value.
+     *
+     * @return string|null
+     */
+    public function getTsDispositivoMs()
+    {
+        return $this->ts_dispositivo_ms;
+    }
+
+    /**
+     * Get the [modo_entrada] column value.
+     *
+     * @return string|null
+     */
+    public function getModoEntrada()
+    {
+        return $this->modo_entrada;
+    }
+
+    /**
+     * Get the [origem] column value.
+     *
+     * @return string|null
+     */
+    public function getOrigem()
+    {
+        return $this->origem;
+    }
+
+    /**
      * Set the value of [ocorrencia_id] column.
      *
      * @param string $v New value
@@ -681,6 +763,86 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [qualidade_tempo] column.
+     *
+     * @param string $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setQualidadeTempo($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->qualidade_tempo !== $v) {
+            $this->qualidade_tempo = $v;
+            $this->modifiedColumns[ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [ts_dispositivo_ms] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setTsDispositivoMs($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->ts_dispositivo_ms !== $v) {
+            $this->ts_dispositivo_ms = $v;
+            $this->modifiedColumns[ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [modo_entrada] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setModoEntrada($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->modo_entrada !== $v) {
+            $this->modo_entrada = $v;
+            $this->modifiedColumns[ContagemOcorrenciaTableMap::COL_MODO_ENTRADA] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [origem] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setOrigem($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->origem !== $v) {
+            $this->origem = $v;
+            $this->modifiedColumns[ContagemOcorrenciaTableMap::COL_ORIGEM] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -690,6 +852,10 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
      */
     public function hasOnlyDefaultValues(): bool
     {
+            if ($this->qualidade_tempo !== 'exato') {
+                return false;
+            }
+
         // otherwise, everything was equal, so return TRUE
         return true;
     }
@@ -746,6 +912,18 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemOcorrenciaTableMap::translateFieldName('UuidCliente', TableMap::TYPE_PHPNAME, $indexType)];
             $this->uuid_cliente = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ContagemOcorrenciaTableMap::translateFieldName('QualidadeTempo', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->qualidade_tempo = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : ContagemOcorrenciaTableMap::translateFieldName('TsDispositivoMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->ts_dispositivo_ms = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : ContagemOcorrenciaTableMap::translateFieldName('ModoEntrada', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->modo_entrada = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : ContagemOcorrenciaTableMap::translateFieldName('Origem', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->origem = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -753,7 +931,7 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 10; // 10 = ContagemOcorrenciaTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 14; // 14 = ContagemOcorrenciaTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemOcorrencia'), 0, $e);
@@ -1004,6 +1182,18 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_UUID_CLIENTE)) {
             $modifiedColumns[':p' . $index++]  = 'uuid_cliente';
         }
+        if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO)) {
+            $modifiedColumns[':p' . $index++]  = 'qualidade_tempo';
+        }
+        if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'ts_dispositivo_ms';
+        }
+        if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_MODO_ENTRADA)) {
+            $modifiedColumns[':p' . $index++]  = 'modo_entrada';
+        }
+        if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_ORIGEM)) {
+            $modifiedColumns[':p' . $index++]  = 'origem';
+        }
 
         $sql = sprintf(
             'INSERT INTO contagem_ocorrencia (%s) VALUES (%s)',
@@ -1053,6 +1243,22 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
                         break;
                     case 'uuid_cliente':
                         $stmt->bindValue($identifier, $this->uuid_cliente, PDO::PARAM_STR);
+
+                        break;
+                    case 'qualidade_tempo':
+                        $stmt->bindValue($identifier, $this->qualidade_tempo, PDO::PARAM_STR);
+
+                        break;
+                    case 'ts_dispositivo_ms':
+                        $stmt->bindValue($identifier, $this->ts_dispositivo_ms, PDO::PARAM_INT);
+
+                        break;
+                    case 'modo_entrada':
+                        $stmt->bindValue($identifier, $this->modo_entrada, PDO::PARAM_STR);
+
+                        break;
+                    case 'origem':
+                        $stmt->bindValue($identifier, $this->origem, PDO::PARAM_STR);
 
                         break;
                 }
@@ -1147,6 +1353,18 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
             case 9:
                 return $this->getUuidCliente();
 
+            case 10:
+                return $this->getQualidadeTempo();
+
+            case 11:
+                return $this->getTsDispositivoMs();
+
+            case 12:
+                return $this->getModoEntrada();
+
+            case 13:
+                return $this->getOrigem();
+
             default:
                 return null;
         } // switch()
@@ -1185,6 +1403,10 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
             $keys[7] => $this->getCriadoEmMs(),
             $keys[8] => $this->getSubstituiId(),
             $keys[9] => $this->getUuidCliente(),
+            $keys[10] => $this->getQualidadeTempo(),
+            $keys[11] => $this->getTsDispositivoMs(),
+            $keys[12] => $this->getModoEntrada(),
+            $keys[13] => $this->getOrigem(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1273,6 +1495,18 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
             case 9:
                 $this->setUuidCliente($value);
                 break;
+            case 10:
+                $this->setQualidadeTempo($value);
+                break;
+            case 11:
+                $this->setTsDispositivoMs($value);
+                break;
+            case 12:
+                $this->setModoEntrada($value);
+                break;
+            case 13:
+                $this->setOrigem($value);
+                break;
         } // switch()
 
         return $this;
@@ -1328,6 +1562,18 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
         }
         if (array_key_exists($keys[9], $arr)) {
             $this->setUuidCliente($arr[$keys[9]]);
+        }
+        if (array_key_exists($keys[10], $arr)) {
+            $this->setQualidadeTempo($arr[$keys[10]]);
+        }
+        if (array_key_exists($keys[11], $arr)) {
+            $this->setTsDispositivoMs($arr[$keys[11]]);
+        }
+        if (array_key_exists($keys[12], $arr)) {
+            $this->setModoEntrada($arr[$keys[12]]);
+        }
+        if (array_key_exists($keys[13], $arr)) {
+            $this->setOrigem($arr[$keys[13]]);
         }
 
         return $this;
@@ -1401,6 +1647,18 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_UUID_CLIENTE)) {
             $criteria->add(ContagemOcorrenciaTableMap::COL_UUID_CLIENTE, $this->uuid_cliente);
+        }
+        if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO)) {
+            $criteria->add(ContagemOcorrenciaTableMap::COL_QUALIDADE_TEMPO, $this->qualidade_tempo);
+        }
+        if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS)) {
+            $criteria->add(ContagemOcorrenciaTableMap::COL_TS_DISPOSITIVO_MS, $this->ts_dispositivo_ms);
+        }
+        if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_MODO_ENTRADA)) {
+            $criteria->add(ContagemOcorrenciaTableMap::COL_MODO_ENTRADA, $this->modo_entrada);
+        }
+        if ($this->isColumnModified(ContagemOcorrenciaTableMap::COL_ORIGEM)) {
+            $criteria->add(ContagemOcorrenciaTableMap::COL_ORIGEM, $this->origem);
         }
 
         return $criteria;
@@ -1499,6 +1757,10 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
         $copyObj->setCriadoEmMs($this->getCriadoEmMs());
         $copyObj->setSubstituiId($this->getSubstituiId());
         $copyObj->setUuidCliente($this->getUuidCliente());
+        $copyObj->setQualidadeTempo($this->getQualidadeTempo());
+        $copyObj->setTsDispositivoMs($this->getTsDispositivoMs());
+        $copyObj->setModoEntrada($this->getModoEntrada());
+        $copyObj->setOrigem($this->getOrigem());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setOcorrenciaId(NULL); // this is a auto-increment column, so set to default value
@@ -1606,8 +1868,13 @@ abstract class ContagemOcorrencia implements ActiveRecordInterface
         $this->criado_em_ms = null;
         $this->substitui_id = null;
         $this->uuid_cliente = null;
+        $this->qualidade_tempo = null;
+        $this->ts_dispositivo_ms = null;
+        $this->modo_entrada = null;
+        $this->origem = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
+        $this->applyDefaultValues();
         $this->resetModified();
         $this->setNew(true);
         $this->setDeleted(false);

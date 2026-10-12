@@ -75,12 +75,14 @@ export class SyncQueue {
         this.requestInFlight = false;
         this.flushPromise = null;
         this.flushRequestedMeanwhile = false;
+        // See suprimirMarcaDeFila().
+        this.marcaDeFilaSuprimida = false;
+        // Set by the heartbeat (sync-heartbeat.js): called the moment the
+        // server refuses this device's token.
+        this.onRevoked = null;
 
         // A revoked token stays revoked across reloads: the mark is on disk.
         this.conexao = store.getMeta(META_REVOKED, false) ? CONEXAO.REVOGADO : CONEXAO.CONECTANDO;
-        // Monotonic time at which the server refused the token during THIS
-        // page load (null when the mark was already on disk).
-        this.revokedAtMs = null;
         // So does an ended shift: reopening the page must not quietly tell
         // the server "I am counting again" before the person says so.
         this.turnoEncerrado = store.getMeta(META_SHIFT_ENDED, false) === true;
@@ -134,7 +136,24 @@ export class SyncQueue {
             maxBatch: this.maxBatch,
             vouchesForHistory: this.vouchesForHistory,
             encerrando,
+            suppressQueueEmpty: this.marcaDeFilaSuprimida,
         });
+    }
+
+    /**
+     * For the race simulation only. While switched on, no request says
+     * `queue_empty: true`, whatever the queue holds.
+     *
+     * Why: `queue_empty` moves this device's "synced through" mark on the
+     * server to now. A replay injects passes that lie in the PAST, in
+     * bursts; an empty queue between two bursts does not mean "you have
+     * everything up to now", and saying so would turn the passes still to
+     * come into misses.
+     *
+     * @param {boolean} suprimir
+     */
+    suprimirMarcaDeFila(suprimir) {
+        this.marcaDeFilaSuprimida = suprimir === true;
     }
 
     /**
@@ -237,13 +256,16 @@ export class SyncQueue {
     /**
      * The server said this token is no longer accepted: uploads stop. Nothing
      * local is touched except the mark itself. From now on the heartbeat
-     * only asks, slowly, whether the device has been let back in (see
+     * only asks whether the device has been let back in: once right away
+     * (the answer also says WHY it was shut out), then slowly (see
      * sync-heartbeat.js).
      */
     async registerRevoked() {
         this.conexao = CONEXAO.REVOGADO;
-        this.revokedAtMs = this.clock.monotonicNow();
         await this.store.setMeta(META_REVOKED, true);
+        if (this.onRevoked) {
+            this.onRevoked();
+        }
         return nothingDone(RESULTADO.REVOGADO);
     }
 
@@ -309,7 +331,6 @@ export class SyncQueue {
     async resumeWithNewToken() {
         await this.store.setMeta(META_REVOKED, false);
         this.conexao = CONEXAO.CONECTANDO;
-        this.revokedAtMs = null;
         this.notifyChange();
     }
 

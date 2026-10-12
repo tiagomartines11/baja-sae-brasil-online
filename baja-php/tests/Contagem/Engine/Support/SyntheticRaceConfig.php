@@ -37,6 +37,13 @@ final class SyntheticRaceConfig
     public float $lateBeyondWindowRate = 0.003;
     /** A counter types the number of ANOTHER car that is crossing within 15 seconds. */
     public float $typoOntoPassingCarRate = 0.003;
+    /**
+     * A counter types the number of another car that crosses the line 15 to
+     * 25 seconds earlier or later: at the edge of the matching window. The
+     * stray entry then sits one window away from that car's real entries,
+     * where a careless matcher makes two passes out of one crossing.
+     */
+    public float $windowEdgeTypoRate = 0.003;
 
     // ----- two counters get the same crossing wrong -----
 
@@ -46,6 +53,14 @@ final class SyntheticRaceConfig
     public float $missAndTypoRate = 0.002;
     /** One counter records the car again 10 to 15 s later and another records it 22 to 26 s late. */
     public float $repeatAndLatecomerRate = 0.003;
+    /**
+     * Two counters type the SAME wrong number for a crossing; the third
+     * types the right one. Two counters "agree" on a pass of a car that is
+     * somewhere else on the track. No system that counts by two-of-three
+     * agreement can always tell this from a real pass, so it is OFF by
+     * default and has tests of its own (see FullRaceTest).
+     */
+    public float $sharedTypoRate = 0.0;
 
     /**
      * After a simple mistake (miss, typo, double tap, late), the chance that
@@ -139,6 +154,8 @@ final class SyntheticRaceConfig
         $this->lateRate = 0.0;
         $this->lateBeyondWindowRate = 0.0;
         $this->typoOntoPassingCarRate = 0.0;
+        $this->windowEdgeTypoRate = 0.0;
+        $this->sharedTypoRate = 0.0;
         $this->loneRealPassRate = 0.0;
         $this->missAndTypoRate = 0.0;
         $this->repeatAndLatecomerRate = 0.0;
@@ -180,7 +197,30 @@ final class SyntheticRaceConfig
         // The timing races are kept exactly as they were when the budgets
         // were set, so that times can be compared from round to round.
         $config->fuelStopRate = 0.0;
+        $config->windowEdgeTypoRate = 0.0;
         return $config;
+    }
+
+    /** A race in which the only mistake the counters make is the given one, at the given rate. */
+    public function withOnly(string $kind, float $rate): self
+    {
+        $this->withoutHumanErrors();
+        $property = [
+            SyntheticMistakes::MISS => 'missRate',
+            SyntheticMistakes::TYPO => 'typoRate',
+            SyntheticMistakes::DOUBLE_TAP => 'doubleTapRate',
+            SyntheticMistakes::REPEAT => 'repeatRate',
+            SyntheticMistakes::LATE => 'lateRate',
+            SyntheticMistakes::LATE_BEYOND_WINDOW => 'lateBeyondWindowRate',
+            SyntheticMistakes::TYPO_ONTO_PASSING_CAR => 'typoOntoPassingCarRate',
+            SyntheticMistakes::WINDOW_EDGE_TYPO => 'windowEdgeTypoRate',
+            SyntheticMistakes::LONE_REAL_PASS => 'loneRealPassRate',
+            SyntheticMistakes::MISS_AND_TYPO => 'missAndTypoRate',
+            SyntheticMistakes::REPEAT_AND_LATECOMER => 'repeatAndLatecomerRate',
+            SyntheticMistakes::SHARED_TYPO => 'sharedTypoRate',
+        ][$kind];
+        $this->$property = $rate;
+        return $this;
     }
 
     /** @return array<string, float> kind of mistake => rate per crossing */
@@ -197,6 +237,8 @@ final class SyntheticRaceConfig
             SyntheticMistakes::LONE_REAL_PASS => $this->loneRealPassRate,
             SyntheticMistakes::MISS_AND_TYPO => $this->missAndTypoRate,
             SyntheticMistakes::REPEAT_AND_LATECOMER => $this->repeatAndLatecomerRate,
+            SyntheticMistakes::WINDOW_EDGE_TYPO => $this->windowEdgeTypoRate,
+            SyntheticMistakes::SHARED_TYPO => $this->sharedTypoRate,
         ];
     }
 }

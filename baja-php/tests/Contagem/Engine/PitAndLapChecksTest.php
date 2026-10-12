@@ -29,7 +29,10 @@ final class PitAndLapChecksTest extends EngineTestCase
      *
      * EXPECTED: the lap counts (three counters agree), but a "no_box" flag
      * marks it as unreliable, and the laps touching that pass cannot be a
-     * "best lap".
+     * "best lap". Since several counters saw the car at the line, the
+     * suggestion is "marcar saída do box": record the exit nobody logged,
+     * one second before the pass. It changes no count. Once accepted, the
+     * car is out of the pit lane from then on and the flag is gone.
      */
     public function testAPassWhileTheCarIsLoggedInThePitLaneIsFlaggedAsUnreliable(): void
     {
@@ -43,11 +46,39 @@ final class PitAndLapChecksTest extends EngineTestCase
         $result = $race->run('10:00');
 
         $flag = $this->assertSingleOpenFlag($result, Flag::NO_BOX);
-        $this->assertNull($flag->sugestao);
+        $this->assertSame(['tipo' => 'marcar_saida', 'area' => 'box', 'equipe_numero' => 6, 'ts_ms' => RaceScenario::ms('06:59')], $flag->sugestao);
         $this->assertSame([6], $flag->carros);
         $this->assertLapCounts([6 => 1], $result);
         $this->assertSame([Flag::NO_BOX], $result->laps[1]->grupo->alertasAbertos);
         $this->assertFalse($result->laps[1]->elegivelMelhorVolta);
+
+        $race->accept($flag);
+        $fixed = $race->run('10:00');
+        $this->assertNoOpenFlags($fixed);
+        $this->assertLapCounts([6 => 1], $fixed);
+        $this->assertFalse($fixed->timeline->isInPitAt(6, RaceScenario::ms('07:00')));
+        $this->assertTrue($fixed->timeline->isInPitAt(6, RaceScenario::ms('06:58.999')));
+    }
+
+    /**
+     * SITUATION: car 6 is logged into the pit lane at minute 5 and nobody
+     * ever logs it out. Only counter 1 records it at the line at minute 7.
+     *
+     * EXPECTED: one counter against the pit log: the flag is "no_box" and
+     * the suggestion is to discard the pass ("descartar_passagem").
+     */
+    public function testAPassOnlyOneCounterSawWhileInThePitLaneIsSuggestedForDiscarding(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->pass(6, '03:00');
+        $race->pitIn(6, '05:00');
+        $lone = $race->entry(1, 6, '07:00');
+
+        $flag = $this->assertSingleOpenFlag($race->run('10:00'), Flag::NO_BOX);
+
+        $this->assertSame(['tipo' => 'descartar_passagem', 'passagem_id' => $lone], $flag->sugestao);
+        $this->assertStringContainsString('Só Contagem 1', $flag->motivo);
     }
 
     /**
@@ -82,14 +113,15 @@ final class PitAndLapChecksTest extends EngineTestCase
      * muddy number plate.
      *
      * WHAT WENT WRONG: every counter read the same wrong number, so they
-     * agree with each other and the pass counts.
+     * agree with each other. (The pass used to count, with a flag.)
      *
-     * EXPECTED: agreement alone cannot hide it: a "volta_curta" flag says
-     * that a 42-second lap is not believable for a car that laps in about
-     * 180 seconds. No suggestion; the reviewer decides which entries to
-     * reassign.
+     * EXPECTED: agreement alone is not enough. Car 5 has three laps of 180
+     * s behind it, so a pass 42 seconds after its previous one is not
+     * believable: it is HELD, not counted, and a "passagem_proxima_demais"
+     * flag says so. No suggestion; the reviewer decides which entries to
+     * reassign. Car 5 keeps its five real laps.
      */
-    public function testACountedLapFarShorterThanTheCarsUsualLapIsFlagged(): void
+    public function testAPassFarTooSoonAfterTheCarsPreviousOneIsHeldHoweverManyCountersAgree(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
@@ -98,21 +130,24 @@ final class PitAndLapChecksTest extends EngineTestCase
 
         $result = $race->run('20:00');
 
-        $flag = $this->assertSingleOpenFlag($result, Flag::VOLTA_CURTA);
+        $flag = $this->assertSingleOpenFlag($result, Flag::PASSAGEM_PROXIMA_DEMAIS);
         $this->assertNull($flag->sugestao);
         $this->assertSame([5], $flag->carros);
-        $this->assertStringContainsString('42 s', $flag->motivo);
-        $this->assertSame(6, $result->lapCount(5), 'It stays counted (five real laps plus this one) until a reviewer acts.');
+        $this->assertStringContainsString('a 42 s da passagem anterior', $flag->motivo);
+        $this->assertStringContainsString('é de 90 s', $flag->motivo);
+        $this->assertSame(5, $result->lapCount(5), 'Five real laps; the held pass counts only if a reviewer says so.');
     }
 
     /**
-     * SITUATION: the same short lap, but the reviewer looked at it and
+     * SITUATION: the same held pass, but the reviewer looked at it and
      * confirmed it is real (the car took a shortcut and will be penalised
      * elsewhere, say).
      *
-     * EXPECTED: confirming the pass silences the flag for good.
+     * EXPECTED: confirming the pass makes it count (six laps) and silences
+     * the flag for good: no "too short a lap" flag comes back for a pass a
+     * person vouched for.
      */
-    public function testConfirmingAShortLapSilencesItsFlag(): void
+    public function testConfirmingAHeldPassCountsItAndSilencesItsFlag(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
@@ -120,7 +155,10 @@ final class PitAndLapChecksTest extends EngineTestCase
         $entries = $race->pass(5, '13:10');
         $race->confirm($entries[1]);
 
-        $this->assertNoOpenFlags($race->run('20:00'));
+        $result = $race->run('20:00');
+
+        $this->assertNoOpenFlags($result);
+        $this->assertSame(6, $result->lapCount(5));
     }
 
     /**

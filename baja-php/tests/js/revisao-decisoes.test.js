@@ -215,9 +215,17 @@ test('each kind of decision carries the fields the server expects', () => {
 
 // ---- what can be done with one chip ----------------------------------------
 
-test('a normal entry can be voided, reassigned or confirmed', () => {
-  const acoes = acoesDaEntrada({ id: 10, decisoes: [] });
+test('an entry that is part of a pass can be voided, reassigned or confirmed', () => {
+  const acoes = acoesDaEntrada({ id: 10, decisoes: [], grupo: { contado: false, passagem_ids: [10] } });
   assert.deepEqual(acoes.map((opcao) => opcao.acao), ['anular', 'reatribuir', 'confirmar']);
+});
+
+// An entry in no pass at all (its source was excluded at that moment, or it
+// is from before the start) and not voided as a repeat: confirming it would
+// change nothing, so the button is not there to be misread.
+test('an entry that is in no pass has nothing to confirm', () => {
+  const acoes = acoesDaEntrada({ id: 10, decisoes: [], grupo: null, fora_de_uso: true });
+  assert.deepEqual(acoes.map((opcao) => opcao.acao), ['anular', 'reatribuir']);
 });
 
 test('an entry whose pass has other entries can also have the whole pass discarded', () => {

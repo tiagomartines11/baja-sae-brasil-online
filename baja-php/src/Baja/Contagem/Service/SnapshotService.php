@@ -6,7 +6,7 @@ namespace Baja\Contagem\Service;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Engine;
-use Baja\Contagem\Engine\Settings;
+use Baja\Contagem\Review\StateSnapshot;
 use Baja\Model\Prova;
 
 /**
@@ -99,22 +99,55 @@ final class SnapshotService
      */
     public function storeFromRun(EngineInput $input, EngineResult $result, ?int $changesSeen): RaceSnapshot
     {
-        // A slow recalculation that started BEFORE a decision can finish
-        // AFTER the decision stored its own, newer snapshot. Storing ours
-        // then would put the pre-decision race back on every screen.
-        $stored = $this->store->get();
-        if ($this->hasSeenMore($stored, $changesSeen)) {
-            return $stored;
-        }
-
         $dados = SnapshotBuilder::build($this->service, $input, $result);
-        // The token is a digest of the content: recalculating a race in
-        // which nothing visible changed gives the same token, and review
-        // screens are told "inalterado" instead of downloading it again.
-        $token = sha1((string) json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
-        $snapshot = new RaceSnapshot($token, $input->nowMs, $changesSeen, $dados);
-        $this->store->put($snapshot, $input->settings->recalculoS * 1000);
-        return $snapshot;
+        $snapshot = new RaceSnapshot(self::tokenOf($dados), $input->nowMs, $changesSeen, $dados);
+
+        // "Look at what is stored, then store" must be one step. Without
+        // the count lock around it, a decision could store its snapshot
+        // between our look and our write, and ours (older) would land on
+        // top of it. Decisions already hold this lock when they get here.
+        try {
+            return $this->service->withLock(function () use ($snapshot, $input, $changesSeen): RaceSnapshot {
+                // A slow recalculation that started BEFORE a decision can
+                // finish AFTER the decision stored its own, newer snapshot.
+                // Storing ours then would put the pre-decision race back on
+                // every screen.
+                $stored = $this->store->get();
+                if ($this->hasSeenMore($stored, $changesSeen)) {
+                    return $stored;
+                }
+                $this->store->put($snapshot, $input->settings->recalculoS * 1000);
+                return $snapshot;
+            }, ProvaLock::WAIT_FOR_AN_UPLOAD_SECONDS);
+        } catch (LockBusy $busy) {
+            // Not stored. It still answers the request that computed it,
+            // and counts as a change so that the next request tries again.
+            $this->changes->markChanged();
+            return $snapshot;
+        }
+    }
+
+    /**
+     * The token is a digest of the content: recalculating a race in which
+     * nothing a reviewer looks at changed gives the same token, and review
+     * screens are told "inalterado" instead of downloading it all again.
+     *
+     * What changes with every heartbeat of every phone (when each device
+     * was last seen, how far each has uploaded) is left out of the digest.
+     * Those numbers are sent with every answer anyway, changed or not; with
+     * them in the digest the token changed every few seconds and "nothing
+     * new" was never said.
+     *
+     * @param array<string, mixed> $dados as built by SnapshotBuilder
+     */
+    private static function tokenOf(array $dados): string
+    {
+        $liveKeys = defined(StateSnapshot::class . '::LIVE_KEYS') ? constant(StateSnapshot::class . '::LIVE_KEYS') : [];
+        foreach ($liveKeys as $key) {
+            unset($dados['estado'][$key]);
+        }
+        unset($dados['tempo_real']['sinc_min_ms']);
+        return sha1((string) json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
     }
 
     /** True when the stored snapshot was computed from a later state of the race than $changesSeen. */

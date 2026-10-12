@@ -22,6 +22,15 @@ final class ConfirmationNeeded extends InvalidArgumentException
     /** Label of the button that confirms. */
     public string $rotulo;
 
+    /**
+     * More fields the confirming form must send, name => value. Used to
+     * carry what must not change between the question and the answer: the
+     * instant of the click on "Largar agora", which IS the start time.
+     *
+     * @var array<string, string>
+     */
+    public array $campos = [];
+
     public function __construct(string $message, string $campo, string $rotulo)
     {
         parent::__construct($message);

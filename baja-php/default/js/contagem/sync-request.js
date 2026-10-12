@@ -56,31 +56,43 @@ function pitEventForUpload(record) {
     return pitEvent;
 }
 
+// The server processes at most this many entries of one request and leaves
+// the rest unacknowledged (upload contract). Sending more would only make
+// the same records travel twice.
+export const SERVER_MAX_RECORDS_PER_REQUEST = 500;
+
 /**
  * @param {object}  options
  * @param {object}  options.store             LocalStore
  * @param {object}  options.clock             ServerClock
- * @param {number}  options.maxBatch          most records of each kind per request
+ * @param {number}  options.maxBatch          most records of each kind per
+ *        request (never more than SERVER_MAX_RECORDS_PER_REQUEST)
  * @param {boolean} options.vouchesForHistory false when the store is memory
  *        only: this page then cannot know what the device recorded before it
  *        was opened, so it may never claim "you have everything"
  * @param {boolean} [options.encerrando]      the counter asked to end the shift
+ * @param {boolean} [options.suppressQueueEmpty] true while a simulation
+ *        replays a race that lies in the past (see SyncQueue.suprimirMarcaDeFila)
  */
-export function buildSyncRequest({ store, clock, maxBatch, vouchesForHistory, encerrando = false }) {
-    const entries = store.entriesReadyToSend().slice(0, maxBatch).map(entryForUpload);
-    const voids = store.voidsReadyToSend().slice(0, maxBatch).map((record) => ({ uuid: record.uuid }));
-    const pitEvents = store.pitEventsReadyToSend().slice(0, maxBatch).map(pitEventForUpload);
+export function buildSyncRequest({
+    store, clock, maxBatch, vouchesForHistory, encerrando = false, suppressQueueEmpty = false,
+}) {
+    const batchSize = Math.min(maxBatch, SERVER_MAX_RECORDS_PER_REQUEST);
+    const entries = store.entriesReadyToSend().slice(0, batchSize).map(entryForUpload);
+    const voids = store.voidsReadyToSend().slice(0, batchSize).map((record) => ({ uuid: record.uuid }));
+    const pitEvents = store.pitEventsReadyToSend().slice(0, batchSize).map(pitEventForUpload);
     const serverHasEverything = nothingIsWaiting(store);
-    // Null until this page load has an anchor. "Everything up to WHEN?" has
-    // no answer then, so the promise below cannot be made either.
-    const nowMs = clock.serverNowMs();
+    // Null until this page load has an anchor, and while the one it has is
+    // in doubt. "Everything up to WHEN?" has no answer then, so the promise
+    // below cannot be made either.
+    const nowMs = clock.trustedServerNowMs();
 
     const request = {
         entries,
         voids,
         pit_events: pitEvents,
         now_ms: nowMs,
-        queue_empty: serverHasEverything && nowMs !== null && vouchesForHistory,
+        queue_empty: serverHasEverything && nowMs !== null && vouchesForHistory && !suppressQueueEmpty,
     };
     // The field is left out entirely unless it is true, so an ordinary
     // request looks exactly as it always did.
@@ -98,10 +110,12 @@ export function buildSyncRequest({ store, clock, maxBatch, vouchesForHistory, en
  * @returns {?object} null when no goodbye may be sent: something is still
  *          waiting (the device is NOT done), or there is no token to sign it
  */
-export function buildClosingBeaconBody({ store, clock, vouchesForHistory, token }) {
+export function buildClosingBeaconBody({ store, clock, vouchesForHistory, token, suppressQueueEmpty = false }) {
     if (typeof token !== 'string' || token === '' || !nothingIsWaiting(store)) {
         return null;
     }
-    const request = buildSyncRequest({ store, clock, maxBatch: 0, vouchesForHistory, encerrando: true });
+    const request = buildSyncRequest({
+        store, clock, maxBatch: 0, vouchesForHistory, encerrando: true, suppressQueueEmpty,
+    });
     return { ...request, token };
 }

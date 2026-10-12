@@ -229,6 +229,29 @@ final class RaceScenario
         return $this->ocorrencia(Ocorrencia::ABASTECIMENTO_SAIDA, $at, $car);
     }
 
+    /**
+     * A reviewer says the car must have left an area ("marcar saída do
+     * box"): an exit nobody logged at the gate, inferred from a pass.
+     *
+     * @param string $area 'box' or 'abastecimento'
+     */
+    public function inferredExit(string $area, int $car, int $tsMs): int
+    {
+        $id = $this->nextOcorrenciaId++;
+        $exit = new Ocorrencia($id, $area === 'box' ? Ocorrencia::BOX_SAIDA : Ocorrencia::ABASTECIMENTO_SAIDA, $tsMs, $car);
+        $exit->inferida = true;
+        $this->ocorrencias[] = $exit;
+        return $id;
+    }
+
+    /** A pit lane or fueling event from a phone that had no usable time: the time it carries is the phone's own clock. */
+    public function stopEventOfUnknownTime(string $tipo, int $car, string $at): int
+    {
+        $id = $this->ocorrencia($tipo, $at, $car);
+        $this->ocorrencias[count($this->ocorrencias) - 1]->qualidadeTempo = Entry::TEMPO_DESCONHECIDO;
+        return $id;
+    }
+
     public function redFlag(string $at): int
     {
         return $this->ocorrencia(Ocorrencia::BANDEIRA_VERMELHA, $at);

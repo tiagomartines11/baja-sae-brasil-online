@@ -178,28 +178,96 @@ final class StopStatsTest extends EngineTestCase
      * again at 10:40 (somebody tapped twice, or the exit in between was
      * missed), and out at 12:00.
      *
-     * WHAT WENT WRONG: a second entry with no exit before it.
+     * WHAT WENT WRONG: a second entry with no exit before it. A car that
+     * enters again must have left in between; if the FIRST entry kept the
+     * stay open, one missed exit would make a stay that lasts for hours.
      *
-     * EXPECTED: the second entry is the unpaired event and adds nothing;
-     * the stay runs from the first entry to the exit: one stay, 120 s. With
-     * no exit at all the car is inside since the FIRST entry.
+     * EXPECTED: the OLDER entry is the unpaired event and adds nothing;
+     * the stay runs from the second entry to the exit: one stay, 80 s. With
+     * no exit at all the car is inside since the SECOND entry.
      */
-    public function testASecondEntryWithNoExitAddsNothing(): void
+    public function testWhenACarEntersTwiceTheOlderEntryIsTheOneLeftWithoutAnExit(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
-        $race->fuelIn(7, '10:00');
+        $first = $race->fuelIn(7, '10:00');
         $race->fuelIn(7, '10:40');
         $this->assertSame(
-            ['dentro' => true, 'desde_ms' => RaceScenario::ms('10:00'), 'paradas' => 0, 'total_ms' => 60000, 'ultima_ms' => null],
+            ['dentro' => true, 'desde_ms' => RaceScenario::ms('10:40'), 'paradas' => 0, 'total_ms' => 20000, 'ultima_ms' => null],
             $this->fuel($this->timelineOf($race), 7, '11:00')
         );
+        $this->assertSame([$first], array_column($this->timelineOf($race)->unpairedStops, 'ocorrencia_id'));
 
         $race->fuelOut(7, '12:00');
         $this->assertSame(
-            ['dentro' => false, 'desde_ms' => null, 'paradas' => 1, 'total_ms' => 120000, 'ultima_ms' => 120000],
+            ['dentro' => false, 'desde_ms' => null, 'paradas' => 1, 'total_ms' => 80000, 'ultima_ms' => 80000],
             $this->fuel($this->timelineOf($race), 7, '15:00')
         );
+    }
+
+    /**
+     * SITUATION: car 7 enters the pit lane at 10:00 and nobody logs it
+     * out. The race ends at 30:00. Car 8 enters the pit lane at 31:00,
+     * after the finish.
+     *
+     * EXPECTED: a car still inside when the race ends is taken to have
+     * left at the finish: car 7 has one completed stay of twenty minutes,
+     * and its total no longer grows. Before the finish is recorded it is
+     * simply inside. An entry AFTER the finish stays open (there is no
+     * later moment to close it at).
+     */
+    public function testAStayStillOpenWhenTheRaceEndsIsClosedAtTheFinish(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->pitIn(7, '10:00');
+        $this->assertSame(
+            ['dentro' => true, 'desde_ms' => RaceScenario::ms('10:00'), 'paradas' => 0, 'total_ms' => 25 * 60000, 'ultima_ms' => null],
+            $this->pit($this->timelineOf($race), 7, '35:00')
+        );
+
+        $race->finish('30:00');
+        $race->pitIn(8, '31:00');
+        $timeline = $this->timelineOf($race);
+
+        $this->assertSame(
+            ['dentro' => false, 'desde_ms' => null, 'paradas' => 1, 'total_ms' => 20 * 60000, 'ultima_ms' => 20 * 60000],
+            $this->pit($timeline, 7, '35:00')
+        );
+        $this->assertSame([[RaceScenario::ms('10:00'), RaceScenario::ms('30:00')]], $timeline->pitIntervals[7]);
+        $this->assertSame([[RaceScenario::ms('31:00'), null]], $timeline->pitIntervals[8]);
+        $this->assertSame([], $timeline->unpairedStops);
+    }
+
+    /**
+     * SITUATION: the phone at the pit exit could not take its time from
+     * the server: car 7's exit is stored with whatever its own clock said
+     * (here 10:30), marked as of unknown time. The entry at 10:00 is fine.
+     *
+     * WHAT COULD GO WRONG: pairing the two would invent a 30-second stay,
+     * when nobody knows when the car left.
+     *
+     * EXPECTED: the event of unknown time pairs with nothing. It is listed
+     * in `unknownTimeStops` for the review lanes, and is neither an
+     * unpaired event nor one of the recent events the feed announces. Car
+     * 7 is still inside, since 10:00.
+     */
+    public function testAStopEventOfUnknownTimeIsListedApartAndPairsWithNothing(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $entry = $race->pitIn(7, '10:00');
+        $unknown = $race->stopEventOfUnknownTime(\Baja\Contagem\Engine\Data\Ocorrencia::BOX_SAIDA, 7, '10:30');
+        $timeline = $this->timelineOf($race);
+
+        $this->assertSame(
+            [['area' => 'box', 'tipo' => 'box_saida', 'carro' => 7, 'ts_ms' => RaceScenario::ms('10:30'), 'ocorrencia_id' => $unknown, 'inferida' => false]],
+            $timeline->unknownTimeStops
+        );
+        $this->assertSame([], $timeline->unpairedStops);
+        $this->assertSame([$entry], array_column($timeline->stopEvents, 'ocorrencia_id'));
+        $this->assertSame([[RaceScenario::ms('10:00'), null]], $timeline->pitIntervals[7]);
+        $this->assertTrue($this->pit($timeline, 7, '15:00')['dentro']);
     }
 
     /**
@@ -285,5 +353,24 @@ final class StopStatsTest extends EngineTestCase
         $this->assertSame(self::NOTHING, $this->pit($timeline, 7, '10:00'));
         $this->assertSame(self::NOTHING, $this->fuel($timeline, 7, '10:00'));
         $this->assertSame([], StopStats::recentEvents($timeline, 10));
+    }
+
+    /**
+     * SITUATION: car 7 enters the pit lane at 10:00; car 8 is logged OUT at
+     * 10:30 with no entry; car 7 enters again at 11:00 (its exit was
+     * missed, which is only noticed now).
+     *
+     * EXPECTED: the events without a partner are listed in time order: car
+     * 7's first entry (10:00), then car 8's exit (10:30).
+     */
+    public function testEventsWithoutAPartnerAreListedInTimeOrder(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $firstEntry = $race->pitIn(7, '10:00');
+        $exit = $race->pitOut(8, '10:30');
+        $race->pitIn(7, '11:00');
+
+        $this->assertSame([$firstEntry, $exit], array_column($this->timelineOf($race)->unpairedStops, 'ocorrencia_id'));
     }
 }

@@ -49,10 +49,12 @@ final class UploadContents
 
     /**
      * @param mixed $value
-     * @return array<int, mixed> the value if it is a JSON list, otherwise an empty list
+     * @return array<int, mixed> the value if it is a JSON list (its first elements, see
+     *         UploadFields::MAX_ITEMS_PER_REQUEST), otherwise an empty list. What is cut off
+     *         is not acknowledged, so the client sends it again.
      */
     private static function listOf($value): array
     {
-        return is_array($value) ? array_values($value) : [];
+        return UploadFields::firstItems($value);
     }
 }

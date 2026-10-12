@@ -49,7 +49,12 @@ $writeLog = function (string $dados) use ($prova, $equipe): void {
     $log->save();
 };
 
-$wantsDelete = array_key_exists('delete', $_POST) && !array_key_exists('submit', $_POST);
+// On a laps prova ANY request that carries "delete" takes the path that
+// keeps the row, also one that carries "submit" as well. A browser sends
+// only the button that was clicked, but a request with both used to slip
+// past this check and reach the plain `$nota->delete()` further down, which
+// removed the car's lap count and its classification with no recount.
+$wantsDelete = array_key_exists('delete', $_POST);
 
 if ($isLapsProva && $wantsDelete) {
     // The row also holds the lap count, which is not this page's to delete:
@@ -75,7 +80,9 @@ if (!$nota) {
     $nota->setEventoId($currentEventId);
 }
 
-if (($_POST['delete'] ?? '') == 'Deletar Nota') {
+// Never reached for a laps prova (see above); the check is repeated so that
+// stays true whatever is changed up there.
+if (!$isLapsProva && ($_POST['delete'] ?? '') == 'Deletar Nota') {
     $writeLog('{"DELETED": "---"}');
 
     $nota->delete();

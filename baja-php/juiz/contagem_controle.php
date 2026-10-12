@@ -6,6 +6,7 @@ use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\RaceTimeline;
 use Baja\Contagem\Review\ConfirmationNeeded;
 use Baja\Contagem\Review\CsvExport;
+use Baja\Contagem\Review\InferredExits;
 use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\RaceControl;
 use Baja\Contagem\Review\RaceEventRules;
@@ -82,14 +83,7 @@ foreach (RaceEvents::inForce($ocorrencias) as $ocorrencia) {
         $onlyStartId = $ocorrencia->id;
     }
 }
-// What pressing "Largar agora" again would leave before the new start.
-$leftOutByRestart = $timeline->largadaMs === null
-    ? ['registros' => 0, 'carros' => 0]
-    : RaceEventRules::entriesLeftBeforeStart($prova, $timeline->largadaMs, Clock::nowMs());
-$restartQuestion = 'A corrida já largou. Substituir o horário da largada por agora?'
-    . ($leftOutByRestart['registros'] > 0
-        ? ' ' . RaceEventRules::describeEntriesLeftOut($leftOutByRestart) . ' ficariam antes da nova largada e deixariam de contar.'
-        : '');
+$inferredExits = InferredExits::inForce($prova);
 $hasEverStarted = RaceControl::hasEverStarted($prova);
 $mayReset = $isAdmin || !$hasEverStarted;
 $publishingIsOff = !$service->getSettings()->publishesToScoring();
@@ -128,19 +122,16 @@ Pagina::printHeader($prova, 'Controle de corrida');
         <?php } ?>
     </p>
 
-    <?php // No confirmation on the first start: the click is the start time, and a dialog would delay it. ?>
-    <form method="POST" action="<?= $h($action) ?>" class="contagem-acao"
-          <?php if ($timeline->largadaMs !== null) { ?>onsubmit="return confirm(<?= $h(json_encode($restartQuestion)) ?>);"<?php } ?>>
+    <?php // No question in the browser, and no confirmation field sent ahead: the click is the start time.
+          // When the race already has a start, or entries would be left before the new one, or the test
+          // preset is applied, the SERVER answers with a question (worked out under the count lock) and
+          // the form that confirms it carries the instant of this first click. ?>
+    <form method="POST" action="<?= $h($action) ?>" class="contagem-acao">
         <?= $csrf ?>
         <input type="hidden" name="acao" value="largar_agora">
-        <?php // Sent only by a page that knew about the start and asked: the server refuses a second start without them. ?>
-        <?php if ($timeline->largadaMs !== null) { ?>
-            <input type="hidden" name="confirmar" value="1">
-            <input type="hidden" name="confirmar_registros" value="1">
-        <?php } ?>
         <button type="submit" class="botao-grande botao-verde">Largar agora</button>
         <?php if ($timeline->largadaMs !== null) { ?>
-            <span class="contagem-aviso">A corrida já tem largada: isto substitui o horário atual. Pode ser desfeito cancelando a nova largada na lista abaixo.</span>
+            <span class="contagem-aviso">A corrida já tem largada: isto substitui o horário atual (a página pergunta antes). Pode ser desfeito cancelando a nova largada na lista abaixo.</span>
         <?php } ?>
     </form>
 
@@ -148,8 +139,9 @@ Pagina::printHeader($prova, 'Controle de corrida');
         <?= $csrf ?>
         <input type="hidden" name="acao" value="registrar">
         <input type="hidden" name="tipo" value="<?= $h(Ocorrencia::LARGADA) ?>">
-        <?php // Typing a time and pressing "Salvar" is deliberate enough to replace a start. If entries
-              // would fall before the new start, the server answers with a question instead of saving. ?>
+        <?php // Typing a time and pressing "Salvar" is deliberate enough to replace a start, so "confirmar"
+              // goes along. The other question, about entries that would fall before the new start, is
+              // never answered ahead: the server asks it when it applies. ?>
         <input type="hidden" name="confirmar" value="1">
         <label>Informar ou corrigir o horário da largada (horário de Brasília):
             <input type="datetime-local" name="horario" step="1" required
@@ -257,6 +249,53 @@ Pagina::printHeader($prova, 'Controle de corrida');
             <p class="contagem-dica">Estas linhas NÃO valem para a corrida. Uma ocorrência cancelada pode ser restaurada.</p>
             <table class="tablesorter contagem-tabela"><?= $tableHead ?><tbody><?php $eventRows($eventsOfHistory) ?></tbody></table>
         <?php } ?>
+    <?php } ?>
+</section>
+
+<section class="contagem-bloco">
+    <h2>Saídas marcadas pela revisão</h2>
+    <p class="contagem-dica">
+        Saídas do box ou do abastecimento que ninguém registrou na hora e um revisor marcou a partir de uma passagem
+        do carro na linha ("Marcar saída"). Valem como qualquer saída. Corrigir grava a saída em outro horário;
+        cancelar desfaz a marcação (o mesmo que "Desfazer" no histórico da revisão) e o carro volta a constar como dentro.
+    </p>
+    <?php if ($inferredExits === []) { ?>
+        <p>Nenhuma saída marcada pela revisão.</p>
+    <?php } else { ?>
+        <table class="tablesorter contagem-tabela">
+            <thead><tr><th>Carro</th><th>Área</th><th>Horário da saída</th><th>Por</th><th>Marcada em</th>
+                <th class="sorter-false">Corrigir horário</th><th class="sorter-false">Cancelar</th></tr></thead>
+            <tbody>
+            <?php foreach ($inferredExits as $exit) { ?>
+                <tr>
+                    <td><?= (int) $exit['carro'] ?></td>
+                    <td><?= $h(InferredExits::AREA_LABELS[$exit['area']]) ?> <span class="contagem-etiqueta">inferida</span></td>
+                    <td><?= $h(Pagina::formatClock($exit['ts_ms'])) ?></td>
+                    <td><?= $h($exit['usuario'] ?? '—') ?></td>
+                    <td><?= $h(Pagina::formatClock($exit['criado_em_ms'])) ?></td>
+                    <td class="sem-risco">
+                        <form method="POST" action="<?= $h($action) ?>">
+                            <?= $csrf ?>
+                            <input type="hidden" name="acao" value="corrigir_saida">
+                            <input type="hidden" name="decisao_id" value="<?= (int) $exit['decisao_id'] ?>">
+                            <input type="datetime-local" name="horario" step="1" required
+                                   value="<?= $h(date('Y-m-d\TH:i:s', intdiv($exit['ts_ms'], 1000))) ?>">
+                            <button type="submit">Corrigir</button>
+                        </form>
+                    </td>
+                    <td class="sem-risco">
+                        <form method="POST" action="<?= $h($action) ?>"
+                              onsubmit="return confirm(<?= $h(json_encode('Cancelar a saída marcada para o carro ' . $exit['carro'] . '? Ele volta a constar como dentro do ' . InferredExits::AREA_LABELS[$exit['area']] . '.')) ?>);">
+                            <?= $csrf ?>
+                            <input type="hidden" name="acao" value="cancelar_saida">
+                            <input type="hidden" name="decisao_id" value="<?= (int) $exit['decisao_id'] ?>">
+                            <button type="submit">Cancelar</button>
+                        </form>
+                    </td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
     <?php } ?>
 </section>
 

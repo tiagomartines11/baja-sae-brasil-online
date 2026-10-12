@@ -121,7 +121,11 @@ final class ClassifiedCarsTest extends DbTestCase
             $this->assertCount(1, $answer['body']['stored_uuids']);
         }
 
-        $this->assertSame(4, $this->countRows('contagem_passagem', 'equipe_numero = ?', [self::CAR_C]));
+        $this->assertSame(4, $this->countRows(
+            'contagem_passagem',
+            'equipe_numero = ? AND fonte_id IN (?, ?)',
+            [self::CAR_C, $this->fontes[0]->getFonteId(), $this->fontes[1]->getFonteId()]
+        ));
         $this->assertNull($this->publishedData(self::CAR_C)['VOLTAS'] ?? null, 'no lap count was published for car 33');
     }
 
@@ -145,9 +149,9 @@ final class ClassifiedCarsTest extends DbTestCase
         $this->assertNull($this->publishedData(self::CAR_C)['VOLTAS'] ?? null);
 
         $this->newRequest();
-        $changed = $this->service->markAllPresentAsClassified(self::USER_PREFIX . 'controle');
+        $outcome = $this->service->markAllPresentAsClassified(self::USER_PREFIX . 'controle');
 
-        $this->assertSame(1, $changed);
+        $this->assertSame(['marcados' => [self::CAR_C], 'ja_nao' => []], $outcome);
         $this->assertSame('SIM', $this->publishedData(self::CAR_C)[self::FIELD]);
         $this->assertEquals(1, $this->publishedData(self::CAR_C)['VOLTAS']);
         $this->assertSame(1, $this->countRows(
@@ -166,7 +170,36 @@ final class ClassifiedCarsTest extends DbTestCase
      */
     public function testTheButtonDoesNothingWithoutAClassificationField(): void
     {
-        $this->assertSame(0, $this->service->markAllPresentAsClassified(self::USER_PREFIX . 'controle'));
+        $outcome = $this->service->markAllPresentAsClassified(self::USER_PREFIX . 'controle');
+
+        $this->assertSame(['marcados' => [], 'ja_nao' => []], $outcome);
         $this->assertNull($this->publishedData(self::CAR_C));
+    }
+
+    /**
+     * SITUATION: a judge looked at car 22 and wrote "NÃO" in its
+     * classification field: it failed an inspection and may not race. Car
+     * 33's field is still blank. Then somebody presses "Marcar todos os
+     * presentes como aptos".
+     *
+     * WHAT WENT WRONG BEFORE: the button wrote "SIM" over everything that
+     * was not "SIM", and the judge's decision about car 22 was gone, with
+     * one click meant to save typing.
+     *
+     * EXPECTED: only the blank field is filled in (car 33). Car 22 keeps
+     * its "NÃO" and is reported back separately, so the page can say "these
+     * were left alone".
+     */
+    public function testMarkingEveryCarOnlyFillsInBlankFields(): void
+    {
+        $this->useClassificationField();
+        $this->setManualField(self::CAR_B, self::FIELD, 'NÃO');
+        $this->newRequest();
+
+        $outcome = $this->service->markAllPresentAsClassified(self::USER_PREFIX . 'controle');
+
+        $this->assertSame(['marcados' => [self::CAR_C], 'ja_nao' => [self::CAR_B]], $outcome);
+        $this->assertSame('NÃO', $this->publishedData(self::CAR_B)[self::FIELD]);
+        $this->assertSame('SIM', $this->publishedData(self::CAR_C)[self::FIELD]);
     }
 }

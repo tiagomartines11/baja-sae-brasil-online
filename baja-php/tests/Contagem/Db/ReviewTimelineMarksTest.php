@@ -36,7 +36,12 @@ final class ReviewTimelineMarksTest extends ReviewDbTestCase
      * EXPECTED: the three early entries are on car A's timeline as one
      * pass marked "antes_da_largada", not counted. A flag of that type
      * suggests confirming it. Once the reviewer accepts, the pass is car
-     * A's pass zero and the crossing at 1:40 is lap 1.
+     * A's pass zero and the crossing at 1:40 is lap 1 (so car A goes from
+     * 1 lap to 2).
+     *
+     * Since round 4 the suggestion is only made once the field has shown
+     * what a first lap looks like (three cars with one), which is why the
+     * three cars each cross twice here.
      */
     public function testAPassTypedJustBeforeTheStartIsShownFlaggedAndCanBeCounted(): void
     {
@@ -44,8 +49,11 @@ final class ReviewTimelineMarksTest extends ReviewDbTestCase
         $this->startRace(self::RACE_START_MS);
         $early = $this->allCountersSee($car, -3);
         $this->allCountersSee($car, 100);
+        $this->allCountersSee($car, 200);
         $this->allCountersSee(self::CAR_B, 20);
         $this->allCountersSee(self::CAR_B, 120);
+        $this->allCountersSee(self::CAR_C, 25);
+        $this->allCountersSee(self::CAR_C, 125);
         $this->syncAll($this->at(290));
         Clock::freezeAt($this->at(300));
 
@@ -57,14 +65,14 @@ final class ReviewTimelineMarksTest extends ReviewDbTestCase
             $this->assertFalse($entries[$entryId]['grupo']['contado']);
             $this->assertFalse($entries[$entryId]['fora_de_uso'], 'it is in a pass group, not thrown away');
         }
-        $this->assertSame(0, $this->carRow($state, $car)['voltas']);
+        $this->assertSame(1, $this->carRow($state, $car)['voltas']);
         $flag = $this->flagOfType($state, 'antes_da_largada');
         $this->assertSame('confirmar', $flag['sugestao']['tipo']);
 
         $answer = $this->decide($flag['sugestao'], $flag['passagem_ids'], $flag['assinatura']);
 
         $this->assertSame(200, $answer['status']);
-        $this->assertSame(1, $this->carRow($answer['body']['estado'], $car)['voltas']);
+        $this->assertSame(2, $this->carRow($answer['body']['estado'], $car)['voltas']);
         $entries = $this->entriesById(TimelineWindow::forCar($this->service, $car));
         $this->assertTrue($entries[$early[0]]['grupo']['contado'], 'confirmed: it is the pass zero now');
     }

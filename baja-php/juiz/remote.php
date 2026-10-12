@@ -2,6 +2,8 @@
 // TODO(contagem): remove this endpoint once the new lap counting has been validated at an event.
 namespace Baja\Juiz;
 
+use Baja\Contagem\Review\ManualScoreFields;
+use Baja\Contagem\Service\LockBusy;
 use Baja\Model\EventoQuery;
 use Baja\Model\Input;
 use Baja\Model\InputQuery;
@@ -23,6 +25,25 @@ if (!isset($input) || !isset($input['key']) || $input['key'] != $_remoteKey) {
 
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId('END');
 if (!$prova) { header("Location: index.php"); exit; }
+
+if (array_key_exists("truncate", $input) && $input["truncate"] == "all" && ManualScoreFields::isLapsProva($prova)) {
+    // The rows of a laps prova also hold what people typed (DESCLAS, the
+    // classification field) and, when the count publishes, the lap count
+    // itself. Deleting them took all of that along, with no recount. So the
+    // spreadsheet's "truncate" only empties the three fields it owns, and is
+    // refused while the lap counting owns them.
+    try {
+        $emptied = ManualScoreFields::truncateSpreadsheetFields($prova);
+    } catch (LockBusy $busy) {
+        header('HTTP/1.0 503 Service Unavailable');
+        die("BUSY");
+    }
+    if (!$emptied) {
+        header('HTTP/1.0 409 Conflict');
+        die("REFUSED: a contagem de voltas publica esta prova; use Zerar corrida no controle de corrida");
+    }
+    die("OK");
+}
 
 if (array_key_exists("truncate", $input) && $input["truncate"] == "all") {
     $allInputs = InputQuery::create()->filterByProvaId('END')->filterByEventoId($currentEventId);

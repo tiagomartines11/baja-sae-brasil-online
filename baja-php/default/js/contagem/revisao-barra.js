@@ -6,8 +6,9 @@ import {
 } from './revisao-formato.js';
 import { exclusoesAbertas } from './revisao-decisoes.js';
 import {
-  dispositivosDaFonte, estadoDaFonte, ordenarFila, quandoDoAlerta, resumoDeAlertas, resumoDosDispositivos,
+  contagemEmDuvida, dispositivosDaFonte, estadoDaFonte, ordenarFila, quandoDoAlerta, resumoDeAlertas, resumoDosDispositivos,
 } from './revisao-fila.js';
+import { fraseDeDuvida } from './revisao-alertas.js';
 import { horarioOficial, idadeDoCalculo } from './revisao-relogio.js';
 
 // The chip of one source: its name, whether it is in contact, and anything
@@ -84,6 +85,9 @@ function itemDaFila(alerta, estado, selecionadoId, aoEscolher) {
   if (alerta.auto_resolvido) {
     classes.push('resolvido');
   }
+  if (contagemEmDuvida(alerta)) {
+    classes.push('em-duvida');
+  }
   const olhando = alerta.olhando ?? [];
 
   return el('li', {},
@@ -94,6 +98,7 @@ function itemDaFila(alerta, estado, selecionadoId, aoEscolher) {
       alerta.prioridade !== null && alerta.prioridade !== undefined
         ? el('span', { class: 'posicao', title: 'melhor posição entre os carros envolvidos' }, `P${alerta.prioridade}`)
         : null,
+      contagemEmDuvida(alerta) ? el('span', { class: 'duvida' }, fraseDeDuvida(alerta)) : null,
       el('span', { class: 'motivo' }, alerta.motivo),
       olhando.length > 0 ? el('span', { class: 'olhando' }, `${olhando.join(', ')} está olhando`) : null));
 }

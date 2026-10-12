@@ -62,11 +62,35 @@ trait ReviewerActions
         return $this->decide(Decision::desfazer($this->nextDecisionId, $decisionId));
     }
 
-    /** The reviewer presses "aceitar sugestão" on a flag. */
+    /**
+     * The reviewer presses "aceitar sugestão" on a flag. Returns the id of
+     * the (last) decision stored, or of the exit recorded for "marcar saída".
+     *
+     * Most suggestions are one decision. "reatribuir_grupo" moves several
+     * entries, "descartar_passagem" voids every entry of the flag's pass,
+     * and "marcar_saida" records an exit from the pit lane or the fueling
+     * station; the review screen stores each of those in one step too.
+     */
     public function accept(Flag $flag): int
     {
         if ($flag->sugestao === null) {
             throw new \LogicException('The flag ' . $flag->id . ' has no suggestion to accept.');
+        }
+        switch ($flag->sugestao['tipo']) {
+            case 'reatribuir_grupo':
+                $last = 0;
+                foreach ($flag->sugestao['passagem_ids'] as $entryId) {
+                    $last = $this->reassign($entryId, $flag->sugestao['equipe_numero']);
+                }
+                return $last;
+            case 'descartar_passagem':
+                $last = 0;
+                foreach ($flag->passagemIds as $entryId) {
+                    $last = $this->void($entryId);
+                }
+                return $last;
+            case 'marcar_saida':
+                return $this->inferredExit($flag->sugestao['area'], $flag->sugestao['equipe_numero'], $flag->sugestao['ts_ms']);
         }
         $decision = new Decision($this->nextDecisionId, $flag->sugestao['tipo']);
         $decision->passagemId = $flag->sugestao['passagem_id'] ?? null;

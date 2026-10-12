@@ -36,6 +36,9 @@ final class CarRoster
     /** @var array<int, array{numero: int, nome: string, escola: string}> */
     private array $unclassified = [];
 
+    /** @var int[] unclassified cars whose field is not blank (somebody wrote "NÃO", say) */
+    private array $markedOtherwise = [];
+
     public static function forProva(Prova $prova): self
     {
         $settings = Settings::fromArray($prova->getParams()->contagem ?? null);
@@ -61,6 +64,10 @@ final class CarRoster
                 $roster->classified[$car['numero']] = $car;
             } else {
                 $roster->unclassified[$car['numero']] = $car;
+                $value = $dados[(string) $roster->field] ?? null;
+                if (is_string($value) && trim($value) !== '') {
+                    $roster->markedOtherwise[] = $car['numero'];
+                }
             }
         }
         return $roster;
@@ -96,6 +103,17 @@ final class CarRoster
     public function unclassified(): array
     {
         return $this->unclassified;
+    }
+
+    /**
+     * The unclassified cars whose field holds something (for example "NÃO"):
+     * somebody decided about them. The others are simply blank.
+     *
+     * @return int[]
+     */
+    public function markedOtherwise(): array
+    {
+        return $this->markedOtherwise;
     }
 
     /** @param array<string, mixed> $dados the car's score row for this prova (empty when it has none) */

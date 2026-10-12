@@ -31,6 +31,7 @@ final class SettingsTest extends TestCase
         'fator_atrasado' => 1.5,
         'fator_parado' => 2.0,
         'dispersao_max_ms' => 2000,
+        'dispersao_alerta_ms' => 4000,
         'fonte_offline_s' => 60,
         'recalculo_s' => 5,
         'dispositivo_ausente_s' => 600,
@@ -75,6 +76,7 @@ final class SettingsTest extends TestCase
             'fator_atrasado' => 1.8,
             'fator_parado' => 2.5,
             'dispersao_max_ms' => 1500,
+            'dispersao_alerta_ms' => 3000,
             'fonte_offline_s' => 90,
             'recalculo_s' => 10,
             'dispositivo_ausente_s' => 300,
@@ -101,6 +103,7 @@ final class SettingsTest extends TestCase
         $this->assertSame(1.8, $settings->fatorAtrasado);
         $this->assertSame(2.5, $settings->fatorParado);
         $this->assertSame(1500, $settings->dispersaoMaxMs);
+        $this->assertSame(3000, $settings->dispersaoAlertaMs);
         $this->assertSame(90, $settings->fonteOfflineS);
         $this->assertSame(10, $settings->recalculoS);
         $this->assertSame(300, $settings->dispositivoAusenteS);
@@ -136,7 +139,7 @@ final class SettingsTest extends TestCase
     public static function unusableValues(): array
     {
         $cases = [];
-        $numericKeys = ['janela_ms', 'duplicata_ms', 'fracao_volta_minima', 'janela_ritmo_s', 'fator_atrasado', 'fator_parado', 'dispersao_max_ms', 'fonte_offline_s', 'recalculo_s', 'dispositivo_ausente_s', 'fonte_principal_id'];
+        $numericKeys = ['janela_ms', 'duplicata_ms', 'fracao_volta_minima', 'janela_ritmo_s', 'fator_atrasado', 'fator_parado', 'dispersao_max_ms', 'dispersao_alerta_ms', 'fonte_offline_s', 'recalculo_s', 'dispositivo_ausente_s', 'fonte_principal_id'];
         foreach ($numericKeys as $key) {
             $cases["$key = 0"] = [$key, 0];
             $cases["$key = -5"] = [$key, -5];

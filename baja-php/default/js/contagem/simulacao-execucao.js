@@ -39,7 +39,13 @@ export function playPlan({ acoes, registrar, agora, esperar, velocidade = 1, ini
     let stopped = false;
     const realStartMs = agora();
     const raceStartMs = inicioCorridaMs ?? (acoes.length > 0 ? acoes[0].tsMs : 0);
-    const raceNow = () => raceStartMs + (agora() - realStartMs) * velocidade;
+    // A clock may have no answer for a moment (a page that lost its
+    // official time until the next contact with the server). The race then
+    // simply waits: nothing is due at "unknown o'clock".
+    const raceNow = () => {
+        const now = agora();
+        return Number.isFinite(now) ? raceStartMs + (now - realStartMs) * velocidade : -Infinity;
+    };
 
     async function run() {
         let played = 0;
@@ -47,6 +53,10 @@ export function playPlan({ acoes, registrar, agora, esperar, velocidade = 1, ini
         while (played < acoes.length && !stopped) {
             const next = acoes[played];
             const raceMsUntilDue = next.tsMs - raceNow();
+            if (!Number.isFinite(raceMsUntilDue)) {
+                await esperar(LONGEST_SLEEP_MS);
+                continue;
+            }
             if (raceMsUntilDue > 0) {
                 await esperar(Math.min(LONGEST_SLEEP_MS, Math.ceil(raceMsUntilDue / velocidade)));
                 continue;
@@ -84,4 +94,32 @@ export function playPlan({ acoes, registrar, agora, esperar, velocidade = 1, ini
  */
 export function windowFitsLap(janelaMs, voltaMediaMs) {
     return janelaMs * 4 <= voltaMediaMs;
+}
+
+/**
+ * A replay injects a race that lies wholly in the past. If part of it lay
+ * in the future, its entries would be stamped with times that have not
+ * happened yet, and the server's idea of "how far each counter has
+ * uploaded" would stop meaning anything.
+ *
+ * @returns {number} how many milliseconds too late the start is: 0 or less
+ *          means the whole race is in the past
+ */
+export function replayOverrunMs(largadaMs, duracaoMs, officialNowMs) {
+    return largadaMs + duracaoMs - officialNowMs;
+}
+
+/**
+ * May a simulation start on this prova? Made-up passes must not reach the
+ * official results by accident. So either publishing is off for the prova
+ * ("modo de publicação: desligada"), or the person typed the prova's own
+ * id as confirmation, which nobody does by accident.
+ *
+ * @param {object}  options
+ * @param {boolean} options.publica        whether the prova's counts go to the official results
+ * @param {string}  options.provaId
+ * @param {*}       options.confirmacao    what the person passed as `confirmarPublicacao`
+ */
+export function mayStartSimulation({ publica, provaId, confirmacao }) {
+    return publica === false || (typeof confirmacao === 'string' && confirmacao === provaId);
 }

@@ -10,6 +10,7 @@ use Baja\Contagem\Review\SourceAdmin;
 use Baja\Contagem\Review\SourceSettings;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\LockBusy;
+use Baja\Contagem\Service\TestPreset;
 use InvalidArgumentException;
 
 // Sources and settings: create and edit sources, devices and API tokens,
@@ -57,7 +58,7 @@ if (Pagina::isPost()) {
                 SourceSettings::applyTestPreset($service, $_POST);
                 Pagina::redirectAfterPost('contagem_fontes.php', $prova, ['msg' => 'predefinicao']);
             case 'restaurar_configuracoes':
-                SourceSettings::restore($service);
+                SourceSettings::restore($service, $_POST);
                 Pagina::redirectAfterPost('contagem_fontes.php', $prova, ['msg' => 'restaurado']);
             case 'importar_totais':
                 SourceAdmin::importTotals($service, $_POST, $_FILES['arquivo'] ?? null);
@@ -88,6 +89,8 @@ $sources = SourceAdmin::sources($prova);
 $boxSource = SourceAdmin::boxSource($prova);
 $settings = $service->getSettings();
 $settingValues = $settings->toArray();
+$presetIsApplied = $service->hasSavedSettings();
+$hasSimulatedRows = $service->hasSimulatedRows();
 
 $options = function (array $labels, $selected) use ($h): string {
     $html = '';
@@ -292,6 +295,13 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                 <?= $h($label) ?>
                 <small><?= $h($hint) ?></small>
             </label>
+            <?php // Why unticking it would be refused, said before the person tries. ?>
+            <?php if ($key === 'permitir_simulacao' && $settings->permitirSimulacao && $presetIsApplied) { ?>
+                <p class="contagem-aviso">A predefinição de teste está aplicada: para desligar a simulação use "Restaurar valores salvos", no fim desta página.</p>
+            <?php } elseif ($key === 'permitir_simulacao' && $settings->permitirSimulacao && $hasSimulatedRows) { ?>
+                <p class="contagem-aviso">Esta prova tem registros de simulação: a simulação só pode ser desligada depois de
+                    <a href="contagem_controle.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Zerar corrida</a>.</p>
+            <?php } ?>
         <?php } ?>
         <?php foreach (SettingsForm::numberFields() as $key => [$label, $hint]) { ?>
             <label><?= $h($label) ?>
@@ -308,23 +318,29 @@ Pagina::printHeader($prova, 'Fontes e configurações');
     <h2>Predefinição de teste</h2>
     <p class="contagem-dica">
         Para ensaiar com uma corrida simulada de voltas curtas: ajusta a janela de agrupamento e os outros tempos
-        para a volta média informada. Os valores em vigor ficam guardados e voltam com "Restaurar valores salvos".
-        Liga também "Permitir simulação" (a faixa SIMULAÇÃO aparece em todas as páginas); restaurar desliga de novo.
+        para a volta média informada. Os tempos em vigor ficam guardados e voltam com "Restaurar valores salvos".
+        Liga também "Permitir simulação" (a faixa SIMULAÇÃO aparece em todas as páginas). Restaurar devolve só os
+        tempos e desliga a simulação; o que foi mudado no resto das configurações nesse meio-tempo fica como está.
     </p>
     <form method="POST" action="<?= $h($action) ?>" class="contagem-acao"
           onsubmit="return confirm('Aplicar a predefinição de teste? Os tempos da contagem mudam agora, a simulação é permitida e a corrida é recalculada. NÃO use durante uma corrida de verdade.');">
         <?= $csrf ?>
         <input type="hidden" name="acao" value="aplicar_predefinicao">
-        <label>Volta média (s) <input type="number" name="volta_media_s" min="10" max="3600" required value="60" size="6"></label>
+        <label>Volta média (s), de <?= TestPreset::SHORTEST_LAP_S ?> a <?= TestPreset::LONGEST_LAP_S ?>
+            <input type="number" name="volta_media_s" min="<?= TestPreset::SHORTEST_LAP_S ?>" max="<?= TestPreset::LONGEST_LAP_S ?>" required value="60" size="6"></label>
         <button type="submit">Aplicar predefinição de teste</button>
     </form>
-    <?php if ($service->hasSavedSettings()) { ?>
+    <?php if ($presetIsApplied) { ?>
         <form method="POST" action="<?= $h($action) ?>" class="contagem-acao">
             <?= $csrf ?>
             <input type="hidden" name="acao" value="restaurar_configuracoes">
             <button type="submit">Restaurar valores salvos</button>
-            <span class="contagem-aviso">Uma predefinição de teste está aplicada: as configurações acima NÃO são as da corrida de verdade.</span>
+            <span class="contagem-aviso">Uma predefinição de teste está aplicada: os tempos acima NÃO são os da corrida de verdade.</span>
         </form>
+        <?php if ($hasSimulatedRows) { ?>
+            <p class="contagem-aviso">Esta prova tem registros de simulação: antes de restaurar, use
+                <a href="contagem_controle.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Zerar corrida</a>.</p>
+        <?php } ?>
     <?php } ?>
 </section>
 <?php

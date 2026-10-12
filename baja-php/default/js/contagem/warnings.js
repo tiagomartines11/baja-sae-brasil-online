@@ -7,7 +7,7 @@
 //
 // A warning never blocks anything: the entry is already stored when it shows.
 
-import { elapsedBetween } from './server-clock.js';
+import { elapsedBetween } from './record-elapsed.js';
 
 export const AVISO = {
     NUMERO_DESCONHECIDO: 'numero_desconhecido',

@@ -132,6 +132,78 @@ final class ReviewManualFieldsTest extends ReviewDbTestCase
         $this->assertNull($this->publishedData(self::CAR_C));
     }
 
+    /**
+     * SITUATION: the count runs beside the spreadsheet (publish mode
+     * "desligada"): the spreadsheet sends VOLTAS through juiz/remote.php.
+     * Car A has VOLTAS = 9 from it, and a judge marked car A as
+     * disqualified and car B as fit to race (APTO = SIM, the prova's
+     * classification field). Before a new session the spreadsheet sends
+     * "truncate": start my totals again from nothing.
+     *
+     * WHAT WENT WRONG: "truncate" deleted every score row of the prova. The
+     * disqualification was gone, and so was APTO: by the rule "blank means
+     * not classified" every car silently left the race, and nothing
+     * recounted.
+     *
+     * EXPECTED: on a laps prova only the three fields the spreadsheet owns
+     * are emptied. The rows stay, with DESCLAS and APTO as they were, and
+     * car B is still classified.
+     */
+    public function testTheSpreadsheetsTruncateEmptiesItsOwnFieldsAndKeepsTheRows(): void
+    {
+        $this->addClassificationField();
+        $this->changeSettings(['modo_publicacao' => 'desligada', 'campo_classificacao' => 'APTO']);
+        $this->setManualField(self::CAR_A, 'VOLTAS', 9);
+        $this->setManualField(self::CAR_A, 'DESCLAS', 'SIM');
+        $this->setManualField(self::CAR_B, 'APTO', 'SIM');
+
+        $this->newRequest();
+        $emptied = ManualScoreFields::truncateSpreadsheetFields($this->prova);
+
+        $this->assertTrue($emptied);
+        $carA = $this->publishedData(self::CAR_A);
+        $this->assertNotNull($carA, 'the row must not be deleted');
+        $this->assertNull($carA['VOLTAS']);
+        $this->assertSame('SIM', $carA['DESCLAS']);
+        $this->assertSame('SIM', $this->publishedData(self::CAR_B)['APTO']);
+        $this->newRequest();
+        $this->assertSame([self::CAR_B], array_keys($this->service->carRoster()->classified()), 'car B still takes part');
+    }
+
+    /**
+     * SITUATION: the lap counting publishes this prova (mode "confirmadas")
+     * and car A has 2 laps. An old spreadsheet, left running, sends
+     * "truncate".
+     *
+     * EXPECTED: refused, and nothing changes: VOLTAS is the count's while
+     * it publishes, and "Zerar corrida" is the way to empty a race.
+     */
+    public function testTheSpreadsheetsTruncateIsRefusedWhileTheCountPublishes(): void
+    {
+        $this->carCompletesTwoLaps(self::CAR_A);
+
+        $this->newRequest();
+        $emptied = ManualScoreFields::truncateSpreadsheetFields($this->prova);
+
+        $this->assertFalse($emptied);
+        $this->assertEquals(2, $this->publishedData(self::CAR_A)['VOLTAS']);
+    }
+
+    /** Adds the SIM/NÃO field APTO to the test prova, as an organiser would in its parameters. */
+    private function addClassificationField(): void
+    {
+        $params = json_decode((string) $this->fetchValue(
+            'SELECT params FROM prova WHERE evento_id = ? AND prova_id = ?',
+            [self::EVENTO_ID, self::PROVA_ID]
+        ), true);
+        $params['inputs'][] = ['code' => 'APTO', 'name' => 'Apto para o enduro', 'type' => 'enum', 'options' => ['SIM', 'NÃO']];
+        $this->executeSql(
+            'UPDATE prova SET params = ? WHERE evento_id = ? AND prova_id = ?',
+            [json_encode($params), self::EVENTO_ID, self::PROVA_ID]
+        );
+        $this->newRequest();
+    }
+
     /** Three crossings recorded by every counter: the pass zero and two laps. */
     private function carCompletesTwoLaps(int $car): void
     {

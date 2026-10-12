@@ -111,6 +111,9 @@ final class TimelineWindow
             'raias' => $lanes,
             'ocorrencias' => TimelineStops::describeOcorrencias($recount->input->ocorrencias, $recount->timeline, $wantsOcorrencia),
             'estadias' => TimelineStops::describeStays($recount->timeline, $carro, $fromMs, $untilMs),
+            // Stops whose time nobody knows have no place on the lanes; the
+            // ones of the cars shown are listed under them.
+            'paradas_sem_horario' => TimelineStops::describeUnknownTime($recount->timeline, $carro !== null ? [$carro] : $recount->cars),
             'abastecimento' => $recount->input->settings->abastecimento,
         ];
     }
@@ -164,6 +167,16 @@ final class TimelineWindow
      *   papel 'antes_da_largada'   typed shortly before the start; counts
      *                              (as the car's pass zero) only once a
      *                              reviewer confirmed it
+     *   papel 'retida'             HELD: two counters agree, but the pass is
+     *                              too close to the car's previous one (or
+     *                              the two entries are too far apart) to be
+     *                              counted without a person's word
+     *
+     * `soma_ao_confirmar` says whether "confirmar" on an entry of the group
+     * would give the car one more official pass. The screen writes
+     * "+1 volta" on the button from it, and only from it: a pass the rules
+     * of the race leave out (start window, after the finish) stays out
+     * whoever confirms it, and a button that promised a lap there lied.
      *
      * @return array<string, mixed>
      */
@@ -172,8 +185,11 @@ final class TimelineWindow
         // The start window is asked first: the engine numbers a car's first
         // crossing typed inside it as pass 0 too, and the reviewer should be
         // told the more specific thing.
+        $held = ($group->retida ?? false) && !$group->contado;
         if ($group->antesDaLargada) {
             $role = 'antes_da_largada';
+        } elseif ($held) {
+            $role = 'retida';
         } elseif ($group->dentroDaJanelaDeLargada) {
             $role = 'janela_largada';
         } elseif ($group->numeroVolta === 0) {
@@ -195,6 +211,10 @@ final class TimelineWindow
             'contado' => $role === 'volta' || $role === 'inicial' || ($role === 'antes_da_largada' && $group->contado),
             'numero_volta' => $group->numeroVolta,
             'confirmado_por_revisor' => $group->confirmadoPorRevisor,
+            // 'proxima_demais' | 'dispersao'; null when the pass is not held.
+            'motivo_retencao' => $held ? ($group->motivoRetencao ?? null) : null,
+            'soma_ao_confirmar' => !$group->confirmadoPorRevisor && in_array($role, ['pendente', 'retida', 'antes_da_largada'], true)
+                && !$group->contado,
         ];
     }
 

@@ -181,6 +181,37 @@ function unknownNumber(racing, naoClassificados, prng) {
 }
 
 /**
+ * Gives every action of a plan an id that is the same every time the same
+ * plan is made: for the same race, the same person and the same position
+ * in the plan.
+ *
+ * The page stores each record under this id and the server keeps one
+ * record per id. So a tab that is reloaded in the middle of a rehearsal, or
+ * somebody running the command a second time, injects nothing twice: the
+ * second copy of every record is recognised and dropped.
+ *
+ * @param {{acoes: Array<object>}} plan   a plan from planCounter() or planStopLog()
+ * @param {object} race                   what makes this race this race
+ * @param {number} race.semente
+ * @param {number} race.largadaMs
+ * @param {number} race.voltaMediaMs
+ * @param {string|number} who             the source id of a counter, or the area of a stop logger
+ * @returns {object} the same plan, each action with a `uuid`
+ */
+export function withStableIds(plan, { semente, largadaMs, voltaMediaMs }, who) {
+    // Three numbers folded into one, then written as eight hex digits. The
+    // start time is split in two because it does not fit 32 bits.
+    const startHigh = Math.trunc(largadaMs / 0x100000000);
+    const startLow = largadaMs % 0x100000000;
+    const raceKey = deriveSeed(deriveSeed(deriveSeed(semente, startHigh), startLow), voltaMediaMs);
+    const prefix = 'sim-' + raceKey.toString(16).padStart(8, '0') + '-' + String(who).slice(0, 13) + '-';
+    plan.acoes.forEach((action, index) => {
+        action.uuid = prefix + String(index).padStart(6, '0');
+    });
+    return plan;
+}
+
+/**
  * The plan of the person logging one area (pit lane or fueling station).
  *
  * @param {object} options

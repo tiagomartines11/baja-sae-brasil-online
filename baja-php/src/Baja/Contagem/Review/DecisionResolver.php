@@ -72,6 +72,60 @@ final class DecisionResolver
     }
 
     /**
+     * "Mover os registros para o carro Y": two counters typed the same
+     * wrong number, so their entries form a pass of a car that was not
+     * there. One reassignment per entry, stored together: with only one of
+     * them moved, both cars would be wrong in between.
+     *
+     * @return Decision[]
+     */
+    public static function moveGroup(DecisionRequest $request, EngineInput $input): array
+    {
+        $car = self::presentCar($request, $input);
+        $stored = [];
+        foreach ($input->entries as $entry) {
+            $stored[$entry->id] = true;
+        }
+        $decisions = [];
+        foreach ($request->grupoIds as $entryId) {
+            if (!isset($stored[$entryId])) {
+                throw new InvalidArgumentException('Esta passagem não pertence a esta prova.');
+            }
+            $decisions[] = Decision::reatribuir(0, $entryId, $car);
+        }
+        return $decisions;
+    }
+
+    /**
+     * "Marcar saída do box / do abastecimento": the car and the moment of
+     * the exit a reviewer infers from a pass at the line.
+     *
+     * The log must still say the car is INSIDE at that moment. When it does
+     * not, somebody was faster (the person at the pit lane logged the exit
+     * late, or another reviewer marked it): a second exit would be an
+     * unpaired event, so the request is answered as a conflict and the
+     * reviewer gets the screen as it is now.
+     *
+     * @return array{area: string, carro: int, ts_ms: int}
+     * @throws DecisionConflict when the car is no longer logged inside
+     */
+    public static function inferredExit(DecisionRequest $request, CarsRecount $recount): array
+    {
+        $car = self::presentCar($request, $recount->input);
+        $tsMs = (int) $request->number('ts_ms');
+        if ($tsMs > $recount->input->nowMs) {
+            throw new InvalidArgumentException('O horário da saída está no futuro.');
+        }
+        $inside = $request->area === DecisionRequest::AREA_BOX
+            ? $recount->timeline->isInPitAt($car, $tsMs)
+            : $recount->timeline->isFuelingAt($car, $tsMs);
+        if (!$inside) {
+            throw DecisionConflict::dataChanged();
+        }
+        return ['area' => (string) $request->area, 'carro' => $car, 'ts_ms' => $tsMs];
+    }
+
+    /**
      * "Encerrar exclusão": the open-ended exclusion that is to get an end.
      *
      * @return Decision the exclusion still in force

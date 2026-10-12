@@ -51,21 +51,63 @@ final class UploadFields
         return $car;
     }
 
+    /**
+     * Times are milliseconds since 1970 and must stay below 2^53: beyond
+     * that, adding two of them (which the engine does to take a median) no
+     * longer fits a whole number, PHP silently turns the sum into a
+     * fraction, and every later run of the engine fails. 2^53 ms is the
+     * year 287,396, so nothing real is lost.
+     */
+    public const TIME_LIMIT_MS = 9007199254740992;
+
+    /** How many entries, voids or stop events of one request are looked at. The rest wait for the next request. */
+    public const MAX_ITEMS_PER_REQUEST = 500;
+
     /** @param mixed $value */
     public static function intOrNull($value): ?int
     {
         if (is_int($value)) {
             return $value;
         }
-        // JSON has one number type; a client may send 1760000000000.0.
-        if (is_float($value) && is_finite($value)) {
-            return (int) round($value);
-        }
         // BIGINT columns come back from the database as numeric strings.
-        if (is_string($value) && is_numeric($value)) {
+        if (is_string($value) && preg_match('/^-?\d{1,18}$/', $value) === 1) {
             return (int) $value;
         }
+        if (is_string($value) && is_numeric($value)) {
+            $value = (float) $value;
+        }
+        // JSON has one number type; a client may send 1760000000000.0. A
+        // number too large for an integer (1e30) is cut to the largest
+        // one: converting it directly gives an arbitrary result.
+        if (is_float($value) && is_finite($value)) {
+            return (int) round(max((float) PHP_INT_MIN, min($value, 9.2e18)));
+        }
         return null;
+    }
+
+    /** Can this time be computed with? See TIME_LIMIT_MS. */
+    public static function isUsableTime(int $tsMs): bool
+    {
+        return $tsMs >= 0 && $tsMs < self::TIME_LIMIT_MS;
+    }
+
+    /** The nearest usable time to an unusable one. */
+    public static function clampTime(int $tsMs): int
+    {
+        return max(0, min($tsMs, self::TIME_LIMIT_MS - 1));
+    }
+
+    /**
+     * At most MAX_ITEMS_PER_REQUEST elements of a list from the request.
+     * A phone that was offline for an hour sends its backlog in batches;
+     * a single request with a hundred thousand elements is not a phone.
+     *
+     * @param mixed $list
+     * @return array<int, mixed>
+     */
+    public static function firstItems($list): array
+    {
+        return is_array($list) ? array_slice(array_values($list), 0, self::MAX_ITEMS_PER_REQUEST) : [];
     }
 
     /**

@@ -25,8 +25,13 @@ if (ContagemAccess::isController($prova)) {
         Pagina::requireCsrfPost($prova);
         if (($_POST['acao'] ?? '') === 'marcar_aptos') {
             try {
-                $changed = $service->markAllPresentAsClassified(Pagina::username());
-                Pagina::redirectAfterPost('contagem.php', $prova, ['aptos' => (string) $changed]);
+                // Only blank fields are filled. A car somebody marked NÃO
+                // was looked at and refused: it stays as it is and is named.
+                $outcome = $service->markAllPresentAsClassified(Pagina::username());
+                Pagina::redirectAfterPost('contagem.php', $prova, [
+                    'aptos' => (string) count($outcome['marcados']),
+                    'mantidos' => implode(',', $outcome['ja_nao']),
+                ]);
             } catch (LockBusy $busy) {
                 $errorMessage = 'A contagem está ocupada com outra operação. Nada foi alterado: tente de novo.';
             }
@@ -35,28 +40,48 @@ if (ContagemAccess::isController($prova)) {
     $roster = $service->carRoster();
     $classificationField = $roster->classificationField();
     $markedNow = filter_var($_GET['aptos'] ?? null, FILTER_VALIDATE_INT);
+    // Car numbers only: this comes back from the URL.
+    $leftAloneNow = is_string($_GET['mantidos'] ?? null) && preg_match('/^\d{1,5}(,\d{1,5})*$/', $_GET['mantidos']) === 1
+        ? explode(',', $_GET['mantidos'])
+        : [];
 
     Pagina::printHeader($prova, 'Contagem');
     ?>
     <?php if ($errorMessage !== null) { ?><p class="contagem-erro"><?= $h($errorMessage) ?></p><?php } ?>
     <?php if ($markedNow !== false && $markedNow !== null) { ?>
-        <p class="contagem-ok"><?= (int) $markedNow ?> carro(s) marcado(s) como apto(s). A contagem foi recalculada.</p>
+        <p class="contagem-ok"><?= (int) $markedNow ?> carro(s) marcado(s) como apto(s).<?= $markedNow > 0 ? ' A contagem foi recalculada.' : '' ?>
+            <?php if ($leftAloneNow !== []) { ?>
+                <strong>Não alterado(s), porque o campo já estava preenchido com outro valor (por exemplo NÃO): <?= $h(implode(', ', $leftAloneNow)) ?>.</strong>
+            <?php } ?>
+        </p>
     <?php } ?>
     <?php if ($classificationField !== null) {
-        $unclassified = $roster->unclassified(); ?>
+        $unclassified = $roster->unclassified();
+        // Not classified for two different reasons: nobody filled the field
+        // in (the button below does), or somebody filled in something that
+        // is not SIM (the button leaves those alone).
+        $markedNo = array_values(array_intersect($roster->markedOtherwise(), array_keys($unclassified)));
+        $blank = array_values(array_diff(array_keys($unclassified), $markedNo)); ?>
         <section class="contagem-bloco">
             <h2>Carros classificados</h2>
             <p>
                 Participa da corrida o carro presente e com <strong><?= $h($classificationField) ?> = SIM</strong>:
                 <strong><?= count($roster->classified()) ?></strong> classificado(s),
-                <strong><?= count($unclassified) ?></strong> presente(s) sem classificação<?= $unclassified === [] ? '' : ' (' . $h(implode(', ', array_keys($unclassified))) . ')' ?>.
+                <strong><?= count($blank) ?></strong> presente(s) com o campo em branco<?= $blank === [] ? '' : ' (' . $h(implode(', ', $blank)) . ')' ?>.
                 Uma passagem digitada para um carro não classificado é guardada, mas não conta e gera um alerta na revisão.
             </p>
+            <?php if ($markedNo !== []) { ?>
+                <p class="contagem-aviso">
+                    <strong><?= count($markedNo) ?></strong> presente(s) marcado(s) como NÃO apto(s) (campo preenchido com outro valor que não SIM):
+                    <strong><?= $h(implode(', ', $markedNo)) ?></strong>.
+                    O botão abaixo NÃO altera esses carros; para liberar um deles, edite o campo dele em Campos manuais.
+                </p>
+            <?php } ?>
             <form method="POST" action="contagem.php<?= $h($query) ?>" class="contagem-acao"
-                  onsubmit="return confirm(<?= $h(json_encode('Marcar como apto cada carro presente ainda sem classificação (' . count($unclassified) . ')? Cada alteração fica no histórico da prova.')) ?>);">
+                  onsubmit="return confirm(<?= $h(json_encode('Marcar como apto cada carro presente com o campo em branco (' . count($blank) . ')? Carros marcados NÃO não são alterados. Cada alteração fica no histórico da prova.')) ?>);">
                 <?= Pagina::csrfField($prova) ?>
                 <input type="hidden" name="acao" value="marcar_aptos">
-                <button type="submit" <?= $unclassified === [] ? 'disabled' : '' ?>>Marcar todos os presentes como aptos</button>
+                <button type="submit" <?= $blank === [] ? 'disabled' : '' ?>>Marcar todos os presentes como aptos</button>
                 <span class="contagem-dica">Para desmarcar um carro, edite o campo <?= $h($classificationField) ?> dele em
                     <a href="dashboard.php<?= $h($query) ?>">Campos manuais</a>.</span>
             </form>

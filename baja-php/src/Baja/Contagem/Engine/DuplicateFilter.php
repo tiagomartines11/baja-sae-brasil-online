@@ -82,6 +82,17 @@ final class DuplicateFilter
                 $lastKeptBySourceAndCar[$fonteId][$entry->carro] = $entry;
                 continue;
             }
+            if ($lastKept->tsMs < $result->flagsFromMs && $entry->tsMs >= $result->flagsFromMs) {
+                // The earlier entry was typed before the start (warm-up, or
+                // a clock a little early) and this one after it. What is
+                // typed before the start is not a pass, so it cannot make
+                // the car's first real crossing a "double tap": voiding
+                // this entry would cost the car a counter's word on its
+                // pass zero, or the pass itself.
+                $result->keptEntries[] = $entry;
+                $lastKeptBySourceAndCar[$fonteId][$entry->carro] = $entry;
+                continue;
+            }
 
             if ($result->keepsRepeat($entry, $lastKept, $settings, $confirmedEntryIds, $sourcesById)) {
                 $result->keptEntries[] = $entry;

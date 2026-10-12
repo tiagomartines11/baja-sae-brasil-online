@@ -403,28 +403,75 @@ final class BeforeTheStartTest extends EngineTestCase
     }
 
     /**
-     * SITUATION: as in the test about half the field's first lap, but only
-     * TWO cars have completed a first lap so far (180 s each). Car 9 was
-     * typed 30 s before the start and made its first pass at 00:50, so
-     * confirming would give it a first lap of 80 s.
+     * SITUATION: only TWO cars have completed a first lap so far (180 s
+     * each). Car 9 was typed by everybody 30 s before the start and made
+     * its first pass at 01:10, so confirming would give it a first lap of
+     * 100 s. Later a third car completes its first lap too.
      *
-     * EXPECTED: two cars are not a field (three are needed, as for the
-     * late-first-pass flag). With nothing to compare against, only the
-     * absolute limit applies (two matching windows, 40 s), 80 s passes it,
-     * and the suggestion to confirm is made.
+     * WHY IT MATTERS: accepting this suggestion ADDS A LAP. Early in the
+     * race the engine cannot tell a first crossing from warm-up: that takes
+     * the field's median first lap, and two cars are not a field (three are
+     * needed, as for the late-first-pass flag).
+     *
+     * EXPECTED: while only two cars have a first lap, the flag is there,
+     * says what confirming would do, but makes NO suggestion, and says
+     * why. Once the third car has its first lap, the 100 s can be judged
+     * (more than half of 180 s) and the suggestion to confirm appears.
      */
-    public function testWithFewerThanThreeFirstLapsOnlyTheAbsoluteLimitApplies(): void
+    public function testUntilTheFieldsFirstLapIsKnownThereIsNoSuggestionToCountAPassBeforeTheStart(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
         $race->steadyField([11, 12], 180, 2, '00:40');
+        $race->pass(13, '00:54');
         $race->pass(9, '-00:30');
-        $race->pass(9, '00:50');
+        $race->pass(9, '01:10');
 
         $flag = $this->assertSingleOpenFlag($race->run('05:00'), Flag::ANTES_DA_LARGADA);
 
-        $this->assertSame(80000, $flag->voltaResultanteMs);
-        $this->assertNotNull($flag->sugestao);
+        $this->assertSame(100000, $flag->voltaResultanteMs);
+        $this->assertSame(Flag::EFEITO_MAIS_UMA_PASSAGEM, $flag->efeitoDeConfirmar);
+        $this->assertNull($flag->sugestao);
+        $this->assertStringContainsString('por enquanto não há sugestão', $flag->motivo);
+
+        $race->pass(13, '03:54');
+        $flag = $this->assertSingleOpenFlag($race->run('05:00'), Flag::ANTES_DA_LARGADA);
+        $this->assertSame(Decision::CONFIRMAR, $flag->sugestao['tipo']);
+    }
+
+    /**
+     * SITUATION: the race of the first test (five cars, so the field's
+     * first lap is known: 180 s). Thirty seconds before the start, counter
+     * 1 alone typed car 9; in a second race counters 1 and 2 both did. Car
+     * 9 then crosses at 02:50 and 05:50, recorded by everybody.
+     *
+     * WHAT WENT WRONG (before): the stray entry of ONE counter came with
+     * the suggestion "count it as the initial pass", so a single key press
+     * gave car 9 a lap on one person's word.
+     *
+     * EXPECTED: one counter's entry before the start is flagged, with what
+     * confirming would do, but with no suggestion; the reason says only one
+     * counter has it. Two counters agreeing do get the suggestion.
+     */
+    public function testAPassBeforeTheStartIsOnlySuggestedOnTwoCountersWord(): void
+    {
+        foreach ([[1], [1, 2]] as $seenBy) {
+            $race = $this->fiveCarsTwoCrossingsEach();
+            $race->pass(9, '-00:30', $seenBy);
+            $race->pass(9, '02:50');
+            $race->pass(9, '05:50');
+
+            $flag = $this->assertSingleOpenFlag($race->run('06:00'), Flag::ANTES_DA_LARGADA);
+
+            $this->assertSame(Flag::EFEITO_MAIS_UMA_PASSAGEM, $flag->efeitoDeConfirmar);
+            $this->assertSame(200000, $flag->voltaResultanteMs);
+            if (count($seenBy) === 1) {
+                $this->assertNull($flag->sugestao, 'One counter alone: no suggestion.');
+                $this->assertStringContainsString('Só Contagem 1 a registrou', $flag->motivo);
+            } else {
+                $this->assertSame(Decision::CONFIRMAR, $flag->sugestao['tipo'], 'Two counters agree: suggested.');
+            }
+        }
     }
 
     /**
@@ -566,7 +613,8 @@ final class BeforeTheStartTest extends EngineTestCase
      *
      * EXPECTED:
      * - car 7's lone entry is flagged "antes_da_largada" like any other
-     *   pass before the start, naming the counter it comes from;
+     *   pass before the start, naming the counter it comes from, but with
+     *   no suggestion to count it;
      * - 99 and 50 get the flag that says more about them ("carro
      *   desconhecido", "carro não classificado"), not "antes da largada".
      */
@@ -592,7 +640,8 @@ final class BeforeTheStartTest extends EngineTestCase
             array_map(fn(Flag $flag) => $flag->tipo, $flagsByCar)
         );
         $this->assertSame(1, $flagsByCar[7]->fonteId);
-        $this->assertSame(['tipo' => Decision::CONFIRMAR, 'passagem_id' => $lone], $flagsByCar[7]->sugestao);
+        $this->assertSame([$lone], $flagsByCar[7]->passagemIds);
+        $this->assertNull($flagsByCar[7]->sugestao, 'One counter\'s word is not enough to suggest adding a lap.');
         $this->assertNull($flagsByCar[7]->voltaResultanteMs, 'Car 7 has no other pass to measure a lap from.');
     }
 

@@ -550,6 +550,16 @@
          pages, so they need the same idempotency key. NULL for events
          created directly by race control. -->
     <column name="uuid_cliente" phpName="UuidCliente" type="CHAR" size="36"/>
+    <!-- How good ts_ms is, as for entries: exato | estimado | desconhecido.
+         A stop event of unknown time is kept out of the pairing. -->
+    <column name="qualidade_tempo" phpName="QualidadeTempo" type="VARCHAR" size="12" required="true" defaultValue="exato"/>
+    <!-- What the device's own clock said. Audit only. -->
+    <column name="ts_dispositivo_ms" phpName="TsDispositivoMs" type="BIGINT"/>
+    <!-- How it was entered: toque | teclado | simulacao | ... NULL for race control. -->
+    <column name="modo_entrada" phpName="ModoEntrada" type="VARCHAR" size="16"/>
+    <!-- Who it comes from: NULL (race control or a pit-log device), or
+         "revisor" for an exit a reviewer inferred from a pass at the line. -->
+    <column name="origem" phpName="Origem" type="VARCHAR" size="16"/>
     <foreign-key foreignTable="prova" name="contagem_ocorrencia_prova" onDelete="RESTRICT" onUpdate="CASCADE">
       <reference local="evento_id" foreign="evento_id"/>
       <reference local="prova_id" foreign="prova_id"/>

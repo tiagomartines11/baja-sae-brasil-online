@@ -136,6 +136,26 @@ final class StopEventsTest extends DbTestCase
     }
 
     /**
+     * SITUATION: the prova has a classification field. Cars 11 and 22 are
+     * classified; car 33 is present at the event but may not race.
+     *
+     * WHAT WENT WRONG BEFORE: the stops report listed every present car,
+     * unlike every other list of the feature (tiles, review table, feed).
+     *
+     * EXPECTED: the report has the two cars of the race, and not car 33.
+     */
+    public function testTheStopsReportListsOnlyTheCarsOfTheRace(): void
+    {
+        $this->setManualField(self::CAR_A, 'APTO', 'SIM');
+        $this->setManualField(self::CAR_B, 'APTO', 'SIM');
+        $this->changeSettings(['campo_classificacao' => 'APTO']);
+
+        $rows = StopReport::rows($this->service);
+
+        $this->assertSame([self::CAR_A, self::CAR_B], array_column($rows, 'numero'));
+    }
+
+    /**
      * SITUATION: the race simulation is run on the pit-log page of a prova
      * that does not allow simulation (the setting is off, as for any real
      * race). Its events are marked with the mode "simulacao".

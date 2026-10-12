@@ -114,6 +114,12 @@ final class SyntheticRace
         return self::lapsFromPasses($this->track->officialPassesBy($car, $momentMs), Settings::INICIAL_PRIMEIRA_PASSAGEM);
     }
 
+    /** How many official passes (the first crossing included) the car had really made by $momentMs. */
+    public function truePassesBy(int $car, int $momentMs): int
+    {
+        return $this->track->officialPassesBy($car, $momentMs);
+    }
+
     private static function lapsFromPasses(int $passes, string $passagemInicial): int
     {
         return $passagemInicial === Settings::INICIAL_LARGADA ? $passes : max(0, $passes - 1);

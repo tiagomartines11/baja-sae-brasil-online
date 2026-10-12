@@ -21,7 +21,9 @@ import assert from 'node:assert/strict';
 
 import { CONEXAO } from '../../default/js/contagem/sync-queue.js';
 import { HEARTBEAT_INTERVAL_MS, REVOKED_RETRY_INTERVAL_MS } from '../../default/js/contagem/sync-heartbeat.js';
-import { createDevice } from './helpers/fakes.js';
+import { describeBanner } from '../../default/js/contagem/status-messages.js';
+import { ARMAZENAMENTO } from '../../default/js/contagem/storage-open.js';
+import { FakeClock, createDevice } from './helpers/fakes.js';
 
 /** Lets everything that was started by a timer tick run to its end. */
 async function settle(device) {
@@ -79,14 +81,18 @@ test('a counter who is linked again starts uploading again without reloading the
     device.server.behaviour = 'revoked';
     await device.type(41);
     await device.queue.syncOnce();
+    await settle(device);
     assert.equal(device.queue.getState().conexao, CONEXAO.REVOGADO);
+    // The page asked for a new token the moment it was refused.
+    assert.equal(desk.requests, 1);
     await device.type(12);
 
-    // Still shut out: the page asks, the server says no, nothing changes.
+    // Still shut out: half a minute later the page asks again, the server
+    // says no again, nothing changes.
     device.clock.advance(REVOKED_RETRY_INTERVAL_MS);
     device.heartbeat.tick();
     await settle(device);
-    assert.equal(desk.requests, 1);
+    assert.equal(desk.requests, 2);
     assert.equal(device.queue.getState().conexao, CONEXAO.REVOGADO);
 
     // The controller links the counter again.
@@ -120,13 +126,122 @@ test('a shut-out device asks to be let back in slowly, not every 5 seconds', asy
         await settle(device);
     }
 
-    // Expected: one request for a token per 30 seconds, so 10 in five
-    // minutes. "Removed" is a decision by a person; knocking on the door
-    // every 5 seconds would be noise in the server's log, not persistence.
+    // Expected: one request at the moment of the refusal, then one per 30
+    // seconds: 11 in five minutes. "Removed" is a decision by a person;
+    // knocking on the door every 5 seconds would be noise in the server's
+    // log, not persistence.
     assert.equal(REVOKED_RETRY_INTERVAL_MS, 30000);
-    assert.equal(desk.requests, 10);
+    assert.equal(desk.requests, 11);
     // And not one upload attempt: the old token is never tried again.
     assert.equal(device.server.receivedRequests.length, 0);
+});
+
+/**
+ * A pretend contagem_dispositivo.php, for tests that use the page's REAL
+ * token source. Each request takes `answerDelayMs`; the answer is "blocked by
+ * the controller" until the test sets `released`.
+ */
+function createTokenEndpoint(clock, answerDelayMs = 200) {
+    const endpoint = {
+        released: false,
+        requests: 0,
+        requestToken: async () => {
+            endpoint.requests++;
+            clock.advance(answerDelayMs);
+            return endpoint.released
+                ? { status: 200, body: { token: 'new-token' } }
+                : { status: 403, body: { erro: 'dispositivo_revogado' } };
+        },
+    };
+    return endpoint;
+}
+
+test('a device blocked by the controller says so by itself, at once', async () => {
+    // SITUATION: the controller presses "revogar" on equipe1's phone. The
+    // phone's next upload gets the 401.
+    //
+    // WHAT WENT WRONG: the page showed the general "desconectado" text. The
+    // sentence that tells the counter what to do ("bloqueado pelo
+    // responsável... peça para liberar") comes from the token request, and
+    // (1) that request was first made 30 s later, (2) nothing redrew the
+    // warning after it. In practice it appeared only when the counter
+    // pressed "Tentar de novo".
+    const clock = new FakeClock();
+    const endpoint = createTokenEndpoint(clock);
+    const device = await createDevice({ clock, requestToken: endpoint.requestToken });
+    await device.type(41);
+    device.server.behaviour = 'revoked';
+    assert.equal(device.tokenProblem, null);
+
+    // The upload that gets the 401. No timer tick and no button after it.
+    await device.queue.syncOnce();
+    const redrawsAfterTheRefusal = device.stateChanges.length;
+    await settle(device);
+
+    // EXPECTED: the 401 itself does not say why, so the page asks for a
+    // token right away, learns the reason from that answer, and tells the
+    // page to redraw. The warning now is the "bloqueado" one.
+    assert.equal(endpoint.requests, 1);
+    assert.equal(device.tokenProblem, 'dispositivo_revogado');
+    assert.ok(device.stateChanges.length > redrawsAfterTheRefusal, 'the page was told to redraw after the answer');
+    const banner = describeBanner(device.queue.getState(), { tokenProblem: device.tokenProblem, armazenamento: ARMAZENAMENTO.DISCO });
+    assert.match(banner.avisos.join(' '), /bloqueado nesta contagem pelo responsável/);
+});
+
+test('a blocked device really asks every 30 seconds, and heals when released', async () => {
+    // SITUATION: blocked, phone left on the table for five minutes with the
+    // page open.
+    //
+    // WHAT WENT WRONG: two pauses of 30 s were stacked. The heartbeat waited
+    // 30 s between attempts, and the token source refused to ask again
+    // within 30 s of the last ANSWER (a moment after the attempt). So every
+    // other attempt of the heartbeat died without reaching the server: one
+    // real request per minute, and a released counter waited up to a minute.
+    //
+    // And a browser timer is not exact: the tick "at 30 s" comes a few
+    // milliseconds early as often as late. Early by 2 ms meant "too soon",
+    // and the real pause became 35 s.
+    const clock = new FakeClock();
+    const endpoint = createTokenEndpoint(clock, 0);
+    const askedAtMs = [];
+    const device = await createDevice({
+        clock,
+        requestToken: () => {
+            askedAtMs.push(clock.serverNow());
+            return endpoint.requestToken();
+        },
+    });
+    await device.type(41);
+    device.server.behaviour = 'revoked';
+    await device.queue.syncOnce();
+    await settle(device);
+
+    // The 5-second timer; its first tick comes 3 ms early, so every sixth
+    // tick is 29.997 s after the refusal instead of 30 s.
+    for (let tick = 0; tick < 60; tick++) {
+        device.clock.advance(tick === 0 ? HEARTBEAT_INTERVAL_MS - 3 : HEARTBEAT_INTERVAL_MS);
+        device.heartbeat.tick();
+        await settle(device);
+    }
+
+    // EXPECTED: one request at the refusal, then one every 30 s (give or
+    // take the timer's few milliseconds).
+    const gapsMs = askedAtMs.slice(1).map((atMs, index) => atMs - askedAtMs[index]);
+    assert.ok(askedAtMs.length >= 10, askedAtMs.length + ' requests in five minutes');
+    assert.ok(gapsMs.every((gapMs) => gapMs >= 29_500 && gapMs <= 30_500), 'gaps: ' + gapsMs.join(', '));
+
+    // The controller presses "liberar". The next attempt gets a token and
+    // the waiting entry goes up, with no reload and no button.
+    endpoint.released = true;
+    device.server.behaviour = 'ok';
+    for (let tick = 0; tick < 6; tick++) {
+        device.clock.advance(HEARTBEAT_INTERVAL_MS);
+        device.heartbeat.tick();
+        await settle(device);
+    }
+    assert.equal(device.queue.getState().conexao, CONEXAO.ONLINE);
+    assert.deepEqual(device.server.storedCars(), [41]);
+    assert.equal(device.tokenProblem, null);
 });
 
 test('a page opened while shut out asks once right away', async () => {
@@ -138,6 +253,9 @@ test('a page opened while shut out asks once right away', async () => {
     device.server.behaviour = 'revoked';
     await device.queue.syncOnce();
 
+    await settle(device);
+    const requestsYesterday = desk.requests;
+
     desk.counterIsLinkedAgain = true;
     device.server.behaviour = 'ok';
     await device.reload();                      // the page is opened again
@@ -146,7 +264,7 @@ test('a page opened while shut out asks once right away', async () => {
     await settle(device);
 
     // Expected: no 30-second wait on a freshly opened page.
-    assert.equal(desk.requests, 1);
+    assert.equal(desk.requests, requestsYesterday + 1);
     assert.deepEqual(device.server.storedCars(), [41]);
 });
 

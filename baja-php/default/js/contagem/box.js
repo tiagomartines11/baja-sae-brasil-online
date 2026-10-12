@@ -1,7 +1,9 @@
 // Pit lane and fueling station page controller. Same local store, queue and
-// status bar as the count page. The page opens on a choice (which area, then
-// entry or exit); after that every tap on a car records that event. The
-// decisions are in pit-session.js; this file connects them to the DOM.
+// status bar as the count page. A device that has never chosen is asked
+// which area and whether entry or exit; one that has opens directly in the
+// mode it used last. After that every tap on a car records that event. The
+// decisions are in pit-session.js and box-toques.js; this file connects
+// them to the DOM.
 //
 // FOR THE RACE SIMULATION: while the prova allows simulation, this page puts
 // one object on `window.contagemPagina`:
@@ -21,14 +23,10 @@ import { buildPitEventsCsv } from './csv-export.js';
 import { createFeedback } from './feedback.js';
 import { NumberBuffer } from './entry-modes.js';
 import { carListIsKnown, teamNameOf } from './warnings.js';
-import { createPitLists, describeTipo } from './box-listas.js';
+import { createPitLists, describeGroups, describeTipo } from './box-listas.js';
+import { TapGuard, TileLayoutHold, LAYOUT_HOLD_MS } from './box-toques.js';
 
 const MODO_SIMULACAO = 'simulacao';
-
-// After an event the tapped car moves to the other group and the tiles below
-// it shift. A second touch landing within this time is the same finger still
-// on the screen, now over a different car, so it is ignored.
-const TAP_GUARD_MS = 350;
 
 async function main() {
     const page = await startPage({ buildExportCsv: (store) => buildPitEventsCsv(store.allPitEvents()) });
@@ -40,7 +38,8 @@ async function main() {
     const feedback = createFeedback({ preferences, windowRef: window });
     const buffer = new NumberBuffer();
     const field = element('campo-numero');
-    let lastRecordedAtMs = -Infinity;
+    const tapGuard = new TapGuard();
+    const layoutHold = new TileLayoutHold();
 
     function showMessage(text, isProblem) {
         const message = element('box-mensagem');
@@ -66,12 +65,13 @@ async function main() {
      * @param {object} [options]
      * @param {?number} [options.tsMs] time of the event in SERVER time; left out = right now
      * @param {?string} [options.modo] 'simulacao' for a simulated event
+     * @param {?string} [options.uuid] simulation only: see PitSession.recordEvent
      */
-    async function recordEvent(car, tipo, { tsMs = null, modo = null } = {}) {
+    async function recordEvent(car, tipo, { tsMs = null, modo = null, uuid = null } = {}) {
         let record;
         try {
             // The time of the event is taken inside, first thing.
-            record = await session.recordEvent({ car, tipo, tsMs, mode: modo });
+            record = await session.recordEvent({ car, tipo, tsMs, mode: modo, uuid });
         } catch (storageError) {
             showMessage('NÃO REGISTRADO: o aparelho não conseguiu guardar o carro ' + car + '.', true);
             feedback.erro();
@@ -98,10 +98,15 @@ async function main() {
     function recordTappedCar(car) {
         const tipo = flow.tipo();
         const nowMs = monotonicNow();
-        if (page.shiftEnded() || tipo === null || nowMs - lastRecordedAtMs < TAP_GUARD_MS) {
+        // Only a double tap on the SAME car is dropped. Two cars entering
+        // together are two taps a moment apart, and both must be recorded.
+        if (page.shiftEnded() || tipo === null || !tapGuard.accepts(car, nowMs)) {
             return;
         }
-        lastRecordedAtMs = nowMs;
+        // The tiles keep their places for a moment, so that the next tap
+        // lands on the car it was aimed at; then they are put in order.
+        layoutHold.noteTap(car, nowMs);
+        window.setTimeout(render, LAYOUT_HOLD_MS + 20);
         recordEvent(car, tipo).catch(() => {});
     }
 
@@ -133,16 +138,19 @@ async function main() {
             return;
         }
         const carsInside = session.carsInside(flow.area, page.serverCarsInside(flow.area));
+        const freshGroups = orderCarsForMode({
+            // Classified cars only; a car that is inside is added by
+            // orderCarsForMode whatever list it is (or is not) in.
+            listedCars: (page.validCars() || []).map((car) => car.numero),
+            carsInside,
+            sentido: flow.sentido,
+        });
+        const layout = layoutHold.layoutFor(flow.tipo(), freshGroups, monotonicNow());
         lists.render({
             area: flow.area,
             sentido: flow.sentido,
-            groups: orderCarsForMode({
-                // Classified cars only; a car that is inside is added by
-                // orderCarsForMode whatever list it is (or is not) in.
-                listedCars: (page.validCars() || []).map((car) => car.numero),
-                carsInside,
-                sentido: flow.sentido,
-            }),
+            groups: layout.groups,
+            tappedCars: layout.tappedCars,
             recentEvents: session.recentEvents(),
         });
     }
@@ -183,6 +191,13 @@ async function main() {
         }
         render();
     });
+    if (flow.abriuNoModoLembrado) {
+        // No question was asked, so the page says what it assumed. The
+        // heading says it too; this line adds where it came from and how to
+        // change it.
+        showMessage('Aberto como da última vez neste aparelho: ' + describeGroups(flow.area, flow.sentido).modo
+            + '. Para mudar, toque em Entrada ou Saída acima.', false);
+    }
     element('carregando').hidden = true;
     element('conteudo').hidden = false;
 
@@ -210,13 +225,24 @@ async function main() {
          * @param {string}  pitEvent.tipo   'box_entrada' | 'box_saida' | 'abastecimento_entrada' | 'abastecimento_saida'
          * @param {?number} [pitEvent.tsMs] intended time, SERVER time in ms; left out = now
          * @param {string}  [pitEvent.modo] 'simulacao' unless given
+         * @param {?string} [pitEvent.uuid] the record is stored under exactly
+         *        this uuid; the same uuid a second time records nothing and
+         *        returns the record already there
          * @returns {Promise<object>} the stored record
          */
-        registrarParada({ car, tipo, tsMs = null, modo = MODO_SIMULACAO }) {
+        registrarParada({ car, tipo, tsMs = null, modo = MODO_SIMULACAO, uuid = null }) {
             if (partsOfTipo(tipo) === null) {
                 return Promise.reject(new Error('Tipo de parada desconhecido: ' + tipo));
             }
-            return recordEvent(car, tipo, { tsMs, modo });
+            return recordEvent(car, tipo, { tsMs, modo, uuid });
+        },
+        /**
+         * While true, this page never tells the server "you have everything
+         * up to now" (see SyncQueue.suprimirMarcaDeFila).
+         * @param {boolean} suprimir
+         */
+        suprimirMarcaDeFila(suprimir) {
+            queue.suprimirMarcaDeFila(suprimir);
         },
     });
 }

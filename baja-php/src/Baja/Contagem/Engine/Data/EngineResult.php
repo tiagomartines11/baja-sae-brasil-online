@@ -23,9 +23,10 @@ final class EngineResult
     public array $groups = [];
 
     /**
-     * Entries whose time is unknown (`Entry::TEMPO_DESCONHECIDO`) and that no
-     * reviewer confirmed. They are in no pass group and count for nothing;
-     * each has a "tempo_desconhecido" flag. Listed so timelines can show them.
+     * Entries whose time is unknown (`Entry::TEMPO_DESCONHECIDO`). They are in
+     * no pass group and count for nothing, whether a reviewer confirmed them
+     * or not; each unconfirmed one has a "tempo_desconhecido" flag. Listed so
+     * timelines can show them.
      *
      * @var Entry[]
      */

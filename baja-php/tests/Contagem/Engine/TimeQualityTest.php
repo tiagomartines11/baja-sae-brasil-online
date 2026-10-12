@@ -139,9 +139,11 @@ final class TimeQualityTest extends EngineTestCase
      * the entry is NOT matched: the pass group has two entries and counts
      * on their agreement. The entry is in no group; it is listed in
      * `unknownTimeEntries` and has its own flag, "tempo_desconhecido",
-     * naming counter 3. The flag says confirming would add a pass, and that
-     * the lap it would make is half a second long, so the screen can ask
-     * "are you sure?". The entry is not among counter 3's passes or entries
+     * naming counter 3. The flag says confirming changes NO count: the
+     * entry is never matched, whatever a reviewer presses, because the time
+     * it carries cannot be checked. (It used to say "one more pass", and K
+     * counted the pass at the phone's own clock time, which the screen does
+     * not even show.) The entry is not among counter 3's passes or entries
      * in use.
      */
     public function testAnEntryOfUnknownTimeIsNeverMatchedAndIsFlaggedOnItsOwn(): void
@@ -167,9 +169,10 @@ final class TimeQualityTest extends EngineTestCase
         $this->assertSame(3, $flag->fonteId);
         $this->assertSame(RaceScenario::ms('03:00.5'), $flag->tsMs);
         $this->assertNull($flag->sugestao);
-        $this->assertSame(Flag::EFEITO_MAIS_UMA_PASSAGEM, $flag->efeitoDeConfirmar);
-        $this->assertSame(500, $flag->voltaResultanteMs);
+        $this->assertSame(Flag::EFEITO_NENHUM, $flag->efeitoDeConfirmar);
+        $this->assertNull($flag->voltaResultanteMs);
         $this->assertStringContainsString('Contagem 3', $flag->motivo);
+        $this->assertStringContainsString('adicione a passagem', $flag->motivo);
         $this->assertSame(1, $this->sourceCount($result, 7, 3), 'Only the first crossing is among counter 3\'s passes.');
         $this->assertSame(1, $result->sourceStats[3]->entradas);
     }
@@ -216,16 +219,22 @@ final class TimeQualityTest extends EngineTestCase
 
     /**
      * SITUATION: car 8 again: counter 1's lone entry at 06:00 and counter
-     * 3's entry of unknown time, also saying 06:00. The reviewer watches
-     * the video, sees the car cross at 06:00 and confirms counter 3's
-     * entry: "the time it carries is right".
+     * 3's entry of unknown time, also saying 06:00. A reviewer confirms
+     * counter 3's entry.
      *
-     * EXPECTED: a confirmed entry takes part like any other. It joins
-     * counter 1's entry in one pass group, which counts (lap 1), and both
-     * flags are gone: the group was confirmed. Nothing is listed as unknown
-     * any more. The fast path gives the same count.
+     * WHAT WENT WRONG (before): confirming made the entry take part at the
+     * time its phone's clock said. That time is the one thing nobody can
+     * vouch for.
+     *
+     * EXPECTED: confirming an entry of unknown time only stops the warning.
+     * The entry stays out of every pass group and car 8 still has no lap;
+     * counter 1's entry still waits alone, with its own flag. The entry is
+     * still listed for the timeline. The reviewer who saw the car cross on
+     * the video ADDS a pass at the time they saw ("Adicionar passagem"):
+     * that joins counter 1's entry and the lap counts. The fast path gives
+     * the same counts at each step.
      */
-    public function testConfirmingAnEntryOfUnknownTimeAcceptsItsTime(): void
+    public function testConfirmingAnEntryOfUnknownTimeOnlySilencesItAndAddingAPassIsWhatCounts(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
@@ -236,11 +245,52 @@ final class TimeQualityTest extends EngineTestCase
         $race->confirm($unknown);
         $result = $race->run('08:00');
 
-        $this->assertLapCounts([8 => 1], $result);
-        $this->assertSame($result->groupOfEntry($lone), $result->groupOfEntry($unknown));
-        $this->assertNoOpenFlags($result);
-        $this->assertSame([], $result->unknownTimeEntries);
+        $this->assertLapCounts([8 => 0], $result);
+        $this->assertNull($result->groupOfEntry($unknown));
+        $this->assertCount(1, $result->groupOfEntry($lone)->entries);
+        $this->assertSingleOpenFlag($result, Flag::SOLITARIA);
+        $this->assertSame([$unknown], array_map(fn(Entry $entry) => $entry->id, $result->unknownTimeEntries));
+        $this->assertSame(0, $race->countCars('08:00', [8])->lapCount(8));
+
+        $race->addPass(8, '06:00.5');
+        $added = $race->run('08:00');
+        $this->assertLapCounts([8 => 1], $added);
+        $this->assertNoOpenFlags($added);
         $this->assertSame(1, $race->countCars('08:00', [8])->lapCount(8));
+    }
+
+    /**
+     * SITUATION: car 8 made its first crossing and one lap. Counter 3 also
+     * has an entry for it of unknown time, dated by a phone whose calendar
+     * is three days behind: long before the start. A reviewer confirms it
+     * (or an older version of the screen did, with its K key). In a second
+     * race the phone's clock is three days AHEAD, after the finish.
+     *
+     * WHAT WENT WRONG (before): a confirmed group before the start is the
+     * car's pass zero, so the confirmed entry became pass zero and the car
+     * gained a lap for a "pass" three days before the race. After the
+     * finish it could become the one pass allowed after the flag.
+     *
+     * EXPECTED: a confirmed entry of unknown time never counts, inside the
+     * race or outside it. One lap in both races.
+     */
+    public function testAConfirmedEntryOfUnknownTimeOutsideTheRaceNeverCounts(): void
+    {
+        foreach (['-4320:00', '4320:00'] as $phoneClock) {
+            $race = RaceScenario::withCounters(3);
+            $race->start('00:00');
+            $race->firstCrossing([8]);
+            $race->pass(8, '03:00');
+            $race->finish('10:00');
+            $unknown = $race->entryWithTimeQuality(3, 8, $phoneClock, Entry::TEMPO_DESCONHECIDO);
+            $race->confirm($unknown);
+
+            $result = $race->run('11:00');
+
+            $this->assertLapCounts([8 => 1], $result, "Phone clock at $phoneClock.");
+            $this->assertNoOpenFlags($result);
+            $this->assertSame(1, $race->countCars('11:00', [8])->lapCount(8));
+        }
     }
 
     /**

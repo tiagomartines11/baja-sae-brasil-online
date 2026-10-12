@@ -9,6 +9,7 @@ use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\Lap;
 use Baja\Contagem\Engine\Data\Ocorrencia;
+use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Engine;
 use Baja\Contagem\Engine\LapCounter;
 use Baja\Contagem\Engine\Settings;
@@ -245,7 +246,8 @@ final class CountCarsTest extends EngineTestCase
      *
      * - settings: any publish mode, any primary counter, either pass-zero
      *   rule, a start window of 0, 30 or 90 seconds, either rule for
-     *   passes after the finish;
+     *   passes after the finish, several matching windows, agreement
+     *   spreads and minimum-lap fractions;
      * - the start corrected to a later time (so more entries fall before
      *   it);
      * - a counter switched off mid-race, or one that never took part;
@@ -260,8 +262,13 @@ final class CountCarsTest extends EngineTestCase
      * answer through both entry points.
      *
      * EXPECTED: for every car, recounting it alone gives exactly the rows
-     * of the full run. (A 600-seed run of this passed when the round was
-     * written; the suite keeps forty. See fuzzSeeds() to run more.)
+     * of the full run, AND exactly its pass groups: the same entries
+     * together, held or not for the same reason. Matching and the hold rule
+     * depend on the car's own entries and on nothing else. And the full
+     * run itself gives the same groups when the entries are handed over in
+     * another order: nothing depends on the order of arrival. (A 600-seed
+     * run of this passed when the round was written; the suite keeps
+     * forty. See fuzzSeeds() to run more.)
      */
     #[DataProvider('fuzzSeeds')]
     public function testWhateverIsThrownAtItEveryCarCountsTheSameOnItsOwn(int $seed): void
@@ -276,6 +283,13 @@ final class CountCarsTest extends EngineTestCase
         $config->unclassifiedCarsOnTrack = 1;
         $config->estimatedTimePeriods = [['source' => 3, 'fromSeconds' => 5 * 60, 'toSeconds' => 7 * 60, 'errorMs' => 1200]];
         $config->unknownTimePeriods = [['source' => 2, 'fromSeconds' => 15 * 60, 'toSeconds' => 16 * 60, 'errorMs' => -3 * 24 * 3600 * 1000]];
+        // Plenty of what the matcher and the hold rule exist for: stray
+        // entries one window away from a real pass, repeats, late
+        // counters, and two counters typing the same wrong number.
+        $config->windowEdgeTypoRate = 0.02;
+        $config->sharedTypoRate = 0.02;
+        $config->repeatAndLatecomerRate = 0.02;
+        $config->lateRate = 0.04;
         $race = SyntheticRace::generate($config);
         $input = $race->input();
 
@@ -283,7 +297,38 @@ final class CountCarsTest extends EngineTestCase
         $this->randomRaceControlAndSources($input, $race, $dice);
         $this->randomDecisions($input, $race, $dice);
 
-        $this->assertEveryCarCountsTheSameOnItsOwn($input, Engine::run($input), $seed, 0);
+        $full = Engine::run($input);
+        $this->assertEveryCarCountsTheSameOnItsOwn($input, $full, $seed, 0);
+
+        $inAnotherOrder = clone $input;
+        $inAnotherOrder->entries = $dice->shuffleArray($input->entries);
+        $this->assertSame(
+            $this->describeGroups($full->groups),
+            $this->describeGroups(Engine::run($inAnotherOrder)->groups),
+            'The pass groups changed with the order in which the entries arrived.'
+        );
+    }
+
+    /**
+     * @param PassGroup[] $groups
+     * @return string[] one line per group, in a fixed order: its car, its entries, and whether and why it counts or is held
+     */
+    private function describeGroups(array $groups): array
+    {
+        $lines = [];
+        foreach ($groups as $group) {
+            $lines[] = sprintf(
+                'car %d: %s%s%s%s %s',
+                $group->carro,
+                implode('+', $group->entryIds()),
+                $group->contado ? ' counted' : '',
+                $group->referencia ? ' reference' : '',
+                $group->dispersa ? ' dispersed' : '',
+                ($group->retida ? 'held ' : '') . ($group->retidaNaReferencia ? 'held-in-reference ' : '') . ($group->motivoRetencao ?? '')
+            );
+        }
+        sort($lines);
+        return $lines;
     }
 
     private function randomSettings(EngineInput $input, Randomizer $dice): void
@@ -294,6 +339,9 @@ final class CountCarsTest extends EngineTestCase
         $settings->passagemInicial = Settings::PASSAGENS_INICIAIS[$dice->getInt(0, 1)];
         $settings->janelaLargadaS = [0, 30, 90][$dice->getInt(0, 2)];
         $settings->aposEncerramento = Settings::APOS_ENCERRAMENTO[$dice->getInt(0, 1)];
+        $settings->janelaMs = [20000, 20000, 8000, 30000][$dice->getInt(0, 3)];
+        $settings->dispersaoAlertaMs = [4000, 4000, 1500, 9000][$dice->getInt(0, 3)];
+        $settings->fracaoVoltaMinima = [0.5, 0.5, 0.2, 0.9][$dice->getInt(0, 3)];
     }
 
     private function randomRaceControlAndSources(EngineInput $input, SyntheticRace $race, Randomizer $dice): void
@@ -408,7 +456,17 @@ final class CountCarsTest extends EngineTestCase
                 $carInput->sources[] = $neverSynced;
             }
 
+            $ownGroups = LapCounter::count($carInput, [$car])->groupsByCar[$car] ?? [];
+            $firstEntryTimes = array_map(fn(PassGroup $group) => $group->primeiroTsMs, $ownGroups);
+            $inTimeOrder = $firstEntryTimes;
+            sort($inTimeOrder);
+            $this->assertSame($inTimeOrder, $firstEntryTimes, "The pass groups of car $car are ordered by first entry.");
             $alone = Engine::countCars($carInput, [$car]);
+            $this->assertSame(
+                $this->describeGroups(array_filter($full->groups, fn(PassGroup $group) => $group->carro === $car)),
+                $this->describeGroups(LapCounter::count($carInput, [$car])->groupsByCar[$car] ?? []),
+                "Pass groups of car $car."
+            );
 
             $this->assertSame($this->officialPasses($full->laps, $car), $this->officialPasses($alone->lapsByCar[$car], $car), "Car $car.");
             $this->assertSame($this->rows($full->laps, $car), $this->rows($alone->lapsByCar[$car], $car), "Rows of car $car, pending ones included.");
