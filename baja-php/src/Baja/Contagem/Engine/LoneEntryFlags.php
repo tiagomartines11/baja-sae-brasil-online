@@ -224,7 +224,12 @@ final class LoneEntryFlags
             $cars[] = $other->carro;
             $entryIds = array_merge($entryIds, $other->entryIds());
         }
-        $flag = new Flag(Flag::TROCA_PROVAVEL, array_values(array_unique($cars)), $entryIds, 'grupo-' . $group->anchorEntryId());
+        // The id is built from the whole knot, not from the pass that
+        // happened to raise the flag: when a reviewer vouches for one of
+        // the passes, another one raises it, and it must still be the same
+        // flag to the review screen. (Only counters' entries: a pass a
+        // reviewer added has a negative id and comes and goes.)
+        $flag = new Flag(Flag::TROCA_PROVAVEL, array_values(array_unique($cars)), $entryIds, 'grupo-' . min(array_filter($entryIds, fn(int $id): bool => $id > 0)));
         $flag->tsMs = $group->tsMs;
         $flag->motivo = sprintf(
             'Os carros %s foram registrados no mesmo momento, e todas as contagens que registraram o carro %d (%s) deixaram de registrar outro deles: %s. Um desses carros pode não ter passado: as contagens que o registraram teriam digitado o número dele no lugar do carro que lhes falta. Confira qual e mova os registros.',

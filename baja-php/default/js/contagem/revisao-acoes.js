@@ -12,6 +12,7 @@ import {
   entradasDaDecisao, mensagemDeConflito, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo, pedidosDaSugestao,
   podeDecidirSobreAlerta, problemaAoAdicionar, problemaAoEncerrarExclusao,
 } from './revisao-decisoes.js';
+import { problemaAoMover } from './revisao-edicao-manual.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { interpretarTempoDeProva } from './revisao-formato.js';
 import { encontrarEntrada } from './revisao-raias-logica.js';
@@ -197,6 +198,22 @@ export function criarAcoes(ganchos) {
     }
   }
 
+  // "Mover o registro … para o carro N" in the manual edit of a "troca
+  // provável": the same decision as accepting an ordinary suggestion. Like
+  // that one, and like "Trocar" on a chip, it is not asked about.
+  function moverRegistro(mover, carroNovo) {
+    const alerta = alertaQuePodeSerDecidido();
+    if (!alerta) {
+      return;
+    }
+    const problema = problemaAoMover(mover, carroNovo, tela.estado);
+    if (problema) {
+      mostrarMensagem(problema, 'erro');
+      return;
+    }
+    enviarSobreAlerta(decisaoReatribuir(mover.passagemId, carroNovo), alerta);
+  }
+
   // "Confirmar saída" on an exit the engine assumed: the exit is stored in
   // the reviewer's name. It changes no count (the passes after it were
   // counted already) and can be undone from the history, so nothing is asked.
@@ -350,6 +367,7 @@ export function criarAcoes(ganchos) {
     descartarPassagem,
     marcarSaida,
     confirmarSaida,
+    moverRegistro,
     anular,
     acaoNaEntrada,
     adicionar,

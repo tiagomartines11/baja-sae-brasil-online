@@ -454,3 +454,7 @@ tr.aviso-tabela td { background: var(--fundo-ambar); color: var(--cor-ambar); wh
 
 /* An exit the engine assumed: in no log, drawn dotted until somebody confirms it. */
 .marca-box.presumida { border: 1px dotted var(--cor-fraca); background: transparent; color: var(--cor-fraca); font-style: italic; }
+
+/* "Editar manualmente" on a probable swap: the form that settles the flag first, the other one clearly apart. */
+.edicao-manual .acao-mover { border-left: 4px solid var(--cor-verde); }
+.edicao-manual .separador-manual { margin: 12px 0 4px; padding-top: 8px; border-top: 1px dashed var(--cor-fraca); }

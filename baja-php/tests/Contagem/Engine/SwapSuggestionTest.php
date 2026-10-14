@@ -555,7 +555,8 @@ final class SwapSuggestionTest extends EngineTestCase
             }
             $phantom = $result->groupOfEntry($forCar9);
             $this->assertSame([$forCar9, $forCar7], $phantom->entryIds());
-            $flag = $this->assertSingleOpenFlag($result, Flag::TROCA_PROVAVEL);
+            $this->assertCount(1, $this->openFlags($result, Flag::TROCA_PROVAVEL), 'One flag for the knot.');
+            $flag = $this->openFlags($result, Flag::TROCA_PROVAVEL)[0];
             $cars = $flag->carros;
             sort($cars);
             $this->assertSame([7, 8, 9], $cars);

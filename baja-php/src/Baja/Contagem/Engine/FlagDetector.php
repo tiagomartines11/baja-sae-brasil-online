@@ -207,7 +207,9 @@ final class FlagDetector
                 // marked so that they do not raise the same flag again.
                 $this->attach($knot[0], $group);
                 foreach ($knot[1] as $otherPass) {
-                    if ($otherPass->alertasAbertos === []) {
+                    // (A held pass keeps its own flag: that one says the
+                    // car's count is in doubt, which this one does not.)
+                    if ($otherPass->alertasAbertos === [] && !$otherPass->retidaNaReferencia) {
                         $otherPass->alertasAbertos[] = Flag::TROCA_PROVAVEL;
                     }
                 }
@@ -495,6 +497,15 @@ final class FlagDetector
     {
         $group = $lap->grupo;
         if ($group === null || $group->confirmadoPorRevisor || $group->alertasAbertos !== []) {
+            return;
+        }
+        if ($group->adicionadoPorRevisor && isset($group->entries[1])) {
+            // A reviewer added a pass exactly where the counters have
+            // entries: that is the reviewer saying "this pass happened",
+            // like a confirmation. Flagging it again would leave the event
+            // open after the person has decided it. (A pass added where
+            // nobody has anything is still checked: it may duplicate the
+            // pass next to it.)
             return;
         }
         $lapStartMs = $lap->grupoAnterior->tsMs;

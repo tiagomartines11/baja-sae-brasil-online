@@ -335,7 +335,11 @@ export function passagensParaDescartar(alerta) {
 
 // "Descartar a segunda passagem (0:12:31, anula os 2 registros)".
 export function rotuloDeDescartar(passagem, largadaMs) {
-  const registros = passagem.registros === 1 ? 'anula 1 registro' : `anula os ${passagem.registros} registros`;
+  // A pass a reviewer added is no counter's entry (its id is below zero):
+  // discarding it removes the addition.
+  const adicionada = passagem.registros === 1 && passagem.passagemId < 0;
+  const registros = adicionada ? 'remove a passagem adicionada pelo revisor'
+    : (passagem.registros === 1 ? 'anula 1 registro' : `anula os ${passagem.registros} registros`);
   if (passagem.qual === null) {
     return `Descartar esta passagem (${registros})`;
   }

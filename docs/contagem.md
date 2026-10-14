@@ -276,7 +276,18 @@ once. The person leaving then presses **Encerrar meu turno**.
 - The car table shows, per car, the official laps next to each counter's
   own number of passes (laps + the pass zero); real disagreements are
   highlighted. Click a car to see its whole race and to add a pass nobody
-  recorded.
+  recorded. A pass added by hand too close to another one raises
+  `volta_curta`; "Descartar" on that flag removes the addition.
+- **Editar manualmente** on a flag is for what no button offers. On a
+  "troca provável" about one stray entry it opens **Mover o registro … para
+  o carro N**: saying which car that entry belongs to is what settles the
+  flag (the same decision "Aceitar sugestão" stores, with a car you
+  choose). **Adicionar passagem** is below it, for a pass that NOBODY
+  recorded: it gives the car a lap on the reviewer's word and does not
+  settle a flag about an entry. The car is filled in only where adding the
+  pass is what the flag is about (a lone entry, a held pass too close to
+  the previous one); on a probable swap, a wide-spread pass, a pass while
+  the car is logged inside, or an unknown number, it is left empty.
 - Manual fields such as `DESCLAS` are still edited in the usual dashboard
   (link on the hub). Saving them never touches the lap count, with one
   exception: changing a car's classification field recounts the race.
@@ -315,7 +326,7 @@ From `default/js/contagem/revisao-alertas.js`, which is what the screen runs.
 |---|---|---|---|
 | `passagem_proxima_demais` | no suggestion | **Contar esta passagem (+1 volta)**; asks when the lap would be impossibly short | Descartar esta passagem |
 | `dispersao_alta` | void the outlying entry, when two other counters agree; none when the whole pass is held | Contar esta passagem (+1 volta): the outlier, or the held pass, becomes a pass of its own | |
-| `troca_provavel` | move the lone entry to the other car; or, for the reverse reading, **Mover os N registros para o carro Y**, which asks and states both readings | Contar esta passagem (+1 volta) | |
+| `troca_provavel` | move the lone entry to the other car; or, for the reverse reading, **Mover os N registros para o carro Y**, which asks and states both readings | Contar esta passagem (+1 volta) | **Editar manualmente → Mover** the stray entry to a car you choose |
 | `solitaria` | void it, when it would make an impossibly short lap; otherwise none | Contar esta passagem (+1 volta) | |
 | `repetida` | **Anular a segunda** | none: "keep both" would count the car twice | Era outro carro… |
 | `primeira_passagem_tardia` | none | Está correto, parar de avisar (the car really started late) | add the missing pass from the car's timeline |

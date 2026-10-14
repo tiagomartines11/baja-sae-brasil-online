@@ -157,6 +157,15 @@ final class DecisionValidator
             $decisions = DecisionResolver::discardGroup($parsed, $recount);
         } else {
             $decision = DecisionResolver::toDecision($parsed, $input);
+            if ($decision->tipo === Decision::REATRIBUIR) {
+                // "Move it to the car it already counts for" says nothing.
+                // Stored, it would sit in the history as a correction, and
+                // the flag the reviewer meant to settle would stay open.
+                $entry = $recount->survivingEntry((int) $decision->passagemId);
+                if ($entry !== null && $entry->carro === $decision->carro) {
+                    throw new InvalidArgumentException('Este registro já é do carro ' . $decision->carro . '. Informe o carro que realmente passou.');
+                }
+            }
             $invalidReason = DecisionRules::invalidReason($decision, $recount->timeline, $input->nowMs);
             if ($invalidReason !== null) {
                 throw new InvalidArgumentException($invalidReason);

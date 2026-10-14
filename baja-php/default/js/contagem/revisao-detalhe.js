@@ -9,6 +9,7 @@ import {
   AVISO_TEMPO_DE_VOLTA, NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, listaDeCarros, relogio, tempoDeProva,
 } from './revisao-formato.js';
 import { acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, fraseDeDuvida } from './revisao-alertas.js';
+import { edicaoManualDoAlerta } from './revisao-edicao-manual.js';
 import { acoesDaEntrada, descreverSugestao, repeticoesEmAberto } from './revisao-decisoes.js';
 import { mostraCorridaInteira, quandoDoAlerta, situacaoDoCarroFora } from './revisao-fila.js';
 import { desenharRaias } from './revisao-raias.js';
@@ -57,6 +58,41 @@ function formularioAdicionar(contexto, carroInicial, tsInicialMs) {
   el('strong', {}, 'Adicionar passagem'), ' carro ', carro, ' no tempo de prova ', tempo, ' ',
   el('button', { type: 'submit', disabled: contexto.ocupado }, 'Adicionar'),
   el('small', {}, ' tempo desde a largada, não a hora do relógio'));
+}
+
+// "Mover o registro": on a "troca provável", the manual edit that settles
+// the flag is saying which car the stray entry belongs to. It stores the
+// same decision as "Aceitar sugestão" (reatribuir), so the flag closes the
+// same way and the history can undo it.
+function formularioMover(contexto, mover) {
+  const carro = campoDeCarro(mover.carroSugerido);
+  return el('form', {
+    class: 'acao-manual acao-mover',
+    onsubmit: (evento) => {
+      evento.preventDefault();
+      contexto.acoes.moverRegistro(mover, carro.value === '' ? null : Number(carro.value));
+    },
+  },
+  el('strong', {}, 'Mover o registro'), ` do contador ${mover.fonteNome ?? '(fonte desconhecida)'} (digitado: carro ${mover.carroAtual}) para o carro `,
+  carro, ' ',
+  el('button', { type: 'submit', disabled: contexto.ocupado || !contexto.podeDecidir }, 'Mover'),
+  el('small', {}, ' é isto que resolve este alerta: diz de qual carro era o registro solto'));
+}
+
+// What "Editar manualmente" opens on a flag: on a "troca provável" the
+// form that moves the stray entry, and then, clearly apart, "Adicionar
+// passagem" (with no car filled in where that would be a trap).
+function edicaoManual(contexto, alerta) {
+  const edicao = edicaoManualDoAlerta(alerta, contexto.estado);
+  const adicionar = formularioAdicionar(contexto, edicao.adicionar.carro, edicao.adicionar.tsMs);
+  if (!edicao.mover) {
+    return adicionar;
+  }
+  return el('div', { class: 'edicao-manual' },
+    formularioMover(contexto, edicao.mover),
+    el('p', { class: 'contagem-dica separador-manual' },
+      'Outra coisa: adicionar uma passagem que NINGUÉM registrou. Não resolve este alerta, e dá uma volta ao carro informado.'),
+    adicionar);
 }
 
 // What can be done with the chip the reviewer clicked.
@@ -203,9 +239,9 @@ export function desenharDetalheDeAlerta(container, contexto) {
       : { escala: ESCALA_ALERTA, idsEmDestaque: alerta.passagem_ids ?? [], centrarEmMs: alerta.ts_ms }),
     el('p', { class: 'contagem-dica' }, LEGENDA),
     entradaSelecionada(contexto),
-    // No time is offered for an entry of unknown time: the one it carries is
-    // its phone's own guess, and offering it would bring the old K back.
-    contexto.modoManual ? formularioAdicionar(contexto, (alerta.carros ?? [])[0], semHorario ? null : alerta.ts_ms) : null);
+    // What is filled in there, and whether a "move the stray entry" form
+    // comes first, depends on the kind of flag: see edicaoManualDoAlerta().
+    contexto.modoManual ? edicaoManual(contexto, alerta) : null);
 }
 
 const LEGENDA = 'Clique em um registro para agir sobre ele. Riscado = anulado; contorno = envolvido neste alerta; '
