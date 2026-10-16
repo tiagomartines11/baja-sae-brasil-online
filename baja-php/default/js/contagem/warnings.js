@@ -1,0 +1,114 @@
+// Warnings shown to a counter right after an entry.
+//
+// IMPORTANT: these are computed ONLY from what this device itself recorded and
+// from the list of car numbers. The three counters must stay independent, so
+// nothing a counter sees may depend on what another counter typed. Do not add
+// a warning here that needs any other source's data.
+//
+// A warning never blocks anything: the entry is already stored when it shows.
+
+import { elapsedBetween } from './record-elapsed.js';
+
+export const AVISO = {
+    NUMERO_DESCONHECIDO: 'numero_desconhecido',
+    // The car is at the event but not classified for this prova. The pass
+    // is stored like any other (the phone's list may be out of date, and a
+    // stored pass is what protects a protest), but it will not count unless
+    // a reviewer says so. The counter must notice: `grave` asks the page for
+    // the error colour and the error sound.
+    NAO_CLASSIFICADO: 'nao_classificado',
+    REPETIDO: 'repetido',
+};
+
+export const DEFAULT_JANELA_MS = 20000;
+
+/**
+ * @param {object}  input
+ * @param {number}  input.car           number just typed
+ * @param {object}  [input.time]        the new entry's time fields (ServerClock.stamp())
+ * @param {number}  [input.tsDeviceMs]  instead of `time`: only the system clock reading
+ * @param {Array}   input.ownEntries    this device's earlier entries (store records)
+ * @param {?Array}  input.validCars     [{numero, nome}] classified cars, or null when not known yet
+ * @param {?Array}  [input.unclassifiedCars] [{numero, nome}] at the event but not classified
+ * @param {?number} input.janelaMs      "same car again too soon" window
+ * @returns {Array<{tipo: string, mensagem: string, grave: boolean}>}
+ */
+export function computeWarnings({ car, time, tsDeviceMs, ownEntries, validCars, unclassifiedCars = null, janelaMs }) {
+    const warnings = [];
+    const windowMs = Number.isFinite(janelaMs) && janelaMs > 0 ? janelaMs : DEFAULT_JANELA_MS;
+    const newEntry = time || { ts_device_ms: tsDeviceMs };
+    const hasNumber = (cars) => Array.isArray(cars) && cars.some((listed) => listed.numero === car);
+
+    if (hasNumber(unclassifiedCars)) {
+        warnings.push({
+            tipo: AVISO.NAO_CLASSIFICADO,
+            mensagem: 'CARRO NÃO CLASSIFICADO: o carro ' + car + ' não está classificado para esta prova. '
+                + 'Registrado mesmo assim; avise o responsável.',
+            grave: true,
+        });
+    } else if ((carListIsKnown(validCars) || carListIsKnown(unclassifiedCars)) && !hasNumber(validCars)) {
+        // Without any car list we cannot call a number unknown (see carListIsKnown).
+        warnings.push({
+            tipo: AVISO.NUMERO_DESCONHECIDO,
+            mensagem: 'Número ' + car + ' não está na lista de carros. Registrado mesmo assim.',
+            grave: false,
+        });
+    }
+
+    const previous = latestActiveEntryOfCar(ownEntries, car, newEntry);
+    if (previous !== null) {
+        const elapsedMs = Math.abs(elapsedBetween(previous, newEntry));
+        if (elapsedMs < windowMs) {
+            warnings.push({
+                tipo: AVISO.REPETIDO,
+                mensagem: 'Carro ' + car + ' já registrado há ' + Math.round(elapsedMs / 1000)
+                    + ' s. Se foi engano, toque em desfazer.',
+                grave: false,
+            });
+        }
+    }
+
+    return warnings;
+}
+
+/**
+ * Whether we really know which cars are at the event. A missing list (never
+ * been online) and an EMPTY list both mean "unknown": an event with no car at
+ * all does not exist, so an empty list is a list that has not been filled in
+ * yet (teams not marked as present, for example). Treating it as "every
+ * number is invalid" would put a warning on every single entry.
+ */
+export function carListIsKnown(validCars) {
+    return Array.isArray(validCars) && validCars.length > 0;
+}
+
+/**
+ * The entry of this car closest in time to the new one. An entry the
+ * counter undid no longer counts as "already typed".
+ */
+function latestActiveEntryOfCar(ownEntries, car, newEntry) {
+    let closest = null;
+    let closestGapMs = Infinity;
+    for (const entry of ownEntries) {
+        if (entry.car !== car || entry.voided) {
+            continue;
+        }
+        const gapMs = Math.abs(elapsedBetween(entry, newEntry));
+        if (gapMs < closestGapMs) {
+            closest = entry;
+            closestGapMs = gapMs;
+        }
+    }
+    return closest;
+}
+
+/** @returns {?string} team name for the big flash, or null for an unknown number */
+export function teamNameOf(car, validCars, unclassifiedCars = null) {
+    for (const cars of [validCars, unclassifiedCars]) {
+        const found = Array.isArray(cars) ? cars.find((listed) => listed.numero === car) : null;
+        if (found) {
+            return found.nome;
+        }
+    }
+    return null;
+}

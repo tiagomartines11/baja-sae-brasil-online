@@ -1,6 +1,8 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Contagem\Access\ContagemAccess;
+use Baja\Contagem\Review\ManualScoreFields;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\InputQuery;
@@ -40,8 +42,23 @@ echo '
 ';
 
 $fields = $prova->getParamsInputs();
+// In a laps prova, VOLTAS, LAST and BEST are written by the lap counting
+// engine after every upload. They are shown as plain text: a value typed
+// here would be overwritten within seconds, and a correction belongs on the
+// review screen, where it is recorded as a decision.
+// With publishing switched off ("desligada") the engine writes none of them:
+// the list is empty and all three are ordinary fields again, for whoever
+// copies them from the spreadsheet.
+$isLapsProva = $prova->getType() == ContagemAccess::PROVA_TYPE;
+$engineOwnedFields = ManualScoreFields::engineOwnedFields($prova);
 foreach ($fields as $k=>$field) {
-    echo '<tr '.(($field->getPass() >= 0 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == ($field->getPass()+1))) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($nota ? $nota->getDados()->{$field->getCode()} : null) . '</tr>';
+    // A row created by the engine has no value yet for the fields people type.
+    $value = $nota ? ($nota->getDados()->{$field->getCode()} ?? null) : null;
+    if (in_array($field->getCode(), $engineOwnedFields, true)) {
+        echo '<tr><td>'.$field->getName().'</td><td style="width: 80px; font-size: 20px;" title="Calculado pela contagem de voltas">'.($value !== null ? htmlspecialchars((string)$value) : '&ndash;').'</td></tr>';
+        continue;
+    }
+    echo '<tr '.(($field->getPass() >= 0 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == ($field->getPass()+1))) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($value) . '</tr>';
 }
 
 ?>
@@ -51,7 +68,15 @@ foreach ($fields as $k=>$field) {
         <input type="submit" name="submit" id="submit1" value="Salvar" disabled /> &nbsp&nbsp&nbspOU&nbsp&nbsp&nbsp <input type="submit" name="submit" id="submit2" value="Salvar e Avançar" disabled /></th>
 </tr>
 <tr style="border: solid 2px black; height: 60px">
-    <th colspan="2"><input type="submit" name="delete" id="delete" value="Deletar Nota" /></th>
+    <?php if ($isLapsProva) { // laps prova: the lap count in this row is not this page's to delete ?>
+        <th colspan="2">
+            <input type="submit" name="delete" id="delete" value="Limpar campos manuais"
+                   onclick="return confirm('Limpar os campos digitados deste carro? As voltas contadas não são alteradas.');" /><br />
+            <span style="font-size: 10px">Voltas, última passagem e melhor volta são da contagem de voltas e não são apagadas aqui.</span>
+        </th>
+    <?php } else { ?>
+        <th colspan="2"><input type="submit" name="delete" id="delete" value="Deletar Nota" /></th>
+    <?php } ?>
 </tr>
 <tr>
     <th colspan="2">
