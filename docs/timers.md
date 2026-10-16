@@ -10,6 +10,7 @@ or laptop and shown identically on every device that has the timer open.
   current event. Same backup scheme as provas and premiações.
 - `timer.php` — run a timer. Never edits it. `timer.php?k=<chave>` opens a
   timer with no login; logged-in users get a list of the timers they may use.
+  Opened with the read-only key it shows the run and has no controls.
 - `timer_action.php` — JSON endpoint the usage page polls and posts to.
 
 ## Permissions
@@ -19,9 +20,11 @@ or laptop and shown identically on every device that has the timer open.
 | `<evento>_TIMER_ADMIN` | configure and use every timer of the event |
 | `<evento>_TIMER_<id>` | use that one timer |
 | access key | use that one timer, no login |
+| read-only key | watch that one timer, no login |
 
-`admin` implies all of them. The access key is shown on the timer's config
-page and can be regenerated there, which cuts off whoever had the old one.
+`admin` implies all of them. Both keys are shown on the timer's config page
+and each can be regenerated there, which cuts off whoever had the old one.
+`timer_action.php` refuses actions posted with the read-only key.
 
 ## How a run is stored
 
@@ -75,8 +78,10 @@ CREATE TABLE `timer` (
   `state` json DEFAULT NULL,
   `log` json DEFAULT NULL,
   `access_key` char(6) NOT NULL,
+  `view_key` char(6) NOT NULL,
   PRIMARY KEY (`evento_id`,`timer_id`),
   UNIQUE KEY `timer_access_key_UNIQUE` (`access_key`),
+  UNIQUE KEY `timer_view_key_UNIQUE` (`view_key`),
   CONSTRAINT `timer_evento_id` FOREIGN KEY (`evento_id`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 ```
@@ -84,3 +89,23 @@ CREATE TABLE `timer` (
 The charset has to match the `evento` table's, or MySQL rejects the foreign
 key (error 3780). The databases that came from the production dump are
 `latin1`; check with `SHOW CREATE TABLE evento` if in doubt.
+
+A database that already has the table from before the read-only key needs
+the column added, and a key for each existing timer:
+
+```sql
+ALTER TABLE `timer` ADD COLUMN `view_key` char(6) NULL AFTER `access_key`;
+SET @a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+UPDATE `timer` SET `view_key` = CONCAT(
+  SUBSTRING(@a, FLOOR(1 + RAND() * 31), 1), SUBSTRING(@a, FLOOR(1 + RAND() * 31), 1),
+  SUBSTRING(@a, FLOOR(1 + RAND() * 31), 1), SUBSTRING(@a, FLOOR(1 + RAND() * 31), 1),
+  SUBSTRING(@a, FLOOR(1 + RAND() * 31), 1), SUBSTRING(@a, FLOOR(1 + RAND() * 31), 1)
+);
+ALTER TABLE `timer` MODIFY `view_key` char(6) NOT NULL,
+  ADD UNIQUE KEY `timer_view_key_UNIQUE` (`view_key`);
+```
+
+If the last statement fails on a duplicate, run the `UPDATE` again. A key
+equal to some timer's access key would also be a problem, since `?k=` checks
+the access key first; with a few timers that is vanishingly unlikely, but
+`Gerar Nova Chave de Leitura` fixes it if it ever happens.

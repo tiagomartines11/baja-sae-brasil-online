@@ -20,7 +20,7 @@ Template::printHeader("Admin");
     <table id="myTable2" class="tablesorter">
         <thead>
             <tr style="height: 50px;">
-                <th colspan="6" class="sorter-false">
+                <th colspan="7" class="sorter-false">
                     <span style="float:left;"><a href="<?= $voltar ?>" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
                     <span style="font-size: 28px;">Timers (<?= $evento ?>)</span>
                 </th>
@@ -30,6 +30,7 @@ Template::printHeader("Admin");
                 <th>Nome</th>
                 <th>Etapas</th>
                 <th>Chave de acesso</th>
+                <th>Chave de leitura</th>
                 <th>Configurar</th>
                 <th>Abrir</th>
             </tr>
@@ -42,6 +43,7 @@ Template::printHeader("Admin");
                 <td><?= htmlspecialchars($t->getNome()) ?></td>
                 <td><?= count($t->getConfig()->etapas ?? []) ?></td>
                 <td><code><?= htmlspecialchars($t->getAccessKey()) ?></code></td>
+                <td><code><?= htmlspecialchars($t->getViewKey()) ?></code></td>
                 <td><a href='timer_admin.php?id=<?= $t->getTimerId() ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
                 <td><a href="timer.php?id=<?= $t->getTimerId() ?>">Abrir</a></td>
             </tr>
@@ -50,7 +52,7 @@ Template::printHeader("Admin");
         </tbody>
         <tfoot>
             <tr>
-                <th colspan="6" style="height: 30px">
+                <th colspan="7" style="height: 30px">
                     <input type="button" onclick="location.href='timer_admin.php?nova=true';" value="Novo Timer"/>
                 </th>
             </tr>

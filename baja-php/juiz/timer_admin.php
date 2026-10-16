@@ -38,6 +38,7 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova'] == 'true') {
             $timer->setTimerId($timerId);
             $timer->setConfig($config);
             $timer->generateAccessKey();
+            $timer->generateViewKey();
             $timer->appendLog($username, 'criado');
             $timer->save();
 
@@ -117,6 +118,13 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova'] == 'true') {
         header("Location: timer_admin.php?id=" . $_page); exit;
     }
 
+    if (@$_REQUEST['act'] == 'Gerar Nova Chave de Leitura') {
+        $timer->generateViewKey();
+        $timer->appendLog($username, 'nova_chave_leitura');
+        $timer->save();
+        header("Location: timer_admin.php?id=" . $_page); exit;
+    }
+
     if (@$_REQUEST['act'] == 'Deletar Timer') {
         $timer->delete();
         header("Location: admin_timers.php"); exit;
@@ -171,13 +179,23 @@ Template::printHeader("Timer", false);
                 </tr>
 <?php if (!$nova) { ?>
                 <tr>
-                    <td>Acesso sem login</td>
+                    <td>Acesso sem login<br/>(controle total)</td>
                     <td>
                         Chave: <code style="font-size: 18px;"><?= htmlspecialchars($timer->getAccessKey()) ?></code>
                         &nbsp;&nbsp;
                         <a href="<?= htmlspecialchars(Url::subdomain('juiz', '/timer.php?k=' . $timer->getAccessKey())) ?>" target="_blank"><?= htmlspecialchars(Url::subdomain('juiz', '/timer.php?k=' . $timer->getAccessKey())) ?></a>
                         &nbsp;&nbsp;
                         <input type="submit" name="act" value="Gerar Nova Chave" onclick="return confirm('A chave atual deixa de funcionar. Continuar?');"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Acesso sem login<br/>(somente leitura)</td>
+                    <td>
+                        Chave: <code style="font-size: 18px;"><?= htmlspecialchars($timer->getViewKey()) ?></code>
+                        &nbsp;&nbsp;
+                        <a href="<?= htmlspecialchars(Url::subdomain('juiz', '/timer.php?k=' . $timer->getViewKey())) ?>" target="_blank"><?= htmlspecialchars(Url::subdomain('juiz', '/timer.php?k=' . $timer->getViewKey())) ?></a>
+                        &nbsp;&nbsp;
+                        <input type="submit" name="act" value="Gerar Nova Chave de Leitura" onclick="return confirm('A chave de leitura atual deixa de funcionar. Continuar?');"/>
                     </td>
                 </tr>
                 <tr>

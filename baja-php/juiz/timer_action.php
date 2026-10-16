@@ -14,7 +14,7 @@ const ACOES = ['iniciar', 'pausar', 'retomar', 'parar', 'proxima', 'anterior', '
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
 
-list($timer, $quem) = TimerAcesso::resolver();
+list($timer, $quem, $somenteLeitura) = TimerAcesso::resolver();
 if (!$timer) {
     http_response_code(403);
     die(json_encode(['ok' => false]));
@@ -22,6 +22,12 @@ if (!$timer) {
 
 $input = json_decode(file_get_contents('php://input'), true);
 $acoes = (is_array($input) && isset($input['acoes']) && is_array($input['acoes'])) ? $input['acoes'] : [];
+
+// The view key may poll, never act. The read-only page posts nothing, so this is someone trying.
+if ($somenteLeitura && count($acoes)) {
+    http_response_code(403);
+    die(json_encode(['ok' => false]));
+}
 
 if (count($acoes) && count($timer->getConfig()->etapas ?? [])) {
     $con = Propel::getWriteConnection(TimerTableMap::DATABASE_NAME);
