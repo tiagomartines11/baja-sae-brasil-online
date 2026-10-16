@@ -210,11 +210,15 @@
     <column name="state" phpName="State" type="LONGVARCHAR" sqlType="json"/>
     <column name="log" phpName="Log" type="LONGVARCHAR" sqlType="json"/>
     <column name="access_key" phpName="AccessKey" type="CHAR" size="6" required="true"/>
+    <column name="view_key" phpName="ViewKey" type="CHAR" size="6" required="true"/>
     <foreign-key foreignTable="evento" name="timer_evento_id" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="evento_id" foreign="evento_id"/>
     </foreign-key>
     <unique name="timer_access_key_UNIQUE">
       <unique-column name="access_key"/>
+    </unique>
+    <unique name="timer_view_key_UNIQUE">
+      <unique-column name="view_key"/>
     </unique>
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>

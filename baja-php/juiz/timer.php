@@ -6,10 +6,11 @@ use Baja\Model\TimerQuery;
 use Baja\Session;
 
 // Usage page: runs a timer, never edits it. Reachable with a session (pick
-// from the timers the user may use) or, without login, with a timer's access key.
+// from the timers the user may use) or, without login, with a timer's access
+// key. With its view key instead, it only follows the run: no controls.
 
 $usuario = Session::getCurrentUserOrNull();
-list($timer, $quem) = TimerAcesso::resolver();
+list($timer, $quem, $somenteLeitura) = TimerAcesso::resolver();
 
 $h = fn($s) => htmlspecialchars((string)$s);
 $jsonFlags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE;
@@ -95,6 +96,9 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
         #lista .t { font-variant-numeric: tabular-nums; color: var(--muted); }
         #lista button.ativa { border-color: var(--accent); background: #17324f; }
         #lista button.ativa .t { color: var(--text); }
+        #leitura { font-size: 0.8rem; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 0.15rem 0.45rem; white-space: nowrap; }
+        body.leitura #controles { display: none; }
+        body.leitura #lista button { pointer-events: none; }
 
         @media (max-width: 800px) {
             main { display: block; overflow-y: auto; }
@@ -119,7 +123,7 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
         .escolha .erro { color: var(--danger); }
     </style>
 </head>
-<body>
+<body<?= $somenteLeitura ? ' class="leitura"' : '' ?>>
 <?php if (!$timer) { ?>
 
 <header>
@@ -151,6 +155,7 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
 <header>
     <?php if ($usuario) { ?><a href="timer.php" title="Voltar">&larr;</a><?php } ?>
     <h1><?= $h($timer->getNome()) ?></h1>
+    <?php if ($somenteLeitura) { ?><span id="leitura">somente leitura</span><?php } ?>
     <span id="conn">conectando</span>
     <button id="btnSom" title="Som"></button>
     <button id="btnTela" title="Tela cheia">⛶</button>
@@ -185,8 +190,10 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
 <script>
 (function () {
     const BOOT = <?= json_encode([
-        'chave' => $timer->getEventoId() . '_' . $timer->getTimerId(),
-        'endpoint' => 'timer_action.php?' . ($porChave ? 'k=' . urlencode($timer->getAccessKey()) : 'id=' . $timer->getTimerId()),
+        // Read only keeps its own storage, so it never touches the outbox of a full-control page on the same device.
+        'chave' => $timer->getEventoId() . '_' . $timer->getTimerId() . ($somenteLeitura ? '_leitura' : ''),
+        'endpoint' => 'timer_action.php?' . ($porChave ? 'k=' . urlencode($somenteLeitura ? $timer->getViewKey() : $timer->getAccessKey()) : 'id=' . $timer->getTimerId()),
+        'somenteLeitura' => $somenteLeitura,
         'config' => $timer->getConfig(),
         'hash' => md5(json_encode($timer->getConfig())),
         'state' => $timer->getState(),
@@ -249,6 +256,7 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
 
     // ---- Actions -----------------------------------------------------------
     function aplicar(acao, novo) {
+        if (BOOT.somenteLeitura) return;
         // Strictly increasing, so the server can order two actions taken in a row.
         novo.at = Math.max(Math.round(agora()), state.at + 1);
         state =Object.assign({ started_at: 0, remaining_ms: 0 }, novo);
@@ -368,7 +376,7 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
     let acessoRevogado = false;
     function revogado() {
         acessoRevogado = true;
-        aviso("revogado", "O acesso a este timer foi revogado. As ações feitas aqui não são mais enviadas.");
+        aviso("revogado", "O acesso a este timer foi revogado." + (BOOT.somenteLeitura ? " O que aparece aqui não é mais atualizado." : " As ações feitas aqui não são mais enviadas."));
     }
 
     window.addEventListener("online", sincronizar);

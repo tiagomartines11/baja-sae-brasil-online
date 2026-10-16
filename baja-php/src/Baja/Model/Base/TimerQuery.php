@@ -26,6 +26,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildTimerQuery orderByState($order = Criteria::ASC) Order by the state column
  * @method     ChildTimerQuery orderByLog($order = Criteria::ASC) Order by the log column
  * @method     ChildTimerQuery orderByAccessKey($order = Criteria::ASC) Order by the access_key column
+ * @method     ChildTimerQuery orderByViewKey($order = Criteria::ASC) Order by the view_key column
  *
  * @method     ChildTimerQuery groupByEventoId() Group by the evento_id column
  * @method     ChildTimerQuery groupByTimerId() Group by the timer_id column
@@ -34,6 +35,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildTimerQuery groupByState() Group by the state column
  * @method     ChildTimerQuery groupByLog() Group by the log column
  * @method     ChildTimerQuery groupByAccessKey() Group by the access_key column
+ * @method     ChildTimerQuery groupByViewKey() Group by the view_key column
  *
  * @method     ChildTimerQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildTimerQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -65,6 +67,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildTimer|null findOneByState(string $state) Return the first ChildTimer filtered by the state column
  * @method     ChildTimer|null findOneByLog(string $log) Return the first ChildTimer filtered by the log column
  * @method     ChildTimer|null findOneByAccessKey(string $access_key) Return the first ChildTimer filtered by the access_key column
+ * @method     ChildTimer|null findOneByViewKey(string $view_key) Return the first ChildTimer filtered by the view_key column
  *
  * @method     ChildTimer requirePk($key, ?ConnectionInterface $con = null) Return the ChildTimer by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildTimer requireOne(?ConnectionInterface $con = null) Return the first ChildTimer matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -76,6 +79,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildTimer requireOneByState(string $state) Return the first ChildTimer filtered by the state column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildTimer requireOneByLog(string $log) Return the first ChildTimer filtered by the log column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildTimer requireOneByAccessKey(string $access_key) Return the first ChildTimer filtered by the access_key column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildTimer requireOneByViewKey(string $view_key) Return the first ChildTimer filtered by the view_key column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildTimer[]|Collection find(?ConnectionInterface $con = null) Return ChildTimer objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildTimer> find(?ConnectionInterface $con = null) Return ChildTimer objects based on current ModelCriteria
@@ -94,6 +98,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildTimer> findByLog(string|array<string> $log) Return ChildTimer objects filtered by the log column
  * @method     ChildTimer[]|Collection findByAccessKey(string|array<string> $access_key) Return ChildTimer objects filtered by the access_key column
  * @psalm-method Collection&\Traversable<ChildTimer> findByAccessKey(string|array<string> $access_key) Return ChildTimer objects filtered by the access_key column
+ * @method     ChildTimer[]|Collection findByViewKey(string|array<string> $view_key) Return ChildTimer objects filtered by the view_key column
+ * @psalm-method Collection&\Traversable<ChildTimer> findByViewKey(string|array<string> $view_key) Return ChildTimer objects filtered by the view_key column
  *
  * @method     ChildTimer[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildTimer> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -193,7 +199,7 @@ abstract class TimerQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT evento_id, timer_id, config, config_backup, state, log, access_key FROM timer WHERE evento_id = :p0 AND timer_id = :p1';
+        $sql = 'SELECT evento_id, timer_id, config, config_backup, state, log, access_key, view_key FROM timer WHERE evento_id = :p0 AND timer_id = :p1';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key[0], PDO::PARAM_STR);
@@ -504,6 +510,34 @@ abstract class TimerQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(TimerTableMap::COL_ACCESS_KEY, $accessKey, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the view_key column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByViewKey('fooValue');   // WHERE view_key = 'fooValue'
+     * $query->filterByViewKey('%fooValue%', Criteria::LIKE); // WHERE view_key LIKE '%fooValue%'
+     * $query->filterByViewKey(['foo', 'bar']); // WHERE view_key IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $viewKey The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByViewKey($viewKey = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($viewKey)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(TimerTableMap::COL_VIEW_KEY, $viewKey, $comparison);
 
         return $this;
     }

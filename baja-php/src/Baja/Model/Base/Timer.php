@@ -113,6 +113,13 @@ abstract class Timer implements ActiveRecordInterface
     protected $access_key;
 
     /**
+     * The value for the view_key field.
+     *
+     * @var        string
+     */
+    protected $view_key;
+
+    /**
      * @var        ChildEvento
      */
     protected $aEvento;
@@ -422,6 +429,16 @@ abstract class Timer implements ActiveRecordInterface
     }
 
     /**
+     * Get the [view_key] column value.
+     *
+     * @return string
+     */
+    public function getViewKey()
+    {
+        return $this->view_key;
+    }
+
+    /**
      * Set the value of [evento_id] column.
      *
      * @param string $v New value
@@ -566,6 +583,26 @@ abstract class Timer implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [view_key] column.
+     *
+     * @param string $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setViewKey($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->view_key !== $v) {
+            $this->view_key = $v;
+            $this->modifiedColumns[TimerTableMap::COL_VIEW_KEY] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -622,6 +659,9 @@ abstract class Timer implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : TimerTableMap::translateFieldName('AccessKey', TableMap::TYPE_PHPNAME, $indexType)];
             $this->access_key = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : TimerTableMap::translateFieldName('ViewKey', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->view_key = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -629,7 +669,7 @@ abstract class Timer implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 7; // 7 = TimerTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 8; // 8 = TimerTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Timer'), 0, $e);
@@ -864,6 +904,9 @@ abstract class Timer implements ActiveRecordInterface
         if ($this->isColumnModified(TimerTableMap::COL_ACCESS_KEY)) {
             $modifiedColumns[':p' . $index++]  = 'access_key';
         }
+        if ($this->isColumnModified(TimerTableMap::COL_VIEW_KEY)) {
+            $modifiedColumns[':p' . $index++]  = 'view_key';
+        }
 
         $sql = sprintf(
             'INSERT INTO timer (%s) VALUES (%s)',
@@ -901,6 +944,10 @@ abstract class Timer implements ActiveRecordInterface
                         break;
                     case 'access_key':
                         $stmt->bindValue($identifier, $this->access_key, PDO::PARAM_STR);
+
+                        break;
+                    case 'view_key':
+                        $stmt->bindValue($identifier, $this->view_key, PDO::PARAM_STR);
 
                         break;
                 }
@@ -979,6 +1026,9 @@ abstract class Timer implements ActiveRecordInterface
             case 6:
                 return $this->getAccessKey();
 
+            case 7:
+                return $this->getViewKey();
+
             default:
                 return null;
         } // switch()
@@ -1014,6 +1064,7 @@ abstract class Timer implements ActiveRecordInterface
             $keys[4] => $this->getState(),
             $keys[5] => $this->getLog(),
             $keys[6] => $this->getAccessKey(),
+            $keys[7] => $this->getViewKey(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1093,6 +1144,9 @@ abstract class Timer implements ActiveRecordInterface
             case 6:
                 $this->setAccessKey($value);
                 break;
+            case 7:
+                $this->setViewKey($value);
+                break;
         } // switch()
 
         return $this;
@@ -1139,6 +1193,9 @@ abstract class Timer implements ActiveRecordInterface
         }
         if (array_key_exists($keys[6], $arr)) {
             $this->setAccessKey($arr[$keys[6]]);
+        }
+        if (array_key_exists($keys[7], $arr)) {
+            $this->setViewKey($arr[$keys[7]]);
         }
 
         return $this;
@@ -1203,6 +1260,9 @@ abstract class Timer implements ActiveRecordInterface
         }
         if ($this->isColumnModified(TimerTableMap::COL_ACCESS_KEY)) {
             $criteria->add(TimerTableMap::COL_ACCESS_KEY, $this->access_key);
+        }
+        if ($this->isColumnModified(TimerTableMap::COL_VIEW_KEY)) {
+            $criteria->add(TimerTableMap::COL_VIEW_KEY, $this->view_key);
         }
 
         return $criteria;
@@ -1314,6 +1374,7 @@ abstract class Timer implements ActiveRecordInterface
         $copyObj->setState($this->getState());
         $copyObj->setLog($this->getLog());
         $copyObj->setAccessKey($this->getAccessKey());
+        $copyObj->setViewKey($this->getViewKey());
         if ($makeNew) {
             $copyObj->setNew(true);
         }
@@ -1411,6 +1472,7 @@ abstract class Timer implements ActiveRecordInterface
         $this->state = null;
         $this->log = null;
         $this->access_key = null;
+        $this->view_key = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->resetModified();

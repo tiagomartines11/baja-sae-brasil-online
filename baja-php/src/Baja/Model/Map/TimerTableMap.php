@@ -63,7 +63,7 @@ class TimerTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 7;
+    public const NUM_COLUMNS = 8;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class TimerTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 7;
+    public const NUM_HYDRATE_COLUMNS = 8;
 
     /**
      * the column name for the evento_id field
@@ -111,6 +111,11 @@ class TimerTableMap extends TableMap
     public const COL_ACCESS_KEY = 'timer.access_key';
 
     /**
+     * the column name for the view_key field
+     */
+    public const COL_VIEW_KEY = 'timer.view_key';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -124,11 +129,11 @@ class TimerTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['EventoId', 'TimerId', 'Config', 'ConfigBackup', 'State', 'Log', 'AccessKey', ],
-        self::TYPE_CAMELNAME     => ['eventoId', 'timerId', 'config', 'configBackup', 'state', 'log', 'accessKey', ],
-        self::TYPE_COLNAME       => [TimerTableMap::COL_EVENTO_ID, TimerTableMap::COL_TIMER_ID, TimerTableMap::COL_CONFIG, TimerTableMap::COL_CONFIG_BACKUP, TimerTableMap::COL_STATE, TimerTableMap::COL_LOG, TimerTableMap::COL_ACCESS_KEY, ],
-        self::TYPE_FIELDNAME     => ['evento_id', 'timer_id', 'config', 'config_backup', 'state', 'log', 'access_key', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, ]
+        self::TYPE_PHPNAME       => ['EventoId', 'TimerId', 'Config', 'ConfigBackup', 'State', 'Log', 'AccessKey', 'ViewKey', ],
+        self::TYPE_CAMELNAME     => ['eventoId', 'timerId', 'config', 'configBackup', 'state', 'log', 'accessKey', 'viewKey', ],
+        self::TYPE_COLNAME       => [TimerTableMap::COL_EVENTO_ID, TimerTableMap::COL_TIMER_ID, TimerTableMap::COL_CONFIG, TimerTableMap::COL_CONFIG_BACKUP, TimerTableMap::COL_STATE, TimerTableMap::COL_LOG, TimerTableMap::COL_ACCESS_KEY, TimerTableMap::COL_VIEW_KEY, ],
+        self::TYPE_FIELDNAME     => ['evento_id', 'timer_id', 'config', 'config_backup', 'state', 'log', 'access_key', 'view_key', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, ]
     ];
 
     /**
@@ -140,11 +145,11 @@ class TimerTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['EventoId' => 0, 'TimerId' => 1, 'Config' => 2, 'ConfigBackup' => 3, 'State' => 4, 'Log' => 5, 'AccessKey' => 6, ],
-        self::TYPE_CAMELNAME     => ['eventoId' => 0, 'timerId' => 1, 'config' => 2, 'configBackup' => 3, 'state' => 4, 'log' => 5, 'accessKey' => 6, ],
-        self::TYPE_COLNAME       => [TimerTableMap::COL_EVENTO_ID => 0, TimerTableMap::COL_TIMER_ID => 1, TimerTableMap::COL_CONFIG => 2, TimerTableMap::COL_CONFIG_BACKUP => 3, TimerTableMap::COL_STATE => 4, TimerTableMap::COL_LOG => 5, TimerTableMap::COL_ACCESS_KEY => 6, ],
-        self::TYPE_FIELDNAME     => ['evento_id' => 0, 'timer_id' => 1, 'config' => 2, 'config_backup' => 3, 'state' => 4, 'log' => 5, 'access_key' => 6, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, ]
+        self::TYPE_PHPNAME       => ['EventoId' => 0, 'TimerId' => 1, 'Config' => 2, 'ConfigBackup' => 3, 'State' => 4, 'Log' => 5, 'AccessKey' => 6, 'ViewKey' => 7, ],
+        self::TYPE_CAMELNAME     => ['eventoId' => 0, 'timerId' => 1, 'config' => 2, 'configBackup' => 3, 'state' => 4, 'log' => 5, 'accessKey' => 6, 'viewKey' => 7, ],
+        self::TYPE_COLNAME       => [TimerTableMap::COL_EVENTO_ID => 0, TimerTableMap::COL_TIMER_ID => 1, TimerTableMap::COL_CONFIG => 2, TimerTableMap::COL_CONFIG_BACKUP => 3, TimerTableMap::COL_STATE => 4, TimerTableMap::COL_LOG => 5, TimerTableMap::COL_ACCESS_KEY => 6, TimerTableMap::COL_VIEW_KEY => 7, ],
+        self::TYPE_FIELDNAME     => ['evento_id' => 0, 'timer_id' => 1, 'config' => 2, 'config_backup' => 3, 'state' => 4, 'log' => 5, 'access_key' => 6, 'view_key' => 7, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, ]
     ];
 
     /**
@@ -203,6 +208,14 @@ class TimerTableMap extends TableMap
         'COL_ACCESS_KEY' => 'ACCESS_KEY',
         'access_key' => 'ACCESS_KEY',
         'timer.access_key' => 'ACCESS_KEY',
+        'ViewKey' => 'VIEW_KEY',
+        'Timer.ViewKey' => 'VIEW_KEY',
+        'viewKey' => 'VIEW_KEY',
+        'timer.viewKey' => 'VIEW_KEY',
+        'TimerTableMap::COL_VIEW_KEY' => 'VIEW_KEY',
+        'COL_VIEW_KEY' => 'VIEW_KEY',
+        'view_key' => 'VIEW_KEY',
+        'timer.view_key' => 'VIEW_KEY',
     ];
 
     /**
@@ -229,6 +242,7 @@ class TimerTableMap extends TableMap
         $this->addColumn('state', 'State', 'LONGVARCHAR', false, null, null);
         $this->addColumn('log', 'Log', 'LONGVARCHAR', false, null, null);
         $this->addColumn('access_key', 'AccessKey', 'CHAR', true, 6, null);
+        $this->addColumn('view_key', 'ViewKey', 'CHAR', true, 6, null);
     }
 
     /**
@@ -462,6 +476,7 @@ class TimerTableMap extends TableMap
             $criteria->addSelectColumn(TimerTableMap::COL_STATE);
             $criteria->addSelectColumn(TimerTableMap::COL_LOG);
             $criteria->addSelectColumn(TimerTableMap::COL_ACCESS_KEY);
+            $criteria->addSelectColumn(TimerTableMap::COL_VIEW_KEY);
         } else {
             $criteria->addSelectColumn($alias . '.evento_id');
             $criteria->addSelectColumn($alias . '.timer_id');
@@ -470,6 +485,7 @@ class TimerTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.state');
             $criteria->addSelectColumn($alias . '.log');
             $criteria->addSelectColumn($alias . '.access_key');
+            $criteria->addSelectColumn($alias . '.view_key');
         }
     }
 
@@ -495,6 +511,7 @@ class TimerTableMap extends TableMap
             $criteria->removeSelectColumn(TimerTableMap::COL_STATE);
             $criteria->removeSelectColumn(TimerTableMap::COL_LOG);
             $criteria->removeSelectColumn(TimerTableMap::COL_ACCESS_KEY);
+            $criteria->removeSelectColumn(TimerTableMap::COL_VIEW_KEY);
         } else {
             $criteria->removeSelectColumn($alias . '.evento_id');
             $criteria->removeSelectColumn($alias . '.timer_id');
@@ -503,6 +520,7 @@ class TimerTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.state');
             $criteria->removeSelectColumn($alias . '.log');
             $criteria->removeSelectColumn($alias . '.access_key');
+            $criteria->removeSelectColumn($alias . '.view_key');
         }
     }
 

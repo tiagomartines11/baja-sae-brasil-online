@@ -98,18 +98,40 @@ class Timer extends BaseTimer
     }
 
     /**
+     * Full control: run, pause, skip.
+     *
      * @return $this|Timer
      */
     public function generateAccessKey()
+    {
+        return $this->setAccessKey(self::newKey());
+    }
+
+    /**
+     * Read only: follows the run, cannot act on it.
+     *
+     * @return $this|Timer
+     */
+    public function generateViewKey()
+    {
+        return $this->setViewKey(self::newKey());
+    }
+
+    /**
+     * Unique across both columns, since ?k= is looked up in either.
+     *
+     * @return string
+     */
+    private static function newKey()
     {
         do {
             $key = '';
             for ($i = 0; $i < self::KEY_LENGTH; $i++) {
                 $key .= self::KEY_ALPHABET[random_int(0, strlen(self::KEY_ALPHABET) - 1)];
             }
-        } while (TimerQuery::create()->findOneByAccessKey($key));
+        } while (TimerQuery::create()->filterByAccessKey($key)->_or()->filterByViewKey($key)->exists());
 
-        return $this->setAccessKey($key);
+        return $key;
     }
 
     /**
