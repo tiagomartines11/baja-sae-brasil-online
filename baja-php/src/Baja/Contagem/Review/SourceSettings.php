@@ -98,19 +98,27 @@ final class SourceSettings
      * field: every field people type. The three the count writes itself
      * cannot say whether a car takes part. A field the scoring formula
      * reads is listed too, marked as such: the page shows it disabled, so
-     * that nobody wonders where DESCLAS went.
+     * that nobody wonders where DESCLAS went. The one already in force
+     * ($inForce) stays selectable (see refusedClassificationFields()), so
+     * its label asks for it to be replaced instead of saying it cannot be
+     * chosen.
      *
      * @return array<string, string> field code => label for the list
      */
-    public static function classificationChoices(Prova $prova): array
+    public static function classificationChoices(Prova $prova, ?string $inForce = null): array
     {
         $readByScoring = ScoringFields::readByScoring($prova);
         $choices = [];
         foreach ($prova->getParamsInputs() as $field) {
             $code = (string) $field->getCode();
-            if (!in_array($code, ScorePublisher::ENGINE_FIELDS, true)) {
-                $choices[$code] = $code . ' (' . $field->getName() . ')'
-                    . (in_array($code, $readByScoring, true) ? ' — usado na fórmula de pontuação, não pode ser escolhido' : '');
+            if (in_array($code, ScorePublisher::ENGINE_FIELDS, true)) {
+                continue;
+            }
+            $choices[$code] = $code . ' (' . $field->getName() . ')';
+            if (in_array($code, $readByScoring, true)) {
+                $choices[$code] .= $code === $inForce
+                    ? ' — lido pela fórmula de pontuação: troque por um campo próprio (APTO)'
+                    : ' — usado na fórmula de pontuação, não pode ser escolhido';
             }
         }
         return $choices;

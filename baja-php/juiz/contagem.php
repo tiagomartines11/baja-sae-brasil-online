@@ -67,7 +67,7 @@ if (ContagemAccess::isController($prova)) {
         <p class="contagem-erro" role="alert"><strong>Campo de classificação errado: <?= $h($classificationConflict) ?>.</strong>
             <?= $h(ScoringFields::whyNot($classificationConflict)) ?>
             "Marcar todos os presentes como aptos" fica bloqueado até isso ser corrigido. Para corrigir sem tirar carros da corrida,
-            peça ao responsável pelo sistema: o passo a passo está na documentação da contagem (Classified cars).</p>
+            peça ao responsável pelo sistema: o passo a passo está na seção "Classified cars" de docs/contagem.md.</p>
     <?php } ?>
     <?php if ($scoring['todos_os_pontos_zero']) { ?>
         <p class="contagem-erro" role="alert"><strong>Todos os pontos publicados são 0</strong>, mas há carros com voltas:

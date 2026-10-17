@@ -143,9 +143,17 @@ disabled. To fix it without ever taking a car out of the race:
    `UPDATE input SET dados = JSON_SET(dados, '$.APTO', JSON_EXTRACT(dados, '$.DESCLAS')) WHERE evento_id = '<evento>' AND prova_id = '<prova>' AND JSON_EXTRACT(dados, '$.DESCLAS') IS NOT NULL;`
 3. On the Fontes page, set the classification field to `APTO`. The same
    cars race, so the recount changes nothing.
-4. Give `DESCLAS` back its meaning: empty it where the hub wrote `SIM`
-   (`JSON_SET(dados, '$.DESCLAS', NULL)` where it is `'SIM'`), keeping any
-   car that really is disqualified.
+4. Give `DESCLAS` back its meaning: empty it only where the hub wrote
+   `SIM`. In `input` a judge's real disqualification looks the same as the
+   hub's `SIM`; the difference is in the `log` table, where the hub left
+   one line per car with `"origem": "marcar todos os presentes"` (`pagina`
+   is `<evento>_<prova>`). This clears the cars with such a line and no
+   later line touching `DESCLAS`:
+   `UPDATE input SET dados = JSON_SET(dados, '$.DESCLAS', NULL) WHERE evento_id = '<evento>' AND prova_id = '<prova>' AND JSON_UNQUOTE(JSON_EXTRACT(dados, '$.DESCLAS')) = 'SIM' AND equipe_id IN (SELECT h.equipe FROM log h WHERE h.pagina = '<evento>_<prova>' AND IF(JSON_VALID(h.dados), JSON_UNQUOTE(JSON_EXTRACT(h.dados, '$.origem')), NULL) = 'marcar todos os presentes' AND NOT EXISTS (SELECT 1 FROM log m WHERE m.pagina = h.pagina AND m.equipe = h.equipe AND m.id > h.id AND IF(JSON_VALID(m.dados), JSON_CONTAINS_PATH(m.dados, 'one', '$.DESCLAS', '$.DELETED'), 0)));`
+   Any car still at `DESCLAS = SIM` afterwards is confirmed with the judges
+   before it is touched. So is a car the hub marked and a judge then meant
+   to disqualify: saving the same `SIM` changes nothing and leaves no log
+   line, and the review page's manual fields leave none either.
 5. **Controle da corrida → Republicar tudo** recalculates every car's points.
 
 Switching to `APTO` before copying (step 3 before 2) would take every car

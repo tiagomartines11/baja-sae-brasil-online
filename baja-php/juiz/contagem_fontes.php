@@ -297,7 +297,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                 // one in force stays selectable: a disabled selected option
                 // is not sent, and saving would silently clear the field.
                 $refusedFields = SourceSettings::refusedClassificationFields($prova, $settings->campoClassificacao);
-                foreach (['' => '(nenhum: todo carro presente participa)'] + SourceSettings::classificationChoices($prova) as $value => $label) { ?>
+                foreach (['' => '(nenhum: todo carro presente participa)'] + SourceSettings::classificationChoices($prova, $settings->campoClassificacao) as $value => $label) { ?>
                     <option value="<?= $h($value) ?>"<?= (string) $value === ($settings->campoClassificacao ?? '') ? ' selected' : '' ?><?= in_array((string) $value, $refusedFields, true) ? ' disabled' : '' ?>><?= $h($label) ?></option>
                 <?php } ?>
             </select>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Tests\Contagem\Db;
 
 use Baja\Contagem\Review\SourceSettings;
+use Baja\Contagem\Service\ClassificationWriter;
 use Baja\Contagem\Service\Clock;
 use Baja\Contagem\Service\ScoringFields;
 use InvalidArgumentException;
@@ -88,6 +89,10 @@ final class ScoringGuardTest extends ReviewDbTestCase
         $this->changeSettings(['campo_classificacao' => 'DESCLAS']);
         $this->assertSame('DESCLAS', ScoringFields::classificationConflict($this->prova));
         $this->assertSame(['VOLTAS'], SourceSettings::refusedClassificationFields($this->prova, 'DESCLAS'));
+        // Selected and selectable, so its label must not say it cannot be chosen.
+        $label = SourceSettings::classificationChoices($this->prova, 'DESCLAS')['DESCLAS'];
+        $this->assertStringNotContainsString('não pode ser escolhido', $label);
+        $this->assertStringContainsString('troque por um campo próprio (APTO)', $label);
 
         $this->saveSettingsForm(['janela_ms' => '15000']);
 
@@ -121,8 +126,10 @@ final class ScoringGuardTest extends ReviewDbTestCase
     }
 
     /**
-     * SITUATION: 26SE replayed. DESCLAS is the classification field; the
-     * hub marks every present car SIM; car 11 does two laps.
+     * SITUATION: 26SE replayed. DESCLAS is the classification field. Before
+     * race day a judge disqualified car 33 on the entry page (DESCLAS = SIM,
+     * as the formula means it); on race morning the hub marked the other
+     * present cars SIM; car 11 does two laps.
      *
      * EXPECTED: the review screen's state says every published points value
      * is 0 although a car has laps, names the field, and says when points
@@ -130,17 +137,24 @@ final class ScoringGuardTest extends ReviewDbTestCase
      *
      * THEN the fix, in the order docs/contagem.md gives, which never takes a
      * car out of the race: add APTO, copy DESCLAS into it, switch the
-     * classification field to APTO, empty DESCLAS, "Republicar tudo".
-     * After each step the same three cars race and car 11 keeps its laps;
-     * at the end car 11 has its 400 points and the warnings are gone.
+     * classification field to APTO, empty DESCLAS only where the hub wrote
+     * it (found through the hub's own lines in the log table), "Republicar
+     * tudo". After each step the same three cars race and car 11 keeps its
+     * laps; at the end car 11 has its 400 points, car 33 is still
+     * disqualified, and the warnings are gone.
      */
     public function testTheReviewScreenSaysWhenEveryCarScoresZeroAndTheFixKeepsEveryCarInTheRace(): void
     {
         $this->changeSettings(['campo_classificacao' => 'DESCLAS']);
-        // What the button did at 26SE (it refuses now; see the test above).
-        foreach ([self::CAR_A, self::CAR_B, self::CAR_C] as $car) {
-            $this->setManualField($car, 'DESCLAS', 'SIM');
-        }
+        // The judge's disqualification, logged as the entry page does.
+        $this->setManualField(self::CAR_C, 'DESCLAS', 'SIM');
+        $this->writeEntryPageLogLine(self::CAR_C, ['DESCLAS' => 'SIM']);
+        // What the button did at 26SE (the service refuses now; see the
+        // test above): SIM, with its log line, on every blank field.
+        $this->newRequest();
+        $marked = ClassificationWriter::markAllPresent($this->prova, self::USER_PREFIX . 'controle');
+        $this->assertSame([self::CAR_A, self::CAR_B], $marked['marcados']);
+
         $this->startRace(self::RACE_START_MS);
         foreach ([60, 240, 420] as $seconds) {
             $this->recordCountedPass(self::CAR_A, $this->at($seconds));
@@ -170,13 +184,13 @@ final class ScoringGuardTest extends ReviewDbTestCase
         $this->assertCarsRacing($racing);
         $this->assertEquals(2, $this->publishedData(self::CAR_A)['VOLTAS']);
 
-        // 4: DESCLAS goes back to meaning "disqualified": nobody is.
-        $this->executeSql(
-            "UPDATE input SET dados = JSON_SET(dados, '$.DESCLAS', NULL)
-              WHERE evento_id = ? AND prova_id = ? AND JSON_UNQUOTE(JSON_EXTRACT(dados, '$.DESCLAS')) = 'SIM'",
-            [self::EVENTO_ID, self::PROVA_ID]
-        );
+        // 4: DESCLAS goes back to meaning "disqualified", emptied only where
+        // the hub wrote it; the SQL is the one in docs/contagem.md.
+        $this->clearTheHubsDesclas();
         $this->assertCarsRacing($racing);
+        $this->assertNull($this->publishedData(self::CAR_A)['DESCLAS']);
+        $this->assertNull($this->publishedData(self::CAR_B)['DESCLAS']);
+        $this->assertSame('SIM', $this->publishedData(self::CAR_C)['DESCLAS'], "the judge's disqualification survives");
 
         // 5: "Republicar tudo" recalculates the points.
         $this->newRequest();
@@ -187,6 +201,27 @@ final class ScoringGuardTest extends ReviewDbTestCase
         $check = $this->freshScreen()['pontuacao'];
         $this->assertFalse($check['todos_os_pontos_zero']);
         $this->assertNull($check['campo_classificacao_na_formula']);
+    }
+
+    /**
+     * SITUATION: the same repair, but after the hub marked car 22 a judge
+     * saved its DESCLAS on the entry page (a later log line for that car).
+     *
+     * EXPECTED: step 4 leaves car 22 alone. Whether the judge meant a
+     * disqualification is for people to settle, not for the SQL.
+     */
+    public function testTheRepairLeavesAloneACarWhoseDesclasAJudgeSavedAfterTheHub(): void
+    {
+        $this->changeSettings(['campo_classificacao' => 'DESCLAS']);
+        $this->newRequest();
+        ClassificationWriter::markAllPresent($this->prova, self::USER_PREFIX . 'controle');
+        $this->writeEntryPageLogLine(self::CAR_B, ['DESCLAS' => 'SIM']);
+
+        $this->clearTheHubsDesclas();
+
+        $this->assertNull($this->publishedData(self::CAR_A)['DESCLAS']);
+        $this->assertSame('SIM', $this->publishedData(self::CAR_B)['DESCLAS']);
+        $this->assertNull($this->publishedData(self::CAR_C)['DESCLAS']);
     }
 
     // ------------------------------------------------------------------
@@ -220,6 +255,44 @@ final class ScoringGuardTest extends ReviewDbTestCase
             $form[$key] = $value === null ? '' : str_replace('.', ',', (string) $value);
         }
         SourceSettings::save($this->service, $changes + $form);
+    }
+
+    /**
+     * Step 4 of the repair in docs/contagem.md ("Classified cars"), word for
+     * word but for the placeholders: empties DESCLAS = SIM only for the cars
+     * the hub's button wrote it for, and that no later log line touched.
+     * IF(JSON_VALID(...)) because old log lines are not always JSON.
+     */
+    private function clearTheHubsDesclas(): void
+    {
+        $this->executeSql(
+            "UPDATE input SET dados = JSON_SET(dados, '$.DESCLAS', NULL)
+              WHERE evento_id = ? AND prova_id = ?
+                AND JSON_UNQUOTE(JSON_EXTRACT(dados, '$.DESCLAS')) = 'SIM'
+                AND equipe_id IN (
+                  SELECT h.equipe FROM log h
+                   WHERE h.pagina = ?
+                     AND IF(JSON_VALID(h.dados), JSON_UNQUOTE(JSON_EXTRACT(h.dados, '$.origem')), NULL) = 'marcar todos os presentes'
+                     AND NOT EXISTS (
+                       SELECT 1 FROM log m
+                        WHERE m.pagina = h.pagina AND m.equipe = h.equipe AND m.id > h.id
+                          AND IF(JSON_VALID(m.dados), JSON_CONTAINS_PATH(m.dados, 'one', '$.DESCLAS', '$.DELETED'), 0)))",
+            [self::EVENTO_ID, self::PROVA_ID, self::EVENTO_ID . '_' . self::PROVA_ID]
+        );
+    }
+
+    /**
+     * The line juiz/save_entry.php writes when a judge saves a car's fields:
+     * the changed fields, without "origem".
+     *
+     * @param array<string, mixed> $diff
+     */
+    private function writeEntryPageLogLine(int $car, array $diff): void
+    {
+        $this->executeSql(
+            'INSERT INTO `log` (`user`, pagina, equipe, dados) VALUES (?, ?, ?, ?)',
+            [self::USER_PREFIX . 'juiz', self::EVENTO_ID . '_' . self::PROVA_ID, $car, json_encode($diff)]
+        );
     }
 
     /** Adds an enum SIM/NÃO field to the test prova, as an organiser would in its parameters. */
