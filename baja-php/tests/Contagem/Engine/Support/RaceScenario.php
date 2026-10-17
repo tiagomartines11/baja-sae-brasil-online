@@ -317,7 +317,7 @@ final class RaceScenario
      */
     public function promote(int $source, string $at): void
     {
-        $this->sources[$source]->periodosForaMs[] = [$this->sources[$source]->papelDesdeMs, self::ms($at)];
+        $this->sources[$source]->periodosForaMs[] = [$this->sources[$source]->papelDesdeMs, self::ms($at), Source::PERIODO_OBSERVADORA];
         $this->sources[$source]->papel = Source::PAPEL_VOTANTE;
         $this->sources[$source]->papelDesdeMs = self::ms($at);
     }

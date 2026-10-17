@@ -10,7 +10,9 @@ import {
 } from './revisao-fila.js';
 import { descreverParada } from './revisao-raias-logica.js';
 import { descreverDecisao, exclusoesAbertas } from './revisao-decisoes.js';
-import { ehObservadora, fontesDaTabela, linhasDaObservacao } from './revisao-observacao.js';
+import {
+  ehObservadora, fontesDaTabela, linhasDaObservacao, tituloDaObservacao,
+} from './revisao-observacao.js';
 
 export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscolherCarro) {
   const fontes = fontesDaTabela(estado.fontes);
@@ -154,26 +156,28 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
   const podeExcluir = fonte.tipo !== 'totais' && largada !== null && largada !== undefined;
 
   // An observer counts nothing, so the counter's numbers (entries in use,
-  // misses) say nothing about it: its own comparison takes their place.
+  // misses) say nothing about it: its own comparison takes their place. A
+  // promoted one shows both, the comparison of the time it observed below.
   const observacao = linhasDaObservacao(stats?.observacao);
   const sincronizado = stats
     ? [el('dt', {}, 'sincronizado até'), el('dd', {},
       stats.nada_a_esperar ? 'nenhum dispositivo aberto' : tempoDeProva(stats.sincronizado_ate_ms, largada))]
     : null;
+  const comparacao = (comSincronizado) => el('div', { class: 'observacao' },
+    el('p', {}, tituloDaObservacao(fonte)),
+    el('dl', {}, observacao.map(([rotulo, valor]) => [el('dt', {}, rotulo), el('dd', {}, valor)]), comSincronizado ? sincronizado : null));
 
   let numeros = el('p', { class: 'vazio' }, 'Sem estatísticas.');
-  if (stats && observacao) {
-    numeros = el('div', { class: 'observacao' },
-      el('p', {}, 'Observadora: o que registra é só comparado com a contagem oficial e nunca conta.'),
-      el('dl', {}, observacao.map(([rotulo, valor]) => [el('dt', {}, rotulo), el('dd', {}, valor)]), sincronizado));
+  if (stats && observacao && ehObservadora(fonte)) {
+    numeros = comparacao(true);
   } else if (stats) {
-    numeros = el('dl', {},
+    numeros = [el('dl', {},
       el('dt', {}, 'registros em uso'), el('dd', {}, numero(stats.entradas)),
       el('dt', {}, 'faltas'), el('dd', {}, numero(stats.faltas)),
       el('dt', {}, 'trocas corrigidas'), el('dd', {}, numero(stats.trocas)),
       el('dt', {}, 'repetidas anuladas'), el('dd', {}, numero(stats.repetidas_anuladas)),
       el('dt', {}, 'atraso mediano'), el('dd', {}, `${Math.round((stats.desvio_mediano_ms ?? 0) / 1000)} s`),
-      sincronizado);
+      sincronizado), observacao ? comparacao(false) : null];
   }
 
   return el('div', { class: fonte.ativa ? 'bloco-fonte' : 'bloco-fonte inativa' },

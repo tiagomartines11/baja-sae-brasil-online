@@ -58,13 +58,18 @@ final class Source
      */
     public ?int $papelDesdeMs = null;
 
+    /** Marks a period off that the source spent as an observer (see periodosForaMs). */
+    public const PERIODO_OBSERVADORA = 'observadora';
+
     /**
      * Closed periods during which this source's entries do not count, as
      * [from, to) with from null for "since always": a period it was switched
-     * off before being switched on again, a period it was an observer
-     * before being promoted. Empty for nearly every source.
+     * off before being switched on again, or, marked with a third element
+     * PERIODO_OBSERVADORA, a period it was an observer before being promoted
+     * (its entries from then are still compared, see wasObservingAt). Empty
+     * for nearly every source.
      *
-     * @var array<int, array{0: ?int, 1: int}>
+     * @var array<int, array{0: ?int, 1: int, 2?: string}>
      */
     public array $periodosForaMs = [];
 
@@ -127,16 +132,37 @@ final class Source
     }
 
     /**
-     * True when the source was observing at $tsMs: an observer, switched on,
-     * and not in one of its periods off. Its entry from that moment is
-     * compared with the official passes instead of counting.
+     * True when the source was observing at $tsMs: an observer then (now, or
+     * in a period it observed before being promoted), switched on, and not
+     * switched off in between. Its entry from that moment is compared with
+     * the official passes instead of counting.
      */
     public function wasObservingAt(int $tsMs): bool
     {
-        return $this->isObserver()
-            && ($this->papelDesdeMs === null || $tsMs >= $this->papelDesdeMs)
-            && !$this->isInPeriodOff($tsMs)
-            && $this->wasSwitchedOnAt($tsMs);
+        if (!$this->recordsPasses() || $this->isInPeriodOff($tsMs, false) || !$this->wasSwitchedOnAt($tsMs)) {
+            return false;
+        }
+        if ($this->papel === self::PAPEL_OBSERVADORA && ($this->papelDesdeMs === null || $tsMs >= $this->papelDesdeMs)) {
+            return true;
+        }
+        return $this->isInPeriodOff($tsMs, true);
+    }
+
+    /**
+     * True for a pass source that is an observer now or was one before being
+     * promoted: it has a comparison with the official count to show.
+     */
+    public function hasObserved(): bool
+    {
+        if ($this->isObserver()) {
+            return true;
+        }
+        foreach ($this->periodosForaMs as $period) {
+            if (($period[2] ?? null) === self::PERIODO_OBSERVADORA) {
+                return $this->recordsPasses();
+            }
+        }
+        return false;
     }
 
     /** True for a source that is taking part in the count right now. */
@@ -171,27 +197,33 @@ final class Source
 
     /**
      * The periods off as stored in contagem_fonte.periodos_fora: a JSON list
-     * of [from, to]. Anything unreadable in it is left out.
+     * of [from, to], or [from, to, "observadora"] for a period observed.
+     * Anything unreadable in it is left out.
      *
-     * @return array<int, array{0: ?int, 1: int}>
+     * @return array<int, array{0: ?int, 1: int, 2?: string}>
      */
     public static function periodsFromJson(?string $json): array
     {
         $decoded = $json === null || $json === '' ? null : json_decode($json, true);
         $periods = [];
         foreach (is_array($decoded) ? $decoded : [] as $period) {
-            if (!is_array($period) || count($period) !== 2 || !is_int($period[1] ?? null)) {
+            if (!is_array($period) || !in_array(count($period), [2, 3], true) || !is_int($period[1] ?? null)) {
                 continue;
             }
             $fromMs = $period[0] ?? null;
-            if ($fromMs === null || is_int($fromMs)) {
+            if ($fromMs !== null && !is_int($fromMs)) {
+                continue;
+            }
+            if (count($period) === 2) {
                 $periods[] = [$fromMs, $period[1]];
+            } elseif (($period[2] ?? null) === self::PERIODO_OBSERVADORA) {
+                $periods[] = [$fromMs, $period[1], self::PERIODO_OBSERVADORA];
             }
         }
         return $periods;
     }
 
-    /** @param array<int, array{0: ?int, 1: int}> $periods */
+    /** @param array<int, array{0: ?int, 1: int, 2?: string}> $periods */
     public static function periodsToJson(array $periods): ?string
     {
         return $periods === [] ? null : json_encode(array_values($periods));
@@ -205,9 +237,17 @@ final class Source
         return $this->desativadaEmMs !== null && $tsMs < $this->desativadaEmMs;
     }
 
-    private function isInPeriodOff(int $tsMs): bool
+    /**
+     * @param bool|null $observed true: only the periods it observed; false:
+     *     only the ones it was switched off; null: any
+     */
+    private function isInPeriodOff(int $tsMs, ?bool $observed = null): bool
     {
-        foreach ($this->periodosForaMs as [$fromMs, $toMs]) {
+        foreach ($this->periodosForaMs as $period) {
+            [$fromMs, $toMs] = $period;
+            if ($observed !== null && $observed !== (($period[2] ?? null) === self::PERIODO_OBSERVADORA)) {
+                continue;
+            }
             if (($fromMs === null || $tsMs >= $fromMs) && $tsMs < $toMs) {
                 return true;
             }

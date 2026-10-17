@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Review;
 
-use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\StopReport;
 use Baja\Model\Prova;
@@ -44,14 +43,14 @@ final class CsvExport
 
     /**
      * The exports to offer for this prova: the usual ones, plus the
-     * observer comparison when some source is an observer.
+     * observer comparison when some source is or was an observer.
      *
      * @return array<string, string>
      */
     public static function labels(Prova $prova): array
     {
         foreach (SourceAdmin::sources($prova) as $fonte) {
-            if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA && $fonte->getTipo() !== Source::TIPO_TOTAIS) {
+            if (SourceAdmin::hasObserved($fonte)) {
                 return self::LABELS + [self::OBSERVACAO => self::OBSERVER_LABEL];
             }
         }

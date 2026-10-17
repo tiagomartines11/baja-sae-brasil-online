@@ -166,7 +166,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         <?php if (isset($observerComparisons[$fonteId])) {
             $comparison = $observerComparisons[$fonteId]; ?>
             <div class="contagem-dica contagem-observacao">
-                <strong>Comparação com a contagem oficial:</strong>
+                <strong>Comparação com a contagem oficial<?= $fonte->getPapel() === Source::PAPEL_OBSERVADORA ? '' : ' (do tempo em que era observadora)' ?>:</strong>
                 <?= (int) $comparison['acertos'] ?> acertos de <?= (int) $comparison['entradas'] ?> registros,
                 <?= (int) $comparison['faltas'] ?> passagens oficiais não vistas,
                 <?= (int) $comparison['falsos_positivos'] ?> falsos positivos,

@@ -47,6 +47,14 @@ export function linhasDaObservacao(observacao) {
   return linhas;
 }
 
+// The sentence above the comparison. A source promoted to votante keeps the
+// comparison of the time it observed, below its counter numbers.
+export function tituloDaObservacao(fonte) {
+  return ehObservadora(fonte)
+    ? 'Observadora: o que registra é só comparado com a contagem oficial e nunca conta.'
+    : 'Enquanto era observadora (antes da promoção), comparada com a contagem oficial:';
+}
+
 // The picture behind an entry, when its source links pictures: where it is
 // and how sure the system was. Null when there is none.
 export function imagemDaEntrada(entrada) {

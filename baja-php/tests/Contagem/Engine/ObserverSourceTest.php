@@ -135,7 +135,9 @@ final class ObserverSourceTest extends EngineTestCase
      *
      * EXPECTED: the promotion does not reach back. At 05:00 the camera was
      * an observer, so counter 1 stands alone and the pass waits. At 12:00
-     * the camera is a votante: two sources agree and the pass counts.
+     * the camera is a votante: two sources agree and the pass counts. The
+     * comparison of the time it observed stays (its 05:00 entry), and its
+     * entries from then are still told apart as observed.
      */
     public function testAPromotionCountsFromThatMomentOnNeverBackwards(): void
     {
@@ -155,7 +157,40 @@ final class ObserverSourceTest extends EngineTestCase
         $this->assertLapCounts([5 => 1], $result);
         $this->assertNull($result->groupOfEntry($before), 'observed, so in no group');
         $this->assertTrue($result->groupOfEntry($after)->contado);
-        $this->assertNull($result->sourceStats[3]->observacao, 'a votante is not compared');
+        $this->assertSame(1, $result->sourceStats[3]->observacao->entradas, 'only what it sent as an observer is compared');
+    }
+
+    /**
+     * SITUATION: a camera observed until 10:00 and was promoted then. It
+     * had also been switched off from 03:00 to 04:00, and switched on again
+     * without asking for that gap to count.
+     *
+     * EXPECTED: at 02:00 and 05:00 it was observing (an entry from then is
+     * "observed", not "from a source switched off"); at 03:30 it was off;
+     * from 10:00 on it counts. A counter that was only ever switched off
+     * and on again never observed anything.
+     */
+    public function testAPromotedSourceRemembersWhenItWasObserving(): void
+    {
+        $camera = new Source(3, 'Câmera', Source::TIPO_AUTOMATICA);
+        $camera->periodosForaMs = [[180000, 240000], [null, 600000, Source::PERIODO_OBSERVADORA]];
+        $camera->papelDesdeMs = 600000;
+
+        $this->assertTrue($camera->wasObservingAt(120000));
+        $this->assertTrue($camera->wasObservingAt(300000));
+        $this->assertFalse($camera->wasObservingAt(210000), 'switched off then');
+        $this->assertFalse($camera->wasCountingAt(300000));
+        $this->assertFalse($camera->wasObservingAt(720000));
+        $this->assertTrue($camera->wasCountingAt(720000));
+        $this->assertTrue($camera->hasObserved());
+
+        $counter = new Source(2, 'Contagem 2');
+        $counter->periodosForaMs = [[180000, 240000]];
+        $this->assertFalse($counter->wasObservingAt(210000));
+        $this->assertFalse($counter->hasObserved());
+
+        $stored = Source::periodsToJson($camera->periodosForaMs);
+        $this->assertSame($camera->periodosForaMs, Source::periodsFromJson($stored));
     }
 
     /**

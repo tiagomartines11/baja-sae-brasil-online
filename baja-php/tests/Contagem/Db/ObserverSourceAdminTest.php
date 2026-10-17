@@ -63,7 +63,9 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
      *
      * EXPECTED: the promotion is asked first, saying it does not reach back.
      * Once confirmed it counts from 2:00 on: the 1:00 pass still has one
-     * voice (pending), the 3:00 one has two and completes lap 1.
+     * voice (pending), the 3:00 one has two and completes lap 1. On the
+     * timeline its 1:00 entry is still "observed", not "from a source
+     * switched off".
      */
     public function testAPromotionIsAskedFirstAndCountsFromThatMomentOn(): void
     {
@@ -87,7 +89,7 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
         $stored = $this->reload($camera);
         $this->assertSame(Source::PAPEL_VOTANTE, $stored->getPapel());
         $this->assertSame($this->at(120), (int) $stored->getPapelDesdeMs());
-        $this->assertSame([[null, $this->at(120)]], Source::periodsFromJson($stored->getPeriodosFora()));
+        $this->assertSame([[null, $this->at(120), Source::PERIODO_OBSERVADORA]], Source::periodsFromJson($stored->getPeriodosFora()));
 
         $this->addEntry($this->fontes[0], self::CAR_A, $this->at(180));
         $this->addEntry($camera, self::CAR_A, $this->at(180));
@@ -95,6 +97,13 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
         Clock::freezeAt($this->at(600));
         $this->recompute();
         $this->assertEquals(1, $this->publishedData(self::CAR_A)['VOLTAS']);
+
+        $observed = array_values(array_filter(
+            $this->entriesOnTheTimeline(),
+            fn(array $entry) => $entry['fonte_id'] === (int) $camera->getFonteId() && $entry['ts_ms'] === $this->at(60)
+        ));
+        $this->assertCount(1, $observed);
+        $this->assertSame('fonte_observadora', $observed[0]['motivo_fora_de_uso']);
     }
 
     /**
@@ -157,15 +166,6 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
     }
 
     /**
-     * SITUATION: Contagem 3 is switched off at 5:00. Its phone, still open
-     * in a pocket, sends car A at 6:00, which counter 1 also recorded. At
-     * 8:00 it is switched on again.
-     *
-     * WHAT WENT WRONG: switching it on cleared the moment it was switched
-     * off, and every entry it had sent while off suddenly counted: here the
-     * 6:00 pass got a second voice and a lap appeared.
-     *
-    /**
      * SITUATION: the publishing mode is "confirmadas", where the primary
      * source has no effect. The promoted camera is the stored primary and
      * is set back to observer. Later the controller changes only the
@@ -202,6 +202,15 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
         }
     }
 
+    /**
+     * SITUATION: Contagem 3 is switched off at 5:00. Its phone, still open
+     * in a pocket, sends car A at 6:00, which counter 1 also recorded. At
+     * 8:00 it is switched on again.
+     *
+     * WHAT WENT WRONG: switching it on cleared the moment it was switched
+     * off, and every entry it had sent while off suddenly counted: here the
+     * 6:00 pass got a second voice and a lap appeared.
+     *
      * EXPECTED: switching it on again keeps the time it was off as a period
      * off: the 6:00 entry stays out. Asking explicitly ("contar também")
      * brings it back.

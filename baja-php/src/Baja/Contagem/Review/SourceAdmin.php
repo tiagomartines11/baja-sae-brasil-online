@@ -192,8 +192,9 @@ final class SourceAdmin
                     'Promover a votante'
                 );
             }
-            // Not backwards: the time it observed becomes a period off.
-            $periods[] = [$fonte->getPapelDesdeMs() === null ? null : (int) $fonte->getPapelDesdeMs(), $nowMs];
+            // Not backwards: the time it observed becomes a period off,
+            // marked as observed so it is still compared with the count.
+            $periods[] = [$fonte->getPapelDesdeMs() === null ? null : (int) $fonte->getPapelDesdeMs(), $nowMs, Source::PERIODO_OBSERVADORA];
             $fonte->setPapelDesdeMs($nowMs);
         } elseif ($previousRole === Source::PAPEL_VOTANTE && $role === Source::PAPEL_OBSERVADORA) {
             // Like switching a counter off: the votes it cast stay.
@@ -227,7 +228,8 @@ final class SourceAdmin
     /**
      * How each observer source compares with the official count, from the
      * latest snapshot (ObserverComparator). Nothing is asked, and nothing is
-     * recalculated, while no source is an observer.
+     * recalculated, while no source is or was an observer. A promoted source
+     * keeps the comparison of the time it observed.
      *
      * @return array<int, array<string, mixed>> fonteId => the 'observacao' part of its statistics
      */
@@ -235,7 +237,7 @@ final class SourceAdmin
     {
         $hasObserver = false;
         foreach (self::sources($service->getProva()) as $fonte) {
-            $hasObserver = $hasObserver || $fonte->getPapel() === Source::PAPEL_OBSERVADORA;
+            $hasObserver = $hasObserver || self::hasObserved($fonte);
         }
         if (!$hasObserver) {
             return [];
@@ -247,6 +249,26 @@ final class SourceAdmin
             }
         }
         return $comparisons;
+    }
+
+    /**
+     * True for a pass source that is an observer, or was one before being
+     * promoted (Source::hasObserved): it has a comparison to show.
+     */
+    public static function hasObserved(ContagemFonte $fonte): bool
+    {
+        if ($fonte->getTipo() === Source::TIPO_TOTAIS || $fonte->getTipo() === Source::TIPO_BOX) {
+            return false;
+        }
+        if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA) {
+            return true;
+        }
+        foreach (Source::periodsFromJson($fonte->getPeriodosFora()) as $period) {
+            if (($period[2] ?? null) === Source::PERIODO_OBSERVADORA) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

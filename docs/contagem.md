@@ -812,10 +812,14 @@ entry and per missed pass ("Fonte observadora x contagem oficial").
 
 **Promotion.** Choosing `votante` on the Fontes page asks first, and the
 promotion counts **from that moment on**, never backwards: the time it
-observed is stored as a period off. Making a votante an observer keeps the
-votes it cast before (like switching a counter off). An observer cannot be
-the primary source, and the primary source of "fonte principal" mode
-cannot be made an observer. With timing `precisa`, the page also asks
+observed is stored as a period off marked as observed, so its entries from
+then are still "fonte observadora" on the timeline and its comparison stays
+(the review block shows it below the counter's numbers, labelled "antes da
+promoção"). Making a votante an observer keeps the votes it cast before
+(like switching a counter off). An observer cannot be the primary source
+of "fonte principal" mode, and that mode's primary source cannot be made
+an observer. In the other modes the primary has no effect, so an observer
+left stored there does not stop the settings form from saving. With timing `precisa`, the page also asks
 before the source starts to count, because its time then becomes the pass
 time and the reference for every counter's habit.
 

@@ -12,7 +12,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  SEM_IMAGEM_NA_REDE, ehObservadora, fontesDaTabela, imagemDaEntrada, linhasDaObservacao,
+  SEM_IMAGEM_NA_REDE, ehObservadora, fontesDaTabela, imagemDaEntrada, linhasDaObservacao, tituloDaObservacao,
 } from '../../default/js/contagem/revisao-observacao.js';
 import { descricaoDoChip } from '../../default/js/contagem/revisao-raias-logica.js';
 
@@ -76,4 +76,13 @@ test('a chip says it has a picture, and why an observer\'s entry is not in use',
   assert.match(texto, /fonte observadora: só comparada com a contagem oficial, nunca conta/);
   assert.match(texto, /com imagem/);
   assert.doesNotMatch(descricaoDoChip({ ...entrada, imagem_url: undefined }), /imagem/);
+});
+
+test('a promoted source keeps its comparison, told as the time it observed', () => {
+  // It counts now, so it is no "observadora" any more; what is compared is
+  // only what it sent before the promotion.
+  const promovida = { ...camera, papel: 'votante' };
+  assert.match(tituloDaObservacao(camera), /^Observadora: /);
+  assert.match(tituloDaObservacao(promovida), /antes da promoção/);
+  assert.deepEqual(fontesDaTabela([promovida]).map((fonte) => fonte.id), [4]);
 });

@@ -50,14 +50,15 @@ final class ObserverComparator
     public array $rows = [];
 
     /**
-     * True when at least one source is an observer now: only then is there anything to compare.
+     * True when at least one source is an observer, or was one before being
+     * promoted: only then is there anything to compare.
      *
      * @param array<int, Source> $sourcesById
      */
     public static function hasObservers(array $sourcesById): bool
     {
         foreach ($sourcesById as $source) {
-            if ($source->isObserver()) {
+            if ($source->hasObserved()) {
                 return true;
             }
         }
@@ -102,7 +103,7 @@ final class ObserverComparator
         }
 
         foreach ($sourcesById as $source) {
-            if (!$source->isObserver()) {
+            if (!$source->hasObserved()) {
                 continue;
             }
             $comparator->compareOne($source, $entriesBySource[$source->id] ?? [], $passes, $passTimes, $passIndexesByCar, $applied, $availability, $janelaMs);
