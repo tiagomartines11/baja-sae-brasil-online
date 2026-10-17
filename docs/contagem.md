@@ -826,9 +826,10 @@ promoção"). Making a votante an observer keeps the votes it cast before
 (like switching a counter off). An observer cannot be the primary source
 of "fonte principal" mode, and that mode's primary source cannot be made
 an observer. In the other modes the primary has no effect, so an observer
-left stored there does not stop the settings form from saving. With timing `precisa`, the page also asks
-before the source starts to count, because its time then becomes the pass
-time and the reference for every counter's habit.
+left stored there does not stop the settings form from saving. With
+timing `precisa`, the page also asks before the source starts to count,
+because its time then becomes the pass time and the reference for every
+counter's habit.
 
 **What the system sends.** The upload protocol, with `"mode": "api"`.
 **`"time_quality": "exato"` is mandatory**: an entry without it is stored
@@ -839,6 +840,13 @@ entry, stored and shown, never computed with:
   characters of `A-Z a-z 0-9 . _ -` (not starting with a dot). Anything
   else is dropped; the entry is still stored.
 - `confianca`: how sure the system was, a number from 0 to 1.
+
+For its misses to be measured the system must also report how far it has
+synced: `queue_empty: true` with `now_ms`, also as a heartbeat with no
+entries (see [Upload protocol](#upload-protocol)). An official pass is only
+a *falta* once the observer is synced past it; a system that never sends
+that mark shows 0 misses and looks perfect. "sincronizado até" in its
+review block shows whether it does.
 
 **Pictures.** With an *endereço das imagens* (`imagem_base_url`) set on
 the source, each entry with an `imagem` gets `imagem_url` = address + id

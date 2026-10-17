@@ -89,8 +89,9 @@ final class UploadFields
      * Image references of an automatic source are opaque ids appended to the
      * source's image base URL: plain characters only, so a reference can
      * never climb out of that address ("../") or carry a query of its own.
+     * \z, not $: $ also lets a trailing newline through.
      */
-    private const IMAGE_REF_PATTERN = '/^[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}$/';
+    private const IMAGE_REF_PATTERN = '/^[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}\z/';
 
     /**
      * The image reference of an entry ("imagem"), or null when there is none
