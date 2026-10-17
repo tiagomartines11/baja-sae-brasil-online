@@ -156,8 +156,16 @@ final class DecisionValidator
             DecisionConflicts::requireUnchanged($prova, $parsed, $recount);
             $decisions = DecisionResolver::discardGroup($parsed, $recount);
         } elseif ($parsed->tipo === Decision::USAR_TEMPO) {
+            // Asked first: once stored, the two entries are one pass, and
+            // useTime() would refuse them as such. "Já decidido" is the
+            // useful answer to the same request sent twice.
+            $alvoId = $parsed->number('passagem_alvo_id');
+            DecisionConflicts::requireNew(
+                $prova,
+                Decision::usarTempo(0, (int) $parsed->number('passagem_id'), $alvoId === null ? null : (int) $alvoId),
+                $input,
+            );
             $decisions = [DecisionResolver::useTime($parsed, $recount)];
-            DecisionConflicts::requireNew($prova, $decisions[0], $input);
             DecisionConflicts::requireUnchanged($prova, $parsed, $recount);
         } else {
             $decision = DecisionResolver::toDecision($parsed, $input);
