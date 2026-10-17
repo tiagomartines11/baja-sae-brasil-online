@@ -41,6 +41,24 @@ final class EngineResult
     /** @var array<int, CarState> carro => state, in standings order */
     public array $cars = [];
 
+    /**
+     * The field pace (see PaceModel) at the moment of the run, or at the
+     * finish once the race is over: the median lap, null while unknown, and
+     * how many laps of the window it is taken from. Before the start there
+     * are no laps and no pace.
+     *
+     * @var array{volta_mediana_ms: ?int, voltas_na_janela: int, janela_s: int}
+     */
+    public array $ritmo = ['volta_mediana_ms' => null, 'voltas_na_janela' => 0, 'janela_s' => 0];
+
+    /**
+     * The field pace once a minute from the start to the same moment,
+     * oldest first. Empty before the start.
+     *
+     * @var array<int, array{ts_ms: int, volta_mediana_ms: ?int, voltas_na_janela: int}>
+     */
+    public array $ritmoHistorico = [];
+
     /** @var array<int, SourceStats> fonteId => statistics */
     public array $sourceStats = [];
 

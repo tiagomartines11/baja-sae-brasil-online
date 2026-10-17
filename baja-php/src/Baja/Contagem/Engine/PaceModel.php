@@ -51,6 +51,9 @@ final class PaceModel
     /** @var array<int, ?float> grid step => field pace, for every step asked about so far */
     private array $paceByGridStep = [];
 
+    /** @var array<int, int> grid step => how many laps the field pace of that step was taken from */
+    private array $lapCountByGridStep = [];
+
     // ----- per car -----
 
     /** @var array<int, Lap[]> carro => its clean laps in time order */
@@ -100,26 +103,77 @@ final class PaceModel
     /** Median lap of the field around $tsMs, in ms. Null while there is too little data. */
     public function fieldPaceAt(int $tsMs): ?float
     {
-        // The moment is rounded up to the grid, so that a question asked
-        // "now" sees every lap completed so far.
-        $step = intdiv($tsMs + self::GRID_MS - 1, self::GRID_MS);
+        $step = self::gridStepOf($tsMs);
         if (!array_key_exists($step, $this->paceByGridStep)) {
-            $moment = $step * self::GRID_MS;
-            $this->paceByGridStep[$step] = $this->medianOfLapsEndedBetween($moment - $this->windowMs, $moment);
+            $this->measureFieldAt($step);
         }
         return $this->paceByGridStep[$step];
     }
 
     /**
-     * The field's laps are kept in the order they ended, so the laps of a
-     * period are one stretch of the list, found by two binary searches.
-     * A lap that ended exactly at $afterMs is no longer in the period; one
-     * that ended exactly at $untilMs is.
+     * How many clean laps of the field fieldPaceAt($tsMs) is taken from:
+     * those that ended in the window. Below MIN_LAPS_FOR_FIELD_PACE the
+     * pace is unknown, and this says how far it is from being known.
      */
-    private function medianOfLapsEndedBetween(int $afterMs, int $untilMs): ?float
+    public function fieldLapCountAt(int $tsMs): int
     {
-        $firstIndex = Stats::countAtMost($this->fieldLapEnds, $afterMs);
+        $step = self::gridStepOf($tsMs);
+        if (!array_key_exists($step, $this->lapCountByGridStep)) {
+            $this->measureFieldAt($step);
+        }
+        return $this->lapCountByGridStep[$step];
+    }
+
+    /**
+     * The field pace at every step of the grid from $fromMs to $untilMs,
+     * oldest first: what a chart of the pace through the race draws. Each
+     * point carries the moment of its step, except the last, which carries
+     * $untilMs itself (its step may be up to a minute later).
+     *
+     * @return array<int, array{ts_ms: int, volta_mediana_ms: ?int, voltas_na_janela: int}>
+     */
+    public function fieldPaceHistory(int $fromMs, int $untilMs): array
+    {
+        $points = [];
+        $lastStep = self::gridStepOf($untilMs);
+        for ($step = self::gridStepOf($fromMs); $step <= $lastStep; $step++) {
+            $momentMs = $step === $lastStep ? $untilMs : $step * self::GRID_MS;
+            $pace = $this->fieldPaceAt($momentMs);
+            $points[] = [
+                'ts_ms' => $momentMs,
+                'volta_mediana_ms' => $pace === null ? null : (int) round($pace),
+                'voltas_na_janela' => $this->fieldLapCountAt($momentMs),
+            ];
+        }
+        return $points;
+    }
+
+    /**
+     * The moment is rounded up to the grid, so that a question asked "now"
+     * sees every lap completed so far.
+     */
+    private static function gridStepOf(int $tsMs): int
+    {
+        return intdiv($tsMs + self::GRID_MS - 1, self::GRID_MS);
+    }
+
+    /**
+     * The field's laps are kept in the order they ended, so the laps of a
+     * window are one stretch of the list, found by two binary searches.
+     * A lap that ended exactly at the start of the window is no longer in
+     * it; one that ended exactly at its end is.
+     */
+    private function measureFieldAt(int $step): void
+    {
+        $untilMs = $step * self::GRID_MS;
+        $firstIndex = Stats::countAtMost($this->fieldLapEnds, $untilMs - $this->windowMs);
         $lapCount = Stats::countAtMost($this->fieldLapEnds, $untilMs) - $firstIndex;
+        $this->lapCountByGridStep[$step] = $lapCount;
+        $this->paceByGridStep[$step] = $this->medianOf($firstIndex, $lapCount);
+    }
+
+    private function medianOf(int $firstIndex, int $lapCount): ?float
+    {
         if ($lapCount < self::MIN_LAPS_FOR_FIELD_PACE) {
             return null;
         }
@@ -207,7 +261,7 @@ final class PaceModel
             $lapStartMs = $lap->tsMs - (int) $lap->tempoVoltaMs;
             // The same grid step fieldPaceAt() uses; an answer already
             // worked out is read straight from the list.
-            $step = intdiv($lapStartMs + self::GRID_MS - 1, self::GRID_MS);
+            $step = self::gridStepOf($lapStartMs);
             $fieldPace = $this->paceByGridStep[$step] ?? $this->fieldPaceAt($lapStartMs);
             if ($fieldPace === null || $fieldPace <= 0) {
                 continue;

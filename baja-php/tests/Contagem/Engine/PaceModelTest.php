@@ -318,4 +318,67 @@ final class PaceModelTest extends TestCase
         $this->assertNull($pace->expectedLapMs(1, 180000));
         $this->assertNull($pace->expectedLapMs(1, 180000));
     }
+
+    /**
+     * SITUATION: seven laps of 100 s have been completed; then an eighth.
+     * Race control and the public feed show the field pace with the number
+     * of laps it is taken from.
+     *
+     * EXPECTED: with seven laps the pace is unknown, and the model says it
+     * has seven (one short of what it needs); with eight, eight. Laps that
+     * have left the window are not counted, and before the first lap ends
+     * there are none.
+     */
+    public function testThePaceSaysHowManyLapsItIsTakenFrom(): void
+    {
+        $laps = [];
+        for ($car = 1; $car <= 7; $car++) {
+            $laps[$car][] = $this->lap($car, 100 + $car, 100);
+        }
+        $sevenLaps = new PaceModel($laps, new Settings());
+        $this->assertSame(7, $sevenLaps->fieldLapCountAt(180000));
+        $this->assertNull($sevenLaps->fieldPaceAt(180000));
+
+        $laps[8][] = $this->lap(8, 108, 100);
+        $eightLaps = new PaceModel($laps, new Settings());
+        $this->assertSame(8, $eightLaps->fieldLapCountAt(180000));
+        $this->assertSame(0, $eightLaps->fieldLapCountAt(60000), 'Before anybody completed a lap.');
+        $this->assertSame(0, $eightLaps->fieldLapCountAt(1080000), 'Every lap has left the 900-second window.');
+    }
+
+    /**
+     * SITUATION: the dry-then-wet race of the window test above: eight laps
+     * of 100 s end between seconds 120 and 127, eight of 200 s between 1501
+     * and 1508. The pace chart asks for the pace from second 0 to second
+     * 1570.
+     *
+     * EXPECTED: one point per minute, the last one at 1570 itself (not at
+     * the next whole minute). Each point is what fieldPaceAt() says at that
+     * moment, in whole milliseconds, with its lap count: 100 s at 960 (8
+     * laps), unknown at 1020 (7 laps), 200 s at the end (8 wet laps).
+     */
+    public function testTheHistoryHasThePaceOfEveryMinute(): void
+    {
+        $laps = [];
+        for ($car = 1; $car <= 8; $car++) {
+            $laps[$car][] = $this->lap($car, 119 + $car, 100);
+            $laps[$car][] = $this->lap($car, 1500 + $car, 200);
+        }
+        $pace = new PaceModel($laps, new Settings());
+
+        $history = $pace->fieldPaceHistory(0, 1570000);
+
+        $this->assertCount(28, $history, 'Minutes 0 to 26, and the end.');
+        $this->assertSame(['ts_ms' => 0, 'volta_mediana_ms' => null, 'voltas_na_janela' => 0], $history[0]);
+        $this->assertSame(['ts_ms' => 960000, 'volta_mediana_ms' => 100000, 'voltas_na_janela' => 8], $history[16]);
+        $this->assertSame(['ts_ms' => 1020000, 'volta_mediana_ms' => null, 'voltas_na_janela' => 7], $history[17]);
+        $this->assertSame(['ts_ms' => 1570000, 'volta_mediana_ms' => 200000, 'voltas_na_janela' => 8], $history[27]);
+        foreach ($history as $point) {
+            $this->assertSame(
+                $pace->fieldPaceAt($point['ts_ms']) === null ? null : (int) round($pace->fieldPaceAt($point['ts_ms'])),
+                $point['volta_mediana_ms'],
+                'At ' . $point['ts_ms'] . ' ms.'
+            );
+        }
+    }
 }

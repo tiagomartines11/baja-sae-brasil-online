@@ -89,6 +89,7 @@ final class Engine
 
         $carStatus = new CarStatus($settings, $timeline, $pace, $counter->availability);
         $result->cars = $carStatus->build(self::carsToReport($input->validCars, $lapsByCar), $lapsByCar, $counter->groupsByCar, $input->nowMs);
+        self::describePace($result, $pace, $timeline, $settings, $input->nowMs);
 
         $flags = array_merge($flags, self::totalsMismatchFlags($input, $counter->sourcesById, $result));
         $result->flags = self::inReviewOrder($flags, $result);
@@ -108,6 +109,28 @@ final class Engine
         );
 
         return $result;
+    }
+
+    /**
+     * The field pace for the public feed and race control: now, and once a
+     * minute since the start. Once the race is over both stop at the
+     * finish; afterwards the laps would only drop out of the window one by
+     * one and the pace would fade into "unknown".
+     *
+     * The history costs one median per minute of race, most of them already
+     * worked out for the flags; it is only made here, in the full run.
+     */
+    private static function describePace(EngineResult $result, PaceModel $pace, RaceTimeline $timeline, Settings $settings, int $nowMs): void
+    {
+        $result->ritmo['janela_s'] = $settings->janelaRitmoS;
+        if ($timeline->largadaMs === null || $nowMs < $timeline->largadaMs) {
+            return;
+        }
+        $untilMs = $timeline->encerramentoMs === null ? $nowMs : min($nowMs, $timeline->encerramentoMs);
+        $result->ritmoHistorico = $pace->fieldPaceHistory($timeline->largadaMs, $untilMs);
+        $now = $result->ritmoHistorico[count($result->ritmoHistorico) - 1];
+        $result->ritmo['volta_mediana_ms'] = $now['volta_mediana_ms'];
+        $result->ritmo['voltas_na_janela'] = $now['voltas_na_janela'];
     }
 
     /**
