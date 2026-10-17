@@ -32,6 +32,10 @@ export class CountSession {
         this.getUnclassifiedCars = getUnclassifiedCars;
         this.getJanelaMs = getJanelaMs;
         this.recordingBlocked = recordingBlocked;
+        // The warnings each entry got when it was typed, for the recent
+        // list: the big flash only has room for a short line of one of them.
+        // Kept for this page load only; nothing else needs them.
+        this.warningsByUuid = new Map();
     }
 
     /**
@@ -91,6 +95,9 @@ export class CountSession {
             ...time,
         });
 
+        if (avisos.length > 0) {
+            this.warningsByUuid.set(entry.uuid, avisos);
+        }
         return { entry, avisos, nomeEquipe: teamNameOf(car, validCars, unclassifiedCars) };
     }
 
@@ -99,13 +106,18 @@ export class CountSession {
         return this.store.markEntryVoided(uuid, this.clock.now());
     }
 
-    /** The newest entries first, voided ones included (shown struck through). */
+    /**
+     * The newest entries first, voided ones included (shown struck through).
+     * `avisos`: the warnings the entry got when typed on this page load
+     * (empty after a reload).
+     */
     recentEntries(limit = RECENT_LIST_SIZE) {
         const validCars = this.getValidCars();
         const unclassifiedCars = this.getUnclassifiedCars();
         return this.store.allEntries().slice(-limit).reverse().map((entry) => ({
             ...entry,
             nomeEquipe: teamNameOf(entry.car, validCars, unclassifiedCars),
+            avisos: this.warningsByUuid.get(entry.uuid) || [],
         }));
     }
 }

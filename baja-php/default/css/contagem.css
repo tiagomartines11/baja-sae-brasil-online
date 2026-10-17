@@ -68,8 +68,21 @@ button {
     text-align: center;
 }
 
+/* Read by screen readers, not seen. */
+.so-leitor {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
 /* ---- status bar: always visible ---- */
 
+/* Its height never changes, whatever it says: the keypad and the tiles are
+   right below, and a bar that grew by a line moved them under the finger.
+   No line wraps; a text too long is cut with "…" (its title has it all). */
 .barra-status {
     position: sticky;
     top: 0;
@@ -252,34 +265,62 @@ button {
 
 /* ---- the big flash after each entry ---- */
 
+/* ONE SIZE, whatever it says (contar-destaque.js): three rows of fixed
+   height (number, team, one warning line), every text on one line and cut
+   with "…" when too long. The keys and tiles right below never move. */
 .destaque {
-    min-height: 132px;
-    padding: 6px 10px;
+    display: grid;
+    grid-template-rows: 64px 28px 30px;
+    gap: 2px;
+    height: 144px;
+    padding: 4px 10px;
     border: 4px solid var(--cor-borda);
     border-radius: 10px;
+    overflow: hidden;
     text-align: center;
 }
 
 .destaque-numero {
-    font-size: 72px;
+    font-size: 64px;
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
 }
 
+.destaque-equipe,
+.destaque-aviso {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 .destaque-equipe {
     font-size: 22px;
     font-weight: 700;
-    overflow-wrap: anywhere;
+    line-height: 28px;
 }
 
-.destaque-avisos p {
-    margin: 6px 0 0;
-    padding: 6px 8px;
+.destaque-aviso {
+    padding: 0 8px;
     border-radius: 6px;
     background: var(--cor-alerta);
     color: #ffffff;
+    font-size: 17px;
     font-weight: 700;
+    line-height: 30px;
+}
+
+.destaque-aviso-vazio {
+    visibility: hidden;
+}
+
+.destaque-instrucao .destaque-equipe {
+    font-weight: 400;
+}
+
+.destaque-desfeito .destaque-numero {
+    text-decoration: line-through;
 }
 
 .destaque-ativo {
@@ -304,9 +345,8 @@ button {
     animation-name: destaque-erro;
 }
 
-.destaque-erro .destaque-avisos p {
+.destaque-erro .destaque-aviso {
     background: var(--cor-erro);
-    font-size: 20px;
 }
 
 @keyframes destaque-registrado {
@@ -561,7 +601,8 @@ button {
     grid-template-columns: 64px 1fr auto;
     grid-template-areas:
         "numero equipe botao"
-        "numero hora   botao";
+        "numero hora   botao"
+        "numero aviso  aviso";
     align-items: center;
     gap: 0 10px;
     min-height: var(--alvo-toque);
@@ -598,6 +639,27 @@ button {
     grid-area: hora;
     justify-self: end;
     font-size: 15px;
+}
+
+/* The whole sentence of a warning the big flash could only show in short. */
+.recente-aviso {
+    grid-area: aviso;
+    margin: 4px 0 2px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--cor-alerta);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.recente-aviso + .recente-aviso {
+    grid-row: 4;
+    grid-column: 2 / -1;
+}
+
+.recente-aviso-grave {
+    background: var(--cor-erro);
 }
 
 .recente-desfeito .recente-numero,
@@ -812,6 +874,11 @@ button {
 @media (min-width: 700px) {
     .conteudo {
         padding-top: 18px;
+    }
+
+    .destaque {
+        grid-template-rows: 96px 28px 30px;
+        height: 176px;
     }
 
     .destaque-numero {

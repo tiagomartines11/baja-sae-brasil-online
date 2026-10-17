@@ -1,5 +1,6 @@
 // The "últimos registros" list of the count page: the last 10 entries of THIS
-// device, newest first, each with its own "desfazer".
+// device, newest first, each with its own "desfazer" and, in full, the
+// warnings it got when typed (the big flash only shows a short line).
 
 import { describeRecordTime } from './race-clock.js';
 
@@ -29,6 +30,11 @@ function timeText(entry, timeZone) {
     return entry.time_quality === 'desconhecido' ? text + ' (relógio do aparelho)' : text;
 }
 
+/** An undone entry's warnings no longer matter: they are not shown. */
+function warningsShown(entry) {
+    return entry.voided || !Array.isArray(entry.avisos) ? [] : entry.avisos;
+}
+
 /**
  * @param {object}      options
  * @param {HTMLElement} options.listElement
@@ -46,7 +52,8 @@ export function createRecentList({ listElement, session, onUndo, timeZone = null
             // rebuilt only when something visible changed, so a "desfazer"
             // button is never swapped out from under a finger.
             const signature = entries
-                .map((entry) => [entry.uuid, uploadStateText(entry), entry.nomeEquipe, entry.ts_ms].join('|'))
+                .map((entry) => [entry.uuid, uploadStateText(entry), entry.nomeEquipe, entry.ts_ms,
+                    ...warningsShown(entry).map((aviso) => aviso.mensagem)].join('|'))
                 .join('\n');
             if (signature === renderedSignature) {
                 return;
@@ -61,6 +68,9 @@ export function createRecentList({ listElement, session, onUndo, timeZone = null
                 item.appendChild(span('recente-equipe', entry.nomeEquipe || 'Número desconhecido'));
                 item.appendChild(span('recente-hora', timeText(entry, timeZone)));
                 item.appendChild(span('recente-estado', uploadStateText(entry)));
+                for (const aviso of warningsShown(entry)) {
+                    item.appendChild(span('recente-aviso' + (aviso.grave ? ' recente-aviso-grave' : ''), aviso.mensagem));
+                }
                 if (!entry.voided) {
                     const undoButton = document.createElement('button');
                     undoButton.type = 'button';

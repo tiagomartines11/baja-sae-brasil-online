@@ -31,7 +31,10 @@ export const DEFAULT_JANELA_MS = 20000;
  * @param {?Array}  input.validCars     [{numero, nome}] classified cars, or null when not known yet
  * @param {?Array}  [input.unclassifiedCars] [{numero, nome}] at the event but not classified
  * @param {?number} input.janelaMs      "same car again too soon" window
- * @returns {Array<{tipo: string, mensagem: string, grave: boolean}>}
+ * @returns {Array<{tipo: string, mensagem: string, curta: string, grave: boolean}>}
+ *          `mensagem` is the whole sentence (recent list, screen readers);
+ *          `curta` fits the single warning line of the big flash, which
+ *          must never grow (see contar-destaque.js).
  */
 export function computeWarnings({ car, time, tsDeviceMs, ownEntries, validCars, unclassifiedCars = null, janelaMs }) {
     const warnings = [];
@@ -44,6 +47,7 @@ export function computeWarnings({ car, time, tsDeviceMs, ownEntries, validCars, 
             tipo: AVISO.NAO_CLASSIFICADO,
             mensagem: 'CARRO NÃO CLASSIFICADO: o carro ' + car + ' não está classificado para esta prova. '
                 + 'Registrado mesmo assim; avise o responsável.',
+            curta: 'NÃO CLASSIFICADO: avise',
             grave: true,
         });
     } else if ((carListIsKnown(validCars) || carListIsKnown(unclassifiedCars)) && !hasNumber(validCars)) {
@@ -51,6 +55,7 @@ export function computeWarnings({ car, time, tsDeviceMs, ownEntries, validCars, 
         warnings.push({
             tipo: AVISO.NUMERO_DESCONHECIDO,
             mensagem: 'Número ' + car + ' não está na lista de carros. Registrado mesmo assim.',
+            curta: 'Número fora da lista',
             grave: false,
         });
     }
@@ -59,16 +64,41 @@ export function computeWarnings({ car, time, tsDeviceMs, ownEntries, validCars, 
     if (previous !== null) {
         const elapsedMs = Math.abs(elapsedBetween(previous, newEntry));
         if (elapsedMs < windowMs) {
+            const seconds = Math.round(elapsedMs / 1000);
             warnings.push({
                 tipo: AVISO.REPETIDO,
-                mensagem: 'Carro ' + car + ' já registrado há ' + Math.round(elapsedMs / 1000)
-                    + ' s. Se foi engano, toque em desfazer.',
+                mensagem: 'Carro ' + car + ' já registrado há ' + seconds + ' s. Se foi engano, toque em desfazer.',
+                curta: 'REPETIDO há ' + seconds + ' s: desfazer?',
                 grave: false,
             });
         }
     }
 
     return warnings;
+}
+
+// Which warning the big flash shows when there are two (it has room for
+// one line): an unclassified car before a number off the list, and either
+// before a repeat. The colour already says how serious it is; the recent
+// list shows every warning in full.
+const ORDEM_GRAVIDADE = [AVISO.NAO_CLASSIFICADO, AVISO.NUMERO_DESCONHECIDO, AVISO.REPETIDO];
+
+/**
+ * @param {Array<{tipo: string}>} warnings computeWarnings()
+ * @returns {?object} the most serious one, or null when there is none
+ */
+export function mostSeriousWarning(warnings) {
+    const rank = (warning) => {
+        const position = ORDEM_GRAVIDADE.indexOf(warning.tipo);
+        return position === -1 ? ORDEM_GRAVIDADE.length : position;
+    };
+    let chosen = null;
+    for (const warning of warnings) {
+        if (chosen === null || rank(warning) < rank(chosen)) {
+            chosen = warning;
+        }
+    }
+    return chosen;
 }
 
 /**

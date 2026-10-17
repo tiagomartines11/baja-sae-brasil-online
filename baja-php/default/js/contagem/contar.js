@@ -20,6 +20,9 @@ import { createFeedback, canVibrate, recordThenPrepareSound } from './feedback.j
 import { carListIsKnown } from './warnings.js';
 import { RecordingBlockedError, TEXTO_BLOQUEIO } from './access.js';
 import { createRecentList } from './contar-recentes.js';
+import {
+    createFlash, instructionFlash, notRecordedFlash, passFlash, undoFlash,
+} from './contar-destaque.js';
 import { wireCountKeys } from './contar-teclas.js';
 import { createTilesPanel } from './contar-blocos.js';
 import { TilesControl } from './tiles-control.js';
@@ -27,7 +30,6 @@ import {
     MODO, MODOS, TECLA, NumberBuffer, loadEntryMode, saveEntryMode,
 } from './entry-modes.js';
 
-const FLASH_CLASS = 'destaque-ativo';
 const KEYPAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'apagar', '0', 'registrar'];
 const MODO_SIMULACAO = 'simulacao';
 
@@ -52,39 +54,32 @@ async function main() {
     const deviceHasTouch = window.matchMedia('(pointer: coarse)').matches;
     let currentMode = loadEntryMode(preferences, deviceHasTouch);
 
+    // Always the same size, whatever it says (see contar-destaque.js).
+    const flash = createFlash({
+        box: element('destaque'),
+        number: element('destaque-numero'),
+        team: element('destaque-equipe'),
+        warning: element('destaque-aviso'),
+        warningShort: element('destaque-aviso-curto'),
+        warningFull: element('destaque-aviso-completo'),
+    });
+
     const recentList = createRecentList({
         listElement: element('lista-recentes'),
         session,
         timeZone: page.config.fuso || null,
         onUndo: async (uuid) => {
+            const undone = store.findEntry(uuid);
             await session.undo(uuid);
+            if (undone) {
+                flash.show(undoFlash(undone.car));
+            }
             recentList.render();
             queue.requestSync();
         },
     });
 
     // ---- recording a pass ----
-
-    /** @param {string} level '' (fine), 'aviso' (look again) or 'erro' (something is wrong) */
-    function showFlash(numberText, teamText, warningTexts, level) {
-        const flash = element('destaque');
-        element('destaque-numero').textContent = numberText;
-        element('destaque-equipe').textContent = teamText;
-        const warningsBox = element('destaque-avisos');
-        warningsBox.replaceChildren();
-        for (const text of warningTexts) {
-            const line = document.createElement('p');
-            line.textContent = text;
-            warningsBox.appendChild(line);
-        }
-        flash.classList.toggle('destaque-problema', level === 'aviso');
-        flash.classList.toggle('destaque-erro', level === 'erro');
-        // Removing and re-adding the class restarts the CSS animation, so two
-        // identical entries in a row still flash twice.
-        flash.classList.remove(FLASH_CLASS);
-        void flash.offsetWidth;
-        flash.classList.add(FLASH_CLASS);
-    }
 
     /**
      * Every pass goes through here: Enter, the keypad's OK, a tile, "Passou",
@@ -107,28 +102,23 @@ async function main() {
             if (storageError instanceof RecordingBlockedError) {
                 // The controls are hidden; this is a key typed anyway, or
                 // the simulation. Say why nothing was recorded.
-                showFlash(String(car), 'NÃO REGISTRADO', [TEXTO_BLOQUEIO[storageError.motivo]], 'erro');
+                flash.show(notRecordedFlash(car, TEXTO_BLOQUEIO[storageError.motivo]));
                 throw storageError;
             }
             // The only case in which a typed number is NOT kept. It must be
             // impossible to miss.
-            showFlash(String(car), 'NÃO REGISTRADO', ['O aparelho não conseguiu guardar. Digite de novo.'], 'erro');
+            flash.show(notRecordedFlash(car));
             feedback.erro();
             throw storageError;
         }
-        const warningTexts = result.avisos.map((aviso) => aviso.mensagem);
         const serious = result.avisos.some((aviso) => aviso.grave);
-        // With no car list at all, "unknown number" would be shown for every
-        // car; the page then simply shows no team name.
         const anyListKnown = carListIsKnown(page.validCars()) || carListIsKnown(page.unclassifiedCars());
-        const nameWhenNotFound = anyListKnown ? 'Número desconhecido' : '';
-        const level = serious ? 'erro' : (warningTexts.length > 0 ? 'aviso' : '');
-        showFlash(String(car), result.nomeEquipe || nameWhenNotFound, warningTexts, level);
+        flash.show(passFlash({ car, avisos: result.avisos, nomeEquipe: result.nomeEquipe, anyListKnown }));
         // A simulated race is hundreds of passes a minute; it stays silent.
         if (!simulated) {
             if (serious) {
                 feedback.erro();
-            } else if (warningTexts.length > 0) {
+            } else if (result.avisos.length > 0) {
                 feedback.aviso();
             } else {
                 feedback.registrado();
@@ -246,6 +236,9 @@ async function main() {
         }
         for (const button of document.querySelectorAll('[data-modo]')) {
             button.setAttribute('aria-pressed', button.dataset.modo === mode ? 'true' : 'false');
+        }
+        if (flash.showsInstruction()) {
+            flash.show(instructionFlash(mode));
         }
         if (mode === MODO.TECLADO) {
             element('campo-numero').focus();

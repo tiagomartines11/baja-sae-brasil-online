@@ -47,10 +47,15 @@ OfflineShell::printDocumentStart($fonte->getNome() . ' - ' . $prova->getNome(), 
 OfflineShell::printStatusBar($fonte->getNome(), 'Também contando aqui:');
 ?>
 <main id="conteudo" class="conteudo" hidden>
-    <section id="destaque" class="destaque" aria-live="assertive">
+    <?php // Fixed size whatever it says (contar-destaque.js): the keys and tiles below must never move.
+          // The instruction follows the entry mode. ?>
+    <section id="destaque" class="destaque destaque-instrucao" aria-live="assertive">
         <div id="destaque-numero" class="destaque-numero">&nbsp;</div>
-        <div id="destaque-equipe" class="destaque-equipe">Digite o número do carro que passou</div>
-        <div id="destaque-avisos" class="destaque-avisos"></div>
+        <div id="destaque-equipe" class="destaque-equipe">Digite o número</div>
+        <div id="destaque-aviso" class="destaque-aviso destaque-aviso-vazio">
+            <span id="destaque-aviso-curto" aria-hidden="true"></span>
+            <span id="destaque-aviso-completo" class="so-leitor"></span>
+        </div>
     </section>
 
     <section class="entrada" aria-label="Registrar passagem">
