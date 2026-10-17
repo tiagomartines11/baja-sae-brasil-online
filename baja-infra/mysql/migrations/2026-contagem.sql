@@ -224,3 +224,8 @@ SET @add_column = (SELECT IF(COUNT(*) = 0,
     FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_passagem' AND COLUMN_NAME = 'confianca');
 PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
+SET @add_column = (SELECT IF(COUNT(*) = 0,
+    'ALTER TABLE `contagem_decisao` ADD COLUMN `passagem_alvo_id` bigint DEFAULT NULL AFTER `passagem_id`', 'DO 0')
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_decisao' AND COLUMN_NAME = 'passagem_alvo_id');
+PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
