@@ -18,7 +18,7 @@ import { el, substituir } from './revisao-dom.js';
 import { MEIA_JANELA_MS, janelaDoAlerta, voltaEsperadaDoAlerta } from './revisao-fila.js';
 import {
   ALEM_DO_AGORA_MS, ANTES_DA_LARGADA_MS, FRACAO_DO_AGORA, PEDACO_MS, aindaSeguindo, centroAoVerTodos, destaqueDaLinha, estenderFaixa,
-  faixaAoVivo, faixaEntre, intervaloDoPedaco, juntarPedacos, lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha,
+  faixaAoVivo, faltaPorErro, faixaEntre, intervaloDoPedaco, juntarPedacos, lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha,
   pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara, rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from './revisao-linha-logica.js';
 import { desenharRaias } from './revisao-raias.js';
@@ -58,6 +58,8 @@ export function criarLinhaDoTempo(ganchos) {
     juntada: null,           // {geracao, faixa, janela}: the pieces of the stretch, joined
     alvo: null,              // where to scroll at the next drawing
     desenhado: null,         // what the lanes on screen were drawn from
+    desenhadoSemDados: null, // the same, leaving out what was loaded
+    carregandoDesenhado: 0,  // pieces drawn as still loading
     limites: null,           // {de, ate} of the lanes on screen
     escalaDesenhada: null,
     aviso: null,             // what the warning line says now
@@ -145,7 +147,7 @@ export function criarLinhaDoTempo(ganchos) {
       return;
     }
     const visiveis = pedacosVisiveis(linha.faixa, trechoNaTela());
-    for (const inicio of pedacosAPedir(visiveis, linha.pedacos, new Set(linha.emVoo.keys()), tela.estado.versao, performance.now())) {
+    for (const inicio of pedacosAPedir(visiveis, linha.pedacos, new Set(linha.emVoo.keys()), tela.estado.versao, performance.now(), agoraMs())) {
       buscarPedaco(inicio);
     }
   }
@@ -202,7 +204,7 @@ export function criarLinhaDoTempo(ganchos) {
     tela.janela = juntada.vazia ? null : juntada.janela;
     // A flag with no moment has nothing of its own to wait for.
     tela.janelaAssinatura = alertaSelecionado()?.assinatura ?? null;
-    tela.erroDaJanela = false;
+    tela.erroDaJanela = faltaPorErro(pedacosVisiveis(linha.faixa, trechoNaTela()), linha.pedacos);
   }
 
   // ---- what is selected ------------------------------------------------------------
@@ -249,7 +251,8 @@ export function criarLinhaDoTempo(ganchos) {
     const modo = modoDaLinha(tela.selecao, alerta, linha.soCarro);
     if (!linha.modo || modo.chave !== linha.modo.chave) {
       mudarDeModo(modo, alerta);
-    }    pedirOQueFalta();
+    }
+    pedirOQueFalta();
     publicarJanela();
     desenhar(alerta);
   }
@@ -304,11 +307,20 @@ export function criarLinhaDoTempo(ganchos) {
 
     const largadaMs = tela.estado.corrida?.largada_ms ?? null;
     const alertaEmMs = alerta && modo.fonte === 'pedacos' && !modo.aoVivo ? alerta.ts_ms : null;
-    const chave = JSON.stringify([
-      linha.geracao, modo.chave, modo.escala, linha.faixa, destaque, tela.entradaSelecionadaId, largadaMs, lacuna,
-      alertaEmMs, carregando.length,
-    ]);
+    const doQueSeVe = [modo.chave, modo.escala, linha.faixa, destaque, tela.entradaSelecionadaId, largadaMs, lacuna, alertaEmMs];
+    const chave = JSON.stringify([linha.geracao, carregando.length, ...doQueSeVe]);
     if (chave === linha.desenhado && linha.alvo === null) {
+      return;
+    }
+    // In the live view with the pointer on the lanes, a refresh of what is
+    // already drawn waits for the pointer to leave: rebuilt lanes would drop
+    // the tooltip being read and could swallow a click. A piece that fills a
+    // hole, and what the reviewer does (a click, a scroll that grows the
+    // stretch), are drawn at once. Under the keyboard focus the lanes are
+    // redrawn, the focus is put back and the view does not move.
+    const parado = linha.sobOPonteiro || elementos.rolagem.contains(document.activeElement);
+    if (linha.sobOPonteiro && modo.aoVivo && !tela.selecao && linha.limites && linha.alvo === null
+        && linha.desenhadoSemDados === JSON.stringify(doQueSeVe) && carregando.length === linha.carregandoDesenhado) {
       return;
     }
 
@@ -317,6 +329,7 @@ export function criarLinhaDoTempo(ganchos) {
       substituir(elementos.extras);
       linha.limites = null;
       linha.desenhado = chave;
+      linha.desenhadoSemDados = null;
       return;
     }
 
@@ -345,15 +358,19 @@ export function criarLinhaDoTempo(ganchos) {
     linha.limites = limites;
     linha.escalaDesenhada = modo.escala;
     linha.desenhado = chave;
+    linha.desenhadoSemDados = JSON.stringify(doQueSeVe);
+    linha.carregandoDesenhado = carregando.length;
     if (limites) {
-      posicionar(esquerdaAntes);
+      posicionar(esquerdaAntes, parado);
     }
     if (focoAntes !== undefined) {
       elementos.rolagem.querySelector(`[data-entrada="${CSS.escape(String(focoAntes))}"]`)?.focus({ preventScroll: true });
     }
   }
 
-  function posicionar(esquerdaAntes) {
+  // `parado`: the pointer or the focus is on the lanes, so the live view
+  // does not run after "now"; what is under them stays where it was.
+  function posicionar(esquerdaAntes, parado) {
     const { escala } = linha.modo;
     const largura = elementos.rolagem.clientWidth;
     const de = linha.limites.de;
@@ -364,7 +381,7 @@ export function criarLinhaDoTempo(ganchos) {
       alvoPx = rolagemPara(linha.alvo.ts, 0.5, de, escala, largura);
     } else if (linha.alvo?.tipo === 'fim') {
       alvoPx = rolagemPara(linha.limites.ate, 1, de, escala, largura);
-    } else if (linha.modo.aoVivo && linha.seguindo) {
+    } else if (linha.modo.aoVivo && linha.seguindo && !(parado && esquerdaAntes !== null)) {
       alvoPx = rolagemPara(agoraMs(), FRACAO_DO_AGORA, de, escala, largura);
     } else if (esquerdaAntes !== null) {
       alvoPx = rolagemPara(esquerdaAntes, 0, de, escala, largura);
@@ -470,7 +487,10 @@ export function criarLinhaDoTempo(ganchos) {
 
   // Nothing moves under the pointer or under the keyboard focus.
   elementos.rolagem.addEventListener('pointerenter', () => { linha.sobOPonteiro = true; });
-  elementos.rolagem.addEventListener('pointerleave', () => { linha.sobOPonteiro = false; });
+  elementos.rolagem.addEventListener('pointerleave', () => {
+    linha.sobOPonteiro = false;
+    ganchos.desenharTudo(); // what arrived meanwhile
+  });
 
   elementos.agora.addEventListener('click', () => {
     linha.seguindo = true;

@@ -20,8 +20,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  ALEM_DO_AGORA_MS, ATUALIZAR_NO_MAXIMO_A_CADA_MS, ESCALA_AO_VIVO, LARGURA_DO_NOME_PX, MAXIMO_DE_PEDACOS, PEDACO_MS,
-  aindaSeguindo, centroAoVerTodos, destaqueDaLinha, estenderFaixa, faixaAoVivo, faixaEntre, inicioDoPedaco, intervaloDoPedaco, juntarPedacos,
+  ALEM_DO_AGORA_MS, ATUALIZAR_NO_MAXIMO_A_CADA_MS, ATUALIZAR_O_PASSADO_A_CADA_MS, ESCALA_AO_VIVO, LARGURA_DO_NOME_PX, MAXIMO_DE_PEDACOS, PEDACO_MS,
+  aindaSeguindo, centroAoVerTodos, destaqueDaLinha, estenderFaixa, faixaAoVivo, faixaEntre, faltaPorErro, inicioDoPedaco, intervaloDoPedaco, juntarPedacos,
   lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha, pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara,
   rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from '../../default/js/contagem/revisao-linha-logica.js';
@@ -119,6 +119,51 @@ test('a piece is asked for once, then only again when the state changed, and not
   cache.set(T0, { versao: 'v2', buscadoEmMs: 9000, erro: true });
   assert.deepEqual(pedacosAPedir([T0], cache, emVoo, 'v2', 9500), []);
   assert.deepEqual(pedacosAPedir([T0], cache, emVoo, 'v2', 9000 + ATUALIZAR_NO_MAXIMO_A_CADA_MS), [T0]);
+});
+
+// Every piece asked costs the server a recount of every car typed in it,
+// and during a race the state changes every few seconds. The present
+// changes all the time; the past only with a decision or a late upload.
+test('a piece of the past is refreshed less often than the present', () => {
+  const agoraDaCorrida = T0 + 10 * PEDACO_MS + 30000;
+  const presente = T0 + 10 * PEDACO_MS;
+  const anterior = T0 + 9 * PEDACO_MS;
+  const passado = T0 + 8 * PEDACO_MS;
+  const cache = new Map([presente, anterior, passado].map((inicio) => [inicio, { versao: 'v1', buscadoEmMs: 0, erro: false }]));
+  const emVoo = new Set();
+  const todos = [passado, anterior, presente];
+
+  // The state moved on: the piece of now and the one before it (late typing lands there) are asked again.
+  assert.deepEqual(pedacosAPedir(todos, cache, emVoo, 'v2', ATUALIZAR_NO_MAXIMO_A_CADA_MS, agoraDaCorrida), [anterior, presente]);
+  // The older one waits half a minute.
+  assert.ok(ATUALIZAR_O_PASSADO_A_CADA_MS > ATUALIZAR_NO_MAXIMO_A_CADA_MS);
+  assert.deepEqual(pedacosAPedir(todos, cache, emVoo, 'v2', ATUALIZAR_O_PASSADO_A_CADA_MS, agoraDaCorrida), todos);
+
+  // A piece that failed is not the past's slow refresh: it is tried again soon.
+  cache.set(passado, { versao: 'v1', buscadoEmMs: 0, erro: true });
+  assert.deepEqual(pedacosAPedir([passado], cache, emVoo, 'v1', ATUALIZAR_NO_MAXIMO_A_CADA_MS, agoraDaCorrida), [passado]);
+});
+
+test('a piece in view that failed with nothing to show is an error, not "carregando" for ever', () => {
+  const cache = new Map([
+    [T0, { janela: null, versao: null, buscadoEmMs: 0, erro: true }],
+    [T0 + PEDACO_MS, { janela: { raias: [] }, versao: 'v1', buscadoEmMs: 0, erro: true }],
+    [T0 + 2 * PEDACO_MS, { janela: { raias: [] }, versao: 'v1', buscadoEmMs: 0, erro: false }],
+  ]);
+  assert.equal(faltaPorErro([T0, T0 + PEDACO_MS], cache), true);
+  // One that failed to refresh still shows what it had.
+  assert.equal(faltaPorErro([T0 + PEDACO_MS, T0 + 2 * PEDACO_MS], cache), false);
+  // Not asked yet: loading, not an error.
+  assert.equal(faltaPorErro([T0 + 3 * PEDACO_MS], cache), false);
+});
+
+test('the header names the flag\'s car, or cars', () => {
+  const modo = { fonte: 'pedacos', aoVivo: false };
+  const umCarro = { id: 'solitaria:5', carros: [5], ts_ms: T0 };
+  assert.equal(situacaoDaLinha(modo, { tipo: 'alerta' }, umCarro), 'em volta do alerta do carro 5');
+  assert.equal(situacaoDaLinha(modo, { tipo: 'alerta' }, { ...umCarro, carros: [5, 7] }), 'em volta do alerta dos carros 5 e 7');
+  assert.equal(situacaoDaLinha(modo, { tipo: 'alerta' }, { ...umCarro, carros: [3, 5, 7] }), 'em volta do alerta dos carros 3, 5 e 7');
+  assert.equal(situacaoDaLinha(modo, { tipo: 'alerta' }, { ...umCarro, carros: [] }), 'em volta do alerta');
 });
 
 test('only the pieces in view are asked for', () => {

@@ -261,7 +261,12 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 .linha-aviso .contagem-erro { margin: 0; padding: 2px 8px; }
 .linha-aviso button, .linha-botao { padding: 3px 10px; border: 1px solid var(--cor-borda); border-radius: 4px; background: var(--cor-painel); white-space: nowrap; }
 .linha-botao.ativo { background: #dcebf9; border-color: var(--cor-azul); color: var(--cor-azul); font-weight: bold; }
-.linha-raias { height: clamp(190px, 32vh, 330px); overflow-y: auto; margin-top: 6px; }
+.linha-raias { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+/* Lanes and the list of entries of unknown time (a car's whole race) share
+   one fixed height, so the panels below never move when the list comes or
+   goes. */
+.linha-corpo { display: flex; flex-direction: column; height: clamp(190px, 32vh, 330px); margin-top: 6px; }
+.linha-extras { flex: 0 1 auto; max-height: 40%; overflow-y: auto; }
 .linha-raias .raia-regua { position: sticky; top: 0; z-index: 3; background: var(--cor-painel); }
 .linha-legenda { margin-top: 4px; font-size: 13px; }
 .linha-legenda summary { cursor: pointer; color: var(--cor-fraca); }
@@ -339,12 +344,13 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 .chip.fora-de-uso { color: var(--cor-fraca); background: var(--cor-fundo); border-style: dotted; }
 .chip.reatribuida { font-style: italic; border-color: var(--cor-azul); }
 .chip.do-revisor { border-color: var(--cor-azul); background: #dcebf9; }
-.chip.em-destaque { outline: 3px solid var(--cor-ambar); outline-offset: 1px; }
-.chip.selecionada { outline: 3px solid var(--cor-azul); outline-offset: 1px; z-index: 2; }
-/* With a flag or a car picked: its other entries weakly, every other car dimmed. */
+/* With a flag or a car picked: its other entries weakly, every other car dimmed.
+   Before the flag's and the selection's outlines, which must win over these. */
 .chip.do-carro { outline: 1px solid var(--cor-ambar); outline-offset: 1px; }
 .chip.apagada { opacity: 0.35; }
-.chip.apagada:hover, .chip.apagada:focus { opacity: 1; }
+.chip.apagada:hover, .chip.apagada:focus, .chip.apagada.selecionada { opacity: 1; }
+.chip.em-destaque { outline: 3px solid var(--cor-ambar); outline-offset: 1px; }
+.chip.selecionada { outline: 3px solid var(--cor-azul); outline-offset: 1px; z-index: 2; }
 
 /* Three kinds of void. A reviewer's: red dashes. The counter's own (they
    usually typed it wrong and retyped it): grey, with a "C". A repeat the
@@ -456,7 +462,7 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
   .revisao-zonas .zona-linha { display: block; margin-bottom: 6px; padding: 4px 6px; }
   .linha-cabecalho { gap: 4px 8px; }
   .linha-cabecalho h2 { font-size: 14px; }
-  .linha-raias { height: clamp(170px, 30vh, 260px); }
+  .linha-corpo { height: clamp(170px, 30vh, 260px); }
   .zona-fila { max-height: none; }
   .botoes button { flex: 1 1 45%; padding: 12px 8px; }
   kbd { display: none; }

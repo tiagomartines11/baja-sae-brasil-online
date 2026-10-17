@@ -37,6 +37,13 @@ export const MAXIMO_DE_PEDACOS = 15;
 // always about cars the reviewer is not looking at.
 export const ATUALIZAR_NO_MAXIMO_A_CADA_MS = 5000;
 
+// The same for a piece of the past, older than the piece before "now": what
+// changes there is a decision or a late upload, rare, and every piece asked
+// costs the server a recount of every car typed in it. A reviewer's own
+// decision reloads what is on screen at once, and a flag's pieces are
+// loaded afresh when it is opened, whatever this says.
+export const ATUALIZAR_O_PASSADO_A_CADA_MS = 30000;
+
 // How far before the start the timeline lets the reviewer scroll back.
 export const ANTES_DA_LARGADA_MS = 10 * 60 * 1000;
 
@@ -121,11 +128,15 @@ export function destaqueDaLinha(selecao, alerta, modo) {
 
 // The pieces to ask the server for, among `inicios` (those in view):
 // the ones never loaded, and the ones loaded at another state version
-// (or that failed) and not asked for in the last few seconds. One already
-// on its way is not asked again.
-//   cache  Map inicio -> {versao, buscadoEmMs, erro}
-//   emVoo  Set of the pieces on their way
-export function pedacosAPedir(inicios, cache, emVoo, versao, agoraMs) {
+// (or that failed) and not asked for in the last few seconds (half a
+// minute for a piece of the past). One already on its way is not asked
+// again.
+//   cache          Map inicio -> {versao, buscadoEmMs, erro}
+//   emVoo          Set of the pieces on their way
+//   agoraMs        the clock of `buscadoEmMs`
+//   corridaAgoraMs the race's "now", which tells the past from the present
+export function pedacosAPedir(inicios, cache, emVoo, versao, agoraMs, corridaAgoraMs = null) {
+  const recentesDesde = corridaAgoraMs === null ? -Infinity : inicioDoPedaco(corridaAgoraMs) - PEDACO_MS;
   return inicios.filter((inicio) => {
     if (emVoo.has(inicio)) {
       return false;
@@ -135,7 +146,18 @@ export function pedacosAPedir(inicios, cache, emVoo, versao, agoraMs) {
       return true;
     }
     const velho = guardado.erro || guardado.versao !== versao;
-    return velho && agoraMs - guardado.buscadoEmMs >= ATUALIZAR_NO_MAXIMO_A_CADA_MS;
+    const pausaMs = inicio >= recentesDesde || guardado.erro ? ATUALIZAR_NO_MAXIMO_A_CADA_MS : ATUALIZAR_O_PASSADO_A_CADA_MS;
+    return velho && agoraMs - guardado.buscadoEmMs >= pausaMs;
+  });
+}
+
+// Whether a piece in view failed with nothing of it on screen: the header
+// then says so and offers "Tentar de novo", instead of "carregando…" for
+// ever. A piece that failed to refresh keeps what it showed: not an error.
+export function faltaPorErro(inicios, cache) {
+  return inicios.some((inicio) => {
+    const guardado = cache.get(inicio);
+    return Boolean(guardado?.erro && !guardado.janela);
   });
 }
 
@@ -286,14 +308,24 @@ export function lacunaDaPassagemAnterior(alerta, voltaEsperadaMs = null) {
 // The one line above the lanes: what they show.
 export function situacaoDaLinha(modo, selecao, alerta) {
   if (selecao?.tipo === 'alerta' && alerta) {
-    const carros = (alerta.carros ?? []).join(', ');
     if (modo.fonte === 'carro') {
       return `corrida inteira do carro ${modo.carro} (alerta sem horário)`;
     }
-    return modo.aoVivo ? 'ao vivo (este alerta não tem um momento)' : `em volta do alerta${carros ? ` do carro ${carros}` : ''}`;
+    return modo.aoVivo ? 'ao vivo (este alerta não tem um momento)' : `em volta do alerta${doCarro(alerta.carros ?? [])}`;
   }
   if (selecao?.tipo === 'carro') {
     return modo.fonte === 'carro' ? `corrida inteira do carro ${selecao.numero}` : `todos os carros; carro ${selecao.numero} em destaque`;
   }
   return 'ao vivo: últimos minutos';
+}
+
+// " do carro 5", " dos carros 5 e 7", " dos carros 3, 5 e 7"; nothing for no car.
+function doCarro(carros) {
+  if (carros.length === 0) {
+    return '';
+  }
+  if (carros.length === 1) {
+    return ` do carro ${carros[0]}`;
+  }
+  return ` dos carros ${carros.slice(0, -1).join(', ')} e ${carros[carros.length - 1]}`;
 }

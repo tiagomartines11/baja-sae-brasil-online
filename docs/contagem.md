@@ -449,7 +449,11 @@ those moved from flag to flag. Now it is a panel of its own, always there:
   back loads earlier stretches as they come into view, down to ten minutes
   before the start; the header then says "parada no passado". **Agora**
   comes back to the present (and closes a flag or car that is open).
-  Nothing scrolls while the pointer or the keyboard focus is on the lanes.
+  Nothing scrolls while the pointer or the keyboard focus is on the lanes;
+  with the pointer on them, a refresh of what is drawn waits for it to
+  leave (a piece that fills a hole is drawn at once), so a tooltip or a
+  click is not lost under a redraw. A piece that cannot be loaded says so
+  in the header, with **Tentar de novo**.
 - **A flag**: the same timeline scrolls and zooms to the flag's window. Its
   entries have a thick amber outline, the other entries of its car(s) a thin
   one, and every other car is dimmed. The flag's buttons wait until the
@@ -464,7 +468,11 @@ those moved from flag to flag. Now it is a panel of its own, always there:
 
 What it loads: two-minute pieces on a fixed grid (`contagem_janela.php?de=&ate=`),
 kept by the page. A piece is asked again when the state's version changed,
-at most every 5 s, and only while it is in view; at most half an hour of
+and only while it is in view: at most every 5 s for the piece of "now" and
+the one before it, every 30 s for older ones (each piece costs the server a
+recount of every car typed in it, and the past rarely changes). A
+reviewer's own decision reloads what is on screen at once, and a flag's
+pieces are loaded afresh when it is opened. At most half an hour of
 pieces is kept on screen. The lanes have a fixed height and scroll inside,
 and the header is one line, so nothing below moves when a piece arrives.
 
@@ -478,7 +486,7 @@ What a chip tells (the legend under the timeline says the same):
 | struck through, dotted | a repeat the engine voided by itself |
 | blue corner | counts on a reviewer's word (`confirmado_por_revisor`) |
 | blue bar along the bottom | the entry that times the pass ("Usar o tempo", `tempo_escolhido_id`) |
-| amber, thick border | a lap too short to be real that counts because a reviewer confirmed it (`volta_curta_confirmada`); its box offers **Desfazer a confirmação (−1 volta)** first, which asks |
+| amber, thick border | a lap too short to be real that counts because a reviewer vouched for it (`volta_curta_confirmada`); its box offers the undo first, which asks: **Desfazer a confirmação (−1 volta)**, **Desfazer o "usar o tempo"** when the reviewer chose its time, or **Remover a passagem adicionada** when a pass a reviewer added joined it |
 | dark dotted border | one counter alone, not counting yet |
 | teal, italic | an observer source's entry (compared, never counted); a click shows its picture |
 
@@ -509,7 +517,8 @@ table times it: "volta 22 · 1:15" (`grupo.volta_ms`).
 
 **A short lap a reviewer confirmed** stays visible: the review screen
 marks it on the car's row and on the timeline ("volta curta confirmada"),
-and the chip's box offers "Desfazer a confirmação" first.
+and the chip's box offers to undo what vouched for it first ("Desfazer a
+confirmação", or the "usar o tempo" or the added pass behind it).
 At the race, a reviewer undid two voids and confirmed three entries in four
 seconds, and three cars were one lap over with nothing open.
 

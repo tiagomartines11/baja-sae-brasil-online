@@ -14,7 +14,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { classesDoChip, descricaoDoChip } from '../../default/js/contagem/revisao-raias-logica.js';
-import { acoesDaEntrada, perguntaAoAgirNaEntrada } from '../../default/js/contagem/revisao-decisoes.js';
+import { acoesDaEntrada, perguntaAoAgirNaEntrada, rotuloDeDesfazerConfirmacao } from '../../default/js/contagem/revisao-decisoes.js';
 
 const anulacao = (origem, usuario, motivo = null) => ({ id: 30, tipo: 'anular', origem, usuario, criado_em_ms: 1_700_000_000_000, motivo });
 
@@ -123,7 +123,8 @@ test('a confirmed short lap offers to undo the confirmation, first, asking', () 
     grupo: { contado: true, papel: 'volta', numero_volta: 12, volta_curta_confirmada: true, confirmado_por_revisor: true, passagem_ids: [357] },
   };
   const opcoes = acoesDaEntrada(entrada);
-  assert.deepEqual(opcoes[0], { acao: 'desfazer_confirmacao', decisaoId: 88 });
+  assert.deepEqual(opcoes[0], { acao: 'desfazer_confirmacao', decisaoId: 88, tipo: 'confirmar' });
+  assert.equal(rotuloDeDesfazerConfirmacao(opcoes[0]), 'Desfazer a confirmação (−1 volta)');
   assert.match(perguntaAoAgirNaEntrada(opcoes[0], entrada), /Desfazer a confirmação desta passagem do carro 3\?.*−1 volta/);
 
   // An ordinary confirmed pass (a normal lap) does not get it up front.
@@ -140,7 +141,41 @@ test('the confirmation is found on another entry of the same pass', () => {
     grupo: { contado: true, papel: 'volta', numero_volta: 4, volta_curta_confirmada: true, passagem_ids: [500, 501] },
   };
   const janela = { raias: [{ entradas: [confirmada] }, { entradas: [outra] }] };
-  assert.deepEqual(acoesDaEntrada(outra, new Set(), janela)[0], { acao: 'desfazer_confirmacao', decisaoId: 91 });
+  assert.deepEqual(acoesDaEntrada(outra, new Set(), janela)[0], { acao: 'desfazer_confirmacao', decisaoId: 91, tipo: 'confirmar' });
   // Not on screen: nothing to offer (the history still has it).
   assert.ok(!acoesDaEntrada(outra).some((opcao) => opcao.acao === 'desfazer_confirmacao'));
+});
+
+// The server marks a short lap "volta curta confirmada" in two more cases
+// than a "confirmar": the reviewer chose the pass's time ("usar o tempo",
+// which confirms too), or added a pass by hand that joined a counter's lone
+// entry. The amber chip must offer the undo there as well.
+test('a short lap vouched for by "usar o tempo" offers to undo that, asking', () => {
+  const escolhida = { id: 600, carro: 20, decisoes: [{ id: 95, tipo: 'usar_tempo', origem: 'revisor' }], grupo: { passagem_ids: [600, 601] } };
+  const outra = {
+    id: 601, carro: 20, decisoes: [{ id: 95, tipo: 'usar_tempo', origem: 'revisor' }],
+    grupo: { contado: true, papel: 'volta', numero_volta: 9, volta_curta_confirmada: true, confirmado_por_revisor: true, passagem_ids: [600, 601] },
+  };
+  const janela = { raias: [{ entradas: [escolhida, outra] }] };
+  const opcao = acoesDaEntrada(outra, new Set(), janela)[0];
+  assert.deepEqual(opcao, { acao: 'desfazer_confirmacao', decisaoId: 95, tipo: 'usar_tempo' });
+  assert.equal(rotuloDeDesfazerConfirmacao(opcao), 'Desfazer o "usar o tempo" (−1 volta)');
+  assert.match(perguntaAoAgirNaEntrada(opcao, outra), /Desfazer o "usar o tempo" desta passagem do carro 20\?.*−1 volta/);
+
+  // A "confirmar" on the pass is what is undone first.
+  const confirmada = { ...escolhida, decisoes: [...escolhida.decisoes, { id: 97, tipo: 'confirmar' }] };
+  assert.equal(acoesDaEntrada(outra, new Set(), { raias: [{ entradas: [confirmada, outra] }] })[0].decisaoId, 97);
+});
+
+test('a short lap made by a pass a reviewer added offers to remove that pass', () => {
+  // The added pass's id is minus the id of its "adicionar" decision.
+  const adicionada = { id: -42, carro: 1, adicionada_por_revisor: true, decisoes: [], grupo: { passagem_ids: [700, -42] } };
+  const doContador = {
+    id: 700, carro: 1, decisoes: [],
+    grupo: { contado: true, papel: 'volta', numero_volta: 3, volta_curta_confirmada: true, confirmado_por_revisor: false, passagem_ids: [700, -42] },
+  };
+  const opcao = acoesDaEntrada(doContador, new Set(), { raias: [{ entradas: [doContador] }, { entradas: [adicionada] }] })[0];
+  assert.deepEqual(opcao, { acao: 'desfazer_confirmacao', decisaoId: 42, tipo: 'adicionar' });
+  assert.equal(rotuloDeDesfazerConfirmacao(opcao), 'Remover a passagem adicionada (−1 volta)');
+  assert.match(perguntaAoAgirNaEntrada(opcao, doContador), /^Remover a passagem que um revisor adicionou ao carro 1/);
 });

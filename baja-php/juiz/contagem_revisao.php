@@ -76,8 +76,10 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
             <button type="button" class="linha-botao" id="linha-so-carro" aria-pressed="true" hidden>Só o carro</button>
             <button type="button" class="linha-botao" id="linha-agora" aria-pressed="true">Agora</button>
         </div>
-        <div class="raias linha-raias" id="linha-raias"></div>
-        <div id="linha-extras"></div>
+        <div class="linha-corpo">
+            <div class="raias linha-raias" id="linha-raias"></div>
+            <div class="linha-extras" id="linha-extras"></div>
+        </div>
         <details class="linha-legenda">
             <summary>Legenda</summary>
             <p class="contagem-dica">
@@ -85,7 +87,7 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
                 contorno âmbar fino = outros registros do mesmo carro, apagados = outros carros.
                 Riscado = anulado: borda vermelha pela revisão, "C" = pelo próprio contador, pontilhado = repetição anulada automaticamente.
                 Canto azul = conta porque um revisor confirmou; traço azul embaixo = o horário da passagem é deste registro ("Usar o tempo");
-                âmbar com borda grossa = volta curta demais que conta porque a revisão confirmou (o registro oferece "Desfazer a confirmação").
+                âmbar com borda grossa = volta curta demais que conta porque a revisão confirmou (o registro oferece desfazer a confirmação).
                 Borda pontilhada escura = um contador só, ainda não conta. Verde-azulado em itálico = fonte observadora (só comparada, nunca conta).
                 "0" no canto = passagem zero (não é volta); tracejado = não conta (antes da largada, janela de largada ou depois do encerramento);
                 tracejado vermelho com fundo = passagem retida (não conta até um revisor decidir);

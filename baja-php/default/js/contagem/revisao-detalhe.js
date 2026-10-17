@@ -14,7 +14,7 @@ import {
   acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, efeitoDeUsarTempo, fraseDeDuvida, temposParaEscolher,
 } from './revisao-alertas.js';
 import { edicaoManualDoAlerta } from './revisao-edicao-manual.js';
-import { acoesDaEntrada, descreverSugestao, repeticoesEmAberto } from './revisao-decisoes.js';
+import { acoesDaEntrada, descreverSugestao, repeticoesEmAberto, rotuloDeDesfazerConfirmacao } from './revisao-decisoes.js';
 import { quandoDoAlerta, situacaoDoCarroFora } from './revisao-fila.js';
 import { SEM_IMAGEM_NA_REDE, imagemDaEntrada } from './revisao-observacao.js';
 import { descricaoDoChip, encontrarEntrada } from './revisao-raias-logica.js';
@@ -107,7 +107,7 @@ function caixaDaEntrada(contexto, entrada) {
       case 'desfazer_confirmacao':
         // The quick way out of a hurried confirmation; it asks first.
         return el('button', { type: 'button', class: 'tira-volta', disabled: contexto.ocupado, onclick: () => agir() },
-          'Desfazer a confirmação (−1 volta)');
+          rotuloDeDesfazerConfirmacao(opcao));
       case 'anular':
         return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() }, 'Anular');
       case 'confirmar':
