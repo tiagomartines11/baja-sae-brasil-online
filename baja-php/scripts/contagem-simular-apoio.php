@@ -34,6 +34,7 @@
  * It never changes a setting: a person must, on the settings page.
  */
 
+use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\Settings;
@@ -41,6 +42,8 @@ use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Sync\DeviceTokens;
 use Baja\Model\ContagemFonteQuery;
 use Baja\Model\ProvaQuery;
+use Baja\Model\User;
+use Baja\Model\UserQuery;
 use Baja\Util\Env;
 use Propel\Runtime\Propel;
 
@@ -146,6 +149,16 @@ foreach ($sources as $source) {
     ];
 }
 $roster = $service->carRoster();
+
+// The upload endpoint checks, on every upload of stops, that the pit
+// phone's user still holds the pit log code. The simulated pit phone's
+// user gets that code here (dev stacks only, see the checks above).
+$pitCode = $prova->getEventoId() . '_' . $prova->getProvaId() . ContagemAccess::PIT_LOG_SUFFIX;
+$simulationUser = UserQuery::create()->findOneByUsername(SIMULATION_USER) ?? (new User())->setUsername(SIMULATION_USER);
+if (!$simulationUser->hasPermission($pitCode)) {
+    $simulationUser->setPermissions(array_values(array_unique(array_merge($simulationUser->getPermissions() ?? [], [$pitCode]))));
+    $simulationUser->save();
+}
 
 echo json_encode([
     'largada_ms' => $startMs,

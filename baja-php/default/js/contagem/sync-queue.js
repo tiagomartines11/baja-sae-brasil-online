@@ -21,6 +21,8 @@ export const CONEXAO = {
     ONLINE: 'online',
     OFFLINE: 'offline',
     REVOGADO: 'revogado',
+    // The server refuses uploads from this device's user (403 sem_permissao).
+    SEM_PERMISSAO: 'sem_permissao',
 };
 
 export const RESULTADO = {
@@ -28,6 +30,7 @@ export const RESULTADO = {
     FALHA: 'falha',
     REVOGADO: 'revogado',
     OCUPADO: 'ocupado',
+    SEM_PERMISSAO: 'sem_permissao',
     // Nothing was sent because this page has nothing it is allowed to say
     // (shift ended, or memory-only storage with nothing waiting).
     SILENCIO: 'silencio',
@@ -35,6 +38,8 @@ export const RESULTADO = {
 
 // The one answer that means "this token is no longer accepted".
 const ERRO_TOKEN_INVALIDO = 'token_invalido';
+// 403 with this: the token is fine, but its user may not record here any more.
+const ERRO_SEM_PERMISSAO = 'sem_permissao';
 
 // Upper bound per request, so that a device coming back after an hour offline
 // sends several moderate requests instead of one enormous one.
@@ -46,6 +51,7 @@ const MAX_REQUESTS_PER_FLUSH = 50;
 
 const META_REVOKED = 'token_revogado';
 const META_SHIFT_ENDED = 'turno_encerrado';
+const META_NO_PERMISSION = 'sem_permissao';
 
 function nothingDone(resultado) {
     return { resultado, confirmados: 0, carimbados: 0, encerrado: false };
@@ -86,6 +92,9 @@ export class SyncQueue {
         // So does an ended shift: reopening the page must not quietly tell
         // the server "I am counting again" before the person says so.
         this.turnoEncerrado = store.getMeta(META_SHIFT_ENDED, false) === true;
+        // So does "the server refuses this user": a reload must not open a
+        // window in which new records can be typed before the first answer.
+        this.semPermissao = store.getMeta(META_NO_PERMISSION, false) === true;
         this.outrosUsuarios = [];
         this.unacknowledged = new UnacknowledgedTracker();
 
@@ -120,6 +129,7 @@ export class SyncQueue {
             servidor: this.store.getMeta(META_SERVER_INFO, null),
             outrosUsuarios: this.outrosUsuarios,
             turnoEncerrado: this.turnoEncerrado,
+            semPermissao: this.semPermissao,
         };
     }
 
@@ -228,6 +238,9 @@ export class SyncQueue {
             if (response.status === 401 && body && body.erro === ERRO_TOKEN_INVALIDO) {
                 return await this.registerRevoked();
             }
+            if (response.status === 403 && body && body.erro === ERRO_SEM_PERMISSAO) {
+                return await this.registerNoPermission();
+            }
             // Every other answer that is not a proper 200, INCLUDING any
             // other 401 (a proxy or a captive Wi-Fi portal can produce one),
             // is trouble on the way, not a decision about this device.
@@ -239,6 +252,10 @@ export class SyncQueue {
             });
             this.outrosUsuarios = Array.isArray(body.outros_usuarios) ? body.outros_usuarios : [];
             this.conexao = CONEXAO.ONLINE;
+            if (this.semPermissao) {
+                // Accepted again: the user was given access back.
+                await this.setNoPermission(false);
+            }
             // Only the server's own word counts: a request that carried
             // "encerrando" and got a 200 proves nothing by itself.
             return { resultado: RESULTADO.OK, ...applied, encerrado: body.encerrado === true };
@@ -246,6 +263,23 @@ export class SyncQueue {
             this.requestInFlight = false;
             this.notifyChange();
         }
+    }
+
+    /**
+     * The server refuses this device's user (brief round 4g). Nothing local
+     * is touched: the queue stays as it is and keeps being offered at every
+     * heartbeat, so it goes up by itself if access is given back. Meanwhile
+     * the page records nothing new (access.js).
+     */
+    async registerNoPermission() {
+        this.conexao = CONEXAO.SEM_PERMISSAO;
+        await this.setNoPermission(true);
+        return nothingDone(RESULTADO.SEM_PERMISSAO);
+    }
+
+    async setNoPermission(refused) {
+        await this.store.setMeta(META_NO_PERMISSION, refused);
+        this.semPermissao = refused;
     }
 
     registerFailure() {

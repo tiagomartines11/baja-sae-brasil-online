@@ -18,6 +18,7 @@ import { generateUuid } from './uuid.js';
 import { buildEntriesCsv } from './csv-export.js';
 import { createFeedback, canVibrate, recordThenPrepareSound } from './feedback.js';
 import { carListIsKnown } from './warnings.js';
+import { RecordingBlockedError, TEXTO_BLOQUEIO } from './access.js';
 import { createRecentList } from './contar-recentes.js';
 import { wireCountKeys } from './contar-teclas.js';
 import { createTilesPanel } from './contar-blocos.js';
@@ -42,6 +43,7 @@ async function main() {
         getValidCars: page.validCars,
         getUnclassifiedCars: page.unclassifiedCars,
         getJanelaMs: page.janelaMs,
+        recordingBlocked: page.recordingBlocked,
     });
     // Creates the page's audio now, while the page is still loading: never
     // inside a key press (see feedback.js).
@@ -102,6 +104,12 @@ async function main() {
             // The time of the pass is taken inside, first thing.
             result = await session.recordPass({ car, typingMs, mode: modo, tsMs, uuid });
         } catch (storageError) {
+            if (storageError instanceof RecordingBlockedError) {
+                // The controls are hidden; this is a key typed anyway, or
+                // the simulation. Say why nothing was recorded.
+                showFlash(String(car), 'NÃO REGISTRADO', [TEXTO_BLOQUEIO[storageError.motivo]], 'erro');
+                throw storageError;
+            }
             // The only case in which a typed number is NOT kept. It must be
             // impossible to miss.
             showFlash(String(car), 'NÃO REGISTRADO', ['O aparelho não conseguiu guardar. Digite de novo.'], 'erro');
@@ -133,7 +141,7 @@ async function main() {
 
     /** For event handlers: the failure was already shown by recordPass. */
     function recordTypedPass(pass) {
-        if (page.shiftEnded()) {
+        if (page.shiftEnded() || page.recordingBlocked() !== null) {
             // The entry controls are hidden; a stray Enter must not record.
             return;
         }
@@ -205,7 +213,7 @@ async function main() {
         numberField: element('campo-numero'),
         keypad,
         getMode: () => currentMode,
-        isBlocked: () => page.shiftEnded(),
+        isBlocked: () => page.shiftEnded() || page.recordingBlocked() !== null,
         onKey(action) {
             pressKeypadKey(action.tecla === TECLA.DIGITO ? action.digito : action.tecla);
             if (currentMode === MODO.TECLADO) {

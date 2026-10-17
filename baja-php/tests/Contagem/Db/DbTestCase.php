@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Tests\Contagem\Db;
 
+use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Access\CounterLinks;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Settings;
@@ -14,6 +15,7 @@ use Baja\Model\ContagemFonte;
 use Baja\Model\Prova;
 use Baja\Model\ProvaQuery;
 use Baja\Model\User;
+use Baja\Model\UserQuery;
 use Baja\Session;
 use PHPUnit\Framework\TestCase;
 use Propel\Runtime\Propel;
@@ -336,6 +338,19 @@ abstract class DbTestCase extends TestCase
      * a "device" for that source and hands the browser a secret token.
      * From then on the phone proves who it is with that token alone.
      */
+    /**
+     * A pit-log phone's token, for a user who holds the pit log permission
+     * ({evento}_{prova}_BOX). The upload endpoint checks that permission on
+     * every upload, so a token for a user without it would be refused.
+     */
+    protected function issuePitLogToken(string $username = self::USER_PREFIX . 'box'): string
+    {
+        if (UserQuery::create()->findOneByUsername($username) === null) {
+            $this->createUser($username, ['index', self::EVENTO_ID . '_' . self::PROVA_ID . ContagemAccess::PIT_LOG_SUFFIX]);
+        }
+        return DeviceTokens::issue(DeviceTokens::boxSourceFor($this->prova), $username, 'Telefone do box');
+    }
+
     protected function issueToken(ContagemFonte $fonte, ?string $username = null): string
     {
         return DeviceTokens::issue($fonte, $username ?? self::USER_PREFIX . 'contador', 'Telefone de teste');

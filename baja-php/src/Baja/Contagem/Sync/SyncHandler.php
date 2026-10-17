@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Sync;
 
+use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\Settings;
 use Baja\Contagem\Service\ChangeCounter;
@@ -111,6 +112,9 @@ final class SyncHandler
                 if ($current === null || $current['revogado_em_ms'] !== null) {
                     return null;
                 }
+                if (!self::deviceUserMayStillWrite($current)) {
+                    return ['forbidden' => true];
+                }
                 $prova->reload();
 
                 $stored = self::store($current, $upload, $heartbeat, $nowMs, $service->getSettings());
@@ -127,6 +131,11 @@ final class SyncHandler
         }
         if ($stored === null) {
             return self::error(401, 'token_invalido');
+        }
+        if (isset($stored['forbidden'])) {
+            // Nothing was stored. The phone keeps its queue: the records are
+            // somebody's work, and a controller may give the access back.
+            return self::error(403, 'sem_permissao');
         }
 
         $answer = self::answer($device, $nowMs, $heartbeat, $stored['stored_uuids'], $stored['voided_uuids'], $stored['refused']);
@@ -181,6 +190,24 @@ final class SyncHandler
             throw $error;
         }
         return $result;
+    }
+
+    /**
+     * A pit phone's user must still have pit access when it uploads. A
+     * token outlives a removed permission, and the browser keeps the
+     * offline copy of the page, so the token alone is not enough here.
+     *
+     * Counting phones are not checked this way: for them the LINK to the
+     * source decides, and removing a link already revokes its devices.
+     *
+     * @param array<string, mixed> $device
+     */
+    private static function deviceUserMayStillWrite(array $device): bool
+    {
+        if ($device['fonte_tipo'] !== Source::TIPO_BOX) {
+            return true;
+        }
+        return ContagemAccess::userMayStillLogStops((string) $device['usuario'], (string) $device['evento_id'], (string) $device['prova_id']);
     }
 
     /**

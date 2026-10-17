@@ -170,7 +170,14 @@ final class CounterLinks
         return $fonte->getEventoId() . '_' . $fonte->getProvaId() . ContagemAccess::COUNTER_SUFFIX;
     }
 
-    private static function findOrCreateUser(string $username): User
+    /**
+     * The `user` row of a forum username, created (not saved) when the
+     * forum confirms the name exists. Shared with PitLoggers, so a pit
+     * volunteer is added under exactly the same rule as a counter.
+     *
+     * @throws \InvalidArgumentException when the forum does not know the username
+     */
+    public static function findOrCreateUser(string $username): User
     {
         $user = UserQuery::create()->findOneByUsername($username);
         if ($user !== null) {

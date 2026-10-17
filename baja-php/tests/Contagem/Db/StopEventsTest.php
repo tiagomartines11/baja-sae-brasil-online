@@ -39,7 +39,7 @@ final class StopEventsTest extends DbTestCase
 
     private function pitLogToken(): string
     {
-        return DeviceTokens::issue(DeviceTokens::boxSourceFor($this->prova), self::USER_PREFIX . 'box', 'Telefone do box');
+        return $this->issuePitLogToken();
     }
 
     /** One tap on the pit-log page, as the phone sends it. */

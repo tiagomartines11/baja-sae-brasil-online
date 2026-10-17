@@ -25,6 +25,7 @@ import { NumberBuffer } from './entry-modes.js';
 import { carListIsKnown, teamNameOf } from './warnings.js';
 import { createPitLists, describeGroups, describeTipo } from './box-listas.js';
 import { TapGuard, TileLayoutHold, LAYOUT_HOLD_MS } from './box-toques.js';
+import { RecordingBlockedError, TEXTO_BLOQUEIO } from './access.js';
 
 const MODO_SIMULACAO = 'simulacao';
 
@@ -33,7 +34,7 @@ async function main() {
     const { store, queue, clock, monotonicNow, preferences } = page;
     const element = (id) => document.getElementById(id);
 
-    const session = new PitSession({ store, clock, generateUuid });
+    const session = new PitSession({ store, clock, generateUuid, recordingBlocked: page.recordingBlocked });
     const flow = new PitFlow({ preferences, fuelingEnabled: page.fuelingEnabled() });
     // Creates the page's audio now, while the page is still loading: never
     // inside a tap (see feedback.js).
@@ -75,6 +76,10 @@ async function main() {
             // The time of the event is taken inside, first thing.
             record = await session.recordEvent({ car, tipo, tsMs, mode: modo, uuid });
         } catch (storageError) {
+            if (storageError instanceof RecordingBlockedError) {
+                showMessage('NÃO REGISTRADO: ' + TEXTO_BLOQUEIO[storageError.motivo], true);
+                throw storageError;
+            }
             showMessage('NÃO REGISTRADO: o aparelho não conseguiu guardar o carro ' + car + '.', true);
             feedback.erro();
             throw storageError;
@@ -102,7 +107,7 @@ async function main() {
         const nowMs = monotonicNow();
         // Only a double tap on the SAME car is dropped. Two cars entering
         // together are two taps a moment apart, and both must be recorded.
-        if (page.shiftEnded() || tipo === null || !tapGuard.accepts(car, nowMs)) {
+        if (page.shiftEnded() || page.recordingBlocked() !== null || tipo === null || !tapGuard.accepts(car, nowMs)) {
             return;
         }
         // The tiles keep their places for a moment, so that the next tap

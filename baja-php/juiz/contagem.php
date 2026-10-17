@@ -92,7 +92,7 @@ if (ContagemAccess::isController($prova)) {
         <ul class="contagem-links">
             <li><a href="contagem_revisao.php<?= $h($query) ?>">Revisão</a> <span>alertas, tabela de carros e decisões</span></li>
             <li><a href="contagem_controle.php<?= $h($query) ?>">Controle de corrida</a> <span>largada, bandeira vermelha, encerramento</span></li>
-            <li><a href="contagem_contadores.php<?= $h($query) ?>">Contadores</a> <span>quem conta em cada fonte</span></li>
+            <li><a href="contagem_contadores.php<?= $h($query) ?>">Usuários</a> <span>quem conta em cada fonte, e quem registra o box e o abastecimento</span></li>
             <li><a href="contagem_fontes.php<?= $h($query) ?>">Fontes e configurações</a></li>
             <li><a href="contagem_box.php<?= $h($query) ?>">Registro de box<?= $service->getSettings()->abastecimento ? ' e abastecimento' : '' ?></a> <span>entrada e saída, uma pessoa em cada ponta</span></li>
             <li><a href="dashboard.php<?= $h($query) ?>">Campos manuais</a> <span>desclassificação e outros campos digitados</span></li>

@@ -83,7 +83,7 @@ function loadWorker() {
             world.requestedFromNetwork.push(url);
             return world.network(url);
         },
-        URL, Request, Response, AbortController, setTimeout, clearTimeout,
+        URL, Request, Response, Headers, AbortController, setTimeout, clearTimeout,
     };
     vm.runInNewContext(WORKER_SOURCE, sandbox);
 
@@ -232,19 +232,148 @@ test('a page loaded with a connection is kept, and served again when the connect
     assert.equal(await answer.text(), '<p>count page</p>');
 });
 
-test('a login page arriving instead of the count page never replaces the stored copy', async () => {
-    // Situation: the login session expired. The server now answers the page
-    // address with the login form (no shell header). The counter's unsent
-    // entries are reachable only through the real count page.
-    const worker = loadWorker();
-    worker.network = () => shellPageResponse('<p>count page</p>');
-    await worker.request(PAGE_URL);
+// ---------------------------------------------------------------------------
+// The server refuses the page: the stored copy, marked "record nothing new"
+// ---------------------------------------------------------------------------
 
-    worker.network = () => new Response('<p>please log in</p>', { status: 200 });
+const SHELL_HTML = '<!DOCTYPE html><html><head><title>Box</title></head><body><p>pit page</p></body></html>';
+const REFUSED_MARK = '<meta name="contagem-acesso" content="recusado">';
+
+/** A worker holding the page, as after one load with a connection. */
+async function workerWithStoredPage() {
+    const worker = loadWorker();
+    worker.network = () => shellPageResponse(SHELL_HTML);
+    await worker.request(PAGE_URL);
+    return worker;
+}
+
+/**
+ * What the worker gets when the page redirects to login.php (no forum
+ * session). A navigation is fetched with redirect mode "manual": an opaque
+ * redirect, whose target cannot be read.
+ */
+function opaqueRedirectToLogin() {
+    return { type: 'opaqueredirect', status: 0, ok: false, redirected: false, url: PAGE_URL, headers: new Headers() };
+}
+
+/** The same redirect, followed: the login form, saying it came through a redirect. */
+function followedRedirectToLogin() {
+    const loginForm = new Response('<form>entrar</form>', { status: 200, headers: { 'Content-Type': 'text/html' } });
+    Object.defineProperty(loginForm, 'redirected', { value: true });
+    Object.defineProperty(loginForm, 'url', { value: ORIGIN + '/26BR/login.php' });
+    return loginForm;
+}
+
+test('a redirect to the login page leaves the stored copy unmarked, so recording goes on', async () => {
+    // SITUATION: four hours into the race the counter's forum session
+    // expires. They reload the page; the server answers its address with a
+    // redirect to login.php.
+    //
+    // WHY IT MATTERS: counting survives an expired forum login: the device
+    // token on the phone (the counter's own) is the credential. Marking the
+    // page here would take the page away from a counter who has access.
+    for (const [label, redirect] of [['opaque redirect', opaqueRedirectToLogin], ['followed redirect', followedRedirectToLogin]]) {
+        const worker = await workerWithStoredPage();
+        worker.network = redirect;
+
+        const html = await (await worker.request(PAGE_URL)).text();
+
+        // EXPECTED: the stored page exactly as it was: it records normally.
+        assert.equal(html, SHELL_HTML, label);
+    }
+});
+
+test('an "access denied" answer still marks the stored copy as refused', async () => {
+    // SITUATION: the phone was used for counting by equipe1. Now somebody
+    // logged in WITHOUT access opens the page. The server answers with
+    // "Você não tem acesso a essa página" (status 200, no shell header).
+    //
+    // WHAT WENT WRONG: the worker served the stored copy as it was: equipe1's
+    // configuration and, on the phone's disk, equipe1's device token. The
+    // person in front of the phone could record box entries and exits, and
+    // the server, seeing a valid token, stored them.
+    const worker = await workerWithStoredPage();
+
+    worker.network = () => new Response('Você não tem acesso a essa página', { status: 200 });
     const answer = await worker.request(PAGE_URL);
 
-    // Expected: the stored count page, not the login form.
-    assert.equal(await answer.text(), '<p>count page</p>');
+    // EXPECTED: still the stored page, never the refusal (the unsent entries
+    // and the export are reachable only through it), but carrying the mark
+    // that makes the page record nothing new.
+    const html = await answer.text();
+    assert.ok(html.includes('<p>pit page</p>'));
+    assert.ok(html.includes(REFUSED_MARK + '\n</head>'), 'the mark is in the head, before any script runs');
+    assert.equal(answer.headers.get('X-Contagem-Shell'), '1');
+});
+
+test('an "access denied" page, whatever its status, is a refusal too', async () => {
+    // "Você não tem acesso a essa página" (200), a 403, a 404 for a page that
+    // was removed, the page a forum user unknown to this system gets (200):
+    // the server answered, and the answer is not the page.
+    for (const refusal of [
+        new Response('<p>Você não tem acesso a essa página</p>', { status: 200 }),
+        new Response('forbidden', { status: 403 }),
+        new Response('not found', { status: 404 }),
+    ]) {
+        const worker = await workerWithStoredPage();
+        worker.network = () => refusal;
+
+        const html = await (await worker.request(PAGE_URL)).text();
+
+        assert.ok(html.includes(REFUSED_MARK), 'status ' + refusal.status);
+    }
+});
+
+test('no network, a slow network or a server error: the stored copy, NOT marked', async () => {
+    // SITUATION: the counter is at the far corner of the track. The point of
+    // the offline copy is that counting goes on there, as normal.
+    const noNetwork = await workerWithStoredPage();
+    noNetwork.network = () => {
+        throw new Error('simulated: no network');
+    };
+    // A request that took too long ends the same way: the worker aborts it.
+    const timedOut = await workerWithStoredPage();
+    timedOut.network = () => {
+        throw new DOMException('simulated: the worker gave up waiting', 'AbortError');
+    };
+    // A server error is trouble on the way, not a decision about this person.
+    const serverError = await workerWithStoredPage();
+    serverError.network = () => new Response('oops', { status: 502 });
+
+    for (const [label, worker] of [['no network', noNetwork], ['timeout', timedOut], ['server error', serverError]]) {
+        const html = await (await worker.request(PAGE_URL)).text();
+        // EXPECTED: the page exactly as stored: it records normally.
+        assert.equal(html, SHELL_HTML, label);
+    }
+});
+
+test('the mark is only on what is served: the stored copy itself stays clean', async () => {
+    // SITUATION: refused once ("sem acesso"), then the network drops and the
+    // page is reloaded again.
+    const worker = await workerWithStoredPage();
+    worker.network = () => new Response('Você não tem acesso a essa página', { status: 200 });
+    await worker.request(PAGE_URL);
+    worker.network = () => {
+        throw new Error('simulated: no network');
+    };
+
+    const html = await (await worker.request(PAGE_URL)).text();
+
+    // EXPECTED: no mark. (Had the mark been stored, a counter would be
+    // locked out of counting offline for good.)
+    assert.equal(html, SHELL_HTML);
+});
+
+test('the user who IS allowed gets the fresh page from the server, unmarked', async () => {
+    // SITUATION: another counter, with access, logs in on the same phone
+    // and opens the page. The server sends the page, made for them.
+    const worker = await workerWithStoredPage();
+    const pageForTheNewUser = SHELL_HTML.replace('pit page', 'pit page for capitao2');
+    worker.network = () => shellPageResponse(pageForTheNewUser);
+
+    const html = await (await worker.request(PAGE_URL)).text();
+
+    assert.equal(html, pageForTheNewUser);
 });
 
 test('requests that are not part of the count pages are left alone', async () => {

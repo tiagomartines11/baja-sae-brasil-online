@@ -13,6 +13,7 @@ import { SyncQueue } from '../../../default/js/contagem/sync-queue.js';
 import { runClockGuard } from '../../../default/js/contagem/clock-guard.js';
 import { SyncHeartbeat } from '../../../default/js/contagem/sync-heartbeat.js';
 import { createTokenSource } from '../../../default/js/contagem/device-token.js';
+import { recordingBlockReason } from '../../../default/js/contagem/access.js';
 import { CountSession } from '../../../default/js/contagem/count-session.js';
 import { PitSession } from '../../../default/js/contagem/pit-session.js';
 
@@ -195,6 +196,8 @@ export class FakeBrowserLocks {
  *   'server_error'  the server answers HTTP 500
  *   'garbage'       the server answers 200 with something that is not the contract
  *   'revoked'       the token was revoked: HTTP 401 with {"erro": "token_invalido"}
+ *   'no_permission' the token is fine but its user may not record here any
+ *                   more: HTTP 403 with {"erro": "sem_permissao"}, nothing stored
  *   'other_401'     HTTP 401 that is NOT the server's verdict on the token
  *                   (what a hotel or track Wi-Fi login portal answers)
  */
@@ -256,6 +259,10 @@ export class FakeServer {
         if (this.behaviour === 'revoked') {
             this.deviceClock.advance(this.downloadDelayMs);
             return { status: 401, body: { erro: 'token_invalido' } };
+        }
+        if (this.behaviour === 'no_permission') {
+            this.deviceClock.advance(this.downloadDelayMs);
+            return { status: 403, body: { erro: 'sem_permissao' } };
         }
         if (this.behaviour === 'other_401') {
             return { status: 401, body: null };
@@ -365,7 +372,7 @@ export class FakeServer {
  */
 export async function createDevice({
     server = null, clock = new FakeClock(), disk = createMemoryStorage(), maxBatch, uuidPrefix = 'uuid',
-    vouchesForHistory = true, renewToken = null, requestToken = null, anchored = true,
+    vouchesForHistory = true, renewToken = null, requestToken = null, anchored = true, shellRefused = false,
 } = {}) {
     const fakeServer = server || new FakeServer(clock);
     const device = { clock, disk, server: fakeServer, stateChanges: [], pageLoads: 0, tokenProblem: null };
@@ -413,10 +420,17 @@ export async function createDevice({
             device.pretendFirstAnswerArrived();
         }
         // The same phone can play the pit page: same store, clock and queue.
+        // As page-setup.js: may this page record? `device.shellRefused` plays
+        // the offline copy served in place of a refused page (access.js).
+        const recordingBlocked = () => recordingBlockReason({
+            shellRefused: device.shellRefused, queueState: device.queue.getState(),
+        });
+        device.recordingBlocked = recordingBlocked;
         device.pit = new PitSession({
-            store: device.store, clock: device.serverClock, generateUuid: device.generateUuid,
+            store: device.store, clock: device.serverClock, generateUuid: device.generateUuid, recordingBlocked,
         });
         device.session = new CountSession({
+            recordingBlocked,
             store: device.store,
             clock: device.serverClock,
             generateUuid: device.generateUuid,
@@ -437,6 +451,7 @@ export async function createDevice({
 
     // Created once, outside boot(): uuids keep counting up across reloads.
     device.generateUuid = createUuidSequence(uuidPrefix);
+    device.shellRefused = shellRefused;
     device.reload = boot;
     /**
      * Gives the page its anchor without a request showing up in the fake
