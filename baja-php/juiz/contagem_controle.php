@@ -4,9 +4,11 @@ namespace Baja\Juiz;
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\RaceTimeline;
+use Baja\Contagem\Engine\PaceModel;
 use Baja\Contagem\Review\ConfirmationNeeded;
 use Baja\Contagem\Review\CsvExport;
 use Baja\Contagem\Review\InferredExits;
+use Baja\Contagem\Review\PaceChart;
 use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\RaceControl;
 use Baja\Contagem\Review\RaceEventRules;
@@ -14,6 +16,7 @@ use Baja\Contagem\Review\RaceEvents;
 use Baja\Contagem\Service\Clock;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\LockBusy;
+use Baja\Contagem\Service\SnapshotStore;
 use Baja\Session;
 use InvalidArgumentException;
 
@@ -88,6 +91,10 @@ $assumedExits = InferredExits::assumed($service);
 $hasEverStarted = RaceControl::hasEverStarted($prova);
 $mayReset = $isAdmin || !$hasEverStarted;
 $publishingIsOff = !$service->getSettings()->publishesToScoring();
+// The field pace, as the last recalculation left it (the public feed's part of the snapshot).
+$feedPart = (new SnapshotStore($prova))->getFeedPart();
+$pace = $feedPart['feed']['ritmo'] ?? null;
+$paceChart = $timeline->largadaMs === null ? '' : PaceChart::svg($feedPart['feed']['ritmo_historico'] ?? [], $timeline->largadaMs);
 
 $stateLabels = [
     RaceTimeline::AGUARDANDO => 'Aguardando a largada',
@@ -151,6 +158,20 @@ Pagina::printHeader($prova, 'Controle de corrida');
         <button type="submit">Salvar horário da largada</button>
     </form>
 </section>
+
+<?php if ($timeline->largadaMs !== null) { ?>
+<section class="contagem-bloco">
+    <h2>Ritmo da corrida</h2>
+    <p><strong><?= $h(PaceChart::summary($pace, PaceModel::MIN_LAPS_FOR_FIELD_PACE)) ?></strong></p>
+    <?= $paceChart ?>
+    <p class="contagem-dica">
+        Mediana das voltas completas de todo o pelotão na janela, minuto a minuto desde a largada
+        <?php if (isset($feedPart['gerado_em_ms'])) { ?>(calculado às <?= $h(Pagina::formatClock((int) $feedPart['gerado_em_ms'])) ?>)<?php } ?>.
+        O ritmo define a volta esperada de cada carro (atrasado, parado), as voltas curtas demais para serem reais
+        e quais voltas valem como melhor volta. Não decide se uma passagem conta.
+    </p>
+</section>
+<?php } ?>
 
 <section class="contagem-bloco">
     <h2>Durante a corrida</h2>

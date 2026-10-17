@@ -103,6 +103,15 @@
 .estado-bandeira_vermelha { background: var(--fundo-vermelho); color: var(--cor-vermelha); }
 .estado-encerrada { background: #2b2f36; color: #fff; }
 
+/* Pace chart on race control (Review\PaceChart): one line, recessive grid. */
+.ritmo-grafico { display: block; width: 100%; max-width: 720px; height: auto; }
+.ritmo-grade { stroke: var(--cor-borda); stroke-width: 1; }
+.ritmo-eixo { fill: var(--cor-fraca); font-size: 11px; }
+.ritmo-linha { fill: none; stroke: var(--cor-azul); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ritmo-alvo { fill: transparent; }
+.ritmo-alvo:hover { fill: var(--cor-azul); fill-opacity: 0.3; }
+.ritmo-atual { fill: var(--cor-azul); stroke: var(--cor-painel); stroke-width: 2; }
+
 /* ---- review screen ----------------------------------------------------- */
 
 body.revisao {
