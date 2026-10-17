@@ -208,6 +208,34 @@ final class LapBuilder
         return true;
     }
 
+    /**
+     * Marks the counted laps that are impossibly short and count only on a
+     * reviewer's word (see Lap::$curtaConfirmada). Measured like the
+     * "volta_curta" flag, in racing time between the two pass times: the
+     * flag stays closed for these laps, and this says why it would not be.
+     *
+     * @param array<int, Lap[]> $lapsByCar
+     */
+    public static function markShortLapsAReviewerVouchedFor(array $lapsByCar, Settings $settings, PaceModel $pace, RaceTimeline $timeline): void
+    {
+        foreach ($lapsByCar as $laps) {
+            foreach ($laps as $lap) {
+                $group = $lap->grupo;
+                $previous = $lap->grupoAnterior;
+                if (!$lap->isCounted() || $group === null || $previous === null) {
+                    continue;
+                }
+                // The same two cases FlagDetector does not flag again.
+                $vouched = $group->confirmadoPorRevisor || ($group->adicionadoPorRevisor && isset($group->entries[1]));
+                if (!$vouched) {
+                    continue;
+                }
+                $racingMs = $timeline->racingMsBetween($previous->tsMs, $group->tsMs);
+                $lap->curtaConfirmada = $settings->isImpossiblyShortLap($racingMs, $pace->expectedLapMs($lap->carro, $previous->tsMs));
+            }
+        }
+    }
+
     /** A pass time is reliable when two sources agree closely, or a precise source gave it. */
     private static function isWellTimed(PassGroup $group, Settings $settings): bool
     {

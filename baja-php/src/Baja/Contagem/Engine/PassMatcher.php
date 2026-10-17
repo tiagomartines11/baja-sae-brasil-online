@@ -40,6 +40,13 @@ use Baja\Contagem\Engine\Data\Source;
  * The result depends only on the car's own entries, and not on the order
  * in which they were uploaded: the entries arrive here sorted by time, and
  * ties are settled by time and then by entry id.
+ *
+ * A REVIEWER'S "USAR O TEMPO DESTE REGISTRO" ("usar_tempo") says two things
+ * the rule above cannot know. The chosen entry times its pass (see
+ * PassTimeFuser). And, for a crossing one counter typed late, beyond the
+ * matching window (it happened: 23 s), the late entry is a WITNESS of the
+ * chosen entry's pass: it is kept out of the matching and joins that pass
+ * afterwards, without timing it.
  */
 final class PassMatcher
 {
@@ -47,12 +54,31 @@ final class PassMatcher
      * @param Entry[] $entriesInTimeOrder already sorted by time (LapCounter does it once for every step)
      * @param array<int, true> $confirmedEntryIds
      * @param int $agreementSpreadMs entries of one crossing lie within this (Settings::agreementSpreadMs())
+     * @param array<int, int> $timeChoices entry id => id of the "usar_tempo" decision that chose its time
+     * @param array<int, int> $witnesses witness entry id => id of the entry whose pass it joins
      * @return array<int, PassGroup[]> carro => its pass groups, ordered by first entry
      */
-    public static function match(array $entriesInTimeOrder, int $janelaMs, array $confirmedEntryIds, int $agreementSpreadMs = 4000): array
-    {
+    public static function match(
+        array $entriesInTimeOrder,
+        int $janelaMs,
+        array $confirmedEntryIds,
+        int $agreementSpreadMs = 4000,
+        array $timeChoices = [],
+        array $witnesses = []
+    ): array {
+        $carOfEntry = [];
+        if ($witnesses !== []) {
+            foreach ($entriesInTimeOrder as $entry) {
+                $carOfEntry[$entry->id] = $entry->carro;
+            }
+        }
         $entriesByCar = [];
+        $witnessesByCar = [];
         foreach ($entriesInTimeOrder as $entry) {
+            if ($witnesses !== [] && isset($witnesses[$entry->id]) && self::canWitness($entry, $witnesses, $carOfEntry)) {
+                $witnessesByCar[$entry->carro][] = $entry;
+                continue;
+            }
             $entriesByCar[$entry->carro][] = $entry;
         }
 
@@ -60,8 +86,95 @@ final class PassMatcher
         foreach ($entriesByCar as $carro => $carEntries) {
             $groupsByCar[$carro] = self::matchOneCar($carEntries, $janelaMs, $agreementSpreadMs, $confirmedEntryIds);
         }
+        foreach ($witnessesByCar as $carro => $carWitnesses) {
+            $groupsByCar[$carro] = self::attachWitnesses($groupsByCar[$carro] ?? [], $carWitnesses, $witnesses, $confirmedEntryIds);
+        }
+        if ($timeChoices !== []) {
+            self::markChosenTimes($groupsByCar, $timeChoices);
+        }
 
         return $groupsByCar;
+    }
+
+    /**
+     * A witness is set aside only when the entry whose pass it joins takes
+     * part, for the same car (it was not voided, or moved to another car),
+     * and is not a witness itself. Otherwise it is matched like any entry.
+     *
+     * @param array<int, int> $witnesses
+     * @param array<int, int> $carOfEntry entry id => car, every entry that takes part
+     */
+    private static function canWitness(Entry $entry, array $witnesses, array $carOfEntry): bool
+    {
+        $chosenId = $witnesses[$entry->id];
+        return $entry->fonteId !== Source::REVISOR_ID
+            && ($carOfEntry[$chosenId] ?? null) === $entry->carro
+            && !isset($witnesses[$chosenId]);
+    }
+
+    /**
+     * Each witness joins the group of the entry it vouches for. When that
+     * group already has an entry of the witness's counter (a later upload
+     * put one there), the witness stands alone instead: a group never holds
+     * two entries of one counter.
+     *
+     * @param PassGroup[] $groups one car's groups, ordered by first entry
+     * @param Entry[] $carWitnesses in time order
+     * @param array<int, int> $witnesses
+     * @param array<int, true> $confirmedEntryIds
+     * @return PassGroup[] ordered by first entry
+     */
+    private static function attachWitnesses(array $groups, array $carWitnesses, array $witnesses, array $confirmedEntryIds): array
+    {
+        foreach ($carWitnesses as $witness) {
+            $target = null;
+            foreach ($groups as $group) {
+                if (in_array($witnesses[$witness->id], $group->entryIds(), true)) {
+                    $target = $group;
+                    break;
+                }
+            }
+            if ($target === null || $target->hasSource($witness->fonteId)) {
+                $groups[] = self::groupOf([$witness], $confirmedEntryIds);
+                continue;
+            }
+            $entries = $target->entries;
+            $entries[] = $witness;
+            usort($entries, fn(Entry $a, Entry $b): int => [$a->tsMs, $a->id] <=> [$b->tsMs, $b->id]);
+            $target->entries = $entries;
+            $target->primeiroTsMs = $entries[0]->tsMs;
+            $target->tempoEstimado = $target->tempoEstimado || $witness->qualidadeTempo !== Entry::TEMPO_EXATO;
+        }
+        usort($groups, fn(PassGroup $a, PassGroup $b): int => [$a->primeiroTsMs, $a->entries[0]->id] <=> [$b->primeiroTsMs, $b->entries[0]->id]);
+        return $groups;
+    }
+
+    /**
+     * Records on each group which entry a reviewer chose to time it. Of two
+     * choices on one group (the group changed after the first), the newer
+     * decision wins.
+     *
+     * @param array<int, PassGroup[]> $groupsByCar
+     * @param array<int, int> $timeChoices
+     */
+    private static function markChosenTimes(array $groupsByCar, array $timeChoices): void
+    {
+        foreach ($groupsByCar as $groups) {
+            foreach ($groups as $group) {
+                if (!$group->confirmadoPorRevisor) {
+                    // Every chosen entry is also a confirmed one.
+                    continue;
+                }
+                $newestDecisionId = null;
+                foreach ($group->entries as $entry) {
+                    $decisionId = $timeChoices[$entry->id] ?? null;
+                    if ($decisionId !== null && ($newestDecisionId === null || $decisionId > $newestDecisionId)) {
+                        $newestDecisionId = $decisionId;
+                        $group->tempoEscolhidoId = $entry->id;
+                    }
+                }
+            }
+        }
     }
 
     /**

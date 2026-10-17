@@ -50,6 +50,13 @@ final class PassGroup
     /** A reviewer confirmed this group ("confirmar"). */
     public bool $confirmadoPorRevisor = false;
 
+    /**
+     * A reviewer chose which entry times this pass ("usar_tempo"): its id.
+     * The pass time is then that entry's time, not the median, and the
+     * other entries are witnesses only. Null when nobody chose.
+     */
+    public ?int $tempoEscolhidoId = null;
+
     /** The group contains a pass added by a reviewer ("adicionar"). */
     public bool $adicionadoPorRevisor = false;
 
@@ -207,6 +214,20 @@ final class PassGroup
     public function isReviewersWord(): bool
     {
         return $this->confirmadoPorRevisor || $this->adicionadoPorRevisor;
+    }
+
+    /** The entry a reviewer chose to time this pass ("usar_tempo"); null when nobody chose. */
+    public function chosenTimeEntry(): ?Entry
+    {
+        if ($this->tempoEscolhidoId === null) {
+            return null;
+        }
+        foreach ($this->entries as $entry) {
+            if ($entry->id === $this->tempoEscolhidoId) {
+                return $entry;
+            }
+        }
+        return null;
     }
 
     /** True when exactly one real source recorded it and no reviewer vouched for it. */

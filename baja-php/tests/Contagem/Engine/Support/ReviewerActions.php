@@ -37,6 +37,16 @@ trait ReviewerActions
         return $this->decide(Decision::confirmar($this->nextDecisionId, $entryId));
     }
 
+    /**
+     * "Usar o tempo deste registro": count the pass of $entryId, timed by
+     * that entry alone. $lateEntryId is the same crossing typed late by
+     * another counter, in a pass group of its own; it joins the pass.
+     */
+    public function useTimeOf(int $entryId, ?int $lateEntryId = null): int
+    {
+        return $this->decide(Decision::usarTempo($this->nextDecisionId, $entryId, $lateEntryId));
+    }
+
     public function addPass(int $car, string $at): int
     {
         return $this->decide(Decision::adicionar($this->nextDecisionId, $car, RaceScenario::ms($at)));

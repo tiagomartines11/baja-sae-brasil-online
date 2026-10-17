@@ -386,8 +386,9 @@ final class MatchingTest extends EngineTestCase
      * same crossing differ by, so the pass is held, not counted, and one
      * flag ("dispersao_alta") names both counters; the reviewer who says
      * "it is one pass" gives the car its lap with one decision. At 20.001 s
-     * they are two unrelated lone entries, nothing counts, and each is
-     * shown to the reviewer on its own.
+     * they are two lone entries and nothing counts; being too close to be
+     * two passes, they are shown to the reviewer together, as one crossing
+     * typed late ("registro_tardio").
      */
     public function testTheMatchingWindowIsTwentySecondsInclusive(): void
     {
@@ -423,7 +424,8 @@ final class MatchingTest extends EngineTestCase
         $outside = $justOutside->run('05:00');
         $this->assertLapCounts([9 => 0], $outside);
         $this->assertCount(3, $outside->groups);
-        $this->assertCount(2, $this->openFlags($outside, Flag::SOLITARIA));
+        $this->assertSame([], $this->openFlags($outside, Flag::SOLITARIA));
+        $this->assertCount(1, $this->openFlags($outside, Flag::REGISTRO_TARDIO));
     }
 
     /**

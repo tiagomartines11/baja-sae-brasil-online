@@ -27,6 +27,11 @@ use Baja\Contagem\Engine\Data\Source;
  *    group, never after. Otherwise every new entry would shift the times of
  *    the whole race a little, and published lap times would flicker by a
  *    second between one run and the next.
+ *
+ * A pass a reviewer timed by one entry ("usar_tempo": the other counter
+ * typed late) takes that entry's time for both. The other entries are
+ * witnesses: they do not time the pass, and the group teaches nothing
+ * about anybody's habit (the late entry would teach a habit of 20 s).
  */
 final class PassTimeFuser
 {
@@ -74,6 +79,14 @@ final class PassTimeFuser
             }
             $group->tempoPreciso = $preciseTime !== null;
             $group->tsMs = $preciseTime ?? $medianMs;
+            if ($group->tempoEscolhidoId !== null) {
+                // The reviewer's word beats both the median and a precise source.
+                $chosen = $group->chosenTimeEntry();
+                if ($chosen !== null) {
+                    $group->tempoPreciso = false;
+                    $group->tsMs = $chosen->tsMs;
+                }
+            }
             // Until habits are measured (the slower, whole-race step) the
             // corrected time is simply the pass time.
             $group->tsAjustadoMs = $group->tsMs;
@@ -104,6 +117,11 @@ final class PassTimeFuser
         foreach ($groupsInTimeOrder as $group) {
             $entries = $group->entries;
             $count = count($entries);
+
+            if ($group->tempoEscolhidoId !== null) {
+                self::timeByTheChosenEntry($group, $habit, $preciseSourceIds);
+                continue;
+            }
 
             if ($count === 1) {
                 // A single entry has no spread, and nothing to compare with,
@@ -178,6 +196,28 @@ final class PassTimeFuser
 
         $fuser->offsetBySource = $habit;
         return $fuser;
+    }
+
+    /**
+     * A pass timed by the entry a reviewer chose: its corrected time is that
+     * entry's, and the spread is still the real one (the pass is not "well
+     * timed" for best lap just because a person picked a time). Nothing is
+     * learnt from it.
+     *
+     * @param array<int, int> $habit
+     * @param array<int, true> $preciseSourceIds
+     */
+    private static function timeByTheChosenEntry(PassGroup $group, array $habit, array $preciseSourceIds): void
+    {
+        $chosen = $group->chosenTimeEntry();
+        $corrected = [];
+        foreach ($group->entries as $entry) {
+            $corrected[] = isset($preciseSourceIds[$entry->fonteId]) ? $entry->tsMs : $entry->tsMs - ($habit[$entry->fonteId] ?? 0);
+        }
+        $group->dispersaoMs = max($corrected) - min($corrected);
+        $group->tsAjustadoMs = $chosen === null || isset($preciseSourceIds[$chosen->fonteId])
+            ? $group->tsMs
+            : $chosen->tsMs - ($habit[$chosen->fonteId] ?? 0);
     }
 
     /** The whole millisecond halfway between two times; a half rounds up, as round() does. */

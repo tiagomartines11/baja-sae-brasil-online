@@ -179,7 +179,8 @@ final class FlagDetector
             }
             // A lone entry: one source, and no reviewer vouching for it.
             $lone = self::NOT_LONE;
-            if (!$hasOpenRepeat && !$group->adicionadoPorRevisor && count($group->entries) === 1) {
+            // (Not one another lone entry already claimed: see LoneEntryFlags::lateEntry.)
+            if (!$hasOpenRepeat && !$group->adicionadoPorRevisor && count($group->entries) === 1 && $group->alertasAbertos === []) {
                 $lone = $this->examineLoneEntry($group);
             }
             if ($group->alertasAbertos !== []) {
@@ -430,7 +431,7 @@ final class FlagDetector
             // car was not on the track at all.
             return self::OTHERS_MISSED_IT;
         }
-        $this->attach($this->loneEntries->loneEntry($group), $group);
+        $this->attach($this->loneEntries->lateEntry($group) ?? $this->loneEntries->loneEntry($group), $group);
         return self::OTHERS_MISSED_IT;
     }
 

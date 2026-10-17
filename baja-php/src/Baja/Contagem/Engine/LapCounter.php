@@ -84,7 +84,9 @@ final class LapCounter
             $counter->duplicates->keptEntries,
             $input->settings->janelaMs,
             $counter->applied->confirmedEntryIds,
-            $input->settings->agreementSpreadMs()
+            $input->settings->agreementSpreadMs(),
+            $counter->applied->timeChoices,
+            $counter->applied->witnesses
         );
 
         foreach ($counter->groupsByCar as $groups) {

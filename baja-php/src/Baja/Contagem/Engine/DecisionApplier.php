@@ -49,6 +49,17 @@ final class DecisionApplier
                         $applied->confirmedEntryIds[$decision->passagemId] = true;
                     }
                     break;
+                case Decision::USAR_TEMPO:
+                    // A confirmation that also says which entry times the
+                    // pass. Visited oldest first: a later choice wins.
+                    if ($decision->passagemId !== null) {
+                        $applied->confirmedEntryIds[$decision->passagemId] = true;
+                        $applied->timeChoices[$decision->passagemId] = $decision->id;
+                        if ($decision->passagemAlvoId !== null) {
+                            $applied->witnesses[$decision->passagemAlvoId] = $decision->passagemId;
+                        }
+                    }
+                    break;
                 case Decision::ADICIONAR:
                     if ($decision->carro !== null && $decision->tsMs !== null) {
                         // A negative id can never collide with a stored entry

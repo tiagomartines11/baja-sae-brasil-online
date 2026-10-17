@@ -6,6 +6,7 @@ namespace Baja\Contagem\Engine;
 use Baja\Contagem\Engine\Data\Decision;
 use Baja\Contagem\Engine\Data\Flag;
 use Baja\Contagem\Engine\Data\PassGroup;
+use Baja\Contagem\Engine\Data\Source;
 
 /**
  * The flag for a pass only one counter recorded.
@@ -43,9 +44,22 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * 3. A NUMBER THAT IS NO TEAM, or a car that is not classified: left to the
  *    flags that say so (FlagDetector raises them).
  *
- * 4. JUST A LONE ENTRY ("solitaria"): a real pass the others missed, or an
+ * 4. THE SAME CROSSING, ONE COUNTER LATE ("registro_tardio"). Another
+ *    counter has a lone entry of the same car, so close to this one that
+ *    the two cannot be two passes (an impossibly short lap between them),
+ *    yet beyond the matching window and within two of them (seen at a
+ *    race: 23 s, the counter had picked the car and pressed "Passou"
+ *    late). Each alone would be a
+ *    "solitaria" with a plausible lap, and confirming both gave the car a
+ *    lap too many. One flag about both, no suggestion: the reviewer says
+ *    whose time is right ("usar_tempo"), and the pass counts once.
+ *
+ * 5. JUST A LONE ENTRY ("solitaria"): a real pass the others missed, or an
  *    entry that should not exist. Suggestion: void it when counting it
  *    would create an impossibly short lap; otherwise the reviewer decides.
+ *
+ * Both lone-entry flags name the car's previous official pass, so the
+ * review screen can show the lap the entry would make.
  */
 final class LoneEntryFlags
 {
@@ -101,13 +115,78 @@ final class LoneEntryFlags
         return $partner === null ? null : $this->swap($group, $partner);
     }
 
-    /** Case 4 of the class comment. */
+    /**
+     * Case 4 of the class comment: the other lone entry of the same
+     * crossing, or null when there is none. The other group is marked, so
+     * that it does not raise a flag of its own.
+     *
+     * @param PassGroup $group a group of one entry, from a real counter, that no reviewer vouched for
+     */
+    public function lateEntry(PassGroup $group): ?Flag
+    {
+        $entry = $group->entries[0];
+        $expectedMs = $this->pace->expectedLapMs($group->carro, $group->tsMs);
+        // Typing a crossing late is a matter of seconds. Two lone entries a
+        // minute apart are a real pass and a stray far more often than one
+        // crossing, so the partner is looked for within two matching windows.
+        $longestDelayMs = 2 * $this->settings->janelaMs;
+        $partner = null;
+        $partnerGapMs = PHP_INT_MAX;
+        foreach ($this->groupsByCar[$group->carro] ?? [] as $other) {
+            if ($other === $group || !$other->isUnconfirmedSingleSource() || $other->alertasAbertos !== []
+                || $other->foraDaReferencia || $other->antesDaLargada) {
+                continue;
+            }
+            $otherEntry = $other->entries[0];
+            if ($otherEntry->fonteId === $entry->fonteId || $otherEntry->fonteId === Source::REVISOR_ID) {
+                continue;
+            }
+            $gapMs = $other->tsMs >= $group->tsMs
+                ? $this->timeline->racingMsBetween($group->tsMs, $other->tsMs)
+                : $this->timeline->racingMsBetween($other->tsMs, $group->tsMs);
+            if ($gapMs < $partnerGapMs && $gapMs <= $longestDelayMs && $this->settings->isImpossiblyShortLap($gapMs, $expectedMs)) {
+                $partner = $other;
+                $partnerGapMs = $gapMs;
+            }
+        }
+        if ($partner === null) {
+            return null;
+        }
+
+        [$early, $late] = $partner->tsMs < $group->tsMs ? [$partner, $group] : [$group, $partner];
+        $earlyEntry = $early->entries[0];
+        $lateEntry = $late->entries[0];
+        $flag = new Flag(Flag::REGISTRO_TARDIO, [$group->carro], [$earlyEntry->id, $lateEntry->id], (string) min($earlyEntry->id, $lateEntry->id));
+        $flag->fonteId = $lateEntry->fonteId;
+        $flag->tsMs = $earlyEntry->tsMs;
+        // Two counters saw a crossing that does not count: the car may be a lap short.
+        $flag->contagemEmDuvida = Flag::DUVIDA_A_MENOS;
+        $flag->passagemAnterior = $this->previousPass($group->carro, $earlyEntry->tsMs, $early);
+        $flag->temposPossiveis = [
+            ['passagem_id' => $earlyEntry->id, 'fonte_id' => $earlyEntry->fonteId, 'ts_ms' => $earlyEntry->tsMs, 'passagem_alvo_id' => $lateEntry->id],
+            ['passagem_id' => $lateEntry->id, 'fonte_id' => $lateEntry->fonteId, 'ts_ms' => $lateEntry->tsMs, 'passagem_alvo_id' => $earlyEntry->id],
+        ];
+        $flag->motivo = sprintf(
+            '%s registrou o carro %d %d s depois de %s: provavelmente a mesma passagem, digitada com atraso. Como duas passagens, dariam uma volta de %d s, %s. Escolha o horário de quem registrou na hora: a passagem conta uma vez, e o outro registro fica junto dela sem definir o horário.',
+            $this->passFlags->sourceName($lateEntry->fonteId),
+            $group->carro,
+            (int) round($partnerGapMs / 1000),
+            $this->passFlags->sourceName($earlyEntry->fonteId),
+            (int) round($partnerGapMs / 1000),
+            $this->whyTooShort($partnerGapMs, $expectedMs)
+        );
+        $partner->alertasAbertos[] = Flag::REGISTRO_TARDIO;
+        return $flag;
+    }
+
+    /** Case 5 of the class comment. */
     public function loneEntry(PassGroup $group): Flag
     {
         $entry = $group->entries[0];
         $flag = new Flag(Flag::SOLITARIA, [$entry->carro], [$entry->id], (string) $entry->id);
         $flag->fonteId = $entry->fonteId;
         $flag->tsMs = $entry->tsMs;
+        $flag->passagemAnterior = $this->previousPass($entry->carro, $entry->tsMs, $group);
 
         $shortestLapMs = $this->effect->shortestLapIfPassAt($group->carro, $group->tsMs, $group);
         $expectedMs = $this->pace->expectedLapMs($entry->carro, $entry->tsMs);
@@ -129,6 +208,13 @@ final class LoneEntryFlags
             );
         }
         return $flag;
+    }
+
+    /** @return array{passagem_id: int, ts_ms: int}|null the car's official pass before $tsMs */
+    private function previousPass(int $carro, int $tsMs, PassGroup $itself): ?array
+    {
+        $previous = $this->effect->previousPassBefore($carro, $tsMs, $itself);
+        return $previous === null ? null : ['passagem_id' => $previous->anchorEntryId(), 'ts_ms' => $previous->tsMs];
     }
 
     /**

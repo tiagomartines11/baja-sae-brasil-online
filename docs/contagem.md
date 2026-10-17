@@ -385,7 +385,8 @@ once. The person leaving then presses **Encerrar meu turno**.
 | `passagem_proxima_demais` | Two counters agree on a pass, but it is closer to the car's previous official pass than a lap can be. **It is held: it does not count** until a reviewer says so. See [The hold rule](#the-hold-rule) |
 | `dispersao_alta` | The entries of one pass are further apart than honest entries are (`dispersao_alerta_ms`, 4 s). With three counters the two that agree count and the outlier stands alone; with only two, the pass is held |
 | `troca_provavel` | One counter typed car X alone while others recorded car Y at the same moment. Usually the lone entry is the typo. When the others' pass is held or impossibly short for Y and X was due, the flag says both readings and suggests the reverse: move the others' entries to X. **Both cars are always flagged** when a two-counter pass coincides with another car's entry from the remaining counter, however plausible each looks. The same flag is raised, with no suggestion, for a two-counter pass in which every counter left out a car the others recorded at that moment: each of its entries may be a typo for that other car |
-| `solitaria` | Only one counter recorded this pass. It does not count |
+| `solitaria` | Only one counter recorded this pass. It does not count. The flag names the car's previous official pass, and the timeline of the flag reaches back to it |
+| `registro_tardio` | Two counters each recorded the car alone, further apart than the matching window but too close together to be two passes (an impossibly short lap, and no more than two matching windows apart). Probably one crossing, one counter typing late: seen at a race, 23 s, with each entry flagged `solitaria` with a "plausible" lap until this flag existed. Not raised when the other entry is in a pass the counters agree on (that is a stray). Neither entry counts until the reviewer says whose time is right |
 | `repetida` | Same counter, same car, twice within the matching window. Double taps and handover duplicates are voided automatically. Not raised when both entries sit in passes other counters share (those are two candidate passes, and the later one is judged by the hold rule), nor when the second entry sits in a widely spread group with another counter's late entry (that group is held with `dispersao_alta` and no suggestion): a suggestion never voids an entry another counter's entry may depend on |
 | `primeira_passagem_tardia` | The car's first pass came much later than the field's: its pass zero was probably missed |
 | `antes_da_largada` | Entries for a car shortly before the start (the start was moved, or a clock was early). Without them the car has lost its pass zero |
@@ -396,8 +397,13 @@ once. The person leaving then presses **Encerrar meu turno**.
 | `carro_nao_classificado` | A pass for a car that is present but not classified. It does not count |
 | `no_box`, `no_abastecimento` | A pass while the log says the car is in the pit lane or at the fueling station. **It is held**, whatever the number of counters, until the exit is marked, the pass discarded, or a second agreed pass arrives a lap later |
 | `saida_presumida` | Informational: the log had the car inside, the counters agreed on two passes a lap apart, and the count assumed the exit and counted both. Nothing is held |
-| `volta_curta` | Two official passes of a car closer together than a lap can be, in the cases the hold rule does not cover (a reviewer confirmed one, or the mode is `todas`). The flag names both passes |
+| `volta_curta` | Two official passes of a car closer together than a lap can be, in the cases the hold rule does not cover (a reviewer confirmed one, or the mode is `todas`). The flag names both passes. A lap that is impossibly short and counts on a reviewer's confirmation is not reopened, but it is marked (`volta_curta_confirmada`, below) |
 | `divergencia_total` | Imported paper totals differ from the official count, or do not list a car that has laps |
+
+**A short lap a reviewer confirmed** stays visible: the review screen
+marks it on the car's row and on the timeline ("volta curta confirmada").
+At the race, a reviewer undid two voids and confirmed three entries in four
+seconds, and three cars were one lap over with nothing open.
 
 A pass recorded by two counters and missed by the third is **not** a flag.
 It counts, and the miss shows in that counter's statistics. The flags are the
@@ -896,7 +902,7 @@ entry points: `Engine::countCars()` (the official passes of a few cars) and
 
 | Step | Class | What it does |
 |---|---|---|
-| 1 | `DecisionApplier` | Drops voided entries, moves reassigned ones, drops entries of excluded sources, adds reviewer passes, cancels undone decisions |
+| 1 | `DecisionApplier` | Drops voided entries, moves reassigned ones, drops entries of excluded sources, adds reviewer passes, cancels undone decisions, notes the times a reviewer chose (`usar_tempo`) |
 | 2 | `DuplicateFilter` | Voids double taps and handover duplicates; flags other repeats |
 | 3 | `PassMatcher`, `PassTimeFuser` | Groups entries per car by time (never by typing order); the pass time of each group |
 | 4 | `PublishRule`, `PassRoles`, `LapBuilder` | Which groups are official passes; leaves out the start crossing and late finishers; numbers pass zero and the laps |
@@ -985,6 +991,13 @@ The time of an entry is the Enter press. The **pass time** is the median of
 the times as typed (or the time of a `precisa` source). It depends only on
 the group's own entries, so it is the same in the fast path and in a full
 run, and never moves afterwards; `LAST` comes from it.
+
+**A time a reviewer chose** ("usar_tempo") replaces the median: the pass
+is timed by that entry alone. With a crossing typed late
+(`registro_tardio`), the late entry also joins the chosen entry's pass, as a
+witness: it does not time it, its counter is not charged a miss, and the
+pass teaches nobody's habit. The same decision on a held pass whose
+entries are too far apart picks one of them instead of their midpoint.
 
 **Lap durations** use habit-corrected times: for each source the engine
 measures its habitual offset (median of "its time minus the pass time" over

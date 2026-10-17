@@ -44,6 +44,14 @@ final class Flag
     public const PASSAGEM_PROXIMA_DEMAIS = 'passagem_proxima_demais';
 
     /**
+     * Two lone entries of one car, from two counters, too close together to
+     * be two passes and too far apart to have been matched: one crossing,
+     * one of the counters typed it late. Neither counts until a reviewer
+     * says which time is right ("usar_tempo").
+     */
+    public const REGISTRO_TARDIO = 'registro_tardio';
+
+    /**
      * Informational: the pit log (or the fueling log) still had the car
      * inside, the counters agreed on two passes a lap apart, and the engine
      * assumed the exit nobody logged and counted them. Holds nothing.
@@ -141,6 +149,30 @@ final class Flag
     public ?int $voltasAoMarcarSaida = null;
 
     /**
+     * Only on flags about a lone entry ("solitaria", "registro_tardio"): the
+     * car's official pass before it, ['passagem_id' => its anchor entry,
+     * 'ts_ms' => its pass time]. The review screen widens the flag's
+     * timeline back to it, so the lap the entry would make is on screen.
+     * Null when the car has no pass before.
+     *
+     * @var array{passagem_id: int, ts_ms: int}|null
+     */
+    public ?array $passagemAnterior = null;
+
+    /**
+     * Where the reviewer may say which entry times the pass ("usar_tempo"):
+     * on a held pass whose entries are too far apart, and on a crossing
+     * typed late ("registro_tardio"). One item per entry that could be the
+     * right time: ['passagem_id', 'fonte_id', 'ts_ms', 'passagem_alvo_id'],
+     * the last being the other entry when it is in another pass group (null
+     * when every entry is in the same one). The screen writes one button
+     * per item: "Usar o tempo de Contagem 1 (h:mm:ss)". Null elsewhere.
+     *
+     * @var array<int, array{passagem_id: int, fonte_id: int, ts_ms: int, passagem_alvo_id: ?int}>|null
+     */
+    public ?array $temposPossiveis = null;
+
+    /**
      * @param int[] $carros
      * @param int[] $passagemIds
      */
@@ -171,6 +203,8 @@ final class Flag
             'contagem_em_duvida' => $this->contagemEmDuvida,
             'passagens' => $this->passagens,
             'voltas_ao_marcar_saida' => $this->voltasAoMarcarSaida,
+            'passagem_anterior' => $this->passagemAnterior,
+            'tempos_possiveis' => $this->temposPossiveis,
         ];
     }
 }

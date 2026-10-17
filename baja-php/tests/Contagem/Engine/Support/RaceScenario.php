@@ -32,7 +32,7 @@ use Baja\Contagem\Engine\Settings;
  */
 final class RaceScenario
 {
-    // void(), reassign(), confirm(), addPass(), excludeSource(), undo(), accept()
+    // void(), reassign(), confirm(), useTimeOf(), addPass(), excludeSource(), undo(), accept()
     use ReviewerActions;
 
     /** The moment "00:00" stands for. Any fixed date works; nothing depends on it. */

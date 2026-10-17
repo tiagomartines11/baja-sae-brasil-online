@@ -150,6 +150,10 @@ final class TypoAndLoneEntryTest extends EngineTestCase
         $flag = $this->assertSingleOpenFlag($result, Flag::SOLITARIA);
         $this->assertNull($flag->sugestao, 'A plausible lone entry gets no default action.');
         $this->assertSame(4, $result->lapCount(5), 'Five agreed crossings are four laps; the lone one waits for a reviewer.');
+        // The car's previous official pass, so the review screen can show
+        // the lap the entry would make (it is three minutes back).
+        $this->assertSame(RaceScenario::ms('15:28'), $flag->passagemAnterior['ts_ms']);
+        $this->assertSame($result->groupOfEntry($flag->passagemAnterior['passagem_id'])->tsMs, RaceScenario::ms('15:28'));
     }
 
     /**

@@ -96,6 +96,18 @@ final class ConfirmEffect
         return $this->lapsAroundPassAt($carro, $tsMs, $itself, false)[1];
     }
 
+    /** The car's last pass (under the default rule) at or before $tsMs; null when it has none. */
+    public function previousPassBefore(int $carro, int $tsMs, ?PassGroup $itself): ?PassGroup
+    {
+        $previous = null;
+        foreach ($this->groupsByCar[$carro] ?? [] as $other) {
+            if ($other !== $itself && $other->referencia && $other->tsMs <= $tsMs) {
+                $previous = $other;
+            }
+        }
+        return $previous;
+    }
+
     /**
      * @return array{0: ?int, 1: ?int} racing time since the car's previous pass and until its next one
      */

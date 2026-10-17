@@ -18,6 +18,21 @@ final class AppliedDecisions
     /** @var array<int, true> ids of entries a reviewer confirmed */
     public array $confirmedEntryIds = [];
 
+    /**
+     * "usar_tempo": entries whose own time is the time of their pass.
+     *
+     * @var array<int, int> entry id => id of the decision (the newest wins when two touch one pass)
+     */
+    public array $timeChoices = [];
+
+    /**
+     * "usar_tempo" on a crossing typed late: the late entry joins the pass
+     * of the chosen one as a witness that does not time it.
+     *
+     * @var array<int, int> witness entry id => id of the entry whose pass it joins
+     */
+    public array $witnesses = [];
+
     /** @var array<int, int> voided entry id => id of the decision that voided it */
     public array $voidedEntryIds = [];
 

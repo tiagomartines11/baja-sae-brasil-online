@@ -392,9 +392,13 @@ final class ConfirmEffectTest extends EngineTestCase
         $flag = new Flag(Flag::SOLITARIA, [9], [5], '5');
 
         $this->assertSame(
-            ['id', 'tipo', 'carros', 'passagem_ids', 'fonte_id', 'ts_ms', 'sugestao', 'motivo', 'auto_resolvido', 'prioridade', 'efeito_de_confirmar', 'volta_resultante_ms', 'contagem_em_duvida', 'passagens', 'voltas_ao_marcar_saida'],
+            ['id', 'tipo', 'carros', 'passagem_ids', 'fonte_id', 'ts_ms', 'sugestao', 'motivo', 'auto_resolvido', 'prioridade', 'efeito_de_confirmar', 'volta_resultante_ms', 'contagem_em_duvida', 'passagens', 'voltas_ao_marcar_saida',
+                'passagem_anterior', 'tempos_possiveis'],
             array_keys($flag->toArray())
         );
+        // A lone entry's previous official pass and the times a reviewer may choose (round 5): null unless said.
+        $this->assertNull($flag->toArray()['passagem_anterior']);
+        $this->assertNull($flag->toArray()['tempos_possiveis']);
         $this->assertNull($flag->toArray()['contagem_em_duvida']);
         $this->assertNull($flag->toArray()['passagens']);
         $this->assertSame(['a_mais', 'a_menos'], [Flag::DUVIDA_A_MAIS, Flag::DUVIDA_A_MENOS]);

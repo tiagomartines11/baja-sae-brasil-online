@@ -34,6 +34,14 @@ final class Lap
     /** True when the lap overlaps a red flag or a pit stay of the car. */
     public bool $interrompida = false;
 
+    /**
+     * The lap is too short to be real (Settings::isImpossiblyShortLap), and
+     * it counts because a reviewer vouched for the pass that ends it, so no
+     * "volta_curta" flag reopens it. Not a flag: a mark on the lap, so a
+     * hurried confirmation stays visible. Set by Engine::run().
+     */
+    public bool $curtaConfirmada = false;
+
     /** The pass group that ended this lap. Not stored; kept for the engine's own use. */
     public ?PassGroup $grupo = null;
 

@@ -86,6 +86,7 @@ final class Engine
         $flags = array_merge($flags, $flagDetector->describeRepeats($counter->duplicates->flags));
 
         LapBuilder::markBestLapEligibility($lapsByCar, $settings, $pace);
+        LapBuilder::markShortLapsAReviewerVouchedFor($lapsByCar, $settings, $pace, $timeline);
 
         $carStatus = new CarStatus($settings, $timeline, $pace, $counter->availability);
         $result->cars = $carStatus->build(self::carsToReport($input->validCars, $lapsByCar), $lapsByCar, $counter->groupsByCar, $input->nowMs);

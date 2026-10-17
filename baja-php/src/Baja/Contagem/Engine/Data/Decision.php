@@ -15,6 +15,15 @@ namespace Baja\Contagem\Engine\Data;
  *   adicionar      carro, tsMs                 add a pass nobody recorded
  *   excluir_fonte  fonteId, tsMs, tsFimMs      ignore a source between two times
  *   desfazer       desfazDecisaoId             reverse an earlier decision
+ *   usar_tempo     passagemId, passagemAlvoId  count the pass group this entry
+ *                                              belongs to, timed by THIS entry
+ *                                              alone (not the median of the
+ *                                              group). With passagemAlvoId:
+ *                                              that other entry, of another
+ *                                              counter, is the same crossing
+ *                                              typed late; it joins this
+ *                                              entry's pass as a witness that
+ *                                              does not time it
  *   marcar_saida   carro, tsMs                 a reviewer inferred an exit from
  *                                              the pit lane or the fueling
  *                                              station; the exit itself is an
@@ -32,6 +41,7 @@ final class Decision
     public const EXCLUIR_FONTE = 'excluir_fonte';
     public const DESFAZER = 'desfazer';
     public const MARCAR_SAIDA = 'marcar_saida';
+    public const USAR_TEMPO = 'usar_tempo';
 
     public const TIPOS = [
         self::ANULAR,
@@ -41,6 +51,7 @@ final class Decision
         self::EXCLUIR_FONTE,
         self::DESFAZER,
         self::MARCAR_SAIDA,
+        self::USAR_TEMPO,
     ];
 
     public const ORIGEM_CONTADOR = 'contador';
@@ -54,6 +65,8 @@ final class Decision
     public ?int $tsMs = null;
     public ?int $tsFimMs = null;
     public ?int $desfazDecisaoId = null;
+    /** Only for "usar_tempo": the other entry, when it is in another pass group (a crossing typed late). */
+    public ?int $passagemAlvoId = null;
     public string $origem = self::ORIGEM_REVISOR;
 
     public function __construct(int $id, string $tipo)
@@ -82,6 +95,14 @@ final class Decision
     {
         $decision = new self($id, self::CONFIRMAR);
         $decision->passagemId = $passagemId;
+        return $decision;
+    }
+
+    public static function usarTempo(int $id, int $passagemId, ?int $passagemAlvoId = null): self
+    {
+        $decision = new self($id, self::USAR_TEMPO);
+        $decision->passagemId = $passagemId;
+        $decision->passagemAlvoId = $passagemAlvoId;
         return $decision;
     }
 

@@ -136,6 +136,14 @@ final class PassFlags
         $flag = $this->aboutGroup(Flag::DISPERSAO_ALTA, $group);
         $outlier = $this->entryFurthestFromTheOthers($group);
         $flag->fonteId = $outlier === null ? null : $outlier->fonteId;
+        // Confirmed as it is, the pass would be timed by the middle of
+        // entries that disagree; the reviewer may say whose time is right.
+        $flag->temposPossiveis = [];
+        foreach ($group->entries as $entry) {
+            if ($entry->fonteId !== Source::REVISOR_ID) {
+                $flag->temposPossiveis[] = ['passagem_id' => $entry->id, 'fonte_id' => $entry->fonteId, 'ts_ms' => $entry->tsMs, 'passagem_alvo_id' => null];
+            }
+        }
         $flag->motivo = sprintf(
             'Os registros do carro %d neste momento (%s) estão espalhados por %d s, mais que os %d s aceitos entre contagens que viram a mesma passagem%s. %s Se for uma passagem só, conte-a; se não, anule os registros errados.',
             $group->carro,
