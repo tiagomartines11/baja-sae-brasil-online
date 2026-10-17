@@ -154,7 +154,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         tudo o que ela registrou até esse momento continua contando. Para descartar registros de um período,
         use "Excluir esta fonte" na tela de revisão.
         Quem conta em cada fonte manual é definido em
-        <a href="contagem_contadores.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Contadores</a>.
+        <a href="contagem_contadores.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Usuários</a>.
     </p>
 </section>
 

@@ -280,7 +280,8 @@ final class Pagina
             'Contagem' => 'contagem.php',
             'Revisão' => 'contagem_revisao.php',
             'Controle de corrida' => 'contagem_controle.php',
-            'Contadores' => 'contagem_contadores.php',
+            // The file keeps its old name so that bookmarks keep working.
+            'Usuários' => 'contagem_contadores.php',
             'Fontes e configurações' => 'contagem_fontes.php',
         ];
 

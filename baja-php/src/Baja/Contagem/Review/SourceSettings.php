@@ -31,7 +31,7 @@ final class SourceSettings
 
     /** The one sentence that explains the block to a controller. */
     public const BLOCK_RULE = 'Quem teve um dispositivo revogado não recebe novo acesso a esta fonte até ser vinculado de novo '
-        . 'em Contadores ou liberado aqui; sem isso o aparelho revogado pediria um acesso novo sozinho, meio minuto depois.';
+        . 'em Usuários ou liberado aqui; sem isso o aparelho revogado pediria um acesso novo sozinho, meio minuto depois.';
 
     /**
      * @param array<string, mixed> $post

@@ -74,17 +74,21 @@ A controller can do everything a counter can.
    `DESCLAS` if the scoring formula uses it). The scoring formulas do not
    change. Existing results are not touched until the race is started.
 2. **Give the controller the prova permission** (`{evento}_{prova}`) in
-   Administração → Usuários, as for any other prova. On the same page give
-   the people at the pit lane and the fueling station **"box e
-   abastecimento"** (`{evento}_{prova}_BOX`). Counters need nothing there:
-   linking them in step 4 grants their code. Removing the pit code stops
-   that person's phones at their next upload; what they logged before stays.
+   Administração → Usuários, as for any other prova. Counters and the pit
+   log need nothing there: they are added in step 4.
 3. **Create the sources.** On the prova's hub (`juiz` → click the prova) open
    **Fontes e configurações** and create one source per counter, usually
    "Contagem 1", "Contagem 2", "Contagem 3", type `manual`.
-4. **Link the counters.** Open **Contadores**, and under each source type
-   the forum username of the person who will count there. The person gets
-   access automatically. Link reliefs to the source they will take over.
+4. **Add the people.** Open **Usuários** (on the prova's hub). Under each
+   source type the forum username of the person who will count there; link
+   reliefs to the source they will take over. Under **Box e abastecimento**
+   add the people who will log the pit lane and the fueling station. Each
+   gets their access automatically: `{evento}_{prova}_CONT` for a counter,
+   `{evento}_{prova}_BOX` for the pit log. The two are separate: a counter
+   does not open the pit page, and the pit log does not open a count page;
+   somebody who does both is added in both places. The controller can do
+   both without being listed. An administrator can also tick the pit code
+   on Administração → Usuários ("box e abastecimento").
 5. **Check the settings** on the Fontes page; see [Settings](#settings). The
    ones to decide on purpose are the pass-zero rule, the publish mode, the
    classification field and whether the fueling station is logged.
@@ -468,12 +472,13 @@ counter missed.) To stop using a source altogether, deactivate it on the
 Fontes page: what it recorded before stays in the count.
 
 **A counter must be removed, or one phone must be stopped.** On
-**Contadores**, "remover" takes the person off the source; on the Fontes
-page, "revogar" stops one device. Either way the device stops uploading at
+**Usuários**, "remover" takes the person off the source (or, under Box e
+abastecimento, off the pit log); on the Fontes page, "revogar" stops one
+device. Either way the device stops uploading at
 once; its page says so, keeps its data and offers the export. **A user whose
 device was revoked stays blocked on that source**: the page cannot get a new
-token by itself. To let the person back in, link them to the source again on
-Contadores, or press **liberar** next to their name on the Fontes page.
+token by itself. To let the person back in, link them to the source again
+(or add them to Box e abastecimento again) on Usuários, or press **liberar** next to their name on the Fontes page.
 
 **A race-control button was pressed by mistake.** Every event listed on
 Controle da corrida has **cancelar**, those with a time have **corrigir**,
@@ -665,7 +670,7 @@ integer milliseconds since the Unix epoch, UTC.
 | Table | Content | Written by |
 |---|---|---|
 | `contagem_fonte` | Sources | Fontes page |
-| `contagem_fonte_usuario` | Which user may count on which source | Contadores page |
+| `contagem_fonte_usuario` | Which user may count on which source | Usuários page. The pit log has no rows here: its code is in `user.permissions` |
 | `contagem_dispositivo` | Devices and their token hashes, last contact, "synced through", closed | Device registration, sync |
 | `contagem_passagem` | Raw entries. **Append-only** | Sync |
 | `contagem_ocorrencia` | Race control events and stops (pit lane, fueling station). Append-only | Controle page, pit log |
