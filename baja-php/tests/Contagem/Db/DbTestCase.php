@@ -256,6 +256,30 @@ abstract class DbTestCase extends TestCase
         $this->assertSame(0, proc_close($process), 'The second process ended with an error.');
     }
 
+    /**
+     * Runs a juiz page in a separate PHP process as $username and returns
+     * what it printed. See Support/render-page.php. Unlike the HTTP tests
+     * this needs no forum login, so it runs wherever the database does.
+     * A page that redirects prints nothing.
+     *
+     * @param array<string, string> $query the page's query string, e.g. ['p' => 'ZZL']
+     */
+    protected function renderJuizPage(string $page, string $username, array $query = []): string
+    {
+        $command = [PHP_BINARY, '-d', 'display_errors=stderr', __DIR__ . '/Support/render-page.php', $page, $username, (string) json_encode($query)];
+        $pipes = [];
+        $process = proc_open($command, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        $this->assertIsResource($process, 'The page could not be started.');
+        $output = (string) stream_get_contents($pipes[1]);
+        $errors = (string) stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitStatus = proc_close($process);
+        $this->assertSame(0, $exitStatus, "The page ended with an error:\n" . $errors);
+        $this->assertSame('', $errors, 'The page printed warnings or errors.');
+        return $output;
+    }
+
     /** The name MySQL knows one of the prova's locks by. */
     protected function lockName(string $purpose = ''): string
     {

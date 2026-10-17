@@ -213,4 +213,110 @@ final class EntryChooserTest extends DbTestCase
     {
         $this->assertNotNull($this->chooserOf(self::USER_PREFIX . 'chefe', ['index', self::CONTROLLER_CODE]));
     }
+
+    // ------------------------------------------------------------------
+    // The pages themselves
+    // ------------------------------------------------------------------
+    //
+    // The tests above ask ContagemAccess what the pages would show. These
+    // run index.php and contagem.php for real (in a separate PHP process,
+    // see DbTestCase::renderJuizPage), so a page that stopped asking
+    // ContagemAccess, or printed the list wrong, is caught as well.
+
+    /**
+     * SITUATION: the pit volunteer of the first test opens the start page
+     * and clicks the prova.
+     *
+     * EXPECTED: the start page lists the prova, and contagem.php shows the
+     * chooser with the pit log as its only link.
+     */
+    public function testThePagesLeadAPitVolunteerToThePitLog(): void
+    {
+        $username = self::USER_PREFIX . 'so_box';
+        $this->createUser($username, ['index', self::PIT_CODE]);
+
+        $start = $this->renderJuizPage('index.php', $username);
+        $this->assertStringContainsString('href="contagem.php?p=' . self::PROVA_ID . '"', $start);
+
+        $chooser = $this->renderJuizPage('contagem.php', $username, ['p' => self::PROVA_ID]);
+        $this->assertStringContainsString('Escolha onde você vai trabalhar', $chooser);
+        $this->assertStringContainsString('<a href="' . self::PIT_PAGE . '">Registro de box</a>', $chooser);
+        $this->assertStringNotContainsString('contagem_contar.php', $chooser);
+    }
+
+    /**
+     * SITUATION: a counter linked to Contagem 1 only clicks the prova.
+     *
+     * WHAT CHANGED: contagem.php used to send them on to the count page
+     * (a redirect prints nothing).
+     *
+     * EXPECTED: the chooser, with Contagem 1 as its one link.
+     */
+    public function testACounterWithOneSourceSeesTheChooserInsteadOfARedirect(): void
+    {
+        $username = self::USER_PREFIX . 'contador';
+        $this->createUser($username, ['index', self::COUNTER_CODE]);
+        $this->linkUser($this->fontes[0], $username);
+
+        $chooser = $this->renderJuizPage('contagem.php', $username, ['p' => self::PROVA_ID]);
+
+        $this->assertStringContainsString('Escolha onde você vai trabalhar', $chooser);
+        $this->assertStringContainsString(
+            '<a href="' . htmlspecialchars($this->countPage($this->fontes[0])) . '">Contagem 1</a>',
+            $chooser
+        );
+        $this->assertStringNotContainsString('contagem_box.php', $chooser);
+    }
+
+    /**
+     * SITUATION: a stale counter code and nothing else.
+     *
+     * EXPECTED: contagem.php opens and says whom to ask.
+     */
+    public function testTheStaleCounterCodeAloneIsToldWhomToAsk(): void
+    {
+        $username = self::USER_PREFIX . 'velho';
+        $this->createUser($username, ['index', self::COUNTER_CODE]);
+
+        $page = $this->renderJuizPage('contagem.php', $username, ['p' => self::PROVA_ID]);
+
+        $this->assertStringContainsString('Você não está vinculado a nenhuma contagem', $page);
+    }
+
+    /**
+     * SITUATION: somebody with no code of this prova.
+     *
+     * EXPECTED: the start page does not list it, and contagem.php refuses.
+     */
+    public function testThePagesRefuseSomebodyWithNoCodeOfTheProva(): void
+    {
+        $username = self::USER_PREFIX . 'so_index';
+        $this->createUser($username, ['index']);
+
+        $start = $this->renderJuizPage('index.php', $username);
+        $this->assertStringNotContainsString('contagem.php?p=' . self::PROVA_ID, $start);
+
+        $page = $this->renderJuizPage('contagem.php', $username, ['p' => self::PROVA_ID]);
+        $this->assertSame('Você não tem acesso a essa página', trim($page));
+    }
+
+    /**
+     * SITUATION: the controller opens the hub of a prova that also logs the
+     * fueling station.
+     *
+     * EXPECTED: the bar at the top and the hub's list name the pit page the
+     * same way, "Registro de box e abastecimento".
+     */
+    public function testTheControllerBarNamesThePitLogLikeTheHub(): void
+    {
+        $this->changeSettings(['abastecimento' => true]);
+        $username = self::USER_PREFIX . 'chefe';
+        $this->createUser($username, ['index', self::CONTROLLER_CODE]);
+
+        $hub = $this->renderJuizPage('contagem.php', $username, ['p' => self::PROVA_ID]);
+
+        $link = '<a href="' . self::PIT_PAGE . '">Registro de box e abastecimento</a>';
+        $this->assertSame(2, substr_count($hub, $link), 'once in the bar, once in the hub');
+        $this->assertStringNotContainsString('>Registro de box</a>', $hub);
+    }
 }

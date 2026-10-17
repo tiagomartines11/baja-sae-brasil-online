@@ -283,7 +283,8 @@ final class Pagina
             // The file keeps its old name so that bookmarks keep working.
             'Usuários' => 'contagem_contadores.php',
             'Fontes e configurações' => 'contagem_fontes.php',
-            'Registro de box' => 'contagem_box.php',
+            // Named as on the hub and the chooser.
+            ContagemAccess::pitLogLabel($prova) => 'contagem_box.php',
         ];
 
         $html = '<nav class="contagem-nav"><strong>' . self::h($prova->getNome()) . '</strong>';
