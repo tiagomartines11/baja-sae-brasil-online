@@ -371,6 +371,10 @@ final class ContagemService
      * Fills in the classification field where it is blank, and recounts:
      * passes those cars already had now count.
      *
+     * Points are recalculated in the same locked step even when the recount
+     * moved no published number: the field just written is a field of the
+     * score row, and a formula may read it.
+     *
      * @return array{marcados: int[], ja_nao: int[]} the cars now marked, and those left alone because their field was not blank
      */
     public function markAllPresentAsClassified(string $usuario): array
@@ -379,6 +383,10 @@ final class ContagemService
             $outcome = ClassificationWriter::markAllPresent($this->prova, $usuario);
             if ($outcome['marcados'] !== []) {
                 $this->recomputeAndPublish();
+                $published = $this->publishLog->lastOutcome();
+                if ($published === null || !$published->refreshRan) {
+                    (new ScorePublisher($this->prova, $this->getSettings()))->refreshPointsNow();
+                }
             }
             return $outcome;
         });

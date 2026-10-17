@@ -120,7 +120,9 @@ From then on a car takes part when it is present **and** its field says
 presentes como aptos**, which fills in the field where it is **blank**, so
 nobody types 60 rows on race morning; each car changed gets a line in the
 log. A car whose field already says something else (`NÃO`) was decided about
-by a person: it is left alone and listed separately on the hub.
+by a person: it is left alone and listed separately on the hub. The button
+recounts the race and recalculates points in the same step, even when no
+lap count moved, as the entry page does after every save.
 
 Only classified cars appear as tiles, on the pit page lists, in the review
 table and in the feed. A pass typed for an unclassified car is **stored,

@@ -192,6 +192,20 @@ final class ScorePublisher
         return $this->write($valuesByCar, false, false, $outcome);
     }
 
+    /**
+     * Recalculates points although nothing of ours changed. For a field
+     * people type that a formula may read (the classification field
+     * filled in by "Marcar todos os presentes como aptos"): the judge's
+     * entry page recalculates after every save, and so must this. In every
+     * publish mode, as the entry page does. The caller holds the lock.
+     */
+    public function refreshPointsNow(): PublishOutcome
+    {
+        $outcome = new PublishOutcome();
+        $this->refreshPoints($outcome);
+        return $outcome;
+    }
+
     public static function refreshCount(): int
     {
         return self::$refreshCount;

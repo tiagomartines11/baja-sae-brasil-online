@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Tests\Contagem\Db;
 
 use Baja\Contagem\Service\Clock;
+use Baja\Contagem\Service\ScorePublisher;
 
 /**
  * Which cars take part in the race: present AND classified.
@@ -201,5 +202,54 @@ final class ClassifiedCarsTest extends DbTestCase
         $this->assertSame(['marcados' => [self::CAR_C], 'ja_nao' => [self::CAR_B]], $outcome);
         $this->assertSame('NÃO', $this->publishedData(self::CAR_B)[self::FIELD]);
         $this->assertSame('SIM', $this->publishedData(self::CAR_C)[self::FIELD]);
+    }
+
+    /**
+     * SITUATION: the prova's points formula reads the classification field
+     * itself: a car not marked APTO = SIM scores 0, one marked scores 10
+     * plus its share of 400 by laps. (The settings page refuses such a
+     * field now, but any manual field can feed a formula.) Car 11 has a
+     * lap. Car 33 has a score row from earlier with zero laps and a blank
+     * APTO, so it scores 0. Then "Marcar todos os presentes como aptos"
+     * marks car 33.
+     *
+     * WHAT WENT WRONG BEFORE: the button wrote SIM and recounted, but car
+     * 33 still had no lap, so no published number moved and points were
+     * not recalculated: its 0 stayed on the results page until the next
+     * lap of some car.
+     *
+     * EXPECTED: points are recalculated once, in the same step, and car 33
+     * now has its 10.
+     */
+    public function testMarkingCarsAsClassifiedRecalculatesPointsEvenWhenNoLapCountMoves(): void
+    {
+        $this->useFormula("\$APTO=='SIM' ? 10 + 400 * \$VOLTAS / \$Vmax : 0");
+        $this->useClassificationField();
+        foreach (['VOLTAS', 'LAST', 'BEST'] as $field) {
+            $this->setManualField(self::CAR_C, $field, 0);
+        }
+        $this->recordCountedPass(self::CAR_A, $this->at(60));
+        $this->recordCountedPass(self::CAR_A, $this->at(240));
+        $this->recompute();
+        $this->assertEquals(410, $this->publishedPoints(self::CAR_A)['ENDPTS']);
+        $this->assertEquals(0, $this->publishedPoints(self::CAR_C)['ENDPTS']);
+
+        $this->newRequest();
+        $recalculationsBefore = ScorePublisher::refreshCount();
+        $outcome = $this->service->markAllPresentAsClassified(self::USER_PREFIX . 'controle');
+
+        $this->assertSame([self::CAR_C], $outcome['marcados']);
+        $this->assertSame($recalculationsBefore + 1, ScorePublisher::refreshCount());
+        $this->assertEquals(10, $this->publishedPoints(self::CAR_C)['ENDPTS']);
+    }
+
+    /** Replaces the points formula of the test prova. */
+    private function useFormula(string $formula): void
+    {
+        $this->executeSql(
+            "UPDATE prova SET params = JSON_SET(params, '$.pontos.ENDPTS', ?) WHERE evento_id = ? AND prova_id = ?",
+            [$formula, self::EVENTO_ID, self::PROVA_ID]
+        );
+        $this->newRequest();
     }
 }
