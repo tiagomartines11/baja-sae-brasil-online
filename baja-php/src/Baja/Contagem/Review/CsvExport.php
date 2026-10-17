@@ -66,14 +66,14 @@ final class CsvExport
             SELECT p.passagem_id, p.fonte_id, f.nome AS fonte, p.dispositivo_id, d.usuario,
                    p.uuid_cliente, p.equipe_numero, p.ts_ms, p.qualidade_tempo, p.ts_dispositivo_ms,
                    p.ancora_servidor_ms, p.ancora_rtt_ms, p.ancora_idade_ms,
-                   p.digitacao_ms, p.modo_entrada, p.recebido_em_ms
+                   p.digitacao_ms, p.modo_entrada, p.recebido_em_ms, p.imagem_ref, p.confianca
               FROM contagem_passagem p
               JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
               JOIN contagem_dispositivo d ON d.dispositivo_id = p.dispositivo_id
              WHERE f.evento_id = :evento AND f.prova_id = :prova
              ORDER BY p.ts_ms, p.passagem_id',
         self::DECISOES => '
-            SELECT decisao_id, tipo, passagem_id, fonte_id, equipe_numero, ts_ms, ts_fim_ms,
+            SELECT decisao_id, tipo, passagem_id, passagem_alvo_id, fonte_id, equipe_numero, ts_ms, ts_fim_ms,
                    desfaz_decisao_id, origem, usuario, motivo, criado_em_ms
               FROM contagem_decisao
              WHERE evento_id = :evento AND prova_id = :prova

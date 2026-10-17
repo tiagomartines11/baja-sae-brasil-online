@@ -22,15 +22,17 @@ final class RaceReset
 {
     /**
      * The tables that are archived and emptied, with the columns copied and
-     * the condition that selects the rows of this prova.
+     * the condition that selects the rows of this prova. Every column of
+     * each table must be listed (RawDataColumnsTest checks it against the
+     * schema): a column left out is lost for good.
      */
     private const TABLES = [
         'contagem_decisao' => [
-            'columns' => ['decisao_id', 'tipo', 'passagem_id', 'fonte_id', 'equipe_numero', 'ts_ms', 'ts_fim_ms', 'desfaz_decisao_id', 'origem', 'usuario', 'motivo', 'criado_em_ms'],
+            'columns' => ['decisao_id', 'tipo', 'passagem_id', 'passagem_alvo_id', 'fonte_id', 'equipe_numero', 'ts_ms', 'ts_fim_ms', 'desfaz_decisao_id', 'origem', 'usuario', 'motivo', 'criado_em_ms'],
             'where' => 't.evento_id = :evento AND t.prova_id = :prova',
         ],
         'contagem_ocorrencia' => [
-            'columns' => ['ocorrencia_id', 'tipo', 'equipe_numero', 'ts_ms', 'usuario', 'criado_em_ms', 'substitui_id', 'uuid_cliente'],
+            'columns' => ['ocorrencia_id', 'tipo', 'equipe_numero', 'ts_ms', 'usuario', 'criado_em_ms', 'substitui_id', 'uuid_cliente', 'qualidade_tempo', 'ts_dispositivo_ms', 'modo_entrada', 'origem'],
             'where' => 't.evento_id = :evento AND t.prova_id = :prova',
         ],
         'contagem_total' => [
@@ -38,7 +40,7 @@ final class RaceReset
             'where' => 't.fonte_id IN (SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova)',
         ],
         'contagem_passagem' => [
-            'columns' => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_ms', 'qualidade_tempo', 'ts_dispositivo_ms', 'ancora_servidor_ms', 'ancora_rtt_ms', 'ancora_idade_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms'],
+            'columns' => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_ms', 'qualidade_tempo', 'ts_dispositivo_ms', 'ancora_servidor_ms', 'ancora_rtt_ms', 'ancora_idade_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms', 'imagem_ref', 'confianca'],
             'where' => 't.fonte_id IN (SELECT fonte_id FROM contagem_fonte WHERE evento_id = :evento AND prova_id = :prova)',
         ],
     ];
