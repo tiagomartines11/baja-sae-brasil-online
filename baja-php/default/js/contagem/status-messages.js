@@ -70,22 +70,28 @@ const TEXTO_ARMAZENAMENTO = {
  * @param {?string} problems.tokenProblem  'sem_permissao' | 'dispositivo_revogado' | 'sem_sessao' | 'sem_rede' | null
  * @param {string}  problems.armazenamento one of ARMAZENAMENTO.*
  * @param {?string} [problems.bloqueio]   access.js BLOQUEIO.* while nothing new may be recorded
- * @returns {{avisos: string[], oferecerNovaTentativa: boolean}}
+ * @returns {{avisos: string[], tipos: string[], oferecerNovaTentativa: boolean}}
  *          `avisos`: every warning that applies, most dangerous first.
+ *          `tipos`: which problem each warning is about, in the same order
+ *          ("recusados" stays the same while the count of refused records
+ *          grows), so that the banner can tell a new problem from new text.
  *          `oferecerNovaTentativa`: whether to show the "Tentar de novo" button.
  */
 export function describeBanner(state, problems) {
     const avisos = [];
+    const tipos = [];
 
     // First: it says why the entry controls are gone.
     const accessWarning = TEXTO_BLOQUEIO[problems.bloqueio] || null;
     if (accessWarning !== null) {
         avisos.push(accessWarning);
+        tipos.push('bloqueio:' + problems.bloqueio);
     }
 
     const storageWarning = TEXTO_ARMAZENAMENTO[problems.armazenamento] || null;
     if (storageWarning !== null) {
         avisos.push(storageWarning);
+        tipos.push('armazenamento:' + problems.armazenamento);
     }
 
     let uploadWarning = null;
@@ -100,12 +106,15 @@ export function describeBanner(state, problems) {
     }
     if (uploadWarning !== null) {
         avisos.push(uploadWarning);
+        tipos.push('envio:' + (state.conexao === CONEXAO.REVOGADO && problems.tokenProblem !== 'dispositivo_revogado'
+            ? 'revogado' : problems.tokenProblem));
     }
 
     const refusedMotivos = Array.isArray(state.recusados) ? state.recusados : [];
     const refusedWarning = describeRefused(refusedMotivos);
     if (refusedWarning !== null) {
         avisos.push(refusedWarning);
+        tipos.push('recusados');
     }
     // Trying again can help with an upload problem, and with records the
     // server never answered about. It cannot help with a record the server
@@ -114,6 +123,7 @@ export function describeBanner(state, problems) {
 
     return {
         avisos,
+        tipos,
         oferecerNovaTentativa: retryCanHelp && storageWarning === null,
     };
 }

@@ -43,7 +43,7 @@ const ON_DISK = { tokenProblem: null, armazenamento: ARMAZENAMENTO.DISCO };
 test('with nothing wrong there is no banner and no button', () => {
     const banner = describeBanner(queueState(), ON_DISK);
 
-    assert.deepEqual(banner, { avisos: [], oferecerNovaTentativa: false });
+    assert.deepEqual(banner, { avisos: [], tipos: [], oferecerNovaTentativa: false });
 });
 
 test('in memory mode the banner says "NÃO recarregue" and offers no button', () => {
@@ -437,6 +437,30 @@ test('the banner opens on a tap and closes with "recolher"; something new closes
     assert.equal(banner.classes.has('aviso-fixo-aberto'), false);
     assert.equal(toggle.textContent, 'ver tudo (2)');
     assert.equal(documentRef.getElementById('aviso-fixo-textos').children.length, 2, 'every warning is still there');
+});
+
+test('one more refused record does not snap the open banner shut', () => {
+    // Situation: a record was refused; the counter opens the banner to read
+    // it. A second record is refused while they read. Before: the sentence
+    // said "2 registros" instead of "1 registro", and that alone closed the
+    // banner under their eyes. Same problem, new count: it stays open.
+    const documentRef = createFakeBarDocument();
+    const bar = createStatusBar(documentRef, { fonte: { nome: 'Contador 1' } });
+    const banner = documentRef.getElementById('aviso-fixo');
+    const texts = documentRef.getElementById('aviso-fixo-textos');
+
+    bar.render(queueState({ outrosUsuarios: [], recusados: ['simulacao_nao_permitida'] }), DISK_OK);
+    banner.tap(texts);
+    bar.render(queueState({ outrosUsuarios: [], recusados: ['simulacao_nao_permitida', 'simulacao_nao_permitida'] }), DISK_OK);
+
+    assert.equal(banner.classes.has('aviso-fixo-aberto'), true);
+    assert.match(texts.children[0].textContent, /^2 registros foram recusados/);
+
+    // Solved, then back: it appears closed, like any new banner.
+    bar.render(queueState({ outrosUsuarios: [], recusados: [] }), DISK_OK);
+    assert.equal(banner.hidden, true);
+    bar.render(queueState({ outrosUsuarios: [], recusados: ['simulacao_nao_permitida'] }), DISK_OK);
+    assert.equal(banner.classes.has('aviso-fixo-aberto'), false);
 });
 
 test('the bar puts the short texts on screen and the long ones in the titles', () => {

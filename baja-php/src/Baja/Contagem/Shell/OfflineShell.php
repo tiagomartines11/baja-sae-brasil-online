@@ -210,8 +210,9 @@ final class OfflineShell
     <div class="barra-linha barra-outros"><?= htmlspecialchars($outrosRotulo) ?> <b id="st-outros">ninguém</b></div>
     <?php // Lies over the bar's last two lines, so that it never pushes the keypad or the tiles
           // down; a tap opens it over the page (status-bar.js). ?>
-    <div id="aviso-fixo" class="aviso-fixo" role="alert" hidden>
-        <div id="aviso-fixo-textos" class="aviso-fixo-textos"></div>
+    <?php // role="alert" on the texts only: the toggle's label changes on every tap, and is no news. ?>
+    <div id="aviso-fixo" class="aviso-fixo" hidden>
+        <div id="aviso-fixo-textos" class="aviso-fixo-textos" role="alert"></div>
         <button type="button" id="btn-aviso-fixo" class="aviso-fixo-alternar" aria-expanded="false"
                 aria-controls="aviso-fixo-textos">ver tudo</button>
         <?php // Retries in place, never reloads; the script shows it only when a retry can help. ?>

@@ -30,6 +30,7 @@ export function createStatusBar(documentRef, config) {
     const botaoTentarDeNovo = element('btn-reconectar');
     const botaoAlternar = element('btn-aviso-fixo');
     let renderedBannerSignature = null;
+    let renderedBannerTipos = [];
     let bannerCount = 0;
     let bannerOpen = false;
 
@@ -63,11 +64,18 @@ export function createStatusBar(documentRef, config) {
             paragraph.textContent = aviso;
             avisoFixoTextos.appendChild(paragraph);
         }
+        const wasShown = !avisoFixo.hidden;
         avisoFixo.hidden = banner.avisos.length === 0;
         botaoTentarDeNovo.hidden = !banner.oferecerNovaTentativa;
-        // Something new to say: closed again, and it flashes once more.
         bannerCount = banner.avisos.length;
-        setBannerOpen(false);
+        // A new problem (or the banner just appearing): closed again, so
+        // that the start of the newest news is what shows. Only the text of a
+        // problem already there changed (one more refused record): somebody
+        // who opened it to read it keeps reading.
+        const newProblem = banner.tipos.some((tipo) => !renderedBannerTipos.includes(tipo));
+        renderedBannerTipos = banner.tipos;
+        setBannerOpen(bannerOpen && wasShown && !newProblem);
+        // Something new to say: it flashes once more.
         avisoFixo.classList.remove('aviso-fixo-novo');
         void avisoFixo.offsetWidth;
         avisoFixo.classList.add('aviso-fixo-novo');
