@@ -2,7 +2,7 @@
 
 import { el, substituir } from './revisao-dom.js';
 import {
-  NOMES_DE_ALERTA, NOMES_DE_ESTADO, haQuanto, idade, listaDeCarros, relogio, relogioDaCorrida,
+  NOMES_DE_ALERTA, NOMES_DE_ESTADO, haExato, haQuanto, listaDeCarros, relogio, relogioDaCorrida,
 } from './revisao-formato.js';
 import { exclusoesAbertas } from './revisao-decisoes.js';
 import {
@@ -68,7 +68,7 @@ export function descreverPublicacao(estado, agoraServidorMs) {
     return { classe: 'publicacao', rotulo: 'ainda não publicado', idade: null, titulo: null };
   }
   const desdeMs = agoraServidorMs - estado.publicado_em_ms;
-  return { classe: 'publicacao', rotulo: 'publicado', idade: haQuanto(desdeMs), titulo: `publicado há ${idade(desdeMs)}` };
+  return { classe: 'publicacao', rotulo: 'publicado', idade: haQuanto(desdeMs), titulo: `publicado ${haExato(desdeMs)}` };
 }
 
 // "calculado agora" / "calculado há 30 s"; null when unknown. Late (red),
@@ -82,8 +82,8 @@ export function descreverCalculo(estado, agoraServidorMs) {
   return {
     classe: calculo.atrasado ? 'calculo atrasado' : 'calculo',
     rotulo: 'calculado',
-    idade: calculo.atrasado ? `há ${idade(desdeMs)}` : haQuanto(desdeMs),
-    titulo: `Calculado há ${idade(desdeMs)}. Há quanto tempo alertas, tempos de volta e melhores voltas foram recalculados. `
+    idade: calculo.atrasado ? haExato(desdeMs) : haQuanto(desdeMs),
+    titulo: `Calculado ${haExato(desdeMs)}. Há quanto tempo alertas, tempos de volta e melhores voltas foram recalculados. `
       + 'A contagem de voltas em si é imediata.',
   };
 }

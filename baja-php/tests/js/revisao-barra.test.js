@@ -24,6 +24,12 @@ test('just published reads "publicado agora", never "publicado há agora"', () =
   assert.equal(publicacao.idade, 'agora');
 });
 
+test('no tooltip of the bar reads "há agora"', () => {
+  assert.equal(descreverPublicacao({ publicado_em_ms: AGORA - 500 }, AGORA).titulo, 'publicado agora');
+  const calculo = descreverCalculo({ calculado_em_ms: AGORA - 500, corrida: { estado: 'correndo' } }, AGORA);
+  assert.match(calculo.titulo, /^Calculado agora\./);
+});
+
 test('the age of the publication moves in steps of 15 s, with the exact age in the title', () => {
   const idades = [0, 4, 9, 12, 14].map((segundos) => descreverPublicacao({ publicado_em_ms: AGORA - segundos * 1000 }, AGORA).idade);
   assert.deepEqual(new Set(idades), new Set(['agora']), 'nothing changes in the first 15 s');

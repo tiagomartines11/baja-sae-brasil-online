@@ -13,7 +13,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  AVISO_TEMPO_DE_VOLTA, NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, haQuanto, idade, idadeEmPassos, interpretarTempoDeProva, relogio,
+  AVISO_TEMPO_DE_VOLTA, NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, haExato, haQuanto, idade, idadeEmPassos, interpretarTempoDeProva, relogio,
   relogioDaCorrida, tempoDeProva,
 } from '../../default/js/contagem/revisao-formato.js';
 
@@ -72,6 +72,12 @@ test('"há" goes with an age, never with "agora"', () => {
   assert.equal(haQuanto(3 * SEGUNDO), 'agora');
   assert.equal(haQuanto(31 * SEGUNDO), 'há 30 s');
   assert.equal(haQuanto(undefined), '—');
+});
+
+test('the exact age for a tooltip is "agora" under 2 s, never "há agora"', () => {
+  assert.equal(haExato(1500), 'agora');
+  assert.equal(haExato(12 * SEGUNDO), 'há 12 s');
+  assert.equal(haExato(null), '—');
 });
 
 test('a moment of the race is shown as time since the start', () => {

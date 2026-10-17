@@ -115,6 +115,12 @@ export function haQuanto(ms) {
   return quanto === 'agora' || quanto === SEM_VALOR ? quanto : `há ${quanto}`;
 }
 
+// The same, to the second, for tooltips: "agora" or "há 12 s".
+export function haExato(ms) {
+  const quanto = idade(ms);
+  return quanto === 'agora' || quanto === SEM_VALOR ? quanto : `há ${quanto}`;
+}
+
 // A moment of the race shown as time since the start. Before the start is
 // known there is nothing sensible to show.
 export function tempoDeProva(tsMs, largadaMs) {

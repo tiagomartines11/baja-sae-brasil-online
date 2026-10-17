@@ -118,6 +118,11 @@ test('the normal lag between two heartbeats changes nothing on the chip', () => 
   assert.equal(estadoDaFonte(fonte, AGORA).titulo, 'ao vivo, sincronizado há 9 s');
 });
 
+test('a source synchronised a moment ago says "sincronizado agora", never "há agora"', () => {
+  const fonte = { ativa: true, tipo: 'manual', stats: { offline: false, visto_em_ms: AGORA - 500, sincronizado_ate_ms: AGORA - 500, entradas: 3 } };
+  assert.equal(estadoDaFonte(fonte, AGORA).titulo, 'ao vivo, sincronizado agora');
+});
+
 test('a source in contact but with entries still to upload turns amber and says how late, in steps', () => {
   // The counter's phone is talking to the server, but its last "I have
   // sent everything" was 40 seconds ago: recent passes may be missing.
@@ -126,7 +131,7 @@ test('a source in contact but with entries still to upload turns amber and says 
   assert.equal(chip.classe, 'ao-vivo atrasada');
   assert.equal(chip.texto, 'ao vivo', 'the text keeps its shape');
   assert.equal(chip.idade, '30 s', 'the age moves in steps of 15 s');
-  assert.match(chip.titulo, /há 40 s/, 'the exact age is in the title');
+  assert.match(chip.titulo, /até 40 s atrás/, 'the exact age is in the title');
 });
 
 test('a source the server has not heard from is shown as offline, with for how long', () => {

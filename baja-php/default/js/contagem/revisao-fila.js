@@ -2,7 +2,7 @@
 // of the flag queue, the state of each source.
 // Pure functions, tested with `node --test`.
 
-import { idade, idadeEmPassos, tempoDeProva } from './revisao-formato.js';
+import { haExato, idade, idadeEmPassos, tempoDeProva } from './revisao-formato.js';
 
 // Half of the "about one minute" a selected flag shows around its moment.
 export const MEIA_JANELA_MS = 30000;
@@ -188,7 +188,7 @@ export function estadoDaFonte(fonte, agoraServidorMs, largadaMs = null) {
       classe: 'offline',
       texto: 'offline',
       idade: idadeEmPassos(agoraServidorMs - visto),
-      titulo: `offline: nenhum contato há ${idade(agoraServidorMs - visto)}`,
+      titulo: `offline: último contato ${haExato(agoraServidorMs - visto)}`,
     };
   }
   if (stats.nada_a_esperar) {
@@ -198,7 +198,7 @@ export function estadoDaFonte(fonte, agoraServidorMs, largadaMs = null) {
       classe: 'sem-dispositivo',
       texto: 'sem dispositivo aberto',
       idade: null,
-      titulo: `nenhum dispositivo aberto; último contato há ${idade(agoraServidorMs - visto)}`,
+      titulo: `nenhum dispositivo aberto; último contato ${haExato(agoraServidorMs - visto)}`,
     };
   }
   const sincronizado = stats.sincronizado_ate_ms ?? null;
@@ -207,13 +207,13 @@ export function estadoDaFonte(fonte, agoraServidorMs, largadaMs = null) {
   }
   const atrasoMs = agoraServidorMs - sincronizado;
   if (atrasoMs < ATRASO_DE_SINCRONIA_MS) {
-    return { classe: 'ao-vivo', texto: 'ao vivo', idade: null, titulo: `ao vivo, sincronizado há ${idade(atrasoMs)}` };
+    return { classe: 'ao-vivo', texto: 'ao vivo', idade: null, titulo: `ao vivo, sincronizado ${haExato(atrasoMs)}` };
   }
   return {
     classe: 'ao-vivo atrasada',
     texto: 'ao vivo',
     idade: idadeEmPassos(atrasoMs),
-    titulo: `ao vivo, mas sincronizado só até há ${idade(atrasoMs)}: registros recentes podem faltar`,
+    titulo: `ao vivo, mas com envios atrasados: chegou tudo o que foi registrado até ${idade(atrasoMs)} atrás; registros mais recentes podem faltar`,
   };
 }
 
