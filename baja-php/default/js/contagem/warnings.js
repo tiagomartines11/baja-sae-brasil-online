@@ -47,7 +47,7 @@ export function computeWarnings({ car, time, tsDeviceMs, ownEntries, validCars, 
             tipo: AVISO.NAO_CLASSIFICADO,
             mensagem: 'CARRO NÃO CLASSIFICADO: o carro ' + car + ' não está classificado para esta prova. '
                 + 'Registrado mesmo assim; avise o responsável.',
-            curta: 'NÃO CLASSIFICADO: avise',
+            curta: 'NÃO CLASSIF.: avise o resp.',
             grave: true,
         });
     } else if ((carListIsKnown(validCars) || carListIsKnown(unclassifiedCars)) && !hasNumber(validCars)) {

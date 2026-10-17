@@ -49,11 +49,15 @@ export function describeRecordedEvent(car, tipo, unknownNumber) {
     return 'Carro ' + car + ' ' + describeTipo(tipo) + '.' + (unknownNumber ? ' Número fora da lista (registrado).' : '');
 }
 
-/** The page opened in the mode this device used last time; nothing was asked. */
+/** The page opened in the mode this device used last time; nothing was asked,
+ *  so it says where to change it. */
 export function describeReopened(area, sentido) {
-    return 'Como da última vez: ' + describeGroups(area, sentido).modo + '.';
+    return 'Como da última vez: ' + describeGroups(area, sentido).modo + ' (mude acima).';
 }
 
+// Recording is not allowed on this page: the banner, open above, says why
+// in full (two lines here could not hold it).
+export const TEXTO_BLOQUEADO = (car) => 'NÃO REGISTRADO: carro ' + car + '. Bloqueado: veja o aviso acima.';
 export const TEXTO_NAO_GUARDOU = (car) => 'NÃO REGISTRADO: o aparelho não guardou o carro ' + car + '.';
 export const TEXTO_ABASTECIMENTO_DESLIGADO = 'Abastecimento desligado nesta prova: agora você registra o BOX.';
 

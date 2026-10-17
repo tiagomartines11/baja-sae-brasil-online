@@ -20,7 +20,7 @@ import {
     AREA, SENTIDO, PASSO, TIPO_PARADA, PitFlow, mergeCarsInside, orderCarsForMode, partsOfTipo, tipoFor,
 } from '../../default/js/contagem/pit-session.js';
 import {
-    describeGroups, describeRecordedEvent, describeReopened, describeTipo, TEXTO_ABASTECIMENTO_DESLIGADO, TEXTO_NAO_GUARDOU,
+    describeGroups, describeRecordedEvent, describeReopened, describeTipo, TEXTO_ABASTECIMENTO_DESLIGADO, TEXTO_BLOQUEADO, TEXTO_NAO_GUARDOU,
 } from '../../default/js/contagem/box-listas.js';
 import { createPreferences } from '../../default/js/contagem/entry-modes.js';
 import { buildPitEventsCsv } from '../../default/js/contagem/csv-export.js';
@@ -335,13 +335,15 @@ test('the line above the tiles says what the last tap did in at most two lines',
         describeRecordedEvent(1234, 'abastecimento_saida', true),
         describeRecordedEvent(15, 'box_entrada', false),
         describeReopened(AREA.ABASTECIMENTO, SENTIDO.SAIDA),
+        describeReopened(AREA.ABASTECIMENTO, SENTIDO.ENTRADA),
         TEXTO_NAO_GUARDOU(1234),
+        TEXTO_BLOQUEADO(1234),
         TEXTO_ABASTECIMENTO_DESLIGADO,
     ];
 
     assert.equal(messages[0], 'Carro 1234 saiu do abastecimento. Número fora da lista (registrado).');
     assert.equal(messages[1], 'Carro 15 entrou no box.');
-    assert.equal(messages[2], 'Como da última vez: SAÍDA do abastecimento.');
+    assert.equal(messages[2], 'Como da última vez: SAÍDA do abastecimento (mude acima).');
     for (const message of messages) {
         assert.ok(message.length <= 70, '"' + message + '" is ' + message.length + ' characters');
     }

@@ -24,7 +24,7 @@ import { createFeedback, recordThenPrepareSound } from './feedback.js';
 import { NumberBuffer } from './entry-modes.js';
 import { carListIsKnown, teamNameOf } from './warnings.js';
 import {
-    createPitLists, describeRecordedEvent, describeReopened, TEXTO_ABASTECIMENTO_DESLIGADO, TEXTO_NAO_GUARDOU,
+    createPitLists, describeRecordedEvent, describeReopened, TEXTO_ABASTECIMENTO_DESLIGADO, TEXTO_BLOQUEADO, TEXTO_NAO_GUARDOU,
 } from './box-listas.js';
 import { TapGuard, TileLayoutHold, LAYOUT_HOLD_MS } from './box-toques.js';
 import { RecordingBlockedError, TEXTO_BLOQUEIO } from './access.js';
@@ -48,10 +48,10 @@ async function main() {
 
     // Always two lines high, right above the tiles (style sheet: .box-mensagem);
     // a longer text is cut on screen and kept whole in the title.
-    function showMessage(text, isProblem) {
+    function showMessage(text, isProblem, fullText = text) {
         const message = element('box-mensagem');
         message.textContent = text;
-        message.title = text;
+        message.title = fullText;
         message.className = isProblem ? 'box-mensagem box-mensagem-erro' : 'box-mensagem';
     }
 
@@ -83,7 +83,7 @@ async function main() {
         } catch (storageError) {
             if (storageError instanceof RecordingBlockedError) {
                 // The banner, open at the top, says why.
-                showMessage('NÃO REGISTRADO: ' + TEXTO_BLOQUEIO[storageError.motivo], true);
+                showMessage(TEXTO_BLOQUEADO(car), true, 'NÃO REGISTRADO: ' + TEXTO_BLOQUEIO[storageError.motivo]);
                 throw storageError;
             }
             showMessage(TEXTO_NAO_GUARDOU(car), true);

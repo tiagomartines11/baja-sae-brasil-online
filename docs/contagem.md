@@ -223,7 +223,7 @@ to the start recorded in race control.
   says "Desfeito: carro N".
 - After each entry the big box above the keys shows the number, the team
   and at most **one short warning line** ("REPETIDO há 3 s: desfazer?",
-  "NÃO CLASSIFICADO: avise", "Número fora da lista"; with two, the most
+  "NÃO CLASSIF.: avise o resp.", "Número fora da lista"; with two, the most
   serious one). The whole sentence of every warning is on that entry's row
   in the recent list. Before the first entry the box says what to do in the
   mode on screen ("Digite o número", "Toque no carro").
@@ -239,8 +239,14 @@ to the start recorded in race control.
 - A problem with this device (blocked, storage, records refused) shows as a
   **red banner over the bottom of the status bar**, flashing when it
   appears. Tap it to read it all ("ver tudo") and "recolher" to close it;
-  "Tentar de novo" is inside. Where nothing may be recorded any more, the
-  banner is simply shown open.
+  "Tentar de novo" is inside. A new problem closes it again so that its
+  first line shows; one more refused record does not (it stays open while
+  you read). Where nothing may be recorded any more, the banner is simply
+  shown open.
+- While the closed banner is up, it **hides the "Horário oficial" and
+  "Também contando aqui" lines** of the status bar. You can still record
+  (entries wait in the queue until the official time is known, and "Na
+  fila" says how many). The trade-off is deliberate: the pad stays put.
 - You see warnings about your own typing only. You never see what the other
   counters typed. That is deliberate: independence is what makes the
   cross-check worth anything.

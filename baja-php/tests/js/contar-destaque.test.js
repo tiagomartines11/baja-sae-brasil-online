@@ -60,7 +60,7 @@ test('every warning has a short form for the flash and keeps its whole sentence'
     const repeated = warningsFor(15, true)[0];
 
     assert.equal(unknown.curta, 'Número fora da lista');
-    assert.equal(unclassified.curta, 'NÃO CLASSIFICADO: avise');
+    assert.equal(unclassified.curta, 'NÃO CLASSIF.: avise o resp.');
     assert.equal(repeated.curta, 'REPETIDO há 3 s: desfazer?');
     // The whole sentences are unchanged: the recent list shows them.
     assert.match(unknown.mensagem, /Número 14 não está na lista de carros/);
@@ -107,7 +107,7 @@ test('the flash of a pass with two warnings has one short line, both sentences a
 
     assert.equal(flash.numero, '90');
     assert.equal(flash.equipe, 'Equipe Noventa');
-    assert.equal(flash.aviso.curta, 'NÃO CLASSIFICADO: avise');
+    assert.equal(flash.aviso.curta, 'NÃO CLASSIF.: avise o resp.');
     assert.deepEqual(flash.aviso.completa, avisos.map((aviso) => aviso.mensagem));
     assert.equal(flash.aviso.completa.length, 2);
     assert.equal(flash.nivel, NIVEL.ERRO);
