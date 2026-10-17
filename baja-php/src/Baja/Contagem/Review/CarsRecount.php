@@ -177,6 +177,7 @@ final class CarsRecount
     public const ANTES_DA_LARGADA = 'antes_da_largada';
     public const FONTE_INATIVA = 'fonte_inativa';
     public const FONTE_EXCLUIDA = 'fonte_excluida';
+    public const FONTE_OBSERVADORA = 'fonte_observadora';
     public const TEMPO_DESCONHECIDO = 'tempo_desconhecido';
 
     /**
@@ -186,6 +187,7 @@ final class CarsRecount
      *   repetida            the engine dropped it as a double tap or a handover duplicate
      *   tempo_desconhecido  its phone had no usable clock: nobody knows when it was typed
      *   antes_da_largada    typed before the start (or the race has none yet)
+     *   fonte_observadora   its source was an observer at that moment: compared, never counted
      *   fonte_inativa       its source was switched off at that moment
      *   fonte_excluida      a reviewer excluded its source for that period
      */
@@ -206,6 +208,9 @@ final class CarsRecount
             return self::ANTES_DA_LARGADA;
         }
         $source = $this->sourcesById[$raw->fonteId] ?? null;
+        if ($source !== null && $source->wasObservingAt($raw->tsMs) && !$this->applied->isSourceExcludedAt($raw->fonteId, $raw->tsMs)) {
+            return self::FONTE_OBSERVADORA;
+        }
         if ($source === null || !$source->wasCountingAt($raw->tsMs)) {
             return self::FONTE_INATIVA;
         }

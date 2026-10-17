@@ -109,6 +109,25 @@ final class Engine
             $input->nowMs
         );
 
+        // Machine vision on trial: measured after everything else, and only
+        // when some source is an observer.
+        if (ObserverComparator::hasObservers($counter->sourcesById)) {
+            $comparison = ObserverComparator::compare(
+                $counter->sourcesById,
+                $groupsInTimeOrder,
+                $counter->applied,
+                $counter->availability,
+                $timeline,
+                $settings->janelaMs
+            );
+            foreach ($comparison->statsBySource as $fonteId => $observerStats) {
+                if (isset($result->sourceStats[$fonteId])) {
+                    $result->sourceStats[$fonteId]->observacao = $observerStats;
+                }
+            }
+            $result->observerRows = $comparison->rows;
+        }
+
         return $result;
     }
 

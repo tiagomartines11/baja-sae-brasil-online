@@ -63,7 +63,7 @@ class ContagemPassagemTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 14;
+    public const NUM_COLUMNS = 16;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ContagemPassagemTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 14;
+    public const NUM_HYDRATE_COLUMNS = 16;
 
     /**
      * the column name for the passagem_id field
@@ -146,6 +146,16 @@ class ContagemPassagemTableMap extends TableMap
     public const COL_RECEBIDO_EM_MS = 'contagem_passagem.recebido_em_ms';
 
     /**
+     * the column name for the imagem_ref field
+     */
+    public const COL_IMAGEM_REF = 'contagem_passagem.imagem_ref';
+
+    /**
+     * the column name for the confianca field
+     */
+    public const COL_CONFIANCA = 'contagem_passagem.confianca';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -159,11 +169,11 @@ class ContagemPassagemTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['PassagemId', 'FonteId', 'DispositivoId', 'UuidCliente', 'EquipeNumero', 'TsMs', 'QualidadeTempo', 'TsDispositivoMs', 'AncoraServidorMs', 'AncoraRttMs', 'AncoraIdadeMs', 'DigitacaoMs', 'ModoEntrada', 'RecebidoEmMs', ],
-        self::TYPE_CAMELNAME     => ['passagemId', 'fonteId', 'dispositivoId', 'uuidCliente', 'equipeNumero', 'tsMs', 'qualidadeTempo', 'tsDispositivoMs', 'ancoraServidorMs', 'ancoraRttMs', 'ancoraIdadeMs', 'digitacaoMs', 'modoEntrada', 'recebidoEmMs', ],
-        self::TYPE_COLNAME       => [ContagemPassagemTableMap::COL_PASSAGEM_ID, ContagemPassagemTableMap::COL_FONTE_ID, ContagemPassagemTableMap::COL_DISPOSITIVO_ID, ContagemPassagemTableMap::COL_UUID_CLIENTE, ContagemPassagemTableMap::COL_EQUIPE_NUMERO, ContagemPassagemTableMap::COL_TS_MS, ContagemPassagemTableMap::COL_QUALIDADE_TEMPO, ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS, ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS, ContagemPassagemTableMap::COL_ANCORA_RTT_MS, ContagemPassagemTableMap::COL_ANCORA_IDADE_MS, ContagemPassagemTableMap::COL_DIGITACAO_MS, ContagemPassagemTableMap::COL_MODO_ENTRADA, ContagemPassagemTableMap::COL_RECEBIDO_EM_MS, ],
-        self::TYPE_FIELDNAME     => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_ms', 'qualidade_tempo', 'ts_dispositivo_ms', 'ancora_servidor_ms', 'ancora_rtt_ms', 'ancora_idade_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ]
+        self::TYPE_PHPNAME       => ['PassagemId', 'FonteId', 'DispositivoId', 'UuidCliente', 'EquipeNumero', 'TsMs', 'QualidadeTempo', 'TsDispositivoMs', 'AncoraServidorMs', 'AncoraRttMs', 'AncoraIdadeMs', 'DigitacaoMs', 'ModoEntrada', 'RecebidoEmMs', 'ImagemRef', 'Confianca', ],
+        self::TYPE_CAMELNAME     => ['passagemId', 'fonteId', 'dispositivoId', 'uuidCliente', 'equipeNumero', 'tsMs', 'qualidadeTempo', 'tsDispositivoMs', 'ancoraServidorMs', 'ancoraRttMs', 'ancoraIdadeMs', 'digitacaoMs', 'modoEntrada', 'recebidoEmMs', 'imagemRef', 'confianca', ],
+        self::TYPE_COLNAME       => [ContagemPassagemTableMap::COL_PASSAGEM_ID, ContagemPassagemTableMap::COL_FONTE_ID, ContagemPassagemTableMap::COL_DISPOSITIVO_ID, ContagemPassagemTableMap::COL_UUID_CLIENTE, ContagemPassagemTableMap::COL_EQUIPE_NUMERO, ContagemPassagemTableMap::COL_TS_MS, ContagemPassagemTableMap::COL_QUALIDADE_TEMPO, ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS, ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS, ContagemPassagemTableMap::COL_ANCORA_RTT_MS, ContagemPassagemTableMap::COL_ANCORA_IDADE_MS, ContagemPassagemTableMap::COL_DIGITACAO_MS, ContagemPassagemTableMap::COL_MODO_ENTRADA, ContagemPassagemTableMap::COL_RECEBIDO_EM_MS, ContagemPassagemTableMap::COL_IMAGEM_REF, ContagemPassagemTableMap::COL_CONFIANCA, ],
+        self::TYPE_FIELDNAME     => ['passagem_id', 'fonte_id', 'dispositivo_id', 'uuid_cliente', 'equipe_numero', 'ts_ms', 'qualidade_tempo', 'ts_dispositivo_ms', 'ancora_servidor_ms', 'ancora_rtt_ms', 'ancora_idade_ms', 'digitacao_ms', 'modo_entrada', 'recebido_em_ms', 'imagem_ref', 'confianca', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ]
     ];
 
     /**
@@ -175,11 +185,11 @@ class ContagemPassagemTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['PassagemId' => 0, 'FonteId' => 1, 'DispositivoId' => 2, 'UuidCliente' => 3, 'EquipeNumero' => 4, 'TsMs' => 5, 'QualidadeTempo' => 6, 'TsDispositivoMs' => 7, 'AncoraServidorMs' => 8, 'AncoraRttMs' => 9, 'AncoraIdadeMs' => 10, 'DigitacaoMs' => 11, 'ModoEntrada' => 12, 'RecebidoEmMs' => 13, ],
-        self::TYPE_CAMELNAME     => ['passagemId' => 0, 'fonteId' => 1, 'dispositivoId' => 2, 'uuidCliente' => 3, 'equipeNumero' => 4, 'tsMs' => 5, 'qualidadeTempo' => 6, 'tsDispositivoMs' => 7, 'ancoraServidorMs' => 8, 'ancoraRttMs' => 9, 'ancoraIdadeMs' => 10, 'digitacaoMs' => 11, 'modoEntrada' => 12, 'recebidoEmMs' => 13, ],
-        self::TYPE_COLNAME       => [ContagemPassagemTableMap::COL_PASSAGEM_ID => 0, ContagemPassagemTableMap::COL_FONTE_ID => 1, ContagemPassagemTableMap::COL_DISPOSITIVO_ID => 2, ContagemPassagemTableMap::COL_UUID_CLIENTE => 3, ContagemPassagemTableMap::COL_EQUIPE_NUMERO => 4, ContagemPassagemTableMap::COL_TS_MS => 5, ContagemPassagemTableMap::COL_QUALIDADE_TEMPO => 6, ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS => 7, ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS => 8, ContagemPassagemTableMap::COL_ANCORA_RTT_MS => 9, ContagemPassagemTableMap::COL_ANCORA_IDADE_MS => 10, ContagemPassagemTableMap::COL_DIGITACAO_MS => 11, ContagemPassagemTableMap::COL_MODO_ENTRADA => 12, ContagemPassagemTableMap::COL_RECEBIDO_EM_MS => 13, ],
-        self::TYPE_FIELDNAME     => ['passagem_id' => 0, 'fonte_id' => 1, 'dispositivo_id' => 2, 'uuid_cliente' => 3, 'equipe_numero' => 4, 'ts_ms' => 5, 'qualidade_tempo' => 6, 'ts_dispositivo_ms' => 7, 'ancora_servidor_ms' => 8, 'ancora_rtt_ms' => 9, 'ancora_idade_ms' => 10, 'digitacao_ms' => 11, 'modo_entrada' => 12, 'recebido_em_ms' => 13, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ]
+        self::TYPE_PHPNAME       => ['PassagemId' => 0, 'FonteId' => 1, 'DispositivoId' => 2, 'UuidCliente' => 3, 'EquipeNumero' => 4, 'TsMs' => 5, 'QualidadeTempo' => 6, 'TsDispositivoMs' => 7, 'AncoraServidorMs' => 8, 'AncoraRttMs' => 9, 'AncoraIdadeMs' => 10, 'DigitacaoMs' => 11, 'ModoEntrada' => 12, 'RecebidoEmMs' => 13, 'ImagemRef' => 14, 'Confianca' => 15, ],
+        self::TYPE_CAMELNAME     => ['passagemId' => 0, 'fonteId' => 1, 'dispositivoId' => 2, 'uuidCliente' => 3, 'equipeNumero' => 4, 'tsMs' => 5, 'qualidadeTempo' => 6, 'tsDispositivoMs' => 7, 'ancoraServidorMs' => 8, 'ancoraRttMs' => 9, 'ancoraIdadeMs' => 10, 'digitacaoMs' => 11, 'modoEntrada' => 12, 'recebidoEmMs' => 13, 'imagemRef' => 14, 'confianca' => 15, ],
+        self::TYPE_COLNAME       => [ContagemPassagemTableMap::COL_PASSAGEM_ID => 0, ContagemPassagemTableMap::COL_FONTE_ID => 1, ContagemPassagemTableMap::COL_DISPOSITIVO_ID => 2, ContagemPassagemTableMap::COL_UUID_CLIENTE => 3, ContagemPassagemTableMap::COL_EQUIPE_NUMERO => 4, ContagemPassagemTableMap::COL_TS_MS => 5, ContagemPassagemTableMap::COL_QUALIDADE_TEMPO => 6, ContagemPassagemTableMap::COL_TS_DISPOSITIVO_MS => 7, ContagemPassagemTableMap::COL_ANCORA_SERVIDOR_MS => 8, ContagemPassagemTableMap::COL_ANCORA_RTT_MS => 9, ContagemPassagemTableMap::COL_ANCORA_IDADE_MS => 10, ContagemPassagemTableMap::COL_DIGITACAO_MS => 11, ContagemPassagemTableMap::COL_MODO_ENTRADA => 12, ContagemPassagemTableMap::COL_RECEBIDO_EM_MS => 13, ContagemPassagemTableMap::COL_IMAGEM_REF => 14, ContagemPassagemTableMap::COL_CONFIANCA => 15, ],
+        self::TYPE_FIELDNAME     => ['passagem_id' => 0, 'fonte_id' => 1, 'dispositivo_id' => 2, 'uuid_cliente' => 3, 'equipe_numero' => 4, 'ts_ms' => 5, 'qualidade_tempo' => 6, 'ts_dispositivo_ms' => 7, 'ancora_servidor_ms' => 8, 'ancora_rtt_ms' => 9, 'ancora_idade_ms' => 10, 'digitacao_ms' => 11, 'modo_entrada' => 12, 'recebido_em_ms' => 13, 'imagem_ref' => 14, 'confianca' => 15, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ]
     ];
 
     /**
@@ -300,6 +310,21 @@ class ContagemPassagemTableMap extends TableMap
         'COL_RECEBIDO_EM_MS' => 'RECEBIDO_EM_MS',
         'recebido_em_ms' => 'RECEBIDO_EM_MS',
         'contagem_passagem.recebido_em_ms' => 'RECEBIDO_EM_MS',
+        'ImagemRef' => 'IMAGEM_REF',
+        'ContagemPassagem.ImagemRef' => 'IMAGEM_REF',
+        'imagemRef' => 'IMAGEM_REF',
+        'contagemPassagem.imagemRef' => 'IMAGEM_REF',
+        'ContagemPassagemTableMap::COL_IMAGEM_REF' => 'IMAGEM_REF',
+        'COL_IMAGEM_REF' => 'IMAGEM_REF',
+        'imagem_ref' => 'IMAGEM_REF',
+        'contagem_passagem.imagem_ref' => 'IMAGEM_REF',
+        'Confianca' => 'CONFIANCA',
+        'ContagemPassagem.Confianca' => 'CONFIANCA',
+        'confianca' => 'CONFIANCA',
+        'contagemPassagem.confianca' => 'CONFIANCA',
+        'ContagemPassagemTableMap::COL_CONFIANCA' => 'CONFIANCA',
+        'COL_CONFIANCA' => 'CONFIANCA',
+        'contagem_passagem.confianca' => 'CONFIANCA',
     ];
 
     /**
@@ -333,6 +358,8 @@ class ContagemPassagemTableMap extends TableMap
         $this->addColumn('digitacao_ms', 'DigitacaoMs', 'INTEGER', false, null, null);
         $this->addColumn('modo_entrada', 'ModoEntrada', 'VARCHAR', true, 12, null);
         $this->addColumn('recebido_em_ms', 'RecebidoEmMs', 'BIGINT', true, null, null);
+        $this->addColumn('imagem_ref', 'ImagemRef', 'VARCHAR', false, 64, null);
+        $this->addColumn('confianca', 'Confianca', 'DECIMAL', false, 4, null);
     }
 
     /**
@@ -514,6 +541,8 @@ class ContagemPassagemTableMap extends TableMap
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_DIGITACAO_MS);
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_MODO_ENTRADA);
             $criteria->addSelectColumn(ContagemPassagemTableMap::COL_RECEBIDO_EM_MS);
+            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_IMAGEM_REF);
+            $criteria->addSelectColumn(ContagemPassagemTableMap::COL_CONFIANCA);
         } else {
             $criteria->addSelectColumn($alias . '.passagem_id');
             $criteria->addSelectColumn($alias . '.fonte_id');
@@ -529,6 +558,8 @@ class ContagemPassagemTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.digitacao_ms');
             $criteria->addSelectColumn($alias . '.modo_entrada');
             $criteria->addSelectColumn($alias . '.recebido_em_ms');
+            $criteria->addSelectColumn($alias . '.imagem_ref');
+            $criteria->addSelectColumn($alias . '.confianca');
         }
     }
 
@@ -561,6 +592,8 @@ class ContagemPassagemTableMap extends TableMap
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_DIGITACAO_MS);
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_MODO_ENTRADA);
             $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_RECEBIDO_EM_MS);
+            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_IMAGEM_REF);
+            $criteria->removeSelectColumn(ContagemPassagemTableMap::COL_CONFIANCA);
         } else {
             $criteria->removeSelectColumn($alias . '.passagem_id');
             $criteria->removeSelectColumn($alias . '.fonte_id');
@@ -576,6 +609,8 @@ class ContagemPassagemTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.digitacao_ms');
             $criteria->removeSelectColumn($alias . '.modo_entrada');
             $criteria->removeSelectColumn($alias . '.recebido_em_ms');
+            $criteria->removeSelectColumn($alias . '.imagem_ref');
+            $criteria->removeSelectColumn($alias . '.confianca');
         }
     }
 

@@ -18,6 +18,14 @@ final class Source
     public const TEMPO_HUMANA = 'humana';
     public const TEMPO_PRECISA = 'precisa';
 
+    /** Takes part in the count: its entries are votes. The usual case. */
+    public const PAPEL_VOTANTE = 'votante';
+    /**
+     * Records passes that are only COMPARED with the official ones, never
+     * counted: a machine-vision system on trial. See ObserverComparator.
+     */
+    public const PAPEL_OBSERVADORA = 'observadora';
+
     /**
      * Passes added by a reviewer ("adicionar") are treated as entries from
      * this virtual source. It is not a row in contagem_fonte.
@@ -38,6 +46,27 @@ final class Source
      * Null with `ativa` false means it never took part.
      */
     public ?int $desativadaEmMs = null;
+
+    /** One of the PAPEL_* constants. */
+    public string $papel = self::PAPEL_VOTANTE;
+
+    /**
+     * When the current role began; null means since the source exists.
+     * Changing the role never reaches back: a source promoted to votante at
+     * 01:00:00 counts from 01:00:00 on, and one made an observer keeps the
+     * votes it cast before (the same idea as `desativadaEmMs`).
+     */
+    public ?int $papelDesdeMs = null;
+
+    /**
+     * Closed periods during which this source's entries do not count, as
+     * [from, to) with from null for "since always": a period it was switched
+     * off before being switched on again, a period it was an observer
+     * before being promoted. Empty for nearly every source.
+     *
+     * @var array<int, array{0: ?int, 1: int}>
+     */
+    public array $periodosForaMs = [];
 
     /**
      * "Synced through": the moment up to which we know this source has
@@ -85,19 +114,105 @@ final class Source
     /** True when the source was taking part in the count at $tsMs. */
     public function wasCountingAt(int $tsMs): bool
     {
-        if (!$this->recordsPasses()) {
+        if (!$this->recordsPasses() || $this->isInPeriodOff($tsMs)) {
             return false;
         }
+        if ($this->papel === self::PAPEL_OBSERVADORA) {
+            // A source made an observer keeps the votes it cast before.
+            if ($this->papelDesdeMs === null || $tsMs >= $this->papelDesdeMs) {
+                return false;
+            }
+        }
+        return $this->wasSwitchedOnAt($tsMs);
+    }
+
+    /**
+     * True when the source was observing at $tsMs: an observer, switched on,
+     * and not in one of its periods off. Its entry from that moment is
+     * compared with the official passes instead of counting.
+     */
+    public function wasObservingAt(int $tsMs): bool
+    {
+        return $this->isObserver()
+            && ($this->papelDesdeMs === null || $tsMs >= $this->papelDesdeMs)
+            && !$this->isInPeriodOff($tsMs)
+            && $this->wasSwitchedOnAt($tsMs);
+    }
+
+    /** True for a source that is taking part in the count right now. */
+    public function countsPasses(): bool
+    {
+        return $this->ativa && $this->recordsPasses() && $this->papel !== self::PAPEL_OBSERVADORA;
+    }
+
+    /**
+     * The usual case, cheap to check once per source: taking part now and
+     * at every earlier moment, so each of its entries counts.
+     */
+    public function countedAllAlong(): bool
+    {
+        return $this->countsPasses() && $this->periodosForaMs === [];
+    }
+
+    /** True for a pass source that is an observer now. */
+    public function isObserver(): bool
+    {
+        return $this->recordsPasses() && $this->papel === self::PAPEL_OBSERVADORA;
+    }
+
+    /**
+     * False only for an observer that never voted: none of its entries can
+     * ever count, so the engine need not look at it at all.
+     */
+    public function mayHaveCounted(): bool
+    {
+        return $this->recordsPasses() && !($this->papel === self::PAPEL_OBSERVADORA && $this->papelDesdeMs === null);
+    }
+
+    /**
+     * The periods off as stored in contagem_fonte.periodos_fora: a JSON list
+     * of [from, to]. Anything unreadable in it is left out.
+     *
+     * @return array<int, array{0: ?int, 1: int}>
+     */
+    public static function periodsFromJson(?string $json): array
+    {
+        $decoded = $json === null || $json === '' ? null : json_decode($json, true);
+        $periods = [];
+        foreach (is_array($decoded) ? $decoded : [] as $period) {
+            if (!is_array($period) || count($period) !== 2 || !is_int($period[1] ?? null)) {
+                continue;
+            }
+            $fromMs = $period[0] ?? null;
+            if ($fromMs === null || is_int($fromMs)) {
+                $periods[] = [$fromMs, $period[1]];
+            }
+        }
+        return $periods;
+    }
+
+    /** @param array<int, array{0: ?int, 1: int}> $periods */
+    public static function periodsToJson(array $periods): ?string
+    {
+        return $periods === [] ? null : json_encode(array_values($periods));
+    }
+
+    private function wasSwitchedOnAt(int $tsMs): bool
+    {
         if ($this->ativa) {
             return true;
         }
         return $this->desativadaEmMs !== null && $tsMs < $this->desativadaEmMs;
     }
 
-    /** True for a source that is taking part in the count right now. */
-    public function countsPasses(): bool
+    private function isInPeriodOff(int $tsMs): bool
     {
-        return $this->ativa && $this->recordsPasses();
+        foreach ($this->periodosForaMs as [$fromMs, $toMs]) {
+            if (($fromMs === null || $tsMs >= $fromMs) && $tsMs < $toMs) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function hasPreciseTime(): bool

@@ -34,7 +34,7 @@ final class SourceAvailability
      */
     private array $alwaysSupposedToCount = [];
 
-    /** @var Source[] pass sources that were switched off at some point, or excluded for some period */
+    /** @var Source[] pass sources that were switched off, an observer, or excluded for some period */
     private array $sometimesSupposedToCount = [];
 
     private AppliedDecisions $applied;
@@ -46,11 +46,15 @@ final class SourceAvailability
     public function __construct(array $sourcesById, AppliedDecisions $applied, int $janelaMs)
     {
         foreach ($sourcesById as $source) {
-            if (!$source->recordsPasses()) {
+            // An observer is never supposed to count while it observes, so
+            // it is never "expected": it can neither miss a pass nor hold a
+            // flag back while its phone is offline. One that never voted is
+            // left out altogether.
+            if (!$source->mayHaveCounted()) {
                 continue;
             }
             $this->passSources[] = $source;
-            if ($source->ativa && !isset($applied->exclusions[$source->id])) {
+            if ($source->countedAllAlong() && !isset($applied->exclusions[$source->id])) {
                 $this->alwaysSupposedToCount[$source->id] = true;
             } else {
                 $this->sometimesSupposedToCount[] = $source;

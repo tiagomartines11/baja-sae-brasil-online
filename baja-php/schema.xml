@@ -391,6 +391,21 @@
          moment keep counting; switching a counter off must not erase what
          it recorded. NULL while active, and for a source never used. -->
     <column name="desativada_em_ms" phpName="DesativadaEmMs" type="BIGINT"/>
+    <!-- votante | observadora. An observer's entries are stored and compared
+         with the official passes (machine vision on trial) but never take
+         part in the count. Only "automatica" sources start as observers. -->
+    <column name="papel" phpName="Papel" type="VARCHAR" size="12" required="true" default="votante"/>
+    <!-- When the current role began: a promotion to "votante" counts from
+         that moment on, never backwards. NULL = since the source exists. -->
+    <column name="papel_desde_ms" phpName="PapelDesdeMs" type="BIGINT"/>
+    <!-- JSON list of closed periods [from, to] (from NULL = since always)
+         during which the source's entries do not count: the time it was
+         switched off before being switched on again, the time it was an
+         observer before a promotion. NULL when there is none. -->
+    <column name="periodos_fora" phpName="PeriodosFora" type="LONGVARCHAR"/>
+    <!-- Automatic sources only: prefix of the image links of its entries
+         (imagem_ref is appended). NULL = no images; nothing is shown. -->
+    <column name="imagem_base_url" phpName="ImagemBaseUrl" type="VARCHAR" size="255"/>
     <!-- RESTRICT, here and on ocorrencia and decisao: deleting a prova must
          not silently erase the raw record of its race. -->
     <foreign-key foreignTable="prova" name="contagem_fonte_prova" onDelete="RESTRICT" onUpdate="CASCADE">
@@ -504,6 +519,12 @@
     <!-- teclado | teclado_tela | blocos | api | simulacao -->
     <column name="modo_entrada" phpName="ModoEntrada" type="VARCHAR" size="12" required="true"/>
     <column name="recebido_em_ms" phpName="RecebidoEmMs" type="BIGINT" required="true"/>
+    <!-- Sent by an automatic source ("mode": "api") only, both optional:
+         an opaque id of the picture behind the entry (the source's
+         imagem_base_url + this is the link) and how sure the system was,
+         0 to 1. Shown to reviewers; nothing computes with them. -->
+    <column name="imagem_ref" phpName="ImagemRef" type="VARCHAR" size="64"/>
+    <column name="confianca" phpName="Confianca" type="DECIMAL" size="4" scale="3"/>
     <foreign-key foreignTable="contagem_fonte" name="contagem_passagem_fonte" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="fonte_id" foreign="fonte_id"/>
     </foreign-key>

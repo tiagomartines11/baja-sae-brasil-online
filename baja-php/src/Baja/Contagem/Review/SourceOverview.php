@@ -68,6 +68,10 @@ final class SourceOverview
                 'qualidade_tempo' => $source->qualidadeTempo,
                 'ativa' => $source->ativa,
                 'desativada_em_ms' => $source->desativadaEmMs,
+                // 'votante' | 'observadora' (compared with the count, never
+                // counted; its stats carry 'observacao').
+                'papel' => $source->papel,
+                'papel_desde_ms' => $source->papelDesdeMs,
                 'principal' => $primarySourceId !== null && $primarySourceId === $source->id,
                 'stats' => $stats,
             ];

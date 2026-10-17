@@ -34,6 +34,9 @@ final class SourceStats
     public ?int $sincronizadoAteMs = null;
     public ?int $vistoEmMs = null;
 
+    /** For an observer source only: how it compares with the official count. */
+    public ?ObserverStats $observacao = null;
+
     public function __construct(int $fonteId)
     {
         $this->fonteId = $fonteId;
@@ -42,7 +45,7 @@ final class SourceStats
     /** @return array<string, mixed> */
     public function toArray(): array
     {
-        return [
+        $array = [
             'fonte_id' => $this->fonteId,
             'entradas' => $this->entradas,
             'faltas' => $this->faltas,
@@ -53,5 +56,11 @@ final class SourceStats
             'sincronizado_ate_ms' => $this->sincronizadoAteMs,
             'visto_em_ms' => $this->vistoEmMs,
         ];
+        // Only an observer has the key at all: a race without one sends
+        // exactly what it always did.
+        if ($this->observacao !== null) {
+            $array['observacao'] = $this->observacao->toArray();
+        }
+        return $array;
     }
 }

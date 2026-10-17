@@ -63,7 +63,7 @@ class ContagemFonteTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 9;
+    public const NUM_COLUMNS = 13;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ContagemFonteTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 9;
+    public const NUM_HYDRATE_COLUMNS = 13;
 
     /**
      * the column name for the fonte_id field
@@ -121,6 +121,26 @@ class ContagemFonteTableMap extends TableMap
     public const COL_DESATIVADA_EM_MS = 'contagem_fonte.desativada_em_ms';
 
     /**
+     * the column name for the papel field
+     */
+    public const COL_PAPEL = 'contagem_fonte.papel';
+
+    /**
+     * the column name for the papel_desde_ms field
+     */
+    public const COL_PAPEL_DESDE_MS = 'contagem_fonte.papel_desde_ms';
+
+    /**
+     * the column name for the periodos_fora field
+     */
+    public const COL_PERIODOS_FORA = 'contagem_fonte.periodos_fora';
+
+    /**
+     * the column name for the imagem_base_url field
+     */
+    public const COL_IMAGEM_BASE_URL = 'contagem_fonte.imagem_base_url';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -134,11 +154,11 @@ class ContagemFonteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['FonteId', 'EventoId', 'ProvaId', 'Nome', 'Tipo', 'QualidadeTempo', 'Ativa', 'Ordem', 'DesativadaEmMs', ],
-        self::TYPE_CAMELNAME     => ['fonteId', 'eventoId', 'provaId', 'nome', 'tipo', 'qualidadeTempo', 'ativa', 'ordem', 'desativadaEmMs', ],
-        self::TYPE_COLNAME       => [ContagemFonteTableMap::COL_FONTE_ID, ContagemFonteTableMap::COL_EVENTO_ID, ContagemFonteTableMap::COL_PROVA_ID, ContagemFonteTableMap::COL_NOME, ContagemFonteTableMap::COL_TIPO, ContagemFonteTableMap::COL_QUALIDADE_TEMPO, ContagemFonteTableMap::COL_ATIVA, ContagemFonteTableMap::COL_ORDEM, ContagemFonteTableMap::COL_DESATIVADA_EM_MS, ],
-        self::TYPE_FIELDNAME     => ['fonte_id', 'evento_id', 'prova_id', 'nome', 'tipo', 'qualidade_tempo', 'ativa', 'ordem', 'desativada_em_ms', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, ]
+        self::TYPE_PHPNAME       => ['FonteId', 'EventoId', 'ProvaId', 'Nome', 'Tipo', 'QualidadeTempo', 'Ativa', 'Ordem', 'DesativadaEmMs', 'Papel', 'PapelDesdeMs', 'PeriodosFora', 'ImagemBaseUrl', ],
+        self::TYPE_CAMELNAME     => ['fonteId', 'eventoId', 'provaId', 'nome', 'tipo', 'qualidadeTempo', 'ativa', 'ordem', 'desativadaEmMs', 'papel', 'papelDesdeMs', 'periodosFora', 'imagemBaseUrl', ],
+        self::TYPE_COLNAME       => [ContagemFonteTableMap::COL_FONTE_ID, ContagemFonteTableMap::COL_EVENTO_ID, ContagemFonteTableMap::COL_PROVA_ID, ContagemFonteTableMap::COL_NOME, ContagemFonteTableMap::COL_TIPO, ContagemFonteTableMap::COL_QUALIDADE_TEMPO, ContagemFonteTableMap::COL_ATIVA, ContagemFonteTableMap::COL_ORDEM, ContagemFonteTableMap::COL_DESATIVADA_EM_MS, ContagemFonteTableMap::COL_PAPEL, ContagemFonteTableMap::COL_PAPEL_DESDE_MS, ContagemFonteTableMap::COL_PERIODOS_FORA, ContagemFonteTableMap::COL_IMAGEM_BASE_URL, ],
+        self::TYPE_FIELDNAME     => ['fonte_id', 'evento_id', 'prova_id', 'nome', 'tipo', 'qualidade_tempo', 'ativa', 'ordem', 'desativada_em_ms', 'papel', 'papel_desde_ms', 'periodos_fora', 'imagem_base_url', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, ]
     ];
 
     /**
@@ -150,11 +170,11 @@ class ContagemFonteTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['FonteId' => 0, 'EventoId' => 1, 'ProvaId' => 2, 'Nome' => 3, 'Tipo' => 4, 'QualidadeTempo' => 5, 'Ativa' => 6, 'Ordem' => 7, 'DesativadaEmMs' => 8, ],
-        self::TYPE_CAMELNAME     => ['fonteId' => 0, 'eventoId' => 1, 'provaId' => 2, 'nome' => 3, 'tipo' => 4, 'qualidadeTempo' => 5, 'ativa' => 6, 'ordem' => 7, 'desativadaEmMs' => 8, ],
-        self::TYPE_COLNAME       => [ContagemFonteTableMap::COL_FONTE_ID => 0, ContagemFonteTableMap::COL_EVENTO_ID => 1, ContagemFonteTableMap::COL_PROVA_ID => 2, ContagemFonteTableMap::COL_NOME => 3, ContagemFonteTableMap::COL_TIPO => 4, ContagemFonteTableMap::COL_QUALIDADE_TEMPO => 5, ContagemFonteTableMap::COL_ATIVA => 6, ContagemFonteTableMap::COL_ORDEM => 7, ContagemFonteTableMap::COL_DESATIVADA_EM_MS => 8, ],
-        self::TYPE_FIELDNAME     => ['fonte_id' => 0, 'evento_id' => 1, 'prova_id' => 2, 'nome' => 3, 'tipo' => 4, 'qualidade_tempo' => 5, 'ativa' => 6, 'ordem' => 7, 'desativada_em_ms' => 8, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, ]
+        self::TYPE_PHPNAME       => ['FonteId' => 0, 'EventoId' => 1, 'ProvaId' => 2, 'Nome' => 3, 'Tipo' => 4, 'QualidadeTempo' => 5, 'Ativa' => 6, 'Ordem' => 7, 'DesativadaEmMs' => 8, 'Papel' => 9, 'PapelDesdeMs' => 10, 'PeriodosFora' => 11, 'ImagemBaseUrl' => 12, ],
+        self::TYPE_CAMELNAME     => ['fonteId' => 0, 'eventoId' => 1, 'provaId' => 2, 'nome' => 3, 'tipo' => 4, 'qualidadeTempo' => 5, 'ativa' => 6, 'ordem' => 7, 'desativadaEmMs' => 8, 'papel' => 9, 'papelDesdeMs' => 10, 'periodosFora' => 11, 'imagemBaseUrl' => 12, ],
+        self::TYPE_COLNAME       => [ContagemFonteTableMap::COL_FONTE_ID => 0, ContagemFonteTableMap::COL_EVENTO_ID => 1, ContagemFonteTableMap::COL_PROVA_ID => 2, ContagemFonteTableMap::COL_NOME => 3, ContagemFonteTableMap::COL_TIPO => 4, ContagemFonteTableMap::COL_QUALIDADE_TEMPO => 5, ContagemFonteTableMap::COL_ATIVA => 6, ContagemFonteTableMap::COL_ORDEM => 7, ContagemFonteTableMap::COL_DESATIVADA_EM_MS => 8, ContagemFonteTableMap::COL_PAPEL => 9, ContagemFonteTableMap::COL_PAPEL_DESDE_MS => 10, ContagemFonteTableMap::COL_PERIODOS_FORA => 11, ContagemFonteTableMap::COL_IMAGEM_BASE_URL => 12, ],
+        self::TYPE_FIELDNAME     => ['fonte_id' => 0, 'evento_id' => 1, 'prova_id' => 2, 'nome' => 3, 'tipo' => 4, 'qualidade_tempo' => 5, 'ativa' => 6, 'ordem' => 7, 'desativada_em_ms' => 8, 'papel' => 9, 'papel_desde_ms' => 10, 'periodos_fora' => 11, 'imagem_base_url' => 12, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, ]
     ];
 
     /**
@@ -231,6 +251,37 @@ class ContagemFonteTableMap extends TableMap
         'COL_DESATIVADA_EM_MS' => 'DESATIVADA_EM_MS',
         'desativada_em_ms' => 'DESATIVADA_EM_MS',
         'contagem_fonte.desativada_em_ms' => 'DESATIVADA_EM_MS',
+        'Papel' => 'PAPEL',
+        'ContagemFonte.Papel' => 'PAPEL',
+        'papel' => 'PAPEL',
+        'contagemFonte.papel' => 'PAPEL',
+        'ContagemFonteTableMap::COL_PAPEL' => 'PAPEL',
+        'COL_PAPEL' => 'PAPEL',
+        'contagem_fonte.papel' => 'PAPEL',
+        'PapelDesdeMs' => 'PAPEL_DESDE_MS',
+        'ContagemFonte.PapelDesdeMs' => 'PAPEL_DESDE_MS',
+        'papelDesdeMs' => 'PAPEL_DESDE_MS',
+        'contagemFonte.papelDesdeMs' => 'PAPEL_DESDE_MS',
+        'ContagemFonteTableMap::COL_PAPEL_DESDE_MS' => 'PAPEL_DESDE_MS',
+        'COL_PAPEL_DESDE_MS' => 'PAPEL_DESDE_MS',
+        'papel_desde_ms' => 'PAPEL_DESDE_MS',
+        'contagem_fonte.papel_desde_ms' => 'PAPEL_DESDE_MS',
+        'PeriodosFora' => 'PERIODOS_FORA',
+        'ContagemFonte.PeriodosFora' => 'PERIODOS_FORA',
+        'periodosFora' => 'PERIODOS_FORA',
+        'contagemFonte.periodosFora' => 'PERIODOS_FORA',
+        'ContagemFonteTableMap::COL_PERIODOS_FORA' => 'PERIODOS_FORA',
+        'COL_PERIODOS_FORA' => 'PERIODOS_FORA',
+        'periodos_fora' => 'PERIODOS_FORA',
+        'contagem_fonte.periodos_fora' => 'PERIODOS_FORA',
+        'ImagemBaseUrl' => 'IMAGEM_BASE_URL',
+        'ContagemFonte.ImagemBaseUrl' => 'IMAGEM_BASE_URL',
+        'imagemBaseUrl' => 'IMAGEM_BASE_URL',
+        'contagemFonte.imagemBaseUrl' => 'IMAGEM_BASE_URL',
+        'ContagemFonteTableMap::COL_IMAGEM_BASE_URL' => 'IMAGEM_BASE_URL',
+        'COL_IMAGEM_BASE_URL' => 'IMAGEM_BASE_URL',
+        'imagem_base_url' => 'IMAGEM_BASE_URL',
+        'contagem_fonte.imagem_base_url' => 'IMAGEM_BASE_URL',
     ];
 
     /**
@@ -259,6 +310,10 @@ class ContagemFonteTableMap extends TableMap
         $this->addColumn('ativa', 'Ativa', 'BOOLEAN', true, 1, true);
         $this->addColumn('ordem', 'Ordem', 'INTEGER', true, null, 0);
         $this->addColumn('desativada_em_ms', 'DesativadaEmMs', 'BIGINT', false, null, null);
+        $this->addColumn('papel', 'Papel', 'VARCHAR', true, 12, 'votante');
+        $this->addColumn('papel_desde_ms', 'PapelDesdeMs', 'BIGINT', false, null, null);
+        $this->addColumn('periodos_fora', 'PeriodosFora', 'LONGVARCHAR', false, null, null);
+        $this->addColumn('imagem_base_url', 'ImagemBaseUrl', 'VARCHAR', false, 255, null);
     }
 
     /**
@@ -474,6 +529,10 @@ class ContagemFonteTableMap extends TableMap
             $criteria->addSelectColumn(ContagemFonteTableMap::COL_ATIVA);
             $criteria->addSelectColumn(ContagemFonteTableMap::COL_ORDEM);
             $criteria->addSelectColumn(ContagemFonteTableMap::COL_DESATIVADA_EM_MS);
+            $criteria->addSelectColumn(ContagemFonteTableMap::COL_PAPEL);
+            $criteria->addSelectColumn(ContagemFonteTableMap::COL_PAPEL_DESDE_MS);
+            $criteria->addSelectColumn(ContagemFonteTableMap::COL_PERIODOS_FORA);
+            $criteria->addSelectColumn(ContagemFonteTableMap::COL_IMAGEM_BASE_URL);
         } else {
             $criteria->addSelectColumn($alias . '.fonte_id');
             $criteria->addSelectColumn($alias . '.evento_id');
@@ -484,6 +543,10 @@ class ContagemFonteTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.ativa');
             $criteria->addSelectColumn($alias . '.ordem');
             $criteria->addSelectColumn($alias . '.desativada_em_ms');
+            $criteria->addSelectColumn($alias . '.papel');
+            $criteria->addSelectColumn($alias . '.papel_desde_ms');
+            $criteria->addSelectColumn($alias . '.periodos_fora');
+            $criteria->addSelectColumn($alias . '.imagem_base_url');
         }
     }
 
@@ -511,6 +574,10 @@ class ContagemFonteTableMap extends TableMap
             $criteria->removeSelectColumn(ContagemFonteTableMap::COL_ATIVA);
             $criteria->removeSelectColumn(ContagemFonteTableMap::COL_ORDEM);
             $criteria->removeSelectColumn(ContagemFonteTableMap::COL_DESATIVADA_EM_MS);
+            $criteria->removeSelectColumn(ContagemFonteTableMap::COL_PAPEL);
+            $criteria->removeSelectColumn(ContagemFonteTableMap::COL_PAPEL_DESDE_MS);
+            $criteria->removeSelectColumn(ContagemFonteTableMap::COL_PERIODOS_FORA);
+            $criteria->removeSelectColumn(ContagemFonteTableMap::COL_IMAGEM_BASE_URL);
         } else {
             $criteria->removeSelectColumn($alias . '.fonte_id');
             $criteria->removeSelectColumn($alias . '.evento_id');
@@ -521,6 +588,10 @@ class ContagemFonteTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.ativa');
             $criteria->removeSelectColumn($alias . '.ordem');
             $criteria->removeSelectColumn($alias . '.desativada_em_ms');
+            $criteria->removeSelectColumn($alias . '.papel');
+            $criteria->removeSelectColumn($alias . '.papel_desde_ms');
+            $criteria->removeSelectColumn($alias . '.periodos_fora');
+            $criteria->removeSelectColumn($alias . '.imagem_base_url');
         }
     }
 

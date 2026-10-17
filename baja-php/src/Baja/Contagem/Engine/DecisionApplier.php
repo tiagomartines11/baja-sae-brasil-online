@@ -91,10 +91,16 @@ final class DecisionApplier
                 // A source that was switched off keeps what it recorded while
                 // it was on; only entries from after that moment are dropped.
                 $source = $sourcesById[$rawEntry->fonteId] ?? null;
-                if ($source === null || !$source->wasCountingAt($rawEntry->tsMs)) {
+                if ($source === null || $applied->isSourceExcludedAt($rawEntry->fonteId, $rawEntry->tsMs)) {
                     continue;
                 }
-                if ($applied->isSourceExcludedAt($rawEntry->fonteId, $rawEntry->tsMs)) {
+                if (!$source->wasCountingAt($rawEntry->tsMs)) {
+                    // An observer's entry takes no part in anything that
+                    // follows; it is only set aside, to be compared with the
+                    // official passes afterwards (ObserverComparator).
+                    if ($source->wasObservingAt($rawEntry->tsMs)) {
+                        $applied->observedEntries[] = self::withDecidedCar($rawEntry, $newCarByEntryId);
+                    }
                     continue;
                 }
             }
@@ -122,8 +128,23 @@ final class DecisionApplier
     }
 
     /**
+     * @param array<int, int> $newCarByEntryId
+     */
+    private static function withDecidedCar(Entry $rawEntry, array $newCarByEntryId): Entry
+    {
+        $newCar = $newCarByEntryId[$rawEntry->id] ?? null;
+        if ($newCar === null || $newCar === $rawEntry->carro) {
+            return $rawEntry;
+        }
+        $entry = clone $rawEntry;
+        $entry->carro = $newCar;
+        return $entry;
+    }
+
+    /**
      * The usual case, checked once per source instead of once per entry:
-     * sources that are switched on and were never excluded by a reviewer.
+     * sources that are switched on, were never off nor an observer, and
+     * were never excluded by a reviewer.
      * Every entry of such a source takes part.
      *
      * @param array<int, Source> $sourcesById
@@ -133,7 +154,7 @@ final class DecisionApplier
     {
         $alwaysCounting = [];
         foreach ($sourcesById as $source) {
-            if ($source->countsPasses() && !isset($applied->exclusions[$source->id])) {
+            if ($source->countedAllAlong() && !isset($applied->exclusions[$source->id])) {
                 $alwaysCounting[$source->id] = true;
             }
         }

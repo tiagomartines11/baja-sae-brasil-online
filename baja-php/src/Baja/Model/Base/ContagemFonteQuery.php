@@ -28,6 +28,10 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonteQuery orderByAtiva($order = Criteria::ASC) Order by the ativa column
  * @method     ChildContagemFonteQuery orderByOrdem($order = Criteria::ASC) Order by the ordem column
  * @method     ChildContagemFonteQuery orderByDesativadaEmMs($order = Criteria::ASC) Order by the desativada_em_ms column
+ * @method     ChildContagemFonteQuery orderByPapel($order = Criteria::ASC) Order by the papel column
+ * @method     ChildContagemFonteQuery orderByPapelDesdeMs($order = Criteria::ASC) Order by the papel_desde_ms column
+ * @method     ChildContagemFonteQuery orderByPeriodosFora($order = Criteria::ASC) Order by the periodos_fora column
+ * @method     ChildContagemFonteQuery orderByImagemBaseUrl($order = Criteria::ASC) Order by the imagem_base_url column
  *
  * @method     ChildContagemFonteQuery groupByFonteId() Group by the fonte_id column
  * @method     ChildContagemFonteQuery groupByEventoId() Group by the evento_id column
@@ -38,6 +42,10 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonteQuery groupByAtiva() Group by the ativa column
  * @method     ChildContagemFonteQuery groupByOrdem() Group by the ordem column
  * @method     ChildContagemFonteQuery groupByDesativadaEmMs() Group by the desativada_em_ms column
+ * @method     ChildContagemFonteQuery groupByPapel() Group by the papel column
+ * @method     ChildContagemFonteQuery groupByPapelDesdeMs() Group by the papel_desde_ms column
+ * @method     ChildContagemFonteQuery groupByPeriodosFora() Group by the periodos_fora column
+ * @method     ChildContagemFonteQuery groupByImagemBaseUrl() Group by the imagem_base_url column
  *
  * @method     ChildContagemFonteQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildContagemFonteQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -111,6 +119,10 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonte|null findOneByAtiva(boolean $ativa) Return the first ChildContagemFonte filtered by the ativa column
  * @method     ChildContagemFonte|null findOneByOrdem(int $ordem) Return the first ChildContagemFonte filtered by the ordem column
  * @method     ChildContagemFonte|null findOneByDesativadaEmMs(string $desativada_em_ms) Return the first ChildContagemFonte filtered by the desativada_em_ms column
+ * @method     ChildContagemFonte|null findOneByPapel(string $papel) Return the first ChildContagemFonte filtered by the papel column
+ * @method     ChildContagemFonte|null findOneByPapelDesdeMs(string $papel_desde_ms) Return the first ChildContagemFonte filtered by the papel_desde_ms column
+ * @method     ChildContagemFonte|null findOneByPeriodosFora(string $periodos_fora) Return the first ChildContagemFonte filtered by the periodos_fora column
+ * @method     ChildContagemFonte|null findOneByImagemBaseUrl(string $imagem_base_url) Return the first ChildContagemFonte filtered by the imagem_base_url column
  *
  * @method     ChildContagemFonte requirePk($key, ?ConnectionInterface $con = null) Return the ChildContagemFonte by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonte requireOne(?ConnectionInterface $con = null) Return the first ChildContagemFonte matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -124,6 +136,10 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemFonte requireOneByAtiva(boolean $ativa) Return the first ChildContagemFonte filtered by the ativa column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonte requireOneByOrdem(int $ordem) Return the first ChildContagemFonte filtered by the ordem column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemFonte requireOneByDesativadaEmMs(string $desativada_em_ms) Return the first ChildContagemFonte filtered by the desativada_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemFonte requireOneByPapel(string $papel) Return the first ChildContagemFonte filtered by the papel column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemFonte requireOneByPapelDesdeMs(string $papel_desde_ms) Return the first ChildContagemFonte filtered by the papel_desde_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemFonte requireOneByPeriodosFora(string $periodos_fora) Return the first ChildContagemFonte filtered by the periodos_fora column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemFonte requireOneByImagemBaseUrl(string $imagem_base_url) Return the first ChildContagemFonte filtered by the imagem_base_url column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildContagemFonte[]|Collection find(?ConnectionInterface $con = null) Return ChildContagemFonte objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildContagemFonte> find(?ConnectionInterface $con = null) Return ChildContagemFonte objects based on current ModelCriteria
@@ -146,6 +162,14 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemFonte> findByOrdem(int|array<int> $ordem) Return ChildContagemFonte objects filtered by the ordem column
  * @method     ChildContagemFonte[]|Collection findByDesativadaEmMs(string|array<string> $desativada_em_ms) Return ChildContagemFonte objects filtered by the desativada_em_ms column
  * @psalm-method Collection&\Traversable<ChildContagemFonte> findByDesativadaEmMs(string|array<string> $desativada_em_ms) Return ChildContagemFonte objects filtered by the desativada_em_ms column
+ * @method     ChildContagemFonte[]|Collection findByPapel(string|array<string> $papel) Return ChildContagemFonte objects filtered by the papel column
+ * @psalm-method Collection&\Traversable<ChildContagemFonte> findByPapel(string|array<string> $papel) Return ChildContagemFonte objects filtered by the papel column
+ * @method     ChildContagemFonte[]|Collection findByPapelDesdeMs(string|array<string> $papel_desde_ms) Return ChildContagemFonte objects filtered by the papel_desde_ms column
+ * @psalm-method Collection&\Traversable<ChildContagemFonte> findByPapelDesdeMs(string|array<string> $papel_desde_ms) Return ChildContagemFonte objects filtered by the papel_desde_ms column
+ * @method     ChildContagemFonte[]|Collection findByPeriodosFora(string|array<string> $periodos_fora) Return ChildContagemFonte objects filtered by the periodos_fora column
+ * @psalm-method Collection&\Traversable<ChildContagemFonte> findByPeriodosFora(string|array<string> $periodos_fora) Return ChildContagemFonte objects filtered by the periodos_fora column
+ * @method     ChildContagemFonte[]|Collection findByImagemBaseUrl(string|array<string> $imagem_base_url) Return ChildContagemFonte objects filtered by the imagem_base_url column
+ * @psalm-method Collection&\Traversable<ChildContagemFonte> findByImagemBaseUrl(string|array<string> $imagem_base_url) Return ChildContagemFonte objects filtered by the imagem_base_url column
  *
  * @method     ChildContagemFonte[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildContagemFonte> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -245,7 +269,7 @@ abstract class ContagemFonteQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT fonte_id, evento_id, prova_id, nome, tipo, qualidade_tempo, ativa, ordem, desativada_em_ms FROM contagem_fonte WHERE fonte_id = :p0';
+        $sql = 'SELECT fonte_id, evento_id, prova_id, nome, tipo, qualidade_tempo, ativa, ordem, desativada_em_ms, papel, papel_desde_ms, periodos_fora, imagem_base_url FROM contagem_fonte WHERE fonte_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -633,6 +657,133 @@ abstract class ContagemFonteQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ContagemFonteTableMap::COL_DESATIVADA_EM_MS, $desativadaEmMs, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the papel column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByPapel('fooValue');   // WHERE papel = 'fooValue'
+     * $query->filterByPapel('%fooValue%', Criteria::LIKE); // WHERE papel LIKE '%fooValue%'
+     * $query->filterByPapel(['foo', 'bar']); // WHERE papel IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $papel The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByPapel($papel = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($papel)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemFonteTableMap::COL_PAPEL, $papel, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the papel_desde_ms column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByPapelDesdeMs(1234); // WHERE papel_desde_ms = 1234
+     * $query->filterByPapelDesdeMs(array(12, 34)); // WHERE papel_desde_ms IN (12, 34)
+     * $query->filterByPapelDesdeMs(array('min' => 12)); // WHERE papel_desde_ms > 12
+     * </code>
+     *
+     * @param mixed $papelDesdeMs The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByPapelDesdeMs($papelDesdeMs = null, ?string $comparison = null)
+    {
+        if (is_array($papelDesdeMs)) {
+            $useMinMax = false;
+            if (isset($papelDesdeMs['min'])) {
+                $this->addUsingAlias(ContagemFonteTableMap::COL_PAPEL_DESDE_MS, $papelDesdeMs['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($papelDesdeMs['max'])) {
+                $this->addUsingAlias(ContagemFonteTableMap::COL_PAPEL_DESDE_MS, $papelDesdeMs['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemFonteTableMap::COL_PAPEL_DESDE_MS, $papelDesdeMs, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the periodos_fora column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByPeriodosFora('fooValue');   // WHERE periodos_fora = 'fooValue'
+     * $query->filterByPeriodosFora('%fooValue%', Criteria::LIKE); // WHERE periodos_fora LIKE '%fooValue%'
+     * $query->filterByPeriodosFora(['foo', 'bar']); // WHERE periodos_fora IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $periodosFora The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByPeriodosFora($periodosFora = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($periodosFora)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemFonteTableMap::COL_PERIODOS_FORA, $periodosFora, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the imagem_base_url column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByImagemBaseUrl('fooValue');   // WHERE imagem_base_url = 'fooValue'
+     * $query->filterByImagemBaseUrl('%fooValue%', Criteria::LIKE); // WHERE imagem_base_url LIKE '%fooValue%'
+     * $query->filterByImagemBaseUrl(['foo', 'bar']); // WHERE imagem_base_url IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $imagemBaseUrl The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByImagemBaseUrl($imagemBaseUrl = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($imagemBaseUrl)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemFonteTableMap::COL_IMAGEM_BASE_URL, $imagemBaseUrl, $comparison);
 
         return $this;
     }

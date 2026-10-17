@@ -53,7 +53,8 @@ final class SourceLoader
             $devicesBySource[$device['fonte_id']][] = $device;
         }
 
-        $sql = 'SELECT fonte_id, nome, tipo, qualidade_tempo, ativa, ordem, desativada_em_ms
+        $sql = 'SELECT fonte_id, nome, tipo, qualidade_tempo, ativa, ordem, desativada_em_ms,
+                       papel, papel_desde_ms, periodos_fora
                   FROM contagem_fonte
                  WHERE evento_id = :evento AND prova_id = :prova
               ORDER BY ordem, fonte_id';
@@ -74,6 +75,9 @@ final class SourceLoader
                 self::lastSeen($devices)
             );
             $source->desativadaEmMs = $row['desativada_em_ms'] === null ? null : (int) $row['desativada_em_ms'];
+            $source->papel = $row['papel'] === Source::PAPEL_OBSERVADORA ? Source::PAPEL_OBSERVADORA : Source::PAPEL_VOTANTE;
+            $source->papelDesdeMs = self::nullableInt($row['papel_desde_ms']);
+            $source->periodosForaMs = Source::periodsFromJson($row['periodos_fora'] === null ? null : (string) $row['periodos_fora']);
             $sources[] = $source;
         }
         return $sources;

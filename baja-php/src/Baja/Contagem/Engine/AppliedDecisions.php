@@ -15,6 +15,16 @@ final class AppliedDecisions
     /** @var Entry[] surviving entries (reassigned ones carry their new car), plus reviewer-added passes */
     public array $entries = [];
 
+    /**
+     * Entries of observer sources (Source::PAPEL_OBSERVADORA) from moments
+     * they were observing, after voids and reassignments. They are in no
+     * pass group and count for nothing; ObserverComparator measures them
+     * against the official passes. Empty when no source is an observer.
+     *
+     * @var Entry[]
+     */
+    public array $observedEntries = [];
+
     /** @var array<int, true> ids of entries a reviewer confirmed */
     public array $confirmedEntryIds = [];
 

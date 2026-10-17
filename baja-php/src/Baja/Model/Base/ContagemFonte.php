@@ -145,6 +145,35 @@ abstract class ContagemFonte implements ActiveRecordInterface
     protected $desativada_em_ms;
 
     /**
+     * The value for the papel field.
+     *
+     * Note: this column has a database default value of: 'votante'
+     * @var        string
+     */
+    protected $papel;
+
+    /**
+     * The value for the papel_desde_ms field.
+     *
+     * @var        string|null
+     */
+    protected $papel_desde_ms;
+
+    /**
+     * The value for the periodos_fora field.
+     *
+     * @var        string|null
+     */
+    protected $periodos_fora;
+
+    /**
+     * The value for the imagem_base_url field.
+     *
+     * @var        string|null
+     */
+    protected $imagem_base_url;
+
+    /**
      * @var        ChildProva
      */
     protected $aProva;
@@ -225,6 +254,7 @@ abstract class ContagemFonte implements ActiveRecordInterface
         $this->qualidade_tempo = 'humana';
         $this->ativa = true;
         $this->ordem = 0;
+        $this->papel = 'votante';
     }
 
     /**
@@ -556,6 +586,46 @@ abstract class ContagemFonte implements ActiveRecordInterface
     }
 
     /**
+     * Get the [papel] column value.
+     *
+     * @return string
+     */
+    public function getPapel()
+    {
+        return $this->papel;
+    }
+
+    /**
+     * Get the [papel_desde_ms] column value.
+     *
+     * @return string|null
+     */
+    public function getPapelDesdeMs()
+    {
+        return $this->papel_desde_ms;
+    }
+
+    /**
+     * Get the [periodos_fora] column value.
+     *
+     * @return string|null
+     */
+    public function getPeriodosFora()
+    {
+        return $this->periodos_fora;
+    }
+
+    /**
+     * Get the [imagem_base_url] column value.
+     *
+     * @return string|null
+     */
+    public function getImagemBaseUrl()
+    {
+        return $this->imagem_base_url;
+    }
+
+    /**
      * Set the value of [fonte_id] column.
      *
      * @param int $v New value
@@ -752,6 +822,86 @@ abstract class ContagemFonte implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [papel] column.
+     *
+     * @param string $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setPapel($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->papel !== $v) {
+            $this->papel = $v;
+            $this->modifiedColumns[ContagemFonteTableMap::COL_PAPEL] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [papel_desde_ms] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setPapelDesdeMs($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->papel_desde_ms !== $v) {
+            $this->papel_desde_ms = $v;
+            $this->modifiedColumns[ContagemFonteTableMap::COL_PAPEL_DESDE_MS] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [periodos_fora] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setPeriodosFora($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->periodos_fora !== $v) {
+            $this->periodos_fora = $v;
+            $this->modifiedColumns[ContagemFonteTableMap::COL_PERIODOS_FORA] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [imagem_base_url] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setImagemBaseUrl($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->imagem_base_url !== $v) {
+            $this->imagem_base_url = $v;
+            $this->modifiedColumns[ContagemFonteTableMap::COL_IMAGEM_BASE_URL] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -774,6 +924,10 @@ abstract class ContagemFonte implements ActiveRecordInterface
             }
 
             if ($this->ordem !== 0) {
+                return false;
+            }
+
+            if ($this->papel !== 'votante') {
                 return false;
             }
 
@@ -830,6 +984,18 @@ abstract class ContagemFonte implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ContagemFonteTableMap::translateFieldName('DesativadaEmMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->desativada_em_ms = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemFonteTableMap::translateFieldName('Papel', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->papel = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ContagemFonteTableMap::translateFieldName('PapelDesdeMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->papel_desde_ms = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : ContagemFonteTableMap::translateFieldName('PeriodosFora', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->periodos_fora = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : ContagemFonteTableMap::translateFieldName('ImagemBaseUrl', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->imagem_base_url = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -837,7 +1003,7 @@ abstract class ContagemFonte implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 9; // 9 = ContagemFonteTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 13; // 13 = ContagemFonteTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemFonte'), 0, $e);
@@ -1161,6 +1327,18 @@ abstract class ContagemFonte implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemFonteTableMap::COL_DESATIVADA_EM_MS)) {
             $modifiedColumns[':p' . $index++]  = 'desativada_em_ms';
         }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_PAPEL)) {
+            $modifiedColumns[':p' . $index++]  = 'papel';
+        }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_PAPEL_DESDE_MS)) {
+            $modifiedColumns[':p' . $index++]  = 'papel_desde_ms';
+        }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_PERIODOS_FORA)) {
+            $modifiedColumns[':p' . $index++]  = 'periodos_fora';
+        }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_IMAGEM_BASE_URL)) {
+            $modifiedColumns[':p' . $index++]  = 'imagem_base_url';
+        }
 
         $sql = sprintf(
             'INSERT INTO contagem_fonte (%s) VALUES (%s)',
@@ -1206,6 +1384,22 @@ abstract class ContagemFonte implements ActiveRecordInterface
                         break;
                     case 'desativada_em_ms':
                         $stmt->bindValue($identifier, $this->desativada_em_ms, PDO::PARAM_INT);
+
+                        break;
+                    case 'papel':
+                        $stmt->bindValue($identifier, $this->papel, PDO::PARAM_STR);
+
+                        break;
+                    case 'papel_desde_ms':
+                        $stmt->bindValue($identifier, $this->papel_desde_ms, PDO::PARAM_INT);
+
+                        break;
+                    case 'periodos_fora':
+                        $stmt->bindValue($identifier, $this->periodos_fora, PDO::PARAM_STR);
+
+                        break;
+                    case 'imagem_base_url':
+                        $stmt->bindValue($identifier, $this->imagem_base_url, PDO::PARAM_STR);
 
                         break;
                 }
@@ -1297,6 +1491,18 @@ abstract class ContagemFonte implements ActiveRecordInterface
             case 8:
                 return $this->getDesativadaEmMs();
 
+            case 9:
+                return $this->getPapel();
+
+            case 10:
+                return $this->getPapelDesdeMs();
+
+            case 11:
+                return $this->getPeriodosFora();
+
+            case 12:
+                return $this->getImagemBaseUrl();
+
             default:
                 return null;
         } // switch()
@@ -1334,6 +1540,10 @@ abstract class ContagemFonte implements ActiveRecordInterface
             $keys[6] => $this->getAtiva(),
             $keys[7] => $this->getOrdem(),
             $keys[8] => $this->getDesativadaEmMs(),
+            $keys[9] => $this->getPapel(),
+            $keys[10] => $this->getPapelDesdeMs(),
+            $keys[11] => $this->getPeriodosFora(),
+            $keys[12] => $this->getImagemBaseUrl(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1479,6 +1689,18 @@ abstract class ContagemFonte implements ActiveRecordInterface
             case 8:
                 $this->setDesativadaEmMs($value);
                 break;
+            case 9:
+                $this->setPapel($value);
+                break;
+            case 10:
+                $this->setPapelDesdeMs($value);
+                break;
+            case 11:
+                $this->setPeriodosFora($value);
+                break;
+            case 12:
+                $this->setImagemBaseUrl($value);
+                break;
         } // switch()
 
         return $this;
@@ -1531,6 +1753,18 @@ abstract class ContagemFonte implements ActiveRecordInterface
         }
         if (array_key_exists($keys[8], $arr)) {
             $this->setDesativadaEmMs($arr[$keys[8]]);
+        }
+        if (array_key_exists($keys[9], $arr)) {
+            $this->setPapel($arr[$keys[9]]);
+        }
+        if (array_key_exists($keys[10], $arr)) {
+            $this->setPapelDesdeMs($arr[$keys[10]]);
+        }
+        if (array_key_exists($keys[11], $arr)) {
+            $this->setPeriodosFora($arr[$keys[11]]);
+        }
+        if (array_key_exists($keys[12], $arr)) {
+            $this->setImagemBaseUrl($arr[$keys[12]]);
         }
 
         return $this;
@@ -1601,6 +1835,18 @@ abstract class ContagemFonte implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ContagemFonteTableMap::COL_DESATIVADA_EM_MS)) {
             $criteria->add(ContagemFonteTableMap::COL_DESATIVADA_EM_MS, $this->desativada_em_ms);
+        }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_PAPEL)) {
+            $criteria->add(ContagemFonteTableMap::COL_PAPEL, $this->papel);
+        }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_PAPEL_DESDE_MS)) {
+            $criteria->add(ContagemFonteTableMap::COL_PAPEL_DESDE_MS, $this->papel_desde_ms);
+        }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_PERIODOS_FORA)) {
+            $criteria->add(ContagemFonteTableMap::COL_PERIODOS_FORA, $this->periodos_fora);
+        }
+        if ($this->isColumnModified(ContagemFonteTableMap::COL_IMAGEM_BASE_URL)) {
+            $criteria->add(ContagemFonteTableMap::COL_IMAGEM_BASE_URL, $this->imagem_base_url);
         }
 
         return $criteria;
@@ -1698,6 +1944,10 @@ abstract class ContagemFonte implements ActiveRecordInterface
         $copyObj->setAtiva($this->getAtiva());
         $copyObj->setOrdem($this->getOrdem());
         $copyObj->setDesativadaEmMs($this->getDesativadaEmMs());
+        $copyObj->setPapel($this->getPapel());
+        $copyObj->setPapelDesdeMs($this->getPapelDesdeMs());
+        $copyObj->setPeriodosFora($this->getPeriodosFora());
+        $copyObj->setImagemBaseUrl($this->getImagemBaseUrl());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -2853,6 +3103,10 @@ abstract class ContagemFonte implements ActiveRecordInterface
         $this->ativa = null;
         $this->ordem = null;
         $this->desativada_em_ms = null;
+        $this->papel = null;
+        $this->papel_desde_ms = null;
+        $this->periodos_fora = null;
+        $this->imagem_base_url = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();

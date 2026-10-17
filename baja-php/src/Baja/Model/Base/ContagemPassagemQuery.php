@@ -33,6 +33,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemPassagemQuery orderByDigitacaoMs($order = Criteria::ASC) Order by the digitacao_ms column
  * @method     ChildContagemPassagemQuery orderByModoEntrada($order = Criteria::ASC) Order by the modo_entrada column
  * @method     ChildContagemPassagemQuery orderByRecebidoEmMs($order = Criteria::ASC) Order by the recebido_em_ms column
+ * @method     ChildContagemPassagemQuery orderByImagemRef($order = Criteria::ASC) Order by the imagem_ref column
+ * @method     ChildContagemPassagemQuery orderByConfianca($order = Criteria::ASC) Order by the confianca column
  *
  * @method     ChildContagemPassagemQuery groupByPassagemId() Group by the passagem_id column
  * @method     ChildContagemPassagemQuery groupByFonteId() Group by the fonte_id column
@@ -48,6 +50,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemPassagemQuery groupByDigitacaoMs() Group by the digitacao_ms column
  * @method     ChildContagemPassagemQuery groupByModoEntrada() Group by the modo_entrada column
  * @method     ChildContagemPassagemQuery groupByRecebidoEmMs() Group by the recebido_em_ms column
+ * @method     ChildContagemPassagemQuery groupByImagemRef() Group by the imagem_ref column
+ * @method     ChildContagemPassagemQuery groupByConfianca() Group by the confianca column
  *
  * @method     ChildContagemPassagemQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildContagemPassagemQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -96,6 +100,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemPassagem|null findOneByDigitacaoMs(int $digitacao_ms) Return the first ChildContagemPassagem filtered by the digitacao_ms column
  * @method     ChildContagemPassagem|null findOneByModoEntrada(string $modo_entrada) Return the first ChildContagemPassagem filtered by the modo_entrada column
  * @method     ChildContagemPassagem|null findOneByRecebidoEmMs(string $recebido_em_ms) Return the first ChildContagemPassagem filtered by the recebido_em_ms column
+ * @method     ChildContagemPassagem|null findOneByImagemRef(string $imagem_ref) Return the first ChildContagemPassagem filtered by the imagem_ref column
+ * @method     ChildContagemPassagem|null findOneByConfianca(string $confianca) Return the first ChildContagemPassagem filtered by the confianca column
  *
  * @method     ChildContagemPassagem requirePk($key, ?ConnectionInterface $con = null) Return the ChildContagemPassagem by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOne(?ConnectionInterface $con = null) Return the first ChildContagemPassagem matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -114,6 +120,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemPassagem requireOneByDigitacaoMs(int $digitacao_ms) Return the first ChildContagemPassagem filtered by the digitacao_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOneByModoEntrada(string $modo_entrada) Return the first ChildContagemPassagem filtered by the modo_entrada column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemPassagem requireOneByRecebidoEmMs(string $recebido_em_ms) Return the first ChildContagemPassagem filtered by the recebido_em_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemPassagem requireOneByImagemRef(string $imagem_ref) Return the first ChildContagemPassagem filtered by the imagem_ref column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemPassagem requireOneByConfianca(string $confianca) Return the first ChildContagemPassagem filtered by the confianca column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildContagemPassagem[]|Collection find(?ConnectionInterface $con = null) Return ChildContagemPassagem objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildContagemPassagem> find(?ConnectionInterface $con = null) Return ChildContagemPassagem objects based on current ModelCriteria
@@ -146,6 +154,10 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByModoEntrada(string|array<string> $modo_entrada) Return ChildContagemPassagem objects filtered by the modo_entrada column
  * @method     ChildContagemPassagem[]|Collection findByRecebidoEmMs(string|array<string> $recebido_em_ms) Return ChildContagemPassagem objects filtered by the recebido_em_ms column
  * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByRecebidoEmMs(string|array<string> $recebido_em_ms) Return ChildContagemPassagem objects filtered by the recebido_em_ms column
+ * @method     ChildContagemPassagem[]|Collection findByImagemRef(string|array<string> $imagem_ref) Return ChildContagemPassagem objects filtered by the imagem_ref column
+ * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByImagemRef(string|array<string> $imagem_ref) Return ChildContagemPassagem objects filtered by the imagem_ref column
+ * @method     ChildContagemPassagem[]|Collection findByConfianca(string|array<string> $confianca) Return ChildContagemPassagem objects filtered by the confianca column
+ * @psalm-method Collection&\Traversable<ChildContagemPassagem> findByConfianca(string|array<string> $confianca) Return ChildContagemPassagem objects filtered by the confianca column
  *
  * @method     ChildContagemPassagem[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildContagemPassagem> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -245,7 +257,7 @@ abstract class ContagemPassagemQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT passagem_id, fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_ms, qualidade_tempo, ts_dispositivo_ms, ancora_servidor_ms, ancora_rtt_ms, ancora_idade_ms, digitacao_ms, modo_entrada, recebido_em_ms FROM contagem_passagem WHERE passagem_id = :p0';
+        $sql = 'SELECT passagem_id, fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_ms, qualidade_tempo, ts_dispositivo_ms, ancora_servidor_ms, ancora_rtt_ms, ancora_idade_ms, digitacao_ms, modo_entrada, recebido_em_ms, imagem_ref, confianca FROM contagem_passagem WHERE passagem_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -896,6 +908,77 @@ abstract class ContagemPassagemQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ContagemPassagemTableMap::COL_RECEBIDO_EM_MS, $recebidoEmMs, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the imagem_ref column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByImagemRef('fooValue');   // WHERE imagem_ref = 'fooValue'
+     * $query->filterByImagemRef('%fooValue%', Criteria::LIKE); // WHERE imagem_ref LIKE '%fooValue%'
+     * $query->filterByImagemRef(['foo', 'bar']); // WHERE imagem_ref IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $imagemRef The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByImagemRef($imagemRef = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($imagemRef)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemPassagemTableMap::COL_IMAGEM_REF, $imagemRef, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the confianca column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByConfianca(1234); // WHERE confianca = 1234
+     * $query->filterByConfianca(array(12, 34)); // WHERE confianca IN (12, 34)
+     * $query->filterByConfianca(array('min' => 12)); // WHERE confianca > 12
+     * </code>
+     *
+     * @param mixed $confianca The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByConfianca($confianca = null, ?string $comparison = null)
+    {
+        if (is_array($confianca)) {
+            $useMinMax = false;
+            if (isset($confianca['min'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_CONFIANCA, $confianca['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($confianca['max'])) {
+                $this->addUsingAlias(ContagemPassagemTableMap::COL_CONFIANCA, $confianca['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemPassagemTableMap::COL_CONFIANCA, $confianca, $comparison);
 
         return $this;
     }

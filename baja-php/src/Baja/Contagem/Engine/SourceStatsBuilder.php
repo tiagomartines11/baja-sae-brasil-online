@@ -70,7 +70,8 @@ final class SourceStatsBuilder
         // when this source was expected and has nothing.
         $countingSources = 0;
         foreach ($sourcesById as $source) {
-            $countingSources += $source->recordsPasses() ? 1 : 0;
+            // An observer that never voted is in no pass group.
+            $countingSources += $source->mayHaveCounted() ? 1 : 0;
         }
         foreach ($groups as $group) {
             $sourcesInGroup = count($group->entries);
@@ -93,12 +94,14 @@ final class SourceStatsBuilder
     }
 
     /**
-     * A counting source is offline when the race is on and none of its
-     * devices has been heard from for `fonte_offline_s`.
+     * A pass source that is switched on (counting, or observing) is offline
+     * when the race is on and none of its devices has been heard from for
+     * `fonte_offline_s`. An observer's silence changes no count, but whoever
+     * runs the camera wants to know it stopped sending.
      */
     private static function isOffline(Source $source, RaceTimeline $timeline, Settings $settings, int $nowMs): bool
     {
-        if (!$source->countsPasses()) {
+        if (!$source->ativa || !$source->recordsPasses()) {
             return false;
         }
         $raceState = $timeline->stateAt($nowMs);

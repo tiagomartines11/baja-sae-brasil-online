@@ -236,7 +236,8 @@ final class PassTimeFuser
     {
         $ids = [];
         foreach ($sourcesById as $source) {
-            if ($source->hasPreciseTime()) {
+            // An observer that never voted has no entry in any group.
+            if ($source->hasPreciseTime() && $source->mayHaveCounted()) {
                 $ids[$source->id] = true;
             }
         }

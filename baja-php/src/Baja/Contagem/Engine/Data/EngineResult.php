@@ -62,6 +62,14 @@ final class EngineResult
     /** @var array<int, SourceStats> fonteId => statistics */
     public array $sourceStats = [];
 
+    /**
+     * The comparison of each observer entry (and each missed pass) with the
+     * official count, as ObserverComparator::$rows. Empty with no observer.
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    public array $observerRows = [];
+
     /** @var int[] ids of the entries the engine voided on its own (double taps, handovers) */
     public array $autoVoidedEntryIds = [];
 

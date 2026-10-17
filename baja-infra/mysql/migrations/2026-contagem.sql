@@ -3,11 +3,12 @@
 -- Apply once to an existing baja_resultados database:
 --     mysql -u <user> -p baja_resultados < 2026-contagem.sql
 --
--- This file ONLY CREATES TABLES. Safe to run again: every statement is
--- CREATE TABLE IF NOT EXISTS, and nothing here touches an existing table or
--- row. For the same reason it does not alter a contagem_* table that
--- already exists: a database that got these tables from an earlier version
--- of this file (only development machines did) must drop them first.
+-- This file CREATES TABLES, and adds the columns listed under "Columns
+-- added later" to tables that already exist. Safe to run again: every
+-- statement is CREATE TABLE IF NOT EXISTS or an ADD COLUMN that checks
+-- information_schema first, and no row is touched. Nothing else alters a
+-- contagem_* table that already exists: a database that got these tables
+-- from a much earlier version of this file must drop them first.
 --
 -- The definitions mirror baja-php/schema.xml, which stays the source of
 -- truth for the Propel classes. If one changes, change the other.
@@ -43,6 +44,10 @@ CREATE TABLE IF NOT EXISTS `contagem_fonte` (
   `ativa` tinyint(1) NOT NULL DEFAULT '1',
   `ordem` int NOT NULL DEFAULT '0',
   `desativada_em_ms` bigint DEFAULT NULL,
+  `papel` varchar(12) NOT NULL DEFAULT 'votante',
+  `papel_desde_ms` bigint DEFAULT NULL,
+  `periodos_fora` text,
+  `imagem_base_url` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`fonte_id`),
   KEY `contagem_fonte_prova_idx` (`evento_id`,`prova_id`),
   CONSTRAINT `contagem_fonte_prova` FOREIGN KEY (`evento_id`, `prova_id`) REFERENCES `prova` (`evento_id`, `prova_id`) ON DELETE RESTRICT ON UPDATE CASCADE
@@ -91,6 +96,8 @@ CREATE TABLE IF NOT EXISTS `contagem_passagem` (
   `digitacao_ms` int DEFAULT NULL,
   `modo_entrada` varchar(12) NOT NULL,
   `recebido_em_ms` bigint NOT NULL,
+  `imagem_ref` varchar(64) CHARACTER SET ascii DEFAULT NULL,
+  `confianca` decimal(4,3) DEFAULT NULL,
   PRIMARY KEY (`passagem_id`),
   UNIQUE KEY `contagem_passagem_fonte_uuid_UNIQUE` (`fonte_id`,`uuid_cliente`),
   KEY `contagem_passagem_fonte_ts_idx` (`fonte_id`,`ts_ms`),
@@ -181,3 +188,39 @@ CREATE TABLE IF NOT EXISTS `contagem_arquivo` (
   KEY `contagem_arquivo_prova_idx` (`evento_id`,`prova_id`,`arquivado_em_ms`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 -- <<< DDL
+
+-- Columns added later. A database that already holds the tables (one that
+-- ran an event before these existed) gets them here; on a fresh database
+-- the CREATE TABLE above already has them and each statement does nothing.
+-- One column per statement, each checked on its own, so a second run, or a
+-- run that stopped half-way, is harmless.
+SET @add_column = (SELECT IF(COUNT(*) = 0,
+    'ALTER TABLE `contagem_fonte` ADD COLUMN `papel` varchar(12) NOT NULL DEFAULT ''votante''', 'DO 0')
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_fonte' AND COLUMN_NAME = 'papel');
+PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
+SET @add_column = (SELECT IF(COUNT(*) = 0,
+    'ALTER TABLE `contagem_fonte` ADD COLUMN `papel_desde_ms` bigint DEFAULT NULL', 'DO 0')
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_fonte' AND COLUMN_NAME = 'papel_desde_ms');
+PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
+SET @add_column = (SELECT IF(COUNT(*) = 0,
+    'ALTER TABLE `contagem_fonte` ADD COLUMN `periodos_fora` text', 'DO 0')
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_fonte' AND COLUMN_NAME = 'periodos_fora');
+PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
+SET @add_column = (SELECT IF(COUNT(*) = 0,
+    'ALTER TABLE `contagem_fonte` ADD COLUMN `imagem_base_url` varchar(255) DEFAULT NULL', 'DO 0')
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_fonte' AND COLUMN_NAME = 'imagem_base_url');
+PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
+SET @add_column = (SELECT IF(COUNT(*) = 0,
+    'ALTER TABLE `contagem_passagem` ADD COLUMN `imagem_ref` varchar(64) CHARACTER SET ascii DEFAULT NULL', 'DO 0')
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_passagem' AND COLUMN_NAME = 'imagem_ref');
+PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
+SET @add_column = (SELECT IF(COUNT(*) = 0,
+    'ALTER TABLE `contagem_passagem` ADD COLUMN `confianca` decimal(4,3) DEFAULT NULL', 'DO 0')
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_passagem' AND COLUMN_NAME = 'confianca');
+PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;

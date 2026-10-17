@@ -165,6 +165,20 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     protected $recebido_em_ms;
 
     /**
+     * The value for the imagem_ref field.
+     *
+     * @var        string|null
+     */
+    protected $imagem_ref;
+
+    /**
+     * The value for the confianca field.
+     *
+     * @var        string|null
+     */
+    protected $confianca;
+
+    /**
      * @var        ChildContagemFonte
      */
     protected $aContagemFonte;
@@ -562,6 +576,26 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     }
 
     /**
+     * Get the [imagem_ref] column value.
+     *
+     * @return string|null
+     */
+    public function getImagemRef()
+    {
+        return $this->imagem_ref;
+    }
+
+    /**
+     * Get the [confianca] column value.
+     *
+     * @return string|null
+     */
+    public function getConfianca()
+    {
+        return $this->confianca;
+    }
+
+    /**
      * Set the value of [passagem_id] column.
      *
      * @param string $v New value
@@ -850,6 +884,46 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [imagem_ref] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setImagemRef($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->imagem_ref !== $v) {
+            $this->imagem_ref = $v;
+            $this->modifiedColumns[ContagemPassagemTableMap::COL_IMAGEM_REF] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [confianca] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setConfianca($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->confianca !== $v) {
+            $this->confianca = $v;
+            $this->modifiedColumns[ContagemPassagemTableMap::COL_CONFIANCA] = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -931,6 +1005,12 @@ abstract class ContagemPassagem implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : ContagemPassagemTableMap::translateFieldName('RecebidoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->recebido_em_ms = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 14 + $startcol : ContagemPassagemTableMap::translateFieldName('ImagemRef', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->imagem_ref = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 15 + $startcol : ContagemPassagemTableMap::translateFieldName('Confianca', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->confianca = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -938,7 +1018,7 @@ abstract class ContagemPassagem implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 14; // 14 = ContagemPassagemTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 16; // 16 = ContagemPassagemTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemPassagem'), 0, $e);
@@ -1209,6 +1289,12 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemPassagemTableMap::COL_RECEBIDO_EM_MS)) {
             $modifiedColumns[':p' . $index++]  = 'recebido_em_ms';
         }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_IMAGEM_REF)) {
+            $modifiedColumns[':p' . $index++]  = 'imagem_ref';
+        }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_CONFIANCA)) {
+            $modifiedColumns[':p' . $index++]  = 'confianca';
+        }
 
         $sql = sprintf(
             'INSERT INTO contagem_passagem (%s) VALUES (%s)',
@@ -1274,6 +1360,14 @@ abstract class ContagemPassagem implements ActiveRecordInterface
                         break;
                     case 'recebido_em_ms':
                         $stmt->bindValue($identifier, $this->recebido_em_ms, PDO::PARAM_INT);
+
+                        break;
+                    case 'imagem_ref':
+                        $stmt->bindValue($identifier, $this->imagem_ref, PDO::PARAM_STR);
+
+                        break;
+                    case 'confianca':
+                        $stmt->bindValue($identifier, $this->confianca, PDO::PARAM_STR);
 
                         break;
                 }
@@ -1380,6 +1474,12 @@ abstract class ContagemPassagem implements ActiveRecordInterface
             case 13:
                 return $this->getRecebidoEmMs();
 
+            case 14:
+                return $this->getImagemRef();
+
+            case 15:
+                return $this->getConfianca();
+
             default:
                 return null;
         } // switch()
@@ -1422,6 +1522,8 @@ abstract class ContagemPassagem implements ActiveRecordInterface
             $keys[11] => $this->getDigitacaoMs(),
             $keys[12] => $this->getModoEntrada(),
             $keys[13] => $this->getRecebidoEmMs(),
+            $keys[14] => $this->getImagemRef(),
+            $keys[15] => $this->getConfianca(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1537,6 +1639,12 @@ abstract class ContagemPassagem implements ActiveRecordInterface
             case 13:
                 $this->setRecebidoEmMs($value);
                 break;
+            case 14:
+                $this->setImagemRef($value);
+                break;
+            case 15:
+                $this->setConfianca($value);
+                break;
         } // switch()
 
         return $this;
@@ -1604,6 +1712,12 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         }
         if (array_key_exists($keys[13], $arr)) {
             $this->setRecebidoEmMs($arr[$keys[13]]);
+        }
+        if (array_key_exists($keys[14], $arr)) {
+            $this->setImagemRef($arr[$keys[14]]);
+        }
+        if (array_key_exists($keys[15], $arr)) {
+            $this->setConfianca($arr[$keys[15]]);
         }
 
         return $this;
@@ -1689,6 +1803,12 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ContagemPassagemTableMap::COL_RECEBIDO_EM_MS)) {
             $criteria->add(ContagemPassagemTableMap::COL_RECEBIDO_EM_MS, $this->recebido_em_ms);
+        }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_IMAGEM_REF)) {
+            $criteria->add(ContagemPassagemTableMap::COL_IMAGEM_REF, $this->imagem_ref);
+        }
+        if ($this->isColumnModified(ContagemPassagemTableMap::COL_CONFIANCA)) {
+            $criteria->add(ContagemPassagemTableMap::COL_CONFIANCA, $this->confianca);
         }
 
         return $criteria;
@@ -1791,6 +1911,8 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         $copyObj->setDigitacaoMs($this->getDigitacaoMs());
         $copyObj->setModoEntrada($this->getModoEntrada());
         $copyObj->setRecebidoEmMs($this->getRecebidoEmMs());
+        $copyObj->setImagemRef($this->getImagemRef());
+        $copyObj->setConfianca($this->getConfianca());
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setPassagemId(NULL); // this is a auto-increment column, so set to default value
@@ -1950,6 +2072,8 @@ abstract class ContagemPassagem implements ActiveRecordInterface
         $this->digitacao_ms = null;
         $this->modo_entrada = null;
         $this->recebido_em_ms = null;
+        $this->imagem_ref = null;
+        $this->confianca = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();

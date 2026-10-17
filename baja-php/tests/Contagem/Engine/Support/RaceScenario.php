@@ -299,6 +299,38 @@ final class RaceScenario
         $this->sources[$source]->desativadaEmMs = $at === null ? null : self::ms($at);
     }
 
+    /**
+     * The source becomes an observer: what it records is compared with the
+     * official count and never counted (a camera on trial). With $at null it
+     * was one from the start, as a new automatic source is.
+     */
+    public function makeObserver(int $source, ?string $at = null): void
+    {
+        $this->sources[$source]->papel = Source::PAPEL_OBSERVADORA;
+        $this->sources[$source]->papelDesdeMs = $at === null ? null : self::ms($at);
+    }
+
+    /**
+     * The controller promotes an observer to votante at $at, as the Fontes
+     * page stores it: the time it observed becomes a period off, and it
+     * counts from $at on.
+     */
+    public function promote(int $source, string $at): void
+    {
+        $this->sources[$source]->periodosForaMs[] = [$this->sources[$source]->papelDesdeMs, self::ms($at)];
+        $this->sources[$source]->papel = Source::PAPEL_VOTANTE;
+        $this->sources[$source]->papelDesdeMs = self::ms($at);
+    }
+
+    /**
+     * The source was switched off at $from and on again at $until, and the
+     * controller did not ask for what it recorded in between to count.
+     */
+    public function switchedOffBetween(int $source, string $from, string $until): void
+    {
+        $this->sources[$source]->periodosForaMs[] = [self::ms($from), self::ms($until)];
+    }
+
     /** No device is open on this counter any more: nothing can still arrive from it. */
     public function noDeviceOpen(int $source): void
     {
