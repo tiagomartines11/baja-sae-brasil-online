@@ -313,6 +313,6 @@ export {
   descreverDecisao, descreverSugestao, mensagemDeConflito, perguntaAoDesfazer, perguntaSobreVoltaCurta, rotuloDeUsarTempo,
 } from './revisao-frases.js';
 export {
-  acaoDeConfirmar, decisaoConfirmarAlerta, perguntaAoContarNaEntrada, perguntaAoUsarTempo, temposParaEscolher,
+  acaoDeConfirmar, decisaoConfirmarAlerta, efeitoDeUsarTempo, indiceDeUsarTempo, perguntaAoContarNaEntrada, perguntaAoUsarTempo, temposParaEscolher,
   voltaCurtaAoContar, voltaImpossivelmenteCurta,
 } from './revisao-alertas.js';

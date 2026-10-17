@@ -6,6 +6,7 @@
 // revisao-raias-logica.js).
 
 import { criarAcoes } from './revisao-acoes.js';
+import { indiceDeUsarTempo } from './revisao-alertas.js';
 import { SessaoExpirada, buscarCarro, buscarEstado, buscarHistorico, buscarJanela } from './revisao-api.js';
 import { desenharBarra, desenharBarraSemEstado } from './revisao-barra.js';
 import {
@@ -244,12 +245,12 @@ document.addEventListener('keydown', (evento) => {
     return;
   }
   // K does nothing on a flag that has no K button (a repeat): confirmarAlerta checks.
-  // 1, 2, 3 are the "Usar o tempo de …" buttons; usarTempo does nothing on a flag without them.
-  const atalhos = {
-    a: acoes.aceitar, k: acoes.confirmarAlerta, v: acoes.anular, 1: () => acoes.usarTempo(0), 2: () => acoes.usarTempo(1), 3: () => acoes.usarTempo(2),
-  };
-  const acao = atalhos[evento.key.toLowerCase()];
+  // 1, 2, 3 are the "Usar o tempo de …" buttons, and only where the flag
+  // has that button: elsewhere the key is left alone.
   const alerta = alertaSelecionado();
+  const atalhos = { a: acoes.aceitar, k: acoes.confirmarAlerta, v: acoes.anular };
+  const indice = alerta ? indiceDeUsarTempo(evento.key, alerta, tela.estado) : null;
+  const acao = indice !== null ? () => acoes.usarTempo(indice) : atalhos[evento.key.toLowerCase()];
   // The actions themselves refuse while the timeline is missing or stale.
   if (acao && alerta && !alerta.auto_resolvido && !tela.ocupado) {
     evento.preventDefault();

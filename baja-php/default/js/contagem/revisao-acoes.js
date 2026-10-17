@@ -243,8 +243,13 @@ export function criarAcoes(ganchos) {
   }
 
   // "Usar o tempo de …" (or its key, 1, 2, 3) on the selected flag: the
-  // pass counts once, timed by that entry. Asked first: it adds a pass.
+  // pass counts once, timed by that entry. Always asked first. On a flag
+  // without that button it does nothing, before any "being updated" message.
   function usarTempo(indice) {
+    const selecionado = alertaSelecionado();
+    if (!selecionado || !temposParaEscolher(selecionado, tela.estado)[indice]) {
+      return;
+    }
     const alerta = alertaQuePodeSerDecidido();
     const tempo = alerta ? temposParaEscolher(alerta, tela.estado)[indice] : null;
     if (!tempo) {

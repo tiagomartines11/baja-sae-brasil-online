@@ -20,8 +20,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  acaoDeConfirmar, acoesDaEntrada, descreverDecisao, descreverSugestao, perguntaAoAgirNaEntrada, perguntaAoDesfazer,
-  perguntaAoUsarTempo, perguntaSobreVoltaCurta, temposParaEscolher,
+  acaoDeConfirmar, acoesDaEntrada, descreverDecisao, descreverSugestao, efeitoDeUsarTempo, indiceDeUsarTempo, perguntaAoAgirNaEntrada,
+  perguntaAoDesfazer, perguntaAoUsarTempo, perguntaSobreVoltaCurta, temposParaEscolher,
 } from '../../default/js/contagem/revisao-decisoes.js';
 import { perguntaAoConfirmar } from '../../default/js/contagem/revisao-alertas.js';
 import {
@@ -105,6 +105,21 @@ test('a plausible lap on the chip still gets the "+1 volta" question, and an ent
   assert.equal(perguntaAoAgirNaEntrada({ acao: 'confirmar', maisUmaPassagem: true }, repetida, ESTADO), perguntaSobreVoltaCurta(3000));
 });
 
+// WHAT WENT WRONG (review of this round): on a pass held because the car
+// was logged in the pit lane, a short lap replaced the pit question, and
+// with it the advice to use "Marcar saída do box" instead.
+test('a held in-pit pass on a chip keeps the pit question, with the short lap in it', () => {
+  const entrada = {
+    id: 410, carro: 3, decisoes: [],
+    grupo: { contado: false, papel: 'retida', motivo_retencao: 'no_box', passagem_ids: [410, 411], soma_ao_confirmar: true, volta_resultante_ms: 60000 },
+  };
+  const pergunta = perguntaAoAgirNaEntrada({ acao: 'confirmar', maisUmaPassagem: true }, entrada, ESTADO);
+
+  assert.match(pergunta, /constava como dentro do box/);
+  assert.match(pergunta, /"Marcar saída do box"/);
+  assert.match(pergunta, /curta demais para ser real/);
+});
+
 test('confirming a pass that counts already asks nothing', () => {
   assert.equal(perguntaAoAgirNaEntrada({ acao: 'confirmar', maisUmaPassagem: false }, { id: 5, carro: 3, decisoes: [] }, ESTADO), null);
 });
@@ -143,10 +158,17 @@ const REGISTRO_TARDIO = {
   efeito_de_confirmar: 'mais_uma_passagem',
   volta_resultante_ms: 180000,
   tempos_possiveis: [
-    { passagem_id: 531, fonte_id: 2, ts_ms: LARGADA_MS + 3600000, passagem_alvo_id: 533 },
-    { passagem_id: 533, fonte_id: 1, ts_ms: LARGADA_MS + 3623400, passagem_alvo_id: 531 },
+    { passagem_id: 531, fonte_id: 2, ts_ms: LARGADA_MS + 3600000, passagem_alvo_id: 533, voltas: 1, volta_resultante_ms: 180000 },
+    { passagem_id: 533, fonte_id: 1, ts_ms: LARGADA_MS + 3623400, passagem_alvo_id: 531, voltas: 1, volta_resultante_ms: 156600 },
   ],
 };
+
+// The same pair in another publish mode: `voltas` on each time is what the
+// server says choosing it does to the count in force.
+const comVoltas = (voltas) => ({
+  ...REGISTRO_TARDIO,
+  tempos_possiveis: REGISTRO_TARDIO.tempos_possiveis.map((tempo) => ({ ...tempo, voltas })),
+});
 
 test('a late pair offers one button per time, numbered for the keyboard, and no K', () => {
   const tempos = temposParaEscolher(REGISTRO_TARDIO, ESTADO);
@@ -163,8 +185,50 @@ test('a late pair offers one button per time, numbered for the keyboard, and no 
 test('using one time asks first, because the car gains a lap', () => {
   const [tempo] = temposParaEscolher(REGISTRO_TARDIO, ESTADO);
   assert.match(perguntaAoUsarTempo(REGISTRO_TARDIO, tempo, ESTADO), /^Usar o tempo de Contagem 2 \(1:00:00\)\? A passagem do carro 1 conta UMA vez, nesse horário \(\+1 volta\)/);
-  // When the lap it makes is impossibly short, the short-lap question instead.
-  assert.equal(perguntaAoUsarTempo({ ...REGISTRO_TARDIO, volta_resultante_ms: 60000 }, tempo, ESTADO), perguntaSobreVoltaCurta(60000));
+  assert.equal(efeitoDeUsarTempo(tempo), '(+1 volta)');
+});
+
+// WHAT WENT WRONG (review of this round): the short-lap question used the
+// flag's lap, measured at the EARLY entry's time, whichever button was
+// pressed. Choosing the other time was never checked.
+test('the short-lap question is about the lap at the chosen time', () => {
+  const alerta = {
+    ...REGISTRO_TARDIO,
+    tempos_possiveis: [
+      { ...REGISTRO_TARDIO.tempos_possiveis[0], volta_resultante_ms: 120000 },
+      { ...REGISTRO_TARDIO.tempos_possiveis[1], volta_resultante_ms: 60000 },
+    ],
+  };
+  const [cedo, tarde] = temposParaEscolher(alerta, ESTADO);
+
+  assert.doesNotMatch(perguntaAoUsarTempo(alerta, cedo, ESTADO), /curta demais/);
+  assert.equal(perguntaAoUsarTempo(alerta, tarde, ESTADO), perguntaSobreVoltaCurta(60000));
+});
+
+// WHAT WENT WRONG (review of this round): the buttons always said "+1 volta".
+// In "todas" both entries count already, and choosing a time takes the
+// extra lap away; in "fonte_principal" the primary's entry counts, and the
+// number of laps stays.
+test('the buttons and the question say what choosing a time does in the mode in force', () => {
+  const [todas] = temposParaEscolher(comVoltas(-1), ESTADO);
+  assert.equal(efeitoDeUsarTempo(todas), '(−1 volta)');
+  assert.match(perguntaAoUsarTempo(comVoltas(-1), todas, ESTADO), /perde a volta a mais \(−1 volta\)/);
+  assert.doesNotMatch(perguntaAoUsarTempo(comVoltas(-1), todas, ESTADO), /\+1 volta/);
+
+  const [principal] = temposParaEscolher(comVoltas(0), ESTADO);
+  assert.equal(efeitoDeUsarTempo(principal), '');
+  assert.match(perguntaAoUsarTempo(comVoltas(0), principal, ESTADO), /o número de voltas não muda/);
+});
+
+// WHAT WENT WRONG (review of this round): 1, 2, 3 were taken on every flag,
+// and on one without these buttons showed "A linha do tempo está sendo
+// atualizada…" for a key that does nothing there.
+test('the keys 1, 2, 3 only press a "Usar o tempo" button the flag has', () => {
+  assert.equal(indiceDeUsarTempo('1', REGISTRO_TARDIO, ESTADO), 0);
+  assert.equal(indiceDeUsarTempo('2', REGISTRO_TARDIO, ESTADO), 1);
+  assert.equal(indiceDeUsarTempo('3', REGISTRO_TARDIO, ESTADO), null, 'only two times');
+  assert.equal(indiceDeUsarTempo('1', { tipo: 'solitaria', carros: [3], passagem_ids: [9] }, ESTADO), null);
+  assert.equal(indiceDeUsarTempo('k', REGISTRO_TARDIO, ESTADO), null);
 });
 
 test('a held, widely spread pass offers its times with no other entry to join', () => {

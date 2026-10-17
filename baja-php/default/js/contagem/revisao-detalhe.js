@@ -8,7 +8,9 @@ import { el, substituir } from './revisao-dom.js';
 import {
   AVISO_TEMPO_DE_VOLTA, NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, listaDeCarros, relogio, tempoDeProva,
 } from './revisao-formato.js';
-import { acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, fraseDeDuvida, temposParaEscolher } from './revisao-alertas.js';
+import {
+  acaoDeAceitar, acaoDeConfirmar, acoesExtrasDoAlerta, efeitoDeUsarTempo, fraseDeDuvida, temposParaEscolher,
+} from './revisao-alertas.js';
 import { edicaoManualDoAlerta } from './revisao-edicao-manual.js';
 import { acoesDaEntrada, descreverSugestao, repeticoesEmAberto } from './revisao-decisoes.js';
 import { mostraCorridaInteira, quandoDoAlerta, situacaoDoCarroFora } from './revisao-fila.js';
@@ -196,10 +198,11 @@ export function desenharDetalheDeAlerta(container, contexto) {
   });
 
   // "Usar o tempo de …": whose time is right, on a crossing typed late or a
-  // held pass whose entries are too far apart. Each adds a pass; it asks.
+  // held pass whose entries are too far apart. Each says what it does to
+  // the count in force (+1, −1, or nothing); it asks.
   const tempos = temposParaEscolher(alerta, estado).map((tempo, indice) => el('button', {
-    type: 'button', class: 'soma-volta usar-tempo', disabled: semDecisao, onclick: () => acoes.usarTempo(indice),
-  }, `${tempo.rotulo} (+1 volta) `, el('kbd', {}, tempo.tecla)));
+    type: 'button', class: tempo.voltas > 0 ? 'soma-volta usar-tempo' : 'usar-tempo', disabled: semDecisao, onclick: () => acoes.usarTempo(indice),
+  }, `${[tempo.rotulo, efeitoDeUsarTempo(tempo)].filter(Boolean).join(' ')} `, el('kbd', {}, tempo.tecla)));
 
   substituir(container,
     el('header', { class: 'detalhe-titulo' },

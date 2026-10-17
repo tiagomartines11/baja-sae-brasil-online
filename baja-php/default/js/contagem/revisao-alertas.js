@@ -162,6 +162,17 @@ export function perguntaAoContarNaEntrada(opcao, entrada, estado = null) {
   }
   const voltaMs = entrada.grupo ? entrada.grupo.volta_resultante_ms : entrada.volta_resultante_ms;
   const voltaCurtaMs = voltaCurtaDoCarro(entrada.carro, voltaMs, estado);
+  const retida = entrada.grupo?.papel === 'retida';
+  const motivo = retida ? entrada.grupo.motivo_retencao : null;
+  if (motivo === 'no_box' || motivo === 'no_abastecimento') {
+    // Asked first even when the lap is short too: it names the right
+    // action ("Marcar saída"), which the short-lap question does not.
+    const area = motivo === 'no_box' ? 'box' : 'abastecimento';
+    return `Esta passagem está RETIDA porque o carro ${entrada.carro} constava como dentro do ${area}. `
+      + `Contá-la assim dá ao carro MAIS UMA PASSAGEM (+1 volta) e ele CONTINUA constando como dentro do ${area}. `
+      + (voltaCurtaMs !== null ? `Além disso, ela criaria uma volta de ${duracao(voltaCurtaMs)}, curta demais para ser real. ` : '')
+      + `Se o carro saiu, o certo é "Marcar saída do ${area}" no alerta. Contar mesmo assim?`;
+  }
   if (voltaCurtaMs !== null) {
     return perguntaDeVoltaCurta(voltaCurtaMs);
   }
@@ -169,14 +180,7 @@ export function perguntaAoContarNaEntrada(opcao, entrada, estado = null) {
     return 'Este registro foi anulado automaticamente como repetição (toque duplo ou troca de contador). '
       + `Contá-lo dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta), poucos segundos depois da anterior. Contar mesmo assim?`;
   }
-  if (entrada.grupo?.papel === 'retida') {
-    const motivo = entrada.grupo.motivo_retencao;
-    if (motivo === 'no_box' || motivo === 'no_abastecimento') {
-      const area = motivo === 'no_box' ? 'box' : 'abastecimento';
-      return `Esta passagem está RETIDA porque o carro ${entrada.carro} constava como dentro do ${area}. `
-        + `Contá-la assim dá ao carro MAIS UMA PASSAGEM (+1 volta) e ele CONTINUA constando como dentro do ${area}. `
-        + `Se o carro saiu, o certo é "Marcar saída do ${area}" no alerta. Contar mesmo assim?`;
-    }
+  if (retida) {
     return 'Esta passagem está RETIDA: os contadores concordam, mas ela parece ser a mesma passagem de antes registrada de novo. '
       + `Contá-la dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta). Contar mesmo assim?`;
   }
@@ -454,10 +458,14 @@ export function acoesExtrasDoAlerta(alerta, largadaMs = null, estado = null) {
 // entries are too far apart ("dispersao_alta" with "tempos_possiveis"),
 // the reviewer says whose time is right. One button per time, numbered:
 // the keys 1, 2, 3 press them. Each is
-//   {decisao, rotulo, tecla, tsMs, fonteId}
+//   {decisao, rotulo, tecla, tsMs, fonteId, voltas, voltaResultanteMs}
 // and `decisao` is the "usar_tempo" request: the pass counts once, timed by
 // that entry; the other entry, when it is in another pass, joins it.
-// Empty for any other flag.
+// `voltas` is what that does to the count in force, from the server: +1
+// where none of the entries counts today ("confirmadas"), 0 where one does
+// (the primary source's, in "fonte_principal"), -1 where both of a late
+// pair do ("todas"). `voltaResultanteMs` is the shortest lap the pass
+// would make at that time. Empty for any other flag.
 export function temposParaEscolher(alerta, estado = null) {
   const tempos = alerta?.tempos_possiveis ?? [];
   if (!Array.isArray(tempos) || !['registro_tardio', 'dispersao_alta'].includes(alerta.tipo)) {
@@ -475,24 +483,49 @@ export function temposParaEscolher(alerta, estado = null) {
     tecla: String(indice + 1),
     tsMs: tempo.ts_ms,
     fonteId: tempo.fonte_id,
+    // A server that predates "voltas" only offered these buttons where they add a pass.
+    voltas: Number.isInteger(tempo.voltas) ? tempo.voltas : 1,
+    voltaResultanteMs: tempo.volta_resultante_ms ?? null,
   }));
 }
 
-// The question before "Usar o tempo de …": it gives the car one more pass
-// (these passes do not count today), so it is never one key away without
-// one. When the lap is impossibly short the short-lap question is asked
-// instead, as on K.
+// What a "Usar o tempo de …" button adds to its label: "(+1 volta)",
+// "(−1 volta)", or nothing when the count stays as it is.
+export function efeitoDeUsarTempo(tempo) {
+  if (tempo.voltas > 0) {
+    return '(+1 volta)';
+  }
+  return tempo.voltas < 0 ? '(−1 volta)' : '';
+}
+
+// The key 1, 2 or 3 on the selected flag: the index of the "Usar o tempo
+// de …" button it presses, or null when the flag has no such button (the
+// key then does nothing at all, not even a message).
+export function indiceDeUsarTempo(tecla, alerta, estado = null) {
+  const indice = Number(tecla) - 1;
+  return Number.isInteger(indice) && temposParaEscolher(alerta, estado)[indice] ? indice : null;
+}
+
+// The question before "Usar o tempo de …": it changes a count, or at least
+// a pass time, so it is never one key away without one. When the lap the
+// pass would make AT THAT TIME is impossibly short, the short-lap question
+// is asked instead, as on K.
 export function perguntaAoUsarTempo(alerta, tempo, estado = null) {
   const carro = (alerta.carros ?? [])[0];
-  const voltaCurtaMs = alerta.efeito_de_confirmar === 'mais_uma_passagem'
-    ? voltaCurtaDoCarro(carro, alerta.volta_resultante_ms, estado) : null;
+  const voltaCurtaMs = voltaCurtaDoCarro(carro, tempo.voltaResultanteMs ?? null, estado);
   if (voltaCurtaMs !== null) {
     return perguntaDeVoltaCurta(voltaCurtaMs);
   }
   const outro = tempo.decisao.passagem_alvo_id
     ? ' O outro registro fica junto dela, sem definir o horário.'
     : ' Os outros registros ficam nela, sem definir o horário.';
-  return `${tempo.rotulo}? A passagem do carro ${carro} conta UMA vez, nesse horário (+1 volta).${outro} `
+  let efeito = ' (+1 volta)';
+  if (tempo.voltas < 0) {
+    efeito = ': hoje os dois registros contam, e o carro perde a volta a mais (−1 volta)';
+  } else if (tempo.voltas === 0) {
+    efeito = ' (o número de voltas não muda)';
+  }
+  return `${tempo.rotulo}? A passagem do carro ${carro} conta UMA vez, nesse horário${efeito}.${outro} `
     + 'Pode ser desfeito pelo histórico.';
 }
 
