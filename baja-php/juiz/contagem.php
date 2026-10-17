@@ -5,8 +5,11 @@ use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\SourceAdmin;
 use Baja\Contagem\Service\ContagemService;
+use Baja\Contagem\Service\CarRoster;
 use Baja\Contagem\Service\LockBusy;
+use Baja\Contagem\Service\ScoringFields;
 use Baja\Session;
+use InvalidArgumentException;
 
 // Entry point of the lap counting area. Decides where each kind of user
 // goes: the controller gets the hub; everybody else gets a chooser with the
@@ -33,6 +36,8 @@ if (ContagemAccess::isController($prova)) {
                     'aptos' => (string) count($outcome['marcados']),
                     'mantidos' => implode(',', $outcome['ja_nao']),
                 ]);
+            } catch (InvalidArgumentException $refused) {
+                $errorMessage = $refused->getMessage();
             } catch (LockBusy $busy) {
                 $errorMessage = 'A contagem está ocupada com outra operação. Nada foi alterado: tente de novo.';
             }
@@ -40,6 +45,8 @@ if (ContagemAccess::isController($prova)) {
     }
     $roster = $service->carRoster();
     $classificationField = $roster->classificationField();
+    $scoring = $service->scoringCheck();
+    $classificationConflict = $scoring['campo_classificacao_na_formula'];
     $markedNow = filter_var($_GET['aptos'] ?? null, FILTER_VALIDATE_INT);
     // Car numbers only: this comes back from the URL.
     $leftAloneNow = is_string($_GET['mantidos'] ?? null) && preg_match('/^\d{1,5}(,\d{1,5})*$/', $_GET['mantidos']) === 1
@@ -55,6 +62,16 @@ if (ContagemAccess::isController($prova)) {
                 <strong>Não alterado(s), porque o campo já estava preenchido com outro valor (por exemplo NÃO): <?= $h(implode(', ', $leftAloneNow)) ?>.</strong>
             <?php } ?>
         </p>
+    <?php } ?>
+    <?php if ($classificationConflict !== null) { ?>
+        <p class="contagem-erro" role="alert"><strong>Campo de classificação errado: <?= $h($classificationConflict) ?>.</strong>
+            <?= $h(ScoringFields::whyNot($classificationConflict)) ?>
+            "Marcar todos os presentes como aptos" fica bloqueado até isso ser corrigido. Para corrigir sem tirar carros da corrida,
+            peça ao responsável pelo sistema: o passo a passo está na documentação da contagem (Classified cars).</p>
+    <?php } ?>
+    <?php if ($scoring['todos_os_pontos_zero']) { ?>
+        <p class="contagem-erro" role="alert"><strong>Todos os pontos publicados são 0</strong>, mas há carros com voltas:
+            confira o campo de classificação e a fórmula de pontuação da prova.</p>
     <?php } ?>
     <?php if ($classificationField !== null) {
         $unclassified = $roster->unclassified();
@@ -79,10 +96,11 @@ if (ContagemAccess::isController($prova)) {
                 </p>
             <?php } ?>
             <form method="POST" action="contagem.php<?= $h($query) ?>" class="contagem-acao"
-                  onsubmit="return confirm(<?= $h(json_encode('Marcar como apto cada carro presente com o campo em branco (' . count($blank) . ')? Carros marcados NÃO não são alterados. Cada alteração fica no histórico da prova.')) ?>);">
+                  onsubmit="return confirm(<?= $h(json_encode('Grava ' . $classificationField . ' = ' . CarRoster::CLASSIFIED_VALUE . ' em ' . count($blank) . ' carro(s) presente(s) com o campo em branco (' . implode(', ', $blank) . ')? '
+                      . 'Carros com outro valor (NÃO) não são alterados. Cada alteração fica no histórico da prova.')) ?>);">
                 <?= Pagina::csrfField($prova) ?>
                 <input type="hidden" name="acao" value="marcar_aptos">
-                <button type="submit" <?= $blank === [] ? 'disabled' : '' ?>>Marcar todos os presentes como aptos</button>
+                <button type="submit" <?= $blank === [] || $classificationConflict !== null ? 'disabled' : '' ?>>Marcar todos os presentes como aptos</button>
                 <span class="contagem-dica">Para desmarcar um carro, edite o campo <?= $h($classificationField) ?> dele em
                     <a href="dashboard.php<?= $h($query) ?>">Campos manuais</a>.</span>
             </form>

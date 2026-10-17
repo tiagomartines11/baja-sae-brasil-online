@@ -13,7 +13,8 @@ use Propel\Runtime\Propel;
  * A car takes part when its team is PRESENT at the event and CLASSIFIED for
  * this prova. Classification is one of the prova's own input fields, named
  * by the setting `campo_classificacao` (for example "APTO", an enum SIM/NÃO
- * filled per car in the normal dashboard, like DESCLAS). It is "SIM" or it
+ * filled per car in the normal dashboard; never a field the scoring formula
+ * reads, such as DESCLAS: see ScoringFields). It is "SIM" or it
  * is not: a blank field means not classified, so that a car nobody has
  * looked at cannot slip into a race.
  *

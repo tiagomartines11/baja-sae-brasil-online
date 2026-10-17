@@ -9,6 +9,7 @@ import {
   contagemEmDuvida, dispositivosDaFonte, estadoDaFonte, ordenarFila, quandoDoAlerta, resumoDeAlertas, resumoDosDispositivos,
 } from './revisao-fila.js';
 import { fraseDeDuvida } from './revisao-alertas.js';
+import { avisosDaPontuacao, recalculoDosPontos } from './revisao-frases.js';
 import { horarioOficial, idadeDoCalculo } from './revisao-relogio.js';
 
 // The chip of one source: its name, whether it is in contact, and anything
@@ -60,6 +61,11 @@ export function desenharBarra(container, estado, agoraServidorMs, oficialMs = ag
     publicacao = el('span', { class: 'publicacao' }, `publicado há ${idade(agoraServidorMs - estado.publicado_em_ms)}`);
   }
 
+  // The 26SE check: nothing above would show that every car scored 0.
+  const recalculo = recalculoDosPontos(estado.pontuacao);
+  const avisosDePontos = avisosDaPontuacao(estado.pontuacao)
+    .map((aviso) => el('strong', { class: 'publicacao pontos-suspeitos', role: 'alert' }, aviso));
+
   const outros = (estado.revisores ?? []).filter((nome) => nome !== document.body.dataset.usuario);
 
   substituir(container,
@@ -70,6 +76,11 @@ export function desenharBarra(container, estado, agoraServidorMs, oficialMs = ag
     el('span', { class: 'fontes' }, fontes),
     el('span', { class: abertos > 0 ? 'pendencias com-alertas' : 'pendencias' }, resumoDeAlertas(abertos)),
     publicacao,
+    recalculo === null ? null : el('span', {
+      class: 'publicacao',
+      title: 'Última vez que a pontuação da prova foi recalculada (ou que a prova foi alterada).',
+    }, recalculo),
+    ...avisosDePontos,
     calculo === null ? null : el('span', {
       class: calculo.atrasado ? 'calculo atrasado' : 'calculo',
       title: 'Há quanto tempo alertas, tempos de volta e melhores voltas foram recalculados. A contagem de voltas em si é imediata.',

@@ -7,6 +7,7 @@ use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\PublishingWouldStart;
 use Baja\Contagem\Service\ScorePublisher;
+use Baja\Contagem\Service\ScoringFields;
 use Baja\Contagem\Service\TestPreset;
 use Baja\Contagem\Sync\DeviceTokens;
 use Baja\Model\ContagemFonte;
@@ -51,9 +52,15 @@ final class SourceSettings
                 $activeCountingIds[] = (int) $fonte->getFonteId();
             }
         }
-        $settings = SettingsForm::fromPost($post, $countingIds, $activeCountingIds, array_keys(self::classificationChoices($service->getProva())));
-
         $current = $service->getSettings();
+        $settings = SettingsForm::fromPost(
+            $post,
+            $countingIds,
+            $activeCountingIds,
+            array_keys(self::classificationChoices($service->getProva())),
+            self::refusedClassificationFields($service->getProva(), $current->campoClassificacao)
+        );
+
         $switchesSimulationOff = $current->permitirSimulacao && !$settings->permitirSimulacao;
         if ($switchesSimulationOff) {
             // saveSettings() refuses both of these. Said here in the page's
@@ -89,20 +96,38 @@ final class SourceSettings
     /**
      * The input fields of the prova that may be named as the classification
      * field: every field people type. The three the count writes itself
-     * cannot say whether a car takes part.
+     * cannot say whether a car takes part. A field the scoring formula
+     * reads is listed too, marked as such: the page shows it disabled, so
+     * that nobody wonders where DESCLAS went.
      *
      * @return array<string, string> field code => label for the list
      */
     public static function classificationChoices(Prova $prova): array
     {
+        $readByScoring = ScoringFields::readByScoring($prova);
         $choices = [];
         foreach ($prova->getParamsInputs() as $field) {
             $code = (string) $field->getCode();
             if (!in_array($code, ScorePublisher::ENGINE_FIELDS, true)) {
-                $choices[$code] = $code . ' (' . $field->getName() . ')';
+                $choices[$code] = $code . ' (' . $field->getName() . ')'
+                    . (in_array($code, $readByScoring, true) ? ' — usado na fórmula de pontuação, não pode ser escolhido' : '');
             }
         }
         return $choices;
+    }
+
+    /**
+     * The fields the settings form refuses as the classification field:
+     * those the scoring formula reads. The one already in force is let
+     * through, so that a prova already in that state can still change its
+     * other settings during a race; the pages warn about it loudly instead
+     * (see ScoringFields::classificationConflict()).
+     *
+     * @return string[]
+     */
+    public static function refusedClassificationFields(Prova $prova, ?string $inForce): array
+    {
+        return array_values(array_diff(ScoringFields::readByScoring($prova), $inForce === null ? [] : [$inForce]));
     }
 
     /**

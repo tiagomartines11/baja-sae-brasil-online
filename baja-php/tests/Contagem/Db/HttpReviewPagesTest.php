@@ -52,6 +52,8 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
         $this->assertSame(200, $hub['status']);
         $this->assertStringContainsString('Marcar todos os presentes como aptos', $hub['body']);
         $this->assertStringContainsString('<strong>0</strong> classificado(s)', $hub['body']);
+        // The question before pressing names the field, the value and how many cars.
+        $this->assertStringContainsString('Grava APTO = SIM em 3 carro(s)', $hub['body']);
 
         $withoutToken = $this->postForm(self::HUB, $cookies, ['acao' => 'marcar_aptos']);
         $this->assertSame(403, $withoutToken['status']);
@@ -66,6 +68,29 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
 
         $after = $this->get(self::HUB, $cookies);
         $this->assertStringContainsString('<strong>3</strong> classificado(s)', $after['body']);
+    }
+
+    /**
+     * SITUATION: the 26SE setup: the classification field is DESCLAS,
+     * which the Enduro formula reads with SIM = disqualified. The
+     * controller opens the hub and the Fontes page.
+     *
+     * EXPECTED: both pages say loudly that the field is read by the scoring
+     * formula, and the hub's "Marcar todos os presentes como aptos" is
+     * disabled.
+     */
+    public function testTheHubAndTheFontesPageWarnAboutAClassificationFieldTheFormulaReads(): void
+    {
+        $this->changeSettings(['campo_classificacao' => 'DESCLAS']);
+        $this->grant(self::CONTROLLER, '00NE_ZZL');
+        $cookies = $this->loginAndGetCookies(self::CONTROLLER);
+
+        $hub = $this->get(self::HUB, $cookies);
+        $this->assertStringContainsString('Campo de classificação errado: DESCLAS', $hub['body']);
+        $this->assertMatchesRegularExpression('/<button type="submit"\s+disabled\s*>Marcar todos os presentes como aptos/', $hub['body']);
+
+        $fontes = $this->get('/00NE/contagem_fontes.php?p=ZZL', $cookies);
+        $this->assertStringContainsString('O campo de classificação (DESCLAS) é lido pela fórmula de pontuação', $fontes['body']);
     }
 
     /**

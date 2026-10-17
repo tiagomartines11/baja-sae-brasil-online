@@ -109,20 +109,47 @@ A controller can do everything a counter can.
 By default every team marked present at the event takes part. To restrict
 the race to the cars that passed the earlier inspections:
 
-1. Give the prova an input field for it, like `DESCLAS`: for example
-   `APTO`, type enum, options `SIM` / `NÃO`. It is filled per car in the
-   usual dashboard, with its history in the usual log.
+1. Give the prova a **new** input field for it, for example `APTO`, type
+   enum, options `SIM` / `NÃO`. It is filled per car in the usual
+   dashboard, with its history in the usual log. Never use a field the
+   scoring formula reads, such as `DESCLAS`: in the Enduro formula
+   `DESCLAS = SIM` means disqualified, 0 points, and every car the hub
+   marks as apt would score 0 (this happened at 26SE).
 2. On **Fontes e configurações**, set **campo de classificação**
-   (`campo_classificacao`) to the field's code (`APTO`).
+   (`campo_classificacao`) to the field's code (`APTO`). A field that a
+   formula in `vars`, `min_max` or `pontos` reads (as `$CODE`) is listed
+   but disabled, and the save is refused with the reason.
 
 From then on a car takes part when it is present **and** its field says
 `SIM`. A blank field means not classified. The hub has **Marcar todos os
 presentes como aptos**, which fills in the field where it is **blank**, so
 nobody types 60 rows on race morning; each car changed gets a line in the
 log. A car whose field already says something else (`NÃO`) was decided about
-by a person: it is left alone and listed separately on the hub. The button
-recounts the race and recalculates points in the same step, even when no
-lap count moved, as the entry page does after every save.
+by a person: it is left alone and listed separately on the hub. Its
+question names the field, the value and the cars ("Grava APTO = SIM em 3
+carro(s) …"). The button recounts the race and recalculates points in the
+same step, even when no lap count moved, as the entry page does after
+every save.
+
+A prova saved before this check may already have a classification field
+the formula reads. Its other settings can still be saved (refusing them
+would block race control mid-race), but the hub and the Fontes page show
+a red warning, the review status bar too, and the hub's button is
+disabled. To fix it without ever taking a car out of the race:
+
+1. Add the field `APTO` to the prova's inputs (`prova.params`), as above.
+2. Copy the old field into it, `NÃO` included, so the same cars are
+   classified under both:
+   `UPDATE input SET dados = JSON_SET(dados, '$.APTO', JSON_EXTRACT(dados, '$.DESCLAS')) WHERE evento_id = '<evento>' AND prova_id = '<prova>' AND JSON_EXTRACT(dados, '$.DESCLAS') IS NOT NULL;`
+3. On the Fontes page, set the classification field to `APTO`. The same
+   cars race, so the recount changes nothing.
+4. Give `DESCLAS` back its meaning: empty it where the hub wrote `SIM`
+   (`JSON_SET(dados, '$.DESCLAS', NULL)` where it is `'SIM'`), keeping any
+   car that really is disqualified.
+5. **Controle da corrida → Republicar tudo** recalculates every car's points.
+
+Switching to `APTO` before copying (step 3 before 2) would take every car
+out of the race until the field is filled.
 
 Only classified cars appear as tiles, on the pit page lists, in the review
 table and in the feed. A pass typed for an unclassified car is **stored,
@@ -292,7 +319,13 @@ once. The person leaving then presses **Encerrar meu turno**.
   follow in the order of the standings.
 - The status bar shows "calculado há N s": how old the flags and lap times
   on screen are. It turns red beyond three recalculation intervals, which
-  means the server is not keeping up or the connection is poor.
+  means the server is not keeping up or the connection is poor. Beside
+  "publicado há N s" it says "pontos recalculados às HH:MM:SS"
+  (`prova.modificado`, set by every recalculation of points; any other
+  change to the prova row moves it too). In red: "todos os pontos
+  publicados são 0 — confira o campo de classificação e a fórmula" when a
+  car has laps and no car has a point, and a warning when the
+  classification field is one the formula reads.
 - The car table shows, per car, the official laps next to each counter's
   own number of passes (laps + the pass zero); real disagreements are
   highlighted. Click a car to see its whole race and to add a pass nobody
@@ -566,7 +599,7 @@ effective immediately.
 | `fonte_offline_s` | 60 | Silence after which a source is shown as offline |
 | `recalculo_s` | 5 | Flags, lap times and best laps are recalculated at most this often |
 | `dispositivo_ausente_s` | 600 | Silence after which a device is no longer waited for |
-| `campo_classificacao` | none | Code of the prova's input field that says which cars may race (`SIM`); see [Classified cars](#classified-cars) |
+| `campo_classificacao` | none | Code of the prova's input field that says which cars may race (`SIM`); never one the scoring formula reads; see [Classified cars](#classified-cars) |
 | `abastecimento` | off | Whether the fueling station is logged as an area of its own |
 | `permitir_simulacao` | off | Accepts simulated entries. **Only for rehearsals**; see [Simulating a race](#simulating-a-race) |
 

@@ -92,7 +92,7 @@ export function historicoAposResposta(estadoAnterior, estadoNovo, paginas) {
 
 // What an "inalterado" answer carries under the same name as the full state.
 const CHAVES_AO_VIVO = [
-  'servidor_agora_ms', 'calculado_em_ms', 'corrida', 'dispositivos', 'revisores', 'publicado_em_ms',
+  'servidor_agora_ms', 'calculado_em_ms', 'corrida', 'dispositivos', 'revisores', 'publicado_em_ms', 'pontuacao',
   'publicacao_desligada', 'simulacao', 'predefinicao_de_teste', 'correcoes_da_reconciliacao',
 ];
 

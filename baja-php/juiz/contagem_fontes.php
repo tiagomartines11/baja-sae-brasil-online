@@ -10,6 +10,7 @@ use Baja\Contagem\Review\SourceAdmin;
 use Baja\Contagem\Review\SourceSettings;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\LockBusy;
+use Baja\Contagem\Service\ScoringFields;
 use Baja\Contagem\Service\TestPreset;
 use InvalidArgumentException;
 
@@ -91,6 +92,7 @@ $settings = $service->getSettings();
 $settingValues = $settings->toArray();
 $presetIsApplied = $service->hasSavedSettings();
 $hasSimulatedRows = $service->hasSimulatedRows();
+$classificationConflict = ScoringFields::classificationConflict($prova);
 
 $options = function (array $labels, $selected) use ($h): string {
     $html = '';
@@ -109,6 +111,10 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         <p><strong>Nada foi alterado ainda.</strong> <?= $h($question->getMessage()) ?></p>
         <?= Pagina::confirmationForm($prova, $action, $_POST, $question) ?>
     </div>
+<?php } ?>
+<?php if ($classificationConflict !== null) { ?>
+    <p class="contagem-erro" role="alert"><strong>O campo de classificação (<?= $h($classificationConflict) ?>) é lido pela fórmula de pontuação.</strong>
+        Os pontos podem estar errados. Veja "Campo de classificação" em Configurações, abaixo.</p>
 <?php } ?>
 <?php if ($newApiToken !== null) { ?>
     <div class="contagem-token">
@@ -286,10 +292,21 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         <?= $choiceField('apos_encerramento') ?>
         <label><?= $h(SettingsForm::CLASSIFICATION_LABEL) ?>
             <select name="<?= $h(SettingsForm::CLASSIFICATION_FIELD) ?>">
-                <?= $options(['' => '(nenhum: todo carro presente participa)'] + SourceSettings::classificationChoices($prova), $settings->campoClassificacao ?? '') ?>
+                <?php
+                // A field the scoring formula reads is shown, disabled. The
+                // one in force stays selectable: a disabled selected option
+                // is not sent, and saving would silently clear the field.
+                $refusedFields = SourceSettings::refusedClassificationFields($prova, $settings->campoClassificacao);
+                foreach (['' => '(nenhum: todo carro presente participa)'] + SourceSettings::classificationChoices($prova) as $value => $label) { ?>
+                    <option value="<?= $h($value) ?>"<?= (string) $value === ($settings->campoClassificacao ?? '') ? ' selected' : '' ?><?= in_array((string) $value, $refusedFields, true) ? ' disabled' : '' ?>><?= $h($label) ?></option>
+                <?php } ?>
             </select>
             <small><?= $h(SettingsForm::CLASSIFICATION_HINT) ?></small>
         </label>
+        <?php if ($classificationConflict !== null) { ?>
+            <p class="contagem-aviso contagem-pergunta" role="alert"><strong>Atenção: o campo de classificação é <?= $h($classificationConflict) ?>.</strong>
+                <?= $h(ScoringFields::whyNot($classificationConflict)) ?></p>
+        <?php } ?>
         <?php foreach (SettingsForm::BOOLEAN_FIELDS as $key => [$label, $hint]) { ?>
             <label><input type="checkbox" name="<?= $h($key) ?>" value="1" <?= !empty($settingValues[$key]) ? 'checked' : '' ?>>
                 <?= $h($label) ?>

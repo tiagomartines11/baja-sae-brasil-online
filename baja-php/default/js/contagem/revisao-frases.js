@@ -3,7 +3,7 @@
 // before a decision that changes a count.
 // Pure functions, tested with `node --test` (through revisao-decisoes.js).
 
-import { duracao, idade } from './revisao-formato.js';
+import { duracao, horaDoDia, idade } from './revisao-formato.js';
 
 // What the server answered with HTTP 409, as one sentence.
 export function mensagemDeConflito(corpo) {
@@ -121,4 +121,27 @@ export function avisoDeReconciliacao(correcoes, agoraServidorMs, mostrar = 5) {
   return `A contagem rápida divergiu da contagem completa: ${vezes} nas últimas 24 h. `
     + 'Os resultados já estão certos, mas isso não deveria acontecer: avise o responsável pelo sistema. '
     + `Correções: ${lista.slice(0, mostrar).map((correcao) => descreverCorrecao(correcao, agoraServidorMs)).join('; ')}${resto}.`;
+}
+
+// What is wrong with the points, from the state's `pontuacao`: a
+// classification field the scoring formula reads (the 26SE case, DESCLAS),
+// and a race with laps where every published points value is 0. Empty when
+// all is well, or when the server does not send it.
+export function avisosDaPontuacao(pontuacao) {
+  const avisos = [];
+  const campo = pontuacao?.campo_classificacao_na_formula;
+  if (campo) {
+    avisos.push(`campo de classificação ${campo} é lido pela fórmula de pontuação: os pontos podem estar errados `
+      + '(veja Fontes e configurações)');
+  }
+  if (pontuacao?.todos_os_pontos_zero) {
+    avisos.push('todos os pontos publicados são 0 — confira o campo de classificação e a fórmula');
+  }
+  return avisos;
+}
+
+// "pontos recalculados às 14:03:27", or null when the time is not known.
+export function recalculoDosPontos(pontuacao) {
+  const quando = pontuacao?.recalculados_em_ms;
+  return quando === null || quando === undefined ? null : `pontos recalculados às ${horaDoDia(quando)}`;
 }

@@ -303,8 +303,9 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 
 /* ---- round 2: publishing off, devices, pass zero, open-ended exclusions ---- */
 
-/* Publishing switched off must not be mistaken for a quiet moment. */
-.publicacao.desligada {
+/* Publishing switched off must not be mistaken for a quiet moment. Nor
+   points that are all 0, or a classification field the formula reads. */
+.publicacao.desligada, .publicacao.pontos-suspeitos {
   padding: 2px 10px;
   border-radius: 4px;
   background: var(--fundo-vermelho);

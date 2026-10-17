@@ -149,7 +149,7 @@ final class StateSnapshot
 
     /** Keys of liveParts() that the full state carries under the same name. */
     private const LIVE_STATE_KEYS = [
-        'versao', 'calculado_em_ms', 'servidor_agora_ms', 'corrida', 'revisores', 'publicado_em_ms',
+        'versao', 'calculado_em_ms', 'servidor_agora_ms', 'corrida', 'revisores', 'publicado_em_ms', 'pontuacao',
         'publicacao_desligada', 'simulacao', 'predefinicao_de_teste', 'correcoes_da_reconciliacao',
     ];
 
@@ -191,6 +191,9 @@ final class StateSnapshot
             'olhando' => self::watchingWithoutViewer(ReviewerPresence::current($prova), $viewerUsername),
             'revisores' => ReviewerPresence::online($prova),
             'publicado_em_ms' => $service->lastPublishedAtMs(),
+            // The 26SE check: a classification field the formula reads, or
+            // a race where nobody scores, and when points were last worked out.
+            'pontuacao' => $service->scoringCheck(),
             'publicacao_desligada' => !$settings->publishesToScoring(),
             // Drives the permanent "SIMULAÇÃO" banner. Sent with every
             // answer, so the banner follows the setting within one poll.

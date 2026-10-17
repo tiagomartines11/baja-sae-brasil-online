@@ -93,6 +93,30 @@ final class ReviewSettingsFormTest extends TestCase
     }
 
     /**
+     * SITUATION: the prova's scoring formula reads DESCLAS (SIM there means
+     * disqualified). The controller picks DESCLAS as the classification
+     * field, where SIM means "may race".
+     *
+     * EXPECTED: refused, naming the field and saying what to do instead.
+     * APTO, which no formula reads, is accepted.
+     */
+    public function testAClassificationFieldTheScoringReadsIsRefused(): void
+    {
+        $fields = ['DESCLAS', 'APTO'];
+
+        try {
+            SettingsForm::fromPost($this->filledForm(['campo_classificacao' => 'DESCLAS']), [1, 2, 3], null, $fields, ['DESCLAS']);
+            $this->fail('a field the scoring formula reads was accepted as the classification field');
+        } catch (InvalidArgumentException $refusal) {
+            $this->assertStringStartsWith('Campo de classificação: O campo DESCLAS é lido pela fórmula de pontuação', $refusal->getMessage());
+            $this->assertStringContainsString('por exemplo APTO', $refusal->getMessage());
+        }
+
+        $settings = SettingsForm::fromPost($this->filledForm(['campo_classificacao' => 'APTO']), [1, 2, 3], null, $fields, ['DESCLAS']);
+        $this->assertSame('APTO', $settings->campoClassificacao);
+    }
+
+    /**
      * SITUATION: the controller fills in the form: publishing switched off
      * (the race runs beside the old spreadsheet), the start itself as pass
      * zero with a 30-second start window, nothing counting after the

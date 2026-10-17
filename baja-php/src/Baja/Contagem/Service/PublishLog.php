@@ -5,6 +5,7 @@ namespace Baja\Contagem\Service;
 
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Model\Prova;
+use Propel\Runtime\Propel;
 
 /**
  * Remembers what publishing to the scoring system last did, and when.
@@ -67,6 +68,48 @@ final class PublishLog
             return null;
         }
         return is_string($value) && $value !== '' ? (int) $value : null;
+    }
+
+    /**
+     * When points were last recalculated: prova.modificado, which
+     * Prova::refreshVarsAndPontos() sets on every recalculation, whoever
+     * asked for it (the count, the entry page, the spreadsheet). The column
+     * also moves on any other change to the prova row (a setting saved, the
+     * race clock set), so it can be a little later than the last
+     * recalculation, never earlier.
+     */
+    public function pointsRecalculatedAtMs(): ?int
+    {
+        $modificado = $this->prova->getModificado();
+        return $modificado instanceof \DateTimeInterface ? $modificado->getTimestamp() * 1000 : null;
+    }
+
+    /**
+     * True when at least one car has a lap and yet no car has a point:
+     * every published points value is 0 or empty. A race where the leader
+     * scores 0 is never right; the usual cause is a classification field
+     * the formula reads with another meaning (DESCLAS, where SIM means
+     * disqualified). One small query, asked with every review poll.
+     */
+    public function allPublishedPointsAreZero(): bool
+    {
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            'SELECT JSON_EXTRACT(dados, \'$.VOLTAS\'), pontos FROM input WHERE evento_id = ? AND prova_id = ?'
+        );
+        $statement->execute([$this->prova->getEventoId(), $this->prova->getProvaId()]);
+
+        $anyLap = false;
+        foreach ($statement->fetchAll(\PDO::FETCH_NUM) as [$voltas, $pontos]) {
+            if (is_numeric($voltas) && (float) $voltas > 0) {
+                $anyLap = true;
+            }
+            foreach ((array) json_decode((string) ($pontos ?? ''), true) as $value) {
+                if (is_numeric($value) && (float) $value != 0) {
+                    return false;
+                }
+            }
+        }
+        return $anyLap;
     }
 
     /**

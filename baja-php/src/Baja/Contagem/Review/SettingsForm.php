@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\Settings;
+use Baja\Contagem\Service\ScoringFields;
 use InvalidArgumentException;
 
 /**
@@ -88,7 +89,8 @@ final class SettingsForm
     /** The one field whose choices are the prova's own input fields. */
     public const CLASSIFICATION_FIELD = 'campo_classificacao';
     public const CLASSIFICATION_LABEL = 'Campo de classificação';
-    public const CLASSIFICATION_HINT = 'Um campo da própria prova (por exemplo APTO, com SIM/NÃO) preenchido por carro na tela de campos manuais. '
+    public const CLASSIFICATION_HINT = 'Um campo da própria prova criado só para isso (por exemplo APTO, com SIM/NÃO), preenchido por carro na tela de campos manuais; '
+        . 'nunca um campo que a fórmula de pontuação lê, como DESCLAS. '
         . 'Com ele, só participa da corrida o carro presente E marcado SIM; em branco conta como não classificado. '
         . 'Sem campo escolhido, todo carro presente participa.';
     /** The value of that field that means "this car takes part". */
@@ -109,10 +111,16 @@ final class SettingsForm
      * @param int[] $countingSourceIds sources that may be chosen as primary
      * @param int[]|null $activeSourceIds the ones among them that are switched on; null when all are
      * @param string[] $inputFieldCodes codes of the prova's input fields that may hold the classification
+     * @param string[] $readByScoring the ones among them a scoring formula reads, which are refused
      * @throws InvalidArgumentException naming the bad field, in Portuguese
      */
-    public static function fromPost(array $post, array $countingSourceIds, ?array $activeSourceIds = null, array $inputFieldCodes = []): Settings
-    {
+    public static function fromPost(
+        array $post,
+        array $countingSourceIds,
+        ?array $activeSourceIds = null,
+        array $inputFieldCodes = [],
+        array $readByScoring = []
+    ): Settings {
         $values = [];
 
         // An unticked checkbox is simply absent from the form.
@@ -122,6 +130,11 @@ final class SettingsForm
         $classification = is_string($post[self::CLASSIFICATION_FIELD] ?? null) ? trim($post[self::CLASSIFICATION_FIELD]) : '';
         if ($classification !== '' && !in_array($classification, $inputFieldCodes, true)) {
             throw new InvalidArgumentException(self::CLASSIFICATION_LABEL . ': escolha um dos campos desta prova.');
+        }
+        if (in_array($classification, $readByScoring, true)) {
+            // The 26SE case: DESCLAS chosen, every car marked SIM, every
+            // car scored 0 because SIM there means disqualified.
+            throw new InvalidArgumentException(self::CLASSIFICATION_LABEL . ': ' . ScoringFields::whyNot($classification) . ' Nada foi alterado.');
         }
         $values[self::CLASSIFICATION_FIELD] = $classification === '' ? null : $classification;
 

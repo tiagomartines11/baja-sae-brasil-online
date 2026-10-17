@@ -375,10 +375,18 @@ final class ContagemService
      * moved no published number: the field just written is a field of the
      * score row, and a formula may read it.
      *
+     * Refused while the classification field is one the scoring formula
+     * reads: writing SIM into DESCLAS is what scored every car 0 at 26SE.
+     *
      * @return array{marcados: int[], ja_nao: int[]} the cars now marked, and those left alone because their field was not blank
+     * @throws \InvalidArgumentException with a message in Portuguese when the field is one the formula reads
      */
     public function markAllPresentAsClassified(string $usuario): array
     {
+        $conflict = ScoringFields::classificationConflict($this->prova);
+        if ($conflict !== null) {
+            throw new \InvalidArgumentException(ScoringFields::whyNot($conflict) . ' Nada foi alterado.');
+        }
         return $this->withLock(function () use ($usuario): array {
             $outcome = ClassificationWriter::markAllPresent($this->prova, $usuario);
             if ($outcome['marcados'] !== []) {
@@ -447,6 +455,24 @@ final class ContagemService
     public function lastPublishedAtMs(): ?int
     {
         return $this->publishLog->lastPublishedAtMs();
+    }
+
+    /**
+     * What the screens say about the points, beside "publicado há N s":
+     *
+     *   campo_classificacao_na_formula  the classification field, when the scoring formula reads it (else null)
+     *   todos_os_pontos_zero            a car has a lap and every published points value is 0 or empty
+     *   recalculados_em_ms              when points were last recalculated (prova.modificado), null if unknown
+     *
+     * @return array{campo_classificacao_na_formula: ?string, todos_os_pontos_zero: bool, recalculados_em_ms: ?int}
+     */
+    public function scoringCheck(): array
+    {
+        return [
+            'campo_classificacao_na_formula' => ScoringFields::classificationConflict($this->prova),
+            'todos_os_pontos_zero' => $this->publishLog->allPublishedPointsAreZero(),
+            'recalculados_em_ms' => $this->publishLog->pointsRecalculatedAtMs(),
+        ];
     }
 
     /** What the most recent publish through this object did; null if none ran yet. */
