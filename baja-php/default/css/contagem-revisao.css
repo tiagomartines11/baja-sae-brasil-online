@@ -208,6 +208,11 @@ body.revisao {
 kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-size: 11px; opacity: 0.8; }
 .caixa-entrada, .acao-manual { margin: 10px 0; padding: 8px 10px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: 4px; }
 .caixa-entrada p { margin: 0 0 6px; }
+/* The picture an automatic source linked to the entry (machine vision). */
+.imagem-entrada { margin: 0 0 6px; }
+.imagem-entrada img { display: block; max-width: 320px; max-height: 200px; border: 1px solid var(--cor-borda); }
+.imagem-entrada .imagem-indisponivel { display: inline-block; padding: 20px 12px; border: 1px dashed var(--cor-borda); font-style: italic; }
+.bloco-fonte .observacao p { margin: 0 0 4px; font-style: italic; }
 .em-linha { display: inline-flex; gap: 6px; align-items: center; }
 .campo-carro { width: 5em; }
 

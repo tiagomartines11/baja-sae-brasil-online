@@ -10,9 +10,10 @@ import {
 } from './revisao-fila.js';
 import { descreverParada } from './revisao-raias-logica.js';
 import { descreverDecisao, exclusoesAbertas } from './revisao-decisoes.js';
+import { ehObservadora, fontesDaTabela, linhasDaObservacao } from './revisao-observacao.js';
 
 export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscolherCarro) {
-  const fontes = (estado.fontes ?? []).filter((fonte) => fonte.ativa);
+  const fontes = fontesDaTabela(estado.fontes);
   const largada = estado.corrida.largada_ms;
 
   const cabecalho = el('thead', {}, el('tr', {},
@@ -152,20 +153,34 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
   const motivo = el('input', { type: 'text', size: 24, maxlength: 500, placeholder: 'motivo (opcional)', 'aria-label': 'motivo' });
   const podeExcluir = fonte.tipo !== 'totais' && largada !== null && largada !== undefined;
 
+  // An observer counts nothing, so the counter's numbers (entries in use,
+  // misses) say nothing about it: its own comparison takes their place.
+  const observacao = linhasDaObservacao(stats?.observacao);
+  const sincronizado = stats
+    ? [el('dt', {}, 'sincronizado até'), el('dd', {},
+      stats.nada_a_esperar ? 'nenhum dispositivo aberto' : tempoDeProva(stats.sincronizado_ate_ms, largada))]
+    : null;
+
+  let numeros = el('p', { class: 'vazio' }, 'Sem estatísticas.');
+  if (stats && observacao) {
+    numeros = el('div', { class: 'observacao' },
+      el('p', {}, 'Observadora: o que registra é só comparado com a contagem oficial e nunca conta.'),
+      el('dl', {}, observacao.map(([rotulo, valor]) => [el('dt', {}, rotulo), el('dd', {}, valor)]), sincronizado));
+  } else if (stats) {
+    numeros = el('dl', {},
+      el('dt', {}, 'registros em uso'), el('dd', {}, numero(stats.entradas)),
+      el('dt', {}, 'faltas'), el('dd', {}, numero(stats.faltas)),
+      el('dt', {}, 'trocas corrigidas'), el('dd', {}, numero(stats.trocas)),
+      el('dt', {}, 'repetidas anuladas'), el('dd', {}, numero(stats.repetidas_anuladas)),
+      el('dt', {}, 'atraso mediano'), el('dd', {}, `${Math.round((stats.desvio_mediano_ms ?? 0) / 1000)} s`),
+      sincronizado);
+  }
+
   return el('div', { class: fonte.ativa ? 'bloco-fonte' : 'bloco-fonte inativa' },
-    el('h3', {}, fonte.nome, fonte.principal ? ' ★' : '', fonte.ativa ? '' : ' (inativa)'),
+    el('h3', {}, fonte.nome, fonte.principal ? ' ★' : '', fonte.ativa ? '' : ' (inativa)', ehObservadora(fonte) ? ' (observadora)' : ''),
     // Shown first and loud: while this stands, nothing this source records counts.
     abertas.map((decisao) => exclusaoAberta(decisao, largada, ocupado, acoes)),
-    stats
-      ? el('dl', {},
-        el('dt', {}, 'registros em uso'), el('dd', {}, numero(stats.entradas)),
-        el('dt', {}, 'faltas'), el('dd', {}, numero(stats.faltas)),
-        el('dt', {}, 'trocas corrigidas'), el('dd', {}, numero(stats.trocas)),
-        el('dt', {}, 'repetidas anuladas'), el('dd', {}, numero(stats.repetidas_anuladas)),
-        el('dt', {}, 'atraso mediano'), el('dd', {}, `${Math.round((stats.desvio_mediano_ms ?? 0) / 1000)} s`),
-        el('dt', {}, 'sincronizado até'), el('dd', {},
-          stats.nada_a_esperar ? 'nenhum dispositivo aberto' : tempoDeProva(stats.sincronizado_ate_ms, largada)))
-      : el('p', { class: 'vazio' }, 'Sem estatísticas.'),
+    numeros,
     fonte.tipo === 'totais' ? null : listaDeDispositivos(dispositivosDaFonte(estado, fonte.id)),
     podeExcluir
       ? el('form', {

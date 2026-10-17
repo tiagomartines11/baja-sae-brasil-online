@@ -15,6 +15,7 @@ import { edicaoManualDoAlerta } from './revisao-edicao-manual.js';
 import { acoesDaEntrada, descreverSugestao, repeticoesEmAberto } from './revisao-decisoes.js';
 import { mostraCorridaInteira, quandoDoAlerta, situacaoDoCarroFora } from './revisao-fila.js';
 import { desenharRaias } from './revisao-raias.js';
+import { SEM_IMAGEM_NA_REDE, imagemDaEntrada } from './revisao-observacao.js';
 import { ESCALA_ALERTA, ESCALA_CARRO, descricaoDoChip, encontrarEntrada } from './revisao-raias-logica.js';
 
 function campoDeCarro(valorInicial) {
@@ -134,7 +135,30 @@ function caixaDaEntrada(contexto, entrada) {
     el('p', {},
       el('strong', {}, `Carro ${entrada.carro}`), ' · ', descricaoDoChip(entrada), ' · ',
       entrada.qualidade_tempo === 'desconhecido' ? 'sem horário' : tempoDeProva(entrada.ts_ms, contexto.estado.corrida.largada_ms)),
+    figuraDaEntrada(entrada),
     el('div', { class: 'botoes' }, botoes));
+}
+
+// The picture an automatic source linked to the entry, if any. It comes
+// from the system itself, usually over plain http on the track's network:
+// from anywhere else, or from a page on https, it may not load. Then the
+// placeholder says so, and the link still opens it in a tab of its own.
+function figuraDaEntrada(entrada) {
+  const imagem = imagemDaEntrada(entrada);
+  if (!imagem) {
+    return null;
+  }
+  const link = el('a', { href: imagem.url, target: '_blank', rel: 'noopener noreferrer' }, 'abrir em outra aba');
+  const legenda = el('figcaption', {}, imagem.confianca ? `${imagem.confianca} · ` : '', link);
+  const figura = el('figure', { class: 'imagem-entrada' });
+  const foto = el('img', {
+    src: imagem.url,
+    alt: `imagem do registro #${entrada.id}`,
+    loading: 'lazy',
+    onerror: () => foto.replaceWith(el('span', { class: 'imagem-indisponivel' }, SEM_IMAGEM_NA_REDE)),
+  });
+  figura.append(foto, legenda);
+  return figura;
 }
 
 function raiasOuCarregando(contexto, opcoes) {

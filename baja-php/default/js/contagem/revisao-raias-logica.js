@@ -225,6 +225,7 @@ const MOTIVOS_FORA_DE_USO = {
   antes_da_largada: 'fora de uso: registrado antes da largada',
   fonte_inativa: 'fora de uso: a fonte estava desativada',
   fonte_excluida: 'fora de uso: a fonte foi excluída neste período',
+  fonte_observadora: 'fonte observadora: só comparada com a contagem oficial, nunca conta',
   tempo_desconhecido: 'horário desconhecido: o aparelho não tinha o horário oficial; não entra na contagem sozinho',
 };
 
@@ -301,6 +302,9 @@ export function descricaoDoChip(entrada) {
     if (entrada.grupo.volta_curta_confirmada) {
       partes.push('VOLTA CURTA CONFIRMADA: curta demais para ser real, conta porque a revisão confirmou');
     }
+  }
+  if (entrada.imagem_url) {
+    partes.push('com imagem (clique para ver)');
   }
   return partes.join(' · ');
 }
