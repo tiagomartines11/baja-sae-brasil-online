@@ -6,7 +6,7 @@
 import { NOMES_DE_ALERTA, SEM_VALOR } from './revisao-formato.js';
 import { exclusoesAbertas } from './revisao-decisoes.js';
 import {
-  compararNuloPorUltimo, contagemEmDuvida, fonteSilenciosa, resumoDeAlertas,
+  compararNuloPorUltimo, contagemEmDuvida, fonteSilenciosa, fonteVotante, resumoDeAlertas,
 } from './revisao-fila.js';
 import { fontesDaTabela } from './revisao-observacao.js';
 
@@ -28,10 +28,15 @@ export function excluidaDaCorridaInteira(fonte, estado) {
 // car-level "contado acima de todos os contadores"). A source that recorded
 // nothing at all since the start and has no device open gets no column: a
 // column of zeros would only look like every car is wrong. One excluded for
-// the whole race keeps its column, greyed, `motivo` saying why. A paper
-// total is a number of laps and is never part of that comparison.
+// the whole race keeps its column, greyed, `motivo` saying why. So does one
+// that recorded nothing since the start but still has a device open (a
+// phone that died before the start and was never closed, an idle reader):
+// it may still start counting, so its column stays, but its zeros say
+// nothing about the count. A paper total is a number of laps and is never
+// part of that comparison.
 export function colunasDeFontes(estado, agoraServidorMs = null) {
   const largada = estado?.corrida?.largada_ms ?? null;
+  const largou = largada !== null && (agoraServidorMs === null || agoraServidorMs >= largada);
   return fontesDaTabela(estado?.fontes)
     .filter((fonte) => !fonteSilenciosa(fonte, largada, agoraServidorMs))
     .map((fonte) => {
@@ -40,6 +45,9 @@ export function colunasDeFontes(estado, agoraServidorMs = null) {
       }
       if (excluidaDaCorridaInteira(fonte, estado)) {
         return { fonte, comparada: false, motivo: 'excluída desde a largada: não é comparada com a contagem' };
+      }
+      if (largou && fonteVotante(fonte) && (fonte.stats?.entradas ?? 0) === 0) {
+        return { fonte, comparada: false, motivo: 'não registrou nada desde a largada: não é comparada com a contagem' };
       }
       return { fonte, comparada: true, motivo: null };
     });

@@ -406,8 +406,10 @@ once. The person leaving then presses **Encerrar meu turno**.
   **"N volta(s) curta(s) confirmada(s)"** for laps too short to be real
   that a reviewer confirmed (listed in the tooltip, the lap count is
   underlined too). A source that recorded nothing since the start and has
-  no device open gets no column; one excluded from the start with no end
-  is greyed and not compared. Observers get no column.
+  no device open gets no column; one that recorded nothing since the start
+  but still has a device open (a phone that died and was never closed)
+  keeps its column, greyed and not compared, as does one excluded from the
+  start with no end. Observers get no column.
 - **Every column header sorts** (a button; keyboard and screen readers
   see `aria-sort`): first click in the usual direction (most laps first,
   oldest last pass first, most signals first, the counter who missed most

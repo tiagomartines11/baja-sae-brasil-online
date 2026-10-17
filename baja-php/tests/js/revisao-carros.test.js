@@ -58,6 +58,26 @@ test('before the start every source has its column, even with nothing recorded',
   assert.deepEqual(colunasDeFontes(antes).map((coluna) => coluna.fonte.id), [1, 2, 3]);
 });
 
+// SITUATION: a counter's phone died before the start and was never closed
+// or revoked, so the source still has a device open (offline) but has
+// recorded nothing all race.
+//
+// EXPECTED: its column stays (the phone may come back), greyed and not
+// compared, instead of a "−N" on every row.
+test('a source with a device open but nothing recorded since the start is greyed and not compared', () => {
+  const morta = fonte(2, { stats: { entradas: 0, nada_a_esperar: false, offline: true, visto_em_ms: LARGADA - 600_000 } });
+  const [primeira, segunda] = colunasDeFontes(estadoCom([fonte(1), morta]), AGORA);
+  assert.equal(primeira.comparada, true);
+  assert.equal(segunda.fonte.id, 2, 'it keeps its column');
+  assert.equal(segunda.comparada, false);
+  assert.match(segunda.motivo, /não registrou nada desde a largada/);
+});
+
+test('before the start a source with nothing recorded is still compared', () => {
+  const vazia = fonte(2, { stats: { entradas: 0, nada_a_esperar: false, visto_em_ms: LARGADA - 600_000 } });
+  assert.ok(colunasDeFontes(estadoCom([fonte(1), vazia]), LARGADA - 1000).every((coluna) => coluna.comparada));
+});
+
 test('a source excluded from the start with no end keeps its column, greyed and not compared', () => {
   const estado = estadoCom([fonte(1), fonte(2)], {
     historico_em_vigor: [{ tipo: 'excluir_fonte', fonte_id: 2, ts_ms: LARGADA - 5000, ts_fim_ms: null }],
