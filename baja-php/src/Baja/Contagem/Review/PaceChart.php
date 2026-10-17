@@ -20,7 +20,7 @@ final class PaceChart
     private const LEFT = 52;
     private const RIGHT = 12;
     private const TOP = 10;
-    private const BOTTOM = 26;
+    private const BOTTOM = 40;
 
     /** Grid lines are on whole multiples of this: 10 s of lap time. */
     private const Y_STEP_MS = 10000;
@@ -78,9 +78,10 @@ final class PaceChart
         }
         foreach ([$firstMs, intdiv($firstMs + $lastMs, 2), $lastMs] as $index => $tsMs) {
             $anchor = ['start', 'middle', 'end'][$index];
-            $parts[] = '<text class="ritmo-eixo" x="' . self::number($x($tsMs)) . '" y="' . (self::HEIGHT - 6) . '" text-anchor="' . $anchor . '">'
+            $parts[] = '<text class="ritmo-eixo" x="' . self::number($x($tsMs)) . '" y="' . (self::HEIGHT - 20) . '" text-anchor="' . $anchor . '">'
                 . self::raceTimeText($tsMs - $largadaMs) . '</text>';
         }
+        $parts[] = '<text class="ritmo-eixo" x="' . self::number(self::LEFT + $plotWidth / 2) . '" y="' . (self::HEIGHT - 4) . '" text-anchor="middle">tempo de corrida</text>';
 
         // One polyline per stretch of known pace; an unknown minute breaks the line.
         $stretch = [];
@@ -100,9 +101,12 @@ final class PaceChart
             }
         }
 
-        // A hover target per known minute, larger than the line; the last one is drawn.
+        // A hover target per known minute, larger than the line. The last
+        // minute is drawn as the current value, but only when it is known:
+        // while the pace is unknown now, an older minute is not "atual".
+        $lastPoint = $history[count($history) - 1];
         foreach ($known as $index => $point) {
-            $isLast = $index === count($known) - 1;
+            $isLast = $index === count($known) - 1 && $lastPoint['volta_mediana_ms'] !== null;
             $parts[] = '<circle class="' . ($isLast ? 'ritmo-atual' : 'ritmo-alvo') . '" cx="' . self::number($x($point['ts_ms']))
                 . '" cy="' . self::number($y($point['volta_mediana_ms'])) . '" r="' . ($isLast ? 4 : 6) . '">'
                 . '<title>' . self::raceTimeText($point['ts_ms'] - $largadaMs) . ' de corrida: ' . self::lapText($point['volta_mediana_ms'])
@@ -120,14 +124,15 @@ final class PaceChart
         return sprintf('%d:%02d', intdiv($seconds, 60), $seconds % 60);
     }
 
-    /** Time since the start as h:mm. */
+    /** Time since the start as 1h30, so it does not read like a lap time. */
     private static function raceTimeText(int $ms): string
     {
         $minutes = intdiv(max(0, $ms), 60000);
-        return sprintf('%d:%02d', intdiv($minutes, 60), $minutes % 60);
+        return sprintf('%dh%02d', intdiv($minutes, 60), $minutes % 60);
     }
 
-    private static function windowText(int $seconds): string
+    /** A window length as "15 min", or in seconds when it is not whole minutes. */
+    public static function windowText(int $seconds): string
     {
         return $seconds % 60 === 0 ? ($seconds / 60) . ' min' : $seconds . ' s';
     }

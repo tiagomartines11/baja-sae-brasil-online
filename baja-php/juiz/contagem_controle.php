@@ -94,6 +94,7 @@ $publishingIsOff = !$service->getSettings()->publishesToScoring();
 // The field pace, as the last recalculation left it (the public feed's part of the snapshot).
 $feedPart = (new SnapshotStore($prova))->getFeedPart();
 $pace = $feedPart['feed']['ritmo'] ?? null;
+$paceWindowS = (int) ($pace['janela_s'] ?? $service->getSettings()->janelaRitmoS);
 $paceChart = $timeline->largadaMs === null ? '' : PaceChart::svg($feedPart['feed']['ritmo_historico'] ?? [], $timeline->largadaMs);
 
 $stateLabels = [
@@ -165,8 +166,8 @@ Pagina::printHeader($prova, 'Controle de corrida');
     <p><strong><?= $h(PaceChart::summary($pace, PaceModel::MIN_LAPS_FOR_FIELD_PACE)) ?></strong></p>
     <?= $paceChart ?>
     <p class="contagem-dica">
-        Mediana das voltas completas de todo o pelotão na janela, minuto a minuto desde a largada
-        <?php if (isset($feedPart['gerado_em_ms'])) { ?>(calculado às <?= $h(Pagina::formatClock((int) $feedPart['gerado_em_ms'])) ?>)<?php } ?>.
+        Mediana das voltas completas de todo o pelotão nos últimos <?= $h(PaceChart::windowText($paceWindowS)) ?>, minuto a minuto desde a largada
+        <?php if (isset($feedPart['gerado_em_ms'])) { ?>(última atualização às <?= $h(Pagina::formatClock((int) $feedPart['gerado_em_ms'])) ?>)<?php } ?>.
         O ritmo define a volta esperada de cada carro (atrasado, parado), as voltas curtas demais para serem reais
         e quais voltas valem como melhor volta. Não decide se uma passagem conta.
     </p>

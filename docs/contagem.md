@@ -531,7 +531,9 @@ pass that comes too soon, and settling a missed pit exit by the car's next
 lap, use **the car's own laps** ([the hold rule](#the-hold-rule)), so the
 count of one car never depends on the others. The pace is shown on Controle
 da corrida ("Ritmo da corrida": the pace now, the laps behind it, and a chart
-of it minute by minute since the start) and is in the
+of it minute by minute since the start, against race time written 1h30; a
+minute with too few laps is a gap in the line, and the filled dot of the
+current pace is left out while the pace is unknown now) and is in the
 [public feed](#public-feed).
 
 ## When things go wrong
