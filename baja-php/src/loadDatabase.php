@@ -6,6 +6,15 @@ $serviceContainer->initDatabaseMapFromDumps(array (
     'tablesByName' => 
     array (
       'config' => '\\Baja\\Model\\Map\\ConfigTableMap',
+      'contagem_arquivo' => '\\Baja\\Model\\Map\\ContagemArquivoTableMap',
+      'contagem_decisao' => '\\Baja\\Model\\Map\\ContagemDecisaoTableMap',
+      'contagem_dispositivo' => '\\Baja\\Model\\Map\\ContagemDispositivoTableMap',
+      'contagem_fonte' => '\\Baja\\Model\\Map\\ContagemFonteTableMap',
+      'contagem_fonte_usuario' => '\\Baja\\Model\\Map\\ContagemFonteUsuarioTableMap',
+      'contagem_ocorrencia' => '\\Baja\\Model\\Map\\ContagemOcorrenciaTableMap',
+      'contagem_passagem' => '\\Baja\\Model\\Map\\ContagemPassagemTableMap',
+      'contagem_total' => '\\Baja\\Model\\Map\\ContagemTotalTableMap',
+      'contagem_volta' => '\\Baja\\Model\\Map\\ContagemVoltaTableMap',
       'equipe' => '\\Baja\\Model\\Map\\EquipeTableMap',
       'evento' => '\\Baja\\Model\\Map\\EventoTableMap',
       'fila' => '\\Baja\\Model\\Map\\FilaTableMap',
@@ -22,6 +31,15 @@ $serviceContainer->initDatabaseMapFromDumps(array (
     'tablesByPhpName' => 
     array (
       '\\Config' => '\\Baja\\Model\\Map\\ConfigTableMap',
+      '\\ContagemArquivo' => '\\Baja\\Model\\Map\\ContagemArquivoTableMap',
+      '\\ContagemDecisao' => '\\Baja\\Model\\Map\\ContagemDecisaoTableMap',
+      '\\ContagemDispositivo' => '\\Baja\\Model\\Map\\ContagemDispositivoTableMap',
+      '\\ContagemFonte' => '\\Baja\\Model\\Map\\ContagemFonteTableMap',
+      '\\ContagemFonteUsuario' => '\\Baja\\Model\\Map\\ContagemFonteUsuarioTableMap',
+      '\\ContagemOcorrencia' => '\\Baja\\Model\\Map\\ContagemOcorrenciaTableMap',
+      '\\ContagemPassagem' => '\\Baja\\Model\\Map\\ContagemPassagemTableMap',
+      '\\ContagemTotal' => '\\Baja\\Model\\Map\\ContagemTotalTableMap',
+      '\\ContagemVolta' => '\\Baja\\Model\\Map\\ContagemVoltaTableMap',
       '\\Equipe' => '\\Baja\\Model\\Map\\EquipeTableMap',
       '\\Evento' => '\\Baja\\Model\\Map\\EventoTableMap',
       '\\Fila' => '\\Baja\\Model\\Map\\FilaTableMap',

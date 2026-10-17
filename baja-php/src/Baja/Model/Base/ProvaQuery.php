@@ -77,7 +77,47 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildProvaQuery rightJoinWithTournament() Adds a RIGHT JOIN clause and with to the query using the Tournament relation
  * @method     ChildProvaQuery innerJoinWithTournament() Adds a INNER JOIN clause and with to the query using the Tournament relation
  *
- * @method     \Baja\Model\EventoQuery|\Baja\Model\InputQuery|\Baja\Model\TournamentQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildProvaQuery leftJoinContagemFonte($relationAlias = null) Adds a LEFT JOIN clause to the query using the ContagemFonte relation
+ * @method     ChildProvaQuery rightJoinContagemFonte($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ContagemFonte relation
+ * @method     ChildProvaQuery innerJoinContagemFonte($relationAlias = null) Adds a INNER JOIN clause to the query using the ContagemFonte relation
+ *
+ * @method     ChildProvaQuery joinWithContagemFonte($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ContagemFonte relation
+ *
+ * @method     ChildProvaQuery leftJoinWithContagemFonte() Adds a LEFT JOIN clause and with to the query using the ContagemFonte relation
+ * @method     ChildProvaQuery rightJoinWithContagemFonte() Adds a RIGHT JOIN clause and with to the query using the ContagemFonte relation
+ * @method     ChildProvaQuery innerJoinWithContagemFonte() Adds a INNER JOIN clause and with to the query using the ContagemFonte relation
+ *
+ * @method     ChildProvaQuery leftJoinContagemOcorrencia($relationAlias = null) Adds a LEFT JOIN clause to the query using the ContagemOcorrencia relation
+ * @method     ChildProvaQuery rightJoinContagemOcorrencia($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ContagemOcorrencia relation
+ * @method     ChildProvaQuery innerJoinContagemOcorrencia($relationAlias = null) Adds a INNER JOIN clause to the query using the ContagemOcorrencia relation
+ *
+ * @method     ChildProvaQuery joinWithContagemOcorrencia($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ContagemOcorrencia relation
+ *
+ * @method     ChildProvaQuery leftJoinWithContagemOcorrencia() Adds a LEFT JOIN clause and with to the query using the ContagemOcorrencia relation
+ * @method     ChildProvaQuery rightJoinWithContagemOcorrencia() Adds a RIGHT JOIN clause and with to the query using the ContagemOcorrencia relation
+ * @method     ChildProvaQuery innerJoinWithContagemOcorrencia() Adds a INNER JOIN clause and with to the query using the ContagemOcorrencia relation
+ *
+ * @method     ChildProvaQuery leftJoinContagemDecisao($relationAlias = null) Adds a LEFT JOIN clause to the query using the ContagemDecisao relation
+ * @method     ChildProvaQuery rightJoinContagemDecisao($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ContagemDecisao relation
+ * @method     ChildProvaQuery innerJoinContagemDecisao($relationAlias = null) Adds a INNER JOIN clause to the query using the ContagemDecisao relation
+ *
+ * @method     ChildProvaQuery joinWithContagemDecisao($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ContagemDecisao relation
+ *
+ * @method     ChildProvaQuery leftJoinWithContagemDecisao() Adds a LEFT JOIN clause and with to the query using the ContagemDecisao relation
+ * @method     ChildProvaQuery rightJoinWithContagemDecisao() Adds a RIGHT JOIN clause and with to the query using the ContagemDecisao relation
+ * @method     ChildProvaQuery innerJoinWithContagemDecisao() Adds a INNER JOIN clause and with to the query using the ContagemDecisao relation
+ *
+ * @method     ChildProvaQuery leftJoinContagemVolta($relationAlias = null) Adds a LEFT JOIN clause to the query using the ContagemVolta relation
+ * @method     ChildProvaQuery rightJoinContagemVolta($relationAlias = null) Adds a RIGHT JOIN clause to the query using the ContagemVolta relation
+ * @method     ChildProvaQuery innerJoinContagemVolta($relationAlias = null) Adds a INNER JOIN clause to the query using the ContagemVolta relation
+ *
+ * @method     ChildProvaQuery joinWithContagemVolta($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the ContagemVolta relation
+ *
+ * @method     ChildProvaQuery leftJoinWithContagemVolta() Adds a LEFT JOIN clause and with to the query using the ContagemVolta relation
+ * @method     ChildProvaQuery rightJoinWithContagemVolta() Adds a RIGHT JOIN clause and with to the query using the ContagemVolta relation
+ * @method     ChildProvaQuery innerJoinWithContagemVolta() Adds a INNER JOIN clause and with to the query using the ContagemVolta relation
+ *
+ * @method     \Baja\Model\EventoQuery|\Baja\Model\InputQuery|\Baja\Model\TournamentQuery|\Baja\Model\ContagemFonteQuery|\Baja\Model\ContagemOcorrenciaQuery|\Baja\Model\ContagemDecisaoQuery|\Baja\Model\ContagemVoltaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildProva|null findOne(?ConnectionInterface $con = null) Return the first ChildProva matching the query
  * @method     ChildProva findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildProva matching the query, or a new ChildProva object populated from the query conditions when no match is found
@@ -1126,6 +1166,674 @@ abstract class ProvaQuery extends ModelCriteria
     {
         /** @var $q \Baja\Model\TournamentQuery */
         $q = $this->useInQuery('Tournament', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\ContagemFonte object
+     *
+     * @param \Baja\Model\ContagemFonte|ObjectCollection $contagemFonte the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByContagemFonte($contagemFonte, ?string $comparison = null)
+    {
+        if ($contagemFonte instanceof \Baja\Model\ContagemFonte) {
+            $this
+                ->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $contagemFonte->getEventoId(), $comparison)
+                ->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $contagemFonte->getProvaId(), $comparison);
+
+            return $this;
+        } else {
+            throw new PropelException('filterByContagemFonte() only accepts arguments of type \Baja\Model\ContagemFonte');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the ContagemFonte relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinContagemFonte(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('ContagemFonte');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'ContagemFonte');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the ContagemFonte relation ContagemFonte object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\ContagemFonteQuery A secondary query class using the current class as primary query
+     */
+    public function useContagemFonteQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinContagemFonte($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ContagemFonte', '\Baja\Model\ContagemFonteQuery');
+    }
+
+    /**
+     * Use the ContagemFonte relation ContagemFonte object
+     *
+     * @param callable(\Baja\Model\ContagemFonteQuery):\Baja\Model\ContagemFonteQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withContagemFonteQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useContagemFonteQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to ContagemFonte table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ContagemFonteQuery The inner query object of the EXISTS statement
+     */
+    public function useContagemFonteExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ContagemFonteQuery */
+        $q = $this->useExistsQuery('ContagemFonte', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemFonte table for a NOT EXISTS query.
+     *
+     * @see useContagemFonteExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ContagemFonteQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useContagemFonteNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ContagemFonteQuery */
+        $q = $this->useExistsQuery('ContagemFonte', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemFonte table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ContagemFonteQuery The inner query object of the IN statement
+     */
+    public function useInContagemFonteQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ContagemFonteQuery */
+        $q = $this->useInQuery('ContagemFonte', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemFonte table for a NOT IN query.
+     *
+     * @see useContagemFonteInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ContagemFonteQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInContagemFonteQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ContagemFonteQuery */
+        $q = $this->useInQuery('ContagemFonte', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\ContagemOcorrencia object
+     *
+     * @param \Baja\Model\ContagemOcorrencia|ObjectCollection $contagemOcorrencia the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByContagemOcorrencia($contagemOcorrencia, ?string $comparison = null)
+    {
+        if ($contagemOcorrencia instanceof \Baja\Model\ContagemOcorrencia) {
+            $this
+                ->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $contagemOcorrencia->getEventoId(), $comparison)
+                ->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $contagemOcorrencia->getProvaId(), $comparison);
+
+            return $this;
+        } else {
+            throw new PropelException('filterByContagemOcorrencia() only accepts arguments of type \Baja\Model\ContagemOcorrencia');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the ContagemOcorrencia relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinContagemOcorrencia(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('ContagemOcorrencia');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'ContagemOcorrencia');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the ContagemOcorrencia relation ContagemOcorrencia object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\ContagemOcorrenciaQuery A secondary query class using the current class as primary query
+     */
+    public function useContagemOcorrenciaQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinContagemOcorrencia($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ContagemOcorrencia', '\Baja\Model\ContagemOcorrenciaQuery');
+    }
+
+    /**
+     * Use the ContagemOcorrencia relation ContagemOcorrencia object
+     *
+     * @param callable(\Baja\Model\ContagemOcorrenciaQuery):\Baja\Model\ContagemOcorrenciaQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withContagemOcorrenciaQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useContagemOcorrenciaQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to ContagemOcorrencia table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ContagemOcorrenciaQuery The inner query object of the EXISTS statement
+     */
+    public function useContagemOcorrenciaExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ContagemOcorrenciaQuery */
+        $q = $this->useExistsQuery('ContagemOcorrencia', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemOcorrencia table for a NOT EXISTS query.
+     *
+     * @see useContagemOcorrenciaExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ContagemOcorrenciaQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useContagemOcorrenciaNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ContagemOcorrenciaQuery */
+        $q = $this->useExistsQuery('ContagemOcorrencia', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemOcorrencia table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ContagemOcorrenciaQuery The inner query object of the IN statement
+     */
+    public function useInContagemOcorrenciaQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ContagemOcorrenciaQuery */
+        $q = $this->useInQuery('ContagemOcorrencia', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemOcorrencia table for a NOT IN query.
+     *
+     * @see useContagemOcorrenciaInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ContagemOcorrenciaQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInContagemOcorrenciaQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ContagemOcorrenciaQuery */
+        $q = $this->useInQuery('ContagemOcorrencia', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\ContagemDecisao object
+     *
+     * @param \Baja\Model\ContagemDecisao|ObjectCollection $contagemDecisao the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByContagemDecisao($contagemDecisao, ?string $comparison = null)
+    {
+        if ($contagemDecisao instanceof \Baja\Model\ContagemDecisao) {
+            $this
+                ->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $contagemDecisao->getEventoId(), $comparison)
+                ->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $contagemDecisao->getProvaId(), $comparison);
+
+            return $this;
+        } else {
+            throw new PropelException('filterByContagemDecisao() only accepts arguments of type \Baja\Model\ContagemDecisao');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the ContagemDecisao relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinContagemDecisao(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('ContagemDecisao');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'ContagemDecisao');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the ContagemDecisao relation ContagemDecisao object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\ContagemDecisaoQuery A secondary query class using the current class as primary query
+     */
+    public function useContagemDecisaoQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinContagemDecisao($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ContagemDecisao', '\Baja\Model\ContagemDecisaoQuery');
+    }
+
+    /**
+     * Use the ContagemDecisao relation ContagemDecisao object
+     *
+     * @param callable(\Baja\Model\ContagemDecisaoQuery):\Baja\Model\ContagemDecisaoQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withContagemDecisaoQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useContagemDecisaoQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to ContagemDecisao table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ContagemDecisaoQuery The inner query object of the EXISTS statement
+     */
+    public function useContagemDecisaoExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ContagemDecisaoQuery */
+        $q = $this->useExistsQuery('ContagemDecisao', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemDecisao table for a NOT EXISTS query.
+     *
+     * @see useContagemDecisaoExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ContagemDecisaoQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useContagemDecisaoNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ContagemDecisaoQuery */
+        $q = $this->useExistsQuery('ContagemDecisao', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemDecisao table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ContagemDecisaoQuery The inner query object of the IN statement
+     */
+    public function useInContagemDecisaoQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ContagemDecisaoQuery */
+        $q = $this->useInQuery('ContagemDecisao', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemDecisao table for a NOT IN query.
+     *
+     * @see useContagemDecisaoInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ContagemDecisaoQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInContagemDecisaoQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ContagemDecisaoQuery */
+        $q = $this->useInQuery('ContagemDecisao', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\ContagemVolta object
+     *
+     * @param \Baja\Model\ContagemVolta|ObjectCollection $contagemVolta the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByContagemVolta($contagemVolta, ?string $comparison = null)
+    {
+        if ($contagemVolta instanceof \Baja\Model\ContagemVolta) {
+            $this
+                ->addUsingAlias(ProvaTableMap::COL_EVENTO_ID, $contagemVolta->getEventoId(), $comparison)
+                ->addUsingAlias(ProvaTableMap::COL_PROVA_ID, $contagemVolta->getProvaId(), $comparison);
+
+            return $this;
+        } else {
+            throw new PropelException('filterByContagemVolta() only accepts arguments of type \Baja\Model\ContagemVolta');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the ContagemVolta relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinContagemVolta(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('ContagemVolta');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'ContagemVolta');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the ContagemVolta relation ContagemVolta object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\ContagemVoltaQuery A secondary query class using the current class as primary query
+     */
+    public function useContagemVoltaQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinContagemVolta($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'ContagemVolta', '\Baja\Model\ContagemVoltaQuery');
+    }
+
+    /**
+     * Use the ContagemVolta relation ContagemVolta object
+     *
+     * @param callable(\Baja\Model\ContagemVoltaQuery):\Baja\Model\ContagemVoltaQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withContagemVoltaQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useContagemVoltaQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to ContagemVolta table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ContagemVoltaQuery The inner query object of the EXISTS statement
+     */
+    public function useContagemVoltaExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ContagemVoltaQuery */
+        $q = $this->useExistsQuery('ContagemVolta', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemVolta table for a NOT EXISTS query.
+     *
+     * @see useContagemVoltaExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ContagemVoltaQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useContagemVoltaNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ContagemVoltaQuery */
+        $q = $this->useExistsQuery('ContagemVolta', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemVolta table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ContagemVoltaQuery The inner query object of the IN statement
+     */
+    public function useInContagemVoltaQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ContagemVoltaQuery */
+        $q = $this->useInQuery('ContagemVolta', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to ContagemVolta table for a NOT IN query.
+     *
+     * @see useContagemVoltaInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ContagemVoltaQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInContagemVoltaQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ContagemVoltaQuery */
+        $q = $this->useInQuery('ContagemVolta', $modelAlias, $queryClass, 'NOT IN');
         return $q;
     }
 

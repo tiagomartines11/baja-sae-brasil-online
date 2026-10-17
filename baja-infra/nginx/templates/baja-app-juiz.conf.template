@@ -57,6 +57,29 @@ server {
         try_files $uri $uri/ /index.php$is_args$args;
     }
 
+    # Lap counting uploads (count pages, pit log, automated sources).
+    #
+    # Two things set this script apart from every other one on this host:
+    #
+    # - It goes to PHP-FPM's "contagem" pool (port 9001), which has workers
+    #   of its own. Counting can then never be starved by the results site
+    #   or the review screens, nor starve them. Sizes and reasons are in
+    #   baja-infra/baja-app/php-fpm-pools.conf.
+    # - SKIP_AUTH: it authenticates by device token and never looks at the
+    #   forum session, so the session code is not loaded at all. An outage
+    #   of the forum database must not stop the counting.
+    #
+    # An event-prefixed URL (/26BR/contagem_sync.php) is rewritten to this
+    # path by the location above, with $event_code already set.
+    location = /contagem_sync.php {
+        fastcgi_pass baja-app:9001;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /var/www/html/juiz/contagem_sync.php;
+        fastcgi_param PHP_VALUE "auto_prepend_file=/var/www/html/src/bootstrap.php";
+        fastcgi_param REDIRECT_EVENT $event_code;
+        fastcgi_param SKIP_AUTH 1;
+    }
+
     location ~ \.php$ {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         fastcgi_pass baja-app:9000;

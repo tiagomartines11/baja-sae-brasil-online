@@ -1,0 +1,460 @@
+/* Lap counting: hub, review, race control, sources and counters pages.
+   Written for a PC first; the rules at the end adapt it to a phone.
+   The count and pit-log pages have their own file (contagem.css). */
+
+:root {
+  --cor-texto: #1d2733;
+  --cor-fraca: #5d6b7a;
+  --cor-borda: #c9d3dd;
+  --cor-fundo: #f3f6f9;
+  --cor-painel: #ffffff;
+  --cor-azul: #1f5f9c;
+  --cor-verde: #1e7d43;
+  --cor-vermelha: #b42318;
+  --cor-ambar: #9a6700;
+  --fundo-verde: #e3f4e8;
+  --fundo-vermelho: #fde7e4;
+  --fundo-ambar: #fff3d1;
+  --largura-nome-raia: 110px;
+}
+
+/* ---- shared by every page of the area ---------------------------------- */
+
+.contagem-pagina {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 12px 40px;
+  font: 15px/1.45 "Trebuchet MS", Arial, sans-serif;
+  color: var(--cor-texto);
+}
+
+.contagem-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--cor-azul);
+  color: #fff;
+  font: 14px/1.3 "Trebuchet MS", Arial, sans-serif;
+}
+
+.contagem-nav a { color: #fff; text-decoration: none; padding: 2px 0; }
+.contagem-nav a:hover { text-decoration: underline; }
+.contagem-nav a.atual { border-bottom: 2px solid #fff; font-weight: bold; }
+.contagem-nav strong { margin-right: 8px; }
+
+.contagem-bloco {
+  background: var(--cor-painel);
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+
+.contagem-bloco h2 { margin: 0 0 10px; font-size: 18px; }
+.contagem-bloco h3 { margin: 16px 0 6px; font-size: 15px; }
+.contagem-perigo { border-color: var(--cor-vermelha); }
+.contagem-perigo h2 { color: var(--cor-vermelha); }
+
+.contagem-links { list-style: none; padding: 0; margin: 0; }
+.contagem-links li { padding: 6px 0; border-bottom: 1px solid var(--cor-fundo); }
+.contagem-links a { font-weight: bold; color: var(--cor-azul); }
+.contagem-links span { color: var(--cor-fraca); margin-left: 8px; }
+.contagem-links-grandes a { display: block; padding: 14px; font-size: 20px; }
+
+.contagem-ok, .contagem-erro, .contagem-aviso, .contagem-token {
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.contagem-ok { background: var(--fundo-verde); color: var(--cor-verde); }
+.contagem-erro { background: var(--fundo-vermelho); color: var(--cor-vermelha); }
+.contagem-aviso { background: var(--fundo-ambar); color: var(--cor-ambar); }
+.contagem-token { background: var(--fundo-ambar); border: 1px solid var(--cor-ambar); }
+.contagem-token code { display: block; margin: 8px 0; padding: 8px; background: #fff; font-size: 16px; word-break: break-all; user-select: all; }
+.contagem-dica { color: var(--cor-fraca); font-size: 13px; }
+.contagem-etiqueta { background: var(--cor-azul); color: #fff; border-radius: 10px; padding: 1px 8px; font-size: 12px; }
+
+.contagem-acao, .contagem-fonte {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.contagem-coluna, .contagem-configuracoes { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.contagem-configuracoes label { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.contagem-configuracoes small { color: var(--cor-fraca); flex-basis: 100%; }
+.contagem-tabela { width: 100%; }
+.contagem-tabela td form { margin: 0; }
+.contagem-exportar { margin-right: 14px; }
+.linha-substituida td { color: var(--cor-fraca); text-decoration: line-through; }
+
+.botao-grande { font-size: 18px; padding: 10px 20px; min-width: 200px; cursor: pointer; }
+.botao-verde { background: var(--cor-verde); color: #fff; border: 0; border-radius: 4px; }
+.botao-vermelho { background: var(--cor-vermelha); color: #fff; border: 0; border-radius: 4px; padding: 8px 14px; cursor: pointer; }
+.botao-escuro { background: #2b2f36; color: #fff; border: 0; border-radius: 4px; }
+
+.estado-corrida { padding: 2px 10px; border-radius: 12px; background: var(--cor-fundo); }
+.estado-correndo { background: var(--fundo-verde); color: var(--cor-verde); }
+.estado-bandeira_vermelha { background: var(--fundo-vermelho); color: var(--cor-vermelha); }
+.estado-encerrada { background: #2b2f36; color: #fff; }
+
+/* ---- review screen ----------------------------------------------------- */
+
+body.revisao {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font: 14px/1.4 "Trebuchet MS", Arial, sans-serif;
+}
+
+.revisao button { font: inherit; cursor: pointer; }
+.revisao button:disabled { cursor: not-allowed; opacity: 0.55; }
+.oculto { display: none !important; }
+.vazio { color: var(--cor-fraca); font-style: italic; }
+
+.revisao-barra {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--cor-painel);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.revisao-barra .relogio { padding: 2px 10px; border-radius: 4px; background: var(--cor-fundo); }
+.revisao-barra .relogio strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.revisao-barra .fontes { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-fonte { padding: 2px 10px; border-radius: 12px; border: 1px solid var(--cor-borda); background: var(--cor-fundo); }
+.chip-fonte.ao-vivo { background: var(--fundo-verde); border-color: var(--cor-verde); }
+.chip-fonte.offline { background: var(--fundo-vermelho); border-color: var(--cor-vermelha); color: var(--cor-vermelha); }
+.chip-fonte.nunca, .chip-fonte.inativa { color: var(--cor-fraca); }
+.pendencias.com-alertas { font-weight: bold; color: var(--cor-ambar); }
+.publicacao, .revisores { color: var(--cor-fraca); }
+
+.revisao-aviso { margin: 0; padding: 8px 12px; background: var(--fundo-ambar); color: var(--cor-ambar); }
+.revisao-aviso.erro { background: var(--fundo-vermelho); color: var(--cor-vermelha); font-weight: bold; }
+.revisao-aviso.sucesso { background: var(--fundo-verde); color: var(--cor-verde); }
+
+.revisao-abas { display: none; }
+
+.revisao-zonas {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-areas: "fila alerta" "tabela tabela";
+  gap: 10px;
+  padding: 10px;
+}
+
+.revisao-zona { background: var(--cor-painel); border: 1px solid var(--cor-borda); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.revisao-zona h2 { margin: 4px 0 8px; font-size: 16px; }
+.zona-fila { grid-area: fila; max-height: 62vh; overflow-y: auto; }
+.zona-alerta { grid-area: alerta; min-height: 300px; }
+.zona-tabela { grid-area: tabela; }
+.rolagem { overflow-x: auto; }
+
+/* flag queue */
+.fila { list-style: none; margin: 0; padding: 0; }
+.item-fila {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 2px 8px;
+  width: 100%;
+  text-align: left;
+  padding: 8px;
+  margin-bottom: 4px;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-left: 4px solid var(--cor-ambar);
+  border-radius: 4px;
+}
+
+.item-fila.selecionado { background: #dcebf9; border-color: var(--cor-azul); }
+.item-fila.resolvido { border-left-color: var(--cor-borda); color: var(--cor-fraca); }
+.item-fila .tipo { font-weight: bold; }
+.item-fila .carros { grid-column: 1; }
+.item-fila .quando, .item-fila .posicao { font-variant-numeric: tabular-nums; color: var(--cor-fraca); }
+.item-fila .motivo { grid-column: 1 / -1; font-size: 12px; color: var(--cor-fraca); }
+.olhando { grid-column: 1 / -1; font-size: 12px; color: var(--cor-azul); font-weight: bold; }
+#resolvidos { margin-top: 10px; }
+#resolvidos summary { cursor: pointer; color: var(--cor-fraca); }
+
+/* selected flag or car */
+.detalhe-titulo { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.detalhe-titulo h2 { margin: 0; font-size: 18px; }
+.detalhe-titulo .fechar { margin-left: auto; }
+.sugestao { font-weight: bold; }
+.botoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+.botoes button, .acao-manual button { padding: 6px 12px; border: 1px solid var(--cor-borda); border-radius: 4px; background: var(--cor-painel); }
+.botoes button.primario { background: var(--cor-azul); border-color: var(--cor-azul); color: #fff; }
+.botoes button.ativo { background: #dcebf9; }
+kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-size: 11px; opacity: 0.8; }
+.caixa-entrada, .acao-manual { margin: 10px 0; padding: 8px 10px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: 4px; }
+.caixa-entrada p { margin: 0 0 6px; }
+.em-linha { display: inline-flex; gap: 6px; align-items: center; }
+.campo-carro { width: 5em; }
+
+/* lane timeline */
+.raias { overflow-x: auto; overflow-y: hidden; border: 1px solid var(--cor-borda); border-radius: 4px; background: var(--cor-painel); }
+.raias-conteudo { width: max-content; min-width: 100%; }
+.raia { display: flex; border-bottom: 1px solid var(--cor-fundo); }
+.raia.inativa { opacity: 0.6; }
+
+.raia-nome {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  flex: 0 0 var(--largura-nome-raia);
+  width: var(--largura-nome-raia);
+  padding: 6px 8px;
+  box-sizing: border-box;
+  background: var(--cor-fundo);
+  border-right: 1px solid var(--cor-borda);
+  font-size: 12px;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.raia-trilho { position: relative; flex: 0 0 var(--largura-trilho); width: var(--largura-trilho); min-height: 30px; }
+.raia-regua .raia-trilho { height: 20px; min-height: 20px; }
+.marca-tempo { position: absolute; top: 2px; font-size: 11px; color: var(--cor-fraca); border-left: 1px solid var(--cor-borda); padding-left: 3px; white-space: nowrap; }
+/* Lives in the ruler and is tall enough to cross every lane; .raias clips the rest. */
+.linha-do-alerta { position: absolute; top: 0; width: 0; height: 2000px; border-left: 2px dashed var(--cor-ambar); pointer-events: none; z-index: 1; }
+
+.chip {
+  position: absolute;
+  width: 38px;
+  height: 26px;
+  margin-top: 2px;
+  padding: 0;
+  border: 1px solid var(--cor-fraca);
+  border-radius: 4px;
+  background: var(--cor-painel);
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+  z-index: 1;
+}
+
+.chip.contada { background: var(--fundo-verde); border-color: var(--cor-verde); }
+.chip.anulada, .chip.anulada-auto { text-decoration: line-through; color: var(--cor-fraca); background: var(--cor-fundo); border-style: dashed; }
+.chip.fora-de-uso { color: var(--cor-fraca); background: var(--cor-fundo); border-style: dotted; }
+.chip.reatribuida { font-style: italic; border-color: var(--cor-azul); }
+.chip.do-revisor { border-color: var(--cor-azul); background: #dcebf9; }
+.chip.em-destaque { outline: 3px solid var(--cor-ambar); outline-offset: 1px; }
+.chip.selecionada { outline: 3px solid var(--cor-azul); outline-offset: 1px; z-index: 2; }
+
+.marca-box, .marca-corrida { position: absolute; top: 4px; padding: 1px 6px; border-radius: 3px; font-size: 11px; white-space: nowrap; }
+.marca-box { background: var(--fundo-ambar); border: 1px solid var(--cor-ambar); }
+.marca-corrida { background: #2b2f36; color: #fff; }
+.marca-corrida.bandeira_vermelha { background: var(--cor-vermelha); }
+
+/* car table, sources, history */
+table.carros, table.historico { border-collapse: collapse; width: 100%; }
+.carros th, .carros td, .historico th, .historico td { padding: 4px 8px; border-bottom: 1px solid var(--cor-fundo); text-align: left; white-space: nowrap; }
+.carros th, .historico th { background: var(--cor-fundo); font-size: 12px; }
+.carros tbody tr { cursor: pointer; }
+.carros tbody tr:hover, .carros tbody tr:focus { background: #eef4fa; outline: none; }
+.carros tr.selecionado { background: #dcebf9; }
+.carros .num, .historico .num { text-align: right; font-variant-numeric: tabular-nums; }
+.carros .voltas, .carros .carro { font-weight: bold; }
+.carros td.divergente { background: var(--fundo-ambar); color: var(--cor-ambar); font-weight: bold; }
+.carros tr.status-atrasado .situacao { color: var(--cor-ambar); }
+.carros tr.status-parado .situacao { color: var(--cor-vermelha); font-weight: bold; }
+.carros tr.status-fora .situacao { color: var(--cor-fraca); }
+.historico td:nth-child(4) { white-space: normal; }
+.historico tr.desfeita td { color: var(--cor-fraca); text-decoration: line-through; }
+
+#estatisticas-fontes { display: flex; flex-wrap: wrap; gap: 10px; }
+.bloco-fonte { flex: 1 1 260px; padding: 8px 10px; border: 1px solid var(--cor-borda); border-radius: 4px; }
+.bloco-fonte.inativa { opacity: 0.6; }
+.bloco-fonte h3 { margin: 0 0 6px; font-size: 14px; }
+.bloco-fonte dl { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; margin: 0; }
+.bloco-fonte dt { color: var(--cor-fraca); }
+.bloco-fonte dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---- phone: the three zones become tabs -------------------------------- */
+
+@media (max-width: 900px) {
+  .revisao-abas { display: flex; position: sticky; top: 0; z-index: 6; background: var(--cor-painel); border-bottom: 1px solid var(--cor-borda); }
+  .revisao-abas button { flex: 1; padding: 12px 4px; border: 0; border-bottom: 3px solid transparent; background: none; font-weight: bold; }
+  .revisao-abas button.ativa { border-bottom-color: var(--cor-azul); color: var(--cor-azul); }
+  .revisao-barra { position: static; font-size: 13px; }
+  .revisao-zonas { display: block; padding: 6px; }
+  .revisao-zona { display: none; }
+  .revisao-zonas[data-aba-ativa="fila"] .zona-fila,
+  .revisao-zonas[data-aba-ativa="alerta"] .zona-alerta,
+  .revisao-zonas[data-aba-ativa="tabela"] .zona-tabela { display: block; }
+  .zona-fila { max-height: none; }
+  .botoes button { flex: 1 1 45%; padding: 12px 8px; }
+  kbd { display: none; }
+  .chip { height: 28px; }
+  .contagem-acao, .contagem-fonte { flex-direction: column; align-items: stretch; }
+  .botao-grande { width: 100%; }
+}
+
+/* ---- round 2: publishing off, devices, pass zero, open-ended exclusions ---- */
+
+/* Publishing switched off must not be mistaken for a quiet moment. */
+.publicacao.desligada {
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: var(--fundo-vermelho);
+  border: 1px solid var(--cor-vermelha);
+  color: var(--cor-vermelha);
+}
+
+.chip-fonte .chip-dispositivos { color: var(--cor-ambar); }
+.chip-fonte.excluida { background: var(--fundo-vermelho); border-color: var(--cor-vermelha); }
+.chip-fonte .chip-excluida { color: var(--cor-vermelha); }
+
+.exclusao-aberta {
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: var(--fundo-vermelho);
+  border: 2px solid var(--cor-vermelha);
+  border-radius: 4px;
+  color: var(--cor-vermelha);
+}
+
+.dispositivos { list-style: none; margin: 6px 0; padding: 0; font-size: 13px; }
+.dispositivo { padding: 2px 0; }
+.dispositivo .situacao { padding: 0 6px; border-radius: 8px; background: var(--fundo-verde); color: var(--cor-verde); }
+.dispositivo.sem_contato .situacao, .dispositivo.silencioso .situacao { background: var(--fundo-ambar); color: var(--cor-ambar); }
+.dispositivo.fechado .situacao, .dispositivo.nunca .situacao { background: var(--cor-fundo); color: var(--cor-fraca); }
+.dispositivo.revogado .situacao { background: var(--fundo-vermelho); color: var(--cor-vermelha); }
+
+/* The pass zero is official but is not a lap: same green, marked with a 0. */
+.chip.passagem-zero { border-style: double; border-width: 3px; }
+.chip.passagem-zero::after {
+  content: "0";
+  position: absolute;
+  top: -7px;
+  right: -5px;
+  padding: 0 3px;
+  border-radius: 6px;
+  background: var(--cor-verde);
+  color: #fff;
+  font-size: 9px;
+  line-height: 12px;
+}
+/* Recorded and agreed on, yet outside the count by the rules of the race. */
+.chip.janela-largada, .chip.apos-encerramento {
+  border-style: dashed;
+  border-color: var(--cor-ambar);
+  background: var(--fundo-ambar);
+  color: var(--cor-ambar);
+}
+
+.campo-motivo { display: block; margin: 8px 0; font-size: 13px; color: var(--cor-fraca); }
+.campo-motivo input { max-width: 100%; }
+.acao-manual small { color: var(--cor-fraca); }
+
+.historico .titulo-secao th { text-align: left; background: var(--cor-fundo); color: var(--cor-fraca); font-size: 12px; }
+.historico tr.em-vigor td { background: var(--fundo-ambar); }
+#historico-mais { margin: 6px 0 12px; }
+
+.contagem-configuracoes select { max-width: 100%; }
+
+/* ---- round 3 ----------------------------------------------------------- */
+
+/* Permanent while the prova accepts simulated entries: must be impossible to overlook. */
+.contagem-simulacao {
+  margin: 0;
+  padding: 8px 12px;
+  background: repeating-linear-gradient(45deg, #5b21b6, #5b21b6 14px, #6d28d9 14px, #6d28d9 28px);
+  color: #fff;
+  font: 14px/1.4 "Trebuchet MS", Arial, sans-serif;
+}
+.contagem-simulacao strong { font-size: 18px; letter-spacing: 2px; margin-right: 10px; }
+
+.contagem-pergunta { border: 2px solid var(--cor-ambar); }
+.contagem-pergunta p { margin: 0 0 8px; }
+.contagem-em-linha { display: inline-flex; gap: 6px; align-items: center; margin: 0 10px 0 6px; }
+.contagem-configuracoes input[type="checkbox"] { margin-right: 4px; }
+.linha-substituida td.sem-risco { text-decoration: none; }
+
+/* status bar: official clock and age of the calculation */
+.horario-oficial { color: var(--cor-fraca); }
+.horario-oficial strong { color: var(--cor-texto); font-size: 16px; font-variant-numeric: tabular-nums; }
+.calculo { color: var(--cor-fraca); font-variant-numeric: tabular-nums; }
+.calculo.atrasado { padding: 2px 8px; border-radius: 4px; background: var(--fundo-vermelho); color: var(--cor-vermelha); font-weight: bold; }
+
+/* A button that adds a lap must not look like the one that changes nothing. */
+.botoes button.soma-volta { border-color: var(--cor-ambar); background: var(--fundo-ambar); color: var(--cor-ambar); font-weight: bold; }
+
+.exclusao-aberta .em-linha { margin: 6px 6px 0 0; }
+.paradas-sem-par { border-color: var(--cor-ambar); }
+
+/* car table: cars that do not take part */
+.carros tr.nao-classificado td { color: var(--cor-fraca); background: var(--cor-fundo); }
+.etiqueta-fora { margin-left: 6px; padding: 0 6px; border-radius: 8px; background: var(--fundo-ambar); color: var(--cor-ambar); font-size: 11px; }
+.carros tr.status-abastecendo .situacao, .carros tr.status-no_box .situacao { color: var(--cor-azul); }
+
+/* timeline: passes before the start, estimated and unknown times */
+.chip.antes-da-largada { border-style: dashed; border-color: var(--cor-ambar); background: var(--fundo-ambar); color: var(--cor-ambar); }
+.chip.antes-da-largada.contada { background: var(--fundo-verde); border-color: var(--cor-verde); color: var(--cor-texto); }
+.chip.tempo-estimado::before, .chip.tempo-desconhecido::before {
+  position: absolute;
+  top: -7px;
+  left: -5px;
+  padding: 0 3px;
+  border-radius: 6px;
+  background: var(--cor-ambar);
+  color: #fff;
+  font-size: 9px;
+  line-height: 12px;
+}
+.chip.tempo-estimado::before { content: "~"; }
+.chip.tempo-desconhecido::before { content: "?"; }
+.horario-desconhecido { margin: 8px 0; padding: 8px 10px; background: var(--fundo-ambar); border: 1px solid var(--cor-ambar); border-radius: 4px; font-size: 13px; }
+.chip.solto { position: relative; margin: 4px 4px 0 6px; }
+
+/* timeline: race control, pit lane and fueling lanes */
+.raia-direcao .raia-trilho, .raia-box .raia-trilho, .raia-abastecimento .raia-trilho { background: var(--cor-fundo); }
+.estadia { position: absolute; top: 20px; height: 6px; border-radius: 3px; background: var(--cor-azul); opacity: 0.55; }
+.estadia.aberta { background: repeating-linear-gradient(90deg, var(--cor-azul), var(--cor-azul) 6px, transparent 6px, transparent 10px); }
+.raia-abastecimento .estadia { background: var(--cor-verde); }
+.marca-box { top: 1px; }
+.marca-box.sem-par { background: var(--fundo-vermelho); border: 1px dashed var(--cor-vermelha); color: var(--cor-vermelha); font-weight: bold; }
+
+/* Something with an explanation behind it (hover): lap times, above all. */
+.com-dica { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+
+/* ---- Round 4 ---- */
+
+/* A flag that puts a published lap count in doubt: first in the queue, and marked. */
+.item-fila.em-duvida { border-left: 4px solid var(--cor-vermelha); }
+.item-fila .duvida { grid-column: 1 / -1; font-size: 12px; font-weight: bold; color: var(--cor-vermelha); }
+.contagem-em-duvida { margin: 6px 0; padding: 6px 10px; background: var(--fundo-vermelho); border: 1px solid var(--cor-vermelha); border-radius: 4px; color: var(--cor-vermelha); }
+
+/* A pass held back until a reviewer decides: two counters agree, the count does not move. */
+.chip.retida { border-style: dashed; border-width: 2px; border-color: var(--cor-vermelha); background: var(--fundo-ambar); color: var(--cor-vermelha); }
+
+/* An exit nobody logged at the pit lane: a reviewer marked it from a pass at the line. */
+.marca-box.inferida { border: 1px dashed var(--cor-ambar); background: var(--fundo-ambar); color: var(--cor-ambar); font-style: italic; }
+
+/* Pit and fueling events of unknown time, listed under the lanes. */
+.paradas-sem-horario { border-style: dashed; }
+
+/* The test preset is applied: same weight as the simulation banner, its own colour. */
+.contagem-predefinicao { background: var(--fundo-ambar); border-color: var(--cor-ambar); color: var(--cor-ambar); }
+.contagem-predefinicao a { color: inherit; font-weight: bold; }
+
+/* "No team is marked present": said once, above the car rows. */
+tr.aviso-tabela td { background: var(--fundo-ambar); color: var(--cor-ambar); white-space: normal; }
+
+/* An exit the engine assumed: in no log, drawn dotted until somebody confirms it. */
+.marca-box.presumida { border: 1px dotted var(--cor-fraca); background: transparent; color: var(--cor-fraca); font-style: italic; }
+
+/* "Editar manualmente" on a probable swap: the form that settles the flag first, the other one clearly apart. */
+.edicao-manual .acao-mover { border-left: 4px solid var(--cor-verde); }
+.edicao-manual .separador-manual { margin: 12px 0 4px; padding-top: 8px; border-top: 1px dashed var(--cor-fraca); }

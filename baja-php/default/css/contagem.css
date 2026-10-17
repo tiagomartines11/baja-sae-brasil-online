@@ -1,0 +1,820 @@
+/*
+ * Count page and pit page.
+ *
+ * Designed for a phone held in one hand in full sun: black on white, no greys
+ * for anything that matters, colour always backed by text, touch targets of
+ * at least 56px. On a wide screen the same layout is centred in a column.
+ */
+
+:root {
+    --cor-fundo: #ffffff;
+    --cor-texto: #000000;
+    --cor-barra: #000000;
+    --cor-barra-texto: #ffffff;
+    --cor-ok: #0a6b1f;
+    --cor-alerta: #b35900;
+    --cor-erro: #b00020;
+    --cor-acao: #003c9e;
+    --cor-borda: #000000;
+    --alvo-toque: 56px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Several blocks below set `display`; without this, `hidden` would lose. */
+[hidden] {
+    display: none !important;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font: 18px/1.3 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* No double-tap zoom: it would delay every tap by 300 ms. */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+/* ---- "SIMULAÇÃO": permanent while the prova allows simulation ---- */
+
+.faixa-simulacao {
+    padding: 4px 12px;
+    padding-top: max(4px, env(safe-area-inset-top));
+    background: #ffd24d;
+    color: #000000;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    text-align: center;
+}
+
+/* ---- status bar: always visible ---- */
+
+.barra-status {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 6px 12px;
+    padding-top: max(6px, env(safe-area-inset-top));
+    background: var(--cor-barra);
+    color: var(--cor-barra-texto);
+}
+
+.barra-linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2px 14px;
+}
+
+.fonte-nome {
+    font-size: 22px;
+}
+
+.relogio {
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.estado-corrida {
+    margin-left: 6px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.estado-bandeira_vermelha {
+    padding: 0 6px;
+    background: var(--cor-erro);
+}
+
+.barra-detalhes,
+.barra-outros,
+.barra-horario {
+    font-size: 15px;
+}
+
+.barra-horario {
+    justify-content: flex-start;
+    font-variant-numeric: tabular-nums;
+}
+
+/* No server time yet: must not look like a clock. */
+.sincronizando {
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #ffd24d;
+    color: #000000;
+}
+
+/* A time is shown, but the page is checking it with the server. */
+.verificando {
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #ffe9a6;
+    color: #000000;
+}
+
+.conexao {
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    background: #ffffff;
+    color: #000000;
+}
+
+.conexao-online {
+    background: #7dffa0;
+}
+
+.conexao-offline,
+.conexao-conectando {
+    background: #ffd24d;
+}
+
+.conexao-revogado,
+.conexao-sem_permissao {
+    background: #ff8a8a;
+}
+
+.conexao-encerrado {
+    background: #ffffff;
+}
+
+.tem-pendentes b {
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #ffd24d;
+    color: #000000;
+}
+
+.aviso-fixo {
+    margin: 0;
+    padding: 10px 12px;
+    background: var(--cor-erro);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.aviso-fixo p {
+    margin: 0 0 8px;
+}
+
+.carregando {
+    padding: 24px 12px;
+    font-size: 20px;
+    text-align: center;
+}
+
+/* "Already open in another tab": this tab is not going to start, so it must
+   not look like a page that is merely slow to load. */
+.carregando-bloqueado {
+    margin: 12px;
+    border: 4px solid var(--cor-erro);
+    font-weight: 700;
+}
+
+/* ---- "turno encerrado": shown instead of the entry controls ---- */
+
+.turno-encerrado {
+    max-width: 640px;
+    margin: 12px auto;
+    padding: 14px 12px;
+    border: 4px solid var(--cor-borda);
+    text-align: center;
+}
+
+.turno-encerrado h2 {
+    margin: 0 0 8px;
+    font-size: 26px;
+}
+
+.turno-encerrado p {
+    margin: 0 0 12px;
+}
+
+/* Nobody should keep typing into a page that told the server it stopped.
+   The recent list and the export button stay. */
+.turno-encerrado-ativo .destaque,
+.turno-encerrado-ativo .entrada,
+.turno-encerrado-ativo .seletor-modos,
+.turno-encerrado-ativo #btn-encerrar-turno {
+    display: none;
+}
+
+/* Nothing new may be recorded here (access.js): the warning banner says why.
+   The recent list, the export and the uploads stay. */
+.somente-leitura .destaque,
+.somente-leitura .entrada,
+.somente-leitura .seletor-modos,
+.somente-leitura #btn-encerrar-turno {
+    display: none;
+}
+
+/* ---- page body ---- */
+
+.conteudo {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 10px 12px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.conteudo > section,
+.conteudo > nav {
+    margin-bottom: 14px;
+}
+
+.texto-apoio {
+    margin: 8px 0;
+}
+
+/* ---- the big flash after each entry ---- */
+
+.destaque {
+    min-height: 132px;
+    padding: 6px 10px;
+    border: 4px solid var(--cor-borda);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.destaque-numero {
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.destaque-equipe {
+    font-size: 22px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.destaque-avisos p {
+    margin: 6px 0 0;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--cor-alerta);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.destaque-ativo {
+    animation: destaque-registrado 0.7s ease-out;
+}
+
+.destaque-problema.destaque-ativo {
+    animation-name: destaque-aviso;
+}
+
+.destaque-problema {
+    border-color: var(--cor-alerta);
+}
+
+/* Something is wrong, not merely worth a second look: the pass was not
+   stored, or the car is not classified for this prova. */
+.destaque-erro {
+    border-color: var(--cor-erro);
+}
+
+.destaque-erro.destaque-ativo {
+    animation-name: destaque-erro;
+}
+
+.destaque-erro .destaque-avisos p {
+    background: var(--cor-erro);
+    font-size: 20px;
+}
+
+@keyframes destaque-registrado {
+    from { background: var(--cor-ok); color: #ffffff; }
+    to { background: var(--cor-fundo); color: var(--cor-texto); }
+}
+
+@keyframes destaque-aviso {
+    from { background: var(--cor-alerta); color: #ffffff; }
+    to { background: var(--cor-fundo); color: var(--cor-texto); }
+}
+
+@keyframes destaque-erro {
+    from { background: var(--cor-erro); color: #ffffff; }
+    to { background: var(--cor-fundo); color: var(--cor-texto); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .destaque-ativo {
+        animation-duration: 0.01s;
+    }
+}
+
+/* ---- mode 1: system keyboard (also the pit page's number box) ---- */
+
+.form-teclado {
+    display: flex;
+    gap: 10px;
+}
+
+.campo-numero {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 72px;
+    padding: 0 12px;
+    border: 4px solid var(--cor-borda);
+    border-radius: 10px;
+    background: #ffffff;
+    color: #000000;
+    /* 16px or more also stops iOS from zooming the page on focus. */
+    font-size: 44px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.campo-numero:focus {
+    outline: 4px solid var(--cor-acao);
+    outline-offset: 2px;
+}
+
+.botao-registrar {
+    flex: 0 0 auto;
+    min-width: 132px;
+    height: 72px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--cor-ok);
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+/* ---- mode 2: on-screen keypad ---- */
+
+.visor-numero {
+    height: 64px;
+    margin-bottom: 8px;
+    border: 4px solid var(--cor-borda);
+    border-radius: 10px;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 56px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.teclado-tela {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.tecla {
+    height: 72px;
+    border: 3px solid var(--cor-borda);
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 34px;
+    font-weight: 800;
+}
+
+.tecla:active,
+.bloco:active {
+    background: #000000;
+    color: #ffffff;
+}
+
+.tecla-apagar {
+    background: #e6e6e6;
+}
+
+.tecla-registrar {
+    border-color: var(--cor-ok);
+    background: var(--cor-ok);
+    color: #ffffff;
+}
+
+/* ---- mode 3: tiles (also the pit page's car lists) ---- */
+
+.blocos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 8px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.bloco {
+    min-height: 68px;
+    border: 3px solid var(--cor-borda);
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 30px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.blocos-pequenos {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+}
+
+.blocos-pequenos .bloco {
+    min-height: var(--alvo-toque);
+    font-size: 24px;
+}
+
+.bloco-no-box {
+    border-color: var(--cor-alerta);
+    background: #fff1d6;
+}
+
+/* Pit page: a car tapped a moment ago, still in its old place (the tiles do
+   not move under the finger; see box-toques.js). */
+.bloco-recem-tocado {
+    border-style: dashed;
+    opacity: 0.45;
+}
+
+/* The car chosen in two-tap mode, waiting for "Passou". */
+.bloco-selecionado,
+.bloco-selecionado:active {
+    border-color: var(--cor-acao);
+    background: var(--cor-acao);
+    color: #ffffff;
+}
+
+/* Two-tap panel: the selected car, large, and the "Passou" button. It stays
+   at the bottom of the screen while the tiles scroll behind it. */
+.passou-painel {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 10px;
+    align-items: stretch;
+    margin-top: 10px;
+    padding: 8px 0;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    border-top: 4px solid var(--cor-borda);
+    background: var(--cor-fundo);
+}
+
+.selecionado {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    text-align: center;
+}
+
+.selecionado-numero {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.selecionado-equipe {
+    font-size: 15px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.botao-passou {
+    min-height: 104px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--cor-ok);
+    color: #ffffff;
+    font-size: 34px;
+    font-weight: 800;
+}
+
+.botao-passou:active {
+    background: #000000;
+}
+
+.botao-passou:disabled {
+    background: #8a8a8a;
+}
+
+.opcao-um-toque {
+    margin-top: 6px;
+}
+
+/* ---- mode switch ---- */
+
+.seletor-modos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.seletor-modos button {
+    min-height: var(--alvo-toque);
+    border: 3px solid var(--cor-borda);
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.seletor-modos button[aria-pressed="true"] {
+    background: #000000;
+    color: #ffffff;
+}
+
+/* ---- recent list ---- */
+
+.lista-recentes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 2px solid var(--cor-borda);
+}
+
+.recente {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    grid-template-areas:
+        "numero equipe botao"
+        "numero hora   botao";
+    align-items: center;
+    gap: 0 10px;
+    min-height: var(--alvo-toque);
+    padding: 4px 0;
+    border-bottom: 2px solid var(--cor-borda);
+}
+
+.recente-numero {
+    grid-area: numero;
+    font-size: 30px;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.recente-equipe {
+    grid-area: equipe;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.recente-hora {
+    grid-area: hora;
+    /* Shares its cell with the state ("na fila") on the right. The long text
+       of a held record ("aguardando horário oficial") wraps instead of
+       running under it. */
+    justify-self: start;
+    max-width: 65%;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.recente-estado {
+    grid-area: hora;
+    justify-self: end;
+    font-size: 15px;
+}
+
+.recente-desfeito .recente-numero,
+.recente-desfeito .recente-equipe {
+    text-decoration: line-through;
+}
+
+.recente-desfeito .recente-estado {
+    grid-area: botao;
+    font-weight: 700;
+    color: var(--cor-erro);
+}
+
+.botao-desfazer {
+    grid-area: botao;
+    min-width: 96px;
+    min-height: 48px;
+    border: 3px solid var(--cor-erro);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--cor-erro);
+    font-weight: 700;
+}
+
+/* ---- pit page ---- */
+
+.box-equipe {
+    margin: 6px 0;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.botoes-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.botao-box {
+    height: 84px;
+    border: 0;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.botao-entrou {
+    background: var(--cor-alerta);
+}
+
+.botao-saiu {
+    background: var(--cor-ok);
+}
+
+.botao-box:disabled {
+    background: #8a8a8a;
+}
+
+.box-mensagem {
+    min-height: 1.3em;
+    margin: 8px 0 0;
+    font-weight: 700;
+    text-align: center;
+}
+
+.box-mensagem-erro {
+    padding: 8px;
+    background: var(--cor-erro);
+    color: #ffffff;
+}
+
+/* The opening questions (area, then entry or exit). */
+.box-escolha h2 {
+    margin: 10px 0;
+    font-size: 22px;
+    text-transform: none;
+    letter-spacing: 0;
+    text-align: center;
+}
+
+.botao-area {
+    background: var(--cor-acao);
+}
+
+/* What this device chose last time: marked, never pre-pressed. */
+.escolha-lembrada {
+    outline: 4px dashed var(--cor-borda);
+    outline-offset: 3px;
+}
+
+/* The switches that stay visible while recording. */
+.chave {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.chave button {
+    min-height: var(--alvo-toque);
+    border: 3px solid var(--cor-borda);
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.chave button[aria-pressed="true"] {
+    background: #000000;
+    color: #ffffff;
+}
+
+/* Says, in words and in colour, what the next tap will record. */
+.box-instrucao {
+    margin: 0 0 8px;
+    padding: 10px;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.box-instrucao-entrada {
+    background: var(--cor-alerta);
+}
+
+.box-instrucao-saida {
+    background: var(--cor-ok);
+}
+
+#box-registro h2 {
+    margin-top: 12px;
+}
+
+.form-outro-numero {
+    margin-top: 14px;
+}
+
+.form-outro-numero .campo-numero {
+    height: var(--alvo-toque);
+    font-size: 26px;
+}
+
+/* ---- footer ---- */
+
+.rodape {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+    padding-top: 10px;
+    border-top: 2px solid var(--cor-borda);
+}
+
+.botao-secundario {
+    min-height: var(--alvo-toque);
+    padding: 0 16px;
+    border: 3px solid var(--cor-borda);
+    border-radius: 8px;
+    background: #ffffff;
+    color: #000000;
+    font-weight: 700;
+}
+
+.opcao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--alvo-toque);
+}
+
+.opcao input {
+    width: 26px;
+    height: 26px;
+}
+
+.link-voltar {
+    margin-left: auto;
+    padding: 14px 4px;
+    color: var(--cor-acao);
+    font-weight: 700;
+}
+
+.turno-mensagem {
+    flex-basis: 100%;
+    margin: 0;
+    padding: 8px 10px;
+    border: 3px solid var(--cor-alerta);
+    font-weight: 700;
+}
+
+/* The two lines that say whether this device is safe to count on. */
+.estado-aparelho {
+    flex-basis: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    color: var(--cor-alerta);
+}
+
+.estado-aparelho.estado-aparelho-ok {
+    color: var(--cor-texto);
+}
+
+/* ---- wider screens: keypad and flash side by side would only add travel
+        for the eyes, so the single column stays; it just gets more air ---- */
+
+@media (min-width: 700px) {
+    .conteudo {
+        padding-top: 18px;
+    }
+
+    .destaque-numero {
+        font-size: 96px;
+    }
+}
