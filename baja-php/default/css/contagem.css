@@ -853,15 +853,23 @@ button {
     background: #8a8a8a;
 }
 
+/* What the last tap did. Right above the car tiles, so, like the count
+   page's flash, it never changes size: two lines, always the same padding,
+   the rest cut (the title has it all). */
 .box-mensagem {
-    min-height: 1.3em;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    height: calc(2 * 1.3em + 12px);
     margin: 8px 0 0;
+    padding: 6px 8px;
+    overflow: hidden;
+    font-size: 16px;
     font-weight: 700;
     text-align: center;
 }
 
 .box-mensagem-erro {
-    padding: 8px;
     background: var(--cor-erro);
     color: #ffffff;
 }

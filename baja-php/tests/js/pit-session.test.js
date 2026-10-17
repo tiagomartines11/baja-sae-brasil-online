@@ -19,7 +19,9 @@ import assert from 'node:assert/strict';
 import {
     AREA, SENTIDO, PASSO, TIPO_PARADA, PitFlow, mergeCarsInside, orderCarsForMode, partsOfTipo, tipoFor,
 } from '../../default/js/contagem/pit-session.js';
-import { describeGroups, describeTipo } from '../../default/js/contagem/box-listas.js';
+import {
+    describeGroups, describeRecordedEvent, describeReopened, describeTipo, TEXTO_ABASTECIMENTO_DESLIGADO, TEXTO_NAO_GUARDOU,
+} from '../../default/js/contagem/box-listas.js';
 import { createPreferences } from '../../default/js/contagem/entry-modes.js';
 import { buildPitEventsCsv } from '../../default/js/contagem/csv-export.js';
 import { createDevice } from './helpers/fakes.js';
@@ -312,7 +314,7 @@ test('the headings say in words which area and which direction the next tap reco
     const entryToPitLane = describeGroups(AREA.BOX, SENTIDO.ENTRADA);
 
     assert.equal(exitFromFueling.instrucao, 'SAÍDA do abastecimento: toque no carro que SAIU');
-    // The short form, for "Aberto como da última vez neste aparelho: …".
+    // The short form, for "Como da última vez: …".
     assert.equal(exitFromFueling.modo, 'SAÍDA do abastecimento');
     assert.equal(entryToPitLane.modo, 'ENTRADA no box');
     assert.equal(exitFromFueling.primeiros, 'No abastecimento agora');
@@ -320,6 +322,29 @@ test('the headings say in words which area and which direction the next tap reco
     assert.equal(entryToPitLane.outros, 'Outros (já estão no box)');
     assert.equal(describeTipo('abastecimento_saida'), 'saiu do abastecimento');
     assert.equal(describeTipo('box_entrada'), 'entrou no box');
+});
+
+test('the line above the tiles says what the last tap did in at most two lines', () => {
+    // Background (field note N5, 26SE): this line is right above the car
+    // tiles. It grew from one line to three with a longer message, and every
+    // tile moved down under the finger. It is now always two lines high; on
+    // a 360 px phone two lines of its 16 px bold text hold about 70
+    // characters (measured in headless Chromium: the longest message below,
+    // 69 characters, fits), so every message keeps to that.
+    const messages = [
+        describeRecordedEvent(1234, 'abastecimento_saida', true),
+        describeRecordedEvent(15, 'box_entrada', false),
+        describeReopened(AREA.ABASTECIMENTO, SENTIDO.SAIDA),
+        TEXTO_NAO_GUARDOU(1234),
+        TEXTO_ABASTECIMENTO_DESLIGADO,
+    ];
+
+    assert.equal(messages[0], 'Carro 1234 saiu do abastecimento. Número fora da lista (registrado).');
+    assert.equal(messages[1], 'Carro 15 entrou no box.');
+    assert.equal(messages[2], 'Como da última vez: SAÍDA do abastecimento.');
+    for (const message of messages) {
+        assert.ok(message.length <= 70, '"' + message + '" is ' + message.length + ' characters');
+    }
 });
 
 // ---------------------------------------------------------------------------

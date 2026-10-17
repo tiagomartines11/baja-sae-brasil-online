@@ -40,6 +40,23 @@ export function describeGroups(area, sentido) {
     };
 }
 
+// The line above the tiles that says what the last tap did is two lines
+// high and never grows (style sheet: .box-mensagem): a line that grew moved
+// the tiles under the finger. These texts are written to fit it.
+
+/** After a tap was stored. `unknownNumber`: the car is on no list. */
+export function describeRecordedEvent(car, tipo, unknownNumber) {
+    return 'Carro ' + car + ' ' + describeTipo(tipo) + '.' + (unknownNumber ? ' Número fora da lista (registrado).' : '');
+}
+
+/** The page opened in the mode this device used last time; nothing was asked. */
+export function describeReopened(area, sentido) {
+    return 'Como da última vez: ' + describeGroups(area, sentido).modo + '.';
+}
+
+export const TEXTO_NAO_GUARDOU = (car) => 'NÃO REGISTRADO: o aparelho não guardou o carro ' + car + '.';
+export const TEXTO_ABASTECIMENTO_DESLIGADO = 'Abastecimento desligado nesta prova: agora você registra o BOX.';
+
 function textNode(tagName, className, text) {
     const node = document.createElement(tagName);
     node.className = className;

@@ -270,7 +270,8 @@ number of phones can log the same area.
   **Saída**. The choice is remembered on that device and stays on screen as
   a switch, for one person doing both.
 - After that, **every tap on a car records that event**, at the moment of
-  the tap.
+  the tap. The line above the cars says what the last tap did; it is always
+  two lines high, so the cars never move under the finger.
 - In Saída mode the cars currently inside are listed first and every other
   car below, under "outros"; in Entrada mode the reverse. No car is ever
   hidden: the person at the other end may have missed one.

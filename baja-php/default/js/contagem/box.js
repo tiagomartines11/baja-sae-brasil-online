@@ -23,7 +23,9 @@ import { buildPitEventsCsv } from './csv-export.js';
 import { createFeedback, recordThenPrepareSound } from './feedback.js';
 import { NumberBuffer } from './entry-modes.js';
 import { carListIsKnown, teamNameOf } from './warnings.js';
-import { createPitLists, describeGroups, describeTipo } from './box-listas.js';
+import {
+    createPitLists, describeRecordedEvent, describeReopened, TEXTO_ABASTECIMENTO_DESLIGADO, TEXTO_NAO_GUARDOU,
+} from './box-listas.js';
 import { TapGuard, TileLayoutHold, LAYOUT_HOLD_MS } from './box-toques.js';
 import { RecordingBlockedError, TEXTO_BLOQUEIO } from './access.js';
 
@@ -44,9 +46,12 @@ async function main() {
     const tapGuard = new TapGuard();
     const layoutHold = new TileLayoutHold();
 
+    // Always two lines high, right above the tiles (style sheet: .box-mensagem);
+    // a longer text is cut on screen and kept whole in the title.
     function showMessage(text, isProblem) {
         const message = element('box-mensagem');
         message.textContent = text;
+        message.title = text;
         message.className = isProblem ? 'box-mensagem box-mensagem-erro' : 'box-mensagem';
     }
 
@@ -77,19 +82,17 @@ async function main() {
             record = await session.recordEvent({ car, tipo, tsMs, mode: modo, uuid });
         } catch (storageError) {
             if (storageError instanceof RecordingBlockedError) {
+                // The banner, open at the top, says why.
                 showMessage('NÃO REGISTRADO: ' + TEXTO_BLOQUEIO[storageError.motivo], true);
                 throw storageError;
             }
-            showMessage('NÃO REGISTRADO: o aparelho não conseguiu guardar o carro ' + car + '.', true);
+            showMessage(TEXTO_NAO_GUARDOU(car), true);
             feedback.erro();
             throw storageError;
         }
         const anyListKnown = carListIsKnown(page.validCars()) || carListIsKnown(page.unclassifiedCars());
         const unknownNumber = anyListKnown && teamNameOf(car, page.validCars(), page.unclassifiedCars()) === null;
-        showMessage(
-            'Carro ' + car + ' ' + describeTipo(tipo) + '.' + (unknownNumber ? ' Número desconhecido; registrado mesmo assim.' : ''),
-            unknownNumber,
-        );
+        showMessage(describeRecordedEvent(car, tipo, unknownNumber), unknownNumber);
         if (modo !== MODO_SIMULACAO) {
             if (unknownNumber) {
                 feedback.aviso();
@@ -195,16 +198,15 @@ async function main() {
 
     page.onState(() => {
         if (flow.setFuelingEnabled(page.fuelingEnabled())) {
-            showMessage('O abastecimento foi desligado nesta prova. Você está registrando o BOX agora.', true);
+            showMessage(TEXTO_ABASTECIMENTO_DESLIGADO, true);
         }
         render();
     });
     if (flow.abriuNoModoLembrado) {
         // No question was asked, so the page says what it assumed. The
-        // heading says it too; this line adds where it came from and how to
-        // change it.
-        showMessage('Aberto como da última vez neste aparelho: ' + describeGroups(flow.area, flow.sentido).modo
-            + '. Para mudar, toque em Entrada ou Saída acima.', false);
+        // heading says it too; this line adds where it came from (the
+        // Entrada / Saída switch right above changes it).
+        showMessage(describeReopened(flow.area, flow.sentido), false);
     }
     element('carregando').hidden = true;
     element('conteudo').hidden = false;
