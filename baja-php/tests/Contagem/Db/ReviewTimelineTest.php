@@ -76,6 +76,46 @@ final class ReviewTimelineTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: car A crosses at 1:00, 2:40 and 4:20, each crossing
+     * recorded by all three counters; at 5:30 one counter alone types it.
+     *
+     * WHAT WAS MISSING: a chip said "volta 2" and nothing else. At 26SE a
+     * reviewer had to open the car table to see that a lap confirmed on a
+     * chip took 1:15 instead of the usual 3:40.
+     *
+     * EXPECTED: each lap's chips carry the lap's duration ("volta_ms"), the
+     * same number the car table shows for the last lap (100 s here). The
+     * pass zero and the lone entry, which end no counted lap, carry none.
+     */
+    public function testALapsChipsCarryTheLapTimeTheCarTableShows(): void
+    {
+        $car = self::CAR_A;
+        $this->startRace(self::RACE_START_MS);
+        $first = $this->allCountersSee($car, 60);
+        $second = $this->allCountersSee($car, 160);
+        $third = $this->allCountersSee($car, 260);
+        $lone = $this->addEntry($this->fontes[0], $car, $this->at(330));
+        $this->syncAll($this->at(400));
+        Clock::freezeAt($this->at(410));
+
+        $state = $this->freshScreen();
+        $entries = $this->entriesById(TimelineWindow::forCar($this->service, $car));
+
+        $this->assertSame(100000, $this->carRow($state, $car)['ultima_volta_ms']);
+        foreach ($third as $entryId) {
+            $this->assertSame(100000, $entries[$entryId]['grupo']['volta_ms']);
+        }
+        $this->assertSame(100000, $entries[$second[0]]['grupo']['volta_ms']);
+        $this->assertNull($entries[$first[0]]['grupo']['volta_ms'], 'the pass zero ends no lap');
+        $this->assertSame('pendente', $entries[$lone]['grupo']['papel']);
+        $this->assertNull($entries[$lone]['grupo']['volta_ms'], 'a pass that does not count ends no lap');
+
+        // A window of time says the same as the car's whole race.
+        $window = $this->entriesById(TimelineWindow::forWindow($this->service, $this->at(250), $this->at(270)));
+        $this->assertSame(100000, $window[$third[1]]['grupo']['volta_ms']);
+    }
+
+    /**
      * SITUATION: the organisers chose the other rule for the start: the
      * start itself is every car's pass zero ("passagem_inicial = largada"),
      * so counters are told not to type the start pack. Because somebody

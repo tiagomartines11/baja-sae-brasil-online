@@ -66,6 +66,9 @@ final class CarsRecount
     /** @var array<int, true> ids of the entries the engine dropped as repeats */
     private array $autoVoidedEntryIds = [];
 
+    /** @var array<int, int> spl_object_id of a pass group => duration of the counted lap it ends, in ms */
+    private array $lapTimes = [];
+
     /**
      * @param int[] $cars the cars the caller wants to show
      * @param array{0: int, 1: int}|null $window also recount the cars of passes a reviewer added between these two moments
@@ -129,8 +132,15 @@ final class CarsRecount
         }
 
         $counter = LapCounter::count($input, $cars);
-        // Numbers the official passes: writes each group's numeroVolta.
-        $counter->buildLaps();
+        // Numbers the official passes (writes each group's numeroVolta), and
+        // times the laps they end, as the car table and the standings do.
+        foreach ($counter->buildLaps() as $lapsOfOneCar) {
+            foreach ($lapsOfOneCar as $lap) {
+                if ($lap->isCounted() && $lap->grupo !== null && $lap->tempoVoltaMs !== null) {
+                    $this->lapTimes[spl_object_id($lap->grupo)] = $lap->tempoVoltaMs;
+                }
+            }
+        }
 
         $this->timeline = $counter->timeline;
         $this->effect = new ConfirmEffect($counter->timeline, $counter->groupsByCar);
@@ -152,6 +162,17 @@ final class CarsRecount
     public function groupOf(int $entryId): ?PassGroup
     {
         return $this->signatures->groupOf($entryId);
+    }
+
+    /**
+     * The duration of the counted lap a pass group ends, in ms: the
+     * habit-corrected time the car table shows, not the difference of the
+     * two pass times. Null for the pass zero, a pass that does not count,
+     * and lap 1 of a race with no start time.
+     */
+    public function lapTimeOf(PassGroup $group): ?int
+    {
+        return $this->lapTimes[spl_object_id($group)] ?? null;
     }
 
     /** The car an entry counts for after people's decisions; null when a decision took it out. */

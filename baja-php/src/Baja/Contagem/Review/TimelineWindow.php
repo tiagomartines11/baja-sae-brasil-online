@@ -236,6 +236,9 @@ final class TimelineWindow
      * With it, `volta_resultante_ms` is the shortest lap that pass would
      * make (as on a flag), so the chip asks the same question K does.
      *
+     * `volta_ms`: on a lap ('volta'), how long that lap took, as the car
+     * table times it (habit-corrected), so a chip can say "volta 22 · 1:15".
+     *
      * `volta_curta_confirmada`: the pass ends a lap too short to be real
      * that counts on a reviewer's confirmation. `tempo_escolhido_id`: the
      * entry a reviewer chose to time the pass ("usar_tempo"), or null.
@@ -275,6 +278,8 @@ final class TimelineWindow
             // "contado" keeps its old meaning for the screen: an official pass.
             'contado' => $role === 'volta' || $role === 'inicial' || ($role === 'antes_da_largada' && $group->contado),
             'numero_volta' => $group->numeroVolta,
+            // The lap this pass ends, timed as in the car table; null unless it counts as a lap.
+            'volta_ms' => $role === 'volta' ? $recount->lapTimeOf($group) : null,
             'confirmado_por_revisor' => $group->confirmadoPorRevisor,
             // 'proxima_demais' | 'dispersao'; null when the pass is not held.
             'motivo_retencao' => $held ? ($group->motivoRetencao ?? null) : null,
