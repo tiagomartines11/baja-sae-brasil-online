@@ -202,25 +202,29 @@ final class OfflineShell
     </div>
     <div class="barra-linha barra-detalhes">
         <span id="st-conexao" class="conexao conexao-conectando">Conectando…</span>
-        <span class="detalhe">Na fila: <b id="st-pendentes">0</b></span>
-        <span class="detalhe">Último envio: <b id="st-ultimo-sync">—</b></span>
+        <span class="detalhe detalhe-fila">Na fila: <b id="st-pendentes">0</b></span>
+        <span class="detalhe" title="Último envio bem-sucedido">Enviado: <b id="st-ultimo-sync">—</b></span>
     </div>
     <?php // The server's clock, never the phone's: "sincronizando…" until the first answer of this page load. ?>
     <div class="barra-linha barra-horario">Horário oficial: <b id="st-horario-oficial" class="sincronizando">sincronizando…</b></div>
     <div class="barra-linha barra-outros"><?= htmlspecialchars($outrosRotulo) ?> <b id="st-outros">ninguém</b></div>
+    <?php // Lies over the bar's last two lines, so that it never pushes the keypad or the tiles
+          // down; a tap opens it over the page (status-bar.js). ?>
+    <div id="aviso-fixo" class="aviso-fixo" role="alert" hidden>
+        <div id="aviso-fixo-textos" class="aviso-fixo-textos"></div>
+        <button type="button" id="btn-aviso-fixo" class="aviso-fixo-alternar" aria-expanded="false"
+                aria-controls="aviso-fixo-textos">ver tudo</button>
+        <?php // Retries in place, never reloads; the script shows it only when a retry can help. ?>
+        <button type="button" id="btn-reconectar" class="botao-secundario" hidden>Tentar de novo</button>
+    </div>
 </header>
-<div id="aviso-fixo" class="aviso-fixo" role="alert" hidden>
-    <div id="aviso-fixo-textos"></div>
-    <?php // Retries in place, never reloads; the script shows it only when a retry can help. ?>
-    <button type="button" id="btn-reconectar" class="botao-secundario" hidden>Tentar de novo</button>
-</div>
 <section id="turno-encerrado" class="turno-encerrado" role="status" hidden>
     <h2>Turno encerrado</h2>
     <p>Este aparelho avisou que parou de contar e não está mais enviando nada.
        Tudo o que você registrou continua guardado aqui.</p>
     <button type="button" id="btn-retomar-turno" class="botao-registrar">Retomar contagem</button>
 </section>
-<noscript><p class="aviso-fixo">Esta página precisa de JavaScript para funcionar.</p></noscript>
+<noscript><p class="aviso-sem-script">Esta página precisa de JavaScript para funcionar.</p></noscript>
 <p id="carregando" class="carregando">Abrindo…</p>
         <?php
     }

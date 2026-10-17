@@ -8,7 +8,9 @@
 //     and whether it offers the "Tentar de novo" button;
 //   - the connection chip in the status bar (`describeConnection`);
 //   - the two status lines in the footer (`describeDeviceStatus`), which say
-//     whether this device is safe to count on.
+//     whether this device is safe to count on;
+//   - that the status bar and the banner keep their height (field note N5):
+//     short texts, and a banner that lies over the bar until tapped.
 //
 // "Memory mode" below means: the page could not use the device's storage and
 // keeps the entries only in its own memory. A reload then ERASES every entry
@@ -19,7 +21,10 @@ import assert from 'node:assert/strict';
 
 import { CONEXAO } from '../../default/js/contagem/sync-queue.js';
 import { ARMAZENAMENTO } from '../../default/js/contagem/storage-open.js';
-import { describeBanner, describeConnection } from '../../default/js/contagem/status-messages.js';
+import {
+    describeBanner, describeConnection, describeOthers, describeQueue,
+} from '../../default/js/contagem/status-messages.js';
+import { createStatusBar } from '../../default/js/contagem/status-bar.js';
 import {
     COPIA_OFFLINE, describeDeviceStatus, readOfflineCopy, readStorageProtection,
 } from '../../default/js/contagem/device-status.js';
@@ -329,4 +334,119 @@ test('where the protection works, there is no third line', () => {
 
     assert.equal(lines.abaUnica, null);
     assert.equal(lines.tudoCerto, true);
+});
+
+// ---------------------------------------------------------------------------
+// The status bar never changes height (field note N5, 26SE)
+// ---------------------------------------------------------------------------
+//
+// Background: the bar is right above the flash, the keypad and the tiles. Its
+// lines used to wrap when a text got longer ("(3 aguardando horário oficial)",
+// a few names under "Também contando aqui"), and the red banner appeared in
+// the flow below it with several lines of text: each time, every key and
+// tile moved down under the counter's thumb. Now no line wraps (style sheet),
+// the texts are short with the long form in the title, and the banner lies
+// over the bar's last two lines until somebody taps it.
+
+test('the queue count says in short how many wait for the official time; the title says it in full', () => {
+    assert.deepEqual(describeQueue(queueState({ pendentes: 4, aguardandoHorario: 0 })),
+        { texto: '4', titulo: '4 na fila' });
+    assert.deepEqual(describeQueue(queueState({ pendentes: 12, aguardandoHorario: 3 })),
+        { texto: '12 (3 sem horário)', titulo: '12 na fila, 3 aguardando horário oficial' });
+});
+
+test('"Também contando aqui" shows one name and how many more; the title has them all', () => {
+    assert.deepEqual(describeOthers([]), { texto: 'ninguém', titulo: 'ninguém' });
+    assert.deepEqual(describeOthers(['maria']), { texto: 'maria', titulo: 'maria' });
+    assert.deepEqual(describeOthers(['maria', 'joao', 'ana']), { texto: 'maria +2', titulo: 'maria, joao, ana' });
+});
+
+/** The status bar's elements, as pretend objects that remember what was set. */
+function createFakeBarDocument() {
+    const elements = new Map();
+    const make = (id) => {
+        const classes = new Set();
+        const listeners = [];
+        const node = {
+            id,
+            hidden: false,
+            textContent: '',
+            title: '',
+            className: '',
+            offsetWidth: 0,
+            children: [],
+            attributes: {},
+            parentElement: null,
+            classes,
+            classList: {
+                add: (name) => classes.add(name),
+                remove: (name) => classes.delete(name),
+                toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)),
+                contains: (name) => classes.has(name),
+            },
+            setAttribute(name, value) { this.attributes[name] = value; },
+            addEventListener(type, listener) { listeners.push(listener); },
+            replaceChildren() { this.children = []; },
+            appendChild(child) { this.children.push(child); },
+            /** A tap on `target` inside this element (the event bubbles up to it). */
+            tap(target = node) { listeners.forEach((listener) => listener({ target })); },
+        };
+        node.parentElement = { title: '', classList: node.classList };
+        return node;
+    };
+    return {
+        getElementById(id) {
+            if (!elements.has(id)) {
+                elements.set(id, make(id));
+            }
+            return elements.get(id);
+        },
+        createElement: () => make(null),
+    };
+}
+
+const DISK_OK = { tokenProblem: null, armazenamento: ARMAZENAMENTO.DISCO, bloqueio: null };
+
+test('the banner opens on a tap and closes with "recolher"; something new closes it again', () => {
+    // Situation: the device is revoked. The banner shows, closed, over the
+    // bottom of the bar. The counter taps it to read, then "recolher".
+    const documentRef = createFakeBarDocument();
+    const bar = createStatusBar(documentRef, { fonte: { nome: 'Contador 1' } });
+    const banner = documentRef.getElementById('aviso-fixo');
+    const toggle = documentRef.getElementById('btn-aviso-fixo');
+    const retry = documentRef.getElementById('btn-reconectar');
+
+    bar.render(queueState({ conexao: CONEXAO.REVOGADO, outrosUsuarios: [] }), DISK_OK);
+    assert.equal(banner.hidden, false);
+    assert.equal(banner.classes.has('aviso-fixo-aberto'), false, 'closed: it must not cover the keys');
+    assert.equal(toggle.attributes['aria-expanded'], 'false');
+
+    banner.tap(documentRef.getElementById('aviso-fixo-textos'));
+    assert.equal(banner.classes.has('aviso-fixo-aberto'), true);
+    assert.equal(toggle.textContent, 'recolher');
+
+    banner.tap(retry);
+    assert.equal(banner.classes.has('aviso-fixo-aberto'), true, '"Tentar de novo" does not close it');
+
+    banner.tap(toggle);
+    assert.equal(banner.classes.has('aviso-fixo-aberto'), false);
+
+    // A second problem arrives while it is open: closed again, saying how many.
+    banner.tap(banner);
+    bar.render(queueState({ conexao: CONEXAO.REVOGADO, outrosUsuarios: [], recusados: ['simulacao_nao_permitida'] }), DISK_OK);
+    assert.equal(banner.classes.has('aviso-fixo-aberto'), false);
+    assert.equal(toggle.textContent, 'ver tudo (2)');
+    assert.equal(documentRef.getElementById('aviso-fixo-textos').children.length, 2, 'every warning is still there');
+});
+
+test('the bar puts the short texts on screen and the long ones in the titles', () => {
+    const documentRef = createFakeBarDocument();
+    const bar = createStatusBar(documentRef, { fonte: { nome: 'Contador 1' } });
+
+    bar.render(queueState({ pendentes: 12, aguardandoHorario: 3, outrosUsuarios: ['maria', 'joao'] }), DISK_OK);
+
+    assert.equal(documentRef.getElementById('st-pendentes').textContent, '12 (3 sem horário)');
+    assert.equal(documentRef.getElementById('st-pendentes').parentElement.title, '12 na fila, 3 aguardando horário oficial');
+    assert.equal(documentRef.getElementById('st-outros').textContent, 'maria +1');
+    assert.equal(documentRef.getElementById('st-outros').parentElement.title, 'maria, joao');
 });

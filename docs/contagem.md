@@ -219,10 +219,28 @@ to the start recorded in race control.
 - **Type every crossing, including the first one after the start.** That
   first crossing is the car's pass zero.
 - Wrong number? Press **desfazer** next to it in the recent list. Do not try
-  to compensate by skipping the next lap.
+  to compensate by skipping the next lap. The big box above the keys then
+  says "Desfeito: carro N".
+- After each entry the big box above the keys shows the number, the team
+  and at most **one short warning line** ("REPETIDO há 3 s: desfazer?",
+  "NÃO CLASSIFICADO: avise", "Número fora da lista"; with two, the most
+  serious one). The whole sentence of every warning is on that entry's row
+  in the recent list. Before the first entry the box says what to do in the
+  mode on screen ("Digite o número", "Toque no carro").
+- **Nothing above the keys and tiles ever changes height**: not the big box,
+  not the status bar, not a warning banner. A box that grew by one line of
+  warning moved every key down by about one keypad row, and the next tap
+  landed on the car below the one aimed at (26SE). Texts too long for their
+  line are cut with "…".
 - The top of the page always shows: your source, the race clock, whether you
-  are connected, how many entries are waiting to upload, and who else is
-  counting on the same source.
+  are connected, how many entries are waiting to upload ("12 (3 sem
+  horário)": three of them wait for the official time), and who else is
+  counting on the same source (one name, then "+N").
+- A problem with this device (blocked, storage, records refused) shows as a
+  **red banner over the bottom of the status bar**, flashing when it
+  appears. Tap it to read it all ("ver tudo") and "recolher" to close it;
+  "Tentar de novo" is inside. Where nothing may be recorded any more, the
+  banner is simply shown open.
 - You see warnings about your own typing only. You never see what the other
   counters typed. That is deliberate: independence is what makes the
   cross-check worth anything.
@@ -1175,3 +1193,11 @@ instead of trampling each other. Never run it against production.
   what answers a protest.
 - **The simulation never changes settings**, and simulated records are
   refused unless the prova allows them.
+- **The count page's flash, status bar and banner have a fixed height**
+  (`contar-destaque.js`, `status-bar.js`, `.destaque` and `.barra-linha` in
+  `contagem.css`). The texts that go in them are short on purpose, and their
+  long form lives in the recent list, the title attribute and the screen
+  reader text. A change there must keep every state at the same height:
+  the placeholder, a clean pass, a repeat, two warnings, "NÃO REGISTRADO", a
+  long team name, an undo, a held count, a banner. This was checked in
+  headless Chromium at 360 px wide; jsdom cannot measure layout.

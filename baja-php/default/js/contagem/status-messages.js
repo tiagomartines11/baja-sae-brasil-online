@@ -136,3 +136,40 @@ export function describeConnection(state, problems) {
         [CONEXAO.SEM_PERMISSAO]: 'Sem permissão',
     }[state.conexao];
 }
+
+// The status bar keeps the same height whatever it says (style sheet:
+// .barra-linha): a line that wrapped moved the keypad and the tiles under the
+// counter's finger. So its texts are short, and the long form goes in the
+// title (a long press or hover shows it).
+
+/**
+ * "Na fila": records not uploaded yet, saying how many of them wait for the
+ * official time (typed before this page knew the server's time).
+ *
+ * @returns {{texto: string, titulo: string}}
+ */
+export function describeQueue(state) {
+    const held = state.aguardandoHorario > 0 ? state.aguardandoHorario : 0;
+    return {
+        texto: String(state.pendentes) + (held > 0 ? ' (' + held + ' sem horário)' : ''),
+        titulo: state.pendentes + ' na fila' + (held > 0 ? ', ' + held + ' aguardando horário oficial' : ''),
+    };
+}
+
+const OUTROS_VISIVEIS = 1;
+
+/**
+ * Who else is counting on this source: one name, then how many more (the
+ * line is short; a handover is usually one other person).
+ *
+ * @param {string[]} names
+ * @returns {{texto: string, titulo: string}}
+ */
+export function describeOthers(names) {
+    if (names.length === 0) {
+        return { texto: 'ninguém', titulo: 'ninguém' };
+    }
+    const shown = names.slice(0, OUTROS_VISIVEIS).join(', ');
+    const more = names.length - OUTROS_VISIVEIS;
+    return { texto: more > 0 ? shown + ' +' + more : shown, titulo: names.join(', ') };
+}

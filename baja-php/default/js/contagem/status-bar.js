@@ -1,9 +1,17 @@
 // Draws the always-visible status bar and the fixed warning banner shared by
 // the count page and the pit page. Reads nothing, decides nothing: it turns a
 // state object into text.
+//
+// Neither may move the page below them: the keypad and the tiles are right
+// there, and a tap aimed at one key would land on the one below. The bar's
+// lines never wrap (long texts are cut, the whole text is in the title), and
+// the banner lies OVER the bottom of the bar, two lines high, until somebody
+// taps it to read it all (style sheet: .aviso-fixo).
 
 import { describeOfficialTime, describeRaceClock, formatTimeOfDay, TEXTO_VERIFICANDO } from './race-clock.js';
-import { describeBanner, describeConnection } from './status-messages.js';
+import {
+    describeBanner, describeConnection, describeOthers, describeQueue,
+} from './status-messages.js';
 
 export function createStatusBar(documentRef, config) {
     const element = (id) => documentRef.getElementById(id);
@@ -20,7 +28,25 @@ export function createStatusBar(documentRef, config) {
 
     const avisoFixoTextos = element('aviso-fixo-textos');
     const botaoTentarDeNovo = element('btn-reconectar');
+    const botaoAlternar = element('btn-aviso-fixo');
     let renderedBannerSignature = null;
+    let bannerCount = 0;
+    let bannerOpen = false;
+
+    function setBannerOpen(open) {
+        bannerOpen = open;
+        avisoFixo.classList.toggle('aviso-fixo-aberto', open);
+        botaoAlternar.setAttribute('aria-expanded', open ? 'true' : 'false');
+        botaoAlternar.textContent = open ? 'recolher' : 'ver tudo' + (bannerCount > 1 ? ' (' + bannerCount + ')' : '');
+    }
+
+    // A tap anywhere on the closed banner opens it; "recolher" closes it.
+    avisoFixo.addEventListener('click', (event) => {
+        if (event.target === botaoTentarDeNovo) {
+            return;
+        }
+        setBannerOpen(event.target === botaoAlternar ? !bannerOpen : true);
+    });
 
     function renderBanner(state, problems) {
         const banner = describeBanner(state, problems);
@@ -39,6 +65,12 @@ export function createStatusBar(documentRef, config) {
         }
         avisoFixo.hidden = banner.avisos.length === 0;
         botaoTentarDeNovo.hidden = !banner.oferecerNovaTentativa;
+        // Something new to say: closed again, and it flashes once more.
+        bannerCount = banner.avisos.length;
+        setBannerOpen(false);
+        avisoFixo.classList.remove('aviso-fixo-novo');
+        void avisoFixo.offsetWidth;
+        avisoFixo.classList.add('aviso-fixo-novo');
     }
 
     return {
@@ -54,6 +86,7 @@ export function createStatusBar(documentRef, config) {
 
             const serverFonte = state.servidor && state.servidor.fonte;
             fonte.textContent = serverFonte && serverFonte.nome ? serverFonte.nome : config.fonte.nome;
+            fonte.title = fonte.textContent;
 
             const connectionClass = state.turnoEncerrado ? 'encerrado' : state.conexao;
             conexao.textContent = describeConnection(state, problems);
@@ -61,15 +94,18 @@ export function createStatusBar(documentRef, config) {
 
             // Records typed before this page knew the server's time are in
             // the queue too; saying why they wait avoids "why is it stuck?".
-            const held = state.aguardandoHorario > 0 ? ' (' + state.aguardandoHorario + ' aguardando horário oficial)' : '';
-            pendentes.textContent = String(state.pendentes) + held;
+            const queueText = describeQueue(state);
+            pendentes.textContent = queueText.texto;
+            pendentes.parentElement.title = queueText.titulo;
             pendentes.parentElement.classList.toggle('tem-pendentes', state.pendentes > 0);
             ultimoSync.textContent = formatTimeOfDay(state.ultimoSyncMs, config.fuso || null);
 
             // Names of other people counting on THIS source (a handover, or
             // two people sharing a counter). Never anything about what they
             // typed, and never anything about the other sources.
-            outros.textContent = state.outrosUsuarios.length > 0 ? state.outrosUsuarios.join(', ') : 'ninguém';
+            const others = describeOthers(state.outrosUsuarios);
+            outros.textContent = others.texto;
+            outros.parentElement.title = others.titulo;
 
             renderBanner(state, problems);
         },
