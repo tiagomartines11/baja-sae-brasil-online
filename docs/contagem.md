@@ -581,7 +581,12 @@ review screen, "excluir esta fonte" for the interval, or with no end time
 h:mm:ss** on the open exclusion: it becomes an exclusion with that end, in
 one step. (Undoing it instead would make the whole gap count as passes that
 counter missed.) To stop using a source altogether, deactivate it on the
-Fontes page: what it recorded before stays in the count.
+Fontes page: what it recorded before stays in the count. Activating it
+again does **not** bring back what its phone sent while it was off: that
+period is kept as a period off (`periodos_fora`). To count it after all,
+tick "ao reativar, contar também o que ela enviou enquanto estava
+desativada" when activating it. A source can also be created switched off
+("criar desativada"), so nothing it sends counts until it is switched on.
 
 **A counter must be removed, or one phone must be stopped.** On
 **Usuários**, "remover" takes the person off the source (or, under Box e
@@ -763,12 +768,84 @@ Two scripts run without a browser (see the top of each file):
 
 - **Automated systems** post to the same endpoint as the browsers. Create
   the source with type `automatica` on the Fontes page, press "criar token"
-  and give the token (shown once) to the system. If its timing is
-  trustworthy set its timing grade to `precisa`; its times then replace the
-  human ones.
+  and give the token (shown once) to the system. A new automatic source
+  starts as an **observer**: nothing it sends counts until it is promoted
+  (see [Visão computacional](#visão-computacional)). If its timing is
+  trustworthy set its timing grade to `precisa`; once it counts, its times
+  replace the human ones (the page asks first).
 - **Paper totals**: create a source of type `totais` and paste
   `carro, voltas` lines. Totals never change the official count; they are
   compared with it and differences are flagged.
+
+### Visão computacional
+
+A camera reading car numbers is a question mark until it has been measured
+at a real race. The app is ready for one, and none of this shows or costs
+anything while no source is an observer and no source has an image address.
+
+**Observer role.** An `automatica` source has a *papel*: `votante` (counts,
+like a counter) or `observadora`. New automatic sources start as
+observers. An observer's entries are stored and shown on its lane, marked
+"fonte observadora", but they are set aside in the same place as the
+entries of a switched-off source: they are in no pass group, set no pass
+time (even with `precisa`), raise no flag, and the observer is never
+*expected*, so it can neither miss a pass nor hold one back while its
+phone is offline. It still turns "offline" when it stops sending. A race
+with an observer counts exactly what the same race without it counts; a
+test checks that.
+
+Instead, after counting, `ObserverComparator` measures it against the
+official passes:
+
+| Result | Meaning |
+|---|---|
+| acerto | paired with an official pass of the same car within `janela_ms` (closest pairs first, each entry and pass used once) |
+| leitura trocada | no pass of its car, but another car's official pass within 2 s that it has no entry for: it read that number wrong (car X read as Y) |
+| falso positivo | neither: it saw a car that did not pass |
+| falta | an official pass, while it was observing and had synced past it, with no entry |
+
+plus the median offset from the pass time and the 90th percentile of its
+size. The review screen shows this in the source's block (instead of a
+counter's numbers, and with no column in the car table), the Fontes page
+under the source, and Controle de corrida offers it as a CSV, one row per
+entry and per missed pass ("Fonte observadora x contagem oficial").
+
+**Promotion.** Choosing `votante` on the Fontes page asks first, and the
+promotion counts **from that moment on**, never backwards: the time it
+observed is stored as a period off. Making a votante an observer keeps the
+votes it cast before (like switching a counter off). An observer cannot be
+the primary source, and the primary source of "fonte principal" mode
+cannot be made an observer. With timing `precisa`, the page also asks
+before the source starts to count, because its time then becomes the pass
+time and the reference for every counter's habit.
+
+**What the system sends.** The upload protocol, with `"mode": "api"`.
+**`"time_quality": "exato"` is mandatory**: an entry without it is stored
+as of unknown time and never counted nor compared. Two optional fields per
+entry, stored and shown, never computed with:
+
+- `imagem`: an opaque id of the picture behind the entry, up to 64
+  characters of `A-Z a-z 0-9 . _ -` (not starting with a dot). Anything
+  else is dropped; the entry is still stored.
+- `confianca`: how sure the system was, a number from 0 to 1.
+
+**Pictures.** With an *endereço das imagens* (`imagem_base_url`) set on
+the source, each entry with an `imagem` gets `imagem_url` = address + id
+in the timeline, and clicking its chip shows the picture with its
+confidence. The picture is served by the system itself, never by this
+server, and never appears in the public feed. Expect it to be a box beside
+the track on the local network, and plan for:
+
+- **Mixed content.** The review page is https; a picture from `http://`
+  is blocked or warned about by browsers. Give the box a real hostname and
+  a certificate (Let's Encrypt with the DNS-01 challenge works for a
+  machine the internet cannot reach).
+- **Private network access.** Chrome restricts pages from the internet
+  loading from local addresses (192.168.x, 10.x). A real hostname and https
+  avoid most of it.
+- **Off the track network** the picture simply does not load. The screen
+  then says "imagem só na rede local", and the "abrir em outra aba" link
+  remains as the fallback (an http link opened on its own is allowed).
 
 ---
 
@@ -1105,7 +1182,9 @@ may send it with `navigator.sendBeacon`, with the token in the body as
 systems use the same request with `"mode": "api"`. **An external system must
 send `"time_quality": "exato"`** with each entry when it vouches for its
 times: an entry without `time_quality` is stored as of unknown time and is
-never counted. At most 500 entries (and 500 voids, 500 stop events) of one
+never counted. An external system may add `"imagem"` and `"confianca"` to
+each entry (see [Visão computacional](#visão-computacional)); from any
+other mode they are ignored. At most 500 entries (and 500 voids, 500 stop events) of one
 request are looked at; the rest are not acknowledged and must be sent again.
 A time outside 0 … 2^53 ms is stored clamped, as of unknown time, with the
 value sent kept in `ts_dispositivo_ms`. A fueling event is refused
