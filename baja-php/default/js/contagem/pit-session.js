@@ -8,6 +8,8 @@
 // other in "Saída" mode. After the mode is chosen, one tap on a car is one
 // event. (Which taps count and when the tiles move: box-toques.js.)
 
+import { RecordingBlockedError } from './access.js';
+
 export const AREA = { BOX: 'box', ABASTECIMENTO: 'abastecimento' };
 export const AREAS = [AREA.BOX, AREA.ABASTECIMENTO];
 export const SENTIDO = { ENTRADA: 'entrada', SAIDA: 'saida' };
@@ -182,11 +184,14 @@ export class PitSession {
      * @param {object}   options.store        LocalStore
      * @param {object}   options.clock        ServerClock
      * @param {function} options.generateUuid () => string
+     * @param {function} [options.recordingBlocked] () => ?string: a reason
+     *        (access.js BLOQUEIO.*) while this page may record nothing new
      */
-    constructor({ store, clock, generateUuid }) {
+    constructor({ store, clock, generateUuid, recordingBlocked = () => null }) {
         this.store = store;
         this.clock = clock;
         this.generateUuid = generateUuid;
+        this.recordingBlocked = recordingBlocked;
     }
 
     /**
@@ -208,6 +213,12 @@ export class PitSession {
     recordEvent({ car, tipo, tsMs = null, mode = null, uuid = null }) {
         if (partsOfTipo(tipo) === null) {
             return Promise.reject(new Error('Unknown pit event type: ' + tipo));
+        }
+        // The one gate every way of recording goes through (taps, the number
+        // box, the simulation), box and fueling alike.
+        const blockedBecause = this.recordingBlocked();
+        if (blockedBecause !== null) {
+            return Promise.reject(new RecordingBlockedError(blockedBecause));
         }
         const time = Number.isFinite(tsMs) ? this.clock.stampAt(tsMs) : this.clock.stamp();
         const record = { uuid: uuid === null ? this.generateUuid() : uuid, car, tipo, ...time };

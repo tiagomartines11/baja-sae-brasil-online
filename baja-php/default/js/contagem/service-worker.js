@@ -22,6 +22,11 @@ const SHELL_PAGES = ['contagem_contar.php', 'contagem_box.php'];
 // How long a reload waits for the network before showing the cached page.
 const PAGE_NETWORK_TIMEOUT_MS = 4000;
 
+// Put into the offline copy when it is served because the SERVER REFUSED the
+// page (see pageFromNetworkThenCache). The page reads it (access.js, which
+// has the same two strings: this worker is not a module and cannot import).
+const ACCESS_REFUSED_META = '<meta name="contagem-acesso" content="recusado">';
+
 function isShellPage(url) {
     return SHELL_PAGES.some((pageName) => url.pathname.endsWith('/' + pageName));
 }
@@ -42,6 +47,58 @@ function isShellAsset(url) {
 
 function isUsableShell(response) {
     return response.ok && response.headers.get(SHELL_HEADER) === '1';
+}
+
+/**
+ * A redirect instead of the page. The page shells redirect a visitor with no
+ * forum session to login.php (Session::initSession); they also redirect to
+ * index.php when the address lacks the prova. A navigation request is
+ * fetched with redirect mode "manual", so what arrives here is an
+ * "opaqueredirect" (its target cannot be read); a request that followed
+ * the redirect says "redirected". Either way: not a decision about access.
+ */
+function isRedirect(response) {
+    return response.type === 'opaqueredirect' || response.redirected === true;
+}
+
+/**
+ * The server REFUSED this person the page: "Você não tem acesso a essa
+ * página" (Session::permissionCheck and the shells' own check die() with it,
+ * status 200), a 403, a 404, a forum user unknown to this system.
+ *
+ * NOT a refusal:
+ *   - a redirect (see isRedirect): the forum login expired, or nobody is
+ *     logged in. Counting survives an expired forum login: the device token
+ *     is the credential (see Sync/SyncHandler.php), and a counter four hours
+ *     into the race must not lose the page because the forum session ran
+ *     out. The token on the phone is that counter's own (one token per user,
+ *     device-token.js).
+ *     What this leaves open: another person, not logged in, picking up a
+ *     phone a counter left. That was so before, and it is bounded on the
+ *     server: removing a counter's link revokes their devices, and a pit
+ *     phone is refused at its next upload once its user's pit code is gone.
+ *   - a server error (5xx): trouble on the way, like no network at all.
+ */
+function isRefusal(response) {
+    return response !== null && !isUsableShell(response) && !isRedirect(response) && response.status < 500;
+}
+
+/**
+ * The offline copy, marked for the page as "served instead of a refused
+ * page". The page then records nothing new and says why (access.js). The
+ * copy in the cache is not changed: served for want of a network, it is the
+ * normal page again.
+ */
+async function markedAsRefused(cachedResponse) {
+    const html = await cachedResponse.text();
+    const marked = html.includes('</head>')
+        ? html.replace('</head>', ACCESS_REFUSED_META + '\n</head>')
+        : ACCESS_REFUSED_META + html;
+    return new Response(marked, {
+        status: cachedResponse.status,
+        statusText: cachedResponse.statusText,
+        headers: cachedResponse.headers,
+    });
 }
 
 async function precacheAssets() {
@@ -107,10 +164,14 @@ function fetchWithTimeout(request, timeoutMs) {
 
 /**
  * Page shells: network first, so config and permissions are fresh whenever
- * there is a connection. The cached copy is used when the network fails, is
- * too slow, or answers with something that is not the shell (session expired,
- * access removed): the counter must always be able to get back to the page
- * that holds their unsent entries and the export button.
+ * there is a connection. The cached copy is used when the network fails or is
+ * too slow: counting with no signal is what the copy is for. It is ALSO used
+ * when the server answers with something that is not the shell: whoever
+ * recorded on this phone must always be able to get back to the page that
+ * holds their unsent entries and the export button. When that answer was a
+ * REFUSAL (isRefusal: access removed, another user without access logged in)
+ * the copy is MARKED, and the page uploads and exports without recording
+ * anything new. When it was the login redirect, the copy is served as it is.
  */
 async function pageFromNetworkThenCache(request) {
     const cache = await caches.open(CACHE_NAME);
@@ -126,7 +187,7 @@ async function pageFromNetworkThenCache(request) {
     }
     const cachedResponse = await cache.match(request.url);
     if (cachedResponse) {
-        return cachedResponse;
+        return isRefusal(networkResponse) ? markedAsRefused(cachedResponse) : cachedResponse;
     }
     if (networkResponse !== null) {
         return networkResponse;

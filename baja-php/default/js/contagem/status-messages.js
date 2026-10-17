@@ -10,6 +10,7 @@
 
 import { CONEXAO } from './sync-queue.js';
 import { ARMAZENAMENTO } from './storage-open.js';
+import { TEXTO_BLOQUEIO } from './access.js';
 
 const TEXTO_REVOGADO = 'Este aparelho foi desconectado desta contagem e não está enviando. '
     + 'Tudo o que você registrou continua guardado aqui. Toque em “Exportar meus dados” '
@@ -68,12 +69,19 @@ const TEXTO_ARMAZENAMENTO = {
  * @param {object}  problems
  * @param {?string} problems.tokenProblem  'sem_permissao' | 'dispositivo_revogado' | 'sem_sessao' | 'sem_rede' | null
  * @param {string}  problems.armazenamento one of ARMAZENAMENTO.*
+ * @param {?string} [problems.bloqueio]   access.js BLOQUEIO.* while nothing new may be recorded
  * @returns {{avisos: string[], oferecerNovaTentativa: boolean}}
  *          `avisos`: every warning that applies, most dangerous first.
  *          `oferecerNovaTentativa`: whether to show the "Tentar de novo" button.
  */
 export function describeBanner(state, problems) {
     const avisos = [];
+
+    // First: it says why the entry controls are gone.
+    const accessWarning = TEXTO_BLOQUEIO[problems.bloqueio] || null;
+    if (accessWarning !== null) {
+        avisos.push(accessWarning);
+    }
 
     const storageWarning = TEXTO_ARMAZENAMENTO[problems.armazenamento] || null;
     if (storageWarning !== null) {
@@ -125,5 +133,6 @@ export function describeConnection(state, problems) {
         [CONEXAO.ONLINE]: 'Conectado',
         [CONEXAO.OFFLINE]: 'Sem conexão',
         [CONEXAO.REVOGADO]: 'Envio bloqueado',
+        [CONEXAO.SEM_PERMISSAO]: 'Sem permissão',
     }[state.conexao];
 }

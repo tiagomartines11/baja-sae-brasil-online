@@ -104,7 +104,7 @@ final class HostileUploadTest extends DbTestCase
      */
     public function testAnAbsurdTimeOnAStopEventIsStoredTheSameWay(): void
     {
-        $token = DeviceTokens::issue(DeviceTokens::boxSourceFor($this->prova), self::USER_PREFIX . 'box', 'Telefone do box');
+        $token = $this->issuePitLogToken();
         $event = [
             'uuid' => self::newUuid(), 'car' => self::CAR_A, 'tipo' => 'box_entrada',
             'ts_ms' => PHP_INT_MAX, 'time_quality' => 'exato', 'ts_device_ms' => 1,
@@ -138,7 +138,7 @@ final class HostileUploadTest extends DbTestCase
     public function testAStopEventKeepsItsTimeQualityDeviceTimeAndMode(): void
     {
         $this->changeSettings(['permitir_simulacao' => true]);
-        $token = DeviceTokens::issue(DeviceTokens::boxSourceFor($this->prova), self::USER_PREFIX . 'box', 'Telefone do box');
+        $token = $this->issuePitLogToken();
         $event = [
             'uuid' => self::newUuid(), 'car' => self::CAR_A, 'tipo' => 'box_entrada', 'mode' => 'simulacao',
             'ts_ms' => $this->at(120), 'time_quality' => 'estimado', 'ts_device_ms' => $this->at(120) + 4321,
@@ -168,7 +168,7 @@ final class HostileUploadTest extends DbTestCase
      */
     public function testFuelingEventsAreRefusedWhileTheProvaDoesNotLogFueling(): void
     {
-        $token = DeviceTokens::issue(DeviceTokens::boxSourceFor($this->prova), self::USER_PREFIX . 'box', 'Telefone do box');
+        $token = $this->issuePitLogToken();
         $common = ['car' => self::CAR_A, 'ts_ms' => $this->at(120), 'time_quality' => 'exato', 'ts_device_ms' => $this->at(120)];
         $pit = ['uuid' => self::newUuid(), 'tipo' => 'box_entrada'] + $common;
         $fuel = ['uuid' => self::newUuid(), 'tipo' => 'abastecimento_entrada'] + $common;

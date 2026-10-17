@@ -6,6 +6,7 @@
 //   3. only then hand it back to be shown and uploaded.
 
 import { computeWarnings, teamNameOf } from './warnings.js';
+import { RecordingBlockedError } from './access.js';
 
 export const RECENT_LIST_SIZE = 10;
 
@@ -18,14 +19,19 @@ export class CountSession {
      * @param {function} options.getValidCars   () => ?[{numero, nome}] classified cars
      * @param {function} [options.getUnclassifiedCars] () => ?[{numero, nome}]
      * @param {function} options.getJanelaMs    () => ?number
+     * @param {function} [options.recordingBlocked] () => ?string: a reason
+     *        (access.js BLOQUEIO.*) while this page may record nothing new
      */
-    constructor({ store, clock, generateUuid, getValidCars, getUnclassifiedCars = () => null, getJanelaMs }) {
+    constructor({
+        store, clock, generateUuid, getValidCars, getUnclassifiedCars = () => null, getJanelaMs, recordingBlocked = () => null,
+    }) {
         this.store = store;
         this.clock = clock;
         this.generateUuid = generateUuid;
         this.getValidCars = getValidCars;
         this.getUnclassifiedCars = getUnclassifiedCars;
         this.getJanelaMs = getJanelaMs;
+        this.recordingBlocked = recordingBlocked;
     }
 
     /**
@@ -48,6 +54,12 @@ export class CountSession {
      *          caller must then tell the counter it was not recorded.
      */
     async recordPass({ car, typingMs, mode, tsMs = null, uuid = null }) {
+        // The one gate every way of recording goes through (keys, tiles, the
+        // simulation): a person refused the page records nothing.
+        const blockedBecause = this.recordingBlocked();
+        if (blockedBecause !== null) {
+            throw new RecordingBlockedError(blockedBecause);
+        }
         // Before anything slow: this is the instant that counts.
         const time = Number.isFinite(tsMs) ? this.clock.stampAt(tsMs) : this.clock.stamp();
         const validCars = this.getValidCars();

@@ -161,19 +161,34 @@ test('when a different person takes over the phone, a token in their own name is
     assert.deepEqual(store.getMeta('dispositivo'), { token: 'token-2', usuario: 'capitao2' });
 });
 
-test('a handover with no network keeps uploading with the previous token', async () => {
-    // Situation: the same handover, but the request for the new token fails
-    // (no signal at that moment). The entries must still be able to reach the
-    // server, so the previous, still valid token stays in use until a new one
-    // can be issued.
+test('a handover with no network does NOT borrow the previous user\'s token', async () => {
+    // SITUATION: the same handover (equipe1 hands the phone to capitao2, who
+    // logs in and opens the page), but the request for capitao2's token
+    // fails: no signal at that moment.
+    //
+    // WHAT WENT WRONG: the page fell back to equipe1's token "until a new one
+    // can be issued". Everything capitao2 typed meanwhile went up, and was
+    // stored, in equipe1's name.
     const store = await LocalStore.open(createMemoryStorage());
     const endpoint = createTokenEndpoint();
     await obtainDeviceToken({ store, requestToken: endpoint.requestToken, usuario: 'equipe1' });
     endpoint.behaviour = 'offline';
 
+    // EXPECTED: no token for now (the entries wait on the phone, nothing is
+    // lost), and capitao2's own token as soon as the signal is back.
+    await assert.rejects(
+        () => obtainDeviceToken({ store, requestToken: endpoint.requestToken, usuario: 'capitao2' }),
+        (error) => error.motivo === 'sem_rede',
+    );
+    endpoint.behaviour = 'ok';
     const result = await obtainDeviceToken({ store, requestToken: endpoint.requestToken, usuario: 'capitao2' });
+    // (token-3: the failed request was call number 2.)
+    assert.deepEqual(result, { token: 'token-3', issuedNow: true });
 
-    assert.deepEqual(result, { token: 'token-1', issuedNow: false });
+    // The same user, on the other hand, keeps their own token with no network.
+    endpoint.behaviour = 'offline';
+    const again = await obtainDeviceToken({ store, requestToken: endpoint.requestToken, usuario: 'capitao2' });
+    assert.deepEqual(again, { token: 'token-3', issuedNow: false });
 });
 
 test('a handover refused by the server does not fall back to the other person\'s token', async () => {

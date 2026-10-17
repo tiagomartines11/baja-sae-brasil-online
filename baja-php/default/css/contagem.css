@@ -153,7 +153,8 @@ button {
     background: #ffd24d;
 }
 
-.conexao-revogado {
+.conexao-revogado,
+.conexao-sem_permissao {
     background: #ff8a8a;
 }
 
@@ -219,6 +220,15 @@ button {
 .turno-encerrado-ativo .entrada,
 .turno-encerrado-ativo .seletor-modos,
 .turno-encerrado-ativo #btn-encerrar-turno {
+    display: none;
+}
+
+/* Nothing new may be recorded here (access.js): the warning banner says why.
+   The recent list, the export and the uploads stay. */
+.somente-leitura .destaque,
+.somente-leitura .entrada,
+.somente-leitura .seletor-modos,
+.somente-leitura #btn-encerrar-turno {
     display: none;
 }
 

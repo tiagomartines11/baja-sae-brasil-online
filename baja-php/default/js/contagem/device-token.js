@@ -46,9 +46,12 @@ export class TokenUnavailableError extends Error {
 export async function obtainDeviceToken({ store, requestToken, usuario }) {
     const stored = store.getMeta(META_DEVICE, null);
     const revoked = store.getMeta(META_REVOKED, false);
-    const storedIsUsable = stored !== null && !revoked;
+    // A token belongs to one user. Another user's token is never used, not
+    // even as a stopgap: the server would store this person's records in
+    // the other person's name.
+    const storedIsUsable = stored !== null && !revoked && (usuario === null || stored.usuario === usuario);
 
-    if (storedIsUsable && (usuario === null || stored.usuario === usuario)) {
+    if (storedIsUsable) {
         return { token: stored.token, issuedNow: false };
     }
 
@@ -89,9 +92,8 @@ export function storedUsableToken(store) {
 }
 
 /**
- * Handover on a shared phone with no network: the entries still have to reach
- * the server, so the previous (still valid) token keeps being used until a
- * new one can be issued.
+ * The same user's token on disk, when a new one cannot be had right now (no
+ * network, session expired): their entries still have to reach the server.
  */
 function fallBackToStoredToken(stored, storedIsUsable, motivo) {
     if (storedIsUsable) {

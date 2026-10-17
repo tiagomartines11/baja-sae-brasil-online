@@ -62,7 +62,7 @@ loses a lap. The flag `primeira_passagem_tardia` exists for that: see below.
 |---|---|---|
 | Controller (responsável pela prova) | `{evento}_{prova}`, for example `26BR_END` | Sets everything up, starts and stops the race, reviews flags |
 | Counter (contador) | `{evento}_{prova}_CONT`, granted automatically | Types car numbers on one source |
-| Pit log | same as counter | Logs cars entering and leaving the pit lane and the fueling station |
+| Pit log | `{evento}_{prova}_BOX`, ticked by an administrator as "box e abastecimento" | Logs cars entering and leaving the pit lane and the fueling station. Does not open the count page; a counter does not open the pit page |
 | Admin | `admin` | Only needed to wipe a race that has been started |
 
 A controller can do everything a counter can.
@@ -74,7 +74,11 @@ A controller can do everything a counter can.
    `DESCLAS` if the scoring formula uses it). The scoring formulas do not
    change. Existing results are not touched until the race is started.
 2. **Give the controller the prova permission** (`{evento}_{prova}`) in
-   Administração → Usuários, as for any other prova.
+   Administração → Usuários, as for any other prova. On the same page give
+   the people at the pit lane and the fueling station **"box e
+   abastecimento"** (`{evento}_{prova}_BOX`). Counters need nothing there:
+   linking them in step 4 grants their code. Removing the pit code stops
+   that person's phones at their next upload; what they logged before stays.
 3. **Create the sources.** On the prova's hub (`juiz` → click the prova) open
    **Fontes e configurações** and create one source per counter, usually
    "Contagem 1", "Contagem 2", "Contagem 3", type `manual`.

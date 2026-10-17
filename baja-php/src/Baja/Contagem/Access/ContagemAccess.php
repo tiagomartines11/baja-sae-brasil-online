@@ -9,13 +9,14 @@ use Baja\Model\ContagemFonteQuery;
 use Baja\Model\ContagemFonteUsuarioQuery;
 use Baja\Model\Prova;
 use Baja\Model\ProvaQuery;
+use Baja\Model\UserQuery;
 use Baja\Session;
 use Propel\Runtime\Propel;
 
 /**
  * Who may do what in the lap counting of a prova.
  *
- * Two permission codes exist, both checked through Session::hasPermission()
+ * Three permission codes exist, all checked through Session::hasPermission()
  * (which adds the event prefix and lets `admin` through):
  *
  *   {prova}        controller: review, race control, sources, counters,
@@ -23,6 +24,11 @@ use Propel\Runtime\Propel;
  *   {prova}_CONT   counter: may enter the count area. Which source they
  *                  count on is not in the code; it comes from their links
  *                  in contagem_fonte_usuario (see CounterLinks)
+ *   {prova}_BOX    pit log: may log cars entering and leaving the pit lane
+ *                  and the fueling station. Kept apart from _CONT on
+ *                  purpose: the people at the pit lane are often not the
+ *                  counters, and neither should get the other's page by
+ *                  default. A controller has both.
  *
  * Every page asks this class instead of testing codes itself, so the rules
  * are written down once.
@@ -30,6 +36,8 @@ use Propel\Runtime\Propel;
 final class ContagemAccess
 {
     public const COUNTER_SUFFIX = '_CONT';
+
+    public const PIT_LOG_SUFFIX = '_BOX';
 
     public const PROVA_TYPE = 'laps';
 
@@ -132,7 +140,30 @@ final class ContagemAccess
 
     public static function canUsePitLog(Prova $prova): bool
     {
-        return self::isController($prova) || self::isCounter($prova);
+        return self::isController($prova)
+            || (self::isInCurrentEvent($prova->getEventoId()) && Session::hasPermission($prova->getProvaId() . self::PIT_LOG_SUFFIX));
+    }
+
+    /**
+     * May this user STILL log stops on this prova? Asked by the upload
+     * endpoint, which has no session: only the device's user name. A pit
+     * phone keeps its token after its user's access is removed (and a
+     * browser keeps the offline copy of the page), so without this a
+     * person whose pit access was taken away could go on logging stops.
+     *
+     * The same codes as canUsePitLog(), read from the user's row:
+     * `admin`, the controller code, or the pit log code.
+     */
+    public static function userMayStillLogStops(string $username, string $eventoId, string $provaId): bool
+    {
+        $user = UserQuery::create()->findOneByUsername($username);
+        if ($user === null) {
+            return false;
+        }
+        $controllerCode = $eventoId . '_' . $provaId;
+        return $user->hasPermission('admin')
+            || $user->hasPermission($controllerCode)
+            || $user->hasPermission($controllerCode . self::PIT_LOG_SUFFIX);
     }
 
     /**

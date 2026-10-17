@@ -15,6 +15,7 @@ import { SyncHeartbeat } from './sync-heartbeat.js';
 import { createTokenSource } from './device-token.js';
 import { createPageInfo } from './page-info.js';
 import { generateUuid } from './uuid.js';
+import { shellSaysAccessRefused, recordingBlockReason } from './access.js';
 import { postJson } from './http.js';
 import { createStatusBar } from './status-bar.js';
 import { createPreferences } from './entry-modes.js';
@@ -105,7 +106,11 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
     const preferences = createPreferences(localStorageOrNull(windowRef));
     const statusBar = createStatusBar(documentRef, config);
     const stateListeners = [];
-    const problems = { tokenProblem: null, armazenamento: opened.armazenamento };
+    // Set when this is the offline copy, served because the server refused
+    // the page to whoever is using the browser now (see access.js).
+    const shellRefused = shellSaysAccessRefused(documentRef);
+    const problems = { tokenProblem: null, armazenamento: opened.armazenamento, bloqueio: null };
+    const recordingBlocked = () => recordingBlockReason({ shellRefused, queueState: queue.getState() });
     const storedOnDisk = opened.armazenamento === ARMAZENAMENTO.DISCO;
     const fetchFn = windowRef.fetch.bind(windowRef);
 
@@ -159,7 +164,9 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
         if (simulationApi === null) {
             return;
         }
-        if (info.simulationAllowed()) {
+        // The simulation records through the page; where the page may not
+        // record, there is no simulation either.
+        if (info.simulationAllowed() && recordingBlocked() === null) {
             if (windowRef[SIMULATION_GLOBAL] !== simulationApi) {
                 windowRef[SIMULATION_GLOBAL] = simulationApi;
                 installSimulationModule();
@@ -174,6 +181,10 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
 
     function renderStatus() {
         const state = queue.getState();
+        problems.bloqueio = recordingBlocked();
+        // The style sheet hides the entry controls under this class; the
+        // recent list, the export and the uploads stay.
+        documentRef.body.classList.toggle('somente-leitura', problems.bloqueio !== null);
         statusBar.render(state, problems, info.simulationAllowed());
         statusBar.renderClock(state, clock.serverNowMs(), clock.estado());
         shiftButtons.render(state);
@@ -273,6 +284,8 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
         preferences,
         ...info,
         /** True after "Encerrar meu turno": the page must not record anything. */
+        /** ?string, a reason (access.js BLOQUEIO.*) while this page may record nothing new. */
+        recordingBlocked,
         shiftEnded() {
             return queue.turnoEncerrado;
         },
