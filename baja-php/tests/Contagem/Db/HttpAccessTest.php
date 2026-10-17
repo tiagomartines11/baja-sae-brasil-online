@@ -114,6 +114,46 @@ final class HttpAccessTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: a volunteer opens the prova from the start page: first
+     * holding only the pit code, then also linked to Contagem 1 as a
+     * counter. (EntryChooserTest covers every combination in-process; this
+     * checks the page the web server actually serves.)
+     *
+     * WHAT WENT WRONG AT 26SE: the pit volunteer was refused here, and a
+     * counter with one source was redirected to it and never saw the pit
+     * page.
+     *
+     * EXPECTED: both times a page, never a redirect: the start page lists
+     * the prova, and contagem.php shows a chooser with the pit log, and
+     * then with the source too.
+     */
+    public function testTheEntryPageShowsTheChooserToThePitLogAndToACounterWithOneSource(): void
+    {
+        $this->grant(self::COUNTER, '00NE_ZZL_BOX');
+        $cookies = $this->loginAndGetCookies(self::COUNTER);
+
+        $start = $this->get('/00NE/index.php', $cookies);
+        $this->assertStringContainsString('contagem.php?p=ZZL', $start['body']);
+
+        $pitOnly = $this->get('/00NE/contagem.php?p=ZZL', $cookies);
+        $this->assertSame(200, $pitOnly['status']);
+        $this->assertStringNotContainsString(self::REFUSAL, $pitOnly['body']);
+        $this->assertStringContainsString('href="contagem_box.php?p=ZZL"', $pitOnly['body']);
+        $this->assertStringNotContainsString('contagem_contar.php', $pitOnly['body']);
+
+        $this->grant(self::COUNTER, '00NE_ZZL_CONT');
+        $this->executeSql(
+            'INSERT INTO contagem_fonte_usuario (fonte_id, usuario, adicionado_por, criado_em_ms) VALUES (?, ?, ?, ?)',
+            [$this->fontes[0]->getFonteId(), self::COUNTER, self::CONTROLLER, $this->at(0)]
+        );
+        $both = $this->get('/00NE/contagem.php?p=ZZL', $cookies);
+        $this->assertSame(200, $both['status'], 'one source is no longer a redirect');
+        $this->assertSame('', $both['location']);
+        $this->assertStringContainsString('contagem_contar.php?p=ZZL&amp;f=' . (int) $this->fontes[0]->getFonteId(), $both['body']);
+        $this->assertStringContainsString('href="contagem_box.php?p=ZZL"', $both['body']);
+    }
+
+    /**
      * SITUATION: the review screen talks to the server through small
      * addresses that answer in JSON (a format programs read). The screen
      * decides what to tell the reviewer from what kind of answer it gets.

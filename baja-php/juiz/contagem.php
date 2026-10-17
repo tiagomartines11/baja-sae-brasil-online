@@ -9,8 +9,9 @@ use Baja\Contagem\Service\LockBusy;
 use Baja\Session;
 
 // Entry point of the lap counting area. Decides where each kind of user
-// goes: the controller gets the hub, a counter goes to the source(s) a
-// controller linked them to and to nothing else.
+// goes: the controller gets the hub; everybody else gets a chooser with the
+// source(s) a controller linked them to and, with the pit code, the pit log,
+// and nothing else.
 
 Session::permissionCheck('index');
 
@@ -94,7 +95,7 @@ if (ContagemAccess::isController($prova)) {
             <li><a href="contagem_controle.php<?= $h($query) ?>">Controle de corrida</a> <span>largada, bandeira vermelha, encerramento</span></li>
             <li><a href="contagem_contadores.php<?= $h($query) ?>">Usuários</a> <span>quem conta em cada fonte, e quem registra o box e o abastecimento</span></li>
             <li><a href="contagem_fontes.php<?= $h($query) ?>">Fontes e configurações</a></li>
-            <li><a href="contagem_box.php<?= $h($query) ?>">Registro de box<?= $service->getSettings()->abastecimento ? ' e abastecimento' : '' ?></a> <span>entrada e saída, uma pessoa em cada ponta</span></li>
+            <li><a href="contagem_box.php<?= $h($query) ?>"><?= $h(ContagemAccess::pitLogLabel($prova)) ?></a> <span>entrada e saída, uma pessoa em cada ponta</span></li>
             <li><a href="dashboard.php<?= $h($query) ?>">Campos manuais</a> <span>desclassificação e outros campos digitados</span></li>
         </ul>
     </section>
@@ -116,17 +117,12 @@ if (ContagemAccess::isController($prova)) {
     exit;
 }
 
-if (!ContagemAccess::isCounter($prova)) {
+if (!ContagemAccess::mayEnter($prova)) {
     die('Você não tem acesso a essa página');
 }
 
-$linkedSources = array_values(ContagemAccess::linkedSources($prova, Pagina::username()));
-
-if (count($linkedSources) === 1) {
-    // Nothing to choose: straight to counting.
-    header('Location: contagem_contar.php' . $query . '&f=' . (int) $linkedSources[0]->getFonteId());
-    exit;
-}
+// Always a choice, even of one: see ContagemAccess::entryDestinations().
+$destinations = ContagemAccess::entryDestinations($prova, Pagina::username());
 
 Template::printHeader('Contagem - ' . $prova->getNome(), false);
 echo Pagina::stylesheetTag();
@@ -134,13 +130,13 @@ echo Pagina::stylesheetTag();
 <div class="contagem-pagina">
     <section class="contagem-bloco">
         <h2><?= $h($prova->getNome()) ?></h2>
-        <?php if ($linkedSources === []) { ?>
+        <?php if ($destinations === []) { ?>
             <p class="contagem-aviso">Você não está vinculado a nenhuma contagem. Procure o responsável pela prova.</p>
         <?php } else { ?>
-            <p>Escolha a contagem em que você vai trabalhar:</p>
+            <p>Escolha onde você vai trabalhar:</p>
             <ul class="contagem-links contagem-links-grandes">
-                <?php foreach ($linkedSources as $fonte) { ?>
-                    <li><a href="contagem_contar.php<?= $h($query) ?>&amp;f=<?= (int) $fonte->getFonteId() ?>"><?= $h($fonte->getNome()) ?></a></li>
+                <?php foreach ($destinations as $destination) { ?>
+                    <li><a href="<?= $h($destination['endereco']) ?>"><?= $h($destination['rotulo']) ?></a></li>
                 <?php } ?>
             </ul>
         <?php } ?>

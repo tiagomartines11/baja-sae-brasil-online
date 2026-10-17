@@ -158,9 +158,13 @@ to the start recorded in race control.
 
 ### Counters
 
-- Log in at `juiz`, click the prova. You land directly on your count page.
-  Do this **while you have a connection**: the first load registers your
-  device. After that the page works offline and survives a reload.
+- Log in at `juiz`, click the prova, then tap your source on the list
+  that opens. The list is always shown, even with a single source: it holds
+  every source you are linked to and, if you also log the pit lane,
+  **Registro de box**. Do this **while you have a connection**: the first
+  load registers your device. After that the count page works offline and
+  survives a reload. The list itself needs a connection, so **Voltar** on
+  the count page does not work offline; stay on the count page.
 - Open the page in **one tab only**. A second tab says "já aberto em outra
   aba" and does nothing until the first is closed.
 - Wait for the clock at the top to show the **Horário oficial**. Until the
@@ -199,6 +203,12 @@ The pit log page is used by the people standing at the pit lane and, when
 the prova logs it (`abastecimento`), at the fueling station. Entry and exit
 are usually **two people on two phones**, one at each end of the area; any
 number of phones can log the same area.
+
+- Log in at `juiz`, click the prova, then tap **Registro de box** (**Registro
+  de box e abastecimento** when the fueling station is logged) on the list
+  that opens. Somebody who also counts finds their source on the same list.
+  The controller reaches the page from the hub or the bar at the top of the
+  controller pages.
 
 - The page opens on a choice: the area (**Box** or **Abastecimento**; only
   asked when the fueling station is in use) and then **Entrada** or

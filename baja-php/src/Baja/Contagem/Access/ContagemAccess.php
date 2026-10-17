@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Contagem\Access;
 
 use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Engine\Settings;
 use Baja\Model\ContagemFonte;
 use Baja\Model\ContagemFonteQuery;
 use Baja\Model\ContagemFonteUsuarioQuery;
@@ -72,6 +73,57 @@ final class ContagemAccess
             && Session::hasPermission($prova->getProvaId() . self::COUNTER_SUFFIX);
     }
 
+    /**
+     * May the logged-in user enter the lap counting of this prova at all?
+     * The one question behind the prova's line on the juiz start page and
+     * the door of contagem.php: the controller, a counter, or somebody on
+     * the pit log. What they find inside is entryDestinations()' business.
+     */
+    public static function mayEnter(Prova $prova): bool
+    {
+        return self::isController($prova) || self::isCounter($prova) || self::canUsePitLog($prova);
+    }
+
+    /**
+     * Where somebody who is NOT the controller may go in this prova, in
+     * the order the chooser lists them: each source they are linked to,
+     * then the pit log if they hold its code. The controller gets the hub
+     * instead and never asks this.
+     *
+     * The chooser is shown even with a single destination: one tap more,
+     * but the person always sees where they are going, and a counter who
+     * also logs the pit lane finds both pages in the same place.
+     *
+     * Empty for a stale counter code (no link left, no pit code): they may
+     * enter, and are told they are not linked to anything.
+     *
+     * @return array<int, array{rotulo: string, endereco: string}> endereco is relative to juiz/, not escaped
+     */
+    public static function entryDestinations(Prova $prova, string $username): array
+    {
+        $query = '?p=' . rawurlencode($prova->getProvaId());
+        $destinations = [];
+        if (self::isCounter($prova)) {
+            foreach (self::linkedSources($prova, $username) as $fonte) {
+                $destinations[] = [
+                    'rotulo' => (string) $fonte->getNome(),
+                    'endereco' => 'contagem_contar.php' . $query . '&f=' . (int) $fonte->getFonteId(),
+                ];
+            }
+        }
+        if (self::canUsePitLog($prova)) {
+            $destinations[] = ['rotulo' => self::pitLogLabel($prova), 'endereco' => 'contagem_box.php' . $query];
+        }
+        return $destinations;
+    }
+
+    /** "Registro de box", naming the fueling station too when the prova logs it. */
+    public static function pitLogLabel(Prova $prova): string
+    {
+        $settings = Settings::fromArray($prova->getParams()->contagem ?? null);
+        return 'Registro de box' . ($settings->abastecimento ? ' e abastecimento' : '');
+    }
+
     /** Ends the request with the application's standard refusal unless the user is a controller. */
     public static function requireController(Prova $prova): void
     {
@@ -82,8 +134,8 @@ final class ContagemAccess
 
     /**
      * The active manual sources of this prova the user is linked to, in
-     * display order. One means "go straight to the count page"; several
-     * means "let them choose among these".
+     * display order. They are offered on the chooser of contagem.php
+     * (see entryDestinations()).
      *
      * @return ContagemFonte[]
      */

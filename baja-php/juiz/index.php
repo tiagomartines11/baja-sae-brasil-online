@@ -31,10 +31,10 @@ echo '<div style="max-width: 400px; margin: 0 auto"><table class="tablesorter">
         ';
 
 foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->getEventoId()) as $prova) {
-    // A laps prova is listed for its controller and for anyone allowed to
-    // count on it. contagem.php then sends each of them to the right place.
+    // A laps prova is listed for its controller, its counters and the pit
+    // log. contagem.php then sends each of them to the right place.
     if ($prova->getType() == ContagemAccess::PROVA_TYPE) {
-        if (ContagemAccess::isController($prova) || ContagemAccess::isCounter($prova)) {
+        if (ContagemAccess::mayEnter($prova)) {
             echo '<tr style="height: 40px"><td><a href="contagem.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
         }
         continue;
