@@ -1,5 +1,7 @@
-// The detail panel: the selected flag (or the selected car's whole race)
-// with its lane timeline and the decision buttons.
+// The detail panel: the selected flag (or car, or chip) and the decision
+// buttons. The lane timeline is not in it: it is the permanent panel at
+// the top of the page (revisao-linha.js), so these buttons stay in the same
+// place for every flag.
 //
 // This file only draws and reports clicks through `acoes`; what a click
 // means is decided in revisao.js.
@@ -13,10 +15,9 @@ import {
 } from './revisao-alertas.js';
 import { edicaoManualDoAlerta } from './revisao-edicao-manual.js';
 import { acoesDaEntrada, descreverSugestao, repeticoesEmAberto } from './revisao-decisoes.js';
-import { mostraCorridaInteira, quandoDoAlerta, situacaoDoCarroFora } from './revisao-fila.js';
-import { desenharRaias } from './revisao-raias.js';
+import { quandoDoAlerta, situacaoDoCarroFora } from './revisao-fila.js';
 import { SEM_IMAGEM_NA_REDE, imagemDaEntrada } from './revisao-observacao.js';
-import { ESCALA_ALERTA, ESCALA_CARRO, descricaoDoChip, encontrarEntrada } from './revisao-raias-logica.js';
+import { descricaoDoChip, encontrarEntrada } from './revisao-raias-logica.js';
 
 function campoDeCarro(valorInicial) {
   return el('input', {
@@ -100,9 +101,13 @@ function edicaoManual(contexto, alerta) {
 
 // What can be done with the chip the reviewer clicked.
 function caixaDaEntrada(contexto, entrada) {
-  const botoes = acoesDaEntrada(entrada, repeticoesEmAberto(contexto.estado)).map((opcao) => {
+  const botoes = acoesDaEntrada(entrada, repeticoesEmAberto(contexto.estado), contexto.janela).map((opcao) => {
     const agir = (extra) => contexto.acoes.acaoNaEntrada(opcao, entrada, extra);
     switch (opcao.acao) {
+      case 'desfazer_confirmacao':
+        // The quick way out of a hurried confirmation; it asks first.
+        return el('button', { type: 'button', class: 'tira-volta', disabled: contexto.ocupado, onclick: () => agir() },
+          'Desfazer a confirmação (−1 volta)');
       case 'anular':
         return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() }, 'Anular');
       case 'confirmar':
@@ -161,28 +166,16 @@ function figuraDaEntrada(entrada) {
   return figura;
 }
 
-function raiasOuCarregando(contexto, opcoes) {
+// Said where the buttons are, since they wait for it: the timeline above
+// says the same, with its "Tentar de novo".
+function esperaPelaLinha(contexto) {
   if (contexto.erroDaJanela) {
-    return el('p', { class: 'contagem-erro' }, 'Não foi possível carregar a linha do tempo. ',
-      el('button', { type: 'button', onclick: contexto.acoes.recarregar }, 'Tentar de novo'));
+    return el('p', { class: 'contagem-dica' }, 'A linha do tempo não carregou (veja acima): as decisões esperam por ela.');
   }
   if (!contexto.janela) {
-    return el('p', { class: 'vazio' }, 'Carregando a linha do tempo…');
+    return el('p', { class: 'contagem-dica' }, 'Carregando a linha do tempo…');
   }
-  return desenharRaias(contexto.janela, {
-    largadaMs: contexto.estado.corrida.largada_ms,
-    entradaSelecionadaId: contexto.entradaSelecionadaId,
-    aoEscolherEntrada: contexto.acoes.escolherEntrada,
-    ...opcoes,
-  });
-}
-
-function avisoDesatualizado(contexto) {
-  if (!contexto.desatualizado) {
-    return null;
-  }
-  return el('p', { class: 'revisao-aviso' }, 'Chegaram dados novos. ',
-    el('button', { type: 'button', onclick: contexto.acoes.recarregar }, 'Atualizar a linha do tempo'));
+  return null;
 }
 
 function entradaSelecionada(contexto) {
@@ -266,22 +259,24 @@ export function desenharDetalheDeAlerta(container, contexto) {
         semHorario ? null : el('button', { type: 'button', class: contexto.modoManual ? 'ativo' : '', onclick: acoes.alternarManual },
           'Editar manualmente')),
     campoDeMotivo(contexto),
-    avisoDesatualizado(contexto),
-    raiasOuCarregando(contexto, mostraCorridaInteira(alerta)
-      // The car's whole race: the entry of unknown time is listed under it.
-      ? { escala: ESCALA_CARRO, idsEmDestaque: alerta.passagem_ids ?? [], centrarEmMs: null }
-      : { escala: ESCALA_ALERTA, idsEmDestaque: alerta.passagem_ids ?? [], centrarEmMs: alerta.ts_ms }),
-    el('p', { class: 'contagem-dica' }, LEGENDA),
+    esperaPelaLinha(contexto),
+    el('p', { class: 'contagem-dica' }, 'Os registros deste alerta estão contornados na linha do tempo acima; clique em um para agir sobre ele.'),
     entradaSelecionada(contexto),
     // What is filled in there, and whether a "move the stray entry" form
     // comes first, depends on the kind of flag: see edicaoManualDoAlerta().
     contexto.modoManual ? edicaoManual(contexto, alerta) : null);
 }
 
-const LEGENDA = 'Clique em um registro para agir sobre ele. Riscado = anulado; contorno = envolvido neste alerta; '
-  + '"0" no canto = passagem zero (não é volta); tracejado = não conta (antes da largada, janela de largada ou depois do encerramento); '
-  + 'tracejado vermelho = passagem retida (não conta até um revisor decidir); '
-  + '"~" = horário estimado; "?" = horário desconhecido (fora da linha do tempo).';
+// A chip clicked on the live timeline, with no flag or car open.
+export function desenharDetalheDeEntrada(container, contexto) {
+  const entrada = encontrarEntrada(contexto.janela, contexto.entradaSelecionadaId);
+  substituir(container,
+    el('header', { class: 'detalhe-titulo' },
+      el('h2', {}, `Registro · carro ${entrada.carro}`),
+      el('button', { type: 'button', class: 'fechar', onclick: () => contexto.acoes.escolherEntrada(entrada.id) }, 'Fechar')),
+    caixaDaEntrada(contexto, entrada),
+    campoDeMotivo(contexto));
+}
 
 export function desenharDetalheDeCarro(container, contexto) {
   const { carro, acoes } = contexto;
@@ -300,9 +295,8 @@ export function desenharDetalheDeCarro(container, contexto) {
     carro.classificado === false
       ? el('p', { class: 'revisao-aviso' }, situacaoDoCarroFora(carro).frase)
       : null,
-    avisoDesatualizado(contexto),
-    raiasOuCarregando(contexto, { escala: ESCALA_CARRO, idsEmDestaque: [], centrarEmMs: null }),
-    el('p', { class: 'contagem-dica' }, 'A corrida inteira deste carro. Role para os lados. ', LEGENDA),
+    el('p', { class: 'contagem-dica' }, 'A linha do tempo acima mostra a corrida inteira deste carro ("Só o carro" desligado: '
+      + 'todos os carros, este em destaque). Clique em um registro para agir sobre ele.'),
     entradaSelecionada(contexto),
     campoDeMotivo(contexto),
     formularioAdicionar(contexto, carro.carro, null));

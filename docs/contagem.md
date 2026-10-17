@@ -339,9 +339,12 @@ once. The person leaving then presses **Encerrar meu turno**.
   counts; keep counting until each car has taken the flag. If a car crosses
   twice on its way in, only the first counts (`apos_encerramento`).
 - **Revisão**: the review screen. Flags are listed with the ones affecting
-  the top of the standings first. Select one to see a one-minute timeline
-  with a lane per counter (plus the pit lane and the fueling station), the
-  suggestion and its reason. Shortcuts: **A** accept the suggestion, **V**
+  the top of the standings first. The **timeline** (a lane per counter,
+  plus race control, the pit lane and the fueling station) is always on
+  screen, full width above the flags and the decision panel, and on a
+  phone above every tab; see [The timeline](#the-timeline). Select a flag
+  to see its suggestion and reason, and the timeline scrolls and zooms to
+  it. Shortcuts: **A** accept the suggestion, **V**
   void the entry, and **K** "confirm". What A and K do depends on the flag
   and is always written on the button; see
   [What A and K do on each flag](#what-a-and-k-do-on-each-flag). The rule
@@ -357,9 +360,10 @@ once. The person leaving then presses **Encerrar meu turno**.
   wrong and retyped it at once, and at 26SE undoing two such voids and
   confirming the retyped entries gave three cars a lap each. A voided
   chip's tooltip says who voided it and why.
-- A flag about a lone entry loads its timeline from a little before the
-  car's previous official pass (at most one expected lap and half a minute
-  back), so the lap the entry would make is on screen.
+- A flag about a lone entry reaches back to a little before the car's
+  previous official pass (at most one expected lap and half a minute
+  back), so the lap the entry would make is on screen, and draws the gap
+  in words: "76 s desde a passagem anterior; volta normal ~3:40".
 - Flags that put a count in doubt right now are listed first and say so
   ("o carro 23 pode estar com uma volta a menos" / "a mais"); the rest
   follow in the order of the standings.
@@ -434,6 +438,53 @@ once. The person leaving then presses **Encerrar meu turno**.
   (link on the hub). Saving them never touches the lap count, with one
   exception: changing a car's classification field recounts the race.
 
+### The timeline
+
+At 26SE the timeline only appeared after a flag or a car was picked,
+"Fechar" threw it away, and it sat under the flag's title and buttons, so
+those moved from flag to flag. Now it is a panel of its own, always there:
+
+- **Nothing selected**: it follows the race, the last five minutes at a
+  readable scale with "now" near the right edge (a blue line). Scrolling
+  back loads earlier stretches as they come into view, down to ten minutes
+  before the start; the header then says "parada no passado". **Agora**
+  comes back to the present (and closes a flag or car that is open).
+  Nothing scrolls while the pointer or the keyboard focus is on the lanes.
+- **A flag**: the same timeline scrolls and zooms to the flag's window. Its
+  entries have a thick amber outline, the other entries of its car(s) a thin
+  one, and every other car is dimmed. The flag's buttons wait until the
+  flag's stretch was loaded again after it was opened ("Carregando a linha
+  do tempo…"), as they waited for the flag's own window before.
+- **A car**: its whole race ("Só o carro N", on by default). Switched off,
+  all cars around the chip picked in its race (or its last pass), the car
+  highlighted and the others dimmed. A whole race is loaded once; when the
+  state moves on the header offers "Atualizar".
+- **A chip clicked** with nothing selected opens its box in the decision
+  panel, with the same actions as on a flag.
+
+What it loads: two-minute pieces on a fixed grid (`contagem_janela.php?de=&ate=`),
+kept by the page. A piece is asked again when the state's version changed,
+at most every 5 s, and only while it is in view; at most half an hour of
+pieces is kept on screen. The lanes have a fixed height and scroll inside,
+and the header is one line, so nothing below moves when a piece arrives.
+
+What a chip tells (the legend under the timeline says the same):
+
+| Look | Meaning |
+|---|---|
+| green | an official pass |
+| struck through, red border | voided by a reviewer |
+| struck through, grey, "C" | voided by its own counter on the phone (usually a typo retyped at once); the tooltip names who and why |
+| struck through, dotted | a repeat the engine voided by itself |
+| blue corner | counts on a reviewer's word (`confirmado_por_revisor`) |
+| blue bar along the bottom | the entry that times the pass ("Usar o tempo", `tempo_escolhido_id`) |
+| amber, thick border | a lap too short to be real that counts because a reviewer confirmed it (`volta_curta_confirmada`); its box offers **Desfazer a confirmação (−1 volta)** first, which asks |
+| dark dotted border | one counter alone, not counting yet |
+| teal, italic | an observer source's entry (compared, never counted); a click shows its picture |
+
+A counted chip's tooltip gives the lap number and the lap time, as the car
+table times it: "volta 22 · 1:15" (`grupo.volta_ms`).
+
 ### What the flags mean
 
 | Flag | Meaning |
@@ -457,7 +508,8 @@ once. The person leaving then presses **Encerrar meu turno**.
 | `divergencia_total` | Imported paper totals differ from the official count, or do not list a car that has laps |
 
 **A short lap a reviewer confirmed** stays visible: the review screen
-marks it on the car's row and on the timeline ("volta curta confirmada").
+marks it on the car's row and on the timeline ("volta curta confirmada"),
+and the chip's box offers "Desfazer a confirmação" first.
 At the race, a reviewer undid two voids and confirmed three entries in four
 seconds, and three cars were one lap over with nothing open.
 

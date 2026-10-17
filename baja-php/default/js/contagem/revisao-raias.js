@@ -28,14 +28,21 @@ function desenharRaia(raia, limites, opcoes) {
 
   const chips = entradas.map((entrada) => el('button', {
     type: 'button',
-    class: classesDoChip(entrada, opcoes.idsEmDestaque, opcoes.entradaSelecionadaId).join(' '),
+    class: classesDoChip(entrada, opcoes.idsEmDestaque, opcoes.entradaSelecionadaId, opcoes.carrosEmFoco ?? []).join(' '),
     title: `${descricaoDoChip(entrada)} · ${relogio(entrada.ts_ms - (opcoes.largadaMs ?? entrada.ts_ms))}`,
     style: { left: `${entrada.x}px`, top: `${entrada.linha * ALTURA_DA_LINHA_PX}px` },
+    // Lets a redraw give the keyboard focus back to the same entry.
+    'data-entrada': entrada.id,
     onclick: () => opcoes.aoEscolherEntrada(entrada.id),
   }, String(entrada.carro)));
 
-  return el('div', { class: raia.ativa === false ? 'raia inativa' : 'raia' },
-    el('div', { class: 'raia-nome' }, raia.nome),
+  // An observer (a camera, say) is compared with the count and never
+  // counts: its lane says so, in its own colour rather than greyed out.
+  const observadora = raia.papel === 'observadora';
+  const classe = ['raia', raia.ativa === false ? 'inativa' : '', observadora ? 'observadora' : ''].filter(Boolean).join(' ');
+  return el('div', { class: classe },
+    el('div', { class: 'raia-nome', title: observadora ? `${raia.nome}: fonte observadora, só comparada com a contagem oficial` : raia.nome },
+      raia.nome, observadora ? el('small', {}, ' observadora') : null),
     el('div', { class: 'raia-trilho', style: { height: `${linhas * ALTURA_DA_LINHA_PX}px` } }, chips));
 }
 
@@ -45,7 +52,9 @@ function desenharRaia(raia, limites, opcoes) {
 function desenharRaiaDeOcorrencias(raia, limites, opcoes) {
   const titulo = (tsMs) => relogio(tsMs - (opcoes.largadaMs ?? tsMs));
 
-  const barras = raia.estadias.map((estadia) => {
+  // Only what overlaps the lanes: a stay elsewhere would stretch the scrolling area.
+  const naJanela = (estadia) => estadia.de_ms <= limites.ate && (estadia.ate_ms ?? limites.ate) >= limites.de;
+  const barras = raia.estadias.filter(naJanela).map((estadia) => {
     const de = Math.max(estadia.de_ms, limites.de);
     const ate = Math.min(estadia.ate_ms ?? limites.ate, limites.ate);
     return el('span', {
@@ -86,7 +95,7 @@ function desenharHorarioDesconhecido(janela, opcoes) {
     'registros enviados sem o horário oficial. Não estão na linha do tempo e não contam sozinhos. ',
     entradas.map((entrada) => el('button', {
       type: 'button',
-      class: `${classesDoChip(entrada, opcoes.idsEmDestaque, opcoes.entradaSelecionadaId).join(' ')} solto`,
+      class: `${classesDoChip(entrada, opcoes.idsEmDestaque, opcoes.entradaSelecionadaId, opcoes.carrosEmFoco ?? []).join(' ')} solto`,
       title: `${entrada.raia} · ${descricaoDoChip(entrada)}`,
       onclick: () => opcoes.aoEscolherEntrada(entrada.id),
     }, String(entrada.carro))));
@@ -113,29 +122,70 @@ function desenharRegua(limites, opcoes) {
 
   // A vertical line at the flag's moment. It lives in the ruler and is
   // simply tall enough to cross every lane below it.
-  const linhaDoAlerta = opcoes.centrarEmMs === null || opcoes.centrarEmMs === undefined ? null : el('span', {
+  const linhaDoAlerta = opcoes.alertaEmMs === null || opcoes.alertaEmMs === undefined ? null : el('span', {
     class: 'linha-do-alerta',
-    style: { left: `${posicaoPx(opcoes.centrarEmMs, limites.de, opcoes.escala) + LARGURA_DO_CHIP_PX / 2}px` },
+    style: { left: `${posicaoPx(opcoes.alertaEmMs, limites.de, opcoes.escala) + LARGURA_DO_CHIP_PX / 2}px` },
   });
+  // The present moment, moved every second by revisao-linha.js. Hidden
+  // while it is past the end of the lanes, which it would stretch.
+  const linhaAgora = opcoes.agoraMs === null || opcoes.agoraMs === undefined ? null : el('span', {
+    class: 'linha-agora',
+    title: 'agora',
+    hidden: opcoes.agoraMs > limites.ate,
+    style: { left: `${posicaoPx(Math.min(opcoes.agoraMs, limites.ate), limites.de, opcoes.escala)}px` },
+  });
+  // Stretches still on their way from the server.
+  const carregando = (opcoes.trechosCarregando ?? []).map((trecho) => el('span', {
+    class: 'trecho-carregando',
+    title: 'carregando…',
+    style: {
+      left: `${posicaoPx(Math.max(trecho.de, limites.de), limites.de, opcoes.escala)}px`,
+      width: `${posicaoPx(Math.min(trecho.ate, limites.ate), Math.max(trecho.de, limites.de), opcoes.escala)}px`,
+    },
+  }));
 
   return el('div', { class: 'raia raia-regua' },
     el('div', { class: 'raia-nome' }, 'tempo de prova'),
-    el('div', { class: 'raia-trilho' }, marcas, linhaDoAlerta));
+    el('div', { class: 'raia-trilho' }, carregando, marcas, linhaDoAlerta, linhaAgora));
+}
+
+// The gap between a lone entry and the car's previous official pass,
+// under the ruler: "76 s desde a passagem anterior; volta normal ~3:40".
+function desenharLacuna(lacuna, limites, opcoes) {
+  const de = Math.max(lacuna.de, limites.de);
+  return el('div', { class: 'raia raia-lacuna' },
+    el('div', { class: 'raia-nome' }, 'desde a anterior'),
+    el('div', { class: 'raia-trilho' },
+      el('span', {
+        class: 'lacuna',
+        title: lacuna.texto,
+        style: {
+          left: `${posicaoPx(de, limites.de, opcoes.escala) + LARGURA_DO_CHIP_PX / 2}px`,
+          width: `${Math.max(2, posicaoPx(Math.min(lacuna.ate, limites.ate), de, opcoes.escala))}px`,
+        },
+      }, lacuna.texto)));
 }
 
 // opcoes:
 //   escala                 pixels per second
 //   largadaMs              start of the race, for the labels
 //   idsEmDestaque          entry ids of the selected flag
+//   carrosEmFoco           cars whose other entries are drawn weakly (the rest dimmed)
 //   entradaSelecionadaId   the chip the reviewer clicked
-//   centrarEmMs            moment to scroll to (the flag's), or null
+//   alertaEmMs             the flag's moment (a line across the lanes), or null
+//   agoraMs                the present moment (a line), or null
+//   lacuna                 lacunaDaPassagemAnterior(), or null
+//   trechosCarregando      [{de, ate}] still loading
 //   aoEscolherEntrada(id)  called when a chip is clicked
+// Returns {conteudo, extras, limites}: what goes in the scrolling area,
+// what is listed under it (entries and stops of unknown time), and the
+// moments the left and right edges of the lanes stand for (null when there
+// is nothing to draw). Where it is scrolled to is the caller's business.
 export function desenharRaias(janela, opcoes) {
   const limites = limitesDaJanela(janela);
-  const paradasSemHorario = desenharParadasSemHorario(janela);
+  const extras = [desenharHorarioDesconhecido(janela, opcoes), desenharParadasSemHorario(janela)].filter(Boolean);
   if (limites === null) {
-    const soltos = [desenharHorarioDesconhecido(janela, opcoes), paradasSemHorario].filter(Boolean);
-    return soltos.length > 0 ? el('div', {}, soltos) : el('p', { class: 'vazio' }, 'Nenhum registro neste período.');
+    return { conteudo: el('p', { class: 'vazio' }, 'Nenhum registro neste período.'), extras, limites };
   }
 
   const larguraPx = posicaoPx(limites.ate, limites.de, opcoes.escala) + LARGURA_DO_CHIP_PX;
@@ -143,18 +193,8 @@ export function desenharRaias(janela, opcoes) {
   // lanes line up and the container scrolls sideways as one.
   const conteudo = el('div', { class: 'raias-conteudo', style: { '--largura-trilho': `${larguraPx}px` } },
     desenharRegua(limites, opcoes),
+    opcoes.lacuna ? desenharLacuna(opcoes.lacuna, limites, opcoes) : null,
     (janela.raias ?? []).map((raia) => desenharRaia(raia, limites, opcoes)),
     raiasDeOcorrencias(janela).map((raia) => desenharRaiaDeOcorrencias(raia, limites, opcoes)));
-
-  const rolagem = el('div', { class: 'raias' }, conteudo);
-  const desconhecidos = desenharHorarioDesconhecido(janela, opcoes);
-
-  // The scroll position can only be set once the element is on the page.
-  if (opcoes.centrarEmMs !== null && opcoes.centrarEmMs !== undefined) {
-    requestAnimationFrame(() => {
-      const alvo = posicaoPx(opcoes.centrarEmMs, limites.de, opcoes.escala);
-      rolagem.scrollLeft = Math.max(0, alvo - rolagem.clientWidth / 2);
-    });
-  }
-  return desconhecidos || paradasSemHorario ? el('div', {}, rolagem, desconhecidos, paradasSemHorario) : rolagem;
+  return { conteudo, extras, limites };
 }

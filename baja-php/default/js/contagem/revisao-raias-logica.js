@@ -1,6 +1,8 @@
 // Geometry of the lane timeline: where each chip goes. Pure functions,
 // tested with `node --test`; the drawing itself is in revisao-raias.js.
 
+import { duracao } from './revisao-formato.js';
+
 // Pixels per second. A flag shows about a minute and must spread the chips
 // out; a car's whole race is hours long and must still fit a scroll bar.
 export const ESCALA_ALERTA = 14;
@@ -172,12 +174,25 @@ export function marcasDeTempo(deMs, ateMs, escalaPxPorSegundo, espacoMinimoPx = 
 }
 
 // The class names of a chip, from the markers the server sends.
-export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
+//
+// `carrosEmFoco` are the cars of the flag (or the car) the reviewer picked:
+// their other entries are drawn weakly ("do-carro") and every other car's
+// are dimmed ("apagada"), so the flag's own entries ("em-destaque") stand
+// out without hiding what is around them. Empty: nothing is dimmed.
+export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId, carrosEmFoco = []) {
   const classes = ['chip'];
   if (entrada.anulada) {
     classes.push('anulada');
+    // A counter voiding their own entry on the phone usually typed it
+    // wrong and retyped it at once: not the same as a reviewer's void.
+    if (anulacaoDaEntrada(entrada)?.origem === 'contador') {
+      classes.push('anulada-pelo-contador');
+    }
   } else if (entrada.anulada_auto) {
     classes.push('anulada-auto');
+  } else if (entrada.motivo_fora_de_uso === 'fonte_observadora') {
+    // Out of use by design, not by accident: it has a look of its own.
+    classes.push('observadora');
   } else if (entrada.fora_de_uso) {
     classes.push('fora-de-uso');
   }
@@ -193,6 +208,14 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
   if (entrada.grupo?.volta_curta_confirmada) {
     classes.push('volta-curta-confirmada');
   }
+  // Counts on a reviewer's word rather than on two counters agreeing.
+  if (entrada.grupo?.confirmado_por_revisor && !entrada.adicionada_por_revisor) {
+    classes.push('confirmada-pelo-revisor');
+  }
+  // The entry a reviewer chose to time the pass ("usar_tempo").
+  if (entrada.grupo?.tempo_escolhido_id === entrada.id) {
+    classes.push('tempo-escolhido');
+  }
   // Passes the rules of the race keep out of the lap count, and the pass
   // zero, must be told apart from laps at a glance.
   const papel = entrada.grupo?.papel;
@@ -206,6 +229,8 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
     classes.push('apos-encerramento');
   } else if (papel === 'retida') {
     classes.push('retida');
+  } else if (solitariaPendente(entrada)) {
+    classes.push('solitaria-pendente');
   }
   if (entrada.qualidade_tempo === 'estimado') {
     classes.push('tempo-estimado');
@@ -214,12 +239,23 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
   }
   if (idsEmDestaque.includes(entrada.id)) {
     classes.push('em-destaque');
+  } else if (carrosEmFoco.length > 0) {
+    const doCarro = carrosEmFoco.includes(entrada.carro) || carrosEmFoco.includes(entrada.carro_digitado);
+    classes.push(doCarro ? 'do-carro' : 'apagada');
   }
   if (entrada.id === entradaSelecionadaId) {
     classes.push('selecionada');
   }
   return classes;
 }
+
+// One counter alone typed this pass and nobody decided yet: it waits for
+// a second witness or a reviewer.
+function solitariaPendente(entrada) {
+  return entrada.grupo?.papel === 'pendente' && (entrada.grupo.passagem_ids ?? []).length === 1;
+}
+
+const anulacaoDaEntrada = (entrada) => (entrada.decisoes ?? []).find((decisao) => decisao.tipo === 'anular') ?? null;
 
 const MOTIVOS_FORA_DE_USO = {
   antes_da_largada: 'fora de uso: registrado antes da largada',
@@ -251,9 +287,13 @@ export function descricaoDoPapel(grupo) {
     case 'apos_encerramento':
       return 'depois do encerramento (ignorada, não conta volta)';
     case 'volta':
-      return `volta ${grupo.numero_volta}`;
+      // "volta 22 · 1:15": the lap time is the engine's (habit-corrected),
+      // the one the car table and the standings show.
+      return `volta ${grupo.numero_volta}${grupo.volta_ms ? ` · ${duracao(grupo.volta_ms)}` : ''}`;
     case 'pendente':
-      return 'ainda não conta como volta';
+      return (grupo.passagem_ids ?? []).length === 1
+        ? 'ainda não conta como volta: só um contador registrou'
+        : 'ainda não conta como volta';
     case 'retida':
       return MOTIVOS_DE_RETENCAO[grupo.motivo_retencao] ?? MOTIVOS_DE_RETENCAO.proxima_demais;
     default:
@@ -266,7 +306,7 @@ export function descricaoDoPapel(grupo) {
 // digitei errado", "anulada pela revisão (jbresolin)". A counter voiding
 // their own entry on the phone usually typed it wrong and retyped it.
 export function descricaoDaAnulacao(entrada) {
-  const anulacao = (entrada.decisoes ?? []).find((decisao) => decisao.tipo === 'anular');
+  const anulacao = anulacaoDaEntrada(entrada);
   if (!anulacao) {
     return 'anulada';
   }
@@ -298,6 +338,9 @@ export function descricaoDoChip(entrada) {
       partes.push(escolhido === entrada.id
         ? 'o horário desta passagem é o deste registro (escolhido pela revisão)'
         : 'não define o horário desta passagem (a revisão escolheu outro registro)');
+    }
+    if (entrada.grupo.confirmado_por_revisor && !entrada.adicionada_por_revisor) {
+      partes.push('conta porque um revisor confirmou');
     }
     if (entrada.grupo.volta_curta_confirmada) {
       partes.push('VOLTA CURTA CONFIRMADA: curta demais para ser real, conta porque a revisão confirmou');

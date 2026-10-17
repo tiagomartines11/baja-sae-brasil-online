@@ -5,10 +5,11 @@
 import { desenharAvisoDosResultados, desenharBarra, desenharFila } from './revisao-barra.js';
 import { chaveAoVivo, chaveDoDetalhe as chaveDoPainel } from './revisao-conexao.js';
 import { podeDecidirSobreAlerta } from './revisao-decisoes.js';
-import { desenharDetalheDeAlerta, desenharDetalheDeCarro } from './revisao-detalhe.js';
+import { desenharDetalheDeAlerta, desenharDetalheDeCarro, desenharDetalheDeEntrada } from './revisao-detalhe.js';
 import { el, estaDigitandoEm, substituir } from './revisao-dom.js';
 import { avisoDeReconciliacao } from './revisao-frases.js';
 import { encontrarAlerta } from './revisao-fila.js';
+import { encontrarEntrada } from './revisao-raias-logica.js';
 import { desenharFontes, desenharHistorico, desenharTabelaDeCarros } from './revisao-tabela.js';
 import {
   agoraServidorMs, escolherOrdemDosCarros, horarioOficialMs, pagina, semConexao, tela,
@@ -19,15 +20,17 @@ export const alertaSelecionado = () => (tela.selecao?.tipo === 'alerta' ? encont
 // True when the loaded timeline no longer matches the state.
 //
 // For a flag that means its entries changed (its signature is different):
-// the timeline is then reloaded on its own. For a car it means anything at
-// all changed; during a race that is every few seconds, and reloading a
-// whole race that often would be wasteful, so the panel offers a button.
+// the timeline is then reloaded on its own. For a car's whole race it means
+// anything at all changed; during a race that is every few seconds, and
+// reloading a whole race that often would be wasteful, so the timeline
+// offers a button. Pieces of time follow the state on their own
+// (revisao-linha.js) and are never behind.
 export function janelaDesatualizada() {
   if (tela.janela === null || !tela.selecao || !tela.estado) {
     return false;
   }
   if (tela.selecao.tipo === 'carro') {
-    return tela.janelaVersao !== tela.estado.versao;
+    return tela.janelaVersao !== null && tela.janelaVersao !== tela.estado.versao;
   }
   const alerta = alertaSelecionado();
   return alerta !== null && alerta.assinatura !== tela.janelaAssinatura;
@@ -48,6 +51,7 @@ export function atualizarListaDeCarros() {
 //   acoesDoDetalhe             the actions of the detail panel
 //   escolherAlerta(id), escolherCarro(numero)
 //   carregarHistoricoAntigo()
+//   desenharLinha()            the timeline at the top (revisao-linha.js)
 // Returns {desenharTudo, desenharDetalhe}.
 export function criarDesenho(ganchos) {
   // The poll calls desenharTudo() every two seconds. Redrawing parts that did
@@ -68,7 +72,10 @@ export function criarDesenho(ganchos) {
       ? (tela.estado.carros ?? []).find((linha) => linha.carro === tela.selecao.numero) ?? null
       : null;
     // Not the state's version: see chaveDoDetalhe() in revisao-conexao.js.
-    return chaveDoPainel({
+    // The chip the reviewer clicked is drawn from the timeline, which
+    // refreshes on its own: its box follows what the chip says.
+    const entrada = tela.entradaSelecionadaId === null ? null : encontrarEntrada(tela.janela, tela.entradaSelecionadaId);
+    return JSON.stringify(entrada) + chaveDoPainel({
       selecao: tela.selecao,
       alerta: alertaSelecionado(),
       carro,
@@ -84,26 +91,12 @@ export function criarDesenho(ganchos) {
     });
   }
 
-  const desenhado = { listas: null, fontes: null, detalhe: null, selecao: null };
+  const desenhado = { listas: null, fontes: null, detalhe: null };
 
   function desenharDetalhe() {
     if (!tela.estado) {
       return;
     }
-    // Keep the timeline where the reviewer scrolled it, unless the panel is
-    // about to show something else.
-    const raiasAntes = pagina.detalhe.querySelector('.raias');
-    const rolagemAnterior = raiasAntes && desenhado.selecao === tela.selecao ? raiasAntes.scrollLeft : null;
-    if (rolagemAnterior !== null) {
-      // Two frames: the timeline's own "centre on the flag" runs in the first.
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        const raiasDepois = pagina.detalhe.querySelector('.raias');
-        if (raiasDepois) {
-          raiasDepois.scrollLeft = rolagemAnterior;
-        }
-      }));
-    }
-
     const contexto = {
       estado: tela.estado,
       janela: tela.janela,
@@ -130,10 +123,12 @@ export function criarDesenho(ganchos) {
       tela.selecao = null;
       tela.janela = null;
       substituir(pagina.detalhe, el('p', { class: 'vazio' }, 'Este alerta não existe mais: foi resolvido. Escolha outro na fila.'));
+    } else if (encontrarEntrada(tela.janela, tela.entradaSelecionadaId)) {
+      // A chip clicked on the live timeline, with nothing else open.
+      desenharDetalheDeEntrada(pagina.detalhe, contexto);
     } else {
-      substituir(pagina.detalhe, el('p', { class: 'vazio' }, 'Escolha um alerta na fila ou um carro na tabela.'));
+      substituir(pagina.detalhe, el('p', { class: 'vazio' }, 'Escolha um alerta na fila, um carro na tabela ou um registro na linha do tempo.'));
     }
-    desenhado.selecao = tela.selecao;
     desenhado.detalhe = chaveDoDetalhe();
   }
 
@@ -141,6 +136,8 @@ export function criarDesenho(ganchos) {
     if (!tela.estado) {
       return;
     }
+    // First: what the timeline loaded decides whether the flag's buttons are on.
+    ganchos.desenharLinha();
     desenharBarra(pagina.barra, tela.estado, agoraServidorMs(), horarioOficialMs());
     // Permanent while the prova accepts simulated entries.
     pagina.faixaSimulacao?.classList.toggle('oculto', !tela.estado.simulacao);

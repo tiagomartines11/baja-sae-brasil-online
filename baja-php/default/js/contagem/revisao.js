@@ -1,20 +1,21 @@
 // Review screen: entry module. Polls the server and keeps track of what is
 // selected. The state lives in revisao-tela.js, the decision buttons in
-// revisao-acoes.js, what is redrawn when in revisao-desenho.js, the drawing
-// itself in the other revisao-*.js modules, and the rules worth testing in
-// the pure ones (revisao-fila.js, revisao-decisoes.js, revisao-conexao.js,
-// revisao-raias-logica.js).
+// revisao-acoes.js, what is redrawn when in revisao-desenho.js, the timeline
+// at the top in revisao-linha.js, the drawing itself in the other
+// revisao-*.js modules, and the rules worth testing in the pure ones
+// (revisao-fila.js, revisao-decisoes.js, revisao-conexao.js,
+// revisao-raias-logica.js, revisao-linha-logica.js).
 
 import { criarAcoes } from './revisao-acoes.js';
 import { indiceDeUsarTempo } from './revisao-alertas.js';
-import { SessaoExpirada, buscarCarro, buscarEstado, buscarHistorico, buscarJanela } from './revisao-api.js';
+import { SessaoExpirada, buscarEstado, buscarHistorico } from './revisao-api.js';
 import { desenharBarra, desenharBarraSemEstado } from './revisao-barra.js';
 import {
   aplicarResposta, avisoDeConexao, criarOrdemDePedidos, historicoAposResposta, proximoAtrasoMs, versaoParaPedir,
 } from './revisao-conexao.js';
 import { alertaSelecionado, atualizarListaDeCarros, criarDesenho, janelaDesatualizada } from './revisao-desenho.js';
 import { estaDigitandoEm } from './revisao-dom.js';
-import { MEIA_JANELA_MS, janelaDoAlerta, mostraCorridaInteira, voltaEsperadaDoAlerta } from './revisao-fila.js';
+import { criarLinhaDoTempo } from './revisao-linha.js';
 import {
   agoraServidorMs, horarioOficialMs, mostrarAba, mostrarMensagem, pagina, relogioOficial, tela,
 } from './revisao-tela.js';
@@ -48,10 +49,18 @@ const acoesDoDetalhe = {
   adicionar: acoes.adicionar,
   alternarManual: () => { tela.modoManual = !tela.modoManual; desenharDetalhe(); },
   anotarMotivo: (texto) => { tela.motivo = texto; },
-  escolherEntrada: (id) => { tela.entradaSelecionadaId = tela.entradaSelecionadaId === id ? null : id; desenharDetalhe(); },
+  escolherEntrada,
   recarregar: carregarJanela,
-  fechar: () => { tela.selecao = null; tela.janela = null; desenharTudo(); mostrarAba('fila'); },
+  // The timeline stays, back to following the race.
+  fechar: () => { fecharSelecao(); mostrarAba('fila'); },
 };
+
+// The permanent timeline at the top of the page.
+const linha = criarLinhaDoTempo({
+  desenharTudo: () => desenharTudo(),
+  irParaAgora: fecharSelecao,
+  escolherEntrada,
+});
 
 const { desenharTudo, desenharDetalhe } = criarDesenho({
   acoes,
@@ -59,6 +68,7 @@ const { desenharTudo, desenharDetalhe } = criarDesenho({
   escolherAlerta,
   escolherCarro,
   carregarHistoricoAntigo,
+  desenharLinha: linha.atualizar,
 });
 
 // Takes a full state. `numero` is the number of the request it answers;
@@ -107,42 +117,15 @@ async function carregarHistoricoAntigo() {
 
 // ---- selection and its timeline ------------------------------------------
 
-async function carregarJanela() {
-  const selecao = tela.selecao;
-  if (!selecao || !tela.estado) {
-    return;
-  }
-  const versao = tela.estado.versao;
-  const alerta = alertaSelecionado();
-  try {
-    let janela = null;
-    if (selecao.tipo === 'carro') {
-      janela = await buscarCarro(pagina.prova, selecao.numero);
-    } else if (mostraCorridaInteira(alerta)) {
-      janela = await buscarCarro(pagina.prova, alerta.carros[0]);
-    } else {
-      const limites = janelaDoAlerta(alerta, MEIA_JANELA_MS, voltaEsperadaDoAlerta(alerta, tela.estado));
-      // A flag with no moment (a difference to an imported total) has no timeline.
-      janela = limites
-        ? await buscarJanela(pagina.prova, limites.de, limites.ate)
-        : { de_ms: null, ate_ms: null, raias: [], ocorrencias: [] };
-    }
-    if (tela.selecao !== selecao) {
-      return; // the reviewer moved on while this was loading
-    }
-    tela.janela = janela;
-    tela.janelaVersao = versao;
-    tela.janelaAssinatura = alerta?.assinatura ?? null;
-    tela.erroDaJanela = false;
-  } catch (erro) {
-    if (tela.selecao !== selecao) {
-      return;
-    }
-    tela.erroDaJanela = true;
-  }
-  desenharDetalhe();
+// Loads again what the timeline shows (after a decision, or when the open
+// flag's entries changed). What it loads, and when the result counts as
+// loaded for the buttons, is up to revisao-linha.js.
+function carregarJanela() {
+  linha.recarregar();
 }
 
+// The timeline is not dropped: it shows the new selection as soon as
+// desenharTudo() runs, from what it already has where it can.
 function selecionar(selecao) {
   tela.selecao = selecao;
   tela.janela = null;
@@ -151,9 +134,27 @@ function selecionar(selecao) {
   tela.modoManual = false;
   tela.motivo = '';
   mostrarMensagem(null);
+  linha.novaSelecao();
   desenharTudo();
   mostrarAba('alerta');
-  carregarJanela();
+}
+
+function fecharSelecao() {
+  tela.selecao = null;
+  tela.janela = null;
+  tela.entradaSelecionadaId = null;
+  tela.modoManual = false;
+  desenharTudo();
+}
+
+// A chip of the timeline: clicked again, it is let go. On a phone its box
+// is on the Detalhe tab.
+function escolherEntrada(id) {
+  tela.entradaSelecionadaId = tela.entradaSelecionadaId === id ? null : id;
+  desenharTudo();
+  if (tela.entradaSelecionadaId !== null) {
+    mostrarAba('alerta');
+  }
 }
 
 function escolherAlerta(id) {
@@ -265,6 +266,8 @@ setInterval(() => {
   relogioOficial.vigiar(performance.now(), Date.now());
   if (tela.estado) {
     desenharBarra(pagina.barra, tela.estado, agoraServidorMs(), horarioOficialMs());
+    // The live timeline follows the race.
+    linha.aCadaSegundo();
   }
 }, 1000);
 

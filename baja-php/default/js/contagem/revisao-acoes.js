@@ -275,6 +275,9 @@ export function criarAcoes(ganchos) {
       restaurar: () => decisaoDesfazer(opcao.decisaoId),
       remover: () => decisaoDesfazer(opcao.decisaoId),
       desfazer_troca: () => decisaoDesfazer(opcao.decisaoId),
+      // A short lap a reviewer confirmed: undoes that confirmation, which
+      // may sit on another entry of the pass.
+      desfazer_confirmacao: () => decisaoDesfazer(opcao.decisaoId),
     };
     enviar(pedidoParaEntrada(comMotivo(decisoes[opcao.acao](), tela.motivo), entrada, tela.estado));
   }

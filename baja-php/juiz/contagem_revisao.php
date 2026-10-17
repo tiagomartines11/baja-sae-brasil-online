@@ -67,6 +67,33 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
 </nav>
 
 <main class="revisao-zonas" data-aba-ativa="fila">
+    <?php // Always on screen, on every tab: it follows the race, and a flag or a car scrolls it to what was picked. ?>
+    <section class="revisao-zona zona-linha" data-zona="linha" aria-labelledby="linha-titulo">
+        <div class="linha-cabecalho">
+            <h2 id="linha-titulo">Linha do tempo</h2>
+            <span class="linha-situacao" id="linha-situacao"></span>
+            <span class="linha-aviso" id="linha-aviso" role="status"></span>
+            <button type="button" class="linha-botao" id="linha-so-carro" aria-pressed="true" hidden>Só o carro</button>
+            <button type="button" class="linha-botao" id="linha-agora" aria-pressed="true">Agora</button>
+        </div>
+        <div class="raias linha-raias" id="linha-raias"></div>
+        <div id="linha-extras"></div>
+        <details class="linha-legenda">
+            <summary>Legenda</summary>
+            <p class="contagem-dica">
+                Clique em um registro para agir sobre ele. Verde = conta. Com um alerta ou carro aberto: contorno âmbar grosso = registro do alerta,
+                contorno âmbar fino = outros registros do mesmo carro, apagados = outros carros.
+                Riscado = anulado: borda vermelha pela revisão, "C" = pelo próprio contador, pontilhado = repetição anulada automaticamente.
+                Canto azul = conta porque um revisor confirmou; traço azul embaixo = o horário da passagem é deste registro ("Usar o tempo");
+                âmbar com borda grossa = volta curta demais que conta porque a revisão confirmou (o registro oferece "Desfazer a confirmação").
+                Borda pontilhada escura = um contador só, ainda não conta. Verde-azulado em itálico = fonte observadora (só comparada, nunca conta).
+                "0" no canto = passagem zero (não é volta); tracejado = não conta (antes da largada, janela de largada ou depois do encerramento);
+                tracejado vermelho com fundo = passagem retida (não conta até um revisor decidir);
+                "~" = horário estimado; "?" = horário desconhecido (fora da linha do tempo).
+            </p>
+        </details>
+    </section>
+
     <section class="revisao-zona zona-fila" data-zona="fila">
         <h2>Alertas <span id="contagem-alertas"></span></h2>
         <ul class="fila" id="fila-abertos"></ul>
@@ -78,7 +105,7 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
 
     <section class="revisao-zona zona-alerta" data-zona="alerta">
         <div id="painel-detalhe">
-            <p class="vazio">Escolha um alerta na fila ou um carro na tabela.</p>
+            <p class="vazio">Escolha um alerta na fila, um carro na tabela ou um registro na linha do tempo.</p>
         </div>
     </section>
 

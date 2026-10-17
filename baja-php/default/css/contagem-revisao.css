@@ -183,16 +183,20 @@ body.revisao {
 
 .revisao-abas { display: none; }
 
+/* The timeline spans the full width above the queue and the detail: lanes
+   need width far more than height, and above both it stays put whatever
+   is selected, so the decision buttons below never move with it. */
 .revisao-zonas {
   display: grid;
   grid-template-columns: 340px minmax(0, 1fr);
-  grid-template-areas: "fila alerta" "tabela tabela";
+  grid-template-areas: "linha linha" "fila alerta" "tabela tabela";
   gap: 10px;
   padding: 10px;
 }
 
 .revisao-zona { background: var(--cor-painel); border: 1px solid var(--cor-borda); border-radius: 6px; padding: 10px 12px; min-width: 0; }
 .revisao-zona h2 { margin: 4px 0 8px; font-size: 16px; }
+.zona-linha { grid-area: linha; padding: 6px 10px; }
 .zona-fila { grid-area: fila; max-height: 62vh; overflow-y: auto; }
 .zona-alerta { grid-area: alerta; min-height: 300px; }
 .zona-tabela { grid-area: tabela; }
@@ -246,6 +250,22 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 
 /* lane timeline */
 .raias { overflow-x: auto; overflow-y: hidden; border: 1px solid var(--cor-borda); border-radius: 4px; background: var(--cor-painel); }
+
+/* The permanent panel: one line of header that never wraps, and lanes of a
+   fixed height that scroll inside, so nothing below moves when a lane needs
+   another row or a piece of the race arrives. */
+.linha-cabecalho { display: flex; flex-wrap: nowrap; align-items: center; gap: 4px 12px; min-height: 32px; overflow: hidden; }
+.linha-cabecalho h2 { margin: 0; white-space: nowrap; }
+.linha-situacao { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cor-fraca); }
+.linha-aviso { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cor-ambar); }
+.linha-aviso .contagem-erro { margin: 0; padding: 2px 8px; }
+.linha-aviso button, .linha-botao { padding: 3px 10px; border: 1px solid var(--cor-borda); border-radius: 4px; background: var(--cor-painel); white-space: nowrap; }
+.linha-botao.ativo { background: #dcebf9; border-color: var(--cor-azul); color: var(--cor-azul); font-weight: bold; }
+.linha-raias { height: clamp(190px, 32vh, 330px); overflow-y: auto; margin-top: 6px; }
+.linha-raias .raia-regua { position: sticky; top: 0; z-index: 3; background: var(--cor-painel); }
+.linha-legenda { margin-top: 4px; font-size: 13px; }
+.linha-legenda summary { cursor: pointer; color: var(--cor-fraca); }
+.linha-legenda p { margin: 4px 0 0; }
 .raias-conteudo { width: max-content; min-width: 100%; }
 .raia { display: flex; border-bottom: 1px solid var(--cor-fundo); }
 .raia.inativa { opacity: 0.6; }
@@ -271,6 +291,34 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 .marca-tempo { position: absolute; top: 2px; font-size: 11px; color: var(--cor-fraca); border-left: 1px solid var(--cor-borda); padding-left: 3px; white-space: nowrap; }
 /* Lives in the ruler and is tall enough to cross every lane; .raias clips the rest. */
 .linha-do-alerta { position: absolute; top: 0; width: 0; height: 2000px; border-left: 2px dashed var(--cor-ambar); pointer-events: none; z-index: 1; }
+/* The present moment, and stretches still on their way from the server. */
+.linha-agora { position: absolute; top: 0; width: 0; height: 2000px; border-left: 2px solid var(--cor-azul); opacity: 0.5; pointer-events: none; z-index: 1; }
+.trecho-carregando {
+  position: absolute;
+  top: 0;
+  height: 2000px;
+  background: repeating-linear-gradient(45deg, rgba(93, 107, 122, 0.08), rgba(93, 107, 122, 0.08) 8px, transparent 8px, transparent 16px);
+  pointer-events: none;
+}
+/* "76 s desde a passagem anterior; volta normal ~3:40", under the ruler. */
+.raia-lacuna .raia-trilho { height: 22px; min-height: 22px; }
+.lacuna {
+  position: absolute;
+  top: 3px;
+  height: 15px;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 1px solid var(--cor-ambar);
+  border-top: 0;
+  background: var(--fundo-ambar);
+  color: var(--cor-ambar);
+  font-size: 11px;
+  line-height: 14px;
+  white-space: nowrap;
+  /* The words sit at the flag's end, which is the end in view. */
+  text-align: right;
+  overflow: hidden;
+}
 
 .chip {
   position: absolute;
@@ -293,6 +341,47 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 .chip.do-revisor { border-color: var(--cor-azul); background: #dcebf9; }
 .chip.em-destaque { outline: 3px solid var(--cor-ambar); outline-offset: 1px; }
 .chip.selecionada { outline: 3px solid var(--cor-azul); outline-offset: 1px; z-index: 2; }
+/* With a flag or a car picked: its other entries weakly, every other car dimmed. */
+.chip.do-carro { outline: 1px solid var(--cor-ambar); outline-offset: 1px; }
+.chip.apagada { opacity: 0.35; }
+.chip.apagada:hover, .chip.apagada:focus { opacity: 1; }
+
+/* Three kinds of void. A reviewer's: red dashes. The counter's own (they
+   usually typed it wrong and retyped it): grey, with a "C". A repeat the
+   engine voided by itself: dotted. */
+.chip.anulada { border-color: var(--cor-vermelha); }
+.chip.anulada-pelo-contador { border-color: var(--cor-fraca); }
+.chip.anulada-pelo-contador::after {
+  content: "C";
+  position: absolute;
+  top: -7px;
+  right: -5px;
+  padding: 0 3px;
+  border-radius: 6px;
+  background: var(--cor-fraca);
+  color: #fff;
+  font-size: 9px;
+  line-height: 12px;
+  text-decoration: none;
+}
+.chip.anulada-auto { border-style: dotted; }
+
+/* An observer source (a camera): compared with the count, never counting.
+   Its own colour, not the grey of an entry that is out of use by accident. */
+.chip.observadora { color: #0f6b63; background: #e0f2ef; border: 1px solid #0f6b63; font-style: italic; }
+.raia.observadora .raia-nome { color: #0f6b63; }
+.raia.observadora .raia-nome small { font-weight: normal; font-style: italic; }
+
+/* Counts on a reviewer's word: a blue corner. The entry that times the pass
+   ("usar o tempo"): a blue bar along the bottom. Prefixed with .raias so a
+   later background shorthand (a held pass, one before the start) keeps them. */
+.raias .chip.confirmada-pelo-revisor { background-image: linear-gradient(135deg, transparent 72%, var(--cor-azul) 72%); }
+.raias .chip.tempo-escolhido { box-shadow: inset 0 -3px 0 var(--cor-azul); }
+/* One counter alone, not counting yet: dotted, dark. */
+.chip.solitaria-pendente { border: 2px dotted var(--cor-texto); }
+/* A lap too short to be real that counts because a reviewer confirmed it:
+   how 26SE cars 1, 3 and 20 got a lap too many. Amber, and thick. */
+.raias .chip.volta-curta-confirmada { background-color: var(--fundo-ambar); border: 2px solid var(--cor-ambar); color: var(--cor-ambar); }
 
 .marca-box, .marca-corrida { position: absolute; top: 4px; padding: 1px 6px; border-radius: 3px; font-size: 11px; white-space: nowrap; }
 .marca-box { background: var(--fundo-ambar); border: 1px solid var(--cor-ambar); }
@@ -363,6 +452,11 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
   .revisao-zonas[data-aba-ativa="fila"] .zona-fila,
   .revisao-zonas[data-aba-ativa="alerta"] .zona-alerta,
   .revisao-zonas[data-aba-ativa="tabela"] .zona-tabela { display: block; }
+  /* The timeline is on every tab, above it. */
+  .revisao-zonas .zona-linha { display: block; margin-bottom: 6px; padding: 4px 6px; }
+  .linha-cabecalho { gap: 4px 8px; }
+  .linha-cabecalho h2 { font-size: 14px; }
+  .linha-raias { height: clamp(170px, 30vh, 260px); }
   .zona-fila { max-height: none; }
   .botoes button { flex: 1 1 45%; padding: 12px 8px; }
   kbd { display: none; }
@@ -458,8 +552,8 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 .calculo { color: var(--cor-fraca); font-variant-numeric: tabular-nums; }
 .calculo.atrasado { padding: 2px 8px; border-radius: 4px; background: var(--fundo-vermelho); color: var(--cor-vermelha); font-weight: bold; }
 
-/* A button that adds a lap must not look like the one that changes nothing. */
-.botoes button.soma-volta { border-color: var(--cor-ambar); background: var(--fundo-ambar); color: var(--cor-ambar); font-weight: bold; }
+/* A button that adds a lap must not look like the one that changes nothing. Nor one that takes a lap away. */
+.botoes button.soma-volta, .botoes button.tira-volta { border-color: var(--cor-ambar); background: var(--fundo-ambar); color: var(--cor-ambar); font-weight: bold; }
 
 .exclusao-aberta .em-linha { margin: 6px 6px 0 0; }
 .paradas-sem-par { border-color: var(--cor-ambar); }

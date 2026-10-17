@@ -255,6 +255,12 @@ export function confirmarSomaPassagem(entrada) {
 //        one more pass (see confirmarSomaPassagem)
 //   {acao: 'descartar_passagem', registros}  void the whole pass group at
 //        once; offered when the pass has more than one entry
+//   {acao: 'desfazer_confirmacao', decisaoId}  the pass ends a lap too short
+//        to be real that counts only because a reviewer confirmed it: undo
+//        that confirmation. Offered first. The confirmation may sit on
+//        another entry of the pass: `janela` (the timeline on screen) is
+//        where it is looked for. At 26SE three cars got a lap too many
+//        this way, and the undo was buried in the history.
 //
 // "confirmar" is NOT offered:
 //   - on the later entry of an open repeat (`repeticoes`, see repeticoesEmAberto);
@@ -263,7 +269,7 @@ export function confirmarSomaPassagem(entrada) {
 //   - on an entry that is in no pass and was not voided as a repeat (its
 //     source was off or excluded, or it is before the start): there is
 //     nothing to confirm.
-export function acoesDaEntrada(entrada, repeticoes = new Set()) {
+export function acoesDaEntrada(entrada, repeticoes = new Set(), janela = null) {
   if (entrada.adicionada_por_revisor) {
     // Its id is minus the id of the "adicionar" decision that created it.
     return [{ acao: 'remover', decisaoId: -entrada.id }];
@@ -273,7 +279,12 @@ export function acoesDaEntrada(entrada, repeticoes = new Set()) {
   if (anulacao) {
     return [{ acao: 'restaurar', decisaoId: anulacao.id, decisao: anulacao }];
   }
-  const acoes = [{ acao: 'anular' }, { acao: 'reatribuir' }];
+  const acoes = [];
+  const confirmacao = entrada.grupo?.volta_curta_confirmada ? confirmacaoDaPassagem(entrada, janela) : null;
+  if (confirmacao) {
+    acoes.push({ acao: 'desfazer_confirmacao', decisaoId: confirmacao.id });
+  }
+  acoes.push({ acao: 'anular' }, { acao: 'reatribuir' });
   const troca = decisoes.find((decisao) => decisao.tipo === 'reatribuir');
   if (troca) {
     acoes.push({ acao: 'desfazer_troca', decisaoId: troca.id });
@@ -292,6 +303,25 @@ export function acoesDaEntrada(entrada, repeticoes = new Set()) {
   return acoes;
 }
 
+// The "confirmar" in force on the pass of an entry: on the entry itself,
+// or on another entry of the same pass found in `janela`.
+function confirmacaoDaPassagem(entrada, janela) {
+  const daEntrada = (entrada.decisoes ?? []).find((decisao) => decisao.tipo === 'confirmar');
+  if (daEntrada) {
+    return daEntrada;
+  }
+  const ids = new Set(entrada.grupo?.passagem_ids ?? []);
+  for (const raia of janela?.raias ?? []) {
+    for (const outra of raia.entradas ?? []) {
+      const confirmacao = ids.has(outra.id) ? (outra.decisoes ?? []).find((decisao) => decisao.tipo === 'confirmar') : null;
+      if (confirmacao) {
+        return confirmacao;
+      }
+    }
+  }
+  return null;
+}
+
 // What is asked before an action on one chip; null when nothing. "Restaurar"
 // on a counter's own void asks (see perguntaAoDesfazer), "confirmar" asks
 // what K asks (see perguntaAoContarNaEntrada).
@@ -304,6 +334,11 @@ export function perguntaAoAgirNaEntrada(opcao, entrada, estado = null) {
   }
   if (opcao.acao === 'descartar_passagem') {
     return `Descartar esta passagem do carro ${entrada.carro}? Os ${opcao.registros} registros dela são anulados de uma vez. `
+      + 'Pode ser desfeito pelo histórico.';
+  }
+  if (opcao.acao === 'desfazer_confirmacao') {
+    return `Desfazer a confirmação desta passagem do carro ${entrada.carro}? Ela fecha uma volta curta demais para ser real `
+      + 'e só conta porque um revisor confirmou. Sem a confirmação ela volta a não contar: o carro perde uma volta (−1 volta). '
       + 'Pode ser desfeito pelo histórico.';
   }
   return null;
