@@ -448,9 +448,12 @@ final class FlagDetector
             $flag->voltasAoMarcarSaida = $this->passesAnExitWouldRelease($group, $area, $groupsOfTheCar);
             return $flag;
         }
-        return $group->motivoRetencao === PassGroup::RETIDA_DISPERSAO
-            ? $this->passFlags->spreadTooWide($group, $this->settings->agreementSpreadMs())
-            : $this->passFlags->tooCloseToThePreviousPass($group);
+        if ($group->motivoRetencao === PassGroup::RETIDA_DISPERSAO) {
+            $flag = $this->passFlags->spreadTooWide($group, $this->settings->agreementSpreadMs());
+            $this->effect->describeTimes($flag, [$group]);
+            return $flag;
+        }
+        return $this->passFlags->tooCloseToThePreviousPass($group);
     }
 
     /**

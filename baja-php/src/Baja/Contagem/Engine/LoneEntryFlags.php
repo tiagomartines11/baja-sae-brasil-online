@@ -159,13 +159,19 @@ final class LoneEntryFlags
         $flag = new Flag(Flag::REGISTRO_TARDIO, [$group->carro], [$earlyEntry->id, $lateEntry->id], (string) min($earlyEntry->id, $lateEntry->id));
         $flag->fonteId = $lateEntry->fonteId;
         $flag->tsMs = $earlyEntry->tsMs;
-        // Two counters saw a crossing that does not count: the car may be a lap short.
-        $flag->contagemEmDuvida = Flag::DUVIDA_A_MENOS;
+        // One crossing, two lone entries. Which way the count is in doubt
+        // depends on the publish mode in force: in "confirmadas" neither
+        // counts (the car may be a lap short), in "todas" both do (a lap too
+        // many), and in "fonte_principal" the primary source's may count
+        // alone, which is the right number of passes, only perhaps mistimed.
+        $counted = (int) $early->contado + (int) $late->contado;
+        $flag->contagemEmDuvida = $counted === 0 ? Flag::DUVIDA_A_MENOS : ($counted === 2 ? Flag::DUVIDA_A_MAIS : null);
         $flag->passagemAnterior = $this->previousPass($group->carro, $earlyEntry->tsMs, $early);
         $flag->temposPossiveis = [
             ['passagem_id' => $earlyEntry->id, 'fonte_id' => $earlyEntry->fonteId, 'ts_ms' => $earlyEntry->tsMs, 'passagem_alvo_id' => $lateEntry->id],
             ['passagem_id' => $lateEntry->id, 'fonte_id' => $lateEntry->fonteId, 'ts_ms' => $lateEntry->tsMs, 'passagem_alvo_id' => $earlyEntry->id],
         ];
+        $this->effect->describeTimes($flag, [$early, $late]);
         $flag->motivo = sprintf(
             '%s registrou o carro %d %d s depois de %s: provavelmente a mesma passagem, digitada com atraso. Como duas passagens, dariam uma volta de %d s, %s. Escolha o horário de quem registrou na hora: a passagem conta uma vez, e o outro registro fica junto dela sem definir o horário.',
             $this->passFlags->sourceName($lateEntry->fonteId),

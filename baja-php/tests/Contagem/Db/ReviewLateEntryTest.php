@@ -91,13 +91,16 @@ final class ReviewLateEntryTest extends ReviewDbTestCase
      * EXPECTED: what makes no sense is refused with a sentence and nothing
      * is stored: the other entry from the same counter, the other entry in
      * a pass the counters agree on, a voided entry, the other entry not
-     * among the watched ones, and "usar_tempo" alone on a lone entry (that
-     * is a plain "Contar esta passagem").
+     * among the watched ones, "usar_tempo" alone on a lone entry (that
+     * is a plain "Contar esta passagem"), and two entries further apart
+     * than the engine pairs a crossing typed late.
      */
     public function testWhatCannotBeOnePassIsRefused(): void
     {
         [$onTime, $late] = $this->latePair();
         $sameCounter = $this->addEntry($this->fontes[1], self::CAR_A, $this->at(300));
+        // A minute before Contagem 2's entry: two passes, not one typed late.
+        $farAway = $this->addEntry($this->fontes[2], self::CAR_A, $this->at(200));
         $agreed = $this->allCountersSee(self::CAR_A, 520);
         $this->syncAll($this->at(580));
         Clock::freezeAt($this->at(600));
@@ -108,6 +111,7 @@ final class ReviewLateEntryTest extends ReviewDbTestCase
             'same counter' => [['tipo' => 'usar_tempo', 'passagem_id' => $onTime, 'passagem_alvo_id' => $sameCounter], [$onTime, $sameCounter]],
             'agreed pass' => [['tipo' => 'usar_tempo', 'passagem_id' => $late, 'passagem_alvo_id' => $agreed[1]], [$late, $agreed[1]]],
             'lone entry alone' => [['tipo' => 'usar_tempo', 'passagem_id' => $onTime], [$onTime]],
+            'too far apart' => [['tipo' => 'usar_tempo', 'passagem_id' => $onTime, 'passagem_alvo_id' => $farAway], [$onTime, $farAway]],
         ];
         foreach ($cases as $name => [$decision, $watched]) {
             $answer = $this->decide($decision, $watched, $this->currentSignatureOf($watched));

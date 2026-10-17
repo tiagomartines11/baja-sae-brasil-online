@@ -61,6 +61,35 @@ final class ConfirmEffect
     }
 
     /**
+     * Writes, on each of the flag's "tempos_possiveis", what "usar_tempo"
+     * with that time would do to the count in force. The decision leaves
+     * ONE counted pass where `$groups` are now (the flag's own group, or
+     * the two lone entries of a crossing typed late), so the car's count
+     * changes by one minus the number of them that count today: +1 in
+     * "confirmadas", where none does; 0 in "fonte_principal" when one of
+     * them is the primary source's; -1 in "todas", where both do. Also the
+     * shortest lap the pass would make at that time, among the passes in
+     * force other than `$groups`, for the short-lap question.
+     *
+     * @param PassGroup[] $groups
+     */
+    public function describeTimes(Flag $flag, array $groups): void
+    {
+        if ($flag->temposPossiveis === null || $groups === []) {
+            return;
+        }
+        $counted = count(array_filter($groups, fn(PassGroup $group): bool => $group->contado));
+        $carro = $groups[0]->carro;
+        foreach ($flag->temposPossiveis as $i => $tempo) {
+            [$beforeMs, $afterMs] = $this->lapsAroundPassAt($carro, $tempo['ts_ms'], $groups, true);
+            $flag->temposPossiveis[$i]['voltas'] = 1 - $counted;
+            $flag->temposPossiveis[$i]['volta_resultante_ms'] = $beforeMs === null || $afterMs === null
+                ? ($beforeMs ?? $afterMs)
+                : min($beforeMs, $afterMs);
+        }
+    }
+
+    /**
      * If the car had one more pass at $tsMs, that pass would split one of
      * its laps in two (or add a lap at either end). Returns the shorter of
      * the laps it would create, in racing time, or null when the car has no
@@ -77,7 +106,7 @@ final class ConfirmEffect
         // rule lap 1 does begin at the start, but it is not a full lap of
         // the track (the counting line is after the start line), so however
         // short it is, it is not "too short to be real" and is left out.
-        [$beforeMs, $afterMs] = $this->lapsAroundPassAt($carro, $tsMs, $itself, $amongPassesInForce);
+        [$beforeMs, $afterMs] = $this->lapsAroundPassAt($carro, $tsMs, $itself === null ? [] : [$itself], $amongPassesInForce);
         if ($beforeMs === null || $afterMs === null) {
             return $beforeMs ?? $afterMs;
         }
@@ -87,13 +116,13 @@ final class ConfirmEffect
     /** Racing time from the car's previous pass (under the default rule) to $tsMs; null when it has none. */
     public function lapBeforePassAt(int $carro, int $tsMs, ?PassGroup $itself): ?int
     {
-        return $this->lapsAroundPassAt($carro, $tsMs, $itself, false)[0];
+        return $this->lapsAroundPassAt($carro, $tsMs, $itself === null ? [] : [$itself], false)[0];
     }
 
     /** Racing time from $tsMs to the car's next pass (under the default rule); null when it has none yet. */
     public function lapAfterPassAt(int $carro, int $tsMs, ?PassGroup $itself): ?int
     {
-        return $this->lapsAroundPassAt($carro, $tsMs, $itself, false)[1];
+        return $this->lapsAroundPassAt($carro, $tsMs, $itself === null ? [] : [$itself], false)[1];
     }
 
     /** The car's last pass (under the default rule) at or before $tsMs; null when it has none. */
@@ -109,14 +138,15 @@ final class ConfirmEffect
     }
 
     /**
+     * @param PassGroup[] $leftOut the groups being judged, so they are not compared with themselves
      * @return array{0: ?int, 1: ?int} racing time since the car's previous pass and until its next one
      */
-    private function lapsAroundPassAt(int $carro, int $tsMs, ?PassGroup $itself, bool $amongPassesInForce): array
+    private function lapsAroundPassAt(int $carro, int $tsMs, array $leftOut, bool $amongPassesInForce): array
     {
         $previousMs = null;
         $nextMs = null;
         foreach ($this->groupsByCar[$carro] ?? [] as $other) {
-            if ($other === $itself || !($amongPassesInForce ? $other->contado : $other->referencia)) {
+            if (in_array($other, $leftOut, true) ||!($amongPassesInForce ? $other->contado : $other->referencia)) {
                 continue;
             }
             if ($other->tsMs <= $tsMs) {

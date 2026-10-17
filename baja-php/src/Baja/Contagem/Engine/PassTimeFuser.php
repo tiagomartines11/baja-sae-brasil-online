@@ -80,10 +80,12 @@ final class PassTimeFuser
             $group->tempoPreciso = $preciseTime !== null;
             $group->tsMs = $preciseTime ?? $medianMs;
             if ($group->tempoEscolhidoId !== null) {
-                // The reviewer's word beats both the median and a precise source.
+                // The reviewer's word beats both the median and a precise
+                // source. The time is precise only when it is a precise
+                // source's own (the reviewer picked the transponder's time).
                 $chosen = $group->chosenTimeEntry();
                 if ($chosen !== null) {
-                    $group->tempoPreciso = false;
+                    $group->tempoPreciso = isset($preciseSourceIds[$chosen->fonteId]);
                     $group->tsMs = $chosen->tsMs;
                 }
             }

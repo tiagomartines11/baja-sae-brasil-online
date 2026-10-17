@@ -165,10 +165,15 @@ final class Flag
      * typed late ("registro_tardio"). One item per entry that could be the
      * right time: ['passagem_id', 'fonte_id', 'ts_ms', 'passagem_alvo_id'],
      * the last being the other entry when it is in another pass group (null
-     * when every entry is in the same one). The screen writes one button
-     * per item: "Usar o tempo de Contagem 1 (h:mm:ss)". Null elsewhere.
+     * when every entry is in the same one). Each item also says what the
+     * decision would do to the count in force ('voltas': +1, 0 or -1; see
+     * ConfirmEffect::describeTimes) and the shortest lap the pass would
+     * make at that time ('volta_resultante_ms', null when there is none to
+     * measure). The screen writes one button per item: "Usar o tempo de
+     * Contagem 1 (h:mm:ss)", with "(+1 volta)" only when it adds one. Null
+     * elsewhere.
      *
-     * @var array<int, array{passagem_id: int, fonte_id: int, ts_ms: int, passagem_alvo_id: ?int}>|null
+     * @var array<int, array{passagem_id: int, fonte_id: int, ts_ms: int, passagem_alvo_id: ?int, voltas: int, volta_resultante_ms: ?int}>|null
      */
     public ?array $temposPossiveis = null;
 

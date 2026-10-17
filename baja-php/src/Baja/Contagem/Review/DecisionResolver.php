@@ -146,6 +146,20 @@ final class DecisionResolver
         if (count($otherGroup->entries) !== 1 || $chosenGroup->hasSource($other->fonteId)) {
             throw new InvalidArgumentException('O outro registro faz parte de outra passagem: anule-o ou troque-o de carro antes.');
         }
+        // As far apart as the engine pairs a crossing typed late
+        // (LoneEntryFlags::lateEntry), no further: joining an entry from
+        // further away would silently take a real pass out of the count.
+        $longestDelayMs = 2 * $recount->input->settings->janelaMs;
+        $gapMs = $chosen->tsMs <= $other->tsMs
+            ? $recount->timeline->racingMsBetween($chosen->tsMs, $other->tsMs)
+            : $recount->timeline->racingMsBetween($other->tsMs, $chosen->tsMs);
+        if ($gapMs > $longestDelayMs) {
+            throw new InvalidArgumentException(sprintf(
+                'Os dois registros estão a %d s um do outro, mais que os %d s de um registro atrasado: são duas passagens. Anule o que estiver errado.',
+                (int) round($gapMs / 1000),
+                (int) round($longestDelayMs / 1000)
+            ));
+        }
         return Decision::usarTempo(0, $chosenId, $otherId);
     }
 
