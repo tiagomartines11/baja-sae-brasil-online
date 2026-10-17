@@ -70,26 +70,6 @@ export function criarOrdemDePedidos() {
   };
 }
 
-// Which older pages of the decision history stay on screen when a new
-// state arrives.
-//
-// The pages were fetched by hand ("Carregar decisões mais antigas") and are
-// only wrong once a decision was made or undone since: that may change
-// which of the old rows are still in force. A new calculation with the same
-// decisions (which happens every few seconds during a race) leaves them
-// exactly right, so they are kept.
-//
-//   paginas: {antigas, haMais}  what the screen has loaded
-// Returns the {antigas, haMais} to use from now on.
-export function historicoAposResposta(estadoAnterior, estadoNovo, paginas) {
-  const mesmasDecisoes = Boolean(estadoAnterior)
-    && estadoAnterior.ultima_decisao_id === estadoNovo.ultima_decisao_id;
-  if (mesmasDecisoes) {
-    return { antigas: paginas.antigas, haMais: paginas.haMais };
-  }
-  return { antigas: [], haMais: Boolean(estadoNovo.historico_ha_mais) };
-}
-
 // What an "inalterado" answer carries under the same name as the full state.
 const CHAVES_AO_VIVO = [
   'servidor_agora_ms', 'calculado_em_ms', 'corrida', 'dispositivos', 'revisores', 'publicado_em_ms', 'pontuacao',

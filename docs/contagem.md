@@ -360,6 +360,24 @@ once. The person leaving then presses **Encerrar meu turno**.
   wrong and retyped it at once, and at 26SE undoing two such voids and
   confirming the retyped entries gave three cars a lap each. A voided
   chip's tooltip says who voided it and why.
+- **Histórico de decisões** is one list, newest first, of every decision of
+  the race, with what the system resolved on its own among them as
+  read-only lines ("Sistema: ignorou a repetida #452 (carro 7, Contagem 1,
+  toque duplo)", "Sistema: presumiu a saída do box do carro 7"). A decision
+  still in force carries **em vigor**; an undone one is struck through; an
+  undo says what it undid ("Desfez a decisão #11: anulou a passagem #352
+  (carro 3, Contagem 1)"). Filters above it combine: **Carro** (the car
+  typed or the car the entry counts for now), **Contador**, **Quem** (a
+  person, "contador (no aparelho)" for voids made on a phone, or
+  "automático"), **Tipo**, and **Só em vigor**; the heading says "12 de 81
+  decisões" and **Limpar filtros** brings everything back. The filters are
+  remembered per prova in the browser. Clicking a line (or **Ver**) opens
+  its car's whole race centred on that moment with its entries outlined,
+  or, for a system line, its flag. The server sends the whole history with
+  the state (about 30 KB for the 81 decisions of 26SE), so a filter sees
+  every decision, not only a first page; past 1000 decisions only the
+  newest are sent and the panel says so. Open-ended source exclusions stay
+  loud in the Fontes block and the status bar as well.
 - A flag about a lone entry reaches back to a little before the car's
   previous official pass (at most one expected lap and half a minute
   back), so the lap the entry would make is on screen, and draws the gap

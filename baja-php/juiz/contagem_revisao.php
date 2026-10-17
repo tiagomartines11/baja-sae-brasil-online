@@ -118,9 +118,18 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
         <h2>Fontes</h2>
         <div id="estatisticas-fontes"></div>
 
-        <h2>Histórico de decisões</h2>
-        <div class="rolagem"><table class="historico" id="tabela-historico"></table></div>
-        <div id="historico-mais"></div>
+        <h2>Histórico de decisões <span class="historico-resumo" id="historico-resumo" aria-live="polite"></span></h2>
+        <?php // In the markup, not drawn by the script: the screen is redrawn every second and the filters must not flicker or lose what is typed. ?>
+        <form class="historico-filtros" id="historico-filtros" role="search" aria-label="Filtrar o histórico de decisões">
+            <label>Carro <input type="number" name="carro" min="0" step="1" inputmode="numeric" class="campo-carro" list="carros-validos"></label>
+            <label>Contador <select name="fonte"><option value="">todos</option></select></label>
+            <label>Quem <select name="quem"><option value="">todos</option></select></label>
+            <label>Tipo <select name="tipo"><option value="">todos</option></select></label>
+            <label class="so-em-vigor"><input type="checkbox" name="soEmVigor"> Só em vigor</label>
+            <button type="button" name="limpar" disabled>Limpar filtros</button>
+        </form>
+        <div class="rolagem historico-rolagem"><table class="historico" id="tabela-historico"></table></div>
+        <div id="historico-aviso"></div>
     </section>
 </main>
 

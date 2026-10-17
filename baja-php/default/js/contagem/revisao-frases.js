@@ -3,7 +3,7 @@
 // before a decision that changes a count.
 // Pure functions, tested with `node --test` (through revisao-decisoes.js).
 
-import { duracao, horaDoDia, idade, relogio } from './revisao-formato.js';
+import { duracao, horaDoDia, idade, relogio, tempoDeProva } from './revisao-formato.js';
 
 // What the server answered with HTTP 409, as one sentence.
 export function mensagemDeConflito(corpo) {
@@ -85,8 +85,10 @@ function doRegistro(decisao, comCarroAtual = true) {
   return partes.length === 0 ? '' : ` (${partes.join(', ')})`;
 }
 
-// One line of the history panel.
-export function descreverDecisao(decisao, nomeDaFonte = () => null) {
+// One line of the history panel. `desfeita` is, for an undo, the history
+// row of the decision it undid, when the screen has it: the line then says
+// what that decision was.
+export function descreverDecisao(decisao, nomeDaFonte = () => null, desfeita = null) {
   switch (decisao.tipo) {
     case 'anular':
       return `Anulou a passagem #${decisao.passagem_id}${doRegistro(decisao)}`;
@@ -95,14 +97,22 @@ export function descreverDecisao(decisao, nomeDaFonte = () => null) {
     case 'confirmar':
       return `Confirmou a passagem #${decisao.passagem_id}${doRegistro(decisao)}`;
     case 'usar_tempo':
+      // With a target: a lone entry typed late joins this one's pass.
+      // Without: of a held pass's entries, this one gives the time.
       return `Usou o tempo da passagem #${decisao.passagem_id}${doRegistro(decisao)}`
-        + `${decisao.passagem_alvo_id ? ` e juntou a #${decisao.passagem_alvo_id} a ela (registrada com atraso)` : ''}`;
+        + `${decisao.passagem_alvo_id
+          ? ` e juntou a #${decisao.passagem_alvo_id} a ela (registrada com atraso)`
+          : ' como horário da passagem'}`;
     case 'adicionar':
       return `Adicionou uma passagem do carro ${decisao.equipe_numero}`;
     case 'excluir_fonte':
-      return `Excluiu a fonte ${nomeDaFonte(decisao.fonte_id) ?? `#${decisao.fonte_id}`} ${
+      return `Excluiu a fonte ${nomeDaFonte(decisao.fonte_id) ?? decisao.fonte_nome ?? `#${decisao.fonte_id}`} ${
         decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined ? 'até segunda ordem' : 'por um período'}`;
     case 'desfazer':
+      if (desfeita && desfeita.tipo !== 'desfazer') {
+        const oQue = descreverDecisao(desfeita, nomeDaFonte);
+        return `Desfez a decisão #${decisao.desfaz_decisao_id}: ${oQue.charAt(0).toLowerCase()}${oQue.slice(1)}`;
+      }
       return `Desfez a decisão #${decisao.desfaz_decisao_id}${doRegistro(decisao)}`;
     case 'marcar_saida':
       // The area is kept in the decision's "motivo".
@@ -110,6 +120,54 @@ export function descreverDecisao(decisao, nomeDaFonte = () => null) {
     default:
       return decisao.tipo;
   }
+}
+
+// When, in race time, a history row's decision acts: " em 0:42:10" for an
+// added pass or a marked exit, ": 0:10:00 até 0:20:00" for an exclusion.
+// Empty for the rest (their entry is named instead) and before the start.
+function momentoDaDecisao(decisao, largadaMs) {
+  if (largadaMs === null || largadaMs === undefined || decisao.ts_ms === null || decisao.ts_ms === undefined) {
+    return '';
+  }
+  if (decisao.tipo === 'adicionar' || decisao.tipo === 'marcar_saida') {
+    return ` em ${tempoDeProva(decisao.ts_ms, largadaMs)}`;
+  }
+  if (decisao.tipo === 'excluir_fonte') {
+    const fim = decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined ? null : relogio(decisao.ts_fim_ms - largadaMs);
+    return fim === null ? `: desde ${relogio(decisao.ts_ms - largadaMs)}` : `: ${relogio(decisao.ts_ms - largadaMs)} até ${fim}`;
+  }
+  return '';
+}
+
+// The whole "O quê" of a history row: the decision, when it acts, and the
+// reason typed with it. For an undo, the decision it undid with its moment.
+//   contexto: {nomeDaFonte(id), largadaMs, desfeita}  see descreverDecisao
+export function fraseDoHistorico(decisao, { nomeDaFonte = () => null, largadaMs = null, desfeita = null } = {}) {
+  const ehDesfeitaConhecida = decisao.tipo === 'desfazer' && desfeita && desfeita.tipo !== 'desfazer';
+  const momento = momentoDaDecisao(ehDesfeitaConhecida ? desfeita : decisao, largadaMs);
+  // The "motivo" of a marked exit is its area, already said in the sentence.
+  const motivo = decisao.motivo && decisao.tipo !== 'marcar_saida' ? ` — ${decisao.motivo}` : '';
+  return descreverDecisao(decisao, nomeDaFonte, desfeita) + momento + motivo;
+}
+
+// The system's own resolutions, listed in the history beside the
+// decisions although nothing was stored for them: a repeat the engine
+// voided (a double tap, or the same car on two devices of one counter),
+// and an exit of the box or the fueling station it assumed.
+//   contexto: {nomeDaFonte(id), area}  area of an assumed exit, when known
+export function descreverResolucaoAutomatica(alerta, { nomeDaFonte = () => null, area = null } = {}) {
+  const carro = (alerta.carros ?? [])[0];
+  if (alerta.tipo === 'repetida') {
+    const ignorada = (alerta.passagem_ids ?? [])[1];
+    const porque = /dois aparelhos/.test(alerta.motivo ?? '') ? 'troca de contador' : 'toque duplo';
+    const fonte = nomeDaFonte(alerta.fonte_id);
+    const partes = [carro === undefined ? null : `carro ${carro}`, fonte, porque].filter(Boolean);
+    return `Sistema: ignorou a repetida #${ignorada} (${partes.join(', ')})`;
+  }
+  if (alerta.tipo === 'saida_presumida') {
+    return `Sistema: presumiu a saída do ${area ?? 'box'} do carro ${carro} (as contagens o viram na linha)`;
+  }
+  return `Sistema: ${alerta.motivo ?? alerta.tipo}`;
 }
 
 // The question asked before a decision that gives a car one more pass when

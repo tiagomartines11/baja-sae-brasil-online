@@ -34,17 +34,19 @@ final class ReviewHistoryTest extends ReviewDbTestCase
      * list. Counter 3 was then being ignored for the rest of the race with
      * no trace of it on the screen and no button to undo it.
      *
+     * Later the panel showed the newest 50, with a button for older pages,
+     * and the decisions in force in a list of their own. At 26SE the
+     * reviewers asked for filters (by car, counter, person, type); a filter
+     * over the pages loaded so far would quietly miss the rest.
+     *
      * EXPECTED:
-     *   - the state carries the newest page only (50 decisions) and says
-     *     that there are more;
-     *   - the exclusion and the added pass are ALWAYS listed, in their own
-     *     list of decisions in force, although they are far older than the
-     *     first page, and they can be undone from there;
-     *   - asking for the page before the last decision shown returns the
-     *     next 50, and so on until the very first decision, with nothing
-     *     skipped and nothing twice.
+     *   - the state carries the WHOLE history, newest first, each decision
+     *     once, and says it is complete;
+     *   - the exclusion and the added pass are also in the list of
+     *     decisions in force (the Fontes block and the status bar read the
+     *     open exclusions from it), and they can be undone.
      */
-    public function testOldExclusionsAndAddedPassesStayListedAndTheRestIsPaged(): void
+    public function testTheStateCarriesTheWholeHistory(): void
     {
         $this->startRace(self::RACE_START_MS);
         $entryId = $this->addEntry($this->fontes[0], self::CAR_B, $this->at(60));
@@ -61,30 +63,69 @@ final class ReviewHistoryTest extends ReviewDbTestCase
 
         $state = $this->freshScreen();
 
-        $this->assertCount(DecisionHistory::PAGE_SIZE, $state['historico']);
-        $this->assertTrue($state['historico_ha_mais']);
-        $idsOnFirstPage = array_column($state['historico'], 'id');
-        $this->assertNotContains($exclusionId, $idsOnFirstPage, 'the exclusion is far older than the first page');
+        $ids = array_column($state['historico'], 'id');
+        $this->assertCount($totalDecisions, $ids);
+        $this->assertCount($totalDecisions, array_unique($ids), 'no decision is listed twice');
+        $this->assertSame($exclusionId, $ids[$totalDecisions - 1], 'the oldest decision is last');
+        $sorted = $ids;
+        rsort($sorted);
+        $this->assertSame($sorted, $ids, 'newest first');
+        $this->assertTrue($state['historico_completo']);
+        $this->assertArrayNotHasKey('historico_ha_mais', $state, 'there are no older pages any more');
 
         $this->assertSame([$additionId, $exclusionId], array_column($state['historico_em_vigor'], 'id'));
         foreach ($state['historico_em_vigor'] as $decision) {
             $this->assertTrue($decision['pode_desfazer']);
         }
+    }
 
-        // Walk back through the older pages, as the "carregar mais" button does.
-        $allIds = $idsOnFirstPage;
-        $hasMore = $state['historico_ha_mais'];
-        $pagesLoaded = 0;
-        while ($hasMore) {
-            $page = DecisionHistory::page($this->prova, DecisionHistory::activeIdsFromDatabase($this->prova), min($allIds));
-            $allIds = array_merge($allIds, array_column($page['linhas'], 'id'));
-            $hasMore = $page['ha_mais'];
-            $pagesLoaded++;
-            $this->assertLessThan(10, $pagesLoaded, 'paging must come to an end');
+    /**
+     * SITUATION: a history longer than any race has had.
+     *
+     * EXPECTED: only the newest decisions travel, the answer says that
+     * older ones were left out, and the decisions in force are still all
+     * in their own list (the screen merges them back in).
+     */
+    public function testPastTheLimitOnlyTheNewestTravelAndTheAnswerSaysSo(): void
+    {
+        $this->startRace(self::RACE_START_MS);
+        Clock::freezeAt($this->at(3600));
+        $exclusionId = $this->store(Decision::excluirFonte(0, (int) $this->fontes[2]->getFonteId(), $this->at(120), null));
+        $newest = [];
+        for ($i = 0; $i < 4; $i++) {
+            $newest[] = $this->store(Decision::adicionar(0, self::CAR_A, $this->at(300 + 200 * $i)));
         }
-        $this->assertCount($totalDecisions, $allIds);
-        $this->assertCount($totalDecisions, array_unique($allIds), 'no decision is listed twice');
-        $this->assertContains($exclusionId, $allIds);
+        $active = DecisionHistory::activeIdsFromDatabase($this->prova);
+
+        $history = DecisionHistory::all($this->prova, $active, 3);
+        $this->assertSame(array_reverse(array_slice($newest, 1)), array_column($history['linhas'], 'id'));
+        $this->assertFalse($history['completo']);
+        $this->assertContains($exclusionId, array_column(DecisionHistory::inForce($this->prova, $active), 'id'));
+
+        $this->assertTrue(DecisionHistory::all($this->prova, $active, 5)['completo'], 'exactly the limit is complete');
+    }
+
+    /**
+     * SITUATION: a reviewer confirms an entry of car B typed 100 s into
+     * the race, and adds a pass for car A.
+     *
+     * EXPECTED: the confirmation's line carries the moment of the entry,
+     * so a click on it can open car B's timeline right there. The added
+     * pass has no entry: its own moment is in ts_ms.
+     */
+    public function testAnEntryDecisionSaysWhenTheEntryWasTyped(): void
+    {
+        $this->startRace(self::RACE_START_MS);
+        $entry = $this->addEntry($this->fontes[0], self::CAR_B, $this->at(100));
+        Clock::freezeAt($this->at(600));
+        $confirmed = $this->store(Decision::confirmar(0, $entry));
+        $added = $this->store(Decision::adicionar(0, self::CAR_A, $this->at(300)));
+
+        $rows = array_column($this->freshScreen()['historico'], null, 'id');
+
+        $this->assertSame($this->at(100), $rows[$confirmed]['passagem_ts_ms']);
+        $this->assertNull($rows[$added]['passagem_ts_ms']);
+        $this->assertSame($this->at(300), $rows[$added]['ts_ms']);
     }
 
     /**

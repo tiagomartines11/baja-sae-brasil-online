@@ -49,8 +49,8 @@ export function atualizarListaDeCarros() {
 // `ganchos` is what a click on the drawn page calls back into revisao.js:
 //   acoes                      the decision actions (see revisao-acoes.js)
 //   acoesDoDetalhe             the actions of the detail panel
-//   escolherAlerta(id), escolherCarro(numero)
-//   carregarHistoricoAntigo()
+//   escolherAlerta(id), escolherCarro(numero, momento)
+//   abrirDoHistorico(alvo)     a line of the history: its flag, or its car at its moment
 //   desenharLinha()            the timeline at the top (revisao-linha.js)
 // Returns {desenharTudo, desenharDetalhe}.
 export function criarDesenho(ganchos) {
@@ -63,7 +63,7 @@ export function criarDesenho(ganchos) {
     // that went offline or a car that is now "parado".
     return JSON.stringify([
       tela.estado.versao, chaveAoVivo(tela.estado), tela.selecao, tela.ocupado, semConexao(),
-      tela.historicoAntigo.length, tela.historicoHaMais, tela.historicoCarregando, tela.ordemDosCarros,
+      tela.ordemDosCarros,
     ]);
   }
 
@@ -91,7 +91,7 @@ export function criarDesenho(ganchos) {
     });
   }
 
-  const desenhado = { listas: null, fontes: null, detalhe: null };
+  const desenhado = { listas: null, fontes: null, historico: null, detalhe: null };
 
   function desenharDetalhe() {
     if (!tela.estado) {
@@ -117,6 +117,8 @@ export function criarDesenho(ganchos) {
     if (alerta) {
       desenharDetalheDeAlerta(pagina.detalhe, { ...contexto, alerta });
     } else if (carro) {
+      // Opened from a line of the history, the timeline above goes to that
+      // line's moment (revisao-linha.js); the panel itself is the same.
       desenharDetalheDeCarro(pagina.detalhe, { ...contexto, carro });
     } else if (tela.selecao?.tipo === 'alerta') {
       // Somebody (or a late upload) made the flag go away while it was open.
@@ -154,18 +156,18 @@ export function criarDesenho(ganchos) {
 
     const chave = chaveDasListas();
     if (chave !== desenhado.listas) {
-      const desligado = tela.ocupado || semConexao();
       desenharFila(pagina.fila, tela.estado, tela.selecao?.tipo === 'alerta' ? tela.selecao.id : null, ganchos.escolherAlerta);
       desenharTabelaDeCarros(pagina.carros, tela.estado, tela.selecao?.tipo === 'carro' ? tela.selecao.numero : null, ganchos.escolherCarro,
         tela.ordemDosCarros, (coluna) => { escolherOrdemDosCarros(coluna); desenharTudo(); });
-      desenharHistorico(
-        { tabela: pagina.historico, mais: pagina.historicoMais },
-        tela.estado,
-        { antigas: tela.historicoAntigo, haMais: tela.historicoHaMais, carregando: tela.historicoCarregando },
-        desligado,
-        { desfazer: ganchos.acoes.desfazer, carregarMais: ganchos.carregarHistoricoAntigo },
-      );
       desenhado.listas = chave;
+    }
+    // The history has its own key: changing a filter redraws it and nothing else.
+    const chaveDoHistorico = JSON.stringify([chave, tela.filtrosDoHistorico]);
+    if (chaveDoHistorico !== desenhado.historico) {
+      desenharHistorico(pagina.historico, tela.estado, tela.filtrosDoHistorico, tela.ocupado || semConexao(), {
+        desfazer: ganchos.acoes.desfazer, abrir: ganchos.abrirDoHistorico,
+      });
+      desenhado.historico = chaveDoHistorico;
     }
     // The source blocks have their own key: redrawing a form somebody is
     // typing in would erase what they typed, so that redraw waits, and it

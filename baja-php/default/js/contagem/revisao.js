@@ -8,16 +8,18 @@
 
 import { criarAcoes } from './revisao-acoes.js';
 import { indiceDeUsarTempo } from './revisao-alertas.js';
-import { SessaoExpirada, buscarEstado, buscarHistorico } from './revisao-api.js';
+import { SessaoExpirada, buscarEstado } from './revisao-api.js';
 import { desenharBarra, desenharBarraSemEstado } from './revisao-barra.js';
 import {
-  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, historicoAposResposta, proximoAtrasoMs, versaoParaPedir,
+  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, proximoAtrasoMs, versaoParaPedir,
 } from './revisao-conexao.js';
 import { alertaSelecionado, atualizarListaDeCarros, criarDesenho, janelaDesatualizada } from './revisao-desenho.js';
 import { estaDigitandoEm } from './revisao-dom.js';
+import { guardarFiltros, lerFiltrosGuardados, normalizarFiltros } from './revisao-historico.js';
 import { criarLinhaDoTempo } from './revisao-linha.js';
+import { ligarFiltrosDoHistorico } from './revisao-tabela.js';
 import {
-  agoraServidorMs, horarioOficialMs, mostrarAba, mostrarMensagem, pagina, relogioOficial, tela,
+  agoraServidorMs, armazenamentoLocal, horarioOficialMs, mostrarAba, mostrarMensagem, pagina, relogioOficial, tela,
 } from './revisao-tela.js';
 
 // Puts the answers in order; see criarOrdemDePedidos().
@@ -67,7 +69,7 @@ const { desenharTudo, desenharDetalhe } = criarDesenho({
   acoesDoDetalhe,
   escolherAlerta,
   escolherCarro,
-  carregarHistoricoAntigo,
+  abrirDoHistorico,
   desenharLinha: linha.atualizar,
 });
 
@@ -78,42 +80,21 @@ function receberEstado(estado, numero) {
   if (!ordem.aceitar(numero)) {
     return false;
   }
-  // Older history pages the reviewer loaded stay until a decision is made
-  // or undone; a new calculation alone does not throw them away.
-  const paginas = historicoAposResposta(tela.estado, estado, { antigas: tela.historicoAntigo, haMais: tela.historicoHaMais });
-  tela.historicoAntigo = paginas.antigas;
-  tela.historicoHaMais = paginas.haMais;
   tela.estado = estado;
   atualizarListaDeCarros();
   return true;
 }
 
-// "Carregar decisões mais antigas" in the history panel.
-async function carregarHistoricoAntigo() {
-  if (tela.historicoCarregando || !tela.estado) {
-    return;
-  }
-  const carregadas = [...(tela.estado.historico ?? []), ...tela.historicoAntigo];
-  if (carregadas.length === 0) {
-    return;
-  }
-  const ultimaDecisao = tela.estado.ultima_decisao_id;
-  tela.historicoCarregando = true;
+// ---- the history's filters -------------------------------------------------------
+
+// Remembered per prova in this browser, so a reload keeps them.
+tela.filtrosDoHistorico = lerFiltrosGuardados(armazenamentoLocal(), pagina.prova);
+
+ligarFiltrosDoHistorico(pagina.historico.formulario, (filtros) => {
+  tela.filtrosDoHistorico = normalizarFiltros(filtros);
+  guardarFiltros(armazenamentoLocal(), pagina.prova, tela.filtrosDoHistorico);
   desenharTudo();
-  try {
-    const maisAntigas = await buscarHistorico(pagina.prova, carregadas[carregadas.length - 1].id);
-    // Unless a decision arrived meanwhile: the page would then be appended
-    // to a list that was just started afresh.
-    if (tela.estado.ultima_decisao_id === ultimaDecisao) {
-      tela.historicoAntigo = [...tela.historicoAntigo, ...(maisAntigas.linhas ?? [])];
-      tela.historicoHaMais = Boolean(maisAntigas.ha_mais);
-    }
-  } catch (erro) {
-    mostrarMensagem('Não foi possível carregar as decisões mais antigas. Tente de novo.', 'erro');
-  }
-  tela.historicoCarregando = false;
-  desenharTudo();
-}
+});
 
 // ---- selection and its timeline ------------------------------------------
 
@@ -161,8 +142,21 @@ function escolherAlerta(id) {
   selecionar({ tipo: 'alerta', id });
 }
 
-function escolherCarro(numero) {
-  selecionar({ tipo: 'carro', numero });
+// `momento` (optional): {momentoMs, passagemIds} to centre the car's
+// timeline on and outline, when it is opened from a line of the history.
+function escolherCarro(numero, momento = null) {
+  selecionar(momento
+    ? { tipo: 'carro', numero, momentoMs: momento.momentoMs ?? null, passagemIds: momento.passagemIds ?? [] }
+    : { tipo: 'carro', numero });
+}
+
+// A line of the history: the flag it is about, or the car at its moment.
+function abrirDoHistorico(alvo) {
+  if (alvo.tipo === 'alerta') {
+    escolherAlerta(alvo.id);
+  } else {
+    escolherCarro(alvo.numero, alvo);
+  }
 }
 
 // ---- polling -------------------------------------------------------------------

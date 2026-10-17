@@ -433,6 +433,19 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 .carros tr.status-fora .situacao { color: var(--cor-fraca); }
 .historico td:nth-child(4) { white-space: normal; }
 .historico tr.desfeita td { color: var(--cor-fraca); text-decoration: line-through; }
+/* One list: what still stands carries a badge, the system's own lines are quieter. */
+.historico tr.abre { cursor: pointer; }
+.historico tr.abre:hover { background: #eef4fa; }
+.historico tr.automatica td { color: var(--cor-fraca); font-style: italic; }
+.historico td.acoes button + button { margin-left: 6px; }
+.etiqueta-em-vigor { padding: 0 6px; border-radius: 8px; background: var(--fundo-verde); color: var(--cor-verde); font-size: 11px; font-style: normal; white-space: nowrap; }
+/* A long history scrolls inside its box: new lines on top do not push the page. */
+.historico-rolagem { max-height: 70vh; overflow-y: auto; }
+.historico-rolagem thead th { position: sticky; top: 0; z-index: 1; }
+.historico-resumo { font-size: 13px; font-weight: normal; color: var(--cor-fraca); }
+.historico-filtros { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 0 0 8px; font-size: 13px; }
+.historico-filtros label { display: inline-flex; gap: 4px; align-items: center; }
+.historico-filtros select { max-width: 14em; }
 
 #estatisticas-fontes { display: flex; flex-wrap: wrap; gap: 10px; }
 .bloco-fonte { flex: 1 1 260px; padding: 8px 10px; border: 1px solid var(--cor-borda); border-radius: 4px; }
@@ -469,6 +482,16 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
   .chip { height: 28px; }
   .contagem-acao, .contagem-fonte { flex-direction: column; align-items: stretch; }
   .botao-grande { width: 100%; }
+  .historico-filtros label { flex: 1 1 40%; }
+  .historico-filtros select, .historico-filtros input[type="number"] { flex: 1; min-width: 0; max-width: none; }
+  .historico-filtros button { flex: 1 1 40%; padding: 8px; }
+  /* Each history line becomes a small card: who and when, then what, then the buttons. */
+  table.historico, .historico tbody { display: block; }
+  .historico thead { display: none; }
+  .historico tr { display: flex; flex-wrap: wrap; gap: 2px 10px; padding: 6px 2px; border-bottom: 1px solid var(--cor-borda); }
+  .historico th, .historico td { padding: 0; border: 0; }
+  .historico td:nth-child(4), .historico td.acoes { flex-basis: 100%; white-space: normal; }
+  .historico td.acoes button { padding: 8px 14px; }
 }
 
 /* ---- round 2: publishing off, devices, pass zero, open-ended exclusions ---- */
@@ -527,10 +550,6 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 .campo-motivo { display: block; margin: 8px 0; font-size: 13px; color: var(--cor-fraca); }
 .campo-motivo input { max-width: 100%; }
 .acao-manual small { color: var(--cor-fraca); }
-
-.historico .titulo-secao th { text-align: left; background: var(--cor-fundo); color: var(--cor-fraca); font-size: 12px; }
-.historico tr.em-vigor td { background: var(--fundo-ambar); }
-#historico-mais { margin: 6px 0 12px; }
 
 .contagem-configuracoes select { max-width: 100%; }
 

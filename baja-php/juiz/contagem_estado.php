@@ -1,7 +1,6 @@
 <?php
 namespace Baja\Juiz;
 
-use Baja\Contagem\Review\DecisionHistory;
 use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\ReviewerPresence;
 use Baja\Contagem\Review\StateSnapshot;
@@ -13,7 +12,9 @@ use Baja\Contagem\Service\ContagemService;
 //   GET ?p=&versao=&alerta=      the state. When `versao` is the token of the
 //                                current snapshot the answer is "inalterado"
 //                                with only the parts that change on their own.
-//   GET ?p=&historico_antes=ID   one older page of the decision history.
+//
+// The decision history is part of the state, whole (see DecisionHistory);
+// there are no older pages to ask for.
 //
 // This never runs the engine: the state comes from the stored snapshot,
 // which is recalculated at most every few seconds (see SnapshotService).
@@ -21,14 +22,6 @@ use Baja\Contagem\Service\ContagemService;
 Pagina::beginJsonEndpoint();
 $prova = Pagina::provaOrRedirect();
 Pagina::requireControllerJson($prova);
-
-if (isset($_GET['historico_antes'])) {
-    $beforeId = filter_var($_GET['historico_antes'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-    if ($beforeId === false) {
-        Pagina::sendJson(400, ['erro' => 'pedido_invalido', 'mensagem' => 'Página do histórico inválida.']);
-    }
-    Pagina::sendJson(200, DecisionHistory::page($prova, DecisionHistory::activeIdsFromDatabase($prova), $beforeId));
-}
 
 $service = ContagemService::forProva($prova);
 $username = Pagina::username();

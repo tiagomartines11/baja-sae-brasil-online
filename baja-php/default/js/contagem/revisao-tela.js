@@ -2,10 +2,13 @@
 // revisao.js (polling and drawing) and revisao-acoes.js (decisions).
 
 import { guardarOrdem, lerOrdem, proximaOrdem } from './revisao-carros.js';
+import { FILTROS_VAZIOS } from './revisao-historico.js';
 import { criarRelogioOficial } from './revisao-relogio.js';
 
-// Some privacy settings make the mere mention of localStorage throw.
-function armazenamentoLocal() {
+// Some privacy settings make the mere mention of localStorage throw. Null
+// then: what is remembered (the car table's order, the history's filters)
+// lasts until the page is reloaded.
+export function armazenamentoLocal() {
   try {
     return window.localStorage;
   } catch (bloqueado) {
@@ -35,8 +38,12 @@ export const pagina = {
   },
   carros: document.getElementById('tabela-carros'),
   fontes: document.getElementById('estatisticas-fontes'),
-  historico: document.getElementById('tabela-historico'),
-  historicoMais: document.getElementById('historico-mais'),
+  historico: {
+    formulario: document.getElementById('historico-filtros'),
+    resumo: document.getElementById('historico-resumo'),
+    tabela: document.getElementById('tabela-historico'),
+    aviso: document.getElementById('historico-aviso'),
+  },
 };
 
 export const tela = {
@@ -51,9 +58,9 @@ export const tela = {
   entradaSelecionadaId: null,
   modoManual: false,
   motivo: '',              // optional reason typed for the next decision in the detail panel
-  historicoAntigo: [],     // older pages of the history, loaded on request
-  historicoHaMais: false,  // whether an even older page exists
-  historicoCarregando: false,
+  // The history's filters (see revisao-historico.js); revisao.js fills them
+  // with the ones this browser remembers for the prova.
+  filtrosDoHistorico: { ...FILTROS_VAZIOS },
   ocupado: false,          // a decision is on its way; buttons are disabled
   // order of the car table, {coluna, direcao} or null for the standings;
   // remembered on this computer (revisao-carros.js)

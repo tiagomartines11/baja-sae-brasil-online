@@ -76,7 +76,7 @@ final class StateSnapshot
             }
         }
 
-        $history = DecisionHistory::page($prova, $activeDecisionIds, null);
+        $history = DecisionHistory::all($prova, $activeDecisionIds);
         [$sources, $contactBySource] = self::withoutContact(SourceOverview::describeSources($input, $result));
 
         return [
@@ -95,8 +95,9 @@ final class StateSnapshot
             // was plainly lapping). Nothing is stored for them; the screen
             // offers "Confirmar saída", which stores one.
             'saidas_presumidas' => TimelineStops::describeAssumedExits($result->timeline),
+            // The whole history, so the screen can filter all of it.
             'historico' => $history['linhas'],
-            'historico_ha_mais' => $history['ha_mais'],
+            'historico_completo' => $history['completo'],
             'historico_em_vigor' => DecisionHistory::inForce($prova, $activeDecisionIds),
             'ultima_decisao_id' => self::highestDecisionId($input),
         ];

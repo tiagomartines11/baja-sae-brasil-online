@@ -89,11 +89,6 @@ export function buscarEstado(prova, versao, alertaId) {
   return buscar(comParametros('contagem_estado.php', { p: prova, versao, alerta: alertaId }), 'estado');
 }
 
-// One older page of the decision history: the decisions before `antesDoId`.
-export function buscarHistorico(prova, antesDoId) {
-  return buscar(comParametros('contagem_estado.php', { p: prova, historico_antes: antesDoId }), 'histórico');
-}
-
 export function buscarJanela(prova, deMs, ateMs) {
   return buscar(comParametros('contagem_janela.php', { p: prova, de: deMs, ate: ateMs }), 'janela');
 }

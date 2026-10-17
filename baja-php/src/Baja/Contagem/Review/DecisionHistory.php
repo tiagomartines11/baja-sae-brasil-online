@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\Data\Decision;
+use Baja\Contagem\Engine\Data\Entry;
 use Baja\Model\Prova;
 use PDO;
 use Propel\Runtime\Propel;
@@ -14,15 +15,19 @@ use Propel\Runtime\Propel;
  *
  * Two lists:
  *
- * - page(): the history itself, a page at a time. A long race gathers
- *   hundreds of decisions and the screen is redrawn from every answer, so
- *   only the newest page travels with the state; older pages are fetched
- *   when the reviewer asks.
+ * - all(): the history itself, the whole of it. The screen filters it by
+ *   car, counter, person and type, and a filter over the newest page alone
+ *   would quietly miss the rest. A race gathers about a hundred decisions
+ *   (81 at 26SE), about 30 KB of JSON in the stored state, which travels
+ *   only when the state changes; so the whole list goes. Past MAX_ROWS
+ *   the oldest are left out and the answer says so: by then the list would
+ *   weigh more than the rest of the screen together.
  * - inForce(): every "excluir fonte", "adicionar passagem" and "marcar
  *   saída" still in force, however old. These change the race for as long
- *   as they stand and are not attached to any entry on a timeline, so the
- *   history is the only place to see and undo them. They must never scroll
- *   away.
+ *   as they stand and are not attached to any entry on a timeline. The
+ *   Fontes block and the status bar read the open-ended exclusions from
+ *   this list, and the screen merges it into the history, so they are
+ *   never lost even past MAX_ROWS.
  *
  * The engine's Decision objects deliberately carry no username (the engine
  * does not care who decided), so this reads the people-facing columns
@@ -35,11 +40,13 @@ use Propel\Runtime\Propel;
  */
 final class DecisionHistory
 {
-    public const PAGE_SIZE = 50;
+    /** Ten times the decisions of a busy race; see the class comment. */
+    public const MAX_ROWS = 1000;
 
     private const COLUMNS = 'd.decisao_id, d.tipo, d.passagem_id, d.passagem_alvo_id, d.fonte_id, d.equipe_numero, d.ts_ms, d.ts_fim_ms,
                              d.desfaz_decisao_id, d.origem, d.usuario, d.motivo, d.criado_em_ms,
                              p.passagem_id AS registro_id, p.equipe_numero AS registro_carro, p.fonte_id AS registro_fonte_id,
+                             p.ts_ms AS registro_ts_ms, p.qualidade_tempo AS registro_qualidade,
                              f.nome AS fonte_nome';
 
     /**
@@ -53,34 +60,28 @@ final class DecisionHistory
                      LEFT JOIN contagem_fonte f ON f.fonte_id = COALESCE(d.fonte_id, p.fonte_id)';
 
     /**
-     * One page of the history, newest first.
+     * The whole history, newest first; at most $limit decisions, the newest.
      *
      * @param array<int, true> $activeDecisionIds ids of the decisions still in force
-     * @param int|null $beforeId only decisions older than this id; null for the newest page
-     * @return array{linhas: array<int, array<string, mixed>>, ha_mais: bool}
+     * @return array{linhas: array<int, array<string, mixed>>, completo: bool} completo is false when older ones were left out
      */
-    public static function page(Prova $prova, array $activeDecisionIds, ?int $beforeId, int $pageSize = self::PAGE_SIZE): array
+    public static function all(Prova $prova, array $activeDecisionIds, int $limit = self::MAX_ROWS): array
     {
-        $pageSize = max(1, min(500, $pageSize));
-        // One row more than the page, only to learn whether another page exists.
+        $limit = max(1, $limit);
+        // One row more than the limit, only to learn whether any was left out.
         $sql = 'SELECT ' . self::COLUMNS . ' ' . self::FROM . '
-                 WHERE d.evento_id = :evento AND d.prova_id = :prova AND d.decisao_id < :antes
+                 WHERE d.evento_id = :evento AND d.prova_id = :prova
                  ORDER BY d.decisao_id DESC
-                 LIMIT ' . ($pageSize + 1);
+                 LIMIT ' . ($limit + 1);
         $statement = Propel::getConnection('resultados')->prepare($sql);
-        $statement->execute([
-            ':evento' => $prova->getEventoId(),
-            ':prova' => $prova->getProvaId(),
-            ':antes' => $beforeId ?? PHP_INT_MAX,
-        ]);
+        $statement->execute([':evento' => $prova->getEventoId(), ':prova' => $prova->getProvaId()]);
 
         $rows = [];
         $carNow = self::carsAfterReassignment($prova, $activeDecisionIds);
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $rows[] = self::describe($row, $activeDecisionIds, $carNow);
         }
-        $hasMore = count($rows) > $pageSize;
-        return ['linhas' => array_slice($rows, 0, $pageSize), 'ha_mais' => $hasMore];
+        return ['linhas' => array_slice($rows, 0, $limit), 'completo' => count($rows) <= $limit];
     }
 
     /**
@@ -116,8 +117,8 @@ final class DecisionHistory
 
     /**
      * Which decisions of the prova are still in force, read from the
-     * database. For the "older page" request, which has no engine input at
-     * hand and must not load a whole race to get one.
+     * database. For callers that have no engine input at hand and must not
+     * load a whole race to get one.
      *
      * @return array<int, true>
      */
@@ -232,6 +233,11 @@ final class DecisionHistory
             // Null for a decision about no stored entry.
             'carro_digitado' => $typedCar,
             'carro' => $entryId === null ? null : ($carNow[$entryId] ?? $typedCar),
+            // When the entry was typed: the screen opens the car's timeline
+            // there. Null for an entry of unknown time.
+            'passagem_ts_ms' => $entryId === null || $row['registro_qualidade'] === Entry::TEMPO_DESCONHECIDO
+                ? null
+                : self::intOrNull($row['registro_ts_ms']),
             'equipe_numero' => self::intOrNull($row['equipe_numero']),
             'ts_ms' => self::intOrNull($row['ts_ms']),
             'ts_fim_ms' => self::intOrNull($row['ts_fim_ms']),

@@ -15,7 +15,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  aplicarResposta, avisoDeConexao, chaveAoVivo, chaveDoDetalhe, criarOrdemDePedidos, historicoAposResposta, proximoAtrasoMs,
+  aplicarResposta, avisoDeConexao, chaveAoVivo, chaveDoDetalhe, criarOrdemDePedidos, proximoAtrasoMs,
   versaoParaPedir,
 } from '../../default/js/contagem/revisao-conexao.js';
 
@@ -212,33 +212,6 @@ test('the screen notices a change that came without a new version', () => {
   assert.equal(chaveAoVivo(antes), chaveAoVivo(igual));
   assert.notEqual(chaveAoVivo(antes), chaveAoVivo(carroAtrasado));
   assert.notEqual(chaveAoVivo(antes), chaveAoVivo(telefoneMudo));
-});
-
-// SITUATION: a long race has 300 decisions. The reviewer wants to check one
-// made an hour ago and presses "Carregar decisões mais antigas" three times.
-// Meanwhile the race goes on: every few seconds the server recalculates and
-// the screen receives a new state, with the same decisions.
-//
-// WHAT WENT WRONG: every new state threw the loaded pages away. The list
-// collapsed back to the newest 50 rows under the reviewer's eyes, every few
-// seconds, and the old decision could never be reached.
-//
-// EXPECTED: the loaded pages stay for as long as no decision is made or
-// undone ("ultima_decisao_id" is the same). When one is, the pages are
-// dropped: which old rows are still in force may have changed.
-test('older history pages stay on screen until a decision is made, not until the next calculation', () => {
-  const paginas = { antigas: [{ id: 40 }, { id: 39 }], haMais: true };
-  const antes = { versao: 'aaa', ultima_decisao_id: 90, historico_ha_mais: true };
-
-  const novoCalculo = { versao: 'bbb', ultima_decisao_id: 90, historico_ha_mais: true };
-  assert.deepEqual(historicoAposResposta(antes, novoCalculo, paginas), paginas, 'a new calculation alone keeps the pages');
-
-  const novaDecisao = { versao: 'ccc', ultima_decisao_id: 91, historico_ha_mais: true };
-  assert.deepEqual(historicoAposResposta(antes, novaDecisao, paginas), { antigas: [], haMais: true });
-
-  // The very first state: nothing was loaded yet.
-  assert.deepEqual(historicoAposResposta(null, { ultima_decisao_id: 3, historico_ha_mais: false }, { antigas: [], haMais: false }),
-    { antigas: [], haMais: false });
 });
 
 // SITUATION: the reviewer has a flag about car 41 open and is reading its

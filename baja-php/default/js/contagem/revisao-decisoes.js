@@ -382,7 +382,8 @@ export function perguntaAoAgirNaEntrada(opcao, entrada, estado = null) {
 }
 
 export {
-  descreverDecisao, descreverSugestao, mensagemDeConflito, perguntaAoDesfazer, perguntaSobreVoltaCurta, rotuloDeUsarTempo,
+  descreverDecisao, descreverResolucaoAutomatica, descreverSugestao, fraseDoHistorico, mensagemDeConflito, perguntaAoDesfazer,
+  perguntaSobreVoltaCurta, rotuloDeUsarTempo,
 } from './revisao-frases.js';
 export {
   acaoDeConfirmar, decisaoConfirmarAlerta, efeitoDeUsarTempo, indiceDeUsarTempo, perguntaAoContarNaEntrada, perguntaAoUsarTempo, temposParaEscolher,

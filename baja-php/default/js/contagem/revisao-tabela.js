@@ -3,7 +3,7 @@
 
 import { el, substituir } from './revisao-dom.js';
 import {
-  AVISO_TEMPO_DE_VOLTA, NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, idade, relogio, tempoDeProva,
+  AVISO_TEMPO_DE_VOLTA, NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, idade, tempoDeProva,
 } from './revisao-formato.js';
 import {
   NOMES_DE_SITUACAO, avisoDeVoltasCurtas, dispositivosDaFonte, fonteSilenciosa, situacaoDoCarroFora,
@@ -13,7 +13,11 @@ import {
   textoDeAcima, textoDeCurtas, textoDosAlertas,
 } from './revisao-carros.js';
 import { descreverParada } from './revisao-raias-logica.js';
-import { descreverDecisao, exclusoesAbertas } from './revisao-decisoes.js';
+import { exclusoesAbertas } from './revisao-decisoes.js';
+import {
+  FILTROS_VAZIOS, avisoDeHistoricoIncompleto, filtrarHistorico, historicoVazio, linhasDoHistorico, opcoesDosFiltros, resumoDoHistorico,
+  temFiltro,
+} from './revisao-historico.js';
 import {
   ehObservadora, linhasDaObservacao, tituloDaObservacao,
 } from './revisao-observacao.js';
@@ -291,65 +295,108 @@ export function desenharFontes(container, estado, ocupado, acoes) {
     blocoDeParadasSemHorario(estado));
 }
 
-function linhaDoHistorico(decisao, estado, ocupado, aoDesfazer, classeExtra = '') {
-  const nomeDaFonte = (fonteId) => (estado.fontes ?? []).find((fonte) => fonte.id === fonteId)?.nome ?? null;
-  const largada = estado.corrida.largada_ms;
-  const temLargada = largada !== null && largada !== undefined;
+// ---- decision history ---------------------------------------------------------
 
-  let detalhe = '';
-  if (decisao.tipo === 'adicionar' || decisao.tipo === 'marcar_saida') {
-    detalhe = ` em ${tempoDeProva(decisao.ts_ms, largada)}`;
-  } else if (decisao.tipo === 'excluir_fonte' && temLargada) {
-    const fim = decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined ? null : relogio(decisao.ts_fim_ms - largada);
-    detalhe = fim === null ? `: desde ${relogio(decisao.ts_ms - largada)}` : `: ${relogio(decisao.ts_ms - largada)} até ${fim}`;
-  }
-  const classes = [decisao.ativa ? '' : 'desfeita', classeExtra].filter(Boolean).join(' ');
-
-  return el('tr', { class: classes },
-    el('td', { class: 'num' }, `#${decisao.id}`),
-    el('td', {}, `há ${idade(estado.servidor_agora_ms - decisao.criado_em_ms)}`),
-    el('td', {}, decisao.usuario ?? SEM_VALOR, decisao.origem === 'contador' ? ' (contador)' : ''),
-    // The "motivo" of a marked exit is its area, already said in the sentence.
-    el('td', {}, descreverDecisao(decisao, nomeDaFonte) + detalhe, decisao.motivo && decisao.tipo !== 'marcar_saida' ? ` — ${decisao.motivo}` : ''),
-    el('td', {},
-      decisao.pode_desfazer
-        ? el('button', { type: 'button', disabled: ocupado, onclick: () => aoDesfazer(decisao) }, 'Desfazer')
-        : (decisao.ativa ? '' : 'desfeita')));
+// The filter bar is in the page's markup (contagem_revisao.php) and is never
+// redrawn, so a car number half typed survives every answer from the
+// server. This wires it, once. `aoFiltrar(filtros)` gets the whole set.
+export function ligarFiltrosDoHistorico(formulario, aoFiltrar) {
+  const campos = formulario.elements;
+  const ler = () => ({
+    carro: campos.carro.value,
+    fonte: campos.fonte.value,
+    quem: campos.quem.value,
+    tipo: campos.tipo.value,
+    soEmVigor: campos.soEmVigor.checked,
+  });
+  // Enter in the car field must not reload the page.
+  formulario.addEventListener('submit', (evento) => evento.preventDefault());
+  formulario.addEventListener('input', () => aoFiltrar(ler()));
+  formulario.addEventListener('change', () => aoFiltrar(ler()));
+  campos.limpar.addEventListener('click', () => aoFiltrar({ ...FILTROS_VAZIOS }));
 }
 
-// The history panel.
-//   elementos: {tabela, mais}
-//   paginas:   {antigas, haMais, carregando}  older pages loaded on request
-//   acoes:     {desfazer(decisao), carregarMais()}
-//
-// On top, always, the exclusions and added passes still in force: they
-// change the count for as long as they stand and belong to no entry on a
-// timeline, so this is the only place to find and undo them. Below, the
-// history newest first, a page at a time.
-export function desenharHistorico(elementos, estado, paginas, ocupado, acoes) {
-  const emVigor = estado.historico_em_vigor ?? [];
-  const recentes = [...(estado.historico ?? []), ...(paginas.antigas ?? [])];
+// The choices of one list, rebuilt only when they changed and never while
+// the list is open (that would close it under the reviewer's finger).
+function preencherLista(lista, opcoes, valor) {
+  const chave = JSON.stringify(opcoes);
+  if (lista.dataset.opcoes !== chave && document.activeElement !== lista) {
+    substituir(lista, el('option', { value: '' }, 'todos'), opcoes.map((opcao) => el('option', { value: opcao.valor }, opcao.rotulo)));
+    lista.dataset.opcoes = chave;
+  }
+  if (lista.value !== valor) {
+    lista.value = valor;
+  }
+}
+
+// The bar shows the filters in force: those remembered from the last visit,
+// and none after "Limpar filtros". A field being typed in is left alone.
+function mostrarFiltros(formulario, estado, linhas, filtros) {
+  const campos = formulario.elements;
+  const opcoes = opcoesDosFiltros(estado, linhas, filtros);
+  preencherLista(campos.fonte, opcoes.fontes, filtros.fonte);
+  preencherLista(campos.quem, opcoes.quem, filtros.quem);
+  preencherLista(campos.tipo, opcoes.tipos, filtros.tipo);
+  if (document.activeElement !== campos.carro && campos.carro.value !== filtros.carro) {
+    campos.carro.value = filtros.carro;
+  }
+  campos.soEmVigor.checked = filtros.soEmVigor;
+  campos.limpar.disabled = !temFiltro(filtros);
+}
+
+function linhaDoHistorico(linha, estado, ocupado, acoes) {
+  const { decisao, alvo } = linha;
+  const abrir = alvo ? () => acoes.abrir(alvo) : null;
+  const classes = [linha.desfeita ? 'desfeita' : '', linha.automatica ? 'automatica' : '', abrir ? 'abre' : ''].filter(Boolean).join(' ');
+  const dicaDoVer = alvo?.tipo === 'alerta'
+    ? 'Abrir este alerta no painel de detalhe'
+    : `Abrir a linha do tempo do carro ${alvo?.numero} neste momento`;
+
+  return el('tr', {
+    class: classes,
+    // The whole line opens it with the mouse; "Ver" is the same for the keyboard.
+    onclick: abrir ? (evento) => { if (!evento.target.closest('button')) abrir(); } : null,
+  },
+  el('td', { class: 'num' }, decisao ? `#${decisao.id}` : SEM_VALOR),
+  el('td', {}, `há ${idade(estado.servidor_agora_ms - linha.quandoMs)}`),
+  el('td', {}, linha.automatica
+    ? 'automático'
+    : [decisao.usuario ?? SEM_VALOR, decisao.origem === 'contador' ? ' (contador, no aparelho)' : '']),
+  el('td', {}, linha.emVigor ? [el('span', { class: 'etiqueta-em-vigor' }, 'em vigor'), ' '] : null, linha.texto),
+  el('td', { class: 'acoes' },
+    abrir ? el('button', { type: 'button', class: 'ver', title: dicaDoVer, onclick: abrir }, 'Ver') : null,
+    decisao?.pode_desfazer
+      ? el('button', { type: 'button', disabled: ocupado, onclick: () => acoes.desfazer(decisao) }, 'Desfazer')
+      : (linha.desfeita ? ' desfeita' : null)));
+}
+
+// The history panel: one list, newest first, the system's own resolutions
+// among the decisions (see linhasDoHistorico), cut down by the filters.
+// What still stands carries "em vigor"; the open-ended source exclusions
+// are also loud in the Fontes block and the status bar.
+//   elementos: {formulario, resumo, tabela, aviso}
+//   filtros:   see revisao-historico.js
+//   acoes:     {desfazer(decisao), abrir(alvo)}
+export function desenharHistorico(elementos, estado, filtros, ocupado, acoes) {
+  const linhas = linhasDoHistorico(estado);
+  const mostradas = filtrarHistorico(linhas, filtros);
   const colunas = 5;
 
-  const corpo = [];
-  if (emVigor.length > 0) {
-    corpo.push(el('tr', { class: 'titulo-secao' },
-      el('th', { colspan: colunas }, `Em vigor: exclusões de fonte, passagens adicionadas e saídas marcadas (${emVigor.length})`)));
-    corpo.push(emVigor.map((decisao) => linhaDoHistorico(decisao, estado, ocupado, acoes.desfazer, 'em-vigor')));
-    corpo.push(el('tr', { class: 'titulo-secao' }, el('th', { colspan: colunas }, 'Todas as decisões, da mais recente para a mais antiga')));
+  if (elementos.formulario) {
+    mostrarFiltros(elementos.formulario, estado, linhas, filtros);
   }
-  corpo.push(recentes.length > 0
-    ? recentes.map((decisao) => linhaDoHistorico(decisao, estado, ocupado, acoes.desfazer))
-    : el('tr', {}, el('td', { colspan: colunas, class: 'vazio' }, 'Nenhuma decisão ainda.')));
+  if (elementos.resumo) {
+    elementos.resumo.textContent = resumoDoHistorico(mostradas.length, linhas.length, filtros);
+  }
 
   substituir(elementos.tabela,
     el('thead', {}, el('tr', {}, el('th', {}, '#'), el('th', {}, 'Quando'), el('th', {}, 'Quem'), el('th', {}, 'O quê'), el('th', {}, ''))),
-    el('tbody', {}, corpo));
+    el('tbody', {}, mostradas.length > 0
+      ? mostradas.map((linha) => linhaDoHistorico(linha, estado, ocupado, acoes))
+      : el('tr', {}, el('td', { colspan: colunas, class: 'vazio' }, historicoVazio(linhas.length)))));
 
-  if (elementos.mais) {
-    substituir(elementos.mais, paginas.haMais
-      ? el('button', { type: 'button', disabled: paginas.carregando, onclick: acoes.carregarMais },
-        paginas.carregando ? 'Carregando…' : 'Carregar decisões mais antigas')
-      : (recentes.length > 0 ? el('span', { class: 'vazio' }, 'Fim do histórico.') : null));
+  if (elementos.aviso) {
+    const aviso = avisoDeHistoricoIncompleto(estado);
+    substituir(elementos.aviso, aviso ? el('p', { class: 'contagem-dica' }, aviso) : null);
   }
 }
