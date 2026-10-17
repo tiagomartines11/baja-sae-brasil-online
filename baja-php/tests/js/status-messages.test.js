@@ -22,7 +22,7 @@ import assert from 'node:assert/strict';
 import { CONEXAO } from '../../default/js/contagem/sync-queue.js';
 import { ARMAZENAMENTO } from '../../default/js/contagem/storage-open.js';
 import {
-    describeBanner, describeConnection, describeOthers, describeQueue,
+    describeBackLink, describeBanner, describeConnection, describeOthers, describeQueue,
 } from '../../default/js/contagem/status-messages.js';
 import { createStatusBar } from '../../default/js/contagem/status-bar.js';
 import {
@@ -473,4 +473,42 @@ test('the bar puts the short texts on screen and the long ones in the titles', (
     assert.equal(documentRef.getElementById('st-pendentes').parentElement.title, '12 na fila, 3 aguardando horário oficial');
     assert.equal(documentRef.getElementById('st-outros').textContent, 'maria +1');
     assert.equal(documentRef.getElementById('st-outros').parentElement.title, 'maria, joao');
+});
+
+// ---------------------------------------------------------------------------
+// "Voltar"
+// ---------------------------------------------------------------------------
+
+// SITUATION: "Voltar" leads to the list of sources. That page is not part
+// of the offline copy, so a counter who pressed it without a connection got
+// the browser's own error page instead of the count page.
+//
+// EXPECTED: while offline the link is replaced by "Voltar: sem conexão";
+// it comes back with the connection. It is in the footer, below the keys,
+// so swapping the two moves nothing above them.
+test('"Voltar" is offered only while the page can reach the list of sources', () => {
+    assert.equal(describeBackLink(queueState({ conexao: CONEXAO.ONLINE })).disponivel, true);
+    assert.equal(describeBackLink(queueState({ conexao: CONEXAO.CONECTANDO })).disponivel, true,
+        'not known to be offline yet');
+    const offline = describeBackLink(queueState({ conexao: CONEXAO.OFFLINE }));
+    assert.equal(offline.disponivel, false);
+    assert.equal(offline.texto, 'Voltar: sem conexão');
+    assert.equal(describeBackLink(queueState({ conexao: CONEXAO.ONLINE }), false).disponivel, false,
+        'the browser knows before the next upload fails');
+});
+
+test('the status bar swaps the link for the hint and back', () => {
+    const documentRef = createFakeBarDocument();
+    const bar = createStatusBar(documentRef, { fonte: { nome: 'Contador 1' } });
+    const link = documentRef.getElementById('link-voltar');
+    const hint = documentRef.getElementById('voltar-sem-conexao');
+
+    bar.render(queueState({ conexao: CONEXAO.OFFLINE, outrosUsuarios: [] }), DISK_OK);
+    assert.deepEqual([link.hidden, hint.hidden], [true, false]);
+
+    bar.render(queueState({ conexao: CONEXAO.ONLINE, outrosUsuarios: [] }), DISK_OK);
+    assert.deepEqual([link.hidden, hint.hidden], [false, true]);
+
+    bar.render(queueState({ conexao: CONEXAO.ONLINE, outrosUsuarios: [] }), DISK_OK, false, false);
+    assert.deepEqual([link.hidden, hint.hidden], [true, false]);
 });

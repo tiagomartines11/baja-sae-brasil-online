@@ -100,7 +100,9 @@ OfflineShell::printStatusBar($fonte->getNome(), 'Também registrando o box:');
 
     <footer class="rodape">
         <?php OfflineShell::printFooterButtons(); ?>
-        <a class="link-voltar" href="contagem.php?p=<?= htmlspecialchars(rawurlencode($provaId)) ?>">Voltar</a>
+        <a class="link-voltar" id="link-voltar" href="contagem.php?p=<?= htmlspecialchars(rawurlencode($provaId)) ?>">Voltar</a>
+        <?php // The list of sources is not in the offline copy: shown instead of the link while offline (status-bar.js). ?>
+        <span class="link-voltar voltar-sem-conexao" id="voltar-sem-conexao" hidden>Voltar: sem conexão</span>
         <?php OfflineShell::printFooterTools(); ?>
     </footer>
 </main>

@@ -183,3 +183,21 @@ export function describeOthers(names) {
     const more = names.length - OUTROS_VISIVEIS;
     return { texto: more > 0 ? shown + ' +' + more : shown, titulo: names.join(', ') };
 }
+
+/**
+ * The "Voltar" link of the footer leads to the list of sources, which is not
+ * part of the offline copy: followed without a connection it gave the
+ * browser's own error page, and the counter lost the count page. So while
+ * the page knows it is offline (the last upload failed, or the browser
+ * says it has no network) the link is replaced by a short hint.
+ *
+ * @param {object}  state           SyncQueue.getState()
+ * @param {boolean} browserOnline   navigator.onLine (false only when the browser is sure)
+ * @returns {{disponivel: boolean, texto: string, titulo: string}}
+ */
+export function describeBackLink(state, browserOnline = true) {
+    const offline = state.conexao === CONEXAO.OFFLINE || browserOnline === false;
+    return offline
+        ? { disponivel: false, texto: 'Voltar: sem conexão', titulo: 'A lista de fontes precisa de conexão. A contagem continua aqui.' }
+        : { disponivel: true, texto: 'Voltar', titulo: 'Voltar para a lista de fontes' };
+}

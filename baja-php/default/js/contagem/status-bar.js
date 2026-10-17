@@ -10,7 +10,7 @@
 
 import { describeOfficialTime, describeRaceClock, formatTimeOfDay, TEXTO_VERIFICANDO } from './race-clock.js';
 import {
-    describeBanner, describeConnection, describeOthers, describeQueue,
+    describeBackLink, describeBanner, describeConnection, describeOthers, describeQueue,
 } from './status-messages.js';
 
 export function createStatusBar(documentRef, config) {
@@ -25,6 +25,9 @@ export function createStatusBar(documentRef, config) {
     const ultimoSync = element('st-ultimo-sync');
     const outros = element('st-outros');
     const avisoFixo = element('aviso-fixo');
+    // In the footer, below the keys: showing one or the other moves nothing above them.
+    const linkVoltar = element('link-voltar');
+    const voltarSemConexao = element('voltar-sem-conexao');
 
     const avisoFixoTextos = element('aviso-fixo-textos');
     const botaoTentarDeNovo = element('btn-reconectar');
@@ -86,8 +89,9 @@ export function createStatusBar(documentRef, config) {
          * @param {object}  state    SyncQueue.getState()
          * @param {object}  problems {tokenProblem: ?string, armazenamento: string}
          * @param {boolean} simulationAllowed the prova is in simulation mode
+         * @param {boolean} browserOnline navigator.onLine
          */
-        render(state, problems, simulationAllowed = false) {
+        render(state, problems, simulationAllowed = false, browserOnline = true) {
             // Permanent while the setting is on: nobody may mistake a
             // rehearsal with invented cars for a real count, or the reverse.
             faixaSimulacao.hidden = !simulationAllowed;
@@ -114,6 +118,14 @@ export function createStatusBar(documentRef, config) {
             const others = describeOthers(state.outrosUsuarios);
             outros.textContent = others.texto;
             outros.parentElement.title = others.titulo;
+
+            // "Voltar" leads to a page that needs the network.
+            const backLink = describeBackLink(state, browserOnline);
+            if (linkVoltar && voltarSemConexao) {
+                linkVoltar.hidden = !backLink.disponivel;
+                voltarSemConexao.hidden = backLink.disponivel;
+                voltarSemConexao.title = backLink.titulo;
+            }
 
             renderBanner(state, problems);
         },

@@ -185,7 +185,7 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
         // The style sheet hides the entry controls under this class; the
         // recent list, the export and the uploads stay.
         documentRef.body.classList.toggle('somente-leitura', problems.bloqueio !== null);
-        statusBar.render(state, problems, info.simulationAllowed());
+        statusBar.render(state, problems, info.simulationAllowed(), windowRef.navigator.onLine !== false);
         statusBar.renderClock(state, clock.serverNowMs(), clock.estado());
         shiftButtons.render(state);
         updateSimulationGlobal();
@@ -235,7 +235,12 @@ export async function startPage({ buildExportCsv, windowRef = window, documentRe
 
     // Do not wait up to 5 s for the heartbeat when the network comes back or
     // the counter returns to the page.
-    windowRef.addEventListener('online', () => queue.requestSync());
+    // Losing the network also hides "Voltar" at once, not at the next failed upload.
+    windowRef.addEventListener('online', () => {
+        queue.requestSync();
+        renderStatus();
+    });
+    windowRef.addEventListener('offline', renderStatus);
     documentRef.addEventListener('visibilitychange', () => {
         if (documentRef.visibilityState === 'visible') {
             // Coming back from the background is exactly when the phone may

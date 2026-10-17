@@ -987,6 +987,12 @@ button {
     font-weight: 700;
 }
 
+/* Offline: the list of sources would not open. Plain text, not a link. */
+.voltar-sem-conexao {
+    color: var(--cor-texto);
+    font-weight: 400;
+}
+
 .turno-mensagem {
     flex-basis: 100%;
     margin: 0;
