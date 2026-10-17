@@ -376,7 +376,7 @@ Pagina::printHeader($prova, 'Controle de corrida');
     </form>
     <p>
         Exportar CSV:
-        <?php foreach (CsvExport::LABELS as $type => $label) { ?>
+        <?php foreach (CsvExport::labels($prova) as $type => $label) { ?>
             <a class="contagem-exportar" href="contagem_exportar.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>&amp;tipo=<?= $h($type) ?>"><?= $h($label) ?></a>
         <?php } ?>
     </p>

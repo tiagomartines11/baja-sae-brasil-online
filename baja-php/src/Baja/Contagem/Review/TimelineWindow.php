@@ -109,6 +109,7 @@ final class TimelineWindow
         foreach ($wanted as [$raw, $effectiveCar]) {
             $entriesBySource[$raw->fonteId][] = self::describeEntry($recount, $raw, $effectiveCar, $people, $shortConfirmed);
         }
+        $entriesBySource = self::withImages($service->getProva(), $entriesBySource);
 
         $lanes = [];
         foreach (self::laneSources($recount->input->sources, isset($entriesBySource[Source::REVISOR_ID])) as $laneSource) {
@@ -199,7 +200,10 @@ final class TimelineWindow
             'reatribuida' => $effectiveCar !== $raw->carroDigitado,
             // In no group and nobody voided it: before the start, or its
             // source was off or excluded at that moment.
-            'fora_de_uso' => in_array($reasonNotInUse, [CarsRecount::ANTES_DA_LARGADA, CarsRecount::FONTE_INATIVA, CarsRecount::FONTE_EXCLUIDA, CarsRecount::TEMPO_DESCONHECIDO], true),
+            'fora_de_uso' => in_array($reasonNotInUse, [
+                CarsRecount::ANTES_DA_LARGADA, CarsRecount::FONTE_INATIVA, CarsRecount::FONTE_EXCLUIDA,
+                CarsRecount::FONTE_OBSERVADORA, CarsRecount::TEMPO_DESCONHECIDO,
+            ], true),
             'motivo_fora_de_uso' => $reasonNotInUse,
             'adicionada_por_revisor' => $raw->fonteId === Source::REVISOR_ID,
             'decisoes' => $decisions,
@@ -282,6 +286,56 @@ final class TimelineWindow
     }
 
     /**
+     * Adds `imagem_url` (and `confianca`, when the system sent it) to the
+     * entries of the automatic sources that have an image base URL, where
+     * the entry carries an image reference. Nothing is added, and no
+     * question is asked of the entries, while no source has a base URL.
+     *
+     * The link is the source's base URL followed by the reference, as is:
+     * the picture is served by the system itself (usually a box beside the
+     * track), never by this server.
+     *
+     * @param array<int, array<int, array<string, mixed>>> $entriesBySource
+     * @return array<int, array<int, array<string, mixed>>>
+     */
+    private static function withImages(Prova $prova, array $entriesBySource): array
+    {
+        $baseUrls = SourceAdmin::imageBaseUrls($prova);
+        $entryIds = [];
+        foreach ($baseUrls as $fonteId => $baseUrl) {
+            foreach ($entriesBySource[$fonteId] ?? [] as $entry) {
+                $entryIds[] = (int) $entry['id'];
+            }
+        }
+        if ($entryIds === []) {
+            return $entriesBySource;
+        }
+
+        $images = [];
+        foreach (array_chunk($entryIds, 500) as $chunk) {
+            $statement = Propel::getReadConnection('resultados')->prepare(
+                'SELECT passagem_id, imagem_ref, confianca FROM contagem_passagem
+                  WHERE imagem_ref IS NOT NULL AND passagem_id IN (' . implode(', ', array_fill(0, count($chunk), '?')) . ')'
+            );
+            $statement->execute($chunk);
+            foreach ($statement->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                $images[(int) $row['passagem_id']] = $row;
+            }
+        }
+        foreach ($baseUrls as $fonteId => $baseUrl) {
+            foreach ($entriesBySource[$fonteId] ?? [] as $index => $entry) {
+                $image = $images[(int) $entry['id']] ?? null;
+                if ($image === null) {
+                    continue;
+                }
+                $entriesBySource[$fonteId][$index]['imagem_url'] = $baseUrl . rawurlencode((string) $image['imagem_ref']);
+                $entriesBySource[$fonteId][$index]['confianca'] = $image['confianca'] === null ? null : (float) $image['confianca'];
+            }
+        }
+        return $entriesBySource;
+    }
+
+    /**
      * The numbers typed between two moments. This is the one question a
      * window has to ask the whole race, so it is asked in SQL.
      *
@@ -315,10 +369,10 @@ final class TimelineWindow
 
         $lanes = [];
         foreach ($counting as $source) {
-            $lanes[] = ['fonte_id' => $source->id, 'nome' => $source->nome, 'tipo' => $source->tipo, 'ativa' => $source->ativa];
+            $lanes[] = ['fonte_id' => $source->id, 'nome' => $source->nome, 'tipo' => $source->tipo, 'ativa' => $source->ativa, 'papel' => $source->papel];
         }
         if ($withReviewerLane) {
-            $lanes[] = ['fonte_id' => Source::REVISOR_ID, 'nome' => 'Revisor', 'tipo' => 'revisor', 'ativa' => true];
+            $lanes[] = ['fonte_id' => Source::REVISOR_ID, 'nome' => 'Revisor', 'tipo' => 'revisor', 'ativa' => true, 'papel' => Source::PAPEL_VOTANTE];
         }
         return $lanes;
     }

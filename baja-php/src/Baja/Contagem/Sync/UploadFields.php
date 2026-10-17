@@ -85,6 +85,42 @@ final class UploadFields
         return null;
     }
 
+    /**
+     * Image references of an automatic source are opaque ids appended to the
+     * source's image base URL: plain characters only, so a reference can
+     * never climb out of that address ("../") or carry a query of its own.
+     */
+    private const IMAGE_REF_PATTERN = '/^[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}$/';
+
+    /**
+     * The image reference of an entry ("imagem"), or null when there is none
+     * or it is not a plain id of at most 64 characters. A bad reference is
+     * dropped, never a reason to refuse the entry.
+     *
+     * @param array<string, mixed> $item
+     */
+    public static function imageRefOf(array $item): ?string
+    {
+        $ref = $item['imagem'] ?? null;
+        return is_string($ref) && preg_match(self::IMAGE_REF_PATTERN, $ref) === 1 ? $ref : null;
+    }
+
+    /**
+     * How sure the system was ("confianca"), from 0 to 1 with three
+     * decimals, or null when it did not say or said something else.
+     *
+     * @param array<string, mixed> $item
+     */
+    public static function confidenceOf(array $item): ?float
+    {
+        $value = $item['confianca'] ?? null;
+        if (!is_int($value) && !is_float($value)) {
+            return null;
+        }
+        $value = (float) $value;
+        return is_finite($value) && $value >= 0.0 && $value <= 1.0 ? round($value, 3) : null;
+    }
+
     /** Can this time be computed with? See TIME_LIMIT_MS. */
     public static function isUsableTime(int $tsMs): bool
     {

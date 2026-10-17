@@ -93,6 +93,8 @@ $settingValues = $settings->toArray();
 $presetIsApplied = $service->hasSavedSettings();
 $hasSimulatedRows = $service->hasSimulatedRows();
 $classificationConflict = ScoringFields::classificationConflict($prova);
+// Empty, at no cost, while no source is an observer.
+$observerComparisons = SourceAdmin::observerComparisons($service);
 
 $options = function (array $labels, $selected) use ($h): string {
     $html = '';
@@ -121,7 +123,8 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         <strong>Token de API criado.</strong> Copie agora: ele não será mostrado de novo.
         <code><?= $h($newApiToken) ?></code>
         O sistema externo envia para <code>contagem_sync.php</code> com o cabeçalho
-        <code>Authorization: Bearer &lt;token&gt;</code> e <code>"mode": "api"</code>.
+        <code>Authorization: Bearer &lt;token&gt;</code> e <code>"mode": "api"</code>, e
+        <code>"time_quality": "exato"</code> em cada registro (sem ele o registro fica com horário desconhecido e nunca conta).
     </div>
 <?php } ?>
 
@@ -137,13 +140,50 @@ Pagina::printHeader($prova, 'Fontes e configurações');
             <label>Tipo <select name="tipo"><?= $options(SourceAdmin::TYPE_LABELS, $fonte->getTipo()) ?></select></label>
             <label>Tempo <select name="qualidade_tempo"><?= $options(SourceAdmin::TIMING_LABELS, $fonte->getQualidadeTempo()) ?></select></label>
             <label>Ordem <input type="number" name="ordem" min="0" max="999" required value="<?= (int) $fonte->getOrdem() ?>"></label>
+            <?php if ($fonte->getTipo() === Source::TIPO_AUTOMATICA) { ?>
+                <label>Papel <select name="papel"><?= $options(SourceAdmin::ROLE_LABELS, $fonte->getPapel()) ?></select></label>
+                <label>Endereço das imagens <input type="text" name="imagem_base_url" maxlength="255" size="32"
+                       placeholder="vazio = sem imagens" value="<?= $h($fonte->getImagemBaseUrl() ?? '') ?>"></label>
+            <?php } ?>
             <label><input type="checkbox" name="ativa" value="1" <?= $fonte->getAtiva() ? 'checked' : '' ?>> ativa</label>
+            <?php if (!$fonte->getAtiva()) { ?>
+                <label><input type="checkbox" name="<?= $h(SourceAdmin::CAMPO_CONTAR_PERIODO_DESATIVADA) ?>" value="1">
+                    ao reativar, contar também o que ela enviou enquanto estava desativada</label>
+            <?php } ?>
             <?php if ($settings->fontePrincipalId === $fonteId) { ?><span class="contagem-etiqueta">principal</span><?php } ?>
+            <?php if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA) { ?>
+                <span class="contagem-etiqueta">observadora<?= $fonte->getPapelDesdeMs() !== null ? ' desde ' . $h(Pagina::formatClock((int) $fonte->getPapelDesdeMs())) : '' ?></span>
+            <?php } elseif ($fonte->getPapelDesdeMs() !== null) { ?>
+                <span class="contagem-dica">votante desde <?= $h(Pagina::formatClock((int) $fonte->getPapelDesdeMs())) ?>; o que registrou antes como observadora não conta</span>
+            <?php } ?>
             <?php if (!$fonte->getAtiva() && $fonte->getDesativadaEmMs() !== null) { ?>
                 <span class="contagem-dica">desativada em <?= $h(Pagina::formatClock((int) $fonte->getDesativadaEmMs())) ?>; o que registrou antes disso continua valendo</span>
+            <?php } elseif (!$fonte->getAtiva()) { ?>
+                <span class="contagem-dica">criada desativada: nada do que enviar conta até ser ativada</span>
             <?php } ?>
             <button type="submit">Salvar</button>
         </form>
+        <?php if (isset($observerComparisons[$fonteId])) {
+            $comparison = $observerComparisons[$fonteId]; ?>
+            <div class="contagem-dica contagem-observacao">
+                <strong>Comparação com a contagem oficial:</strong>
+                <?= (int) $comparison['acertos'] ?> acertos de <?= (int) $comparison['entradas'] ?> registros,
+                <?= (int) $comparison['faltas'] ?> passagens oficiais não vistas,
+                <?= (int) $comparison['falsos_positivos'] ?> falsos positivos,
+                <?= (int) $comparison['leituras_trocadas'] ?> números lidos errado<?php
+                if (($comparison['trocas_frequentes'] ?? []) !== []) {
+                    echo ' (' . $h(implode(', ', array_map(
+                        fn(array $troca) => $troca['carro_real'] . ' lido como ' . $troca['carro_lido'] . ' ×' . $troca['vezes'],
+                        $comparison['trocas_frequentes']
+                    ))) . ')';
+                } ?>.
+                <?php if ($comparison['desvio_mediano_ms'] !== null) { ?>
+                    Diferença para o horário oficial: mediana <?= $h(sprintf('%+.1f', $comparison['desvio_mediano_ms'] / 1000)) ?> s,
+                    90% dentro de <?= $h(sprintf('%.1f', $comparison['desvio_p90_ms'] / 1000)) ?> s.
+                <?php } ?>
+                Detalhe por registro em Controle de corrida, "Exportar CSV".
+            </div>
+        <?php } ?>
     <?php } ?>
 
     <h3>Nova fonte</h3>
@@ -153,12 +193,17 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         <label>Nome <input type="text" name="nome" maxlength="45" required placeholder="Contagem 4"></label>
         <label>Tipo <select name="tipo"><?= $options(SourceAdmin::TYPE_LABELS, Source::TIPO_MANUAL) ?></select></label>
         <label>Tempo <select name="qualidade_tempo"><?= $options(SourceAdmin::TIMING_LABELS, Source::TEMPO_HUMANA) ?></select></label>
+        <label><input type="checkbox" name="<?= $h(SourceAdmin::CAMPO_CRIAR_DESATIVADA) ?>" value="1"> criar desativada</label>
         <button type="submit">Criar</button>
     </form>
     <p class="contagem-dica">
         Fontes não são apagadas. Desativar uma fonte faz o sistema parar de esperar por ela a partir de agora;
-        tudo o que ela registrou até esse momento continua contando. Para descartar registros de um período,
-        use "Excluir esta fonte" na tela de revisão.
+        tudo o que ela registrou até esse momento continua contando. Ao reativá-la, o que ela enviou enquanto
+        estava desativada continua fora da contagem, a menos que você marque a opção de contar também esse período.
+        Para descartar registros de um período, use "Excluir esta fonte" na tela de revisão.
+        Uma fonte automática nova começa como <strong>observadora</strong>: o que ela envia é só comparado com a
+        contagem oficial e nunca conta. Promovida a votante, passa a contar a partir daquele momento, nunca para trás.
+        Tempo "precisa": <?= $h(SourceAdmin::PRECISE_TIMING_WARNING) ?>
         Quem conta em cada fonte manual é definido em
         <a href="contagem_contadores.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Usuários</a>.
     </p>
@@ -283,7 +328,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                     if ($fonte->getTipo() === Source::TIPO_TOTAIS) {
                         continue;
                     } ?>
-                    <option value="<?= (int) $fonte->getFonteId() ?>" <?= $settings->fontePrincipalId === (int) $fonte->getFonteId() ? 'selected' : '' ?>><?= $h($fonte->getNome()) ?><?= $fonte->getAtiva() ? '' : ' (inativa)' ?></option>
+                    <option value="<?= (int) $fonte->getFonteId() ?>" <?= $settings->fontePrincipalId === (int) $fonte->getFonteId() ? 'selected' : '' ?>><?= $h($fonte->getNome()) ?><?= $fonte->getAtiva() ? '' : ' (inativa)' ?><?= $fonte->getPapel() === Source::PAPEL_OBSERVADORA ? ' (observadora)' : '' ?></option>
                 <?php } ?>
             </select>
             <small><?= $h(SettingsForm::PRIMARY_SOURCE_HINT) ?></small>

@@ -36,7 +36,30 @@ final class SourceAdmin
         Source::TEMPO_PRECISA => 'Precisa (o tempo desta fonte vale como está)',
     ];
 
+    public const ROLE_LABELS = [
+        Source::PAPEL_VOTANTE => 'Votante (conta na contagem oficial)',
+        Source::PAPEL_OBSERVADORA => 'Observadora (só comparada com a contagem; nunca conta)',
+    ];
+
+    /** Form field: "I was told a promotion counts from now on, and said yes". */
+    public const CAMPO_CONFIRMAR_VOTANTE = 'confirmar_votante';
+    /** Form field: "I was told a precise source sets the pass times, and said yes". */
+    public const CAMPO_CONFIRMAR_PRECISA = 'confirmar_precisa';
+    /**
+     * Form field of "ativa" being ticked again: '1' when the controller asks
+     * for what the source sent while it was off to count after all.
+     */
+    public const CAMPO_CONTAR_PERIODO_DESATIVADA = 'contar_periodo_desativada';
+    /** Form field of "Nova fonte": '1' creates the source switched off. */
+    public const CAMPO_CRIAR_DESATIVADA = 'criar_desativada';
+
+    /** What a precise source does, said the same way wherever it is asked. */
+    public const PRECISE_TIMING_WARNING = 'Com tempo "precisa", o horário desta fonte passa a ser o horário oficial de cada passagem em que ela '
+        . 'estiver, no lugar da mediana dos contadores, e vira a referência para medir o atraso de cada contador. '
+        . 'Use só para um sistema cujo relógio você conferiu.';
+
     private const MAX_NAME_LENGTH = 45;
+    private const MAX_URL_LENGTH = 255;
     private const MAX_LABEL_LENGTH = 100;
 
     /**
@@ -109,27 +132,43 @@ final class SourceAdmin
         return iterator_to_array($rows, false);
     }
 
-    /** @param array<string, mixed> $post */
+    /**
+     * A new automatic source starts as an OBSERVER: a system nobody has
+     * measured yet must not change the count by being plugged in. It is
+     * promoted on this page once its comparison looks good. A source can
+     * also be created switched off, so nothing it sends counts until a
+     * controller switches it on.
+     *
+     * @param array<string, mixed> $post
+     * @throws ConfirmationNeeded when a counting source with precise timing is being created and the person was not told what that does
+     */
     public static function create(ContagemService $service, array $post): void
     {
         $prova = $service->getProva();
         $fonte = new ContagemFonte();
         $fonte->setEventoId($prova->getEventoId());
         $fonte->setProvaId($prova->getProvaId());
-        $fonte->setAtiva(true);
+        $fonte->setAtiva(($post[self::CAMPO_CRIAR_DESATIVADA] ?? '') !== '1');
         // New sources go to the end of the list.
         $fonte->setOrdem(count(self::sources($prova)) + 1);
         self::applyEditableFields($fonte, $post);
+        $fonte->setPapel($fonte->getTipo() === Source::TIPO_AUTOMATICA ? Source::PAPEL_OBSERVADORA : Source::PAPEL_VOTANTE);
+        self::askAboutPreciseTiming($fonte, false, $post);
         $fonte->save();
         self::rerunEngine($service);
     }
 
-    /** @param array<string, mixed> $post */
+    /**
+     * @param array<string, mixed> $post
+     * @throws ConfirmationNeeded for a promotion to votante, or a source starting to count with precise timing, not confirmed yet
+     */
     public static function update(ContagemService $service, array $post): void
     {
         $fonte = self::requireSource($service->getProva(), $post['fonte_id'] ?? null);
         $wasActive = (bool) $fonte->getAtiva();
         $previousType = (string) $fonte->getTipo();
+        $previousRole = (string) $fonte->getPapel();
+        $wasCountingPrecisely = $previousRole === Source::PAPEL_VOTANTE && $fonte->getQualidadeTempo() === Source::TEMPO_PRECISA;
         self::applyEditableFields($fonte, $post);
 
         $order = filter_var($post['ordem'] ?? null, FILTER_VALIDATE_INT);
@@ -139,19 +178,126 @@ final class SourceAdmin
         $fonte->setOrdem($order);
 
         $staysActive = ($post['ativa'] ?? '') === '1';
-        self::refuseBreakingThePrimarySource($service->getSettings(), $fonte, $staysActive, $previousType);
+        $role = self::postedRole($fonte, $post, $previousRole);
+        self::refuseBreakingThePrimarySource($service->getSettings(), $fonte, $staysActive, $previousType, $role);
+
+        $nowMs = Clock::nowMs();
+        $periods = Source::periodsFromJson($fonte->getPeriodosFora());
+        if ($previousRole === Source::PAPEL_OBSERVADORA && $role === Source::PAPEL_VOTANTE) {
+            if (($post[self::CAMPO_CONFIRMAR_VOTANTE] ?? '') !== '1') {
+                throw new ConfirmationNeeded(
+                    sprintf('Promover "%s" a votante: a partir de agora o que ela registrar conta na contagem oficial, como um contador. ', $fonte->getNome())
+                        . 'O que ela registrou como observadora continua fora da contagem: a promoção não vale para trás.',
+                    self::CAMPO_CONFIRMAR_VOTANTE,
+                    'Promover a votante'
+                );
+            }
+            // Not backwards: the time it observed becomes a period off.
+            $periods[] = [$fonte->getPapelDesdeMs() === null ? null : (int) $fonte->getPapelDesdeMs(), $nowMs];
+            $fonte->setPapelDesdeMs($nowMs);
+        } elseif ($previousRole === Source::PAPEL_VOTANTE && $role === Source::PAPEL_OBSERVADORA) {
+            // Like switching a counter off: the votes it cast stay.
+            $fonte->setPapelDesdeMs($nowMs);
+        }
+        $fonte->setPapel($role);
+        if ($role === Source::PAPEL_VOTANTE) {
+            self::askAboutPreciseTiming($fonte, $wasCountingPrecisely, $post);
+        }
 
         if ($wasActive && !$staysActive) {
             // Switching a counter off must not erase what it recorded. The
             // moment is kept, and the engine goes on using the source's
             // entries from before it (Source::wasCountingAt).
-            $fonte->setDesativadaEmMs(Clock::nowMs());
-        } elseif ($staysActive) {
+            $fonte->setDesativadaEmMs($nowMs);
+        } elseif (!$wasActive && $staysActive) {
+            // Its phone may have gone on sending while it was off. Unless the
+            // controller asks for those entries, they stay out: switching a
+            // source on again must not bring them back silently.
+            if (($post[self::CAMPO_CONTAR_PERIODO_DESATIVADA] ?? '') !== '1') {
+                $periods[] = [$fonte->getDesativadaEmMs() === null ? null : (int) $fonte->getDesativadaEmMs(), $nowMs];
+            }
             $fonte->setDesativadaEmMs(null);
         }
+        $fonte->setPeriodosFora(Source::periodsToJson($periods));
         $fonte->setAtiva($staysActive);
         $fonte->save();
         self::rerunEngine($service);
+    }
+
+    /**
+     * How each observer source compares with the official count, from the
+     * latest snapshot (ObserverComparator). Nothing is asked, and nothing is
+     * recalculated, while no source is an observer.
+     *
+     * @return array<int, array<string, mixed>> fonteId => the 'observacao' part of its statistics
+     */
+    public static function observerComparisons(ContagemService $service): array
+    {
+        $hasObserver = false;
+        foreach (self::sources($service->getProva()) as $fonte) {
+            $hasObserver = $hasObserver || $fonte->getPapel() === Source::PAPEL_OBSERVADORA;
+        }
+        if (!$hasObserver) {
+            return [];
+        }
+        $comparisons = [];
+        foreach ($service->snapshot()->dados['estado']['fontes'] ?? [] as $row) {
+            if (isset($row['stats']['observacao'])) {
+                $comparisons[(int) $row['id']] = $row['stats']['observacao'];
+            }
+        }
+        return $comparisons;
+    }
+
+    /**
+     * The image base URL of each automatic source that has one.
+     *
+     * @return array<int, string> fonteId => base URL
+     */
+    public static function imageBaseUrls(Prova $prova): array
+    {
+        $urls = [];
+        foreach (self::sources($prova) as $fonte) {
+            $url = $fonte->getImagemBaseUrl();
+            if ($fonte->getTipo() === Source::TIPO_AUTOMATICA && $url !== null && $url !== '') {
+                $urls[(int) $fonte->getFonteId()] = (string) $url;
+            }
+        }
+        return $urls;
+    }
+
+    /**
+     * The role chosen on the form. Only an automatic source can be an
+     * observer; another kind of source is always a votante (turning an
+     * observer into a manual source is a promotion, and asked as one).
+     *
+     * @param array<string, mixed> $post
+     */
+    private static function postedRole(ContagemFonte $fonte, array $post, string $previousRole): string
+    {
+        if ($fonte->getTipo() !== Source::TIPO_AUTOMATICA) {
+            return Source::PAPEL_VOTANTE;
+        }
+        $role = $post['papel'] ?? $previousRole;
+        if (!is_string($role) || !isset(self::ROLE_LABELS[$role])) {
+            throw new InvalidArgumentException('Papel de fonte inválido.');
+        }
+        return $role;
+    }
+
+    /**
+     * A precise source sets the pass time of every pass it is in. Starting
+     * to count with one is asked first; an observer, which counts nothing,
+     * is not asked.
+     *
+     * @param array<string, mixed> $post
+     */
+    private static function askAboutPreciseTiming(ContagemFonte $fonte, bool $wasCountingPrecisely, array $post): void
+    {
+        $countsPrecisely = $fonte->getPapel() === Source::PAPEL_VOTANTE && $fonte->getQualidadeTempo() === Source::TEMPO_PRECISA;
+        if ($countsPrecisely && !$wasCountingPrecisely && ($post[self::CAMPO_CONFIRMAR_PRECISA] ?? '') !== '1') {
+            throw new ConfirmationNeeded(self::PRECISE_TIMING_WARNING, self::CAMPO_CONFIRMAR_PRECISA, 'Usar tempo preciso');
+        }
     }
 
     /**
@@ -163,7 +309,8 @@ final class SourceAdmin
         Settings $settings,
         ContagemFonte $fonte,
         bool $staysActive,
-        string $previousType
+        string $previousType,
+        string $role = Source::PAPEL_VOTANTE
     ): void {
         $isPrimaryInUse = $settings->modoPublicacao === Settings::MODO_FONTE_PRINCIPAL
             && $settings->fontePrincipalId === (int) $fonte->getFonteId();
@@ -180,6 +327,12 @@ final class SourceAdmin
             throw new InvalidArgumentException(
                 'Esta é a fonte principal e o modo de publicação é "fonte principal": não é possível mudar o tipo dela. '
                 . 'Troque a fonte principal ou o modo de publicação nas configurações primeiro.'
+            );
+        }
+        if ($role === Source::PAPEL_OBSERVADORA) {
+            throw new InvalidArgumentException(
+                'Esta é a fonte principal e o modo de publicação é "fonte principal": ela não pode virar observadora, '
+                . 'porque nada do que uma observadora registra conta. Troque a fonte principal ou o modo de publicação nas configurações primeiro.'
             );
         }
     }
@@ -275,6 +428,32 @@ final class SourceAdmin
         $fonte->setNome($name);
         $fonte->setTipo($type);
         $fonte->setQualidadeTempo($timing);
+        // Only a form that shows the field sends it; the others keep what is stored.
+        if (array_key_exists('imagem_base_url', $post)) {
+            $fonte->setImagemBaseUrl($type === Source::TIPO_AUTOMATICA ? self::imageBaseUrl($post['imagem_base_url']) : null);
+        }
+    }
+
+    /**
+     * The prefix of the image links of an automatic source: empty for none,
+     * otherwise an http(s) address. An http one is allowed on purpose: the
+     * pictures usually live on a box beside the track, on the local network
+     * (see "Visão computacional" in docs/contagem.md for what that costs).
+     *
+     * @param mixed $value
+     */
+    private static function imageBaseUrl($value): ?string
+    {
+        $url = is_string($value) ? trim($value) : '';
+        if ($url === '') {
+            return null;
+        }
+        if (strlen($url) > self::MAX_URL_LENGTH || preg_match('#^https?://[^\s"\'<>`]+$#i', $url) !== 1) {
+            throw new InvalidArgumentException(
+                'Endereço das imagens inválido: use um endereço http:// ou https:// de até ' . self::MAX_URL_LENGTH . ' caracteres, ou deixe vazio.'
+            );
+        }
+        return $url;
     }
 
     /** @param mixed $value */

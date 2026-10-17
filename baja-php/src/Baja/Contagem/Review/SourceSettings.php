@@ -47,6 +47,18 @@ final class SourceSettings
             if ($fonte->getTipo() === Source::TIPO_TOTAIS) {
                 continue;
             }
+            // Nothing an observer records counts: as the primary source it
+            // would take every lap away from every car.
+            if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA) {
+                $postedPrimary = is_string($post['fonte_principal_id'] ?? null) ? trim($post['fonte_principal_id']) : '';
+                if ($postedPrimary === (string) $fonte->getFonteId()) {
+                    throw new InvalidArgumentException(sprintf(
+                        'A fonte principal não pode ser "%s": ela é observadora e nada do que registra conta. Promova-a a votante antes, ou escolha outra. Nada foi alterado.',
+                        $fonte->getNome()
+                    ));
+                }
+                continue;
+            }
             $countingIds[] = (int) $fonte->getFonteId();
             if ($fonte->getAtiva()) {
                 $activeCountingIds[] = (int) $fonte->getFonteId();

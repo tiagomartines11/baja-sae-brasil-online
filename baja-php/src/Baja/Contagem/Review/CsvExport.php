@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Review;
 
+use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\StopReport;
 use Baja\Model\Prova;
@@ -25,12 +26,37 @@ final class CsvExport
     /** Pit lane and fueling stays per car. Not a table: worked out by Service\StopReport. */
     public const PARADAS = 'paradas';
 
+    /**
+     * Each entry of an observer source (and each official pass it missed)
+     * against the official count. Not a table: worked out by the engine's
+     * ObserverComparator. Offered only while some source is an observer.
+     */
+    public const OBSERVACAO = 'observacao';
+
     public const LABELS = [
         self::PASSAGENS => 'Passagens (registros brutos)',
         self::DECISOES => 'Decisões',
         self::VOLTAS => 'Voltas',
         self::PARADAS => 'Paradas (box e abastecimento)',
     ];
+
+    public const OBSERVER_LABEL = 'Fonte observadora x contagem oficial';
+
+    /**
+     * The exports to offer for this prova: the usual ones, plus the
+     * observer comparison when some source is an observer.
+     *
+     * @return array<string, string>
+     */
+    public static function labels(Prova $prova): array
+    {
+        foreach (SourceAdmin::sources($prova) as $fonte) {
+            if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA && $fonte->getTipo() !== Source::TIPO_TOTAIS) {
+                return self::LABELS + [self::OBSERVACAO => self::OBSERVER_LABEL];
+            }
+        }
+        return self::LABELS;
+    }
 
     private const QUERIES = [
         // ts_ms is THE time of the pass: worked out by the count page from
@@ -72,6 +98,10 @@ final class CsvExport
             self::send($prova, $type, StopReport::rows(ContagemService::forProva($prova)));
             return;
         }
+        if ($type === self::OBSERVACAO) {
+            self::send($prova, $type, self::observerRows(ContagemService::forProva($prova)));
+            return;
+        }
         if (!isset(self::QUERIES[$type])) {
             throw new InvalidArgumentException('Tipo de exportação desconhecido.');
         }
@@ -84,6 +114,26 @@ final class CsvExport
             }
         })();
         self::send($prova, $type, $oneByOne);
+    }
+
+    /**
+     * The observer comparison, one row per observer entry or missed pass,
+     * with the source's name. Runs the whole engine; writes nothing.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function observerRows(ContagemService $service): array
+    {
+        $result = $service->compute();
+        $names = [];
+        foreach (SourceAdmin::sources($service->getProva()) as $fonte) {
+            $names[(int) $fonte->getFonteId()] = (string) $fonte->getNome();
+        }
+        $rows = [];
+        foreach ($result->observerRows as $row) {
+            $rows[] = ['fonte_id' => $row['fonte_id'], 'fonte' => $names[$row['fonte_id']] ?? ''] + $row;
+        }
+        return $rows;
     }
 
     /**

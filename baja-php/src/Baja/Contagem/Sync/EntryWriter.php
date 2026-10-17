@@ -106,8 +106,9 @@ final class EntryWriter
         $insert = Propel::getWriteConnection('resultados')->prepare(
             'INSERT INTO contagem_passagem
                  (fonte_id, dispositivo_id, uuid_cliente, equipe_numero, ts_ms, qualidade_tempo, ts_dispositivo_ms,
-                  ancora_servidor_ms, ancora_rtt_ms, ancora_idade_ms, digitacao_ms, modo_entrada, recebido_em_ms)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                  ancora_servidor_ms, ancora_rtt_ms, ancora_idade_ms, digitacao_ms, modo_entrada, recebido_em_ms,
+                  imagem_ref, confianca)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
         $newCount = 0;
@@ -119,6 +120,10 @@ final class EntryWriter
             $anchor = is_array($raw['anchor'] ?? null) ? $raw['anchor'] : [];
             $typingMs = UploadFields::intOrNull($raw['typing_ms'] ?? null);
             $mode = $raw['mode'] ?? null;
+            // An automatic system may say which picture an entry came from
+            // and how sure it was. Shown to reviewers, never computed with;
+            // a browser's count page never sends them.
+            $fromSystem = $mode === 'api';
 
             $insert->execute([
                 $this->fonteId,
@@ -136,6 +141,8 @@ final class EntryWriter
                 self::boundedInt($typingMs),
                 is_string($mode) && in_array($mode, self::MODES, true) ? $mode : self::UNKNOWN_MODE,
                 $this->nowMs,
+                $fromSystem ? UploadFields::imageRefOf($raw) : null,
+                $fromSystem ? UploadFields::confidenceOf($raw) : null,
             ]);
             $newCount++;
         }
