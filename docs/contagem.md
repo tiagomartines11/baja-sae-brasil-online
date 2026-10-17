@@ -805,7 +805,14 @@ official passes:
 | falta | an official pass, while it was observing and had synced past it, with no entry |
 
 plus the median offset from the pass time and the 90th percentile of its
-size. The review screen shows this in the source's block (instead of a
+size. The reference is the official passes only. After the finish cars
+still cross the line on their way to the pits, so an entry from after the
+finish that pairs with no official pass is left out instead of being a
+false positive. Before the finish a real crossing the rules did not count
+(a lap too short to be possible, a pass only one counter saw) does show as
+a false positive.
+
+The review screen shows this in the source's block (instead of a
 counter's numbers, and with no column in the car table), the Fontes page
 under the source, and Controle de corrida offers it as a CSV, one row per
 entry and per missed pass ("Fonte observadora x contagem oficial").

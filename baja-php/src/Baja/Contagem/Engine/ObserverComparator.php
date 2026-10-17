@@ -26,6 +26,13 @@ use Baja\Contagem\Engine\Data\Source;
  *   falta             an official pass, at a moment the observer was
  *                     observing and had synced past, with no entry of it.
  *
+ * After the finish cars still cross the line (the slow lap to the pits), and
+ * those crossings are rightly no official passes. An entry from then that
+ * pairs with no official pass is left out of the comparison instead of being
+ * called a false positive. Before the finish the reference is still only the
+ * official passes: a real crossing the rules did not count (a lap too short
+ * to be possible, a pass only one counter saw) shows as a false positive.
+ *
  * Nothing here changes a count, a time or a flag. With no observer source it
  * is not even run.
  */
@@ -106,7 +113,7 @@ final class ObserverComparator
             if (!$source->hasObserved()) {
                 continue;
             }
-            $comparator->compareOne($source, $entriesBySource[$source->id] ?? [], $passes, $passTimes, $passIndexesByCar, $applied, $availability, $janelaMs);
+            $comparator->compareOne($source, $entriesBySource[$source->id] ?? [], $passes, $passTimes, $passIndexesByCar, $applied, $availability, $janelaMs, $timeline->encerramentoMs);
         }
         return $comparator;
     }
@@ -125,10 +132,10 @@ final class ObserverComparator
         array $passIndexesByCar,
         AppliedDecisions $applied,
         SourceAvailability $availability,
-        int $janelaMs
+        int $janelaMs,
+        ?int $encerramentoMs
     ): void {
         $stats = new ObserverStats($source->id);
-        $stats->entradas = count($entries);
 
         // 1. Same car, within the window, closest first.
         $candidates = [];
@@ -141,6 +148,16 @@ final class ObserverComparator
             }
         }
         [$passOfEntry, $entryOfPass] = self::pairClosestFirst($candidates);
+
+        // After the finish, a crossing that is no official pass says nothing.
+        if ($encerramentoMs !== null) {
+            foreach ($entries as $entryIndex => $entry) {
+                if ($entry->tsMs >= $encerramentoMs && !isset($passOfEntry[$entryIndex])) {
+                    unset($entries[$entryIndex]);
+                }
+            }
+        }
+        $stats->entradas = count($entries);
 
         // 2. What is left: another car's unrecorded pass close by is a misread.
         $candidates = [];

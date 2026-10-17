@@ -128,6 +128,41 @@ final class ObserverSourceTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: the race ends at 05:00. The camera (observer) records car
+     * 5's pass at 03:00, a "9" at 04:00 when nobody passed, car 5's pass
+     * after the finish at 06:00 (its last lap, official) and car 5 once
+     * more at 09:00, on its slow lap to the pits, which no rule counts.
+     *
+     * EXPECTED: the 09:00 entry is no false positive: after the finish a
+     * crossing that is no official pass says nothing about the camera, and
+     * it is left out. 03:00 and 06:00 are hits; the 04:00 "9" is still a
+     * false positive.
+     */
+    public function testAfterTheFinishOnlyWhatPairsWithAnOfficialPassIsCompared(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->addSource(3, 'Câmera', Source::TIPO_AUTOMATICA, Source::TEMPO_PRECISA);
+        $race->makeObserver(3);
+        $race->start('00:00');
+        $race->firstCrossing([5]);
+        $race->pass(5, '03:00');
+        $race->entry(3, 5, '03:00.2');
+        $race->entry(3, 9, '04:00');
+        $race->finish('05:00');
+        $race->pass(5, '06:00');
+        $race->entry(3, 5, '06:00.1');
+        $race->entry(3, 5, '09:00');
+
+        $result = $race->run('15:00');
+
+        $this->assertLapCounts([5 => 2], $result);
+        $stats = $result->sourceStats[3]->observacao;
+        $this->assertSame(3, $stats->entradas);
+        $this->assertSame(2, $stats->acertos);
+        $this->assertSame(1, $stats->falsosPositivos);
+    }
+
+    /**
      * SITUATION: two counters and a camera observing since the start. Car
      * 5 passes at 05:00 and at 12:00; both times only counter 1 and the
      * camera record it. At 10:00 the controller promotes the camera to
