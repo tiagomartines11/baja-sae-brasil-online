@@ -148,6 +148,10 @@ final class SnapshotService
             unset($dados['estado'][$key]);
         }
         unset($dados['tempo_real']['sinc_min_ms']);
+        // The field pace moves with the clock (laps leave its window, and
+        // the history gains a point every minute) and no review screen
+        // shows it. It is stored all the same.
+        unset($dados['feed']['ritmo'], $dados['feed']['ritmo_historico']);
         return sha1((string) json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
     }
 

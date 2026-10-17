@@ -7,6 +7,7 @@ use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Lap;
 use Baja\Contagem\Engine\Settings;
 use Baja\Contagem\Engine\StopStats;
+use Baja\Model\Prova;
 use Baja\Model\ProvaQuery;
 
 /**
@@ -32,7 +33,41 @@ final class PublicFeed
      */
     public static function jsonFor(string $eventoId, string $provaId): ?string
     {
-        $cacheKey = 'contagem:' . $eventoId . ':' . $provaId . ':feed';
+        return self::cachedJson('feed', $eventoId, $provaId, function (Prova $prova) use ($eventoId, $provaId): array {
+            $settings = Settings::fromArray($prova->getParams()->contagem ?? null);
+            return self::assemble($eventoId, $provaId, (new SnapshotStore($prova))->getFeedPart(), $settings, Clock::nowMs());
+        });
+    }
+
+    /**
+     * The field pace through the race, for a pace chart:
+     * contagem_feed.php?evt=…&p=…&ritmo=historico. A point per minute is a
+     * few hundred over a race, so it is not in the main feed, which every
+     * overlay polls; it is cached in the same way.
+     *
+     * @return string|null as JSON, or null when there is no laps prova with these ids
+     */
+    public static function paceHistoryJsonFor(string $eventoId, string $provaId): ?string
+    {
+        return self::cachedJson('feed_ritmo', $eventoId, $provaId, function (Prova $prova) use ($eventoId, $provaId): array {
+            $snapshotPart = (new SnapshotStore($prova))->getFeedPart();
+            return [
+                'evento_id' => $eventoId,
+                'prova_id' => $provaId,
+                'gerado_em_ms' => Clock::nowMs(),
+                'calculado_em_ms' => $snapshotPart['gerado_em_ms'] ?? null,
+                'ritmo' => $snapshotPart['feed']['ritmo'] ?? null,
+                'ritmo_historico' => $snapshotPart['feed']['ritmo_historico'] ?? [],
+            ];
+        });
+    }
+
+    /**
+     * @param callable(Prova): array<string, mixed> $build
+     */
+    private static function cachedJson(string $cacheName, string $eventoId, string $provaId, callable $build): ?string
+    {
+        $cacheKey = 'contagem:' . $eventoId . ':' . $provaId . ':' . $cacheName;
         $cached = self::readCache($cacheKey);
         if ($cached !== null) {
             return $cached;
@@ -43,10 +78,7 @@ final class PublicFeed
             return null;
         }
 
-        $settings = Settings::fromArray($prova->getParams()->contagem ?? null);
-        $feed = self::assemble($eventoId, $provaId, (new SnapshotStore($prova))->getFeedPart(), $settings, Clock::nowMs());
-
-        $json = (string) json_encode($feed, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        $json = (string) json_encode($build($prova), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         self::writeCache($cacheKey, $json);
         return $json;
     }
@@ -85,6 +117,9 @@ final class PublicFeed
             'novas_melhores_voltas' => array_slice($bestLapEvents, -self::BEST_LAP_EVENTS_KEPT),
             // Newest first: what a "car 12 enters the pit lane" graphic needs.
             'ultimas_paradas' => StopStats::recentEvents($result->timeline, self::STOP_EVENTS_KEPT),
+            'ritmo' => $result->ritmo,
+            // Served only by paceHistoryJsonFor(), never in the main feed.
+            'ritmo_historico' => $result->ritmoHistorico,
         ];
     }
 
@@ -105,7 +140,11 @@ final class PublicFeed
         foreach ($stored['carros'] ?? [] as $car) {
             $carro = (int) $car['numero'];
             $status = $statusByCar[$carro] ?? ['status' => 'fora', 'status_desde_ms' => null];
-            $cars[] = array_merge($car, $status, StopReport::forFeed($timeline, $carro, $settings->abastecimento, $nowMs));
+            // What the pace model expected of the car at the last
+            // recalculation; null while the pace is unknown and whenever
+            // the race is not running.
+            $expected = ['volta_esperada_ms' => $live['carros'][$carro]['volta_esperada_ms'] ?? null];
+            $cars[] = array_merge($car, $expected, $status, StopReport::forFeed($timeline, $carro, $settings->abastecimento, $nowMs));
         }
 
         return [
@@ -124,6 +163,8 @@ final class PublicFeed
                 'estado' => $race['estado'],
                 'decorrido_ms' => $race['decorrido_ms'],
             ],
+            // The field pace at the last recalculation (see EngineResult::$ritmo).
+            'ritmo' => $stored['ritmo'] ?? null,
             'carros' => $cars,
             'melhor_volta' => $stored['melhor_volta'] ?? null,
             'novas_melhores_voltas' => $stored['novas_melhores_voltas'] ?? [],

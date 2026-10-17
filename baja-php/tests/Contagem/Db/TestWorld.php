@@ -177,6 +177,7 @@ final class TestWorld
             $redis->del(
                 $prefix . 'publicado_em_ms',
                 $prefix . 'feed',
+                $prefix . 'feed_ritmo',
                 $prefix . 'mudancas',
                 $prefix . 'contexto',
                 $prefix . 'snapshot',

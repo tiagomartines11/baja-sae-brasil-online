@@ -4,6 +4,7 @@ use Baja\Contagem\Service\PublicFeed;
 
 // Public, read-only picture of a lap-counted race:
 //   contagem_feed.php?evt={evento}&p={prova}
+//   contagem_feed.php?evt={evento}&p={prova}&ritmo=historico   (the field pace through the race)
 //
 // For overlays and anyone else who wants live standings. Open to every
 // origin, like overlaydata.php, because overlays are pages on other hosts.
@@ -24,7 +25,9 @@ $provaId = (string) ($_GET['p'] ?? '');
 // refused before it gets there.
 $json = null;
 if (preg_match('/^[0-9A-Za-z]{4}$/', $eventoId) === 1 && preg_match('/^[0-9A-Za-z]{1,3}$/', $provaId) === 1) {
-    $json = PublicFeed::jsonFor($eventoId, $provaId);
+    $json = ($_GET['ritmo'] ?? null) === 'historico'
+        ? PublicFeed::paceHistoryJsonFor($eventoId, $provaId)
+        : PublicFeed::jsonFor($eventoId, $provaId);
 }
 
 if ($json === null) {
