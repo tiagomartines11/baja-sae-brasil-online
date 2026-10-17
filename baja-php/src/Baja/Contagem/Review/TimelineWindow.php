@@ -42,6 +42,7 @@ final class TimelineWindow
         $recount = CarsRecount::load($service, $cars, [$fromMs, $untilMs]);
 
         return self::describe(
+            $service,
             $recount,
             fn(Entry $raw, int $effectiveCar): bool => $inWindow($raw->tsMs),
             fn(Ocorrencia $ocorrencia): bool => $inWindow($ocorrencia->tsMs),
@@ -62,6 +63,7 @@ final class TimelineWindow
         $recount = CarsRecount::load($service, [$carro]);
 
         return self::describe(
+            $service,
             $recount,
             fn(Entry $raw, int $effectiveCar): bool => $raw->carroDigitado === $carro || $effectiveCar === $carro,
             fn(Ocorrencia $ocorrencia): bool => $ocorrencia->carro === null || $ocorrencia->carro === $carro,
@@ -77,6 +79,7 @@ final class TimelineWindow
      * @return array<string, mixed>
      */
     private static function describe(
+        ContagemService $service,
         CarsRecount $recount,
         callable $wantsEntry,
         callable $wantsOcorrencia,
@@ -84,14 +87,27 @@ final class TimelineWindow
         ?int $untilMs,
         ?int $carro
     ): array {
-        $entriesBySource = [];
+        $wanted = [];
+        $decisionIds = [];
         foreach (array_merge($recount->input->entries, $recount->addedPasses()) as $raw) {
             $surviving = $recount->survivingEntry($raw->id);
             $effectiveCar = $surviving !== null ? $surviving->carro : $raw->carro;
             if (!$wantsEntry($raw, $effectiveCar)) {
                 continue;
             }
-            $entriesBySource[$raw->fonteId][] = self::describeEntry($recount, $raw, $effectiveCar);
+            $wanted[] = [$raw, $effectiveCar];
+            foreach ($recount->signatures->decisionIdsOf($raw->id) as $decisaoId) {
+                $decisionIds[$decisaoId] = $decisaoId;
+            }
+        }
+        // Who decided, when and why: what a chip's tooltip says about a
+        // void, and what "Restaurar" asks about a counter's own one.
+        $people = DecisionHistory::peopleOf($service->getProva(), array_values($decisionIds));
+        $shortConfirmed = self::shortConfirmedLaps($service);
+
+        $entriesBySource = [];
+        foreach ($wanted as [$raw, $effectiveCar]) {
+            $entriesBySource[$raw->fonteId][] = self::describeEntry($recount, $raw, $effectiveCar, $people, $shortConfirmed);
         }
 
         $lanes = [];
@@ -119,18 +135,49 @@ final class TimelineWindow
     }
 
     /**
+     * The laps the last whole-race run marked as too short to be real and
+     * counted on a reviewer's word (CarTable's `voltas_curtas_confirmadas`),
+     * by the anchor entry of the pass that ends them. They need the pace of
+     * the whole field, which a timeline does not compute: they are read
+     * from the stored snapshot, as old as the flags on screen.
+     *
+     * @return array<int, true>
+     */
+    private static function shortConfirmedLaps(ContagemService $service): array
+    {
+        $anchors = [];
+        $snapshot = $service->storedSnapshot();
+        foreach ($snapshot === null ? [] : ($snapshot->dados['estado']['carros'] ?? []) as $row) {
+            foreach ($row['voltas_curtas_confirmadas'] ?? [] as $lap) {
+                $anchors[(int) $lap['ancora']] = true;
+            }
+        }
+        return $anchors;
+    }
+
+    /**
+     * @param array<int, array{usuario: ?string, criado_em_ms: int, motivo: ?string}> $people
+     * @param array<int, true> $shortConfirmed anchors of the passes that end a short confirmed lap
      * @return array<string, mixed>
      */
-    private static function describeEntry(CarsRecount $recount, Entry $raw, int $effectiveCar): array
+    private static function describeEntry(CarsRecount $recount, Entry $raw, int $effectiveCar, array $people, array $shortConfirmed): array
     {
         $decisions = [];
         foreach ($recount->signatures->decisionIdsOf($raw->id) as $decisaoId) {
             $decision = $recount->activeDecisions[$decisaoId];
-            $decisions[] = ['id' => $decisaoId, 'tipo' => $decision->tipo, 'origem' => $decision->origem];
+            $decisions[] = [
+                'id' => $decisaoId,
+                'tipo' => $decision->tipo,
+                'origem' => $decision->origem,
+                'usuario' => $people[$decisaoId]['usuario'] ?? null,
+                'criado_em_ms' => $people[$decisaoId]['criado_em_ms'] ?? null,
+                'motivo' => $people[$decisaoId]['motivo'] ?? null,
+            ];
         }
 
         $group = $recount->groupOf($raw->id);
         $reasonNotInUse = $group === null ? $recount->reasonNotInUse($raw) : null;
+        $autoVoided = $reasonNotInUse === CarsRecount::REPETIDA;
 
         return [
             'id' => $raw->id,
@@ -143,7 +190,12 @@ final class TimelineWindow
             // in no group and its place on the timeline means nothing).
             'qualidade_tempo' => $raw->qualidadeTempo,
             'anulada' => $reasonNotInUse === CarsRecount::ANULADA,
-            'anulada_auto' => $reasonNotInUse === CarsRecount::REPETIDA,
+            'anulada_auto' => $autoVoided,
+            // Only for an entry voided as a repeat: confirming brings it back
+            // as a pass of its own, and this is the shortest lap it would make.
+            'volta_resultante_ms' => $autoVoided && $raw->qualidadeTempo !== Entry::TEMPO_DESCONHECIDO
+                ? $recount->effect->shortestLapIfPassAt($effectiveCar, $raw->tsMs, null, true)
+                : null,
             'reatribuida' => $effectiveCar !== $raw->carroDigitado,
             // In no group and nobody voided it: before the start, or its
             // source was off or excluded at that moment.
@@ -151,7 +203,7 @@ final class TimelineWindow
             'motivo_fora_de_uso' => $reasonNotInUse,
             'adicionada_por_revisor' => $raw->fonteId === Source::REVISOR_ID,
             'decisoes' => $decisions,
-            'grupo' => $group === null ? null : self::describeGroup($group),
+            'grupo' => $group === null ? null : self::describeGroup($recount, $group, $shortConfirmed),
             'assinatura' => $recount->signatures->forEntries([$raw->id]),
         ];
     }
@@ -177,10 +229,17 @@ final class TimelineWindow
      * "+1 volta" on the button from it, and only from it: a pass the rules
      * of the race leave out (start window, after the finish) stays out
      * whoever confirms it, and a button that promised a lap there lied.
+     * With it, `volta_resultante_ms` is the shortest lap that pass would
+     * make (as on a flag), so the chip asks the same question K does.
      *
+     * `volta_curta_confirmada`: the pass ends a lap too short to be real
+     * that counts on a reviewer's confirmation. `tempo_escolhido_id`: the
+     * entry a reviewer chose to time the pass ("usar_tempo"), or null.
+     *
+     * @param array<int, true> $shortConfirmed
      * @return array<string, mixed>
      */
-    private static function describeGroup(PassGroup $group): array
+    private static function describeGroup(CarsRecount $recount, PassGroup $group, array $shortConfirmed): array
     {
         // The start window is asked first: the engine numbers a car's first
         // crossing typed inside it as pass 0 too, and the reviewer should be
@@ -202,6 +261,8 @@ final class TimelineWindow
             $role = 'pendente';
         }
 
+        $addsAPass = !$group->confirmadoPorRevisor && in_array($role, ['pendente', 'retida', 'antes_da_largada'], true)
+            && !$group->contado;
         return [
             'ancora' => $group->anchorEntryId(),
             'passagem_ids' => $group->entryIds(),
@@ -213,8 +274,10 @@ final class TimelineWindow
             'confirmado_por_revisor' => $group->confirmadoPorRevisor,
             // 'proxima_demais' | 'dispersao'; null when the pass is not held.
             'motivo_retencao' => $held ? ($group->motivoRetencao ?? null) : null,
-            'soma_ao_confirmar' => !$group->confirmadoPorRevisor && in_array($role, ['pendente', 'retida', 'antes_da_largada'], true)
-                && !$group->contado,
+            'soma_ao_confirmar' => $addsAPass,
+            'volta_resultante_ms' => $addsAPass ? $recount->effect->shortestLapIfPassAt($group->carro, $group->tsMs, $group, true) : null,
+            'tempo_escolhido_id' => $group->tempoEscolhidoId,
+            'volta_curta_confirmada' => isset($shortConfirmed[$group->anchorEntryId()]) && $group->contado,
         ];
     }
 

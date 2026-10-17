@@ -80,6 +80,12 @@ final class SnapshotService
         return $this->recalculationLock->run(fn() => $this->recalculate());
     }
 
+    /** The stored snapshot as it is, stale or not; null when there is none. Never recalculates. */
+    public function stored(): ?RaceSnapshot
+    {
+        return $this->store->get();
+    }
+
     /** Recalculates if the stored snapshot is stale and nobody else is at it. Never waits. */
     public function refreshIfStale(): void
     {

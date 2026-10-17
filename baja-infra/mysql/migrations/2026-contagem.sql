@@ -127,6 +127,7 @@ CREATE TABLE IF NOT EXISTS `contagem_decisao` (
   `prova_id` char(3) CHARACTER SET latin1 NOT NULL,
   `tipo` varchar(16) NOT NULL,
   `passagem_id` bigint DEFAULT NULL,
+  `passagem_alvo_id` bigint DEFAULT NULL,
   `fonte_id` int DEFAULT NULL,
   `equipe_numero` int DEFAULT NULL,
   `ts_ms` bigint DEFAULT NULL,

@@ -585,9 +585,11 @@
     <column name="decisao_id" phpName="DecisaoId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
     <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
     <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" required="true"/>
-    <!-- anular | reatribuir | confirmar | adicionar | excluir_fonte | desfazer -->
+    <!-- anular | reatribuir | confirmar | adicionar | excluir_fonte | desfazer | marcar_saida | usar_tempo -->
     <column name="tipo" phpName="Tipo" type="VARCHAR" size="16" required="true"/>
     <column name="passagem_id" phpName="PassagemId" type="BIGINT"/>
+    <!-- usar_tempo only: the other entry, of a crossing typed late, that joins passagem_id's pass -->
+    <column name="passagem_alvo_id" phpName="PassagemAlvoId" type="BIGINT"/>
     <column name="fonte_id" phpName="FonteId" type="INTEGER"/>
     <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER"/>
     <column name="ts_ms" phpName="TsMs" type="BIGINT"/>

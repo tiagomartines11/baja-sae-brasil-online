@@ -97,6 +97,59 @@ final class DecisionResolver
     }
 
     /**
+     * "Usar o tempo de Contagem N": count the pass of the chosen entry,
+     * timed by it alone. Without "passagem_alvo_id" the pass is the chosen
+     * entry's own group, which must hold another counter's entry (else it
+     * is a plain "confirmar"). With it, the other entry is the same
+     * crossing typed late: a lone entry of the same car, from another
+     * counter, in another group; it joins the chosen entry's pass.
+     *
+     * @throws InvalidArgumentException with a message in Portuguese, safe to show
+     */
+    public static function useTime(DecisionRequest $request, CarsRecount $recount): Decision
+    {
+        $chosenId = self::entryId($request, $recount->input, false);
+        $chosen = $recount->survivingEntry($chosenId);
+        $chosenGroup = $recount->groupOf($chosenId);
+        if ($chosen === null || $chosenGroup === null) {
+            throw new InvalidArgumentException('Este registro foi anulado ou está fora de uso: o tempo dele não pode valer para a passagem.');
+        }
+        $otherId = $request->number('passagem_alvo_id');
+        if ($otherId === null) {
+            if (count($chosenGroup->realSourceIds()) < 2) {
+                throw new InvalidArgumentException('Esta passagem tem um registro só: não há outro tempo para descartar. Use "Contar esta passagem".');
+            }
+            return Decision::usarTempo(0, $chosenId);
+        }
+
+        $stored = false;
+        foreach ($recount->input->entries as $entry) {
+            $stored = $stored || $entry->id === $otherId;
+        }
+        $other = $recount->survivingEntry($otherId);
+        $otherGroup = $recount->groupOf($otherId);
+        if (!$stored) {
+            throw new InvalidArgumentException('Esta passagem não pertence a esta prova.');
+        }
+        if ($other === null || $otherGroup === null) {
+            throw new InvalidArgumentException('O outro registro foi anulado ou está fora de uso.');
+        }
+        if ($other->carro !== $chosen->carro) {
+            throw new InvalidArgumentException('Os dois registros não são do mesmo carro.');
+        }
+        if ($other->fonteId === $chosen->fonteId) {
+            throw new InvalidArgumentException('Os dois registros são da mesma contagem: um deles é uma repetição, não um registro atrasado.');
+        }
+        if ($otherGroup === $chosenGroup) {
+            throw new InvalidArgumentException('Os dois registros já estão na mesma passagem.');
+        }
+        if (count($otherGroup->entries) !== 1 || $chosenGroup->hasSource($other->fonteId)) {
+            throw new InvalidArgumentException('O outro registro faz parte de outra passagem: anule-o ou troque-o de carro antes.');
+        }
+        return Decision::usarTempo(0, $chosenId, $otherId);
+    }
+
+    /**
      * "Marcar saída do box / do abastecimento": the car and the moment of
      * the exit a reviewer infers from a pass at the line.
      *

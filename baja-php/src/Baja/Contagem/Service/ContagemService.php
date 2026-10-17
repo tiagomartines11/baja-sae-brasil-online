@@ -183,6 +183,12 @@ final class ContagemService
         return $this->snapshots->current();
     }
 
+    /** The snapshot as stored, however old, without ever recalculating. Null when there is none. */
+    public function storedSnapshot(): ?RaceSnapshot
+    {
+        return $this->snapshots->stored();
+    }
+
     /** Recalculates the snapshot if it is stale. Never waits. For use after an answer was sent. */
     public function refreshSnapshotIfStale(): void
     {

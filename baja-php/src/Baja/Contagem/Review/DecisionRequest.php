@@ -35,6 +35,9 @@ use InvalidArgumentException;
  *   reatribuir_grupo    move several entries ("passagem_ids" inside the
  *                       decision) to the car "equipe_numero": two counters
  *                       typed the same wrong number
+ * "usar_tempo" (an engine type) may carry "passagem_alvo_id": the other
+ * entry of a crossing typed late, which must be watched too.
+ *
  *   marcar_saida        the car "equipe_numero" left the pit lane or the
  *                       fueling station ("area") at "ts_ms" and nobody
  *                       logged it: stores that exit as a race event, and a
@@ -60,6 +63,7 @@ final class DecisionRequest
     private const REQUIRED_NUMBERS = [
         Decision::ANULAR => ['passagem_id' => 'Passagem inválida.'],
         Decision::CONFIRMAR => ['passagem_id' => 'Passagem inválida.'],
+        Decision::USAR_TEMPO => ['passagem_id' => 'Passagem inválida.'],
         self::DESCARTAR_PASSAGEM => ['passagem_id' => 'Passagem inválida.'],
         Decision::REATRIBUIR => ['passagem_id' => 'Passagem inválida.', 'equipe_numero' => 'Número de carro inválido.'],
         Decision::ADICIONAR => ['equipe_numero' => 'Número de carro inválido.', 'ts_ms' => 'Horário inválido.'],
@@ -71,7 +75,7 @@ final class DecisionRequest
     ];
 
     /** Kinds of decision that are about one entry on the reviewer's screen. */
-    private const ABOUT_ONE_ENTRY = [Decision::ANULAR, Decision::CONFIRMAR, Decision::REATRIBUIR, self::DESCARTAR_PASSAGEM];
+    private const ABOUT_ONE_ENTRY = [Decision::ANULAR, Decision::CONFIRMAR, Decision::REATRIBUIR, Decision::USAR_TEMPO, self::DESCARTAR_PASSAGEM];
 
     public string $tipo;
 
@@ -123,6 +127,14 @@ final class DecisionRequest
             }
         }
 
+        // The one other number that may be left out: a "usar_tempo" inside one pass group names no other entry.
+        if ($tipo === Decision::USAR_TEMPO && ($raw['passagem_alvo_id'] ?? null) !== null) {
+            $parsed->numeros['passagem_alvo_id'] = self::wholeNumber($raw['passagem_alvo_id'], 'Passagem inválida.', false);
+            if ($parsed->numeros['passagem_alvo_id'] === $parsed->numeros['passagem_id']) {
+                throw new InvalidArgumentException('Escolha dois registros diferentes.');
+            }
+        }
+
         if ($tipo === self::MARCAR_SAIDA) {
             $area = $raw['area'] ?? null;
             if (!in_array($area, [self::AREA_BOX, self::AREA_ABASTECIMENTO], true)) {
@@ -153,6 +165,9 @@ final class DecisionRequest
             // The signature only covers the watched entries. A decision
             // about an entry outside that list would slip past the check
             // that it is still as the reviewer saw it.
+            throw new InvalidArgumentException('A passagem decidida não está entre as passagens observadas.');
+        }
+        if (isset($parsed->numeros['passagem_alvo_id']) && !in_array($parsed->numeros['passagem_alvo_id'], $parsed->passagemIds, true)) {
             throw new InvalidArgumentException('A passagem decidida não está entre as passagens observadas.');
         }
 

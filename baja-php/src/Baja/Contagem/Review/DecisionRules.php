@@ -59,6 +59,15 @@ final class DecisionRules
                     }
                 }
                 return null;
+            case Decision::USAR_TEMPO:
+                foreach ($active as $other) {
+                    if ($other->tipo === Decision::USAR_TEMPO
+                        && $other->passagemId === $decision->passagemId
+                        && $other->passagemAlvoId === $decision->passagemAlvoId) {
+                        return $other->id;
+                    }
+                }
+                return null;
             case Decision::REATRIBUIR:
                 // Of several reassignments of one entry the newest is the
                 // one that counts, so that is the one to compare with.

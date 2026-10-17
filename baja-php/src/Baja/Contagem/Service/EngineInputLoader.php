@@ -191,7 +191,7 @@ final class EngineInputLoader
     /** @return Decision[] oldest first */
     private function loadDecisions(): array
     {
-        $sql = 'SELECT decisao_id, tipo, passagem_id, fonte_id, equipe_numero, ts_ms, ts_fim_ms,
+        $sql = 'SELECT decisao_id, tipo, passagem_id, passagem_alvo_id, fonte_id, equipe_numero, ts_ms, ts_fim_ms,
                        desfaz_decisao_id, origem
                   FROM contagem_decisao
                  WHERE evento_id = :evento AND prova_id = :prova
@@ -201,6 +201,7 @@ final class EngineInputLoader
         foreach ($this->fetchAll($sql, $this->provaParams()) as $row) {
             $decision = new Decision((int) $row['decisao_id'], (string) $row['tipo']);
             $decision->passagemId = self::nullableInt($row['passagem_id']);
+            $decision->passagemAlvoId = self::nullableInt($row['passagem_alvo_id']);
             $decision->fonteId = self::nullableInt($row['fonte_id']);
             $decision->carro = self::nullableInt($row['equipe_numero']);
             $decision->tsMs = self::nullableInt($row['ts_ms']);

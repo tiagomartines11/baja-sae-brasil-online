@@ -155,6 +155,10 @@ final class DecisionValidator
             // screen) is the useful answer, not "this is not a pass".
             DecisionConflicts::requireUnchanged($prova, $parsed, $recount);
             $decisions = DecisionResolver::discardGroup($parsed, $recount);
+        } elseif ($parsed->tipo === Decision::USAR_TEMPO) {
+            $decisions = [DecisionResolver::useTime($parsed, $recount)];
+            DecisionConflicts::requireNew($prova, $decisions[0], $input);
+            DecisionConflicts::requireUnchanged($prova, $parsed, $recount);
         } else {
             $decision = DecisionResolver::toDecision($parsed, $input);
             if ($decision->tipo === Decision::REATRIBUIR) {

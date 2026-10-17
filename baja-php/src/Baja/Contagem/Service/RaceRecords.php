@@ -73,6 +73,7 @@ final class RaceRecords
         $row->setProvaId($this->prova->getProvaId());
         $row->setTipo($decision->tipo);
         $row->setPassagemId($decision->passagemId);
+        $row->setPassagemAlvoId($decision->passagemAlvoId);
         $row->setFonteId($decision->fonteId);
         $row->setEquipeNumero($decision->carro);
         $row->setTsMs($decision->tsMs);

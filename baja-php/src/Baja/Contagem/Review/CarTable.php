@@ -19,6 +19,11 @@ use Baja\Contagem\Engine\Data\EngineResult;
  *   presente      marked present at the event (classified or not)
  *   inscrito      a team of this event has that number, present or not
  *
+ * A row also lists `voltas_curtas_confirmadas`: the laps of the car that
+ * are too short to be real and count on a reviewer's confirmation, each
+ * {numero_volta, ancora, ts_ms, volta_ms}. They raise no flag (a
+ * confirmed pass is not flagged again); this keeps them in sight.
+ *
  * A number that is not even "inscrito" is a typo. A number that is
  * "inscrito" but not "presente" is a real team nobody marked as present,
  * and calling that "número desconhecido" sends the reviewer looking for a
@@ -36,9 +41,21 @@ final class CarTable
     public static function describe(EngineInput $input, EngineResult $result, array $teams): array
     {
         $officialPassesByCar = [];
+        $shortConfirmedByCar = [];
         foreach ($result->laps as $lap) {
             if ($lap->isOfficialPass()) {
                 $officialPassesByCar[$lap->carro] = ($officialPassesByCar[$lap->carro] ?? 0) + 1;
+            }
+            if ($lap->curtaConfirmada && $lap->grupo !== null && $lap->grupoAnterior !== null) {
+                // A lap too short to be real that counts on a reviewer's
+                // word (see Lap::$curtaConfirmada). `ancora` identifies its
+                // pass on the timeline.
+                $shortConfirmedByCar[$lap->carro][] = [
+                    'numero_volta' => $lap->numeroVolta,
+                    'ancora' => $lap->grupo->anchorEntryId(),
+                    'ts_ms' => $lap->tsMs,
+                    'volta_ms' => $result->timeline->racingMsBetween($lap->grupoAnterior->tsMs, $lap->grupo->tsMs),
+                ];
             }
         }
 
@@ -69,6 +86,7 @@ final class CarTable
                 }
             }
             $row['totais_importados'] = $imported;
+            $row['voltas_curtas_confirmadas'] = $shortConfirmedByCar[$state->carro] ?? [];
             $rows[] = $row;
             unset($unclassified[$state->carro]);
         }
@@ -89,6 +107,7 @@ final class CarTable
                 'presente' => true,
                 'inscrito' => true,
                 'totais_importados' => [],
+                'voltas_curtas_confirmadas' => [],
             ];
         }
         return $rows;

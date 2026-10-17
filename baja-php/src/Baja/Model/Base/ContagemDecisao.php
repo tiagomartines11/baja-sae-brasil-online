@@ -99,6 +99,13 @@ abstract class ContagemDecisao implements ActiveRecordInterface
     protected $passagem_id;
 
     /**
+     * The value for the passagem_alvo_id field.
+     *
+     * @var        string|null
+     */
+    protected $passagem_alvo_id;
+
+    /**
      * The value for the fonte_id field.
      *
      * @var        int|null
@@ -465,6 +472,16 @@ abstract class ContagemDecisao implements ActiveRecordInterface
     }
 
     /**
+     * Get the [passagem_alvo_id] column value.
+     *
+     * @return string|null
+     */
+    public function getPassagemAlvoId()
+    {
+        return $this->passagem_alvo_id;
+    }
+
+    /**
      * Get the [fonte_id] column value.
      *
      * @return int|null
@@ -657,6 +674,26 @@ abstract class ContagemDecisao implements ActiveRecordInterface
         if ($this->passagem_id !== $v) {
             $this->passagem_id = $v;
             $this->modifiedColumns[ContagemDecisaoTableMap::COL_PASSAGEM_ID] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [passagem_alvo_id] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setPassagemAlvoId($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->passagem_alvo_id !== $v) {
+            $this->passagem_alvo_id = $v;
+            $this->modifiedColumns[ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID] = true;
         }
 
         return $this;
@@ -897,31 +934,34 @@ abstract class ContagemDecisao implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 4 + $startcol : ContagemDecisaoTableMap::translateFieldName('PassagemId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->passagem_id = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ContagemDecisaoTableMap::translateFieldName('FonteId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 5 + $startcol : ContagemDecisaoTableMap::translateFieldName('PassagemAlvoId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->passagem_alvo_id = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ContagemDecisaoTableMap::translateFieldName('FonteId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->fonte_id = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 6 + $startcol : ContagemDecisaoTableMap::translateFieldName('EquipeNumero', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ContagemDecisaoTableMap::translateFieldName('EquipeNumero', TableMap::TYPE_PHPNAME, $indexType)];
             $this->equipe_numero = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 7 + $startcol : ContagemDecisaoTableMap::translateFieldName('TsMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ContagemDecisaoTableMap::translateFieldName('TsMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->ts_ms = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 8 + $startcol : ContagemDecisaoTableMap::translateFieldName('TsFimMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemDecisaoTableMap::translateFieldName('TsFimMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->ts_fim_ms = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 9 + $startcol : ContagemDecisaoTableMap::translateFieldName('DesfazDecisaoId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ContagemDecisaoTableMap::translateFieldName('DesfazDecisaoId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->desfaz_decisao_id = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 10 + $startcol : ContagemDecisaoTableMap::translateFieldName('Origem', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : ContagemDecisaoTableMap::translateFieldName('Origem', TableMap::TYPE_PHPNAME, $indexType)];
             $this->origem = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : ContagemDecisaoTableMap::translateFieldName('Usuario', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : ContagemDecisaoTableMap::translateFieldName('Usuario', TableMap::TYPE_PHPNAME, $indexType)];
             $this->usuario = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : ContagemDecisaoTableMap::translateFieldName('Motivo', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : ContagemDecisaoTableMap::translateFieldName('Motivo', TableMap::TYPE_PHPNAME, $indexType)];
             $this->motivo = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : ContagemDecisaoTableMap::translateFieldName('CriadoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 14 + $startcol : ContagemDecisaoTableMap::translateFieldName('CriadoEmMs', TableMap::TYPE_PHPNAME, $indexType)];
             $this->criado_em_ms = (null !== $col) ? (string) $col : null;
 
             $this->resetModified();
@@ -931,7 +971,7 @@ abstract class ContagemDecisao implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 14; // 14 = ContagemDecisaoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 15; // 15 = ContagemDecisaoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\ContagemDecisao'), 0, $e);
@@ -1167,6 +1207,9 @@ abstract class ContagemDecisao implements ActiveRecordInterface
         if ($this->isColumnModified(ContagemDecisaoTableMap::COL_PASSAGEM_ID)) {
             $modifiedColumns[':p' . $index++]  = 'passagem_id';
         }
+        if ($this->isColumnModified(ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'passagem_alvo_id';
+        }
         if ($this->isColumnModified(ContagemDecisaoTableMap::COL_FONTE_ID)) {
             $modifiedColumns[':p' . $index++]  = 'fonte_id';
         }
@@ -1223,6 +1266,10 @@ abstract class ContagemDecisao implements ActiveRecordInterface
                         break;
                     case 'passagem_id':
                         $stmt->bindValue($identifier, $this->passagem_id, PDO::PARAM_INT);
+
+                        break;
+                    case 'passagem_alvo_id':
+                        $stmt->bindValue($identifier, $this->passagem_alvo_id, PDO::PARAM_INT);
 
                         break;
                     case 'fonte_id':
@@ -1339,30 +1386,33 @@ abstract class ContagemDecisao implements ActiveRecordInterface
                 return $this->getPassagemId();
 
             case 5:
-                return $this->getFonteId();
+                return $this->getPassagemAlvoId();
 
             case 6:
-                return $this->getEquipeNumero();
+                return $this->getFonteId();
 
             case 7:
-                return $this->getTsMs();
+                return $this->getEquipeNumero();
 
             case 8:
-                return $this->getTsFimMs();
+                return $this->getTsMs();
 
             case 9:
-                return $this->getDesfazDecisaoId();
+                return $this->getTsFimMs();
 
             case 10:
-                return $this->getOrigem();
+                return $this->getDesfazDecisaoId();
 
             case 11:
-                return $this->getUsuario();
+                return $this->getOrigem();
 
             case 12:
-                return $this->getMotivo();
+                return $this->getUsuario();
 
             case 13:
+                return $this->getMotivo();
+
+            case 14:
                 return $this->getCriadoEmMs();
 
             default:
@@ -1398,15 +1448,16 @@ abstract class ContagemDecisao implements ActiveRecordInterface
             $keys[2] => $this->getProvaId(),
             $keys[3] => $this->getTipo(),
             $keys[4] => $this->getPassagemId(),
-            $keys[5] => $this->getFonteId(),
-            $keys[6] => $this->getEquipeNumero(),
-            $keys[7] => $this->getTsMs(),
-            $keys[8] => $this->getTsFimMs(),
-            $keys[9] => $this->getDesfazDecisaoId(),
-            $keys[10] => $this->getOrigem(),
-            $keys[11] => $this->getUsuario(),
-            $keys[12] => $this->getMotivo(),
-            $keys[13] => $this->getCriadoEmMs(),
+            $keys[5] => $this->getPassagemAlvoId(),
+            $keys[6] => $this->getFonteId(),
+            $keys[7] => $this->getEquipeNumero(),
+            $keys[8] => $this->getTsMs(),
+            $keys[9] => $this->getTsFimMs(),
+            $keys[10] => $this->getDesfazDecisaoId(),
+            $keys[11] => $this->getOrigem(),
+            $keys[12] => $this->getUsuario(),
+            $keys[13] => $this->getMotivo(),
+            $keys[14] => $this->getCriadoEmMs(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1481,30 +1532,33 @@ abstract class ContagemDecisao implements ActiveRecordInterface
                 $this->setPassagemId($value);
                 break;
             case 5:
-                $this->setFonteId($value);
+                $this->setPassagemAlvoId($value);
                 break;
             case 6:
-                $this->setEquipeNumero($value);
+                $this->setFonteId($value);
                 break;
             case 7:
-                $this->setTsMs($value);
+                $this->setEquipeNumero($value);
                 break;
             case 8:
-                $this->setTsFimMs($value);
+                $this->setTsMs($value);
                 break;
             case 9:
-                $this->setDesfazDecisaoId($value);
+                $this->setTsFimMs($value);
                 break;
             case 10:
-                $this->setOrigem($value);
+                $this->setDesfazDecisaoId($value);
                 break;
             case 11:
-                $this->setUsuario($value);
+                $this->setOrigem($value);
                 break;
             case 12:
-                $this->setMotivo($value);
+                $this->setUsuario($value);
                 break;
             case 13:
+                $this->setMotivo($value);
+                break;
+            case 14:
                 $this->setCriadoEmMs($value);
                 break;
         } // switch()
@@ -1549,31 +1603,34 @@ abstract class ContagemDecisao implements ActiveRecordInterface
             $this->setPassagemId($arr[$keys[4]]);
         }
         if (array_key_exists($keys[5], $arr)) {
-            $this->setFonteId($arr[$keys[5]]);
+            $this->setPassagemAlvoId($arr[$keys[5]]);
         }
         if (array_key_exists($keys[6], $arr)) {
-            $this->setEquipeNumero($arr[$keys[6]]);
+            $this->setFonteId($arr[$keys[6]]);
         }
         if (array_key_exists($keys[7], $arr)) {
-            $this->setTsMs($arr[$keys[7]]);
+            $this->setEquipeNumero($arr[$keys[7]]);
         }
         if (array_key_exists($keys[8], $arr)) {
-            $this->setTsFimMs($arr[$keys[8]]);
+            $this->setTsMs($arr[$keys[8]]);
         }
         if (array_key_exists($keys[9], $arr)) {
-            $this->setDesfazDecisaoId($arr[$keys[9]]);
+            $this->setTsFimMs($arr[$keys[9]]);
         }
         if (array_key_exists($keys[10], $arr)) {
-            $this->setOrigem($arr[$keys[10]]);
+            $this->setDesfazDecisaoId($arr[$keys[10]]);
         }
         if (array_key_exists($keys[11], $arr)) {
-            $this->setUsuario($arr[$keys[11]]);
+            $this->setOrigem($arr[$keys[11]]);
         }
         if (array_key_exists($keys[12], $arr)) {
-            $this->setMotivo($arr[$keys[12]]);
+            $this->setUsuario($arr[$keys[12]]);
         }
         if (array_key_exists($keys[13], $arr)) {
-            $this->setCriadoEmMs($arr[$keys[13]]);
+            $this->setMotivo($arr[$keys[13]]);
+        }
+        if (array_key_exists($keys[14], $arr)) {
+            $this->setCriadoEmMs($arr[$keys[14]]);
         }
 
         return $this;
@@ -1632,6 +1689,9 @@ abstract class ContagemDecisao implements ActiveRecordInterface
         }
         if ($this->isColumnModified(ContagemDecisaoTableMap::COL_PASSAGEM_ID)) {
             $criteria->add(ContagemDecisaoTableMap::COL_PASSAGEM_ID, $this->passagem_id);
+        }
+        if ($this->isColumnModified(ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID)) {
+            $criteria->add(ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID, $this->passagem_alvo_id);
         }
         if ($this->isColumnModified(ContagemDecisaoTableMap::COL_FONTE_ID)) {
             $criteria->add(ContagemDecisaoTableMap::COL_FONTE_ID, $this->fonte_id);
@@ -1752,6 +1812,7 @@ abstract class ContagemDecisao implements ActiveRecordInterface
         $copyObj->setProvaId($this->getProvaId());
         $copyObj->setTipo($this->getTipo());
         $copyObj->setPassagemId($this->getPassagemId());
+        $copyObj->setPassagemAlvoId($this->getPassagemAlvoId());
         $copyObj->setFonteId($this->getFonteId());
         $copyObj->setEquipeNumero($this->getEquipeNumero());
         $copyObj->setTsMs($this->getTsMs());
@@ -1863,6 +1924,7 @@ abstract class ContagemDecisao implements ActiveRecordInterface
         $this->prova_id = null;
         $this->tipo = null;
         $this->passagem_id = null;
+        $this->passagem_alvo_id = null;
         $this->fonte_id = null;
         $this->equipe_numero = null;
         $this->ts_ms = null;

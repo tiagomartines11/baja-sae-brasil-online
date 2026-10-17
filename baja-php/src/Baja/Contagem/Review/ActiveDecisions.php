@@ -16,7 +16,7 @@ use Baja\Contagem\Engine\Data\Decision;
 final class ActiveDecisions
 {
     /** Decision types that point at one entry through passagem_id. */
-    public const ENTRY_TYPES = [Decision::ANULAR, Decision::REATRIBUIR, Decision::CONFIRMAR];
+    public const ENTRY_TYPES = [Decision::ANULAR, Decision::REATRIBUIR, Decision::CONFIRMAR, Decision::USAR_TEMPO];
 
     /**
      * @param Decision[] $decisions every decision of the prova, in any order
@@ -46,6 +46,9 @@ final class ActiveDecisions
 
     /**
      * @param array<int, Decision> $active as returned by filter()
+     * A "usar_tempo" is about both of its entries: the chosen one and the
+     * one that joins its pass.
+     *
      * @return array<int, int[]> passagemId => ids of the decisions in force about that entry, ascending
      */
     public static function idsByEntry(array $active): array
@@ -54,6 +57,9 @@ final class ActiveDecisions
         foreach ($active as $decision) {
             if ($decision->passagemId !== null && in_array($decision->tipo, self::ENTRY_TYPES, true)) {
                 $byEntry[$decision->passagemId][] = $decision->id;
+            }
+            if ($decision->passagemAlvoId !== null && $decision->tipo === Decision::USAR_TEMPO) {
+                $byEntry[$decision->passagemAlvoId][] = $decision->id;
             }
         }
         foreach ($byEntry as &$ids) {

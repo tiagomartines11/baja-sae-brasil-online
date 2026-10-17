@@ -63,7 +63,7 @@ class ContagemDecisaoTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 14;
+    public const NUM_COLUMNS = 15;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class ContagemDecisaoTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 14;
+    public const NUM_HYDRATE_COLUMNS = 15;
 
     /**
      * the column name for the decisao_id field
@@ -99,6 +99,11 @@ class ContagemDecisaoTableMap extends TableMap
      * the column name for the passagem_id field
      */
     public const COL_PASSAGEM_ID = 'contagem_decisao.passagem_id';
+
+    /**
+     * the column name for the passagem_alvo_id field
+     */
+    public const COL_PASSAGEM_ALVO_ID = 'contagem_decisao.passagem_alvo_id';
 
     /**
      * the column name for the fonte_id field
@@ -159,11 +164,11 @@ class ContagemDecisaoTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['DecisaoId', 'EventoId', 'ProvaId', 'Tipo', 'PassagemId', 'FonteId', 'EquipeNumero', 'TsMs', 'TsFimMs', 'DesfazDecisaoId', 'Origem', 'Usuario', 'Motivo', 'CriadoEmMs', ],
-        self::TYPE_CAMELNAME     => ['decisaoId', 'eventoId', 'provaId', 'tipo', 'passagemId', 'fonteId', 'equipeNumero', 'tsMs', 'tsFimMs', 'desfazDecisaoId', 'origem', 'usuario', 'motivo', 'criadoEmMs', ],
-        self::TYPE_COLNAME       => [ContagemDecisaoTableMap::COL_DECISAO_ID, ContagemDecisaoTableMap::COL_EVENTO_ID, ContagemDecisaoTableMap::COL_PROVA_ID, ContagemDecisaoTableMap::COL_TIPO, ContagemDecisaoTableMap::COL_PASSAGEM_ID, ContagemDecisaoTableMap::COL_FONTE_ID, ContagemDecisaoTableMap::COL_EQUIPE_NUMERO, ContagemDecisaoTableMap::COL_TS_MS, ContagemDecisaoTableMap::COL_TS_FIM_MS, ContagemDecisaoTableMap::COL_DESFAZ_DECISAO_ID, ContagemDecisaoTableMap::COL_ORIGEM, ContagemDecisaoTableMap::COL_USUARIO, ContagemDecisaoTableMap::COL_MOTIVO, ContagemDecisaoTableMap::COL_CRIADO_EM_MS, ],
-        self::TYPE_FIELDNAME     => ['decisao_id', 'evento_id', 'prova_id', 'tipo', 'passagem_id', 'fonte_id', 'equipe_numero', 'ts_ms', 'ts_fim_ms', 'desfaz_decisao_id', 'origem', 'usuario', 'motivo', 'criado_em_ms', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ]
+        self::TYPE_PHPNAME       => ['DecisaoId', 'EventoId', 'ProvaId', 'Tipo', 'PassagemId', 'PassagemAlvoId', 'FonteId', 'EquipeNumero', 'TsMs', 'TsFimMs', 'DesfazDecisaoId', 'Origem', 'Usuario', 'Motivo', 'CriadoEmMs', ],
+        self::TYPE_CAMELNAME     => ['decisaoId', 'eventoId', 'provaId', 'tipo', 'passagemId', 'passagemAlvoId', 'fonteId', 'equipeNumero', 'tsMs', 'tsFimMs', 'desfazDecisaoId', 'origem', 'usuario', 'motivo', 'criadoEmMs', ],
+        self::TYPE_COLNAME       => [ContagemDecisaoTableMap::COL_DECISAO_ID, ContagemDecisaoTableMap::COL_EVENTO_ID, ContagemDecisaoTableMap::COL_PROVA_ID, ContagemDecisaoTableMap::COL_TIPO, ContagemDecisaoTableMap::COL_PASSAGEM_ID, ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID, ContagemDecisaoTableMap::COL_FONTE_ID, ContagemDecisaoTableMap::COL_EQUIPE_NUMERO, ContagemDecisaoTableMap::COL_TS_MS, ContagemDecisaoTableMap::COL_TS_FIM_MS, ContagemDecisaoTableMap::COL_DESFAZ_DECISAO_ID, ContagemDecisaoTableMap::COL_ORIGEM, ContagemDecisaoTableMap::COL_USUARIO, ContagemDecisaoTableMap::COL_MOTIVO, ContagemDecisaoTableMap::COL_CRIADO_EM_MS, ],
+        self::TYPE_FIELDNAME     => ['decisao_id', 'evento_id', 'prova_id', 'tipo', 'passagem_id', 'passagem_alvo_id', 'fonte_id', 'equipe_numero', 'ts_ms', 'ts_fim_ms', 'desfaz_decisao_id', 'origem', 'usuario', 'motivo', 'criado_em_ms', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ]
     ];
 
     /**
@@ -175,11 +180,11 @@ class ContagemDecisaoTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['DecisaoId' => 0, 'EventoId' => 1, 'ProvaId' => 2, 'Tipo' => 3, 'PassagemId' => 4, 'FonteId' => 5, 'EquipeNumero' => 6, 'TsMs' => 7, 'TsFimMs' => 8, 'DesfazDecisaoId' => 9, 'Origem' => 10, 'Usuario' => 11, 'Motivo' => 12, 'CriadoEmMs' => 13, ],
-        self::TYPE_CAMELNAME     => ['decisaoId' => 0, 'eventoId' => 1, 'provaId' => 2, 'tipo' => 3, 'passagemId' => 4, 'fonteId' => 5, 'equipeNumero' => 6, 'tsMs' => 7, 'tsFimMs' => 8, 'desfazDecisaoId' => 9, 'origem' => 10, 'usuario' => 11, 'motivo' => 12, 'criadoEmMs' => 13, ],
-        self::TYPE_COLNAME       => [ContagemDecisaoTableMap::COL_DECISAO_ID => 0, ContagemDecisaoTableMap::COL_EVENTO_ID => 1, ContagemDecisaoTableMap::COL_PROVA_ID => 2, ContagemDecisaoTableMap::COL_TIPO => 3, ContagemDecisaoTableMap::COL_PASSAGEM_ID => 4, ContagemDecisaoTableMap::COL_FONTE_ID => 5, ContagemDecisaoTableMap::COL_EQUIPE_NUMERO => 6, ContagemDecisaoTableMap::COL_TS_MS => 7, ContagemDecisaoTableMap::COL_TS_FIM_MS => 8, ContagemDecisaoTableMap::COL_DESFAZ_DECISAO_ID => 9, ContagemDecisaoTableMap::COL_ORIGEM => 10, ContagemDecisaoTableMap::COL_USUARIO => 11, ContagemDecisaoTableMap::COL_MOTIVO => 12, ContagemDecisaoTableMap::COL_CRIADO_EM_MS => 13, ],
-        self::TYPE_FIELDNAME     => ['decisao_id' => 0, 'evento_id' => 1, 'prova_id' => 2, 'tipo' => 3, 'passagem_id' => 4, 'fonte_id' => 5, 'equipe_numero' => 6, 'ts_ms' => 7, 'ts_fim_ms' => 8, 'desfaz_decisao_id' => 9, 'origem' => 10, 'usuario' => 11, 'motivo' => 12, 'criado_em_ms' => 13, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, ]
+        self::TYPE_PHPNAME       => ['DecisaoId' => 0, 'EventoId' => 1, 'ProvaId' => 2, 'Tipo' => 3, 'PassagemId' => 4, 'PassagemAlvoId' => 5, 'FonteId' => 6, 'EquipeNumero' => 7, 'TsMs' => 8, 'TsFimMs' => 9, 'DesfazDecisaoId' => 10, 'Origem' => 11, 'Usuario' => 12, 'Motivo' => 13, 'CriadoEmMs' => 14, ],
+        self::TYPE_CAMELNAME     => ['decisaoId' => 0, 'eventoId' => 1, 'provaId' => 2, 'tipo' => 3, 'passagemId' => 4, 'passagemAlvoId' => 5, 'fonteId' => 6, 'equipeNumero' => 7, 'tsMs' => 8, 'tsFimMs' => 9, 'desfazDecisaoId' => 10, 'origem' => 11, 'usuario' => 12, 'motivo' => 13, 'criadoEmMs' => 14, ],
+        self::TYPE_COLNAME       => [ContagemDecisaoTableMap::COL_DECISAO_ID => 0, ContagemDecisaoTableMap::COL_EVENTO_ID => 1, ContagemDecisaoTableMap::COL_PROVA_ID => 2, ContagemDecisaoTableMap::COL_TIPO => 3, ContagemDecisaoTableMap::COL_PASSAGEM_ID => 4, ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID => 5, ContagemDecisaoTableMap::COL_FONTE_ID => 6, ContagemDecisaoTableMap::COL_EQUIPE_NUMERO => 7, ContagemDecisaoTableMap::COL_TS_MS => 8, ContagemDecisaoTableMap::COL_TS_FIM_MS => 9, ContagemDecisaoTableMap::COL_DESFAZ_DECISAO_ID => 10, ContagemDecisaoTableMap::COL_ORIGEM => 11, ContagemDecisaoTableMap::COL_USUARIO => 12, ContagemDecisaoTableMap::COL_MOTIVO => 13, ContagemDecisaoTableMap::COL_CRIADO_EM_MS => 14, ],
+        self::TYPE_FIELDNAME     => ['decisao_id' => 0, 'evento_id' => 1, 'prova_id' => 2, 'tipo' => 3, 'passagem_id' => 4, 'passagem_alvo_id' => 5, 'fonte_id' => 6, 'equipe_numero' => 7, 'ts_ms' => 8, 'ts_fim_ms' => 9, 'desfaz_decisao_id' => 10, 'origem' => 11, 'usuario' => 12, 'motivo' => 13, 'criado_em_ms' => 14, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, ]
     ];
 
     /**
@@ -227,6 +232,14 @@ class ContagemDecisaoTableMap extends TableMap
         'COL_PASSAGEM_ID' => 'PASSAGEM_ID',
         'passagem_id' => 'PASSAGEM_ID',
         'contagem_decisao.passagem_id' => 'PASSAGEM_ID',
+        'PassagemAlvoId' => 'PASSAGEM_ALVO_ID',
+        'ContagemDecisao.PassagemAlvoId' => 'PASSAGEM_ALVO_ID',
+        'passagemAlvoId' => 'PASSAGEM_ALVO_ID',
+        'contagemDecisao.passagemAlvoId' => 'PASSAGEM_ALVO_ID',
+        'ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID' => 'PASSAGEM_ALVO_ID',
+        'COL_PASSAGEM_ALVO_ID' => 'PASSAGEM_ALVO_ID',
+        'passagem_alvo_id' => 'PASSAGEM_ALVO_ID',
+        'contagem_decisao.passagem_alvo_id' => 'PASSAGEM_ALVO_ID',
         'FonteId' => 'FONTE_ID',
         'ContagemDecisao.FonteId' => 'FONTE_ID',
         'fonteId' => 'FONTE_ID',
@@ -320,6 +333,7 @@ class ContagemDecisaoTableMap extends TableMap
         $this->addForeignKey('prova_id', 'ProvaId', 'CHAR', 'prova', 'prova_id', true, 3, null);
         $this->addColumn('tipo', 'Tipo', 'VARCHAR', true, 16, null);
         $this->addColumn('passagem_id', 'PassagemId', 'BIGINT', false, null, null);
+        $this->addColumn('passagem_alvo_id', 'PassagemAlvoId', 'BIGINT', false, null, null);
         $this->addColumn('fonte_id', 'FonteId', 'INTEGER', false, null, null);
         $this->addColumn('equipe_numero', 'EquipeNumero', 'INTEGER', false, null, null);
         $this->addColumn('ts_ms', 'TsMs', 'BIGINT', false, null, null);
@@ -499,6 +513,7 @@ class ContagemDecisaoTableMap extends TableMap
             $criteria->addSelectColumn(ContagemDecisaoTableMap::COL_PROVA_ID);
             $criteria->addSelectColumn(ContagemDecisaoTableMap::COL_TIPO);
             $criteria->addSelectColumn(ContagemDecisaoTableMap::COL_PASSAGEM_ID);
+            $criteria->addSelectColumn(ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID);
             $criteria->addSelectColumn(ContagemDecisaoTableMap::COL_FONTE_ID);
             $criteria->addSelectColumn(ContagemDecisaoTableMap::COL_EQUIPE_NUMERO);
             $criteria->addSelectColumn(ContagemDecisaoTableMap::COL_TS_MS);
@@ -514,6 +529,7 @@ class ContagemDecisaoTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.prova_id');
             $criteria->addSelectColumn($alias . '.tipo');
             $criteria->addSelectColumn($alias . '.passagem_id');
+            $criteria->addSelectColumn($alias . '.passagem_alvo_id');
             $criteria->addSelectColumn($alias . '.fonte_id');
             $criteria->addSelectColumn($alias . '.equipe_numero');
             $criteria->addSelectColumn($alias . '.ts_ms');
@@ -546,6 +562,7 @@ class ContagemDecisaoTableMap extends TableMap
             $criteria->removeSelectColumn(ContagemDecisaoTableMap::COL_PROVA_ID);
             $criteria->removeSelectColumn(ContagemDecisaoTableMap::COL_TIPO);
             $criteria->removeSelectColumn(ContagemDecisaoTableMap::COL_PASSAGEM_ID);
+            $criteria->removeSelectColumn(ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID);
             $criteria->removeSelectColumn(ContagemDecisaoTableMap::COL_FONTE_ID);
             $criteria->removeSelectColumn(ContagemDecisaoTableMap::COL_EQUIPE_NUMERO);
             $criteria->removeSelectColumn(ContagemDecisaoTableMap::COL_TS_MS);
@@ -561,6 +578,7 @@ class ContagemDecisaoTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.prova_id');
             $criteria->removeSelectColumn($alias . '.tipo');
             $criteria->removeSelectColumn($alias . '.passagem_id');
+            $criteria->removeSelectColumn($alias . '.passagem_alvo_id');
             $criteria->removeSelectColumn($alias . '.fonte_id');
             $criteria->removeSelectColumn($alias . '.equipe_numero');
             $criteria->removeSelectColumn($alias . '.ts_ms');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\AppliedDecisions;
+use Baja\Contagem\Engine\ConfirmEffect;
 use Baja\Contagem\Engine\Data\Decision;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\Entry;
@@ -50,6 +51,9 @@ final class CarsRecount
 
     /** @var PassGroup[] every pass group of those cars */
     public array $groups = [];
+
+    /** What "confirmar" would do to the count of these cars, as on a flag. */
+    public ConfirmEffect $effect;
 
     /** @var array<int, Source> */
     private array $sourcesById = [];
@@ -129,6 +133,7 @@ final class CarsRecount
         $counter->buildLaps();
 
         $this->timeline = $counter->timeline;
+        $this->effect = new ConfirmEffect($counter->timeline, $counter->groupsByCar);
         foreach ($counter->groupsByCar as $groupsOfOneCar) {
             foreach ($groupsOfOneCar as $group) {
                 $this->groups[] = $group;

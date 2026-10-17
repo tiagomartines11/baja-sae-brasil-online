@@ -23,6 +23,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDecisaoQuery orderByProvaId($order = Criteria::ASC) Order by the prova_id column
  * @method     ChildContagemDecisaoQuery orderByTipo($order = Criteria::ASC) Order by the tipo column
  * @method     ChildContagemDecisaoQuery orderByPassagemId($order = Criteria::ASC) Order by the passagem_id column
+ * @method     ChildContagemDecisaoQuery orderByPassagemAlvoId($order = Criteria::ASC) Order by the passagem_alvo_id column
  * @method     ChildContagemDecisaoQuery orderByFonteId($order = Criteria::ASC) Order by the fonte_id column
  * @method     ChildContagemDecisaoQuery orderByEquipeNumero($order = Criteria::ASC) Order by the equipe_numero column
  * @method     ChildContagemDecisaoQuery orderByTsMs($order = Criteria::ASC) Order by the ts_ms column
@@ -38,6 +39,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDecisaoQuery groupByProvaId() Group by the prova_id column
  * @method     ChildContagemDecisaoQuery groupByTipo() Group by the tipo column
  * @method     ChildContagemDecisaoQuery groupByPassagemId() Group by the passagem_id column
+ * @method     ChildContagemDecisaoQuery groupByPassagemAlvoId() Group by the passagem_alvo_id column
  * @method     ChildContagemDecisaoQuery groupByFonteId() Group by the fonte_id column
  * @method     ChildContagemDecisaoQuery groupByEquipeNumero() Group by the equipe_numero column
  * @method     ChildContagemDecisaoQuery groupByTsMs() Group by the ts_ms column
@@ -76,6 +78,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDecisao|null findOneByProvaId(string $prova_id) Return the first ChildContagemDecisao filtered by the prova_id column
  * @method     ChildContagemDecisao|null findOneByTipo(string $tipo) Return the first ChildContagemDecisao filtered by the tipo column
  * @method     ChildContagemDecisao|null findOneByPassagemId(string $passagem_id) Return the first ChildContagemDecisao filtered by the passagem_id column
+ * @method     ChildContagemDecisao|null findOneByPassagemAlvoId(string $passagem_alvo_id) Return the first ChildContagemDecisao filtered by the passagem_alvo_id column
  * @method     ChildContagemDecisao|null findOneByFonteId(int $fonte_id) Return the first ChildContagemDecisao filtered by the fonte_id column
  * @method     ChildContagemDecisao|null findOneByEquipeNumero(int $equipe_numero) Return the first ChildContagemDecisao filtered by the equipe_numero column
  * @method     ChildContagemDecisao|null findOneByTsMs(string $ts_ms) Return the first ChildContagemDecisao filtered by the ts_ms column
@@ -94,6 +97,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildContagemDecisao requireOneByProvaId(string $prova_id) Return the first ChildContagemDecisao filtered by the prova_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDecisao requireOneByTipo(string $tipo) Return the first ChildContagemDecisao filtered by the tipo column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDecisao requireOneByPassagemId(string $passagem_id) Return the first ChildContagemDecisao filtered by the passagem_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildContagemDecisao requireOneByPassagemAlvoId(string $passagem_alvo_id) Return the first ChildContagemDecisao filtered by the passagem_alvo_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDecisao requireOneByFonteId(int $fonte_id) Return the first ChildContagemDecisao filtered by the fonte_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDecisao requireOneByEquipeNumero(int $equipe_numero) Return the first ChildContagemDecisao filtered by the equipe_numero column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildContagemDecisao requireOneByTsMs(string $ts_ms) Return the first ChildContagemDecisao filtered by the ts_ms column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -117,6 +121,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildContagemDecisao> findByTipo(string|array<string> $tipo) Return ChildContagemDecisao objects filtered by the tipo column
  * @method     ChildContagemDecisao[]|Collection findByPassagemId(string|array<string> $passagem_id) Return ChildContagemDecisao objects filtered by the passagem_id column
  * @psalm-method Collection&\Traversable<ChildContagemDecisao> findByPassagemId(string|array<string> $passagem_id) Return ChildContagemDecisao objects filtered by the passagem_id column
+ * @method     ChildContagemDecisao[]|Collection findByPassagemAlvoId(string|array<string> $passagem_alvo_id) Return ChildContagemDecisao objects filtered by the passagem_alvo_id column
+ * @psalm-method Collection&\Traversable<ChildContagemDecisao> findByPassagemAlvoId(string|array<string> $passagem_alvo_id) Return ChildContagemDecisao objects filtered by the passagem_alvo_id column
  * @method     ChildContagemDecisao[]|Collection findByFonteId(int|array<int> $fonte_id) Return ChildContagemDecisao objects filtered by the fonte_id column
  * @psalm-method Collection&\Traversable<ChildContagemDecisao> findByFonteId(int|array<int> $fonte_id) Return ChildContagemDecisao objects filtered by the fonte_id column
  * @method     ChildContagemDecisao[]|Collection findByEquipeNumero(int|array<int> $equipe_numero) Return ChildContagemDecisao objects filtered by the equipe_numero column
@@ -234,7 +240,7 @@ abstract class ContagemDecisaoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT decisao_id, evento_id, prova_id, tipo, passagem_id, fonte_id, equipe_numero, ts_ms, ts_fim_ms, desfaz_decisao_id, origem, usuario, motivo, criado_em_ms FROM contagem_decisao WHERE decisao_id = :p0';
+        $sql = 'SELECT decisao_id, evento_id, prova_id, tipo, passagem_id, passagem_alvo_id, fonte_id, equipe_numero, ts_ms, ts_fim_ms, desfaz_decisao_id, origem, usuario, motivo, criado_em_ms FROM contagem_decisao WHERE decisao_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_INT);
@@ -494,6 +500,49 @@ abstract class ContagemDecisaoQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(ContagemDecisaoTableMap::COL_PASSAGEM_ID, $passagemId, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the passagem_alvo_id column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByPassagemAlvoId(1234); // WHERE passagem_alvo_id = 1234
+     * $query->filterByPassagemAlvoId(array(12, 34)); // WHERE passagem_alvo_id IN (12, 34)
+     * $query->filterByPassagemAlvoId(array('min' => 12)); // WHERE passagem_alvo_id > 12
+     * </code>
+     *
+     * @param mixed $passagemAlvoId The value to use as filter.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByPassagemAlvoId($passagemAlvoId = null, ?string $comparison = null)
+    {
+        if (is_array($passagemAlvoId)) {
+            $useMinMax = false;
+            if (isset($passagemAlvoId['min'])) {
+                $this->addUsingAlias(ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID, $passagemAlvoId['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($passagemAlvoId['max'])) {
+                $this->addUsingAlias(ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID, $passagemAlvoId['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(ContagemDecisaoTableMap::COL_PASSAGEM_ALVO_ID, $passagemAlvoId, $comparison);
 
         return $this;
     }
