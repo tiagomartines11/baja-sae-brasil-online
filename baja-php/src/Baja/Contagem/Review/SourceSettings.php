@@ -64,7 +64,6 @@ final class SourceSettings
                 }
                 continue;
             }
-            $countingIds[] = (int) $fonte->getFonteId();
             if ($fonte->getAtiva()) {
                 $activeCountingIds[] = (int) $fonte->getFonteId();
             }
