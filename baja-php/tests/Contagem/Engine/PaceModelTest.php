@@ -381,4 +381,29 @@ final class PaceModelTest extends TestCase
             );
         }
     }
+
+    /**
+     * SITUATION: a prova was started and never finished: a test left
+     * running, or a dev copy opened weeks later. The same eight laps, and
+     * the chart asks for the pace from the start until thirty days later.
+     *
+     * EXPECTED: only the last day, one point per minute, ending at the
+     * moment asked: a full run must not build a point for every minute of
+     * the month (it ran out of memory doing that).
+     */
+    public function testTheHistoryOfARaceLeftOpenKeepsOnlyTheLastDay(): void
+    {
+        $laps = [];
+        for ($car = 1; $car <= 8; $car++) {
+            $laps[$car][] = $this->lap($car, 119 + $car, 100);
+        }
+        $pace = new PaceModel($laps, new Settings());
+        $monthLaterMs = 30 * 86400000 + 1234;
+
+        $history = $pace->fieldPaceHistory(0, $monthLaterMs);
+
+        $this->assertCount(PaceModel::MAX_HISTORY_POINTS, $history);
+        $this->assertSame($monthLaterMs, $history[count($history) - 1]['ts_ms']);
+        $this->assertGreaterThan($monthLaterMs - 86400000, $history[0]['ts_ms']);
+    }
 }

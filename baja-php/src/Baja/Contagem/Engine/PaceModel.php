@@ -40,6 +40,13 @@ final class PaceModel
      */
     private const GRID_MS = 60000;
 
+    /**
+     * The pace chart holds at most a day of minutes. A race is hours long;
+     * a prova started and never finished (a test left running) would
+     * otherwise grow a point per minute for as long as it stays open.
+     */
+    public const MAX_HISTORY_POINTS = 1440;
+
     private int $windowMs;
 
     /** @var int[] end time of every clean lap of the field, ascending */
@@ -128,7 +135,8 @@ final class PaceModel
      * The field pace at every step of the grid from $fromMs to $untilMs,
      * oldest first: what a chart of the pace through the race draws. Each
      * point carries the moment of its step, except the last, which carries
-     * $untilMs itself (its step may be up to a minute later).
+     * $untilMs itself (its step may be up to a minute later). Only the last
+     * MAX_HISTORY_POINTS of them.
      *
      * @return array<int, array{ts_ms: int, volta_mediana_ms: ?int, voltas_na_janela: int}>
      */
@@ -136,7 +144,8 @@ final class PaceModel
     {
         $points = [];
         $lastStep = self::gridStepOf($untilMs);
-        for ($step = self::gridStepOf($fromMs); $step <= $lastStep; $step++) {
+        $firstStep = max(self::gridStepOf($fromMs), $lastStep - self::MAX_HISTORY_POINTS + 1);
+        for ($step = $firstStep; $step <= $lastStep; $step++) {
             $momentMs = $step === $lastStep ? $untilMs : $step * self::GRID_MS;
             $pace = $this->fieldPaceAt($momentMs);
             $points[] = [
