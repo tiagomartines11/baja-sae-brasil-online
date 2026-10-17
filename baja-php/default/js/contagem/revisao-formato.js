@@ -89,6 +89,32 @@ export function idade(ms) {
   return `${Math.floor(segundos / 3600)} h`;
 }
 
+// The status bar is redrawn every second. An age that changes every second
+// ("12 s", "13 s", then "agora" again at the next upload) made each pill
+// grow and shrink, and the whole bar jump. So the bar's ages move in steps:
+// "agora" for the first 15 s, then 15 s, 30 s, 45 s, then whole minutes.
+export const PASSO_DA_IDADE_S = 15;
+
+export function idadeEmPassos(ms) {
+  if (ms === null || ms === undefined) {
+    return SEM_VALOR;
+  }
+  const segundos = Math.floor(Math.max(0, ms) / 1000);
+  if (segundos < PASSO_DA_IDADE_S) {
+    return 'agora';
+  }
+  if (segundos < 60) {
+    return `${Math.floor(segundos / PASSO_DA_IDADE_S) * PASSO_DA_IDADE_S} s`;
+  }
+  return idade(ms);
+}
+
+// "agora" or "há 30 s", so that a sentence never reads "publicado há agora".
+export function haQuanto(ms) {
+  const quanto = idadeEmPassos(ms);
+  return quanto === 'agora' || quanto === SEM_VALOR ? quanto : `há ${quanto}`;
+}
+
 // A moment of the race shown as time since the start. Before the start is
 // known there is nothing sensible to show.
 export function tempoDeProva(tsMs, largadaMs) {

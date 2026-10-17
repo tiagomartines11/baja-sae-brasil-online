@@ -200,8 +200,10 @@ to the start recorded in race control.
   every source you are linked to and, if you also log the pit lane,
   **Registro de box**. Do this **while you have a connection**: the first
   load registers your device. After that the count page works offline and
-  survives a reload. The list itself needs a connection, so **Voltar** on
-  the count page does not work offline; stay on the count page.
+  survives a reload. The list itself needs a connection, so while the page
+  is offline **Voltar** on the count and pit pages is replaced by "Voltar:
+  sem conexão" (plain text, in the footer below the keys); stay on the
+  count page. It comes back with the connection.
 - Open the page in **one tab only**. A second tab says "já aberto em outra
   aba" and does nothing until the first is closed.
 - Wait for the clock at the top to show the **Horário oficial**. Until the
@@ -361,20 +363,61 @@ once. The person leaving then presses **Encerrar meu turno**.
 - Flags that put a count in doubt right now are listed first and say so
   ("o carro 23 pode estar com uma volta a menos" / "a mais"); the rest
   follow in the order of the standings.
-- The status bar shows "calculado há N s": how old the flags and lap times
-  on screen are. It turns red beyond three recalculation intervals, which
-  means the server is not keeping up or the connection is poor. Beside
-  "publicado há N s" it says "pontos recalculados às HH:MM:SS"
-  (`prova.modificado`, set by every recalculation of points; any other
-  change to the prova row moves it too). In red: "todos os pontos
-  publicados são 0 — confira o campo de classificação e a fórmula" when a
-  car has laps and no car has a point, and a warning when the
-  classification field is one the formula reads.
-- The car table shows, per car, the official laps next to each counter's
-  own number of passes (laps + the pass zero); real disagreements are
-  highlighted. Click a car to see its whole race and to add a pass nobody
-  recorded. A pass added by hand too close to another one raises
-  `volta_curta`; "Descartar" on that flag removes the addition.
+- The status bar is redrawn every second and **keeps its height** on a PC:
+  two lines that never wrap (what does not fit is cut, the whole text is in
+  the tooltip), and pills whose text has a fixed shape. Ages move in steps
+  ("agora" for the first 15 s, then 15 s, 30 s, 45 s, whole minutes), in a
+  slot of fixed width, with the exact age in the tooltip. On a phone the bar
+  wraps as needed. First line: official time, race clock, open flags,
+  "publicado agora / há 30 s", "calculado agora / há 30 s", other reviewers.
+  "calculado" is how old the flags and lap times on screen are; it turns
+  red beyond three recalculation intervals (the server is not keeping up or
+  the connection is poor) and then counts every second.
+- Second line: one chip per source, then the points. A chip says the
+  source's name and one state word: **ao vivo** (green; amber with the
+  delay when its uploads lag more than 15 s behind), **offline** (red, with
+  for how long), **sem dispositivo aberto** (grey: shift closed or device
+  revoked, nothing more expected), **nunca conectou**, **inativa**,
+  **EXCLUÍDA** (open-ended exclusion), and **sem registros desde a
+  largada** (red): switched on, no device open and nothing recorded since
+  the start. That last one is a source that is not counting at all (26SE:
+  "Contagem 3", whose only phone was revoked the night before, showed "ao
+  vivo" all race); open it on a phone or switch it off. Its block under
+  Fontes says the same. "· 2 disp." means two of its phones are not simply
+  working (which, in the tooltip). An observer has a dashed chip and is
+  never "sem registros". After the chips: "pontos suspeitos" in red when
+  the classification field is one the formula reads or when a car has laps
+  and every published points value is 0, and "pontos recalculados às
+  HH:MM:SS" (`prova.modificado`, set by every recalculation of points; any
+  other change to the prova row moves it too). The full sentences about
+  the points, and "Publicação desligada", are in a red warning under the
+  bar.
+- The car table shows per car the official laps, an **Avisos** column and,
+  per source, small grey numbers: the **difference** between what that
+  source recorded and the official passes (laps + the pass zero; a paper
+  total against the laps): "=", "−2", "+1". The raw count is in the cell's
+  tooltip. Counters routinely miss a pass, so differences are not
+  highlighted one by one; the row says what matters instead:
+  **"contado acima de todos os contadores (+N)"** (amber) when the count
+  has more passes than any counter recorded, which is what a lone entry
+  confirmed twice looks like (26SE car 1: 38 official, 35 and 35); the
+  number of **open flags** about the car (red when one of them puts its
+  count in doubt: a held or pending pass; their names in the tooltip); and
+  **"N volta(s) curta(s) confirmada(s)"** for laps too short to be real
+  that a reviewer confirmed (listed in the tooltip, the lap count is
+  underlined too). A source that recorded nothing since the start and has
+  no device open gets no column; one excluded from the start with no end
+  is greyed and not compared. Observers get no column.
+- **Every column header sorts** (a button; keyboard and screen readers
+  see `aria-sort`): first click in the usual direction (most laps first,
+  oldest last pass first, most signals first, the counter who missed most
+  first, a stopped car first), second click the other way, third click
+  back to the standings. Cars without a value go last either way, and cars
+  that are not classified stay at the bottom. The choice survives the
+  redraws and a reload (remembered on that computer, per prova).
+- Click a car to see its whole race and to add a pass nobody recorded. A
+  pass added by hand too close to another one raises `volta_curta`;
+  "Descartar" on that flag removes the addition.
 - **Editar manualmente** on a flag is for what no button offers. On a
   "troca provável" about one stray entry it opens **Mover o registro … para
   o carro N**: saying which car that entry belongs to is what settles the

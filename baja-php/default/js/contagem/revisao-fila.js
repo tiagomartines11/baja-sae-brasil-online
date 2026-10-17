@@ -1,15 +1,16 @@
 // What the review screen shows first and how it reads the state: the order
-// of the flag queue, the state of each source, which counts disagree.
+// of the flag queue, the state of each source.
 // Pure functions, tested with `node --test`.
 
-import { idade, tempoDeProva } from './revisao-formato.js';
+import { idade, idadeEmPassos, tempoDeProva } from './revisao-formato.js';
 
 // Half of the "about one minute" a selected flag shows around its moment.
 export const MEIA_JANELA_MS = 30000;
 
 // Null sorts last: a flag with no standings position or no time is the
-// least urgent thing in the queue.
-function compararNuloPorUltimo(a, b) {
+// least urgent thing in the queue, and a car with no lap time goes after
+// the ones that have one, whichever way the car table is sorted.
+export function compararNuloPorUltimo(a, b) {
   const aVazio = a === null || a === undefined;
   const bVazio = b === null || b === undefined;
   if (aVazio && bVazio) {
@@ -123,36 +124,97 @@ export function encontrarAlerta(estado, alertaId) {
   return todos.find((alerta) => alerta.id === alertaId) ?? null;
 }
 
-// The chip of one source in the status bar.
-//   classe: ao-vivo | offline | nunca | inativa | totais
+// How long a source may lag behind with its uploads before its chip turns
+// amber. A phone in contact reports "I have sent everything" with each
+// heartbeat (every few seconds), so a lag under this is the normal rhythm
+// and is not shown at all.
+export const ATRASO_DE_SINCRONIA_MS = 15000;
+
+// The sources whose passes count: switched on, typed or automatic, and not
+// an observer (whose passes are only compared, see revisao-observacao.js).
+export function fonteVotante(fonte) {
+  return Boolean(fonte?.ativa) && (fonte.tipo === 'manual' || fonte.tipo === 'automatica') && fonte.papel !== 'observadora';
+}
+
+// A source that is switched on but is not counting at all: the race has
+// started, no device is open on it and it has recorded nothing. At 26SE
+// "Contagem 3" was like that the whole race (its only phone revoked the
+// night before) and its chip said "ao vivo" in green. Such a source is not
+// compared with the count in the car table either.
+export function fonteSilenciosa(fonte, largadaMs, agoraServidorMs = null) {
+  if (!fonteVotante(fonte) || largadaMs === null || largadaMs === undefined) {
+    return false;
+  }
+  if (agoraServidorMs !== null && agoraServidorMs !== undefined && agoraServidorMs < largadaMs) {
+    return false;
+  }
+  const stats = fonte.stats ?? {};
+  const semDispositivo = stats.nada_a_esperar === true || stats.visto_em_ms === null || stats.visto_em_ms === undefined;
+  return semDispositivo && (stats.entradas ?? 0) === 0;
+}
+
+// The chip of one source in the status bar. Its text has a fixed shape (a
+// word or two from a short list), so the chip keeps its width while the bar
+// is redrawn every second: how long ago goes in `idade`, a slot of fixed
+// width that only shows when it matters, and the exact numbers in `titulo`.
+//   classe: ao-vivo | ao-vivo atrasada | offline | silenciosa | sem-dispositivo
+//           | nunca | inativa | totais
 //   texto:  what to write next to the source's name
-export function estadoDaFonte(fonte, agoraServidorMs) {
+//   idade:  "45 s", "3 min", or null
+//   titulo: the whole story, for the tooltip
+export function estadoDaFonte(fonte, agoraServidorMs, largadaMs = null) {
   if (!fonte.ativa) {
-    return { classe: 'inativa', texto: 'inativa' };
+    return { classe: 'inativa', texto: 'inativa', idade: null, titulo: 'desativada em Fontes e configurações' };
   }
   if (fonte.tipo === 'totais') {
-    return { classe: 'totais', texto: 'totais importados' };
+    return { classe: 'totais', texto: 'totais importados', idade: null, titulo: 'totais de voltas importados do papel' };
+  }
+  if (fonteSilenciosa(fonte, largadaMs, agoraServidorMs)) {
+    return {
+      classe: 'silenciosa',
+      texto: 'sem registros desde a largada',
+      idade: null,
+      titulo: 'Ativa, mas nenhum dispositivo está aberto nela e ela não registrou nada desde a largada: não está contando '
+        + 'e não é comparada com a contagem. Abra a fonte num aparelho, ou desative-a em Fontes e configurações.',
+    };
   }
   const stats = fonte.stats ?? {};
   const visto = stats.visto_em_ms ?? null;
   if (visto === null) {
-    return { classe: 'nunca', texto: 'nunca conectou' };
+    return { classe: 'nunca', texto: 'nunca conectou', idade: null, titulo: 'nenhum dispositivo enviou nada para esta fonte' };
   }
-  const semContato = idade(agoraServidorMs - visto);
   if (stats.offline) {
-    return { classe: 'offline', texto: `offline há ${semContato}` };
+    return {
+      classe: 'offline',
+      texto: 'offline',
+      idade: idadeEmPassos(agoraServidorMs - visto),
+      titulo: `offline: nenhum contato há ${idade(agoraServidorMs - visto)}`,
+    };
   }
   if (stats.nada_a_esperar) {
     // In contact a moment ago, but no device is open any more (shift
     // closed, or revoked): nothing more is expected from this source.
-    return { classe: 'ao-vivo', texto: 'sem dispositivo aberto' };
+    return {
+      classe: 'sem-dispositivo',
+      texto: 'sem dispositivo aberto',
+      idade: null,
+      titulo: `nenhum dispositivo aberto; último contato há ${idade(agoraServidorMs - visto)}`,
+    };
   }
   const sincronizado = stats.sincronizado_ate_ms ?? null;
   if (sincronizado === null) {
-    return { classe: 'ao-vivo', texto: 'ao vivo, ainda sem sincronizar' };
+    return { classe: 'ao-vivo atrasada', texto: 'ao vivo', idade: null, titulo: 'ao vivo, ainda sem sincronizar' };
   }
-  const haQuanto = idade(agoraServidorMs - sincronizado);
-  return { classe: 'ao-vivo', texto: haQuanto === 'agora' ? 'ao vivo' : `ao vivo, sincronizado há ${haQuanto}` };
+  const atrasoMs = agoraServidorMs - sincronizado;
+  if (atrasoMs < ATRASO_DE_SINCRONIA_MS) {
+    return { classe: 'ao-vivo', texto: 'ao vivo', idade: null, titulo: `ao vivo, sincronizado há ${idade(atrasoMs)}` };
+  }
+  return {
+    classe: 'ao-vivo atrasada',
+    texto: 'ao vivo',
+    idade: idadeEmPassos(atrasoMs),
+    titulo: `ao vivo, mas sincronizado só até há ${idade(atrasoMs)}: registros recentes podem faltar`,
+  };
 }
 
 // The devices of one source that are NOT simply working, as short words for
@@ -184,36 +246,6 @@ export function resumoDosDispositivos(dispositivos) {
     .filter((situacao) => quantidades[situacao])
     .map((situacao) => `${quantidades[situacao]} ${NOMES_DE_SITUACAO[situacao]}`)
     .join(', ');
-}
-
-// Which sources disagree with a car's official count. Returns the ids of
-// the sources whose cell should be highlighted in the car table.
-//
-// A counter types PASSES, and a car's first pass is its "pass zero", which
-// is not a lap. So a counting source is compared with the car's official
-// passes ("passagens": laps plus the pass zero), not with its laps; with
-// laps every counter would look one ahead on every car. A "totais" source
-// holds lap totals from paper and is compared with the laps.
-export function fontesDivergentes(carro, fontes) {
-  const passagensOficiais = carro.passagens ?? carro.voltas;
-  const divergentes = [];
-  for (const fonte of fontes) {
-    if (!fonte.ativa) {
-      continue;
-    }
-    if (fonte.tipo === 'totais') {
-      const importado = (carro.totais_importados ?? {})[fonte.id];
-      if (importado !== undefined && importado !== null && importado !== carro.voltas) {
-        divergentes.push(fonte.id);
-      }
-      continue;
-    }
-    const contado = (carro.contagem_por_fonte ?? {})[fonte.id] ?? 0;
-    if (contado !== passagensOficiais) {
-      divergentes.push(fonte.id);
-    }
-  }
-  return divergentes;
 }
 
 // A car of the table that does not take part in the race: the short label

@@ -1,7 +1,17 @@
 // The review screen's own state and the elements it draws into. Shared by
 // revisao.js (polling and drawing) and revisao-acoes.js (decisions).
 
+import { guardarOrdem, lerOrdem, proximaOrdem } from './revisao-carros.js';
 import { criarRelogioOficial } from './revisao-relogio.js';
+
+// Some privacy settings make the mere mention of localStorage throw.
+function armazenamentoLocal() {
+  try {
+    return window.localStorage;
+  } catch (bloqueado) {
+    return null;
+  }
+}
 
 export const pagina = {
   prova: document.body.dataset.prova,
@@ -11,6 +21,7 @@ export const pagina = {
   faixaSimulacao: document.getElementById('faixa-simulacao'),
   faixaPredefinicao: document.getElementById('faixa-predefinicao'),
   avisoReconciliacao: document.getElementById('aviso-reconciliacao'),
+  avisoPontuacao: document.getElementById('aviso-pontuacao'),
   avisoConexao: document.getElementById('aviso-conexao'),
   avisoMensagem: document.getElementById('aviso-mensagem'),
   detalhe: document.getElementById('painel-detalhe'),
@@ -44,7 +55,16 @@ export const tela = {
   historicoHaMais: false,  // whether an even older page exists
   historicoCarregando: false,
   ocupado: false,          // a decision is on its way; buttons are disabled
+  // order of the car table, {coluna, direcao} or null for the standings;
+  // remembered on this computer (revisao-carros.js)
+  ordemDosCarros: lerOrdem(armazenamentoLocal(), pagina.prova),
 };
+
+// A click on a header of the car table: the next order, remembered.
+export function escolherOrdemDosCarros(coluna) {
+  tela.ordemDosCarros = proximaOrdem(tela.ordemDosCarros, coluna);
+  guardarOrdem(armazenamentoLocal(), pagina.prova, tela.ordemDosCarros);
+}
 
 // The official clock: the server's time, carried by this computer's
 // monotonic clock. The system clock (Date.now()) is never used to tell the

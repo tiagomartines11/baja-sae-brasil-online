@@ -6,49 +6,78 @@ import {
   AVISO_TEMPO_DE_VOLTA, NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, idade, relogio, tempoDeProva,
 } from './revisao-formato.js';
 import {
-  NOMES_DE_SITUACAO, avisoDeVoltasCurtas, dispositivosDaFonte, fontesDivergentes, situacaoDoCarroFora,
+  NOMES_DE_SITUACAO, avisoDeVoltasCurtas, dispositivosDaFonte, fonteSilenciosa, situacaoDoCarroFora,
 } from './revisao-fila.js';
+import {
+  DICA_DE_ACIMA, celulaDaFonte, colunaDaFonte, colunasDeFontes, indicadorDaOrdem, ordemEmVigor, ordenarCarros, sinaisDoCarro,
+  textoDeAcima, textoDeCurtas, textoDosAlertas,
+} from './revisao-carros.js';
 import { descreverParada } from './revisao-raias-logica.js';
 import { descreverDecisao, exclusoesAbertas } from './revisao-decisoes.js';
 import {
-  ehObservadora, fontesDaTabela, linhasDaObservacao, tituloDaObservacao,
+  ehObservadora, linhasDaObservacao, tituloDaObservacao,
 } from './revisao-observacao.js';
 
-export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscolherCarro) {
-  const fontes = fontesDaTabela(estado.fontes);
+// One column header: a button that sorts by it (see proximaOrdem), with
+// aria-sort and an arrow on the column in use.
+function cabecalhoOrdenavel(coluna, rotulo, ordem, aoOrdenar, atributos = {}) {
+  const { ariaSort, seta } = indicadorDaOrdem(ordem, coluna);
+  return el('th', { ...atributos, 'aria-sort': ariaSort },
+    el('button', {
+      type: 'button',
+      class: 'ordenar',
+      'data-coluna': coluna,
+      onclick: aoOrdenar ? () => aoOrdenar(coluna) : null,
+    }, rotulo, el('span', { class: 'seta', 'aria-hidden': 'true' }, seta)));
+}
+
+// `ordem`: {coluna, direcao} or null for the standings; `aoOrdenar(coluna)`
+// is called by a click on a header (see revisao-carros.js).
+export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscolherCarro, ordemEscolhida = null, aoOrdenar = null) {
+  const colunas = colunasDeFontes(estado);
   const largada = estado.corrida.largada_ms;
+  const ordem = ordemEmVigor(ordemEscolhida, colunas);
+  // The table is drawn anew on every change. A reviewer who sorted with the
+  // keyboard keeps the focus on the same header.
+  const colunaEmFoco = tabela.contains(document.activeElement) ? document.activeElement.dataset?.coluna ?? null : null;
 
   const cabecalho = el('thead', {}, el('tr', {},
-    el('th', {}, 'Pos'), el('th', {}, 'Carro'), el('th', {}, 'Equipe'),
-    el('th', { title: 'voltas oficiais (a passagem zero não é volta)' }, 'Voltas'),
-    fontes.map((fonte) => el('th', {
-      title: fonte.tipo === 'totais'
-        ? 'total de voltas importado'
-        : 'passagens registradas por esta fonte (inclui a passagem zero); destacado quando difere das passagens oficiais',
-    }, fonte.nome)),
-    el('th', {}, 'Última passagem'),
-    el('th', { class: 'com-dica', title: AVISO_TEMPO_DE_VOLTA }, 'Última volta'),
-    el('th', { class: 'com-dica', title: AVISO_TEMPO_DE_VOLTA }, 'Melhor volta'),
-    el('th', {}, 'Situação')));
+    cabecalhoOrdenavel('posicao', 'Pos', ordem, aoOrdenar),
+    cabecalhoOrdenavel('carro', 'Carro', ordem, aoOrdenar),
+    cabecalhoOrdenavel('equipe', 'Equipe', ordem, aoOrdenar),
+    cabecalhoOrdenavel('voltas', 'Voltas', ordem, aoOrdenar, { title: 'voltas oficiais (a passagem zero não é volta)' }),
+    cabecalhoOrdenavel('avisos', 'Avisos', ordem, aoOrdenar, {
+      title: 'alertas abertos do carro, contagem acima de todos os contadores e voltas curtas confirmadas',
+    }),
+    colunas.map((coluna) => cabecalhoOrdenavel(colunaDaFonte(coluna.fonte), coluna.fonte.nome, ordem, aoOrdenar, {
+      class: coluna.comparada || coluna.fonte.tipo === 'totais' ? 'fonte' : 'fonte nao-comparada',
+      title: [coluna.fonte.tipo === 'totais'
+        ? 'total de voltas importado, como diferença para as voltas oficiais'
+        : 'passagens registradas por esta fonte, como diferença para as passagens oficiais (com a passagem zero); o número está na dica de cada célula',
+      coluna.motivo].filter(Boolean).join('; '),
+    })),
+    cabecalhoOrdenavel('ultima_passagem', 'Última passagem', ordem, aoOrdenar),
+    cabecalhoOrdenavel('ultima_volta', 'Última volta', ordem, aoOrdenar, { class: 'com-dica', title: AVISO_TEMPO_DE_VOLTA }),
+    cabecalhoOrdenavel('melhor_volta', 'Melhor volta', ordem, aoOrdenar, { class: 'com-dica', title: AVISO_TEMPO_DE_VOLTA }),
+    cabecalhoOrdenavel('situacao', 'Situação', ordem, aoOrdenar)));
 
-  // Classified cars first, in standings order as the server sent them. A
-  // car that is not classified (or not at the event at all) is only in the
-  // list because somebody typed its number; it goes to the end, marked.
-  const carros = estado.carros ?? [];
-  const emOrdem = [...carros.filter((carro) => carro.classificado !== false), ...carros.filter((carro) => carro.classificado === false)];
+  // Standings order as the server sent them, or the column chosen. A car
+  // that is not classified (or not at the event at all) is only in the list
+  // because somebody typed its number; it stays at the end, marked.
+  const emOrdem = ordenarCarros(estado.carros ?? [], ordem, { estado, colunas });
 
   const linhas = emOrdem.map((carro) => {
-    const divergentes = fontesDivergentes(carro, fontes);
-    const celulasDasFontes = fontes.map((fonte) => {
-      const valor = fonte.tipo === 'totais'
-        ? (carro.totais_importados ?? {})[fonte.id]
-        : (carro.contagem_por_fonte ?? {})[fonte.id] ?? 0;
-      return el('td', { class: divergentes.includes(fonte.id) ? 'num divergente' : 'num' }, valor ?? SEM_VALOR);
+    const celulasDasFontes = colunas.map((coluna) => {
+      const celula = celulaDaFonte(carro, coluna);
+      return el('td', { class: coluna.comparada || coluna.fonte.tipo === 'totais' ? 'num fonte' : 'num fonte nao-comparada', title: celula.titulo },
+        celula.texto);
     });
     const passagemZero = (carro.passagens ?? 0) > carro.voltas;
 
     const foraDaProva = carro.classificado === false;
     const voltasCurtas = avisoDeVoltasCurtas(carro, largada);
+    const sinais = sinaisDoCarro(carro, estado, colunas);
+    const alertas = textoDosAlertas(sinais);
 
     return el('tr', {
       class: [carro.carro === carroSelecionado ? 'selecionado' : '', `status-${carro.status}`, foraDaProva ? 'nao-classificado' : '']
@@ -72,6 +101,13 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
       title: [passagemZero ? `${carro.voltas} voltas + a passagem zero = ${carro.passagens} passagens oficiais` : '', voltasCurtas ?? '']
         .filter(Boolean).join('\n'),
     }, carro.voltas),
+    el('td', { class: 'avisos' },
+      sinais.acima === null ? null
+        : el('span', { class: 'sinal acima', title: DICA_DE_ACIMA }, textoDeAcima(sinais.acima)),
+      alertas === null ? null
+        : el('span', { class: sinais.emDuvida > 0 ? 'sinal alertas em-duvida' : 'sinal alertas', title: alertas.titulo }, alertas.texto),
+      sinais.curtas === 0 ? null
+        : el('span', { class: 'sinal volta-curta-confirmada', title: voltasCurtas }, textoDeCurtas(sinais.curtas))),
     celulasDasFontes,
     el('td', { class: 'num' }, tempoDeProva(carro.ultima_passagem_ms, largada)),
     el('td', { class: 'num', title: AVISO_TEMPO_DE_VOLTA }, duracao(carro.ultima_volta_ms)),
@@ -84,12 +120,15 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
   // present team". That is ONE problem, with the attendance list, and it is
   // said once, here, instead of as a label on every car.
   const semPresentes = estado.sem_equipes_presentes
-    ? el('tr', { class: 'aviso-tabela' }, el('td', { colspan: 8 + fontes.length, role: 'alert' },
+    ? el('tr', { class: 'aviso-tabela' }, el('td', { colspan: 9 + colunas.length, role: 'alert' },
       el('strong', {}, 'Nenhuma equipe está marcada como presente neste evento. '),
       'Por isso nenhuma passagem conta e todo número digitado gera alerta. Marque a presença das equipes no cadastro do evento; a contagem se ajusta sozinha.'))
     : null;
 
   substituir(tabela, cabecalho, el('tbody', {}, semPresentes, linhas));
+  if (colunaEmFoco !== null) {
+    tabela.querySelector(`button.ordenar[data-coluna="${CSS.escape(colunaEmFoco)}"]`)?.focus({ preventScroll: true });
+  }
 }
 
 function numero(valor) {
@@ -180,10 +219,20 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
       sincronizado), observacao ? comparacao(false) : null];
   }
 
-  return el('div', { class: fonte.ativa ? 'bloco-fonte' : 'bloco-fonte inativa' },
+  // Switched on, yet nothing recorded since the start and no device open
+  // (26SE: a source whose only phone was revoked the night before).
+  const silenciosa = fonteSilenciosa(fonte, largada, estado.servidor_agora_ms ?? null);
+
+  return el('div', { class: ['bloco-fonte', fonte.ativa ? '' : 'inativa', silenciosa ? 'silenciosa' : ''].filter(Boolean).join(' ') },
     el('h3', {}, fonte.nome, fonte.principal ? ' ★' : '', fonte.ativa ? '' : ' (inativa)', ehObservadora(fonte) ? ' (observadora)' : ''),
     // Shown first and loud: while this stands, nothing this source records counts.
     abertas.map((decisao) => exclusaoAberta(decisao, largada, ocupado, acoes)),
+    silenciosa
+      ? el('p', { class: 'aviso-silenciosa' },
+        el('strong', {}, 'Sem registros desde a largada. '),
+        'A fonte está ativa, mas nenhum dispositivo está aberto nela: não está contando, e a tabela de carros não a compara com a contagem. '
+        + 'Abra a fonte num aparelho, ou desative-a em Fontes e configurações.')
+      : null,
     numeros,
     fonte.tipo === 'totais' ? null : listaDeDispositivos(dispositivosDaFonte(estado, fonte.id)),
     podeExcluir

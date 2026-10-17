@@ -13,8 +13,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  AVISO_TEMPO_DE_VOLTA, NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, idade, interpretarTempoDeProva, relogio, relogioDaCorrida,
-  tempoDeProva,
+  AVISO_TEMPO_DE_VOLTA, NOMES_DE_ALERTA, NOMES_DE_STATUS, duracao, haQuanto, idade, idadeEmPassos, interpretarTempoDeProva, relogio,
+  relogioDaCorrida, tempoDeProva,
 } from '../../default/js/contagem/revisao-formato.js';
 
 const SEGUNDO = 1000;
@@ -55,6 +55,23 @@ test('"how long ago" never shows a negative age', () => {
   // The server's clock and this computer's can differ by a moment, which
   // would make something look like it happened in the future.
   assert.equal(idade(-800), 'agora');
+});
+
+test('the status bar\'s ages move in steps, so a pill does not change every second', () => {
+  assert.equal(idadeEmPassos(0), 'agora');
+  assert.equal(idadeEmPassos(14 * SEGUNDO + 999), 'agora');
+  assert.equal(idadeEmPassos(15 * SEGUNDO), '15 s');
+  assert.equal(idadeEmPassos(29 * SEGUNDO), '15 s');
+  assert.equal(idadeEmPassos(44 * SEGUNDO), '30 s');
+  assert.equal(idadeEmPassos(59 * SEGUNDO), '45 s');
+  assert.equal(idadeEmPassos(3 * MINUTO + 40 * SEGUNDO), '3 min');
+  assert.equal(idadeEmPassos(null), '—');
+});
+
+test('"há" goes with an age, never with "agora"', () => {
+  assert.equal(haQuanto(3 * SEGUNDO), 'agora');
+  assert.equal(haQuanto(31 * SEGUNDO), 'há 30 s');
+  assert.equal(haQuanto(undefined), '—');
 });
 
 test('a moment of the race is shown as time since the start', () => {

@@ -1,6 +1,6 @@
 // Tests for the flag queue of the review screen: in which order the flags
-// appear, what each source's chip says, and which counts are highlighted
-// in the car table.
+// appear, what each source's chip says, and which source is switched on
+// but counting nothing. The car table is in revisao-carros.test.js.
 //
 // Vocabulary:
 //   - "alerta" (flag): something the system wants a reviewer to look at.
@@ -15,7 +15,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  dispositivosDaFonte, encontrarAlerta, estadoDaFonte, fontesDivergentes, janelaDoAlerta, ordenarFila,
+  compararNuloPorUltimo, dispositivosDaFonte, encontrarAlerta, estadoDaFonte, fonteSilenciosa, janelaDoAlerta, ordenarFila,
   resumoDeAlertas, resumoDosDispositivos,
   mostraCorridaInteira, quandoDoAlerta,
 } from '../../default/js/contagem/revisao-fila.js';
@@ -92,21 +92,110 @@ const AGORA = 1_760_000_100_000;
 
 test('a source in contact and fully uploaded is "ao vivo"', () => {
   const fonte = { ativa: true, tipo: 'manual', stats: { offline: false, visto_em_ms: AGORA - 1000, sincronizado_ate_ms: AGORA - 1000 } };
-  assert.deepEqual(estadoDaFonte(fonte, AGORA), { classe: 'ao-vivo', texto: 'ao vivo' });
+  const chip = estadoDaFonte(fonte, AGORA);
+  assert.equal(chip.classe, 'ao-vivo');
+  assert.equal(chip.texto, 'ao vivo');
+  assert.equal(chip.idade, null);
 });
 
-test('a source in contact but with entries still to upload says since when it is complete', () => {
+// SITUATION (field note N8): the bar is redrawn every second. The phone of
+// a counter says "I have sent everything" with each heartbeat, every few
+// seconds, so between two heartbeats the chip read "ao vivo", then "ao
+// vivo, sincronizado há 3 s", "há 4 s"… then "ao vivo" again: it grew and
+// shrank all the time, and the whole bar jumped.
+//
+// EXPECTED: the normal rhythm (under 15 s) shows no age at all; the exact
+// age is only in the title.
+test('the normal lag between two heartbeats changes nothing on the chip', () => {
+  const textos = [];
+  for (const atrasoS of [0, 1, 3, 5, 9, 14]) {
+    const fonte = { ativa: true, tipo: 'manual', stats: { offline: false, visto_em_ms: AGORA - 500, sincronizado_ate_ms: AGORA - atrasoS * 1000 } };
+    const chip = estadoDaFonte(fonte, AGORA);
+    textos.push([chip.classe, chip.texto, chip.idade]);
+  }
+  assert.deepEqual(new Set(textos.map((texto) => JSON.stringify(texto))).size, 1);
+  const fonte = { ativa: true, tipo: 'manual', stats: { offline: false, visto_em_ms: AGORA - 500, sincronizado_ate_ms: AGORA - 9000 } };
+  assert.equal(estadoDaFonte(fonte, AGORA).titulo, 'ao vivo, sincronizado há 9 s');
+});
+
+test('a source in contact but with entries still to upload turns amber and says how late, in steps', () => {
   // The counter's phone is talking to the server, but its last "I have
   // sent everything" was 40 seconds ago: recent passes may be missing.
   const fonte = { ativa: true, tipo: 'manual', stats: { offline: false, visto_em_ms: AGORA - 2000, sincronizado_ate_ms: AGORA - 40000 } };
-  assert.equal(estadoDaFonte(fonte, AGORA).texto, 'ao vivo, sincronizado há 40 s');
+  const chip = estadoDaFonte(fonte, AGORA);
+  assert.equal(chip.classe, 'ao-vivo atrasada');
+  assert.equal(chip.texto, 'ao vivo', 'the text keeps its shape');
+  assert.equal(chip.idade, '30 s', 'the age moves in steps of 15 s');
+  assert.match(chip.titulo, /há 40 s/, 'the exact age is in the title');
 });
 
 test('a source the server has not heard from is shown as offline, with for how long', () => {
   // The counter walked into an area without signal 3 minutes ago. They keep
   // counting on the phone; the reviewer must know their passes are missing.
   const fonte = { ativa: true, tipo: 'manual', stats: { offline: true, visto_em_ms: AGORA - 180000, sincronizado_ate_ms: AGORA - 180000 } };
-  assert.deepEqual(estadoDaFonte(fonte, AGORA), { classe: 'offline', texto: 'offline há 3 min' });
+  const chip = estadoDaFonte(fonte, AGORA);
+  assert.equal(chip.classe, 'offline');
+  assert.equal(chip.texto, 'offline');
+  assert.equal(chip.idade, '3 min');
+});
+
+// ---- a source that is switched on but counts nothing ----------------------
+
+// SITUATION (26SE): "Contagem 3" was active the whole race. Its only phone
+// had been revoked the night before; nobody opened it again. It recorded
+// nothing, and its chip said "ao vivo" in green from start to finish.
+//
+// EXPECTED: after the start, an active counting source with no device open
+// and no entry at all is a problem, said in red; before the start it is
+// not (nobody has had to count yet).
+const LARGADA = AGORA - 3_600_000;
+const CONTAGEM_3 = {
+  id: 3, nome: 'Contagem 3', ativa: true, tipo: 'manual', papel: 'votante',
+  stats: { entradas: 0, offline: false, visto_em_ms: LARGADA - 12 * 3_600_000, nada_a_esperar: true, sincronizado_ate_ms: null },
+};
+
+test('an active source with no device open and nothing recorded since the start is not "ao vivo"', () => {
+  const chip = estadoDaFonte(CONTAGEM_3, AGORA, LARGADA);
+  assert.equal(chip.classe, 'silenciosa');
+  assert.equal(chip.texto, 'sem registros desde a largada');
+  assert.equal(fonteSilenciosa(CONTAGEM_3, LARGADA, AGORA), true);
+});
+
+test('the same source while the race is still being prepared is no problem yet', () => {
+  assert.equal(fonteSilenciosa(CONTAGEM_3, null, AGORA), false, 'no start yet');
+  assert.equal(fonteSilenciosa(CONTAGEM_3, AGORA + 60000, AGORA), false, 'start in a minute');
+  assert.notEqual(estadoDaFonte(CONTAGEM_3, AGORA, null).classe, 'silenciosa');
+});
+
+test('a source that counted and then closed its shift is not silent, and not green either', () => {
+  // Handover done: the phone pressed "Encerrar meu turno" after 300 entries.
+  const encerrada = { ...CONTAGEM_3, stats: { ...CONTAGEM_3.stats, entradas: 300, visto_em_ms: AGORA - 60000 } };
+  assert.equal(fonteSilenciosa(encerrada, LARGADA, AGORA), false);
+  assert.equal(estadoDaFonte(encerrada, AGORA, LARGADA).classe, 'sem-dispositivo');
+});
+
+test('a source nobody ever opened is silent once the race has started', () => {
+  const nunca = { ...CONTAGEM_3, stats: { entradas: 0, offline: true, visto_em_ms: null, nada_a_esperar: true, sincronizado_ate_ms: null } };
+  assert.equal(estadoDaFonte(nunca, AGORA, null).classe, 'nunca');
+  assert.equal(estadoDaFonte(nunca, AGORA, LARGADA).classe, 'silenciosa');
+});
+
+test('a source with a phone open but no entry yet is not silent: the counter may just be waiting', () => {
+  const aberta = { ...CONTAGEM_3, stats: { entradas: 0, offline: false, visto_em_ms: AGORA - 1000, nada_a_esperar: false, sincronizado_ate_ms: AGORA - 1000 } };
+  assert.equal(fonteSilenciosa(aberta, LARGADA, AGORA), false);
+  assert.equal(estadoDaFonte(aberta, AGORA, LARGADA).classe, 'ao-vivo');
+});
+
+test('an observer that records nothing is never a missing counter', () => {
+  // A camera on trial (papel 'observadora') counts nothing anyway.
+  const camera = { ...CONTAGEM_3, tipo: 'automatica', papel: 'observadora' };
+  assert.equal(fonteSilenciosa(camera, LARGADA, AGORA), false);
+  assert.notEqual(estadoDaFonte(camera, AGORA, LARGADA).classe, 'silenciosa');
+});
+
+test('a switched-off source and a paper total are never silent', () => {
+  assert.equal(fonteSilenciosa({ ...CONTAGEM_3, ativa: false }, LARGADA, AGORA), false);
+  assert.equal(fonteSilenciosa({ ...CONTAGEM_3, tipo: 'totais' }, LARGADA, AGORA), false);
 });
 
 test('a source nobody has opened yet says so', () => {
@@ -119,82 +208,10 @@ test('a deactivated source and a paper-totals source are never "offline"', () =>
   assert.equal(estadoDaFonte({ ativa: true, tipo: 'totais', stats: null }, AGORA).classe, 'totais');
 });
 
-// ---- highlighting disagreements in the car table --------------------------
-
-const TRES_CONTADORES = [
-  { id: 1, tipo: 'manual', ativa: true },
-  { id: 2, tipo: 'manual', ativa: true },
-  { id: 3, tipo: 'manual', ativa: true },
-];
-
-test('no cell is highlighted when every counter agrees with the official count', () => {
-  const carro = { voltas: 20, contagem_por_fonte: { 1: 20, 2: 20, 3: 20 }, totais_importados: {} };
-  assert.deepEqual(fontesDivergentes(carro, TRES_CONTADORES), []);
-});
-
-test('the counter that missed a pass is highlighted', () => {
-  // Counter 3 looked away once: 19 entries for a car with 20 official laps.
-  const carro = { voltas: 20, contagem_por_fonte: { 1: 20, 2: 20, 3: 19 }, totais_importados: {} };
-  assert.deepEqual(fontesDivergentes(carro, TRES_CONTADORES), [3]);
-});
-
-test('a counter with no entry at all for a car counts as zero', () => {
-  // Counter 2 never typed this car. Its cell is missing from the data,
-  // which must read as 0, not as "agrees".
-  const carro = { voltas: 2, contagem_por_fonte: { 1: 2, 3: 2 }, totais_importados: {} };
-  assert.deepEqual(fontesDivergentes(carro, TRES_CONTADORES), [2]);
-});
-
-test('an imported paper total that differs from the count is highlighted', () => {
-  const fontes = [...TRES_CONTADORES, { id: 9, tipo: 'totais', ativa: true }];
-  const carro = { voltas: 20, contagem_por_fonte: { 1: 20, 2: 20, 3: 20 }, totais_importados: { 9: 21 } };
-  assert.deepEqual(fontesDivergentes(carro, fontes), [9]);
-});
-
-test('a car missing from the paper sheet is not treated as a disagreement', () => {
-  const fontes = [{ id: 9, tipo: 'totais', ativa: true }];
-  const carro = { voltas: 20, contagem_por_fonte: {}, totais_importados: {} };
-  assert.deepEqual(fontesDivergentes(carro, fontes), []);
-});
-
-test('a deactivated source is ignored', () => {
-  const fontes = [{ id: 1, tipo: 'manual', ativa: false }];
-  const carro = { voltas: 20, contagem_por_fonte: { 1: 3 }, totais_importados: {} };
-  assert.deepEqual(fontesDivergentes(carro, fontes), []);
-});
-
 test('the open-flag counter is written in proper Portuguese', () => {
   assert.equal(resumoDeAlertas(0), 'nenhum alerta');
   assert.equal(resumoDeAlertas(1), '1 alerta');
   assert.equal(resumoDeAlertas(7), '7 alertas');
-});
-
-// ---- the pass zero ------------------------------------------------------------
-
-// SITUATION: the counting line is after the start line, so the first time a
-// car crosses it the car has not completed a lap: that crossing is its
-// "passagem zero". Car 41 has crossed 6 times: the pass zero and 5 laps.
-// All three counters typed all 6 crossings.
-//
-// WHAT WENT WRONG: the table compared each counter's 6 entries with the 5
-// official LAPS, so every cell of every car was highlighted as a
-// disagreement and the highlighting meant nothing.
-//
-// EXPECTED: the table shows 5 laps, and compares what the counters typed
-// with the car's 6 official PASSES. Nothing is highlighted. A counter who
-// really missed one (5 entries) is.
-test('counters are compared with official passes, which include the pass zero', () => {
-  const todosViram = { voltas: 5, passagens: 6, contagem_por_fonte: { 1: 6, 2: 6, 3: 6 }, totais_importados: {} };
-  assert.deepEqual(fontesDivergentes(todosViram, TRES_CONTADORES), []);
-
-  const contador2Perdeu = { voltas: 5, passagens: 6, contagem_por_fonte: { 1: 6, 2: 5, 3: 6 }, totais_importados: {} };
-  assert.deepEqual(fontesDivergentes(contador2Perdeu, TRES_CONTADORES), [2]);
-});
-
-test('a paper total is a number of laps and is still compared with the laps', () => {
-  const fontes = [{ id: 9, tipo: 'totais', ativa: true }];
-  const carro = { voltas: 5, passagens: 6, contagem_por_fonte: {}, totais_importados: { 9: 5 } };
-  assert.deepEqual(fontesDivergentes(carro, fontes), []);
 });
 
 // ---- the devices of a source ------------------------------------------------
@@ -225,7 +242,14 @@ test('the status bar names the devices of a source that are silent, closed or re
 
 test('a source whose devices were all closed says nobody is expected, not a date', () => {
   const fonte = { ativa: true, tipo: 'manual', stats: { visto_em_ms: 9000, offline: false, nada_a_esperar: true, sincronizado_ate_ms: null } };
-  assert.deepEqual(estadoDaFonte(fonte, 10000), { classe: 'ao-vivo', texto: 'sem dispositivo aberto' });
+  const chip = estadoDaFonte(fonte, 10000);
+  assert.equal(chip.texto, 'sem dispositivo aberto');
+  // Nothing more is coming from it: that is no "ao vivo" in green.
+  assert.equal(chip.classe, 'sem-dispositivo');
+});
+
+test('null comes last when comparing, whatever is compared', () => {
+  assert.deepEqual([3, null, 1, undefined, 2].sort(compararNuloPorUltimo), [1, 2, 3, null, undefined]);
 });
 
 // SITUATION: a flag "tempo_desconhecido": counter 3's phone uploaded an

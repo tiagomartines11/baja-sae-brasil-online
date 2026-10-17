@@ -53,6 +53,8 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
     Antes da corrida, use "Restaurar valores salvos" em Fontes e configurações.
 </p>
 <header class="revisao-barra" id="barra-estado" aria-live="polite"></header>
+<?php // Publishing off or points that look wrong, in full; the bar has the short red pill. ?>
+<div class="revisao-aviso oculto" id="aviso-pontuacao" role="alert"></div>
 <?php // Filled by the script when the recalculation had to correct a published count. ?>
 <div class="revisao-aviso oculto" id="aviso-reconciliacao" role="alert"></div>
 <div class="revisao-aviso oculto" id="aviso-conexao" role="alert"></div>

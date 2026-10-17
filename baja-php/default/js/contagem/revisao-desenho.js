@@ -2,7 +2,7 @@
 // redrawing after each answer from the server, and hands each part to the
 // module that draws it.
 
-import { desenharBarra, desenharFila } from './revisao-barra.js';
+import { desenharAvisoDosResultados, desenharBarra, desenharFila } from './revisao-barra.js';
 import { chaveAoVivo, chaveDoDetalhe as chaveDoPainel } from './revisao-conexao.js';
 import { podeDecidirSobreAlerta } from './revisao-decisoes.js';
 import { desenharDetalheDeAlerta, desenharDetalheDeCarro } from './revisao-detalhe.js';
@@ -10,7 +10,9 @@ import { el, estaDigitandoEm, substituir } from './revisao-dom.js';
 import { avisoDeReconciliacao } from './revisao-frases.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { desenharFontes, desenharHistorico, desenharTabelaDeCarros } from './revisao-tabela.js';
-import { agoraServidorMs, horarioOficialMs, pagina, semConexao, tela } from './revisao-tela.js';
+import {
+  agoraServidorMs, escolherOrdemDosCarros, horarioOficialMs, pagina, semConexao, tela,
+} from './revisao-tela.js';
 
 export const alertaSelecionado = () => (tela.selecao?.tipo === 'alerta' ? encontrarAlerta(tela.estado, tela.selecao.id) : null);
 
@@ -57,7 +59,7 @@ export function criarDesenho(ganchos) {
     // that went offline or a car that is now "parado".
     return JSON.stringify([
       tela.estado.versao, chaveAoVivo(tela.estado), tela.selecao, tela.ocupado, semConexao(),
-      tela.historicoAntigo.length, tela.historicoHaMais, tela.historicoCarregando,
+      tela.historicoAntigo.length, tela.historicoHaMais, tela.historicoCarregando, tela.ordemDosCarros,
     ]);
   }
 
@@ -150,12 +152,15 @@ export function criarDesenho(ganchos) {
       pagina.avisoReconciliacao.textContent = reconciliacao ?? '';
       pagina.avisoReconciliacao.className = reconciliacao ? 'revisao-aviso erro' : 'revisao-aviso oculto';
     }
+    // Publishing off, points that look wrong: the bar has a short pill, this says it all.
+    desenharAvisoDosResultados(pagina.avisoPontuacao, tela.estado);
 
     const chave = chaveDasListas();
     if (chave !== desenhado.listas) {
       const desligado = tela.ocupado || semConexao();
       desenharFila(pagina.fila, tela.estado, tela.selecao?.tipo === 'alerta' ? tela.selecao.id : null, ganchos.escolherAlerta);
-      desenharTabelaDeCarros(pagina.carros, tela.estado, tela.selecao?.tipo === 'carro' ? tela.selecao.numero : null, ganchos.escolherCarro);
+      desenharTabelaDeCarros(pagina.carros, tela.estado, tela.selecao?.tipo === 'carro' ? tela.selecao.numero : null, ganchos.escolherCarro,
+        tela.ordemDosCarros, (coluna) => { escolherOrdemDosCarros(coluna); desenharTudo(); });
       desenharHistorico(
         { tabela: pagina.historico, mais: pagina.historicoMais },
         tela.estado,

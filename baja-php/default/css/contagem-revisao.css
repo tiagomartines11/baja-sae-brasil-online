@@ -131,25 +131,53 @@ body.revisao {
   top: 0;
   z-index: 5;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  align-items: center;
-  padding: 8px 12px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 12px;
   background: var(--cor-painel);
   border-bottom: 1px solid var(--cor-borda);
 }
 
+/* Redrawn every second: two lines that never wrap, so the bar keeps its
+   height; pills of fixed shape, so nothing slides sideways either. What
+   does not fit is cut (the whole text is in the title). */
+.barra-linha {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0 18px;
+  align-items: center;
+  height: 30px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.barra-linha > * { flex: 0 0 auto; }
+.barra-linha > .revisores, .barra-linha > .recalculo { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.revisao-barra .idade { display: inline-block; min-width: 9ch; font-variant-numeric: tabular-nums; }
+
 .revisao-barra .relogio { padding: 2px 10px; border-radius: 4px; background: var(--cor-fundo); }
-.revisao-barra .relogio strong { font-size: 20px; font-variant-numeric: tabular-nums; }
-.revisao-barra .fontes { display: flex; flex-wrap: wrap; gap: 6px; }
+.revisao-barra .relogio strong { display: inline-block; min-width: 7ch; text-align: right; font-size: 20px; font-variant-numeric: tabular-nums; }
+.revisao-barra .fontes { display: flex; flex: 0 1 auto; gap: 6px; min-width: 0; overflow: hidden; }
+.revisao-barra .fontes > .chip-fonte { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Short of room, the time of the points goes first, then the long chip of a silent source. */
+.barra-linha > .recalculo { flex-shrink: 40; }
+.revisao-barra .fontes > .chip-fonte.silenciosa { flex-shrink: 6; }
 .chip-fonte { padding: 2px 10px; border-radius: 12px; border: 1px solid var(--cor-borda); background: var(--cor-fundo); }
+.chip-fonte .idade { min-width: 6ch; margin-left: 4px; text-align: right; }
 .chip-fonte.ao-vivo { background: var(--fundo-verde); border-color: var(--cor-verde); }
+/* In contact, but its uploads lag behind by more than 15 s. */
+.chip-fonte.ao-vivo.atrasada { background: var(--fundo-ambar); border-color: var(--cor-ambar); color: var(--cor-ambar); }
 .chip-fonte.offline { background: var(--fundo-vermelho); border-color: var(--cor-vermelha); color: var(--cor-vermelha); }
-.chip-fonte.nunca, .chip-fonte.inativa { color: var(--cor-fraca); }
+/* Switched on, nothing recorded since the start, no device open: not counting. */
+.chip-fonte.silenciosa { background: var(--fundo-vermelho); border-color: var(--cor-vermelha); color: var(--cor-vermelha); font-weight: bold; }
+.chip-fonte.nunca, .chip-fonte.inativa, .chip-fonte.sem-dispositivo { color: var(--cor-fraca); }
+.chip-fonte.observadora { border-style: dashed; }
+.pendencias { display: inline-block; min-width: 13ch; }
 .pendencias.com-alertas { font-weight: bold; color: var(--cor-ambar); }
 .publicacao, .revisores { color: var(--cor-fraca); }
 
 .revisao-aviso { margin: 0; padding: 8px 12px; background: var(--fundo-ambar); color: var(--cor-ambar); }
+.aviso-resultados p { margin: 0; }
 .revisao-aviso.erro { background: var(--fundo-vermelho); color: var(--cor-vermelha); font-weight: bold; }
 .revisao-aviso.sucesso { background: var(--fundo-verde); color: var(--cor-verde); }
 
@@ -280,7 +308,31 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 .carros tr.selecionado { background: #dcebf9; }
 .carros .num, .historico .num { text-align: right; font-variant-numeric: tabular-nums; }
 .carros .voltas, .carros .carro { font-weight: bold; }
-.carros td.divergente { background: var(--fundo-ambar); color: var(--cor-ambar); font-weight: bold; }
+/* Every header sorts. The arrow has its own fixed slot, so sorting moves no column. */
+.carros thead th { padding: 0; }
+.carros th button.ordenar {
+  display: block;
+  width: 100%;
+  padding: 4px 4px 4px 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: bold;
+  text-align: left;
+  white-space: nowrap;
+}
+.carros th button.ordenar:hover { background: #e6edf4; }
+.carros th button.ordenar:focus-visible { outline: 2px solid var(--cor-azul); outline-offset: -2px; }
+.carros th .seta { display: inline-block; width: 1.4em; text-align: center; color: var(--cor-azul); }
+/* What each counter recorded: small and muted, as a difference to the official number. */
+.carros td.fonte { color: var(--cor-fraca); font-size: 12px; }
+.carros .nao-comparada { opacity: 0.5; }
+/* What a row signals: the count above every counter, open flags, confirmed short laps. */
+.carros .sinal { display: inline-block; margin-right: 4px; padding: 0 6px; border-radius: 8px; font-size: 11px; }
+.carros .sinal.acima, .carros .sinal.volta-curta-confirmada, .carros .sinal.alertas { background: var(--fundo-ambar); color: var(--cor-ambar); font-weight: bold; }
+.carros .sinal.alertas.em-duvida { background: var(--fundo-vermelho); color: var(--cor-vermelha); }
+.carros td.volta-curta-confirmada { color: var(--cor-ambar); text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
 .carros tr.status-atrasado .situacao { color: var(--cor-ambar); }
 .carros tr.status-parado .situacao { color: var(--cor-vermelha); font-weight: bold; }
 .carros tr.status-fora .situacao { color: var(--cor-fraca); }
@@ -290,6 +342,8 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 #estatisticas-fontes { display: flex; flex-wrap: wrap; gap: 10px; }
 .bloco-fonte { flex: 1 1 260px; padding: 8px 10px; border: 1px solid var(--cor-borda); border-radius: 4px; }
 .bloco-fonte.inativa { opacity: 0.6; }
+.bloco-fonte.silenciosa { border-color: var(--cor-vermelha); }
+.aviso-silenciosa { margin: 0 0 6px; padding: 6px 8px; border-radius: 4px; background: var(--fundo-vermelho); color: var(--cor-vermelha); }
 .bloco-fonte h3 { margin: 0 0 6px; font-size: 14px; }
 .bloco-fonte dl { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; margin: 0; }
 .bloco-fonte dt { color: var(--cor-fraca); }
@@ -302,6 +356,8 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
   .revisao-abas button { flex: 1; padding: 12px 4px; border: 0; border-bottom: 3px solid transparent; background: none; font-weight: bold; }
   .revisao-abas button.ativa { border-bottom-color: var(--cor-azul); color: var(--cor-azul); }
   .revisao-barra { position: static; font-size: 13px; }
+  .barra-linha { flex-wrap: wrap; gap: 4px 12px; height: auto; min-height: 30px; white-space: normal; }
+  .revisao-barra .fontes { flex-wrap: wrap; }
   .revisao-zonas { display: block; padding: 6px; }
   .revisao-zona { display: none; }
   .revisao-zonas[data-aba-ativa="fila"] .zona-fila,
@@ -329,7 +385,6 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 
 .chip-fonte .chip-dispositivos { color: var(--cor-ambar); }
 .chip-fonte.excluida { background: var(--fundo-vermelho); border-color: var(--cor-vermelha); }
-.chip-fonte .chip-excluida { color: var(--cor-vermelha); }
 
 .exclusao-aberta {
   margin: 6px 0;
