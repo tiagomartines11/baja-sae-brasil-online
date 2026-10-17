@@ -20,6 +20,7 @@ use Baja\Tests\Contagem\Engine\Support\RaceScenario;
  *   - it is measured from the start time             (PassZeroTest)
  *   - one of its two ends has an open review flag    (here)
  *   - it is too short to be a lap of the track       (here)
+ *   - it is so long the car stood still during it    (here)
  */
 final class BestLapTest extends EngineTestCase
 {
@@ -121,6 +122,43 @@ final class BestLapTest extends EngineTestCase
         $this->assertSame(42000, $theShortLap->tempoVoltaMs);
         $this->assertFalse($theShortLap->elegivelMelhorVolta);
         $this->assertGreaterThan(42000, $result->cars[5]->melhorVoltaMs);
+    }
+
+    /**
+     * SITUATION: a steady race where everybody laps in 180 seconds. Car 5
+     * stops somewhere on the track for an hour (nobody logs it in the pit
+     * lane), then comes back and crosses the line again, recorded by all
+     * three counters. That "lap" took 3780 seconds and nothing about its
+     * two ends is doubtful.
+     *
+     * WHAT WENT WRONG: at 26SE car 9 had BEST = 4303 s (72 minutes): the
+     * only one of its laps with both ends well timed was the one where it
+     * stood still for an hour, and the best lap is the shortest eligible
+     * lap, however long.
+     *
+     * EXPECTED: a lap longer than `fator_parado` expected laps (the car
+     * would have shown as "parado" during it) is not a lap at racing pace
+     * and never qualifies. Car 5's first lap, 180 s, still does.
+     */
+    public function testALapDuringWhichTheCarStoodStillIsNotABestLap(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->steadyField([1, 2, 3, 4, 6, 7, 8, 9, 10], 180, 31, '00:30');
+        for ($lap = 0; $lap < 10; $lap++) {
+            $race->pass(5, RaceScenario::clock(31 + $lap * 180));
+        }
+        $race->pass(5, '90:31');
+
+        $result = $race->run('91:00');
+
+        $lapsOfCar5 = $this->countedLapsOf($result->laps, 5);
+        $theLongLap = array_pop($lapsOfCar5);
+        $this->assertTrue($lapsOfCar5[8]->elegivelMelhorVolta);
+        $this->assertSame(3780000, $theLongLap->tempoVoltaMs);
+        $this->assertFalse($theLongLap->interrompida);
+        $this->assertFalse($theLongLap->elegivelMelhorVolta, 'More than fator_parado expected laps: the car stood still.');
+        $this->assertSame(180000, $result->cars[5]->melhorVoltaMs);
     }
 
     /**

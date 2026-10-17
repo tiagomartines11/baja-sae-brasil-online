@@ -593,7 +593,7 @@ effective immediately.
 | `duplicata_ms` | 5000 | A repeat from the same source inside this is a double tap, voided automatically |
 | `fracao_volta_minima` | 0.5 | Below this fraction of the expected lap, a lap is "too short to be real" (at most 1) |
 | `janela_ritmo_s` | 900 | How far back the field pace looks |
-| `fator_atrasado` / `fator_parado` | 1.5 / 2.0 | Car status thresholds, in expected laps |
+| `fator_atrasado` / `fator_parado` | 1.5 / 2.0 | Car status thresholds, in expected laps. A lap longer than `fator_parado` expected laps is never a best lap |
 | `dispersao_max_ms` | 2000 | Sources must agree within this for a lap to qualify as best lap |
 | `dispersao_alerta_ms` | 4000 | Entries of one pass further apart than this raise `dispersao_alta`; with only two counters the pass is held |
 | `fonte_offline_s` | 60 | Silence after which a source is shown as offline |
@@ -951,8 +951,10 @@ so in a tooltip on the lap time.
 
 A lap qualifies for best lap only if both its ends are agreed by two sources
 within `dispersao_max_ms` (or come from a precise source), neither end has
-an open flag, it does not overlap a pit stay or a red flag, and it is not
-impossibly short. With `passagem_inicial = largada`, lap 1 is measured from
+an open flag, it does not overlap a pit stay or a red flag, it is not
+impossibly short, and it is not longer than `fator_parado` expected laps
+(the car stood still during it, somewhere nobody logged; at 26SE such a
+72-minute lap was a car's only well-timed one and became its `BEST`). With `passagem_inicial = largada`, lap 1 is measured from
 the start and never qualifies. Published times are whole seconds, rounded.
 
 ## Other parts

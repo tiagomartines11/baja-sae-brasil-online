@@ -198,6 +198,12 @@ final class LapBuilder
         if ($settings->isImpossiblyShortLap($lap->tempoVoltaMs, $expectedMs)) {
             return false;
         }
+        // Nor a lap during which the car stood still: the best lap is the
+        // shortest eligible one, so a car whose only well-timed lap held a
+        // 70-minute stop had that as its best lap (car 9 at 26SE).
+        if ($settings->isStoppedLap($lap->tempoVoltaMs, $expectedMs)) {
+            return false;
+        }
 
         return true;
     }

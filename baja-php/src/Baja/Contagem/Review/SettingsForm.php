@@ -75,7 +75,7 @@ final class SettingsForm
     public const DECIMAL_FIELDS = [
         'fracao_volta_minima' => ['Fração mínima de volta', 'Volta mais curta que esta fração da volta esperada gera alerta.'],
         'fator_atrasado' => ['Fator "atrasado"', 'Voltas esperadas sem passar para o carro aparecer como atrasado.'],
-        'fator_parado' => ['Fator "parado"', 'Voltas esperadas sem passar para o carro aparecer como parado.'],
+        'fator_parado' => ['Fator "parado"', 'Voltas esperadas sem passar para o carro aparecer como parado. Uma volta mais longa que isso nunca vale como melhor volta.'],
     ];
 
     public const PRIMARY_SOURCE_HINT = 'A fonte em que o modo "Fonte principal" confia. Nos outros modos não tem efeito.';

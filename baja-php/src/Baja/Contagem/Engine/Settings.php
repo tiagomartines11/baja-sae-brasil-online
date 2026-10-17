@@ -216,6 +216,19 @@ final class Settings
         return $expectedMs !== null && $lapMs < $this->fracaoVoltaMinima * $expectedMs;
     }
 
+    /**
+     * Too long to be a lap at racing pace: over `fator_parado` laps expected
+     * of that car, so the car would have shown as "parado" while it lasted.
+     * It stood still somewhere (an unlogged stop, say) and is no candidate
+     * for best lap. Never true while the pace is unknown.
+     *
+     * @param int|null $expectedMs the expected lap of the car, null while the pace is unknown
+     */
+    public function isStoppedLap(int $lapMs, ?int $expectedMs): bool
+    {
+        return $expectedMs !== null && $lapMs > $this->fatorParado * $expectedMs;
+    }
+
     /** How many of a car's most recent laps say what a normal lap is for it. */
     public const LAPS_FOR_MINIMUM_LAP = 5;
 
