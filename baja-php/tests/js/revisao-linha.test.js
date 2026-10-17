@@ -21,7 +21,7 @@ import assert from 'node:assert/strict';
 
 import {
   ALEM_DO_AGORA_MS, ATUALIZAR_NO_MAXIMO_A_CADA_MS, ATUALIZAR_O_PASSADO_A_CADA_MS, ESCALA_AO_VIVO, LARGURA_DO_NOME_PX, MAXIMO_DE_PEDACOS, PEDACO_MS,
-  aindaSeguindo, centroAoVerTodos, destaqueDaLinha, estenderFaixa, faixaAoVivo, faixaEntre, faltaPorErro, inicioDoPedaco, intervaloDoPedaco, juntarPedacos,
+  aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, estenderFaixa, faixaAoVivo, faixaEntre, faltaPorErro, inicioDoPedaco, intervaloDoPedaco, juntarPedacos,
   lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha, pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara,
   rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from '../../default/js/contagem/revisao-linha-logica.js';
@@ -70,6 +70,28 @@ test('a car shows its own race, and "só o carro" off shows it among all the oth
   assert.notEqual(todos.chave, so.chave, 'switching is a change of view');
   assert.deepEqual(destaqueDaLinha(selecao, null, todos), { ids: [], carros: [20] }, 'the car stands out, the others are dimmed');
   assert.deepEqual(destaqueDaLinha(selecao, null, so), { ids: [], carros: [] }, 'in its own race nothing is dimmed');
+});
+
+test('a car opened from a line of the history goes to that moment and outlines that line\'s entries', () => {
+  const daTabela = { tipo: 'carro', numero: 20 };
+  const doHistorico = { tipo: 'carro', numero: 20, momentoMs: T0 + 5 * MIN, idsEmDestaque: [352, 353] };
+
+  const so = modoDaLinha(doHistorico, null, true);
+  assert.deepEqual([so.fonte, so.carro, so.momentoMs], ['carro', 20, T0 + 5 * MIN]);
+  assert.deepEqual(alvoDaCorridaDoCarro(so), { tipo: 'centro', ts: T0 + 5 * MIN }, 'the moment is centred');
+  assert.deepEqual(alvoDaCorridaDoCarro(modoDaLinha(daTabela, null, true)), { tipo: 'fim' }, 'from the table: the latest passes');
+  assert.deepEqual(alvoDaCorridaDoCarro(modoDaLinha({ ...doHistorico, momentoMs: null }, null, true)), { tipo: 'fim' },
+    'a line with no moment opens the race as the table does');
+
+  // Another line about the same car, or the same car from the table, is a change of view.
+  assert.notEqual(so.chave, modoDaLinha(daTabela, null, true).chave);
+  assert.notEqual(so.chave, modoDaLinha({ ...doHistorico, momentoMs: T0 + 9 * MIN }, null, true).chave);
+  assert.equal(so.chave, modoDaLinha({ ...doHistorico }, null, true).chave, 'the same line twice is the same view');
+
+  assert.deepEqual(destaqueDaLinha(doHistorico, null, so), { ids: [352, 353], carros: [] }, 'outlined strongly, as a flag\'s');
+  const todos = modoDaLinha(doHistorico, null, false);
+  assert.equal(todos.momentoMs, T0 + 5 * MIN);
+  assert.deepEqual(destaqueDaLinha(doHistorico, null, todos), { ids: [352, 353], carros: [20] });
 });
 
 test('a flag highlights its entries strongly and its cars weakly', () => {
@@ -245,6 +267,8 @@ test('switching "só o carro" off goes to the chip picked, or the car\'s last pa
   assert.equal(centroAoVerTodos({ id: 4, ts_ms: T0 + 5000 }, T0 + 90000, T0 + 100000), T0 + 5000);
   assert.equal(centroAoVerTodos(null, T0 + 90000, T0 + 100000), T0 + 90000);
   assert.equal(centroAoVerTodos(null, null, T0 + 100000), T0 + 100000, 'a car that never crossed: now');
+  assert.equal(centroAoVerTodos(null, T0 + 90000, T0 + 100000, T0 + 20000), T0 + 20000, 'opened from the history: its moment');
+  assert.equal(centroAoVerTodos({ id: 4, ts_ms: T0 + 5000 }, T0 + 90000, T0 + 100000, T0 + 20000), T0 + 5000, 'a chip picked since wins');
 });
 
 test('scrolling to an edge grows the stretch by one piece, never past now or long before the start', () => {

@@ -92,6 +92,8 @@ export const limitesDaFaixa = (faixa) => ({ de: faixa.primeiro, ate: faixa.ultim
 //   escala  pixels per second
 //   aoVivo  follows the present moment
 //   chave   changes exactly when the reviewer picked something else
+//   momentoMs  for a car opened from a line of the history: that line's
+//           moment, which the view goes to (null: the car's last pass)
 // `soCarro` is the "só carro N" switch of a selected car.
 export function modoDaLinha(selecao, alerta, soCarro = true) {
   if (selecao?.tipo === 'alerta' && alerta) {
@@ -106,24 +108,40 @@ export function modoDaLinha(selecao, alerta, soCarro = true) {
     return { fonte: 'pedacos', carro: null, escala: ESCALA_ALERTA, aoVivo: false, chave };
   }
   if (selecao?.tipo === 'carro') {
+    // The moment is part of the key: another line of the history about the
+    // same car moves the view, even with the car's race already on screen.
+    const momentoMs = selecao.momentoMs ?? null;
+    const noMomento = momentoMs === null ? '' : `@${momentoMs}`;
     return soCarro
-      ? { fonte: 'carro', carro: selecao.numero, escala: ESCALA_CARRO, aoVivo: false, chave: `carro:${selecao.numero}:so` }
-      : { fonte: 'pedacos', carro: null, escala: ESCALA_AO_VIVO, aoVivo: false, chave: `carro:${selecao.numero}` };
+      ? { fonte: 'carro', carro: selecao.numero, escala: ESCALA_CARRO, aoVivo: false, momentoMs, chave: `carro:${selecao.numero}:so${noMomento}` }
+      : { fonte: 'pedacos', carro: null, escala: ESCALA_AO_VIVO, aoVivo: false, momentoMs, chave: `carro:${selecao.numero}${noMomento}` };
   }
   return { fonte: 'pedacos', carro: null, escala: ESCALA_AO_VIVO, aoVivo: true, chave: 'ao_vivo' };
 }
 
 // Which entries stand out: the flag's own (strongly), and the cars whose
 // other entries are drawn weakly while every other car is dimmed. In a
-// car's own race nothing is dimmed: all of it is that car.
+// car's own race nothing is dimmed: all of it is that car. A car opened
+// from a line of the history has that line's entries (`idsEmDestaque` of
+// the selection) outlined strongly, as a flag's.
 export function destaqueDaLinha(selecao, alerta, modo) {
   if (selecao?.tipo === 'alerta' && alerta) {
     return { ids: alerta.passagem_ids ?? [], carros: alerta.carros ?? [] };
   }
-  if (selecao?.tipo === 'carro' && modo.fonte === 'pedacos') {
-    return { ids: [], carros: [selecao.numero] };
+  if (selecao?.tipo === 'carro') {
+    const ids = selecao.idsEmDestaque ?? [];
+    return { ids, carros: modo.fonte === 'pedacos' ? [selecao.numero] : [] };
   }
   return { ids: [], carros: [] };
+}
+
+// Where a car's whole race goes on screen when it is opened: its end (the
+// latest passes), or the moment of the line of the history it was opened
+// from, centred.
+export function alvoDaCorridaDoCarro(modo) {
+  return modo.momentoMs === null || modo.momentoMs === undefined
+    ? { tipo: 'fim' }
+    : { tipo: 'centro', ts: modo.momentoMs };
 }
 
 // The pieces to ask the server for, among `inicios` (those in view):
@@ -248,10 +266,11 @@ export function rolagemParaAlerta(janelaDoAlerta, alertaTsMs, deMs, escala, larg
 const ESPACO_DO_CHIP_PX = 60;
 
 // Where the view goes when "só o carro" is switched off: around the chip
-// the reviewer picked in the car's race, or else the car's last pass, or
+// the reviewer picked in the car's race, or else the moment of the line of
+// the history the car was opened from, or else the car's last pass, or
 // else now. Never in the future.
-export function centroAoVerTodos(entradaEscolhida, ultimaPassagemMs, agoraMs) {
-  const centro = entradaEscolhida?.ts_ms ?? ultimaPassagemMs ?? agoraMs;
+export function centroAoVerTodos(entradaEscolhida, ultimaPassagemMs, agoraMs, momentoMs = null) {
+  const centro = entradaEscolhida?.ts_ms ?? momentoMs ?? ultimaPassagemMs ?? agoraMs;
   return Math.min(centro, agoraMs);
 }
 

@@ -142,20 +142,37 @@ function escolherAlerta(id) {
   selecionar({ tipo: 'alerta', id });
 }
 
-// `momento` (optional): {momentoMs, passagemIds} to centre the car's
-// timeline on and outline, when it is opened from a line of the history.
+// `momento` (optional): {momentoMs, passagemIds} when the car is opened
+// from a line of the history: the timeline goes to that moment and outlines
+// those entries (modoDaLinha / destaqueDaLinha in revisao-linha-logica.js).
 function escolherCarro(numero, momento = null) {
   selecionar(momento
-    ? { tipo: 'carro', numero, momentoMs: momento.momentoMs ?? null, passagemIds: momento.passagemIds ?? [] }
+    ? { tipo: 'carro', numero, momentoMs: momento.momentoMs ?? null, idsEmDestaque: momento.passagemIds ?? [] }
     : { tipo: 'carro', numero });
 }
 
 // A line of the history: the flag it is about, or the car at its moment.
+// The history is far below the timeline, which is brought into view.
 function abrirDoHistorico(alvo) {
   if (alvo.tipo === 'alerta') {
     escolherAlerta(alvo.id);
   } else {
     escolherCarro(alvo.numero, alvo);
+  }
+  mostrarLinhaDoTempo();
+}
+
+// Scrolls the page up to the timeline when its top is not in sight (under
+// the sticky status bar, or below the fold).
+function mostrarLinhaDoTempo() {
+  const zona = pagina.zonas.querySelector('.zona-linha');
+  if (!zona) {
+    return;
+  }
+  const tampado = Math.max(pagina.barra?.getBoundingClientRect().bottom ?? 0, pagina.abas.getBoundingClientRect().bottom);
+  const topo = zona.getBoundingClientRect().top;
+  if (topo < tampado || topo > window.innerHeight * 0.6) {
+    window.scrollBy({ top: topo - tampado - 6, behavior: 'smooth' });
   }
 }
 

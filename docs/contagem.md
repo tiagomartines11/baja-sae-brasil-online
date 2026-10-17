@@ -376,8 +376,9 @@ once. The person leaving then presses **Encerrar meu turno**.
   leaves the list once a reviewer confirms or discards it, as that
   decision is then listed instead. The filters are
   remembered per prova in the browser. Clicking a line (or **Ver**) opens
-  its car's whole race centred on that moment with its entries outlined,
-  or, for a system line, its flag. The server sends the whole history with
+  its car on the timeline at the top, which the page scrolls back up to:
+  the car's whole race centred on that moment with the line's entries
+  outlined as a flag's are, or, for a system line, its flag. The server sends the whole history with
   the state (about 30 KB for the 81 decisions of 26SE), so a filter sees
   every decision, not only a first page; past 1000 decisions only the
   newest are sent and the panel says so (the exclusions, added passes and
@@ -482,10 +483,13 @@ those moved from flag to flag. Now it is a panel of its own, always there:
   one, and every other car is dimmed. The flag's buttons wait until the
   flag's stretch was loaded again after it was opened ("Carregando a linha
   do tempo…"), as they waited for the flag's own window before.
-- **A car**: its whole race ("Só o carro N", on by default). Switched off,
-  all cars around the chip picked in its race (or its last pass), the car
-  highlighted and the others dimmed. A whole race is loaded once; when the
-  state moves on the header offers "Atualizar".
+- **A car**: its whole race ("Só o carro N", on by default), scrolled to
+  its latest passes; opened from a line of the history, centred on that
+  line's moment with the line's entries outlined thick amber. Switched off,
+  all cars around the chip picked in its race (or the history line's
+  moment, or its last pass), the car highlighted and the others dimmed. A
+  whole race is loaded once; when the state moves on the header offers
+  "Atualizar".
 - **A chip clicked** with nothing selected opens its box in the decision
   panel, with the same actions as on a flag.
 

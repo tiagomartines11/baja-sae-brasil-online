@@ -17,7 +17,7 @@ import { alertaSelecionado } from './revisao-desenho.js';
 import { el, substituir } from './revisao-dom.js';
 import { MEIA_JANELA_MS, janelaDoAlerta, voltaEsperadaDoAlerta } from './revisao-fila.js';
 import {
-  ALEM_DO_AGORA_MS, ANTES_DA_LARGADA_MS, FRACAO_DO_AGORA, PEDACO_MS, aindaSeguindo, centroAoVerTodos, destaqueDaLinha, estenderFaixa,
+  ALEM_DO_AGORA_MS, ANTES_DA_LARGADA_MS, FRACAO_DO_AGORA, PEDACO_MS, aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, estenderFaixa,
   faixaAoVivo, faltaPorErro, faixaEntre, intervaloDoPedaco, juntarPedacos, lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha,
   pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara, rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from './revisao-linha-logica.js';
@@ -214,7 +214,7 @@ export function criarLinhaDoTempo(ganchos) {
     linha.rodada = null;
     linha.alvo = null;
     if (modo.fonte === 'carro') {
-      linha.alvo = { tipo: 'fim' };
+      linha.alvo = alvoDaCorridaDoCarro(modo);
       if (linha.carro?.carro !== modo.carro || alerta) {
         // A flag over the car's race is loaded afresh, for its buttons.
         linha.carro = null;
@@ -233,10 +233,11 @@ export function criarLinhaDoTempo(ganchos) {
       linha.seguindo = true;
       linha.alvo = { tipo: 'agora' };
     } else {
-      // A car among all the others: around the chip picked in its race, or its last pass.
+      // A car among all the others: around the chip picked in its race, the
+      // moment of the history line it was opened from, or its last pass.
       const numero = tela.selecao?.numero;
       const ultimaPassagemMs = (tela.estado.carros ?? []).find((linhaDoCarro) => linhaDoCarro.carro === numero)?.ultima_passagem_ms ?? null;
-      const centro = centroAoVerTodos(encontrarEntrada(linha.carro?.janela, tela.entradaSelecionadaId), ultimaPassagemMs, agoraMs());
+      const centro = centroAoVerTodos(encontrarEntrada(linha.carro?.janela, tela.entradaSelecionadaId), ultimaPassagemMs, agoraMs(), modo.momentoMs);
       linha.faixa = faixaEntre(centro - 2 * PEDACO_MS, Math.min(centro + 2 * PEDACO_MS, agoraMs() + ALEM_DO_AGORA_MS));
       linha.alvo = { tipo: 'centro', ts: centro };
     }

@@ -169,7 +169,7 @@ function desenharLacuna(lacuna, limites, opcoes) {
 // opcoes:
 //   escala                 pixels per second
 //   largadaMs              start of the race, for the labels
-//   idsEmDestaque          entry ids of the selected flag
+//   idsEmDestaque          entry ids of the selected flag, or of the history line a car was opened from
 //   carrosEmFoco           cars whose other entries are drawn weakly (the rest dimmed)
 //   entradaSelecionadaId   the chip the reviewer clicked
 //   alertaEmMs             the flag's moment (a line across the lanes), or null
