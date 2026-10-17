@@ -240,7 +240,8 @@ test('an entry whose pass has other entries can also have the whole pass discard
 test('a voided entry can only be restored, by undoing the void', () => {
   // Decision 4 voided entry 10. "Restaurar" must undo decision 4.
   const acoes = acoesDaEntrada({ id: 10, decisoes: [{ id: 4, tipo: 'anular' }] });
-  assert.deepEqual(acoes, [{ acao: 'restaurar', decisaoId: 4 }]);
+  // The void itself goes along: "Restaurar" asks first when the counter made it (see revisao-desfazer.test.js).
+  assert.deepEqual(acoes, [{ acao: 'restaurar', decisaoId: 4, decisao: { id: 4, tipo: 'anular' } }]);
 });
 
 test('a reassigned entry can be put back to the car that was typed', () => {

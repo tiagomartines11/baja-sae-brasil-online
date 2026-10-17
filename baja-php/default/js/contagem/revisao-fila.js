@@ -53,13 +53,54 @@ export function ordenarFila(alertas) {
   });
 }
 
+// Room left before the car's previous pass when the window reaches back to it.
+export const MARGEM_ANTES_DA_ANTERIOR_MS = 5000;
+
+// How far back a window reaches for the previous pass when the car's
+// expected lap is not known: a slow lap of a slow car.
+export const ALCANCE_SEM_RITMO_MS = 5 * 60 * 1000;
+
 // The stretch of the race to load for a flag. Null when the flag has no
 // moment (for example a difference to an imported total).
-export function janelaDoAlerta(alerta, meiaJanelaMs = MEIA_JANELA_MS) {
+//
+// About a minute around the flag's moment. A flag about a lone entry
+// names the car's previous official pass ("passagem_anterior"), and the
+// window then starts a little before it, so the lap the entry would make
+// is on screen: at a race the previous pass was 77 s back, outside the
+// minute, and a 75 s lap was confirmed as real. Never further back than
+// one expected lap of the car plus half a minute (five minutes when the
+// pace is not known): a car that was stopped would otherwise load half an
+// hour of race at this scale.
+export function janelaDoAlerta(alerta, meiaJanelaMs = MEIA_JANELA_MS, voltaEsperadaMs = null) {
   if (!alerta || alerta.ts_ms === null || alerta.ts_ms === undefined) {
     return null;
   }
-  return { de: alerta.ts_ms - meiaJanelaMs, ate: alerta.ts_ms + meiaJanelaMs };
+  let de = alerta.ts_ms - meiaJanelaMs;
+  const anteriorMs = alerta.passagem_anterior?.ts_ms;
+  if (anteriorMs !== null && anteriorMs !== undefined && anteriorMs < alerta.ts_ms) {
+    const alcanceMs = voltaEsperadaMs ? voltaEsperadaMs + meiaJanelaMs : ALCANCE_SEM_RITMO_MS;
+    de = Math.min(de, Math.max(anteriorMs - MARGEM_ANTES_DA_ANTERIOR_MS, alerta.ts_ms - alcanceMs));
+  }
+  return { de, ate: alerta.ts_ms + meiaJanelaMs };
+}
+
+// The expected lap of the (first) car of a flag, from the car table; null when unknown.
+export function voltaEsperadaDoAlerta(alerta, estado) {
+  const carro = (alerta?.carros ?? [])[0];
+  return (estado?.carros ?? []).find((linha) => linha.carro === carro)?.volta_esperada_ms ?? null;
+}
+
+// The tooltip of a car's laps in the table when some of them are too
+// short to be real and count on a reviewer's confirmation (the server's
+// "voltas_curtas_confirmadas"); null when none is.
+export function avisoDeVoltasCurtas(carro, largadaMs = null) {
+  const curtas = carro?.voltas_curtas_confirmadas ?? [];
+  if (curtas.length === 0) {
+    return null;
+  }
+  const lista = curtas.map((volta) => `volta ${volta.numero_volta}`
+    + ` (${Math.round((volta.volta_ms ?? 0) / 1000)} s${largadaMs === null ? '' : `, em ${tempoDeProva(volta.ts_ms, largadaMs)}`})`).join(', ');
+  return `Volta curta demais confirmada pela revisão: ${lista}. Ninguém dá a volta tão rápido; confira se a passagem confirmada não é a mesma registrada duas vezes.`;
 }
 
 // A flag about an entry of unknown time has no moment worth a one-minute

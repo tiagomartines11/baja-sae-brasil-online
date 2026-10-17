@@ -5,7 +5,9 @@ import { el, substituir } from './revisao-dom.js';
 import {
   AVISO_TEMPO_DE_VOLTA, NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, idade, relogio, tempoDeProva,
 } from './revisao-formato.js';
-import { NOMES_DE_SITUACAO, dispositivosDaFonte, fontesDivergentes, situacaoDoCarroFora } from './revisao-fila.js';
+import {
+  NOMES_DE_SITUACAO, avisoDeVoltasCurtas, dispositivosDaFonte, fontesDivergentes, situacaoDoCarroFora,
+} from './revisao-fila.js';
 import { descreverParada } from './revisao-raias-logica.js';
 import { descreverDecisao, exclusoesAbertas } from './revisao-decisoes.js';
 
@@ -43,6 +45,7 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
     const passagemZero = (carro.passagens ?? 0) > carro.voltas;
 
     const foraDaProva = carro.classificado === false;
+    const voltasCurtas = avisoDeVoltasCurtas(carro, largada);
 
     return el('tr', {
       class: [carro.carro === carroSelecionado ? 'selecionado' : '', `status-${carro.status}`, foraDaProva ? 'nao-classificado' : '']
@@ -62,8 +65,9 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
       foraDaProva && !(estado.sem_equipes_presentes && carro.inscrito)
         ? el('span', { class: 'etiqueta-fora' }, ` ${situacaoDoCarroFora(carro).etiqueta}`) : null),
     el('td', {
-      class: 'num voltas',
-      title: passagemZero ? `${carro.voltas} voltas + a passagem zero = ${carro.passagens} passagens oficiais` : '',
+      class: voltasCurtas ? 'num voltas volta-curta-confirmada' : 'num voltas',
+      title: [passagemZero ? `${carro.voltas} voltas + a passagem zero = ${carro.passagens} passagens oficiais` : '', voltasCurtas ?? '']
+        .filter(Boolean).join('\n'),
     }, carro.voltas),
     celulasDasFontes,
     el('td', { class: 'num' }, tempoDeProva(carro.ultima_passagem_ms, largada)),

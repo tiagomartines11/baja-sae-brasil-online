@@ -3,7 +3,7 @@
 // before a decision that changes a count.
 // Pure functions, tested with `node --test` (through revisao-decisoes.js).
 
-import { duracao, horaDoDia, idade } from './revisao-formato.js';
+import { duracao, horaDoDia, idade, relogio } from './revisao-formato.js';
 
 // What the server answered with HTTP 409, as one sentence.
 export function mensagemDeConflito(corpo) {
@@ -26,6 +26,10 @@ export function descreverSugestao(alerta) {
   if (alerta?.tipo === 'saida_presumida') {
     return 'Nada a corrigir na contagem. Se o carro saiu mesmo, use "Confirmar saída": a saída presumida fica gravada no seu nome '
       + 'e o alerta fecha. Se ele não saiu, descarte a passagem.';
+  }
+  if (alerta?.tipo === 'registro_tardio') {
+    return 'Sem sugestão automática. Diga de quem é o horário certo (normalmente o de quem registrou primeiro): '
+      + 'a passagem conta uma vez, nesse horário, e o outro registro fica junto dela.';
   }
   if (!sugestao) {
     return 'Sem sugestão automática: decida olhando a linha do tempo.';
@@ -64,22 +68,42 @@ export function descreverSugestao(alerta) {
   return `Sugestão: ${sugestao.tipo}.`;
 }
 
+// "(carro 3, Contagem 1)": which entry a decision was about, from the
+// fields the server adds to a history row. For a reassignment the car as
+// typed; otherwise the car the entry counts for now, with the typed one
+// when they differ. Empty when the row says nothing about an entry.
+function doRegistro(decisao, comCarroAtual = true) {
+  const digitado = decisao.carro_digitado ?? null;
+  const atual = decisao.carro ?? digitado;
+  const partes = [];
+  if (digitado !== null) {
+    partes.push(!comCarroAtual || atual === digitado ? `carro ${digitado}` : `carro ${atual}, digitado ${digitado}`);
+  }
+  if (decisao.fonte_nome && digitado !== null) {
+    partes.push(decisao.fonte_nome);
+  }
+  return partes.length === 0 ? '' : ` (${partes.join(', ')})`;
+}
+
 // One line of the history panel.
 export function descreverDecisao(decisao, nomeDaFonte = () => null) {
   switch (decisao.tipo) {
     case 'anular':
-      return `Anulou a passagem #${decisao.passagem_id}`;
+      return `Anulou a passagem #${decisao.passagem_id}${doRegistro(decisao)}`;
     case 'reatribuir':
-      return `Trocou a passagem #${decisao.passagem_id} para o carro ${decisao.equipe_numero}`;
+      return `Trocou a passagem #${decisao.passagem_id}${doRegistro(decisao, false)} para o carro ${decisao.equipe_numero}`;
     case 'confirmar':
-      return `Confirmou a passagem #${decisao.passagem_id}`;
+      return `Confirmou a passagem #${decisao.passagem_id}${doRegistro(decisao)}`;
+    case 'usar_tempo':
+      return `Usou o tempo da passagem #${decisao.passagem_id}${doRegistro(decisao)}`
+        + `${decisao.passagem_alvo_id ? ` e juntou a #${decisao.passagem_alvo_id} a ela (registrada com atraso)` : ''}`;
     case 'adicionar':
       return `Adicionou uma passagem do carro ${decisao.equipe_numero}`;
     case 'excluir_fonte':
       return `Excluiu a fonte ${nomeDaFonte(decisao.fonte_id) ?? `#${decisao.fonte_id}`} ${
         decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined ? 'até segunda ordem' : 'por um período'}`;
     case 'desfazer':
-      return `Desfez a decisão #${decisao.desfaz_decisao_id}`;
+      return `Desfez a decisão #${decisao.desfaz_decisao_id}${doRegistro(decisao)}`;
     case 'marcar_saida':
       // The area is kept in the decision's "motivo".
       return `Marcou a saída do carro ${decisao.equipe_numero} do ${decisao.motivo ?? 'box'} (ninguém registrou na hora)`;
@@ -93,6 +117,33 @@ export function descreverDecisao(decisao, nomeDaFonte = () => null) {
 export function perguntaSobreVoltaCurta(voltaMs) {
   return `Contar esta passagem criaria uma volta de ${duracao(voltaMs)}, curta demais para ser real. `
     + 'O mais provável é ser a mesma passagem registrada duas vezes. Contar mesmo assim?';
+}
+
+// The question before undoing a decision; null when nothing is asked.
+//
+// A counter who voids their own entry on the phone knows something the
+// reviewer does not: they typed it wrong. At a race a reviewer undid two
+// such voids and confirmed the retyped entries a second later, and two cars
+// got a lap they never drove. So undoing a counter's own void asks first,
+// wherever the button is (the history, the chip's "Restaurar").
+// `decisao` is a history row, or a chip's decision ({id, tipo, origem,
+// usuario, criado_em_ms, motivo}).
+export function perguntaAoDesfazer(decisao) {
+  if (decisao?.tipo !== 'anular' || decisao.origem !== 'contador') {
+    return null;
+  }
+  const quem = [decisao.usuario, decisao.criado_em_ms ? horaDoDia(decisao.criado_em_ms) : null].filter(Boolean).join(', ');
+  const motivo = decisao.motivo ? ` Motivo dado: "${decisao.motivo}".` : '';
+  return `O contador anulou este registro no próprio aparelho${quem ? ` (${quem})` : ''}.${motivo} `
+    + 'Normalmente ele digitou errado e registrou de novo logo depois. Desfazer mesmo assim?';
+}
+
+// The button of one time a reviewer may choose ("usar_tempo"):
+// "Usar o tempo de Contagem 1 (0:04:20)".
+export function rotuloDeUsarTempo(tempo, nomeDaFonte, largadaMs) {
+  const nome = nomeDaFonte(tempo.fonte_id) ?? `fonte #${tempo.fonte_id}`;
+  const quando = largadaMs === null || largadaMs === undefined ? '' : ` (${relogio(tempo.ts_ms - largadaMs)})`;
+  return `Usar o tempo de ${nome}${quando}`;
 }
 
 // ---- corrections made by the reconcile step --------------------------------

@@ -13,7 +13,7 @@ import {
 } from './revisao-conexao.js';
 import { alertaSelecionado, atualizarListaDeCarros, criarDesenho, janelaDesatualizada } from './revisao-desenho.js';
 import { estaDigitandoEm } from './revisao-dom.js';
-import { janelaDoAlerta, mostraCorridaInteira } from './revisao-fila.js';
+import { MEIA_JANELA_MS, janelaDoAlerta, mostraCorridaInteira, voltaEsperadaDoAlerta } from './revisao-fila.js';
 import {
   agoraServidorMs, horarioOficialMs, mostrarAba, mostrarMensagem, pagina, relogioOficial, tela,
 } from './revisao-tela.js';
@@ -38,6 +38,7 @@ const acoesDoDetalhe = {
   marcarSaida: acoes.marcarSaida,
   confirmarSaida: acoes.confirmarSaida,
   moverRegistro: acoes.moverRegistro,
+  usarTempo: acoes.usarTempo,
   // "Era outro carro…" on a repeat: opens the entry's own box, where the
   // field to move it to another car is.
   eraOutroCarro: (id) => { tela.entradaSelecionadaId = id; desenharDetalhe(); },
@@ -119,7 +120,7 @@ async function carregarJanela() {
     } else if (mostraCorridaInteira(alerta)) {
       janela = await buscarCarro(pagina.prova, alerta.carros[0]);
     } else {
-      const limites = janelaDoAlerta(alerta);
+      const limites = janelaDoAlerta(alerta, MEIA_JANELA_MS, voltaEsperadaDoAlerta(alerta, tela.estado));
       // A flag with no moment (a difference to an imported total) has no timeline.
       janela = limites
         ? await buscarJanela(pagina.prova, limites.de, limites.ate)
@@ -243,7 +244,10 @@ document.addEventListener('keydown', (evento) => {
     return;
   }
   // K does nothing on a flag that has no K button (a repeat): confirmarAlerta checks.
-  const atalhos = { a: acoes.aceitar, k: acoes.confirmarAlerta, v: acoes.anular };
+  // 1, 2, 3 are the "Usar o tempo de …" buttons; usarTempo does nothing on a flag without them.
+  const atalhos = {
+    a: acoes.aceitar, k: acoes.confirmarAlerta, v: acoes.anular, 1: () => acoes.usarTempo(0), 2: () => acoes.usarTempo(1), 3: () => acoes.usarTempo(2),
+  };
   const acao = atalhos[evento.key.toLowerCase()];
   const alerta = alertaSelecionado();
   // The actions themselves refuse while the timeline is missing or stale.

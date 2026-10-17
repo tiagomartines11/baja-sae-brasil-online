@@ -25,6 +25,7 @@ export const NOMES_DE_ALERTA = {
   passagem_proxima_demais: 'Passagem retida: perto demais da anterior',
   saida_presumida: 'Saída do box presumida: o registro não tem a saída',
   dispersao_alta: 'Registros afastados demais entre si',
+  registro_tardio: 'Mesma passagem registrada com atraso',
 };
 
 export const NOMES_DE_STATUS = {

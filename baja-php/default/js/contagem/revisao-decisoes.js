@@ -2,7 +2,8 @@
 // expects, and turns the server's refusals into sentences.
 // Pure functions, tested with `node --test`.
 //
-import { acaoDeAceitar } from './revisao-alertas.js';
+import { acaoDeAceitar, perguntaAoContarNaEntrada } from './revisao-alertas.js';
+import { perguntaAoDesfazer } from './revisao-frases.js';
 
 // A request always says what the reviewer was looking at ("passagem_ids"
 // and their "assinatura"). If any of it changed on the server in the
@@ -246,7 +247,8 @@ export function confirmarSomaPassagem(entrada) {
 
 // Returns the list of actions offered for a timeline entry:
 //   {acao: 'remover', decisaoId}    a pass added by a reviewer: undo the addition
-//   {acao: 'restaurar', decisaoId}  an entry somebody voided: undo the void
+//   {acao: 'restaurar', decisaoId, decisao}  an entry somebody voided: undo
+//        the void; `decisao` is the void, with who made it (see perguntaAoDesfazer)
 //   {acao: 'desfazer_troca', decisaoId}  a reassigned entry: back to the typed car
 //   {acao: 'anular'} {acao: 'reatribuir'}
 //   {acao: 'confirmar', maisUmaPassagem}  true when confirming gives the car
@@ -269,7 +271,7 @@ export function acoesDaEntrada(entrada, repeticoes = new Set()) {
   const decisoes = entrada.decisoes ?? [];
   const anulacao = decisoes.find((decisao) => decisao.tipo === 'anular');
   if (anulacao) {
-    return [{ acao: 'restaurar', decisaoId: anulacao.id }];
+    return [{ acao: 'restaurar', decisaoId: anulacao.id, decisao: anulacao }];
   }
   const acoes = [{ acao: 'anular' }, { acao: 'reatribuir' }];
   const troca = decisoes.find((decisao) => decisao.tipo === 'reatribuir');
@@ -290,9 +292,27 @@ export function acoesDaEntrada(entrada, repeticoes = new Set()) {
   return acoes;
 }
 
+// What is asked before an action on one chip; null when nothing. "Restaurar"
+// on a counter's own void asks (see perguntaAoDesfazer), "confirmar" asks
+// what K asks (see perguntaAoContarNaEntrada).
+export function perguntaAoAgirNaEntrada(opcao, entrada, estado = null) {
+  if (opcao.acao === 'restaurar') {
+    return perguntaAoDesfazer(opcao.decisao ?? (entrada.decisoes ?? []).find((decisao) => decisao.id === opcao.decisaoId));
+  }
+  if (opcao.acao === 'confirmar') {
+    return perguntaAoContarNaEntrada(opcao, entrada, estado);
+  }
+  if (opcao.acao === 'descartar_passagem') {
+    return `Descartar esta passagem do carro ${entrada.carro}? Os ${opcao.registros} registros dela são anulados de uma vez. `
+      + 'Pode ser desfeito pelo histórico.';
+  }
+  return null;
+}
+
 export {
-  descreverDecisao, descreverSugestao, mensagemDeConflito, perguntaSobreVoltaCurta,
+  descreverDecisao, descreverSugestao, mensagemDeConflito, perguntaAoDesfazer, perguntaSobreVoltaCurta, rotuloDeUsarTempo,
 } from './revisao-frases.js';
 export {
-  acaoDeConfirmar, decisaoConfirmarAlerta, voltaCurtaAoContar, voltaImpossivelmenteCurta,
+  acaoDeConfirmar, decisaoConfirmarAlerta, perguntaAoContarNaEntrada, perguntaAoUsarTempo, temposParaEscolher,
+  voltaCurtaAoContar, voltaImpossivelmenteCurta,
 } from './revisao-alertas.js';

@@ -190,6 +190,9 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId) {
   if (entrada.grupo && entrada.grupo.contado) {
     classes.push('contada');
   }
+  if (entrada.grupo?.volta_curta_confirmada) {
+    classes.push('volta-curta-confirmada');
+  }
   // Passes the rules of the race keep out of the lap count, and the pass
   // zero, must be told apart from laps at a glance.
   const papel = entrada.grupo?.papel;
@@ -258,6 +261,18 @@ export function descricaoDoPapel(grupo) {
   }
 }
 
+// Who voided an entry, and why: "anulada pelo contador (Contador1) —
+// digitei errado", "anulada pela revisão (jbresolin)". A counter voiding
+// their own entry on the phone usually typed it wrong and retyped it.
+export function descricaoDaAnulacao(entrada) {
+  const anulacao = (entrada.decisoes ?? []).find((decisao) => decisao.tipo === 'anular');
+  if (!anulacao) {
+    return 'anulada';
+  }
+  const quem = anulacao.origem === 'contador' ? 'anulada pelo contador' : 'anulada pela revisão';
+  return `${quem}${anulacao.usuario ? ` (${anulacao.usuario})` : ''}${anulacao.motivo ? ` — ${anulacao.motivo}` : ''}`;
+}
+
 // What the tooltip of a chip says.
 export function descricaoDoChip(entrada) {
   const partes = [entrada.adicionada_por_revisor ? 'passagem adicionada pelo revisor' : `passagem #${entrada.id}`];
@@ -265,7 +280,7 @@ export function descricaoDoChip(entrada) {
     partes.push(`digitado ${entrada.carro_digitado}, trocado para ${entrada.carro}`);
   }
   if (entrada.anulada) {
-    partes.push('anulada');
+    partes.push(descricaoDaAnulacao(entrada));
   } else if (entrada.anulada_auto) {
     partes.push('anulada automaticamente (repetida)');
   } else if (entrada.fora_de_uso) {
@@ -277,6 +292,15 @@ export function descricaoDoChip(entrada) {
   }
   if (entrada.grupo) {
     partes.push(descricaoDoPapel(entrada.grupo));
+    const escolhido = entrada.grupo.tempo_escolhido_id;
+    if (escolhido !== null && escolhido !== undefined) {
+      partes.push(escolhido === entrada.id
+        ? 'o horário desta passagem é o deste registro (escolhido pela revisão)'
+        : 'não define o horário desta passagem (a revisão escolheu outro registro)');
+    }
+    if (entrada.grupo.volta_curta_confirmada) {
+      partes.push('VOLTA CURTA CONFIRMADA: curta demais para ser real, conta porque a revisão confirmou');
+    }
   }
   return partes.join(' · ');
 }

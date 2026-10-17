@@ -5,12 +5,13 @@
 import { SessaoExpirada, enviarDecisao } from './revisao-api.js';
 import {
   acaoDeAceitar, decisaoConfirmarAlerta, decisaoConfirmarSaida, decisaoMarcarSaida, perguntaAoConfirmar, perguntaAoDescartar, perguntaAoMarcarSaida,
+  perguntaAoUsarTempo, temposParaEscolher,
 } from './revisao-alertas.js';
 import {
   alvoDaAnulacao, comMotivo, decisaoAceitar, decisaoAdicionar, decisaoAnular, decisaoConfirmar,
   decisaoDescartarPassagem, decisaoDesfazer, decisaoEncerrarExclusao, decisaoExcluirFonte, decisaoReatribuir,
   entradasDaDecisao, mensagemDeConflito, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo, pedidosDaSugestao,
-  podeDecidirSobreAlerta, problemaAoAdicionar, problemaAoEncerrarExclusao,
+  perguntaAoAgirNaEntrada, perguntaAoDesfazer, podeDecidirSobreAlerta, problemaAoAdicionar, problemaAoEncerrarExclusao,
 } from './revisao-decisoes.js';
 import { problemaAoMover } from './revisao-edicao-manual.js';
 import { encontrarAlerta } from './revisao-fila.js';
@@ -241,43 +242,23 @@ export function criarAcoes(ganchos) {
     enviarSobreAlerta(decisao, alerta);
   }
 
-  // What must be asked before an action on one chip; null when nothing.
-  function perguntaDaEntrada(opcao, entrada) {
-    if (opcao.acao === 'confirmar' && opcao.maisUmaPassagem) {
-      if (entrada.anulada_auto) {
-        return 'Este registro foi anulado automaticamente como repetição (toque duplo ou troca de contador). '
-          + `Contá-lo dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta), poucos segundos depois da anterior. Contar mesmo assim?`;
-      }
-      if (entrada.grupo?.papel === 'retida') {
-        const motivo = entrada.grupo.motivo_retencao;
-        if (motivo === 'no_box' || motivo === 'no_abastecimento') {
-          const area = motivo === 'no_box' ? 'box' : 'abastecimento';
-          return `Esta passagem está RETIDA porque o carro ${entrada.carro} constava como dentro do ${area}. `
-            + `Contá-la assim dá ao carro MAIS UMA PASSAGEM (+1 volta) e ele CONTINUA constando como dentro do ${area}. `
-            + `Se o carro saiu, o certo é "Marcar saída do ${area}" no alerta. Contar mesmo assim?`;
-        }
-        return 'Esta passagem está RETIDA: os contadores concordam, mas ela parece ser a mesma passagem de antes registrada de novo. '
-          + `Contá-la dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta). Contar mesmo assim?`;
-      }
-      if (entrada.grupo?.papel === 'antes_da_largada') {
-        return `Este registro é de ANTES da largada. Contá-lo faz dele a passagem inicial do carro ${entrada.carro}: `
-          + 'todas as voltas dele sobem em 1 (+1 volta). Contar?';
-      }
-      const registros = (entrada.grupo?.passagem_ids ?? []).length;
-      return `Contar esta passagem dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta)`
-        + `${registros > 1 ? '' : ' com base neste único registro'}. Contar?`;
+  // "Usar o tempo de …" (or its key, 1, 2, 3) on the selected flag: the
+  // pass counts once, timed by that entry. Asked first: it adds a pass.
+  function usarTempo(indice) {
+    const alerta = alertaQuePodeSerDecidido();
+    const tempo = alerta ? temposParaEscolher(alerta, tela.estado)[indice] : null;
+    if (!tempo) {
+      return;
     }
-    if (opcao.acao === 'descartar_passagem') {
-      return `Descartar esta passagem do carro ${entrada.carro}? Os ${opcao.registros} registros dela são anulados de uma vez. `
-        + 'Pode ser desfeito pelo histórico.';
+    if (window.confirm(perguntaAoUsarTempo(alerta, tempo, tela.estado))) {
+      enviarSobreAlerta(tempo.decisao, alerta);
     }
-    return null;
   }
 
   // `opcao` is one of the items of acoesDaEntrada(); `carroNovo` is only
-  // given for "reatribuir".
+  // given for "reatribuir". What is asked first is in perguntaAoAgirNaEntrada().
   function acaoNaEntrada(opcao, entrada, carroNovo) {
-    const pergunta = perguntaDaEntrada(opcao, entrada);
+    const pergunta = perguntaAoAgirNaEntrada(opcao, entrada, tela.estado);
     if (pergunta !== null && !window.confirm(pergunta)) {
       return;
     }
@@ -344,7 +325,13 @@ export function criarAcoes(ganchos) {
     }
   }
 
+  // "Desfazer" in the history (and "Desfazer a exclusão"). Undoing a
+  // counter's own void asks first, as "Restaurar" on its chip does.
   function desfazer(decisao) {
+    const pergunta = perguntaAoDesfazer(decisao);
+    if (pergunta !== null && !window.confirm(pergunta)) {
+      return;
+    }
     enviar(pedidoSemAlvo(decisaoDesfazer(decisao.id), tela.estado));
   }
 
@@ -368,6 +355,7 @@ export function criarAcoes(ganchos) {
     marcarSaida,
     confirmarSaida,
     moverRegistro,
+    usarTempo,
     anular,
     acaoNaEntrada,
     adicionar,

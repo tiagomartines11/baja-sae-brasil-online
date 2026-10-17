@@ -345,8 +345,19 @@ once. The person leaving then presses **Encerrar meu turno**.
   [What A and K do on each flag](#what-a-and-k-do-on-each-flag). The rule
   behind it: a button that changes a car's lap count says so, and a
   decision that adds or removes a pass is never one keystroke away without
-  a question. A reason can be typed with any decision. Every decision is in
-  the history panel and can be undone.
+  a question. "Contar esta passagem" on a chip of the timeline asks what K
+  asks, including the short-lap question. A reason can be typed with any
+  decision. Every decision is in the history panel and can be undone; each
+  line names the entry's car and counter. **Undoing a void the counter made
+  on their own phone asks first** ("O contador anulou este registro no
+  próprio aparelho (Contador1, 14:03:27). Desfazer mesmo assim?"), from the
+  history as from "Restaurar" on the chip: the counter usually typed it
+  wrong and retyped it at once, and at 26SE undoing two such voids and
+  confirming the retyped entries gave three cars a lap each. A voided
+  chip's tooltip says who voided it and why.
+- A flag about a lone entry loads its timeline from a little before the
+  car's previous official pass (at most one expected lap and half a minute
+  back), so the lap the entry would make is on screen.
 - Flags that put a count in doubt right now are listed first and say so
   ("o carro 23 pode estar com uma volta a menos" / "a mais"); the rest
   follow in the order of the standings.
@@ -417,9 +428,10 @@ From `default/js/contagem/revisao-alertas.js`, which is what the screen runs.
 | Flag | A (accept the suggestion) | K | Other buttons |
 |---|---|---|---|
 | `passagem_proxima_demais` | no suggestion | **Contar esta passagem (+1 volta)**; asks when the lap would be impossibly short | Descartar esta passagem |
-| `dispersao_alta` | void the outlying entry, when two other counters agree; none when the whole pass is held | Contar esta passagem (+1 volta): the outlier, or the held pass, becomes a pass of its own | |
+| `dispersao_alta` | void the outlying entry, when two other counters agree; none when the whole pass is held | Contar esta passagem (+1 volta): the outlier, or the held pass, becomes a pass of its own, timed by the middle of its entries | On a held pass: **Usar o tempo de Contagem N (h:mm:ss)** for each entry (keys 1, 2, 3; asks): the pass counts at that entry's time |
 | `troca_provavel` | move the lone entry to the other car; or, for the reverse reading, **Mover os N registros para o carro Y**, which asks and states both readings | Contar esta passagem (+1 volta) | **Editar manualmente → Mover** the stray entry to a car you choose |
-| `solitaria` | void it, when it would make an impossibly short lap; otherwise none | Contar esta passagem (+1 volta) | |
+| `solitaria` | void it, when it would make an impossibly short lap; otherwise none | Contar esta passagem (+1 volta); asks when the lap would be impossibly short | |
+| `registro_tardio` | none | none: it would count one entry and leave the other to make a short lap | **Usar o tempo de Contagem N (h:mm:ss)** for each of the two entries (keys 1, 2; asks): the pass counts once at that time, and the other entry joins it |
 | `repetida` | **Anular a segunda** | none: "keep both" would count the car twice | Era outro carro… |
 | `primeira_passagem_tardia` | none | Está correto, parar de avisar (the car really started late) | add the missing pass from the car's timeline |
 | `antes_da_largada` | **Contar como passagem inicial (+1 volta)**, always asks. Suggested only when two or more counters agree and the field's median first lap is known | the same, always asks | |

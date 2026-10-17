@@ -7,6 +7,7 @@
 // is never one keystroke away.
 
 import { duracao, relogio } from './revisao-formato.js';
+import { rotuloDeUsarTempo } from './revisao-frases.js';
 
 // ---- "the count is in doubt" ------------------------------------------------
 
@@ -64,7 +65,11 @@ const TIPOS_QUE_SOMAM_PASSAGEM = [
 //                        it is the button "Confirmar saída": the exit is
 //                        STORED. A K that only hid the flag would leave the
 //                        log wrong under the same word
-const TIPOS_SEM_CONFIRMAR = ['repetida', 'tempo_desconhecido', 'no_box', 'no_abastecimento', 'saida_presumida'];
+//   registro_tardio      one crossing typed by two counters far apart: K
+//                        would count the first entry and leave the second
+//                        to make a short lap. The choice is whose time is
+//                        right ("Usar o tempo de …"), which counts it once
+const TIPOS_SEM_CONFIRMAR = ['repetida', 'tempo_desconhecido', 'no_box', 'no_abastecimento', 'saida_presumida', 'registro_tardio'];
 
 const ROTULOS_DE_CONTAR = {
   carro_nao_classificado: 'Contar mesmo assim (+1 volta)',
@@ -112,15 +117,21 @@ export function voltaImpossivelmenteCurta(voltaMs, configuracoes, voltaEsperadaM
   return voltaEsperadaMs !== null && voltaEsperadaMs !== undefined && voltaMs < fracao * voltaEsperadaMs;
 }
 
+// A lap of `voltaMs` that counting a pass of `carro` would create: that
+// lap again when it is impossibly short for the car, null otherwise. Every
+// "contar" asks with it, on a flag (K, A) as on a chip.
+function voltaCurtaDoCarro(carro, voltaMs, estado) {
+  const linha = (estado?.carros ?? []).find((outra) => outra.carro === carro);
+  return voltaImpossivelmenteCurta(voltaMs ?? null, estado?.configuracoes, linha?.volta_esperada_ms ?? null) ? voltaMs : null;
+}
+
 // When K adds a pass and the lap it creates is impossibly short: that lap
 // in ms (for the question). Null otherwise.
 export function voltaCurtaAoContar(alerta, estado) {
   if (!acaoDeConfirmar(alerta)?.maisUmaPassagem) {
     return null;
   }
-  const voltaMs = alerta.volta_resultante_ms ?? null;
-  const carro = (estado?.carros ?? []).find((linha) => linha.carro === (alerta.carros ?? [])[0]);
-  return voltaImpossivelmenteCurta(voltaMs, estado?.configuracoes, carro?.volta_esperada_ms ?? null) ? voltaMs : null;
+  return voltaCurtaDoCarro((alerta.carros ?? [])[0], alerta.volta_resultante_ms, estado);
 }
 
 function perguntaDePassagemInicial(alerta) {
@@ -132,6 +143,46 @@ function perguntaDePassagemInicial(alerta) {
 function perguntaDeVoltaCurta(voltaMs) {
   return `Contar esta passagem criaria uma volta de ${duracao(voltaMs)}, curta demais para ser real. `
     + 'O mais provável é ser a mesma passagem registrada duas vezes. Contar mesmo assim?';
+}
+
+// What must be asked before "confirmar" on one chip of the timeline; null
+// when nothing. `opcao` is one item of acoesDaEntrada(). The short-lap
+// question is the one K asks: the server sends, with a pass that would
+// count, the shortest lap it would make ("volta_resultante_ms"). At a race
+// a reviewer counted three entries on their chips in four seconds, each a
+// lap of about a minute, and was asked nothing about it.
+export function perguntaAoContarNaEntrada(opcao, entrada, estado = null) {
+  if (opcao?.acao !== 'confirmar' || !opcao.maisUmaPassagem) {
+    return null;
+  }
+  if (entrada.grupo?.papel === 'antes_da_largada') {
+    // Measured from no previous crossing: the initial pass question only.
+    return `Este registro é de ANTES da largada. Contá-lo faz dele a passagem inicial do carro ${entrada.carro}: `
+      + 'todas as voltas dele sobem em 1 (+1 volta). Contar?';
+  }
+  const voltaMs = entrada.grupo ? entrada.grupo.volta_resultante_ms : entrada.volta_resultante_ms;
+  const voltaCurtaMs = voltaCurtaDoCarro(entrada.carro, voltaMs, estado);
+  if (voltaCurtaMs !== null) {
+    return perguntaDeVoltaCurta(voltaCurtaMs);
+  }
+  if (entrada.anulada_auto) {
+    return 'Este registro foi anulado automaticamente como repetição (toque duplo ou troca de contador). '
+      + `Contá-lo dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta), poucos segundos depois da anterior. Contar mesmo assim?`;
+  }
+  if (entrada.grupo?.papel === 'retida') {
+    const motivo = entrada.grupo.motivo_retencao;
+    if (motivo === 'no_box' || motivo === 'no_abastecimento') {
+      const area = motivo === 'no_box' ? 'box' : 'abastecimento';
+      return `Esta passagem está RETIDA porque o carro ${entrada.carro} constava como dentro do ${area}. `
+        + `Contá-la assim dá ao carro MAIS UMA PASSAGEM (+1 volta) e ele CONTINUA constando como dentro do ${area}. `
+        + `Se o carro saiu, o certo é "Marcar saída do ${area}" no alerta. Contar mesmo assim?`;
+    }
+    return 'Esta passagem está RETIDA: os contadores concordam, mas ela parece ser a mesma passagem de antes registrada de novo. '
+      + `Contá-la dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta). Contar mesmo assim?`;
+  }
+  const registros = (entrada.grupo?.passagem_ids ?? []).length;
+  return `Contar esta passagem dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta)`
+    + `${registros > 1 ? '' : ' com base neste único registro'}. Contar?`;
 }
 
 // What must be asked before K on this flag; null when nothing.
@@ -395,6 +446,54 @@ export function acoesExtrasDoAlerta(alerta, largadaMs = null, estado = null) {
     acoes.push({ acao: 'adicionar_passagem', rotulo: 'Adicionar passagem…' });
   }
   return acoes;
+}
+
+// ---- "Usar o tempo de …" -------------------------------------------------------
+//
+// On a crossing typed late ("registro_tardio") and on a held pass whose
+// entries are too far apart ("dispersao_alta" with "tempos_possiveis"),
+// the reviewer says whose time is right. One button per time, numbered:
+// the keys 1, 2, 3 press them. Each is
+//   {decisao, rotulo, tecla, tsMs, fonteId}
+// and `decisao` is the "usar_tempo" request: the pass counts once, timed by
+// that entry; the other entry, when it is in another pass, joins it.
+// Empty for any other flag.
+export function temposParaEscolher(alerta, estado = null) {
+  const tempos = alerta?.tempos_possiveis ?? [];
+  if (!Array.isArray(tempos) || !['registro_tardio', 'dispersao_alta'].includes(alerta.tipo)) {
+    return [];
+  }
+  const nomeDaFonte = (fonteId) => (estado?.fontes ?? []).find((fonte) => fonte.id === fonteId)?.nome ?? null;
+  const largadaMs = estado?.corrida?.largada_ms ?? null;
+  return tempos.map((tempo, indice) => ({
+    decisao: {
+      tipo: 'usar_tempo',
+      passagem_id: tempo.passagem_id,
+      ...(tempo.passagem_alvo_id ? { passagem_alvo_id: tempo.passagem_alvo_id } : {}),
+    },
+    rotulo: rotuloDeUsarTempo(tempo, nomeDaFonte, largadaMs),
+    tecla: String(indice + 1),
+    tsMs: tempo.ts_ms,
+    fonteId: tempo.fonte_id,
+  }));
+}
+
+// The question before "Usar o tempo de …": it gives the car one more pass
+// (these passes do not count today), so it is never one key away without
+// one. When the lap is impossibly short the short-lap question is asked
+// instead, as on K.
+export function perguntaAoUsarTempo(alerta, tempo, estado = null) {
+  const carro = (alerta.carros ?? [])[0];
+  const voltaCurtaMs = alerta.efeito_de_confirmar === 'mais_uma_passagem'
+    ? voltaCurtaDoCarro(carro, alerta.volta_resultante_ms, estado) : null;
+  if (voltaCurtaMs !== null) {
+    return perguntaDeVoltaCurta(voltaCurtaMs);
+  }
+  const outro = tempo.decisao.passagem_alvo_id
+    ? ' O outro registro fica junto dela, sem definir o horário.'
+    : ' Os outros registros ficam nela, sem definir o horário.';
+  return `${tempo.rotulo}? A passagem do carro ${carro} conta UMA vez, nesse horário (+1 volta).${outro} `
+    + 'Pode ser desfeito pelo histórico.';
 }
 
 // The question before "Descartar" on a flag.
