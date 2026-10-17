@@ -896,6 +896,11 @@ at 300 ms.
 
 - **Tables.** `baja-infra/mysql/migrations/2026-contagem.sql` only creates
   tables; it changes no existing one. Read its header about character sets.
+- **Columns added later.** A database that already has the contagem_*
+  tables gets new columns from their own files, each safe to run twice:
+  `2026-contagem-passagem-alvo.sql` adds `contagem_decisao.passagem_alvo_id`
+  (the "usar_tempo" decision). Every recount reads it, so apply it before
+  deploying the code that uses it.
 - **Cloudflare.** `s-maxage` does nothing by itself: Cloudflare does not
   cache `.php` responses by default. Add a Cache Rule for the results host:
   *URI Path equals `/contagem_feed.php`* → **Eligible for cache**, Edge TTL
