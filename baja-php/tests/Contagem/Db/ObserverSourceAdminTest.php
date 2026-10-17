@@ -165,6 +165,43 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
      * off, and every entry it had sent while off suddenly counted: here the
      * 6:00 pass got a second voice and a lap appeared.
      *
+    /**
+     * SITUATION: the publishing mode is "confirmadas", where the primary
+     * source has no effect. The promoted camera is the stored primary and
+     * is set back to observer. Later the controller changes only the
+     * matching window; the form posts the stored primary again.
+     *
+     * WHAT WENT WRONG: every save of the settings form was refused ("ela é
+     * observadora"), whatever it changed.
+     *
+     * EXPECTED: the save goes through. Choosing the "fonte principal" mode
+     * with the observer as primary is still refused.
+     */
+    public function testAnObserverStoredAsPrimaryDoesNotBlockTheSettingsInOtherModes(): void
+    {
+        $camera = $this->createCamera(Source::TEMPO_HUMANA);
+        $this->submitSourceForm($camera, ['papel' => Source::PAPEL_VOTANTE, SourceAdmin::CAMPO_CONFIRMAR_VOTANTE => '1']);
+        $this->newRequest();
+        $this->service->saveSettings(Settings::fromArray([
+            'modo_publicacao' => Settings::MODO_CONFIRMADAS,
+            'fonte_principal_id' => (int) $camera->getFonteId(),
+        ]));
+        $this->submitSourceForm($camera, ['papel' => Source::PAPEL_OBSERVADORA]);
+        $this->assertSame(Source::PAPEL_OBSERVADORA, $this->reload($camera)->getPapel(), 'the primary has no effect in this mode');
+
+        $window = $this->service->getSettings()->janelaMs + 1000;
+        $this->saveSettingsForm(['janela_ms' => (string) $window]);
+        $this->newRequest();
+        $this->assertSame($window, $this->service->getSettings()->janelaMs);
+
+        try {
+            $this->saveSettingsForm(['modo_publicacao' => Settings::MODO_FONTE_PRINCIPAL]);
+            $this->fail('an observer was accepted as the primary source');
+        } catch (InvalidArgumentException $refusal) {
+            $this->assertStringContainsString('observadora', $refusal->getMessage());
+        }
+    }
+
      * EXPECTED: switching it on again keeps the time it was off as a period
      * off: the 6:00 entry stays out. Asking explicitly ("contar também")
      * brings it back.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Engine\Settings;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\PublishingWouldStart;
 use Baja\Contagem\Service\ScorePublisher;
@@ -47,11 +48,15 @@ final class SourceSettings
             if ($fonte->getTipo() === Source::TIPO_TOTAIS) {
                 continue;
             }
-            // Nothing an observer records counts: as the primary source it
-            // would take every lap away from every car.
+            $countingIds[] = (int) $fonte->getFonteId();
+            // Nothing an observer records counts: in the "fonte principal"
+            // mode it would take every lap away from every car. In the other
+            // modes the primary has no effect, so an observer stored there
+            // (demoted while another mode was in use) is kept, the way a
+            // switched-off one is, and the form still saves.
             if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA) {
                 $postedPrimary = is_string($post['fonte_principal_id'] ?? null) ? trim($post['fonte_principal_id']) : '';
-                if ($postedPrimary === (string) $fonte->getFonteId()) {
+                if (($post['modo_publicacao'] ?? null) === Settings::MODO_FONTE_PRINCIPAL && $postedPrimary === (string) $fonte->getFonteId()) {
                     throw new InvalidArgumentException(sprintf(
                         'A fonte principal não pode ser "%s": ela é observadora e nada do que registra conta. Promova-a a votante antes, ou escolha outra. Nada foi alterado.',
                         $fonte->getNome()
