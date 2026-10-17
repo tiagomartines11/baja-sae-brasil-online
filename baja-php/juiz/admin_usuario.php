@@ -59,7 +59,7 @@ foreach ($eventos as $ev) {
         $provas[] = ['code' => $p->getFullCode(), 'label' => strtoupper($p->getProvaId())];
         // A lap counting prova has a code of its own for the pit lane and
         // fueling log, apart from the counters' (which comes with linking
-        // a counter, on the prova's "Contadores" page).
+        // a counter, on the prova's "Usuários" page).
         if ($p->getType() === ContagemAccess::PROVA_TYPE) {
             $provas[] = ['code' => $p->getFullCode() . ContagemAccess::PIT_LOG_SUFFIX, 'label' => strtoupper($p->getProvaId()) . ' · box e abastecimento'];
         }
