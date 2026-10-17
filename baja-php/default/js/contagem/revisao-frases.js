@@ -99,10 +99,10 @@ export function descreverDecisao(decisao, nomeDaFonte = () => null, desfeita = n
     case 'usar_tempo':
       // With a target: a lone entry typed late joins this one's pass.
       // Without: of a held pass's entries, this one gives the time.
-      return `Usou o tempo da passagem #${decisao.passagem_id}${doRegistro(decisao)}`
-        + `${decisao.passagem_alvo_id
-          ? ` e juntou a #${decisao.passagem_alvo_id} a ela (registrada com atraso)`
-          : ' como horário da passagem'}`;
+      return decisao.passagem_alvo_id
+        ? `Usou o tempo da passagem #${decisao.passagem_id}${doRegistro(decisao)}`
+          + ` e juntou a #${decisao.passagem_alvo_id} a ela (registrada com atraso)`
+        : `Usou o horário da passagem #${decisao.passagem_id}${doRegistro(decisao)} para a volta`;
     case 'adicionar':
       return `Adicionou uma passagem do carro ${decisao.equipe_numero}`;
     case 'excluir_fonte':

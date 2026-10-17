@@ -141,12 +141,12 @@ function ehResolucaoAutomatica(alerta) {
 // its entry, which is when the system first saw it.
 export function linhasDoHistorico(estado) {
   const historico = estado?.historico ?? [];
-  // A history cut short at the server's limit still holds every decision
-  // in force that has no entry: those come in their own list.
+  // The decisions in force that have no entry come in their own list too,
+  // whole. They are merged in always: a history cut short at the server's
+  // limit, or a state stored before the whole history was sent (only the
+  // newest 50), would otherwise lose the older ones and their "Desfazer".
   const presentes = new Set(historico.map((decisao) => decisao.id));
-  const decisoes = estado?.historico_completo === false
-    ? [...historico, ...(estado.historico_em_vigor ?? []).filter((decisao) => !presentes.has(decisao.id))]
-    : historico;
+  const decisoes = [...historico, ...(estado?.historico_em_vigor ?? []).filter((decisao) => !presentes.has(decisao.id))];
 
   const fontes = new Map((estado?.fontes ?? []).map((fonte) => [fonte.id, fonte.nome]));
   const contexto = {
@@ -228,10 +228,18 @@ export function opcoesDosFiltros(estado, linhas, filtros = FILTROS_VAZIOS) {
   };
 }
 
-// "12 de 81 decisões" while a filter is set, "81 decisões" without.
-export function resumoDoHistorico(mostradas, total, filtros) {
+// "12 de 81 decisões" while a filter is set, "81 decisões" without. The
+// system's lines are not decisions and are counted apart: "81 decisões
+// + 2 do sistema" (the shown ones while filtering, left out when none).
+//   mostradas, linhas: lines of linhasDoHistorico
+export function resumoDoHistorico(mostradas, linhas, filtros) {
+  const decisoes = (lista) => lista.filter((linha) => !linha.automatica).length;
+  const total = decisoes(linhas);
   const nome = total === 1 ? 'decisão' : 'decisões';
-  return temFiltro(filtros) ? `${mostradas} de ${total} ${nome}` : `${total} ${nome}`;
+  const filtrando = temFiltro(filtros);
+  const doSistema = (filtrando ? mostradas : linhas).length - decisoes(filtrando ? mostradas : linhas);
+  return (filtrando ? `${decisoes(mostradas)} de ${total} ${nome}` : `${total} ${nome}`)
+    + (doSistema > 0 ? ` + ${doSistema} do sistema` : '');
 }
 
 // The sentence in place of the list when it is empty.
@@ -243,11 +251,15 @@ export function historicoVazio(total) {
 
 // The sentence under the list when the server left the oldest out; null
 // when the list is whole.
+// A state stored before the whole history was sent has no
+// "historico_completo" but says "historico_ha_mais" when it was paged.
 export function avisoDeHistoricoIncompleto(estado) {
-  if (estado?.historico_completo !== false) {
+  const completo = estado?.historico_completo ?? estado?.historico_ha_mais !== true;
+  if (completo !== false) {
     return null;
   }
-  return `Só as ${(estado.historico ?? []).length} decisões mais recentes estão aqui (e todas as que estão em vigor). `
+  return `Só as ${(estado.historico ?? []).length} decisões mais recentes estão aqui `
+    + '(e as exclusões de fonte, passagens adicionadas e saídas marcadas ainda em vigor). '
     + 'Os filtros não alcançam as mais antigas.';
 }
 

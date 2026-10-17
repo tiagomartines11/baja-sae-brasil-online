@@ -386,7 +386,7 @@ export function desenharHistorico(elementos, estado, filtros, ocupado, acoes) {
     mostrarFiltros(elementos.formulario, estado, linhas, filtros);
   }
   if (elementos.resumo) {
-    elementos.resumo.textContent = resumoDoHistorico(mostradas.length, linhas.length, filtros);
+    elementos.resumo.textContent = resumoDoHistorico(mostradas, linhas, filtros);
   }
 
   substituir(elementos.tabela,

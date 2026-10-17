@@ -146,7 +146,20 @@ test('a history cut short by the server still holds every decision in force, and
 
   assert.deepEqual(linhas.filter((linha) => linha.decisao).map((linha) => linha.decisao.id), [16, 15, 14, 2]);
   assert.match(avisoDeHistoricoIncompleto(estado), /^Só as 3 decisões mais recentes estão aqui/);
+  assert.doesNotMatch(avisoDeHistoricoIncompleto(estado), /todas as que estão em vigor/);
   assert.equal(avisoDeHistoricoIncompleto(ESTADO), null);
+});
+
+test('a state stored before the whole history was sent still lists the older decisions in force', () => {
+  // The old shape: the newest page, "historico_ha_mais", no "historico_completo".
+  // A stored snapshot keeps it until the race changes again.
+  const antiga = decisao({ id: 2, tipo: 'marcar_saida', ts_ms: minuto(1), criado_em_ms: minuto(2) });
+  const { historico_completo: _, ...semCompleto } = ESTADO;
+  const estado = { ...semCompleto, historico: HISTORICO.slice(0, 3), historico_ha_mais: true, historico_em_vigor: [HISTORICO[0], antiga] };
+
+  assert.deepEqual(linhasDoHistorico(estado).filter((linha) => linha.decisao).map((linha) => linha.decisao.id), [16, 15, 14, 2]);
+  assert.match(avisoDeHistoricoIncompleto(estado), /^Só as 3 decisões mais recentes estão aqui/);
+  assert.equal(avisoDeHistoricoIncompleto({ ...semCompleto, historico_ha_mais: false }), null);
 });
 
 // ---- what each line says -----------------------------------------------------
@@ -177,7 +190,7 @@ test('"usar o tempo" reads well with and without a late entry joined to it', () 
   const base = { tipo: 'usar_tempo', passagem_id: 531, carro_digitado: 1, carro: 1, fonte_nome: 'Contagem 2' };
   assert.equal(descreverDecisao({ ...base, passagem_alvo_id: 533 }),
     'Usou o tempo da passagem #531 (carro 1, Contagem 2) e juntou a #533 a ela (registrada com atraso)');
-  assert.equal(descreverDecisao(base), 'Usou o tempo da passagem #531 (carro 1, Contagem 2) como horário da passagem');
+  assert.equal(descreverDecisao(base), 'Usou o horário da passagem #531 (carro 1, Contagem 2) para a volta');
 });
 
 test('an undo whose decision is not in the list still names the entry', () => {
@@ -243,9 +256,18 @@ test('filters combine', () => {
 });
 
 test('the count, and the sentence when nothing is left', () => {
-  assert.equal(resumoDoHistorico(8, 8, FILTROS_VAZIOS), '8 decisões');
-  assert.equal(resumoDoHistorico(1, 81, { ...FILTROS_VAZIOS, carro: '7' }), '1 de 81 decisões');
-  assert.equal(resumoDoHistorico(1, 1, FILTROS_VAZIOS), '1 decisão');
+  const decisoes = (n) => Array.from({ length: n }, () => ({ automatica: false }));
+  const doSistema = (n) => Array.from({ length: n }, () => ({ automatica: true }));
+  const carro7 = { ...FILTROS_VAZIOS, carro: '7' };
+  assert.equal(resumoDoHistorico(decisoes(8), decisoes(8), FILTROS_VAZIOS), '8 decisões');
+  assert.equal(resumoDoHistorico(decisoes(1), decisoes(81), carro7), '1 de 81 decisões');
+  assert.equal(resumoDoHistorico(decisoes(1), decisoes(1), FILTROS_VAZIOS), '1 decisão');
+  // What the system resolved on its own is not a decision: counted apart.
+  const todas = [...decisoes(81), ...doSistema(2)];
+  assert.equal(resumoDoHistorico(todas, todas, FILTROS_VAZIOS), '81 decisões + 2 do sistema');
+  assert.equal(resumoDoHistorico([...decisoes(3), ...doSistema(1)], todas, carro7), '3 de 81 decisões + 1 do sistema');
+  assert.equal(resumoDoHistorico(decisoes(3), todas, carro7), '3 de 81 decisões');
+  assert.equal(resumoDoHistorico(doSistema(2), todas, { ...FILTROS_VAZIOS, quem: QUEM_AUTOMATICO }), '0 de 81 decisões + 2 do sistema');
   assert.equal(historicoVazio(0), 'Nenhuma decisão ainda.');
   assert.match(historicoVazio(81), /^Nenhuma decisão com esses filtros/);
 });

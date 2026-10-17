@@ -370,13 +370,18 @@ once. The person leaving then presses **Encerrar meu turno**.
   typed or the car the entry counts for now), **Contador**, **Quem** (a
   person, "contador (no aparelho)" for voids made on a phone, or
   "automático"), **Tipo**, and **Só em vigor**; the heading says "12 de 81
-  decisões" and **Limpar filtros** brings everything back. The filters are
+  decisões", the system's lines counted apart ("+ 2 do sistema"), and
+  **Limpar filtros** brings everything back. A system line sits at the
+  moment of its entry (flags carry no time of their own); an assumed exit
+  leaves the list once a reviewer confirms or discards it, as that
+  decision is then listed instead. The filters are
   remembered per prova in the browser. Clicking a line (or **Ver**) opens
   its car's whole race centred on that moment with its entries outlined,
   or, for a system line, its flag. The server sends the whole history with
   the state (about 30 KB for the 81 decisions of 26SE), so a filter sees
   every decision, not only a first page; past 1000 decisions only the
-  newest are sent and the panel says so. Open-ended source exclusions stay
+  newest are sent and the panel says so (the exclusions, added passes and
+  marked exits in force are always sent, older or not). Open-ended source exclusions stay
   loud in the Fontes block and the status bar as well.
 - A flag about a lone entry reaches back to a little before the car's
   previous official pass (at most one expected lap and half a minute
