@@ -520,6 +520,20 @@ shows the one it entered last. "Expected lap" follows the pace of the field
 in the last 15 minutes and the car's own speed. The clock behind it stops
 during a red flag. A long gap is never treated as proof of a missed pass.
 
+**Two yardsticks, not one.** The *field pace* is the median of the clean
+laps the whole field finished in the last `janela_ritmo_s` (unknown under
+eight laps); a car's *expected lap* is that pace times how the car compares
+with the field (the median of its last six laps against the pace, 1.0 until
+it has three). They drive the car status above, the "too short to be real"
+test (`volta_curta`, and the lone-entry and swap suggestions that lean on it) and which
+laps may be a best lap. They never decide whether a pass counts: holding a
+pass that comes too soon, and settling a missed pit exit by the car's next
+lap, use **the car's own laps** ([the hold rule](#the-hold-rule)), so the
+count of one car never depends on the others. The pace is shown on Controle
+da corrida ("Ritmo da corrida": the pace now, the laps behind it, and a chart
+of it minute by minute since the start) and is in the
+[public feed](#public-feed).
+
 ## When things go wrong
 
 **A counter's phone loses its connection.** Nothing to do. It keeps
@@ -885,7 +899,7 @@ entry points: `Engine::countCars()` (the official passes of a few cars) and
 | 3 | `PassMatcher`, `PassTimeFuser` | Groups entries per car by time (never by typing order); the pass time of each group |
 | 4 | `PublishRule`, `PassRoles`, `LapBuilder` | Which groups are official passes; leaves out the start crossing and late finishers; numbers pass zero and the laps |
 | — | *(up to here is `LapCounter`: all the fast path needs)* | |
-| 5 | `PassTimeFuser::removeHabits`, `PaceModel` | Lap durations with each counter's habit removed; expected lap per car |
+| 5 | `PassTimeFuser::removeHabits`, `PaceModel` | Lap durations with each counter's habit removed; expected lap per car; the field pace now and once a minute since the start (`ritmo`, `ritmoHistorico`) |
 | 6 | `FlagDetector`, `SwapFinder`, `LateFirstPass` | The flags and their suggestions |
 | 7 | `CarStatus`, `SourceStatsBuilder` | Status of each car now; statistics per source |
 
@@ -1110,6 +1124,26 @@ assumed (it is not in the log; if the gate logs that exit later, the logged
 one takes its place in the list). An unpaired event is listed there but is
 not a stay. The same numbers per car are in the CSV export "paradas" on Controle
 da corrida.
+
+And the pace (see [Car status](#car-status)). Per car, `volta_esperada_ms`:
+what the pace model expects of it, null while the field pace is unknown and
+whenever the race is not running (before the start, red flag, after the
+finish). And `ritmo`, `{volta_mediana_ms, voltas_na_janela, janela_s}`: the
+field pace (null under eight laps), how many laps of the window it is taken
+from, and the window. After the finish it stays as it was at the finish.
+Both are as of `calculado_em_ms`, like the laps.
+
+The pace minute by minute is a separate answer, so the feed every overlay
+polls stays small: `contagem_feed.php?evt=26BR&p=END&ritmo=historico` gives
+`{evento_id, prova_id, gerado_em_ms, calculado_em_ms, ritmo, ritmo_historico}`,
+`ritmo_historico` being `[{ts_ms, volta_mediana_ms, voltas_na_janela}, …]`
+once a minute from the start (the last point at the moment of the
+recalculation, or at the finish). It is computed by the full run, stored in
+the snapshot and cached like the feed; the Cloudflare rule of the
+[deploy notes](#deploy-notes) already
+covers it, because the query string is part of the cache key. The pace is
+left out of the snapshot's token: it moves with the clock and no review
+screen shows it.
 
 ---
 
