@@ -149,3 +149,14 @@ test('the age of the calculation turns red beyond three recalculation intervals,
 
   assert.equal(idadeDoCalculo({ configuracoes: {} }, 1000), null, 'no calculation yet: nothing to show');
 });
+
+// At QA "calculado há 4 min" was red during a quiet stretch of a running
+// race: the engine recalculates only when something changed. The server
+// now says whether changes are waiting ("mudancas_pendentes").
+test('an old calculation turns red only while changes are waiting for it', () => {
+  const estado = { calculado_em_ms: 100_000, configuracoes: { recalculo_s: 5 }, corrida: { estado: 'correndo' } };
+  assert.deepEqual(idadeDoCalculo({ ...estado, mudancas_pendentes: false }, 340_000), { segundos: 240, atrasado: false }, 'a quiet race');
+  assert.deepEqual(idadeDoCalculo({ ...estado, mudancas_pendentes: true }, 116_000), { segundos: 16, atrasado: true }, 'stuck');
+  assert.deepEqual(idadeDoCalculo({ ...estado, mudancas_pendentes: true }, 110_000), { segundos: 10, atrasado: false }, 'on its way');
+  assert.deepEqual(idadeDoCalculo({ ...estado, mudancas_pendentes: null }, 116_000), { segundos: 16, atrasado: true }, 'unknown: as before');
+});

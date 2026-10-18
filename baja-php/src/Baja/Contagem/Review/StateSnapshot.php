@@ -6,6 +6,7 @@ namespace Baja\Contagem\Review;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Flag;
+use Baja\Contagem\Service\ChangeCounter;
 use Baja\Contagem\Service\Clock;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\LiveStatus;
@@ -150,7 +151,7 @@ final class StateSnapshot
 
     /** Keys of liveParts() that the full state carries under the same name. */
     private const LIVE_STATE_KEYS = [
-        'versao', 'calculado_em_ms', 'servidor_agora_ms', 'corrida', 'revisores', 'publicado_em_ms', 'pontuacao',
+        'versao', 'calculado_em_ms', 'mudancas_pendentes', 'servidor_agora_ms', 'corrida', 'revisores', 'publicado_em_ms', 'pontuacao',
         'publicacao_desligada', 'simulacao', 'predefinicao_de_teste', 'correcoes_da_reconciliacao',
     ];
 
@@ -174,10 +175,16 @@ final class StateSnapshot
         // stored half cannot know who is in contact NOW; this one small
         // query can.
         $devices = SourceOverview::describeDevices($prova, $settings, $nowMs);
+        $changes = (new ChangeCounter((string) $prova->getEventoId(), (string) $prova->getProvaId()))->current();
 
         return [
             'versao' => $snapshot->token,
             'calculado_em_ms' => $snapshot->geradoEmMs,
+            // Something changed since this snapshot was calculated (an
+            // upload, a decision, a setting). The engine recalculates only
+            // on change, so an old calculation with nothing pending is a
+            // quiet race, not a stuck one; null when it cannot be known.
+            'mudancas_pendentes' => $changes === null || $snapshot->mudancas === null ? null : $changes > $snapshot->mudancas,
             'servidor_agora_ms' => $nowMs,
             'corrida' => LiveStatus::ofRace($liveNumbers, $nowMs),
             'status_dos_carros' => LiveStatus::ofCars($liveNumbers, $settings, $nowMs),

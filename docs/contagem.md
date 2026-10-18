@@ -414,8 +414,11 @@ once. The person leaving then presses **Encerrar meu turno**.
   wraps as needed. First line: official time, race clock, open flags,
   "publicado agora / há 30 s", "calculado agora / há 30 s", other reviewers.
   "calculado" is how old the flags and lap times on screen are; it turns
-  red beyond three recalculation intervals (the server is not keeping up or
-  the connection is poor) and then counts every second.
+  red beyond three recalculation intervals while changes are waiting for a
+  calculation (the server is not keeping up or the connection is poor; the
+  state's `mudancas_pendentes`) and then counts every second. A quiet
+  stretch of a running race, with nothing new typed, is not recalculated
+  and stays in the normal colour.
 - Second line: one chip per source, then the points. A chip says the
   source's name and one state word: **ao vivo** (green; amber with the
   delay when its uploads lag more than 15 s behind), **offline** (red, with

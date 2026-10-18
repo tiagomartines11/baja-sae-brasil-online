@@ -136,6 +136,11 @@ test('an "inalterado" answer keeps the state but updates who is looking at each 
   assert.deepEqual(depois.alertas_abertos[1].olhando, []);
 });
 
+test('an "inalterado" answer brings whether changes are waiting for a calculation', () => {
+  const estado = { versao: 1, mudancas_pendentes: false, alertas_abertos: [], alertas_resolvidos: [] };
+  assert.equal(aplicarResposta(estado, { inalterado: true, versao: 1, mudancas_pendentes: true, olhando: {} }, 'joao').mudancas_pendentes, true);
+});
+
 test('a reviewer is not told that they themselves are looking at a flag', () => {
   const estado = { versao: 1, alertas_abertos: [{ id: 'a', olhando: [] }], alertas_resolvidos: [] };
   const resposta = { inalterado: true, versao: 1, olhando: { a: ['joao', 'maria'] } };

@@ -85,7 +85,11 @@ export function horarioOficial(agoraMs) {
 // that with no new calculation means something is stuck, and the text turns red.
 // Only while the race is running: with nobody typing (before the start,
 // after the finish, under a red flag) nothing changes, nothing is
-// recalculated, and an old calculation is exactly what is expected.
+// recalculated, and an old calculation is exactly what is expected. And
+// only while the server says changes are waiting for a calculation
+// (`mudancas_pendentes`): in a quiet stretch of a running race nothing is
+// recalculated either. When the server cannot tell (null, or an older
+// server), the age alone decides, as before.
 // Returns {segundos, atrasado}, or null when the age cannot be known.
 export function idadeDoCalculo(estado, agoraMs) {
   const calculadoEm = estado?.calculado_em_ms;
@@ -94,5 +98,6 @@ export function idadeDoCalculo(estado, agoraMs) {
   }
   const segundos = Math.max(0, Math.floor((agoraMs - calculadoEm) / 1000));
   const recalculoS = Number(estado.configuracoes?.recalculo_s) || 5;
-  return { segundos, atrasado: estado.corrida?.estado === 'correndo' && segundos > 3 * recalculoS };
+  const atrasado = estado.corrida?.estado === 'correndo' && segundos > 3 * recalculoS && estado.mudancas_pendentes !== false;
+  return { segundos, atrasado };
 }

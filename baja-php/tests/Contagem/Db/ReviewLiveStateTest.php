@@ -118,6 +118,36 @@ final class ReviewLiveStateTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: the race is calculated at 5:00 and then nobody types for
+     * a while. Later an entry is uploaded and not yet calculated.
+     *
+     * WHAT WENT WRONG: "calculado há 27 s" turned red 15 s after every
+     * calculation of a quiet race: the engine recalculates only when
+     * something changed, so an old calculation alone says nothing.
+     *
+     * EXPECTED: the state says whether changes are waiting for the next
+     * calculation, also in the small "inalterado" answer.
+     */
+    public function testTheStateSaysWhetherChangesAreWaitingForACalculation(): void
+    {
+        $this->startRace(self::RACE_START_MS);
+        $this->allCountersSee(self::CAR_A, 60);
+        $this->syncAll($this->at(290));
+        Clock::freezeAt($this->at(300));
+        $this->recompute();
+        $this->newRequest();
+        $snapshot = $this->service->snapshot();
+
+        Clock::freezeAt($this->at(400));
+        $this->assertFalse(StateSnapshot::unchanged($this->service, $snapshot, null)['mudancas_pendentes']);
+
+        $this->addEntry($this->fontes[0], self::CAR_B, $this->at(390));
+        $this->service->markChanged();
+        $this->newRequest();
+        $this->assertTrue(StateSnapshot::unchanged($this->service, $snapshot, null)['mudancas_pendentes']);
+    }
+
+    /**
      * SITUATION: an ordinary race. The state is asked for.
      *
      * EXPECTED: it carries the two things the screen turns into banners:
