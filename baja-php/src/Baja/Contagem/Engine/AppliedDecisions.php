@@ -25,6 +25,28 @@ final class AppliedDecisions
      */
     public array $observedEntries = [];
 
+    /**
+     * Unread entries ("??") of the sources that took part, after voids,
+     * that no decision gave a car. They are in no pass group; UnreadAssigner
+     * works out which car each one most likely was. Empty for nearly every
+     * race.
+     *
+     * @var Entry[]
+     */
+    public array $unreadEntries = [];
+
+    /**
+     * Marks of timing sensors (Source::TIPO_SENSOR) from moments the
+     * sensor took part, that no reviewer gave a car. They never vote; the
+     * ones UnreadAssigner can match time a pass. Empty without a sensor.
+     *
+     * @var Entry[]
+     */
+    public array $sensorMarks = [];
+
+    /** True when some unread entry was given a car by a decision (it is in `entries` like any other). */
+    public bool $hasDecidedUnread = false;
+
     /** @var array<int, true> ids of entries a reviewer confirmed */
     public array $confirmedEntryIds = [];
 

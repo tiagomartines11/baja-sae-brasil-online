@@ -34,6 +34,12 @@ final class ObserverStats
     /** Official passes, at moments the observer was observing and had synced, that it did not record at all. */
     public int $faltas = 0;
 
+    /** Unread entries ("??"): it saw a car and could not read the number. Also counted in `entradas`. */
+    public int $ilegiveis = 0;
+
+    /** Of those, how many came within MISREAD_WINDOW_MS of an official pass it recorded nothing else for. */
+    public int $ilegiveisComPassagem = 0;
+
     /** Median of (observer's time - pass time) over its hits; positive means it is late. Null without hits. */
     public ?int $desvioMedianoMs = null;
 
@@ -63,6 +69,8 @@ final class ObserverStats
             'falsos_positivos' => $this->falsosPositivos,
             'leituras_trocadas' => $this->leiturasTrocadas,
             'faltas' => $this->faltas,
+            'ilegiveis' => $this->ilegiveis,
+            'ilegiveis_com_passagem' => $this->ilegiveisComPassagem,
             'desvio_mediano_ms' => $this->desvioMedianoMs,
             'desvio_p90_ms' => $this->desvioP90Ms,
             'trocas_frequentes' => $this->trocasFrequentes,

@@ -69,6 +69,28 @@ final class SyntheticRaceConfig
      */
     public float $neighbourMistakeChance = 0.25;
 
+    // ----- passes nobody could read, and a timing sensor -----
+
+    /**
+     * A counter sees the car cross and presses "??" instead of the number
+     * (only on a crossing it would otherwise have typed right). Drawn from
+     * a random stream of its own, so a race without "??" and without a
+     * sensor is exactly the race the same seed always gave.
+     */
+    public float $unreadRate = 0.0;
+
+    /**
+     * A precise timing sensor at the line, as source `counters + 1`: it
+     * marks every real crossing (to within 20 ms) and never the car.
+     */
+    public bool $timingSensor = false;
+
+    /** The sensor misses a crossing (two cars side by side, one beam). */
+    public float $sensorMissRate = 0.02;
+
+    /** The sensor marks a crossing that did not happen (a marshal, a bird), on average this many a minute. */
+    public float $sensorFalseTriggersPerMinute = 1.0;
+
     // ----- racing incidents, which are not mistakes -----
 
     /** A car breaks down on track and loses 3 to 10 minutes on that lap. */

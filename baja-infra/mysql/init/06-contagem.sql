@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `contagem_passagem` (
   `fonte_id` int NOT NULL,
   `dispositivo_id` int NOT NULL,
   `uuid_cliente` char(36) CHARACTER SET ascii NOT NULL,
-  `equipe_numero` int NOT NULL,
+  `equipe_numero` int DEFAULT NULL,
   `ts_ms` bigint NOT NULL,
   `qualidade_tempo` varchar(12) NOT NULL DEFAULT 'exato',
   `ts_dispositivo_ms` bigint NOT NULL,

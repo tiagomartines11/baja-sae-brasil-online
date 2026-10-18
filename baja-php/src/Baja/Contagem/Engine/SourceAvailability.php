@@ -53,6 +53,11 @@ final class SourceAvailability
             if (!$source->mayHaveCounted()) {
                 continue;
             }
+            // A timing sensor never votes: nobody waits for its marks, and
+            // a pass without one is no miss of a witness.
+            if ($source->isTimingSensor()) {
+                continue;
+            }
             $this->passSources[] = $source;
             if ($source->countedAllAlong() && !isset($applied->exclusions[$source->id])) {
                 $this->alwaysSupposedToCount[$source->id] = true;

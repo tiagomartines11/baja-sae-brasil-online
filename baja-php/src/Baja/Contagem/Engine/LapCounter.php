@@ -15,9 +15,11 @@ use Baja\Contagem\Engine\Data\Source;
  * This is everything the official count needs and nothing else:
  *
  *   1. DecisionApplier   apply what people decided
+ *      UnreadAssigner    the likeliest car of an unread pass ("??"), where clear
  *   2. DuplicateFilter   drop double taps and handover duplicates
  *   3. PassMatcher       group entries of the same crossing
  *      PassTimeFuser     the pass time of each group
+ *      UnreadAssigner    a timing sensor's marks time the groups they match
  *   4. PublishRule       which groups are official passes
  *      PassRoles         leave out the start crossing and late finishers
  *      HoldRule          hold a pass that comes too soon after the previous one
@@ -27,7 +29,12 @@ use Baja\Contagem\Engine\Data\Source;
  * classified. It does not depend on the other cars, on whether a phone has
  * synced, or on the pace of the race. That is what lets an upload recount
  * just the cars it touched (pass `$onlyCars`) and get exactly what a full
- * recount would give; a test checks that this stays true.
+ * recount would give; a test checks that this stays true. The one
+ * exception is an unread pass: which car it was is worked out from what
+ * the other sources read around it, whatever car that is, so the input of
+ * a per-car recount also holds the entries around the unread ones nearby
+ * (UnreadAssigner::rangesToLoad()), and the assignment is made before the
+ * cars are picked out.
  *
  * No entry is dropped because of its time. Entries from before the start
  * are grouped like the others and marked (see PassRoles). The one exception
@@ -58,6 +65,9 @@ final class LapCounter
      */
     public array $unknownTimeEntries = [];
 
+    /** What was worked out about the unread passes; null when the race has none (nearly always). */
+    public ?UnreadAssigner $unread = null;
+
     /** The counting rule actually applied: the publish mode, or what it fell back to. One of Settings::MODO_*. */
     public string $ruleApplied = Settings::MODO_CONFIRMADAS;
 
@@ -76,9 +86,18 @@ final class LapCounter
         }
 
         $counter->applied = DecisionApplier::apply($input->entries, $input->decisions, $counter->sourcesById);
+        if ($counter->applied->unreadEntries !== [] || $counter->applied->sensorMarks !== []) {
+            $knownCars = $input->validCars === [] ? [] : array_fill_keys(array_merge($input->validCars, $input->unclassifiedCars), true);
+            $counter->unread = UnreadAssigner::assign($counter->applied, $input->settings, $counter->sourcesById, $knownCars);
+        }
         $counter->availability = new SourceAvailability($counter->sourcesById, $counter->applied, $input->settings->janelaMs);
 
-        $entries = $counter->entriesInTimeOrder($onlyCars);
+        // A timing sensor's marks are matched with the pass groups of
+        // every car near them, so with marks around, the cars whose entries
+        // the input holds for that (EngineInputLoader) are matched too, and
+        // only the requested ones are kept afterwards.
+        $hasMarks = $counter->applied->sensorMarks !== [];
+        $entries = $counter->entriesInTimeOrder($hasMarks ? null : $onlyCars);
         $counter->duplicates = DuplicateFilter::filter($entries, $input->settings, $counter->applied->confirmedEntryIds, $counter->sourcesById, $counter->timeline->largadaMs);
         $counter->groupsByCar = PassMatcher::match(
             $counter->duplicates->keptEntries,
@@ -91,6 +110,12 @@ final class LapCounter
 
         foreach ($counter->groupsByCar as $groups) {
             PassTimeFuser::setPassTimes($groups, $counter->sourcesById);
+        }
+        if ($hasMarks && $counter->unread !== null) {
+            PassTimeFuser::setPassTimes($counter->unread->matchMarks($counter->applied->sensorMarks, $counter->groupsByCar), $counter->sourcesById);
+            if ($onlyCars !== null) {
+                $counter->groupsByCar = array_intersect_key($counter->groupsByCar, array_fill_keys($onlyCars, true));
+            }
         }
         $unclassifiedCars = array_fill_keys($input->unclassifiedCars, true);
         $counter->ruleApplied = PublishRule::decide($counter->groupsByCar, $input->settings, $counter->availability, $unclassifiedCars);

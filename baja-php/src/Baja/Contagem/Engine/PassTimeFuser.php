@@ -28,6 +28,9 @@ use Baja\Contagem\Engine\Data\Source;
  *    the whole race a little, and published lap times would flicker by a
  *    second between one run and the next.
  *
+ * A precise timing sensor's mark matched to the crossing
+ * (PassGroup::$marcaSensor) times it as a precise source's entry would.
+ *
  * A pass a reviewer timed by one entry ("usar_tempo": the other counter
  * typed late) takes that entry's time for both. The other entries are
  * witnesses: they do not time the pass, and the group teaches nothing
@@ -75,6 +78,12 @@ final class PassTimeFuser
                     if (isset($preciseSourceIds[$entry->fonteId])) {
                         $preciseTime = $entry->tsMs;
                     }
+                }
+                // A timing sensor's mark matched to the crossing times it
+                // like a precise source's own entry, without being a vote.
+                $mark = $group->marcaSensor;
+                if ($preciseTime === null && $mark !== null && isset($preciseSourceIds[$mark->fonteId])) {
+                    $preciseTime = $mark->tsMs;
                 }
             }
             $group->tempoPreciso = $preciseTime !== null;

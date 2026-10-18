@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `contagem_passagem` (
   `fonte_id` int NOT NULL,
   `dispositivo_id` int NOT NULL,
   `uuid_cliente` char(36) CHARACTER SET ascii NOT NULL,
-  `equipe_numero` int NOT NULL,
+  `equipe_numero` int DEFAULT NULL,
   `ts_ms` bigint NOT NULL,
   `qualidade_tempo` varchar(12) NOT NULL DEFAULT 'exato',
   `ts_dispositivo_ms` bigint NOT NULL,
@@ -228,4 +228,12 @@ SET @add_column = (SELECT IF(COUNT(*) = 0,
     'ALTER TABLE `contagem_decisao` ADD COLUMN `passagem_alvo_id` bigint DEFAULT NULL AFTER `passagem_id`', 'DO 0')
     FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_decisao' AND COLUMN_NAME = 'passagem_alvo_id');
+PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
+-- A pass whose number nobody could read ("??", and every mark of a timing
+-- sensor) is stored with no car. The column was NOT NULL before; the change
+-- keeps every stored row and the index on (equipe_numero, ts_ms).
+SET @add_column = (SELECT IF(COUNT(*) = 1,
+    'ALTER TABLE `contagem_passagem` MODIFY `equipe_numero` int DEFAULT NULL', 'DO 0')
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_passagem' AND COLUMN_NAME = 'equipe_numero' AND IS_NULLABLE = 'NO');
 PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;

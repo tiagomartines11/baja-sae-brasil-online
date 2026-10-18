@@ -491,8 +491,10 @@
          re-sent upload a no-op. -->
     <column name="uuid_cliente" phpName="UuidCliente" type="CHAR" size="36" required="true"/>
     <!-- The number as typed. Deliberately no FK to equipe: a typo may not
-         match a real car and must still be stored. -->
-    <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER" required="true"/>
+         match a real car and must still be stored. NULL for a pass whose
+         number nobody could read: a counter's "??", and every mark of a
+         timing sensor ("sensor"), which records the moment only. -->
+    <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER" required="false"/>
     <!-- THE time of the pass, in server time. The count page works it out
          itself, from a monotonic clock anchored to the server's time, and
          uploads it final. It is stored as received and never changed

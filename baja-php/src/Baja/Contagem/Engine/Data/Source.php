@@ -14,6 +14,15 @@ final class Source
     public const TIPO_TOTAIS = 'totais';
     /** Internal source the pit-log devices are bound to. It never counts laps. */
     public const TIPO_BOX = 'box';
+    /**
+     * A timing sensor ("sensor de tempo"): something at the line (a beam, a
+     * loop) that marks the moment a car crossed and never which car. Every
+     * entry it sends is unread. Its marks never make or count a pass on
+     * their own: matched to a pass the counters recorded, they give that
+     * pass its time (see UnreadAssigner). Its device posts with an API
+     * token, like an automatic source's.
+     */
+    public const TIPO_SENSOR = 'sensor';
 
     public const TEMPO_HUMANA = 'humana';
     public const TEMPO_PRECISA = 'precisa';
@@ -110,10 +119,25 @@ final class Source
         $this->vistoEmMs = $vistoEmMs;
     }
 
-    /** True for the kinds of source whose entries are passes (as opposed to totals or the pit log). */
+    /**
+     * True for the kinds of source whose entries are passes (as opposed to
+     * totals or the pit log). A timing sensor is one, although its passes
+     * have no car: it is switched on and off, excluded, made an observer
+     * and promoted like any other.
+     */
     public function recordsPasses(): bool
     {
-        return $this->tipo === self::TIPO_MANUAL || $this->tipo === self::TIPO_AUTOMATICA;
+        return $this->tipo === self::TIPO_MANUAL || $this->tipo === self::TIPO_AUTOMATICA || $this->tipo === self::TIPO_SENSOR;
+    }
+
+    /**
+     * True for a timing sensor (TIPO_SENSOR). It never votes: it is never
+     * "expected" at a pass, so it can neither miss one nor hold a flag
+     * back, and its marks are no witnesses of who crossed.
+     */
+    public function isTimingSensor(): bool
+    {
+        return $this->tipo === self::TIPO_SENSOR;
     }
 
     /** True when the source was taking part in the count at $tsMs. */

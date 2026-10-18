@@ -25,6 +25,17 @@ use Baja\Contagem\Engine\Data\Source;
  *   falso_positivo    neither: it saw a car that did not pass.
  *   falta             an official pass, at a moment the observer was
  *                     observing and had synced past, with no entry of it.
+ *   ilegivel          an unread entry ("??": it saw a car and could not
+ *                     read it). Paired, closest first, with an official
+ *                     pass within MISREAD_WINDOW_MS it has no other entry
+ *                     for, which then is no "falta": that is how often it
+ *                     fails to read, as opposed to how often it is blind.
+ *
+ * A TIMING SENSOR on trial never reads a car: each of its marks is paired,
+ * closest first, with an official pass of ANY car within the tolerance
+ * (`dispersao_alerta_ms`). A paired mark is an "acerto" (its offset is
+ * measured: that is the point of a sensor), an unpaired one a "falso
+ * positivo", and a pass with no mark a "falta".
  *
  * After the finish cars still cross the line (the slow lap to the pits), and
  * those crossings are rightly no official passes. An entry from then that
@@ -45,12 +56,14 @@ final class ObserverComparator
     public const LEITURA_TROCADA = 'leitura_trocada';
     public const FALSO_POSITIVO = 'falso_positivo';
     public const FALTA = 'falta';
+    public const ILEGIVEL = 'ilegivel';
 
     /** @var array<int, ObserverStats> fonteId => its comparison */
     public array $statsBySource = [];
 
     /**
-     * One row per observer entry and per missed pass, for the CSV export.
+     * One row per observer entry and per missed pass, for the CSV export
+     * (carro_lido is null for an unread entry and for a sensor's mark).
      *
      * @var array<int, array{fonte_id: int, resultado: string, passagem_id: ?int, carro_lido: ?int, ts_lido_ms: ?int, carro_oficial: ?int, ts_oficial_ms: ?int, desvio_ms: ?int}>
      */
@@ -82,7 +95,8 @@ final class ObserverComparator
         AppliedDecisions $applied,
         SourceAvailability $availability,
         RaceTimeline $timeline,
-        int $janelaMs
+        int $janelaMs,
+        int $toleranceMs = 4000
     ): self {
         $comparator = new self();
 
@@ -113,7 +127,7 @@ final class ObserverComparator
             if (!$source->hasObserved()) {
                 continue;
             }
-            $comparator->compareOne($source, $entriesBySource[$source->id] ?? [], $passes, $passTimes, $passIndexesByCar, $applied, $availability, $janelaMs, $timeline->encerramentoMs);
+            $comparator->compareOne($source, $entriesBySource[$source->id] ?? [], $passes, $passTimes, $passIndexesByCar, $applied, $availability, $janelaMs, $timeline->encerramentoMs, $toleranceMs);
         }
         return $comparator;
     }
@@ -133,13 +147,34 @@ final class ObserverComparator
         AppliedDecisions $applied,
         SourceAvailability $availability,
         int $janelaMs,
-        ?int $encerramentoMs
+        ?int $encerramentoMs,
+        int $toleranceMs
     ): void {
         $stats = new ObserverStats($source->id);
+        $isSensor = $source->isTimingSensor();
 
-        // 1. Same car, within the window, closest first.
+        // The camera's "??" are looked at last, against what is left.
+        $unread = [];
+        if (!$isSensor) {
+            foreach ($entries as $entryIndex => $entry) {
+                if ($entry->carro === null) {
+                    $unread[$entryIndex] = $entry;
+                    unset($entries[$entryIndex]);
+                }
+            }
+        }
+
+        // 1. Same car, within the window, closest first (for a sensor: any
+        // car, within the tolerance).
         $candidates = [];
         foreach ($entries as $entryIndex => $entry) {
+            if ($isSensor) {
+                $first = Stats::countAtMost($passTimes, $entry->tsMs - $toleranceMs - 1);
+                for ($passIndex = $first; $passIndex < count($passTimes) && $passTimes[$passIndex] <= $entry->tsMs + $toleranceMs; $passIndex++) {
+                    $candidates[] = [abs($passTimes[$passIndex] - $entry->tsMs), $entryIndex, $passIndex];
+                }
+                continue;
+            }
             foreach ($passIndexesByCar[$entry->carro] ?? [] as $passIndex) {
                 $distanceMs = abs($passes[$passIndex]->tsMs - $entry->tsMs);
                 if ($distanceMs <= $janelaMs) {
@@ -162,7 +197,7 @@ final class ObserverComparator
         // 2. What is left: another car's unrecorded pass close by is a misread.
         $candidates = [];
         foreach ($entries as $entryIndex => $entry) {
-            if (isset($passOfEntry[$entryIndex])) {
+            if (isset($passOfEntry[$entryIndex]) || $isSensor) {
                 continue;
             }
             $first = Stats::countAtMost($passTimes, $entry->tsMs - self::MISREAD_WINDOW_MS - 1);
@@ -194,9 +229,33 @@ final class ObserverComparator
             }
         }
 
-        // 3. Official passes it did not record, where its silence means something.
+        // 3. Its "??": an official pass close by that it has nothing else for.
+        $candidates = [];
+        foreach ($unread as $entryIndex => $entry) {
+            $first = Stats::countAtMost($passTimes, $entry->tsMs - self::MISREAD_WINDOW_MS - 1);
+            for ($passIndex = $first; $passIndex < count($passTimes) && $passTimes[$passIndex] <= $entry->tsMs + self::MISREAD_WINDOW_MS; $passIndex++) {
+                if (!isset($entryOfPass[$passIndex]) && !isset($entryOfMisreadPass[$passIndex])) {
+                    $candidates[] = [abs($passTimes[$passIndex] - $entry->tsMs), $entryIndex, $passIndex];
+                }
+            }
+        }
+        [$unreadPassOfEntry, $entryOfUnreadPass] = self::pairClosestFirst($candidates);
+        foreach ($unread as $entryIndex => $entry) {
+            $pass = isset($unreadPassOfEntry[$entryIndex]) ? $passes[$unreadPassOfEntry[$entryIndex]] : null;
+            if ($pass === null && $encerramentoMs !== null && $entry->tsMs >= $encerramentoMs) {
+                continue;
+            }
+            $stats->entradas++;
+            $stats->ilegiveis++;
+            if ($pass !== null) {
+                $stats->ilegiveisComPassagem++;
+            }
+            $this->addRow($source->id, self::ILEGIVEL, $entry, $pass);
+        }
+
+        // 4. Official passes it did not record, where its silence means something.
         foreach ($passes as $passIndex => $pass) {
-            if (isset($entryOfPass[$passIndex]) || isset($entryOfMisreadPass[$passIndex])) {
+            if (isset($entryOfPass[$passIndex]) || isset($entryOfMisreadPass[$passIndex]) || isset($entryOfUnreadPass[$passIndex])) {
                 continue;
             }
             if (!$source->wasObservingAt($pass->tsMs) || $applied->isSourceExcludedAt($source->id, $pass->tsMs) || !$availability->isKnownAt($source, $pass->tsMs)) {

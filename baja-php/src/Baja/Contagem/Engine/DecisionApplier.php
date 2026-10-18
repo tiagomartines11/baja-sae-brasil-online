@@ -14,6 +14,11 @@ use Baja\Contagem\Engine\Data\Source;
  * The raw entries are never modified. An entry a reviewer reassigned is
  * copied and the copy carries the new car; every other entry is passed on
  * as it is, and no later step writes to an entry.
+ *
+ * An unread pass ("??") that a reviewer or its own counter gave a car
+ * ("reatribuir") is from then on an ordinary entry of that car. One nobody
+ * gave a car is set aside in `unreadEntries`, and a timing sensor's mark
+ * in `sensorMarks`; UnreadAssigner looks at them next.
  */
 final class DecisionApplier
 {
@@ -87,6 +92,7 @@ final class DecisionApplier
             if (isset($voidedEntryIds[$rawEntry->id])) {
                 continue;
             }
+            $source = null;
             if (!isset($alwaysCounting[$rawEntry->fonteId])) {
                 // A source that was switched off keeps what it recorded while
                 // it was on; only entries from after that moment are dropped.
@@ -106,7 +112,23 @@ final class DecisionApplier
             }
 
             $newCar = $newCarByEntryId[$rawEntry->id] ?? null;
+            if ($source !== null && $source->isTimingSensor()) {
+                // (A sensor is never among the sources that always count,
+                // so its entries all come this way.)
+                if ($newCar === null) {
+                    $applied->sensorMarks[] = $rawEntry;
+                    continue;
+                }
+                // A reviewer said which car crossed at this mark: that is
+                // the reviewer's word for a pass, timed by the sensor.
+                $applied->confirmedEntryIds[$rawEntry->id] = true;
+            }
             if ($newCar === null || $newCar === $rawEntry->carro) {
+                if ($rawEntry->carro === null) {
+                    // "??" with nobody's word on it yet: in no per-car step.
+                    $applied->unreadEntries[] = $rawEntry;
+                    continue;
+                }
                 // Untouched by any decision: the raw entry itself is used,
                 // read-only. Copying tens of thousands of them on every run
                 // would be the slowest step of the engine.
@@ -116,6 +138,9 @@ final class DecisionApplier
             $entry = clone $rawEntry;
             $entry->carro = $newCar;
             $applied->reassignedEntryIds[$entry->id] = $entry->fonteId;
+            if ($rawEntry->carro === null) {
+                $applied->hasDecidedUnread = true;
+            }
             $survivors[] = $entry;
         }
 
@@ -144,7 +169,8 @@ final class DecisionApplier
     /**
      * The usual case, checked once per source instead of once per entry:
      * sources that are switched on, were never off nor an observer, and
-     * were never excluded by a reviewer.
+     * were never excluded by a reviewer. A timing sensor is never one of
+     * them: its entries are marks, set aside one by one.
      * Every entry of such a source takes part.
      *
      * @param array<int, Source> $sourcesById
@@ -154,7 +180,7 @@ final class DecisionApplier
     {
         $alwaysCounting = [];
         foreach ($sourcesById as $source) {
-            if ($source->countedAllAlong() && !isset($applied->exclusions[$source->id])) {
+            if ($source->countedAllAlong() && !isset($applied->exclusions[$source->id]) && !$source->isTimingSensor()) {
                 $alwaysCounting[$source->id] = true;
             }
         }

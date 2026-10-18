@@ -348,7 +348,7 @@ class ContagemPassagemTableMap extends TableMap
         $this->addForeignKey('fonte_id', 'FonteId', 'INTEGER', 'contagem_fonte', 'fonte_id', true, null, null);
         $this->addForeignKey('dispositivo_id', 'DispositivoId', 'INTEGER', 'contagem_dispositivo', 'dispositivo_id', true, null, null);
         $this->addColumn('uuid_cliente', 'UuidCliente', 'CHAR', true, 36, null);
-        $this->addColumn('equipe_numero', 'EquipeNumero', 'INTEGER', true, null, null);
+        $this->addColumn('equipe_numero', 'EquipeNumero', 'INTEGER', false, null, null);
         $this->addColumn('ts_ms', 'TsMs', 'BIGINT', true, null, null);
         $this->addColumn('qualidade_tempo', 'QualidadeTempo', 'VARCHAR', true, 12, 'exato');
         $this->addColumn('ts_dispositivo_ms', 'TsDispositivoMs', 'BIGINT', true, null, null);

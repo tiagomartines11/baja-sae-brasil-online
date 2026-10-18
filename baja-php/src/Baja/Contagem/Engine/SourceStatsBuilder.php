@@ -27,7 +27,8 @@ final class SourceStatsBuilder
         SourceAvailability $availability,
         RaceTimeline $timeline,
         Settings $settings,
-        int $nowMs
+        int $nowMs,
+        ?UnreadAssigner $unread = null
     ): array {
         $statsBySource = [];
         foreach ($sourcesById as $source) {
@@ -70,8 +71,9 @@ final class SourceStatsBuilder
         // when this source was expected and has nothing.
         $countingSources = 0;
         foreach ($sourcesById as $source) {
-            // An observer that never voted is in no pass group.
-            $countingSources += $source->mayHaveCounted() ? 1 : 0;
+            // An observer that never voted is in no pass group, and a
+            // timing sensor's marks are in none either.
+            $countingSources += $source->mayHaveCounted() && !$source->isTimingSensor() ? 1 : 0;
         }
         foreach ($groups as $group) {
             $sourcesInGroup = count($group->entries);
@@ -90,7 +92,101 @@ final class SourceStatsBuilder
             }
         }
 
+        if ($unread !== null || $applied->hasDecidedUnread) {
+            self::countUnread($statsBySource, $sourcesById, $groups, $applied, $availability, $timeline, $unread);
+        }
+
         return $statsBySource;
+    }
+
+    /**
+     * The unread passes of each source, and the timing sensors' own block.
+     * Only reached in a race that has unread entries.
+     *
+     * @param array<int, SourceStats> $statsBySource
+     * @param array<int, Source> $sourcesById
+     * @param PassGroup[] $groups
+     */
+    private static function countUnread(
+        array $statsBySource,
+        array $sourcesById,
+        array $groups,
+        AppliedDecisions $applied,
+        SourceAvailability $availability,
+        RaceTimeline $timeline,
+        ?UnreadAssigner $unread
+    ): void {
+        $startMs = $timeline->largadaMs ?? PHP_INT_MAX;
+        $counted = [];
+        $unreadIds = [];
+        foreach (array_merge($applied->unreadEntries, $applied->sensorMarks, $applied->entries) as $entry) {
+            if (!$entry->isUnread() || $entry->tsMs < $startMs || isset($counted[$entry->id])) {
+                continue;
+            }
+            $counted[$entry->id] = true;
+            $unreadIds[$entry->fonteId][] = $entry->id;
+        }
+        $sensorOffsets = [];
+        foreach ($unread === null ? [] : $unread->assignments as $entryId => $assignment) {
+            $fonteId = $unread->sourceOfEntry($entryId);
+            if ($fonteId === null || !isset($counted[$entryId])) {
+                continue;
+            }
+            if (isset($sourcesById[$fonteId]) && $sourcesById[$fonteId]->isTimingSensor()) {
+                $sensorOffsets[$fonteId][] = $assignment['desvio_ms'];
+            } elseif (isset($statsBySource[$fonteId])) {
+                $statsBySource[$fonteId]->ilegiveisAtribuidas++;
+            }
+        }
+
+        foreach ($sourcesById as $source) {
+            $stats = $statsBySource[$source->id] ?? null;
+            if ($stats === null) {
+                continue;
+            }
+            $ids = $unreadIds[$source->id] ?? [];
+            if (!$source->isTimingSensor()) {
+                $stats->ilegiveis = count($ids);
+                continue;
+            }
+            if (!$source->mayHaveCounted()) {
+                // An observer: compared with the official passes instead (ObserverComparator).
+                continue;
+            }
+            $ambiguous = 0;
+            $noPass = 0;
+            foreach ($unread === null ? [] : $unread->leftUnread as $entry) {
+                if ($entry->fonteId !== $source->id || !isset($counted[$entry->id])) {
+                    continue;
+                }
+                if (isset($unread->candidates[$entry->id])) {
+                    $ambiguous++;
+                } else {
+                    $noPass++;
+                }
+            }
+            $missed = 0;
+            foreach ($groups as $group) {
+                if (!$group->contado || $group->marcaSensor !== null || $group->hasSource($source->id) || $group->tsMs < $startMs) {
+                    continue;
+                }
+                if ($source->wasCountingAt($group->tsMs) && !$applied->isSourceExcludedAt($source->id, $group->tsMs) && $availability->isKnownAt($source, $group->tsMs)) {
+                    $missed++;
+                }
+            }
+            $offsets = $sensorOffsets[$source->id] ?? [];
+            $absolute = array_map('abs', $offsets);
+            sort($absolute);
+            $stats->sensor = [
+                'marcas' => count($ids),
+                'atribuidas' => count($offsets),
+                'ambiguas' => $ambiguous,
+                'sem_passagem' => $noPass,
+                'passagens_sem_marca' => $missed,
+                'desvio_mediano_ms' => $offsets === [] ? null : (int) round((float) Stats::median($offsets)),
+                'desvio_p90_ms' => $absolute === [] ? null : $absolute[(int) ceil(0.9 * count($absolute)) - 1],
+            ];
+        }
     }
 
     /**

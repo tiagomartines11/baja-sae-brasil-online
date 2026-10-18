@@ -58,6 +58,21 @@ final class Flag
      */
     public const SAIDA_PRESUMIDA = 'saida_presumida';
 
+    /**
+     * An unread pass ("??", or a timing sensor's mark nobody else
+     * recorded) whose car the engine could not settle by itself. Carries
+     * the ranked `candidatos`. Settled by "reatribuir" (the reviewer picks
+     * the car) or "anular"; "confirmar" only stops the warning.
+     */
+    public const NUMERO_ILEGIVEL = 'numero_ilegivel';
+
+    /**
+     * Auto-resolved, for the record: an unread pass the engine gave a car
+     * by itself, with the evidence in `atribuicao`. Worked out again on
+     * every run; a decision on the entry replaces it.
+     */
+    public const NUMERO_ATRIBUIDO = 'numero_atribuido';
+
     /** The car may have one lap too many: two counted passes closer than a believable lap. */
     public const DUVIDA_A_MAIS = 'a_mais';
     /** The car may have one lap too few: a pass is held and may be real. */
@@ -178,6 +193,30 @@ final class Flag
     public ?array $temposPossiveis = null;
 
     /**
+     * Only on "numero_ilegivel": the cars the unread pass may have been,
+     * most likely first, each as ['carro', 'motivo', 'score', 'ts_ms']:
+     * motivo 'outros_contadores' (other sources read that car within the
+     * tolerance; ts_ms is their crossing), 'carro_esperado' (the car was
+     * due at the line then, by the pace, and has no pass near; ts_ms null)
+     * or 'volta_faltando' (the car's laps around then are one pass short;
+     * ts_ms null). score goes from 0 to 1. Null elsewhere.
+     *
+     * @var array<int, array{carro: int, motivo: string, score: float, ts_ms: ?int}>|null
+     */
+    public ?array $candidatos = null;
+
+    /**
+     * Only on "numero_atribuido": what the engine matched the unread pass
+     * with: ['carro', 'ts_ms' (the crossing), 'desvio_ms' (the entry minus
+     * the crossing), 'margem_ms' (how much worse the next best answer was;
+     * null when there was none), 'passagem_ids' and 'fonte_ids' (the read
+     * entries of the crossing and their sources)]. Null elsewhere.
+     *
+     * @var array{carro: int, ts_ms: int, desvio_ms: int, margem_ms: ?int, passagem_ids: int[], fonte_ids: int[]}|null
+     */
+    public ?array $atribuicao = null;
+
+    /**
      * @param int[] $carros
      * @param int[] $passagemIds
      */
@@ -192,7 +231,7 @@ final class Flag
     /** @return array<string, mixed> */
     public function toArray(): array
     {
-        return [
+        $array = [
             'id' => $this->id,
             'tipo' => $this->tipo,
             'carros' => $this->carros,
@@ -211,5 +250,14 @@ final class Flag
             'passagem_anterior' => $this->passagemAnterior,
             'tempos_possiveis' => $this->temposPossiveis,
         ];
+        // Only the flags about unread passes have these keys at all: a race
+        // without one sends exactly what it always did.
+        if ($this->candidatos !== null) {
+            $array['candidatos'] = $this->candidatos;
+        }
+        if ($this->atribuicao !== null) {
+            $array['atribuicao'] = $this->atribuicao;
+        }
+        return $array;
     }
 }

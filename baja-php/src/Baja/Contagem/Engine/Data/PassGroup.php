@@ -57,6 +57,14 @@ final class PassGroup
      */
     public ?int $tempoEscolhidoId = null;
 
+    /**
+     * The mark of a timing sensor matched to this crossing (a copy, carrying
+     * this car; see UnreadAssigner). It is no entry of the group: it never
+     * votes, is never expected and is no counter's miss. It only times the
+     * pass, when the sensor's time is precise. Null for nearly every group.
+     */
+    public ?Entry $marcaSensor = null;
+
     /** The group contains a pass added by a reviewer ("adicionar"). */
     public bool $adicionadoPorRevisor = false;
 

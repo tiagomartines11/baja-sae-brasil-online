@@ -72,6 +72,8 @@ final class SyntheticRace
 
     private SyntheticRaceConfig $config;
     private Randomizer $random;
+    /** For "??" and the sensor only, so that they leave the rest of the race as it was. */
+    private Randomizer $unreadRandom;
     private int $nextEntryId = 1;
 
     public static function generate(SyntheticRaceConfig $config): self
@@ -88,6 +90,7 @@ final class SyntheticRace
     {
         $this->config = $config;
         $this->random = new Randomizer(new Mt19937($config->seed));
+        $this->unreadRandom = new Randomizer(new Mt19937($config->seed * 7919 + 13));
         $this->endMs = self::START_MS + $config->raceMinutes * 60000;
     }
 
@@ -150,6 +153,12 @@ final class SyntheticRace
         return $this->crossingMsByEntryId[$entryId] ?? null;
     }
 
+    /** The id of the timing sensor's source (see SyntheticRaceConfig::$timingSensor), or null without one. */
+    public function sensorSourceId(): ?int
+    {
+        return $this->config->timingSensor ? $this->config->counters + 1 : null;
+    }
+
     /** @return int[] the cars that take part */
     public function carNumbers(): array
     {
@@ -201,6 +210,10 @@ final class SyntheticRace
         for ($sourceId = 1; $sourceId <= $this->config->counters; $sourceId++) {
             $syncedThroughMs = $this->offlineSinceMs($sourceId, $nowMs) ?? $nowMs;
             $input->sources[] = new Source($sourceId, 'Contagem ' . $sourceId, Source::TIPO_MANUAL, Source::TEMPO_HUMANA, true, $sourceId, $syncedThroughMs, $syncedThroughMs);
+        }
+        $sensorId = $this->sensorSourceId();
+        if ($sensorId !== null) {
+            $input->sources[] = new Source($sensorId, 'Sensor', Source::TIPO_SENSOR, Source::TEMPO_PRECISA, true, $sensorId, $nowMs, $nowMs);
         }
 
         foreach ($this->entries as $entry) {
@@ -266,6 +279,41 @@ final class SyntheticRace
                 $this->addEntry($sourceId, $this->deviceInUse($sourceId, $pass['tsMs']), $pass['car'], $typedAtMs, $pass['car']);
             }
         }
+
+        if ($this->config->timingSensor) {
+            $this->inventWhatTheSensorMarked();
+        }
+    }
+
+    /**
+     * The timing sensor marks every real crossing (unclassified cars too:
+     * it cannot tell), within 20 ms, except the ones it misses, and now and
+     * then something that is no crossing at all.
+     */
+    private function inventWhatTheSensorMarked(): void
+    {
+        $sensorId = (int) $this->sensorSourceId();
+        $random = $this->unreadRandom;
+        foreach (array_merge($this->track->passes, $this->track->unclassifiedPasses) as $pass) {
+            if ($random->getFloat(0, 1) < $this->config->sensorMissRate) {
+                continue;
+            }
+            $this->crossingBeingTypedMs = $pass['tsMs'];
+            $this->addEntry($sensorId, $sensorId * 10, null, $pass['tsMs'] + $random->getInt(-20, 20), $pass['car']);
+        }
+        $ratePerMs = $this->config->sensorFalseTriggersPerMinute / 60000;
+        if ($ratePerMs <= 0) {
+            return;
+        }
+        $atMs = self::START_MS;
+        while (true) {
+            // Exponential gaps: the triggers are a Poisson process.
+            $atMs += (int) round(-log(max(1e-9, $random->getFloat(0, 1))) / $ratePerMs);
+            if ($atMs > $this->endMs) {
+                return;
+            }
+            $this->addEntry($sensorId, $sensorId * 10, null, $atMs, null);
+        }
     }
 
     /**
@@ -296,6 +344,11 @@ final class SyntheticRace
                 return;
         }
 
+        if ($this->config->unreadRate > 0 && $this->unreadRandom->getFloat(0, 1) < $this->config->unreadRate) {
+            // Saw it, could not read it: "??".
+            $this->addEntry($sourceId, $device, null, $typedAtMs, $car);
+            return;
+        }
         $this->addEntry($sourceId, $device, $car, $typedAtMs, $car);
         if ($handover !== null) {
             // The newcomer, on their own phone, records the same crossing a
@@ -331,7 +384,7 @@ final class SyntheticRace
         return null;
     }
 
-    private function addEntry(int $sourceId, int $device, int $car, int $tsMs, ?int $realCar): void
+    private function addEntry(int $sourceId, int $device, ?int $car, int $tsMs, ?int $realCar): void
     {
         // Nobody types a number before the race has started.
         $tsMs = max($tsMs, self::START_MS);

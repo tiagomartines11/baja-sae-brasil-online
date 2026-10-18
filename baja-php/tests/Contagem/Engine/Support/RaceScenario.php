@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Tests\Contagem\Engine\Support;
 
 use Baja\Contagem\Engine\Data\CountResult;
+use Baja\Contagem\Engine\Data\Decision;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Entry;
@@ -117,6 +118,44 @@ final class RaceScenario
         // By default each counter uses a single device, numbered after the source.
         $this->entries[] = new Entry($id, $source, $device ?? $source * 10, $car, self::ms($at));
         return $id;
+    }
+
+    /**
+     * One counter saw a car cross and could not read its number: it pressed
+     * "??". The entry has no car. Returns its id.
+     */
+    public function unread(int $source, string $at): int
+    {
+        $id = $this->nextEntryId++;
+        $this->entries[] = new Entry($id, $source, $source * 10, null, self::ms($at));
+        return $id;
+    }
+
+    /**
+     * A timing sensor at the line ("sensor de tempo"): it marks the moment
+     * of every crossing, precisely, and never knows the car. It takes part
+     * from the start (not as an observer) unless the test makes it one.
+     */
+    public function addSensor(int $id, string $nome = 'Sensor'): Source
+    {
+        return $this->addSource($id, $nome, Source::TIPO_SENSOR, Source::TEMPO_PRECISA);
+    }
+
+    /** The timing sensor marks a crossing at $at (milliseconds count: "03:10.25"). Returns the entry id. */
+    public function mark(int $sensor, string $at): int
+    {
+        return $this->unread($sensor, $at);
+    }
+
+    /**
+     * The counter fixes their own "??" on the phone ("era o 17"): a
+     * "reatribuir" stored with the counter as its origin.
+     */
+    public function counterFixes(int $entryId, int $car): int
+    {
+        $decision = Decision::reatribuir($this->nextDecisionId, $entryId, $car);
+        $decision->origem = Decision::ORIGEM_CONTADOR;
+        return $this->decide($decision);
     }
 
     /**
@@ -417,7 +456,8 @@ final class RaceScenario
     {
         $ids = [];
         foreach ($this->sources as $source) {
-            if ($source->countsPasses()) {
+            // A timing sensor never types a car.
+            if ($source->countsPasses() && !$source->isTimingSensor()) {
                 $ids[] = $source->id;
             }
         }

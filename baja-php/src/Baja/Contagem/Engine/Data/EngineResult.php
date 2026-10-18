@@ -32,6 +32,18 @@ final class EngineResult
      */
     public array $unknownTimeEntries = [];
 
+    /**
+     * Unread passes ("??", and timing-sensor marks) in no pass group:
+     * nobody gave them a car and the engine could not tell which car they
+     * were (UnreadAssigner). The ones it did tell are ordinary entries of
+     * that car, marked `atribuidoAutomaticamente` (a sensor's mark is the
+     * `marcaSensor` of the pass it times). Listed so timelines can show
+     * them; empty for nearly every race.
+     *
+     * @var Entry[]
+     */
+    public array $unreadEntries = [];
+
     /** @var Lap[] counted and pending laps, ready to be saved to contagem_volta */
     public array $laps = [];
 

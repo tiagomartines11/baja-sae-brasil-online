@@ -61,6 +61,7 @@ final class Engine
         // loop over tens of thousands of entries would do one by one.
         $result->effectiveEntries = array_column($counter->duplicates->keptEntries, null, 'id');
         $result->unknownTimeEntries = $counter->unknownTimeEntries;
+        $result->unreadEntries = $counter->unread === null ? [] : $counter->unread->leftUnread;
 
         $groupsInTimeOrder = self::inTimeOrder($counter->groupsByCar);
         $fuser = PassTimeFuser::removeHabits($groupsInTimeOrder, $counter->sourcesById);
@@ -84,6 +85,10 @@ final class Engine
             $counter->applied->confirmedEntryIds
         );
         $flags = array_merge($flags, $flagDetector->describeRepeats($counter->duplicates->flags));
+        if ($counter->unread !== null) {
+            $unreadFlags = new UnreadFlags($settings, $pace, $timeline, $counter->availability, $counter->sourcesById, $input->validCars, $input->nowMs);
+            $flags = array_merge($flags, $unreadFlags->flags($counter->unread, $referenceLapsByCar, $counter->applied->entries, $counter->applied->confirmedEntryIds));
+        }
 
         LapBuilder::markBestLapEligibility($lapsByCar, $settings, $pace);
         LapBuilder::markShortLapsAReviewerVouchedFor($lapsByCar, $settings, $pace, $timeline);
@@ -106,7 +111,8 @@ final class Engine
             $counter->availability,
             $timeline,
             $settings,
-            $input->nowMs
+            $input->nowMs,
+            $counter->unread
         );
 
         // Machine vision on trial: measured after everything else, and only
@@ -118,7 +124,8 @@ final class Engine
                 $counter->applied,
                 $counter->availability,
                 $timeline,
-                $settings->janelaMs
+                $settings->janelaMs,
+                $settings->agreementSpreadMs()
             );
             foreach ($comparison->statsBySource as $fonteId => $observerStats) {
                 if (isset($result->sourceStats[$fonteId])) {

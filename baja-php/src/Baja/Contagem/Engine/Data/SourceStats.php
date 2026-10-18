@@ -37,6 +37,26 @@ final class SourceStats
     /** For an observer source only: how it compares with the official count. */
     public ?ObserverStats $observacao = null;
 
+    /** Unread passes ("??") of this source from the start on, however they were settled. */
+    public int $ilegiveis = 0;
+
+    /** Of those, how many the engine gave a car by itself (see UnreadAssigner). */
+    public int $ilegiveisAtribuidas = 0;
+
+    /**
+     * For a timing sensor only (taking part, not observing): 'marcas' (its
+     * marks from the start on), 'atribuidas' (matched to a pass, which they
+     * time), 'ambiguas' (near passes, but not safely paired with one),
+     * 'sem_passagem' (no pass the counters recorded anywhere near: noise,
+     * or a crossing everybody missed), 'passagens_sem_marca' (official
+     * passes while it was taking part and synced, with no mark: its
+     * misses), and 'desvio_mediano_ms' / 'desvio_p90_ms' (its mark minus
+     * the counters' time of the pass, over the matched ones; null without).
+     *
+     * @var array{marcas: int, atribuidas: int, ambiguas: int, sem_passagem: int, passagens_sem_marca: int, desvio_mediano_ms: ?int, desvio_p90_ms: ?int}|null
+     */
+    public ?array $sensor = null;
+
     public function __construct(int $fonteId)
     {
         $this->fonteId = $fonteId;
@@ -60,6 +80,14 @@ final class SourceStats
         // exactly what it always did.
         if ($this->observacao !== null) {
             $array['observacao'] = $this->observacao->toArray();
+        }
+        // Likewise for unread passes and timing sensors.
+        if ($this->ilegiveis > 0) {
+            $array['ilegiveis'] = $this->ilegiveis;
+            $array['ilegiveis_atribuidas'] = $this->ilegiveisAtribuidas;
+        }
+        if ($this->sensor !== null) {
+            $array['sensor'] = $this->sensor;
         }
         return $array;
     }

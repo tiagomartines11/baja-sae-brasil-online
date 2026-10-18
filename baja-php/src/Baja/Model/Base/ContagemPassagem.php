@@ -96,7 +96,7 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     /**
      * The value for the equipe_numero field.
      *
-     * @var        int
+     * @var        int|null
      */
     protected $equipe_numero;
 
@@ -478,7 +478,7 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     /**
      * Get the [equipe_numero] column value.
      *
-     * @return int
+     * @return int|null
      */
     public function getEquipeNumero()
     {
@@ -686,7 +686,7 @@ abstract class ContagemPassagem implements ActiveRecordInterface
     /**
      * Set the value of [equipe_numero] column.
      *
-     * @param int $v New value
+     * @param int|null $v New value
      * @return $this The current object (for fluent API support)
      */
     public function setEquipeNumero($v)
