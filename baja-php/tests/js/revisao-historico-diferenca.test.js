@@ -16,7 +16,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { historicoParaPedir } from '../../default/js/contagem/revisao-conexao.js';
+import {
+  estadoDaResposta, historicoParaPedir, pedidoDeEstado, proximaConsultaEm,
+} from '../../default/js/contagem/revisao-conexao.js';
 import { juntarHistorico, linhasDoHistorico } from '../../default/js/contagem/revisao-historico.js';
 
 // A history row as DecisionHistory::describe() makes it.
@@ -169,4 +171,42 @@ test('anything that does not add up makes the screen ask for everything', () => 
   assert.equal(juntarHistorico(ESTADO, diferenca({ historico_quantas: 4 })), null);
   // A newer row that is not newer.
   assert.equal(juntarHistorico(ESTADO, diferenca({ historico: [decisao({ id: 11 })], historico_quantas: 4 })), null);
+});
+
+// What the poll loop (consultar in revisao.js) does with all this.
+
+test('a poll sends the version and the newest decision the screen holds', () => {
+  assert.deepEqual(pedidoDeEstado(ESTADO), { versao: 'a1', historico: { desde: 12, epoca: '0' } });
+  assert.deepEqual(pedidoDeEstado(null), { versao: null, historico: null }, 'the first poll asks for everything');
+});
+
+test('a poll that asks for everything sends neither the version nor the history it holds', () => {
+  assert.deepEqual(pedidoDeEstado(ESTADO, true), { versao: null, historico: null });
+});
+
+test('a difference that fits is shown, and the polls go on as usual', () => {
+  const nova = decisao({ id: 13, tipo: 'adicionar', equipe_numero: 4, ts_ms: 9000 });
+  const { estado, pedirTudo } = estadoDaResposta(ESTADO, diferenca({ historico: [nova], historico_quantas: 4 }));
+  assert.deepEqual(estado.historico.map((linha) => linha.id), [13, 12, 11, 10]);
+  assert.equal(pedirTudo, false);
+  assert.deepEqual(proximaConsultaEm(pedirTudo, 0), { atrasoMs: 2000, pedirTudo: false });
+});
+
+// SITUATION: "Zerar corrida" happened between two polls; the screen still
+// holds the rehearsal's history and gets a difference of another epoch.
+// EXPECTED: the answer is not shown at all (the rehearsal's rows would
+// stay), and the screen asks again at once, for everything, without
+// sending what it holds. That answer is whole and is shown.
+test('after "Zerar corrida" the answer is dropped and the screen reloads everything at once', () => {
+  const zerada = estadoDaResposta(ESTADO, diferenca({ historico_epoca: '77' }));
+  assert.deepEqual(zerada, { estado: null, pedirTudo: true });
+  assert.deepEqual(proximaConsultaEm(zerada.pedirTudo, 0), { atrasoMs: 0, pedirTudo: true });
+  assert.deepEqual(pedidoDeEstado(ESTADO, true), { versao: null, historico: null });
+
+  const inteira = { versao: 'c3', historico_epoca: '77', historico: [decisao({ id: 1 })] };
+  assert.deepEqual(estadoDaResposta(ESTADO, inteira), { estado: inteira, pedirTudo: false });
+});
+
+test('a difference that does not add up is dropped the same way', () => {
+  assert.deepEqual(estadoDaResposta(ESTADO, diferenca({ historico_quantas: 4 })), { estado: null, pedirTudo: true });
 });

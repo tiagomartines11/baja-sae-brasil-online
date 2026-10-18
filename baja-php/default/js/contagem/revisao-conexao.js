@@ -3,6 +3,8 @@
 // what the screen already has.
 // Pure functions, tested with `node --test`.
 
+import { juntarHistorico } from './revisao-historico.js';
+
 export const INTERVALO_NORMAL_MS = 2000;
 export const INTERVALO_MAXIMO_MS = 30000;
 
@@ -52,6 +54,36 @@ export function historicoParaPedir(estado) {
     return null;
   }
   return { desde: Math.max(...historico.map((decisao) => decisao.id)), epoca };
+}
+
+// What the next poll sends: {versao, historico} (versaoParaPedir,
+// historicoParaPedir). `pedirTudo` sends neither, so that the answer is the
+// whole state, history included, even when the version is the one the
+// screen has.
+export function pedidoDeEstado(estado, pedirTudo = false) {
+  if (pedirTudo) {
+    return { versao: null, historico: null };
+  }
+  return { versao: versaoParaPedir(estado), historico: historicoParaPedir(estado) };
+}
+
+// What to do with a poll answer that is not "inalterado": {estado, pedirTudo}.
+// `estado` is the state to show, its history merged (juntarHistorico in
+// revisao-historico.js). When the history difference does not fit the
+// screen's copy (the prova was reset, rows are missing...), `estado` is
+// null: the answer is dropped and `pedirTudo` says to ask at once for the
+// whole state (see proximaConsultaEm).
+export function estadoDaResposta(estadoAtual, resposta) {
+  const estado = juntarHistorico(estadoAtual, resposta);
+  return estado ? { estado, pedirTudo: false } : { estado: null, pedirTudo: true };
+}
+
+// When to poll next, and whether for the whole state: {atrasoMs, pedirTudo}.
+// Right away and for everything after an answer that did not fit
+// (estadoDaResposta); otherwise after proximoAtrasoMs. A whole answer always
+// fits, so this cannot go round in circles.
+export function proximaConsultaEm(pedirTudo, falhasSeguidas) {
+  return pedirTudo ? { atrasoMs: 0, pedirTudo: true } : { atrasoMs: proximoAtrasoMs(falhasSeguidas), pedirTudo: false };
 }
 
 // Puts the answers in order, since the versions cannot.

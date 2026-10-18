@@ -1421,7 +1421,10 @@ screen names a decision it does not have or one newer than any. The
 screen asks for the whole state again whenever a difference does not fit
 (another epoch, the decision it started after is missing, the count or
 the order is off). With the 300 decisions of 99PF a changed state went
-from 283 KB to 141 KB, the history's part from 144 KB to under 2 KB.
+from 283 KB to 141 KB, the history's part from 144 KB to 1.3 KB with no
+new decision and 3.7 KB with five. Most of it is the older rows other
+decisions changed (60 there), a list that grows with the race's
+reassignments and undos.
 Decisions are stored under the count lock, so their ids are committed in
 order and a snapshot never sees a decision without the older ones.
 

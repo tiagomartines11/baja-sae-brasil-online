@@ -18,8 +18,8 @@ use Baja\Contagem\Service\ContagemService;
 //                                answer then carries only the history after
 //                                it (see StateSnapshot::withHistoryAfter).
 //
-// The decision history is part of the state, whole (see DecisionHistory);
-// there are no older pages to ask for.
+// The decision history is part of the state, whole or as the difference
+// asked for (see DecisionHistory); there are no older pages to ask for.
 //
 // This never runs the engine: the state comes from the stored snapshot,
 // which is recalculated at most every few seconds (see SnapshotService).
@@ -47,11 +47,4 @@ if ($knownToken !== '' && hash_equals($snapshot->token, $knownToken)) {
     Pagina::sendJson(200, StateSnapshot::unchanged($service, $snapshot, $username));
 }
 
-$state = StateSnapshot::live($service, $snapshot, $username);
-$historySince = $_GET['historico_desde'] ?? null;
-$historyEpoch = $_GET['historico_epoca'] ?? null;
-if (is_string($historySince) && ctype_digit($historySince) && strlen($historySince) <= 18
-    && is_string($historyEpoch) && $historyEpoch !== '' && strlen($historyEpoch) <= 40) {
-    $state = StateSnapshot::withHistoryAfter($state, (int) $historySince, $historyEpoch);
-}
-Pagina::sendJson(200, $state);
+Pagina::sendJson(200, StateSnapshot::withHistoryAskedFor(StateSnapshot::live($service, $snapshot, $username), $_GET));

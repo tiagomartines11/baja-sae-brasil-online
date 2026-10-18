@@ -187,6 +187,42 @@ final class ReviewHistoryDeltaTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: the poll's query string, as contagem_estado.php gets it:
+     * from a screen holding the history, from one holding none (or an older
+     * page that sends neither), and garbage.
+     *
+     * EXPECTED: only digits for the decision and a non-empty epoch ask for a
+     * difference; anything else gets the whole history.
+     */
+    public function testThePollAsksForADifferenceOnlyWithADecisionIdAndAnEpoch(): void
+    {
+        $this->startRace(self::RACE_START_MS);
+        Clock::freezeAt($this->at(3600));
+        $first = $this->store(Decision::adicionar(0, self::CAR_A, $this->at(300)));
+        $epoch = $this->freshScreen()['historico_epoca'];
+        // A prova never reset has an epoch all the same: an empty one makes
+        // the screen ask for the whole history every time.
+        $this->assertSame('0', $epoch);
+        $second = $this->store(Decision::adicionar(0, self::CAR_B, $this->at(300)));
+        $full = $this->freshScreen();
+
+        $delta = StateSnapshot::withHistoryAskedFor($full, ['p' => '5', 'historico_desde' => (string) $first, 'historico_epoca' => $epoch]);
+        $this->assertSame($first, $delta['historico_desde']);
+        $this->assertSame([$second], array_column($delta['historico'], 'id'));
+
+        foreach ([
+            'no history held' => ['p' => '5'],
+            'no epoch' => ['historico_desde' => (string) $first],
+            'empty epoch' => ['historico_desde' => (string) $first, 'historico_epoca' => ''],
+            'not a number' => ['historico_desde' => '-1', 'historico_epoca' => $epoch],
+            'too long' => ['historico_desde' => str_repeat('9', 19), 'historico_epoca' => $epoch],
+            'an array' => ['historico_desde' => [(string) $first], 'historico_epoca' => $epoch],
+        ] as $why => $query) {
+            $this->assertSame($full, StateSnapshot::withHistoryAskedFor($full, $query), $why);
+        }
+    }
+
+    /**
      * The screen's merge (juntarHistorico in revisao-historico.js), written
      * again here so that every field of a row is checked against the whole
      * history: a field worked out from other rows and forgotten in

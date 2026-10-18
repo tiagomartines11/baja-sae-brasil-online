@@ -196,8 +196,9 @@ final class DecisionHistory
               LIMIT 1'
         );
         $statement->execute([':evento' => $prova->getEventoId(), ':prova' => $prova->getProvaId()]);
+        // Propel's fetchColumn() gives '' (not false) when there is no row.
         $archived = $statement->fetchColumn();
-        return $archived === false ? '0' : (string) $archived;
+        return $archived === false || $archived === null || $archived === '' ? '0' : (string) $archived;
     }
 
     /**

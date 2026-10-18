@@ -224,6 +224,27 @@ final class StateSnapshot
     }
 
     /**
+     * withHistoryAfter() for the poll's query string: `historico_desde`
+     * (the newest decision the screen holds, digits) and `historico_epoca`
+     * (the epoch it came with). Missing or malformed ones, which a screen
+     * with no history or an older page sends, get the whole state.
+     *
+     * @param array<string, mixed> $state as made by live()
+     * @param array<string, mixed> $query the poll's $_GET
+     * @return array<string, mixed>
+     */
+    public static function withHistoryAskedFor(array $state, array $query): array
+    {
+        $since = $query['historico_desde'] ?? null;
+        $epoch = $query['historico_epoca'] ?? null;
+        if (!is_string($since) || !ctype_digit($since) || strlen($since) > 18
+            || !is_string($epoch) || $epoch === '' || strlen($epoch) > 40) {
+            return $state;
+        }
+        return self::withHistoryAfter($state, (int) $since, $epoch);
+    }
+
+    /**
      * A full state whose history is only what a screen holding it up to
      * decision $afterId lacks (DecisionHistory::after()), for a poll that
      * said so. Everything else, the decisions in force included, is sent

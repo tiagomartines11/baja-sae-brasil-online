@@ -11,11 +11,11 @@ import { indiceDeUsarTempo } from './revisao-alertas.js';
 import { SessaoExpirada, buscarEstado } from './revisao-api.js';
 import { desenharBarra, desenharBarraSemEstado } from './revisao-barra.js';
 import {
-  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, historicoParaPedir, proximoAtrasoMs, versaoParaPedir,
+  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, estadoDaResposta, pedidoDeEstado, proximaConsultaEm,
 } from './revisao-conexao.js';
 import { alertaSelecionado, atualizarListaDeCarros, criarDesenho, janelaDesatualizada } from './revisao-desenho.js';
 import { estaDigitandoEm } from './revisao-dom.js';
-import { guardarFiltros, juntarHistorico, lerFiltrosGuardados, normalizarFiltros } from './revisao-historico.js';
+import { guardarFiltros, lerFiltrosGuardados, normalizarFiltros } from './revisao-historico.js';
 import { criarLinhaDoTempo } from './revisao-linha.js';
 import { ligarFiltrosDoHistorico } from './revisao-tabela.js';
 import {
@@ -193,8 +193,7 @@ async function consultar(pedirTudo = false) {
   // A history difference that did not fit: ask again for everything, now.
   let pedirTudoJa = false;
   try {
-    const versao = pedirTudo ? null : versaoParaPedir(tela.estado);
-    const historico = pedirTudo ? null : historicoParaPedir(tela.estado);
+    const { versao, historico } = pedidoDeEstado(tela.estado, pedirTudo);
     const enviadoPerfMs = performance.now();
     const resposta = await buscarEstado(pagina.prova, versao, tela.selecao?.tipo === 'alerta' ? tela.selecao.id : null, historico);
     // Every answer says what time it is on the server. Paired with this
@@ -207,13 +206,12 @@ async function consultar(pedirTudo = false) {
       // show the flag as still open; it is left unused.
     } else if (!resposta.inalterado) {
       // Only the decisions after the newest one the screen holds, when it
-      // asked for that; see juntarHistorico.
-      const estado = juntarHistorico(tela.estado, resposta);
+      // asked for that; see estadoDaResposta.
+      const { estado, pedirTudo: semEncaixe } = estadoDaResposta(tela.estado, resposta);
       if (estado) {
         receberEstado(estado, numero);
-      } else {
-        pedirTudoJa = true;
       }
+      pedirTudoJa = semEncaixe;
     } else if (ordem.aceitar(numero) && tela.estado && resposta.versao === tela.estado.versao) {
       tela.estado = aplicarResposta(tela.estado, resposta, pagina.usuario);
     }
@@ -234,9 +232,8 @@ async function consultar(pedirTudo = false) {
   const aviso = avisoDeConexao(tela.falhas, tela.sessaoExpirada);
   pagina.avisoConexao.textContent = aviso ?? '';
   pagina.avisoConexao.className = aviso ? 'revisao-aviso erro' : 'revisao-aviso oculto';
-  proximaConsulta = pedirTudoJa
-    ? setTimeout(() => consultar(true), 0)
-    : setTimeout(consultar, proximoAtrasoMs(tela.falhas));
+  const proxima = proximaConsultaEm(pedirTudoJa, tela.falhas);
+  proximaConsulta = setTimeout(() => consultar(proxima.pedirTudo), proxima.atrasoMs);
 }
 
 // After a decision whose outcome is unknown: fetch the whole state now
