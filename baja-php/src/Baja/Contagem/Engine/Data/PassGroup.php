@@ -167,6 +167,24 @@ final class PassGroup
         $this->entries[] = $first;
     }
 
+    /**
+     * The group's earliest moment: its first entry, or the sensor's mark
+     * when that came first (it nearly always does: the counters press Enter
+     * after the car crossed). Groups are ordered by their first entry, not
+     * by this.
+     */
+    public function inicioMs(): int
+    {
+        return $this->tempoDoSensor && $this->tsMs < $this->primeiroTsMs ? $this->tsMs : $this->primeiroTsMs;
+    }
+
+    /** The group's latest moment: its last entry, or the sensor's mark when that came after. */
+    public function fimMs(): int
+    {
+        $lastMs = $this->entries[count($this->entries) - 1]->tsMs;
+        return $this->tempoDoSensor && $this->tsMs > $lastMs ? $this->tsMs : $lastMs;
+    }
+
     public function hasSource(int $fonteId): bool
     {
         foreach ($this->entries as $entry) {

@@ -7,6 +7,7 @@ use Baja\Contagem\Engine\Data\Decision;
 use Baja\Contagem\Engine\Data\EngineInput;
 use Baja\Contagem\Engine\Data\EngineResult;
 use Baja\Contagem\Engine\Data\Entry;
+use Baja\Contagem\Engine\Data\Flag;
 use Baja\Contagem\Engine\Data\Lap;
 use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\DecisionApplier;
@@ -99,6 +100,75 @@ final class SensorTrainTest extends EngineTestCase
 
         $this->assertNull($this->groupOf($result, 7)->marcaSensor);
         $this->assertNull($this->groupOf($result, 8)->marcaSensor);
+    }
+
+    /**
+     * SITUATION: race control records the start at 01:00, a moment after
+     * the pack really left. Car 7 crosses at 00:59.80 and the sensor marks
+     * it there; the three counters press Enter after the start instant
+     * (01:00.40, 01:00.60, 01:00.90), or the first of them just before it
+     * (00:59.95). Car 7 then does three laps, each marked by the sensor.
+     *
+     * EXPECTED: the pass time decides, and it is the mark, before the start
+     * in both cases: that crossing is before the start (kept and marked,
+     * not counted), so car 7 has 2 laps either way. Without the mark the
+     * first case is an ordinary pass at 01:00.60. When the counters typed
+     * it does not change which side of the start the car crossed on.
+     */
+    public function testAMarkBeforeTheStartPutsThePassBeforeTheStartWhenEveryCounterTypedItAfter(): void
+    {
+        foreach (['01:00.40', '00:59.95'] as $firstCounterAt) {
+            $race = RaceScenario::withCounters(3);
+            $race->addSensor(4);
+            $race->start('01:00');
+            $race->entry(1, 7, $firstCounterAt);
+            $race->entry(2, 7, '01:00.60');
+            $race->entry(3, 7, '01:00.90');
+            $race->mark(4, '00:59.80');
+            foreach (['04:00', '07:00', '10:00'] as $at) {
+                $race->pass(7, $at . '.50');
+                $race->mark(4, $at . '.00');
+            }
+
+            $result = $race->run('12:00');
+
+            $first = $result->groups[0];
+            $this->assertSame(RaceScenario::ms('00:59.80'), $first->tsMs, $firstCounterAt);
+            $this->assertTrue($first->antesDaLargada, $firstCounterAt);
+            $this->assertFalse($first->contado, $firstCounterAt);
+            $this->assertLapCounts([7 => 2], $result);
+        }
+    }
+
+    /**
+     * SITUATION: race control ends the race at 20:00. Car 7 crosses at
+     * 19:59.80, the sensor marks it there, and all three counters press
+     * Enter after the finish instant.
+     *
+     * EXPECTED: as with a precise source among the entries, the pass lies
+     * on both sides of the finish (the mark before, the counters after),
+     * and which side it counts on decides a lap: flag "no_encerramento".
+     * It counts before the finish, by the mark.
+     */
+    public function testAMarkBeforeTheFinishWithEveryCounterAfterItIsAPassAcrossTheFinish(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->addSensor(4);
+        $race->start('00:00');
+        $race->firstCrossing([7]);
+        $race->pass(7, '03:20');
+        $race->finish('20:00');
+        $race->entry(1, 7, '20:00.30');
+        $race->entry(2, 7, '20:00.50');
+        $race->entry(3, 7, '20:00.80');
+        $race->mark(4, '19:59.80');
+
+        $result = $race->run('22:00');
+
+        $types = array_map(fn($flag) => $flag->tipo, $result->openFlags());
+        $this->assertContains(Flag::NO_ENCERRAMENTO, $types);
+        $last = $result->groups[count($result->groups) - 1];
+        $this->assertSame(RaceScenario::ms('19:59.80'), $last->tsMs);
     }
 
     /**

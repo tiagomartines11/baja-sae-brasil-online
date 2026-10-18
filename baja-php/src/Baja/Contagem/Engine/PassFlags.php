@@ -210,17 +210,20 @@ final class PassFlags
      */
     public function acrossTheFinish(PassGroup $group, int $finishMs): ?Flag
     {
-        // The entries of a group are in time order: first and last are its two ends.
-        $entries = $group->entries;
-        $lastEntryMs = $entries[count($entries) - 1]->tsMs;
-        if ($group->primeiroTsMs > $finishMs || $lastEntryMs <= $finishMs) {
+        // The entries of a group are in time order: first and last are its
+        // two ends, or the sensor's mark that times it when it lies outside
+        // them (a mark before the finish, every counter after it, is a pass
+        // on both sides as much as a precise source's entry would be).
+        $firstMs = $group->inicioMs();
+        $lastEntryMs = $group->fimMs();
+        if ($firstMs > $finishMs || $lastEntryMs <= $finishMs) {
             return null;
         }
         $flag = $this->aboutGroup(Flag::NO_ENCERRAMENTO, $group);
         $flag->motivo = sprintf(
             'O carro %d foi registrado dos dois lados do encerramento (de %d s antes a %d s depois); a passagem foi considerada %s encerramento.',
             $group->carro,
-            (int) round(($finishMs - $group->primeiroTsMs) / 1000),
+            (int) round(($finishMs - $firstMs) / 1000),
             (int) round(($lastEntryMs - $finishMs) / 1000),
             $group->tsMs <= $finishMs ? 'antes do' : 'depois do'
         );

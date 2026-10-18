@@ -64,6 +64,15 @@ use Baja\Contagem\Engine\Data\PassGroup;
 final class PassRoles
 {
     /**
+     * How long before a group's first entry a sensor's mark can be its pass
+     * time, with room to spare: the mark is matched within a few seconds of
+     * the counters' first reading (UnreadAssigner::sensorToleranceMs()).
+     * Walking the groups in their order, one whose first entry is later than
+     * this after an instant cannot have its pass time before it.
+     */
+    private const MARCA_ANTES_MS = 30000;
+
+    /**
      * @param array<int, PassGroup[]> $groupsByCar each car's groups in time order
      * @param string $ruleApplied the counting rule in force (what PublishRule::decide returned)
      */
@@ -77,15 +86,15 @@ final class PassRoles
         $passesAllowedAfterFinish = $settings->aposEncerramento === Settings::APOS_PROXIMA_PASSAGEM ? 1 : 0;
 
         foreach ($groupsByCar as $groups) {
-            if ($timeline->largadaMs !== null && $groups[0]->primeiroTsMs < $timeline->largadaMs) {
+            if ($timeline->largadaMs !== null && self::beginsBeforeTheStart($groups, $timeline->largadaMs)) {
                 self::assignBeforeTheStart($groups, $timeline->largadaMs, $settings);
             }
             if ($startWindowEndsMs !== null) {
                 foreach ($groups as $group) {
-                    if ($group->primeiroTsMs >= $startWindowEndsMs) {
+                    if ($group->primeiroTsMs >= $startWindowEndsMs + self::MARCA_ANTES_MS) {
                         break;
                     }
-                    if (!$group->antesDaLargada) {
+                    if ($group->inicioMs() < $startWindowEndsMs && !$group->antesDaLargada) {
                         $group->dentroDaJanelaDeLargada = true;
                         $group->contado = false;
                         $group->referencia = false;
@@ -118,13 +127,32 @@ final class PassRoles
     }
 
     /**
-     * @param PassGroup[] $groups one car's groups in time order; the first one begins before the start
+     * Whether one of the car's groups begins before the start: its first
+     * entry, or the sensor's mark that times it (PassGroup::inicioMs()).
+     *
+     * @param PassGroup[] $groups one car's groups in time order
+     */
+    private static function beginsBeforeTheStart(array $groups, int $largadaMs): bool
+    {
+        foreach ($groups as $group) {
+            if ($group->inicioMs() < $largadaMs) {
+                return true;
+            }
+            if ($group->primeiroTsMs >= $largadaMs + self::MARCA_ANTES_MS) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param PassGroup[] $groups one car's groups in time order; one of the first ones begins before the start
      */
     private static function assignBeforeTheStart(array $groups, int $largadaMs, Settings $settings): void
     {
         $passZero = null;
         foreach ($groups as $group) {
-            if ($group->primeiroTsMs >= $largadaMs) {
+            if ($group->primeiroTsMs >= $largadaMs + self::MARCA_ANTES_MS) {
                 // Groups are ordered by their first entry: none of the
                 // remaining ones can have a pass time before the start.
                 break;

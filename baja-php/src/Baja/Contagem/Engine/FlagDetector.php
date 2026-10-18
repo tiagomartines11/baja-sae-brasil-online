@@ -140,7 +140,7 @@ final class FlagDetector
 
         foreach ($groupsInTimeOrder as $group) {
             $carro = $group->carro;
-            if ($finishMs !== null && $group->primeiroTsMs <= $finishMs && !$group->confirmadoPorRevisor) {
+            if ($finishMs !== null && $group->inicioMs() <= $finishMs && !$group->confirmadoPorRevisor) {
                 $acrossTheFinish = $this->passFlags->acrossTheFinish($group, $finishMs);
                 if ($acrossTheFinish !== null) {
                     $this->attach($acrossTheFinish, $group);
