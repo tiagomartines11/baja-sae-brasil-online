@@ -1232,7 +1232,12 @@ and a crossing within 2.5 s of each other belong together, and so does
 everything within 2.5 s of either: a **train**. Each train is decided on
 its own (`SensorTrains`, `UnreadAssigner::matchMarks`):
 
-- one mark, one crossing (most trains): that is its pass;
+- one mark, one crossing (most trains): that is its pass, unless the mark
+  is more than 1 s after the crossing's first reading
+  (`MARCA_DEPOIS_DA_PRIMEIRA_LEITURA_MS`): a counter presses Enter as the
+  car is on the line or after, so a mark seconds after every counter is a
+  false trigger beside a crossing whose own mark was missed. Such a mark
+  stays untimed ("ambígua");
 - otherwise by the times: each counter's own delay within the train is
   taken out of the crossings' times, the crossings are moved by the common
   lag that lines them up best with the marks, and a mark gets the crossing
@@ -1305,8 +1310,9 @@ not happen every minute):
 
 | | three counters | two counters |
 |---|---|---|
-| passes timed by the sensor | 76.5 % (19 993 of 26 129) | 77.0 % (20 091 of 26 102) |
-| of those, the right car | 99.67 % (65 wrong) | 99.71 % (58 wrong) |
+| passes timed by the sensor | 76.5 % (19 988 of 26 129) | 77.0 % (20 089 of 26 102) |
+| of those, the right car | 99.70 % (60 wrong) | 99.72 % (56 wrong) |
+| before the 1 s rule for a mark alone with a crossing | 19 993, 65 wrong | 20 091, 58 wrong |
 | before trains were decided on their own | 69.7 %, 99.66 % right | 69.1 %, 99.71 % right |
 | by the counters' order alone | +18 marks, all right | +26 marks, all right |
 

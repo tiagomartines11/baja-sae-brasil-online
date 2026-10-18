@@ -430,6 +430,69 @@ final class UnreadPassTest extends EngineTestCase
     }
 
     /**
+     * SITUATION (seed 7 of the simulator): car 5 crosses at 04:00; the
+     * sensor misses it. The three counters press Enter at 04:00.04,
+     * 04:00.29 and 04:00.36. The beam trips on something else at 04:02.14,
+     * 1.8 s after the last of them: within the 2.5 s a mark may be from a
+     * crossing, and alone with it in its train.
+     *
+     * EXPECTED: a counter presses Enter as the car is on the line or after
+     * it, so a mark two seconds after the first of them is not this car's.
+     * The pass keeps the counters' time, untimed by the sensor; the mark
+     * is left over (ambiguous: near a pass, no flag). The per-car recount
+     * says the same.
+     */
+    public function testAMarkWellAfterTheCountersTimesNothing(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->addSensor(4);
+        $race->start('00:00');
+        $race->firstCrossing([5]);
+        $race->entry(2, 5, '04:00.04');
+        $race->entry(1, 5, '04:00.29');
+        $race->entry(3, 5, '04:00.36');
+        $race->mark(4, '04:02.14');
+
+        $result = $race->run('10:00');
+
+        $group = $this->groupAt($result, 5, '04:00');
+        $this->assertNull($group->marcaSensor);
+        $this->assertFalse($group->tempoDoSensor);
+        $this->assertSame(RaceScenario::ms('04:00.29'), $group->tsMs);
+        $this->assertLapCounts([5 => 1], $result);
+        $this->assertNoOpenFlags($result);
+        $this->assertSame(0, $result->sourceStats[4]->sensor['atribuidas']);
+        $this->assertSame(1, $result->sourceStats[4]->sensor['ambiguas']);
+
+        $fast = $race->countCars('10:00', [5])->lapsByCar[5];
+        $this->assertSame(RaceScenario::ms('04:00.29'), $fast[1]->tsMs, 'the per-car recount gives the same pass time');
+    }
+
+    /**
+     * SITUATION: car 5 crosses at 04:00.80; the counters press Enter at
+     * 04:00.04 (early), 04:00.9 and 04:01.3. The sensor marks 04:00.80.
+     *
+     * EXPECTED: under a second after the first Enter, the mark times the
+     * pass as usual.
+     */
+    public function testAMarkJustAfterAnEarlyCounterTimesThePass(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->addSensor(4);
+        $race->start('00:00');
+        $race->firstCrossing([5]);
+        $race->entry(2, 5, '04:00.04');
+        $race->entry(1, 5, '04:00.9');
+        $race->entry(3, 5, '04:01.3');
+        $mark = $race->mark(4, '04:00.80');
+
+        $result = $race->run('10:00');
+
+        $this->assertSame($mark, $this->groupAt($result, 5, '04:00')->marcaSensor?->id);
+        $this->assertSame(RaceScenario::ms('04:00.80'), $this->groupAt($result, 5, '04:00')->tsMs);
+    }
+
+    /**
      * SITUATION: only counter 1 types car 9 at 05:00; the sensor marks a
      * crossing at 05:00.3.
      *

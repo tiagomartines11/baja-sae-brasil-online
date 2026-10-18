@@ -134,6 +134,15 @@ final class UnreadAssigner
      */
     public const FOLGA_DA_ORDEM_MS = 500;
 
+    /**
+     * A mark alone with a crossing in its train times it only if it is no
+     * later than this after the crossing's first reading. A counter presses
+     * Enter as the car is on the line or after it, rarely more than half a
+     * second before: a mark seconds after every counter's Enter is a false
+     * trigger beside a crossing whose own mark the sensor missed.
+     */
+    public const MARCA_DEPOIS_DA_PRIMEIRA_LEITURA_MS = 1000;
+
     /** A train with at least this many marks and crossings tells by how much the counters lag behind the sensor (bestShift()). */
     private const MARCAS_PARA_ATRASO = 2;
 
@@ -313,8 +322,21 @@ final class UnreadAssigner
                 }
                 if (count($train['marcas']) === 1 && count($train['passagens']) === 1) {
                     // Nearly every train: one mark, one crossing, nothing else
-                    // near either. No other answer exists.
-                    $proposed[] = [$train['marcas'][0], $this->applyAlone($train['marcas'][0], $train['passagens'][0])];
+                    // near either. No other answer exists, unless the mark
+                    // came well after the counters saw the car.
+                    [$mark, $crossing] = [$train['marcas'][0], $train['passagens'][0]];
+                    if ($mark->tsMs - $crossing['ts_ms'] <= self::MARCA_DEPOIS_DA_PRIMEIRA_LEITURA_MS) {
+                        $proposed[] = [$mark, $this->applyAlone($mark, $crossing)];
+                    } else {
+                        // Near a pass, not safely its own: "ambígua".
+                        $this->candidates[$mark->id][] = [
+                            'carro' => $crossing['carro'],
+                            'ts_ms' => $crossing['ts_ms'],
+                            'desvio_ms' => $mark->tsMs - $crossing['ts_ms'],
+                            'passagem_ids' => $crossing['passagem_ids'],
+                            'fonte_ids' => $crossing['fonte_ids'],
+                        ];
+                    }
                     continue;
                 }
                 $applied = $this->solve($train['marcas'], SensorTrains::withoutHabits($train['passagens']), $toleranceMs, true);
