@@ -433,6 +433,47 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: the prova does not log the fueling station, and somebody
+     * logs its pit lane. The controller reads the "Usuários" page: its help,
+     * the question behind "remover" and the messages after adding and
+     * removing a pit logger. An administrator opens the controller's
+     * permissions.
+     *
+     * EXPECTED: no text speaks of "box e abastecimento": each says
+     * "registro de box", as the page's heading does, and the administrator's
+     * checkbox for the pit log code reads "ZZL · Registro de box". With the
+     * fueling station logged, they say "registro de box e abastecimento".
+     */
+    public function testTheUsersPageAndThePermissionsPageNameThePitLogAsTheProvaDoes(): void
+    {
+        $this->changeSettings(['abastecimento' => false]);
+        $this->grant(self::CONTROLLER, '00NE_ZZL');
+        $this->grant(self::CONTROLLER, 'admin');
+        $this->grant(self::COUNTER, '00NE_ZZL_BOX');
+        $cookies = $this->loginAndGetCookies(self::CONTROLLER);
+        $userId = (int) $this->fetchValue('SELECT user_id FROM user WHERE username = ?', [self::CONTROLLER]);
+
+        $users = html_entity_decode($this->get('/00NE/contagem_contadores.php?p=ZZL', $cookies)['body'], ENT_QUOTES);
+        $this->assertStringNotContainsStringIgnoringCase('box e abastecimento', $users);
+        $this->assertMatchesRegularExpression('/e o registro de box\s+só se estiver na lista dele/u', $users);
+        $this->assertStringContainsString("Remover este usuário do registro de box? Os aparelhos", $users);
+        $added = html_entity_decode($this->get('/00NE/contagem_contadores.php?p=ZZL&msg=box_adicionado', $cookies)['body'], ENT_QUOTES);
+        $this->assertStringContainsString('Usuário adicionado ao registro de box.', $added);
+        $removed = html_entity_decode($this->get('/00NE/contagem_contadores.php?p=ZZL&msg=box_removido', $cookies)['body'], ENT_QUOTES);
+        $this->assertStringContainsString('Usuário removido do registro de box. Os aparelhos', $removed);
+
+        $permissions = html_entity_decode($this->get('/admin_usuario.php?id=' . $userId, $cookies)['body'], ENT_QUOTES);
+        $this->assertStringContainsString('ZZL · Registro de box', $permissions);
+        $this->assertStringNotContainsStringIgnoringCase('box e abastecimento', $permissions);
+
+        $this->changeSettings(['abastecimento' => true]);
+        $users = html_entity_decode($this->get('/00NE/contagem_contadores.php?p=ZZL', $cookies)['body'], ENT_QUOTES);
+        $this->assertStringContainsString('Remover este usuário do registro de box e abastecimento?', $users);
+        $permissions = html_entity_decode($this->get('/admin_usuario.php?id=' . $userId, $cookies)['body'], ENT_QUOTES);
+        $this->assertStringContainsString('ZZL · Registro de box e abastecimento', $permissions);
+    }
+
+    /**
      * SITUATION: the test preset was applied for a rehearsal and is still
      * in place. The controller opens the pages of the lap counting.
      *

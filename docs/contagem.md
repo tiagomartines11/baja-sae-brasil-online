@@ -62,7 +62,7 @@ loses a lap. The flag `primeira_passagem_tardia` exists for that: see below.
 |---|---|---|
 | Controller (responsável pela prova) | `{evento}_{prova}`, for example `26BR_END` | Sets everything up, starts and stops the race, reviews flags |
 | Counter (contador) | `{evento}_{prova}_CONT`, granted automatically | Types car numbers on one source |
-| Pit log | `{evento}_{prova}_BOX`, ticked by an administrator as "box e abastecimento" | Logs cars entering and leaving the pit lane and the fueling station. Does not open the count page; a counter does not open the pit page |
+| Pit log | `{evento}_{prova}_BOX`, ticked by an administrator as "Registro de box" ("Registro de box e abastecimento" when the fueling station is logged) | Logs cars entering and leaving the pit lane and the fueling station. Does not open the count page; a counter does not open the pit page |
 | Admin | `admin` | Only needed to wipe a race that has been started |
 
 A controller can do everything a counter can.
@@ -88,7 +88,9 @@ A controller can do everything a counter can.
    does not open the pit page, and the pit log does not open a count page;
    somebody who does both is added in both places. The controller can do
    both without being listed. An administrator can also tick the pit code
-   on Administração → Usuários ("box e abastecimento").
+   on Administração → Usuários ("Registro de box", or "Registro de box e
+   abastecimento" when the prova logs the fueling station; every text of the
+   "Usuários" page names it the same way).
 5. **Check the settings** on the Fontes page; see [Settings](#settings). The
    ones to decide on purpose are the pass-zero rule, the publish mode, the
    classification field and whether the fueling station is logged.

@@ -20,11 +20,13 @@ $prova = Pagina::provaOrRedirect();
 ContagemAccess::requireController($prova);
 
 $errorMessage = null;
+// "registro de box", and "e abastecimento" when the prova logs the fueling station.
+$pitLog = lcfirst(ContagemAccess::pitLogLabel($prova));
 $messages = [
     'vinculado' => 'Usuário vinculado.',
     'removido' => 'Vínculo removido. Os dispositivos dessa pessoa nesta fonte foram revogados.',
-    'box_adicionado' => 'Usuário adicionado ao registro de box e abastecimento.',
-    'box_removido' => 'Usuário removido do registro de box e abastecimento. Os aparelhos dele no box foram revogados.',
+    'box_adicionado' => "Usuário adicionado ao {$pitLog}.",
+    'box_removido' => "Usuário removido do {$pitLog}. Os aparelhos dele no box foram revogados.",
 ];
 
 if (Pagina::isPost()) {
@@ -79,7 +81,7 @@ Pagina::printHeader($prova, 'Usuários');
 <?php if ($errorMessage !== null) { ?><p class="contagem-erro"><?= $h($errorMessage) ?></p><?php } ?>
 
 <p class="contagem-dica">
-    Cada pessoa só consegue abrir a contagem das fontes em que está vinculada, e o registro de box e abastecimento
+    Cada pessoa só consegue abrir a contagem das fontes em que está vinculada, e o <?= $h($pitLog) ?>
     só se estiver na lista dele. Use o nome de usuário do fórum, exatamente como a pessoa faz login.
 </p>
 
@@ -147,7 +149,7 @@ Pagina::printHeader($prova, 'Usuários');
                     <td><?= $pitLogger['visto_em_ms'] === null ? 'nunca' : $h(Pagina::formatClock((int) $pitLogger['visto_em_ms'])) ?></td>
                     <td>
                         <form method="POST" action="<?= $h($action) ?>"
-                              onsubmit="return confirm('Remover este usuário do registro de box e abastecimento? Os aparelhos dele no box deixam de enviar.');">
+                              onsubmit="return confirm('Remover este usuário do <?= $h($pitLog) ?>? Os aparelhos dele no box deixam de enviar.');">
                             <?= $csrf ?>
                             <input type="hidden" name="acao" value="box_remover">
                             <input type="hidden" name="usuario" value="<?= $h($pitLogger['usuario']) ?>">
