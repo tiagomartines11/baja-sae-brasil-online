@@ -406,6 +406,33 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: every present car is already APTO = SIM. The controller
+     * opens the hub; the prova does not log the fueling station.
+     *
+     * EXPECTED: the question behind the (disabled) button has no empty
+     * "()"; the hub and the users page name the pit log as every other
+     * page does, "Registro de box", not "Box e abastecimento".
+     */
+    public function testTheHubQuestionAndTheUsersPageReadRightWithNothingBlankAndNoFueling(): void
+    {
+        $this->addInputFieldToTheProva('APTO');
+        $this->changeSettings(['campo_classificacao' => 'APTO', 'abastecimento' => false]);
+        foreach ([self::CAR_A, self::CAR_B, self::CAR_C] as $car) {
+            $this->setManualField($car, 'APTO', 'SIM');
+        }
+        $this->grant(self::CONTROLLER, '00NE_ZZL');
+        $cookies = $this->loginAndGetCookies(self::CONTROLLER);
+
+        $hub = $this->get(self::HUB, $cookies)['body'];
+        $this->assertStringContainsString('em 0 carro(s) presente(s) com o campo em branco?', html_entity_decode($hub, ENT_QUOTES));
+        $this->assertStringContainsString('quem faz o registro de box</span>', $hub);
+
+        $users = $this->get('/00NE/contagem_contadores.php?p=ZZL', $cookies)['body'];
+        $this->assertStringContainsString('<h2>Registro de box</h2>', $users);
+        $this->assertStringNotContainsString('Box e abastecimento', $users);
+    }
+
+    /**
      * SITUATION: the test preset was applied for a rehearsal and is still
      * in place. The controller opens the pages of the lap counting.
      *

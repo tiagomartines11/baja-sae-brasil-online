@@ -96,7 +96,7 @@ if (ContagemAccess::isController($prova)) {
                 </p>
             <?php } ?>
             <form method="POST" action="contagem.php<?= $h($query) ?>" class="contagem-acao"
-                  onsubmit="return confirm(<?= $h(json_encode('Grava ' . $classificationField . ' = ' . CarRoster::CLASSIFIED_VALUE . ' em ' . count($blank) . ' carro(s) presente(s) com o campo em branco (' . implode(', ', $blank) . ')? '
+                  onsubmit="return confirm(<?= $h(json_encode('Grava ' . $classificationField . ' = ' . CarRoster::CLASSIFIED_VALUE . ' em ' . count($blank) . ' carro(s) presente(s) com o campo em branco' . ($blank === [] ? '' : ' (' . implode(', ', $blank) . ')') . '? '
                       . 'Carros com outro valor (NÃO) não são alterados. Cada alteração fica no histórico da prova.')) ?>);">
                 <?= Pagina::csrfField($prova) ?>
                 <input type="hidden" name="acao" value="marcar_aptos">
@@ -111,7 +111,7 @@ if (ContagemAccess::isController($prova)) {
         <ul class="contagem-links">
             <li><a href="contagem_revisao.php<?= $h($query) ?>">Revisão</a> <span>alertas, tabela de carros e decisões</span></li>
             <li><a href="contagem_controle.php<?= $h($query) ?>">Controle de corrida</a> <span>largada, bandeira vermelha, encerramento</span></li>
-            <li><a href="contagem_contadores.php<?= $h($query) ?>">Usuários</a> <span>quem conta em cada fonte, e quem registra o box e o abastecimento</span></li>
+            <li><a href="contagem_contadores.php<?= $h($query) ?>">Usuários</a> <span>quem conta em cada fonte, e quem faz o <?= $h(mb_strtolower(ContagemAccess::pitLogLabel($prova))) ?></span></li>
             <li><a href="contagem_fontes.php<?= $h($query) ?>">Fontes e configurações</a></li>
             <li><a href="contagem_box.php<?= $h($query) ?>"><?= $h(ContagemAccess::pitLogLabel($prova)) ?></a> <span>entrada e saída, uma pessoa em cada ponta</span></li>
             <li><a href="dashboard.php<?= $h($query) ?>">Campos manuais</a> <span>desclassificação e outros campos digitados</span></li>

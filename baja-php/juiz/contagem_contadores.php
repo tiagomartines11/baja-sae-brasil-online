@@ -130,7 +130,7 @@ Pagina::printHeader($prova, 'Usuários');
     </section>
 <?php } ?>
 <section class="contagem-bloco">
-    <h2>Box e abastecimento</h2>
+    <h2><?= $h(ContagemAccess::pitLogLabel($prova)) ?></h2>
     <p class="contagem-dica">
         Quem registra a entrada e a saída do box<?= $fuelingIsLogged ? ' e do abastecimento' : '' ?> no celular.
         O responsável pela prova também pode, sem estar na lista. Estar aqui não dá acesso à contagem de nenhuma fonte.
