@@ -383,6 +383,9 @@ final class TimelineWindow
             && !$group->contado;
         return [
             'ancora' => $group->anchorEntryId(),
+            // The car of the pass: what a sensor's mark timing it (no car
+            // of its own) belongs to when a car is in focus.
+            'carro' => $group->carro,
             'passagem_ids' => $group->entryIds(),
             'ts_ms' => $group->tsMs,
             'papel' => $role,

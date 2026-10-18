@@ -1361,8 +1361,9 @@ contadores concordam" (the only other reading of that car was a lone one).
 `reatribuir` of the entry, the decision "Trocar" on a chip stores, so it
 shows in the history and undoes from there. The timeline zooms to the "??"
 and outlines the entries of every candidate car, each with its button's
-number. The doubt sentence names the likeliest car only, as a condition:
-"Se esta passagem foi do carro 7, ele pode estar com uma volta a menos";
+number. A on this flag presses the suggested car's button, with the same
+question when it asks one. The doubt sentence names the likeliest car
+only, as a condition: "Se esta passagem foi do carro 7, ele pode estar com uma volta a menos";
 in the car table the flag counts as an open flag of each car it names,
 red only on the likeliest one's row. On a sensor's mark the words are a
 mark's ("Marca do sensor sem passagem", "Anular a marca (não foi
@@ -1386,7 +1387,9 @@ green when it times a pass ("marca do sensor: tempo desta passagem"),
 faint when it has none ("marca sem passagem"). The counters' chips of a pass
 it times carry a small green "S" ("horário desta passagem: a marca do
 sensor (preciso)"); picking the mark outlines them, and picking one of them
-outlines the mark. A mark offers only "Anular" and a car: confirming it or
+outlines the mark. A mark that times a pass is not asked "which car?":
+the counters said it, and under car focus it goes with its pass's car
+(`grupo.carro`). A mark offers only "Anular" and a car: confirming it or
 discarding "its" pass would act on the counters' pass.
 
 *The sources.* A counter's block adds "ilegíveis: 3 (1 atribuído)" when it

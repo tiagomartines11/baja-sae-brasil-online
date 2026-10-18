@@ -773,6 +773,19 @@ final class UnreadUploadTest extends ReviewDbTestCase
         };
         $this->assertSame([[null, true, 'ilegivel']], $shownFor(self::CAR_B));
         $this->assertSame([], $shownFor(self::CAR_A));
+
+        // A pass says whose it is: a sensor's mark timing it has no car of its own.
+        $this->newRequest();
+        $groupCars = [];
+        foreach (\Baja\Contagem\Review\TimelineWindow::forCar($this->service, self::CAR_B)['raias'] as $lane) {
+            foreach ($lane['entradas'] as $entry) {
+                if ($entry['grupo'] !== null) {
+                    $groupCars[] = $entry['grupo']['carro'] ?? null;
+                }
+            }
+        }
+        $this->assertNotEmpty($groupCars);
+        $this->assertSame([self::CAR_B], array_values(array_unique($groupCars)));
     }
 
     // ----- helpers -----

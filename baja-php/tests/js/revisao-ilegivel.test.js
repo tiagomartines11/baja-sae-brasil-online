@@ -17,7 +17,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  atribuicoesAutomaticas, candidatosDoAlerta, candidatosParaTrocar, carrosDoAlertaIlegivel, efeitoDeAtribuir, indiceDeCandidato,
+  atribuicaoDoAceitar, atribuicoesAutomaticas, candidatosDoAlerta, candidatosParaTrocar, carrosDoAlertaIlegivel, efeitoDeAtribuir, indiceDeCandidato,
   linhasDoSensor, listaDeNomes, marcadorDoChip, nomeDoAlertaIlegivel, problemaAoAtribuir, situacaoDoIlegivel, textoDoChip,
   textoDosIlegiveis, dicaDosIlegiveisDaFonte,
 } from '../../default/js/contagem/revisao-ilegivel.js';
@@ -161,6 +161,20 @@ test('a sensor mark is voided or given a car, never confirmed or discarded with 
   assert.deepEqual(acoesDaEntrada(daPassagem).map((opcao) => opcao.acao), ['anular', 'reatribuir']);
 });
 
+test('a sensor mark that times a pass is not a "??" to identify: it belongs to its pass\'s car', () => {
+  const daPassagem = entrada({ id: 90, fonte_id: 9, ilegivel: true, marca_do_sensor: true, grupo: grupoContado([11, 31], { carro: 7 }) });
+  const semPassagem = entrada({ id: 91, fonte_id: 9, ilegivel: true, fora_de_uso: true, motivo_fora_de_uso: 'marca_do_sensor' });
+  // The panel asks "which car?" only of a pending one (partesDoIlegivel).
+  assert.equal(situacaoDoIlegivel(daPassagem), 'marca');
+  assert.equal(situacaoDoIlegivel(semPassagem), 'pendente');
+  assert.equal(marcadorDoChip(daPassagem), null);
+  // Under car focus it goes with its pass: weak under car 7, dimmed under car 12.
+  assert.ok(classesDoChip(daPassagem, [], null, [7], { naRaiaDoSensor: true }).includes('do-carro'));
+  assert.ok(classesDoChip(daPassagem, [], null, [12], { naRaiaDoSensor: true }).includes('apagada'));
+  // A mark with no pass may be any car's: never dimmed.
+  assert.ok(!classesDoChip(semPassagem, [], null, [12], { naRaiaDoSensor: true }).includes('apagada'));
+});
+
 // ---- the candidates of a "??" flag -----------------------------------------------------
 
 // A "??" of Contagem 2 at 10:00; Contagem 1 and 3 read car 7 0.4 s before
@@ -264,6 +278,10 @@ test('A and K on a "??" say what they do there, and the doubt is about the likel
   assert.deepEqual(acaoDeConfirmar({ ...alerta, efeito_de_confirmar: 'nenhum' }),
     { rotulo: 'Deixar sem carro, parar de avisar', maisUmaPassagem: false });
   assert.equal(fraseDeDuvida(sozinho), 'Se esta passagem foi do carro 7, ele pode estar com uma volta a menos.');
+  // On the screen A presses the suggested candidate's button (the same questions, the short lap among them).
+  assert.deepEqual(atribuicaoDoAceitar(alerta), { entradaId: 123, carro: 7 });
+  assert.equal(atribuicaoDoAceitar({ ...alerta, tipo: 'numero_atribuido' }), null);
+  assert.equal(atribuicaoDoAceitar({ ...alerta, sugestao: { tipo: 'confirmar' } }), null);
   assert.equal(fraseDeDuvida(alerta), null);
 });
 

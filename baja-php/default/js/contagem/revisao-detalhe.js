@@ -180,7 +180,9 @@ function partesDoIlegivel(contexto, entrada) {
       }) : null,
     ];
   }
-  if (situacao === 'pendente' || (ehMarcaDoSensor(entrada) && !entrada.grupo && !entrada.reatribuida)) {
+  // A mark that times a pass ('marca') is not asked about: the counters
+  // said which car it was.
+  if (situacao === 'pendente') {
     const candidatos = doAlerta
       ? candidatosDoAlerta(doAlerta, contexto.janela, contexto.estado)
       : candidatosParaTrocar(entrada, contexto.janela, contexto.estado);

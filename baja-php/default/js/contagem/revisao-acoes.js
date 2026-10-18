@@ -17,7 +17,7 @@ import { problemaAoMover } from './revisao-edicao-manual.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { interpretarTempoDeProva } from './revisao-formato.js';
 import { encontrarEntrada } from './revisao-raias-logica.js';
-import { efeitoDeAtribuir, fonteEhSensor, problemaAoAtribuir } from './revisao-ilegivel.js';
+import { atribuicaoDoAceitar, efeitoDeAtribuir, fonteEhSensor, problemaAoAtribuir } from './revisao-ilegivel.js';
 import { agoraServidorMs, mostrarMensagem, pagina, semConexao, tela } from './revisao-tela.js';
 
 const DESFECHO_DESCONHECIDO = 'O servidor não respondeu como esperado. NÃO se sabe se a decisão foi registrada: '
@@ -144,6 +144,13 @@ export function criarAcoes(ganchos) {
   // A. Asks first whenever accepting gives a car a pass or takes one away.
   function aceitar() {
     const alerta = alertaQuePodeSerDecidido();
+    // On a "??" flag A is the suggested candidate's button: the same
+    // questions (the short lap among them).
+    const atribuicao = atribuicaoDoAceitar(alerta);
+    if (atribuicao) {
+      atribuir(atribuicao.entradaId, atribuicao.carro);
+      return;
+    }
     const acao = alerta ? acaoDeAceitar(alerta, tela.estado) : null;
     const decisao = acao ? decisaoAceitar(alerta) : null;
     if (!decisao) {

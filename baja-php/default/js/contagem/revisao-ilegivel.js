@@ -45,6 +45,8 @@ const temCarro = (entrada) => entrada?.carro !== null && entrada?.carro !== unde
 //   'contador'    its own counter said which car, on the phone
 //   'revisor'     a reviewer said which car
 //   'anulado'     voided: not a crossing
+//   'marca'       a sensor's mark that times a pass: it has no car of its
+//                 own and needs none, the counters said which car it was
 // Null for an entry typed with a number.
 export function situacaoDoIlegivel(entrada) {
   if (!ehIlegivel(entrada)) {
@@ -52,6 +54,9 @@ export function situacaoDoIlegivel(entrada) {
   }
   if (entrada.anulada) {
     return 'anulado';
+  }
+  if (entrada.marca_do_sensor === true && entrada.grupo) {
+    return 'marca';
   }
   if (entrada.atribuida_automaticamente) {
     return 'automatico';
@@ -382,6 +387,19 @@ export function efeitoDeAtribuir(entrada, carro, { janela = null, estado = null,
     pergunta: null,
     nota: grupo ? `junta-se aos registros do carro ${carro}` : `fica como registro solitário do carro ${carro}: sozinho, ainda não conta`,
   };
+}
+
+// A on a "??" flag: the car it suggests, given as a candidate's button
+// gives it (the same questions, see efeitoDeAtribuir). Null for any other
+// flag or suggestion.
+//   {entradaId, carro}
+export function atribuicaoDoAceitar(alerta) {
+  const sugestao = alerta?.sugestao;
+  const entradaId = (alerta?.passagem_ids ?? [])[0];
+  if (alerta?.tipo !== 'numero_ilegivel' || sugestao?.tipo !== 'reatribuir' || entradaId === undefined) {
+    return null;
+  }
+  return { entradaId: sugestao.passagem_id ?? entradaId, carro: sugestao.equipe_numero };
 }
 
 // The key 1 to 6 on a "??": the index of the candidate it presses, or null.

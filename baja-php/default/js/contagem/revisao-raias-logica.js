@@ -279,7 +279,9 @@ function destaqueDoChip(classes, entrada, idsEmDestaque, entradaSelecionadaId, c
   if (idsEmDestaque.includes(entrada.id)) {
     classes.push('em-destaque');
   } else if (carrosEmFoco.length > 0) {
-    const doCarro = carrosEmFoco.includes(entrada.carro) || carrosEmFoco.includes(entrada.carro_digitado);
+    // A sensor's mark that times a pass belongs to that pass's car.
+    const doCarro = carrosEmFoco.includes(entrada.carro) || carrosEmFoco.includes(entrada.carro_digitado)
+      || (situacaoDoIlegivel(entrada) === 'marca' && carrosEmFoco.includes(entrada.grupo.carro));
     if (doCarro) {
       classes.push('do-carro');
     } else if (situacaoDoIlegivel(entrada) !== 'pendente') {
