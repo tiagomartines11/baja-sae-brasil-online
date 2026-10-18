@@ -202,7 +202,7 @@ final class FlagDetector
                 $this->attach($areaFlag, $group);
             } elseif (
                 isset($group->entries[1]) && !isset($group->entries[2]) && !$group->adicionadoPorRevisor
-                && ($knot = $this->loneEntries->everyWitnessMayHaveMeantAnotherCar($group)) !== null
+                && ($knot = $this->loneEntries->everyWitnessMayHaveMeantAnotherCar($group, $this->availability)) !== null
             ) {
                 // One flag for the whole knot: the other passes in it are
                 // marked so that they do not raise the same flag again.

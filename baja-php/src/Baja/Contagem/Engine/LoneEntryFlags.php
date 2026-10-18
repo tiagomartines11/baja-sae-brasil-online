@@ -295,16 +295,31 @@ final class LoneEntryFlags
      * witnesses of a pass are in that situation: one counter missing
      * another car is an ordinary miss next to an ordinary pass.
      *
+     * Both halves rest on a counter's silence, so the flag waits, like any
+     * flag that does (SourceAvailability), until the silent counters have
+     * uploaded past it: a counter not in this pass may still have typed the
+     * car (then not every witness lacks another car), and a witness may
+     * still have typed the other car. Without the wait, a phone offline for
+     * a quarter of an hour raised it on the passes its counter had not
+     * uploaded yet (LiveRaceTest, two seeds in four hundred).
+     *
      * @param PassGroup $group a group of exactly two counters' entries that no reviewer vouched for
      * @return array{0: Flag, 1: PassGroup[]}|null the flag and the other passes of the knot
      */
-    public function everyWitnessMayHaveMeantAnotherCar(PassGroup $group): ?array
+    public function everyWitnessMayHaveMeantAnotherCar(PassGroup $group, SourceAvailability $availability): ?array
     {
+        $witnesses = $group->realSourceIds();
+        if ($availability->hasUnknownSourceAt($group->tsMs, $witnesses)) {
+            return null;
+        }
         $lacking = [];
         $others = [];
         foreach ($group->entries as $entry) {
             $other = $this->swapFinder->agreedPassOfAnotherCarWithout($entry);
             if ($other === null) {
+                return null;
+            }
+            if (!$availability->isSourceKnownAt($entry->fonteId, $other->tsMs)) {
                 return null;
             }
             $lacking[] = sprintf('%s não tem o carro %d', $this->passFlags->sourceName($entry->fonteId), $other->carro);

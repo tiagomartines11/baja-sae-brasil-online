@@ -75,6 +75,49 @@ final class SourceAvailabilityTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: the knot of crossed wrong numbers (see SwapSuggestionTest):
+     * car 9 at 15:56 typed by counters 1 and 2, car 7 at 15:58.7 by
+     * counters 1 and 3, and an "8" from counter 3 (15:57.2) and one from
+     * counter 2 (15:59.2), each where it lacks a car. Counter 1's phone
+     * has uploaded only up to 16:00, a moment after its last entry: it may
+     * still hold an "8" of its own, typed a second later.
+     *
+     * WHAT WENT WRONG (LiveRaceTest, seeds 2290 and 2364 of four hundred):
+     * "troca_provavel" was raised on such a pass while the third counter
+     * was offline. The flag says EVERY counter that recorded car 8 lacks
+     * another car; counter 1's "8", once uploaded, would make that untrue.
+     *
+     * EXPECTED: no flag while counter 1 has not synced past the pass and
+     * its matching window. Once it has (and holds no "8"), the knot's flag.
+     */
+    public function testTheKnotOfCrossedNumbersWaitsForTheCounterMissingFromThePass(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([7, 8, 9]);
+        $race->pass(9, '15:56', [1, 2]);
+        $race->pass(7, '15:58.7', [1, 3]);
+        $race->entry(3, 8, '15:57.2');
+        $race->entry(2, 8, '15:59.2');
+        $race->syncedThrough(1, '16:00');
+        $race->lastSeen(1, '16:00');
+
+        $whileOffline = $race->run('17:00');
+
+        $this->assertSame([], $this->openFlags($whileOffline, Flag::TROCA_PROVAVEL), 'Counter 1 may still have typed car 8.');
+
+        $race->syncedThrough(1, '17:00');
+        $race->lastSeen(1, '17:00');
+
+        $afterSync = $race->run('17:00');
+
+        $flag = $this->assertSingleOpenFlag($afterSync, Flag::TROCA_PROVAVEL);
+        $cars = $flag->carros;
+        sort($cars);
+        $this->assertSame([7, 8, 9], $cars);
+    }
+
+    /**
      * SITUATION: the same offline period, and a car that only counter 1
      * recorded at 14:00.
      *

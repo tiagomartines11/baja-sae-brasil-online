@@ -140,6 +140,20 @@ final class SourceAvailability
     }
 
     /**
+     * isKnownAt() for a source given by id. True for one that records no
+     * passes (a timing sensor, an observer): nobody waits for it.
+     */
+    public function isSourceKnownAt(int $fonteId, int $tsMs): bool
+    {
+        foreach ($this->passSources as $source) {
+            if ($source->id === $fonteId) {
+                return $this->isKnownAt($source, $tsMs);
+            }
+        }
+        return true;
+    }
+
+    /**
      * "Expected" sources at $tsMs: supposed to count, and known. If one of
      * these has no entry for a pass, it really missed it.
      *
