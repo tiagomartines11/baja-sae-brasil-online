@@ -143,7 +143,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
             <?php if ($fonte->getTipo() === Source::TIPO_AUTOMATICA) { ?>
                 <label>Papel <select name="papel"><?= $options(SourceAdmin::ROLE_LABELS, $fonte->getPapel()) ?></select></label>
                 <label>Endereço das imagens <input type="text" name="imagem_base_url" maxlength="255" size="32"
-                       placeholder="vazio = sem imagens" value="<?= $h($fonte->getImagemBaseUrl() ?? '') ?>"></label>
+                       placeholder="ex.: http://camera.local/imagens/ (vazio = sem imagens)" value="<?= $h($fonte->getImagemBaseUrl() ?? '') ?>"></label>
             <?php } ?>
             <label><input type="checkbox" name="ativa" value="1" <?= $fonte->getAtiva() ? 'checked' : '' ?>> ativa</label>
             <?php if (!$fonte->getAtiva()) { ?>

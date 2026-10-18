@@ -376,6 +376,11 @@ final class TimelineWindow
             }
         }
         foreach ($baseUrls as $fonteId => $baseUrl) {
+            // An address saved before a path was required ("http://box"):
+            // the id must not run into the host name.
+            if (preg_match('#^https?://[^/]+$#i', $baseUrl) === 1) {
+                $baseUrl .= '/';
+            }
             foreach ($entriesBySource[$fonteId] ?? [] as $index => $entry) {
                 $image = $images[(int) $entry['id']] ?? null;
                 if ($image === null) {

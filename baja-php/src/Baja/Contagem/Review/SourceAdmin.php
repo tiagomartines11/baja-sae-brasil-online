@@ -462,6 +462,10 @@ final class SourceAdmin
      * pictures usually live on a box beside the track, on the local network
      * (see "Visão computacional" in docs/contagem.md for what that costs).
      *
+     * It must have a path after the host ("http://box/" at least): the
+     * picture's id is appended to it, and with no "/" an id sent by the
+     * system ("-x.example.org") would become part of the host name.
+     *
      * @param mixed $value
      */
     private static function imageBaseUrl($value): ?string
@@ -470,9 +474,10 @@ final class SourceAdmin
         if ($url === '') {
             return null;
         }
-        if (strlen($url) > self::MAX_URL_LENGTH || preg_match('#^https?://[^\s"\'<>`]+$#i', $url) !== 1) {
+        if (strlen($url) > self::MAX_URL_LENGTH || preg_match('#^https?://[^/\s"\'<>`]+/[^\s"\'<>`]*$#i', $url) !== 1) {
             throw new InvalidArgumentException(
-                'Endereço das imagens inválido: use um endereço http:// ou https:// de até ' . self::MAX_URL_LENGTH . ' caracteres, ou deixe vazio.'
+                'Endereço das imagens inválido: use um endereço http:// ou https:// com o caminho das imagens '
+                . '(por exemplo http://camera.local/imagens/), de até ' . self::MAX_URL_LENGTH . ' caracteres, ou deixe vazio.'
             );
         }
         return $url;

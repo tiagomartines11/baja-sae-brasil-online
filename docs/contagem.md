@@ -1009,7 +1009,8 @@ review block shows whether it does.
 
 **Pictures.** With an *endereço das imagens* (`imagem_base_url`) set on
 the source, each entry with an `imagem` gets `imagem_url` = address + id
-in the timeline, and clicking its chip shows the picture with its
+in the timeline (the address must have a path, at least `http://box/`, so
+an id cannot run into the host name; one saved without gets its "/"), and clicking its chip shows the picture with its
 confidence. The picture is served by the system itself, never by this
 server, and never appears in the public feed. Expect it to be a box beside
 the track on the local network, and plan for:

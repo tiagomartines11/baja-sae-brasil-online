@@ -304,6 +304,19 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
         $this->assertSame('http://camera.local:8080/img/cam1-000123.jpg', $withPicture[0]['imagem_url']);
         $this->assertEqualsWithDelta(0.873, $withPicture[0]['confianca'], 0.0001);
 
+        // An address with no path would let the picture's id (which the
+        // sending system chooses) run into the host name: refused, and one
+        // saved before that rule gets its "/".
+        try {
+            $this->submitSourceForm($camera, ['imagem_base_url' => 'http://box']);
+            $this->fail('an image address with no path was accepted');
+        } catch (InvalidArgumentException $refused) {
+            $this->assertStringContainsString('caminho das imagens', $refused->getMessage());
+        }
+        $this->executeSql('UPDATE contagem_fonte SET imagem_base_url = ? WHERE fonte_id = ?', ['http://box', $camera->getFonteId()]);
+        $withPicture = array_values(array_filter($this->entriesOnTheTimeline(), fn(array $entry) => isset($entry['imagem_url'])));
+        $this->assertSame('http://box/cam1-000123.jpg', $withPicture[0]['imagem_url']);
+
         $this->expectException(InvalidArgumentException::class);
         $this->submitSourceForm($camera, ['imagem_base_url' => 'javascript:alert(1)']);
     }
