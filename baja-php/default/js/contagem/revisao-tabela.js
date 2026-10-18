@@ -9,7 +9,7 @@ import {
   NOMES_DE_SITUACAO, avisoDeVoltasCurtas, dispositivosDaFonte, fonteSilenciosa, situacaoDoCarroFora,
 } from './revisao-fila.js';
 import {
-  DICA_DE_ACIMA, celulaDaFonte, colunaDaFonte, colunasDeFontes, indicadorDaOrdem, ordemEmVigor, ordenarCarros, sinaisDoCarro,
+  DICA_DE_ACIMA, celulaDaFonte, colunaDaFonte, colunasDeFontes, desdeDoStatus, indicadorDaOrdem, ordemEmVigor, ordenarCarros, sinaisDoCarro,
   textoDeAcima, textoDeCurtas, textoDosAlertas,
 } from './revisao-carros.js';
 import { descreverParada } from './revisao-raias-logica.js';
@@ -116,8 +116,7 @@ export function desenharTabelaDeCarros(tabela, estado, carroSelecionado, aoEscol
     el('td', { class: 'num' }, tempoDeProva(carro.ultima_passagem_ms, largada)),
     el('td', { class: 'num', title: AVISO_TEMPO_DE_VOLTA }, duracao(carro.ultima_volta_ms)),
     el('td', { class: 'num', title: AVISO_TEMPO_DE_VOLTA }, duracao(carro.melhor_volta_ms)),
-    el('td', { class: 'situacao' }, NOMES_DE_STATUS[carro.status] ?? carro.status ?? '',
-      carro.status_desde_ms ? ` desde ${tempoDeProva(carro.status_desde_ms, largada)}` : ''));
+    el('td', { class: 'situacao' }, NOMES_DE_STATUS[carro.status] ?? carro.status ?? '', desdeDoStatus(carro, largada)));
   });
 
   // No team at all is marked present: then every number typed is "not a

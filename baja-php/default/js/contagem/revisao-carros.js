@@ -3,7 +3,7 @@
 // counter's cell says, and the order of the rows. Pure functions, tested
 // with `node --test`; the drawing is in revisao-tabela.js.
 
-import { NOMES_DE_ALERTA, SEM_VALOR } from './revisao-formato.js';
+import { NOMES_DE_ALERTA, SEM_VALOR, tempoDeProva } from './revisao-formato.js';
 import { exclusoesAbertas } from './revisao-decisoes.js';
 import {
   compararNuloPorUltimo, contagemEmDuvida, fonteSilenciosa, fonteVotante, resumoDeAlertas,
@@ -120,6 +120,20 @@ export function sinaisDoCarro(carro, estado, colunas) {
     tipos,
     curtas: (carro.voltas_curtas_confirmadas ?? []).length,
   };
+}
+
+// " desde 1:23:45" after a car's status, or " desde antes da largada" for a
+// stay that began before the start (a car parked in the box overnight read
+// "no box desde -9:39:47"); empty when the moment is unknown.
+export function desdeDoStatus(carro, largadaMs) {
+  const desde = carro?.status_desde_ms;
+  if (!desde) {
+    return '';
+  }
+  if (largadaMs !== null && largadaMs !== undefined && desde < largadaMs) {
+    return ' desde antes da largada';
+  }
+  return ` desde ${tempoDeProva(desde, largadaMs)}`;
 }
 
 export function textoDeAcima(acima) {

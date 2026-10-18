@@ -49,6 +49,40 @@ final class StopStatsTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: the race starts at 10:00. Car 7 was put in the pit lane
+     * at 2:00 (the evening before, in real life) and is still there; car 8
+     * went in at 2:00 and out at 5:00; car 9 went in at 8:00 and out at
+     * 12:00.
+     *
+     * WHAT WENT WRONG: at a race the feed said a car had 18.6 h in the box
+     * of an 11.6 h race, and the review table said "no box desde -9:39:47".
+     *
+     * EXPECTED: only race time counts. Car 7 is inside since the start,
+     * with 10 min spent at 20:00; car 8 made no stop of the race; car 9's
+     * stay counts its 2 min after the start.
+     */
+    public function testOnlyRaceTimeCountsOnceTheRaceHasAStart(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('10:00');
+        $race->pitIn(7, '02:00');
+        $race->pitIn(8, '02:00');
+        $race->pitOut(8, '05:00');
+        $race->pitIn(9, '08:00');
+        $race->pitOut(9, '12:00');
+        $timeline = $this->timelineOf($race);
+
+        $this->assertSame(
+            ['dentro' => true, 'desde_ms' => RaceScenario::ms('10:00'), 'paradas' => 0, 'total_ms' => 600000, 'ultima_ms' => null],
+            $this->pit($timeline, 7, '20:00')
+        );
+        $this->assertSame(self::NOTHING, $this->pit($timeline, 8, '20:00'));
+        $this->assertSame(['dentro' => false, 'desde_ms' => null, 'paradas' => 1, 'total_ms' => 120000, 'ultima_ms' => 120000], $this->pit($timeline, 9, '20:00'));
+        // Asked before the start, a stay is what it is.
+        $this->assertSame(180000, $this->pit($timeline, 8, '09:00')['total_ms']);
+    }
+
+    /**
      * SITUATION: car 7 is in the pit lane from 10:00 to 12:00 (two
      * minutes). We ask at several moments.
      *

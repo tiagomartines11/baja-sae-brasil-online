@@ -14,7 +14,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  CHAVE_DA_ORDEM, celulaDaFonte, colunasDeFontes, diferenca, guardarOrdem, indicadorDaOrdem, lerOrdem, ordemEmVigor,
+  CHAVE_DA_ORDEM, celulaDaFonte, colunasDeFontes, desdeDoStatus, diferenca, guardarOrdem, indicadorDaOrdem, lerOrdem, ordemEmVigor,
   ordenarCarros, proximaOrdem, sinaisDoCarro, textoDeAcima, textoDosAlertas,
 } from '../../default/js/contagem/revisao-carros.js';
 
@@ -336,4 +336,11 @@ test('blocked or broken storage simply means the standings', () => {
   assert.equal(lerOrdem(lixo, 'END'), null);
   lixo.setItem(`${CHAVE_DA_ORDEM}:END`, 'não é JSON');
   assert.equal(lerOrdem(lixo, 'END'), null);
+});
+
+// At QA cars parked in the box overnight read "no box desde -9:39:47".
+test('a stay that began before the start reads "desde antes da largada"', () => {
+  assert.equal(desdeDoStatus({ status: 'box', status_desde_ms: LARGADA - 34_787_000 }, LARGADA), ' desde antes da largada');
+  assert.equal(desdeDoStatus({ status: 'box', status_desde_ms: LARGADA + 3_725_000 }, LARGADA), ' desde 1:02:05');
+  assert.equal(desdeDoStatus({ status: 'normal', status_desde_ms: null }, LARGADA), '');
 });

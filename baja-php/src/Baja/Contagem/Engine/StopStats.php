@@ -36,15 +36,28 @@ final class StopStats
      *   paradas    completed stays (the one under way is not counted yet)
      *   total_ms   time spent inside: completed stays plus the one under way, up to now
      *   ultima_ms  duration of the most recent completed stay, null when there is none
+     *
+     * Once the race has a start, only race time counts: a stay that ended
+     * before the start is no stop of the race (the car was parked in the
+     * pit lane overnight), and one under way at the start counts from the
+     * start. Otherwise a car that spent the night in the box had 18 h in the
+     * box in a race of 11.
      */
     public static function forCar(RaceTimeline $timeline, string $area, int $carro, int $nowMs): array
     {
         $stats = ['dentro' => false, 'desde_ms' => null, 'paradas' => 0, 'total_ms' => 0, 'ultima_ms' => null];
         $lastExitMs = null;
+        $startMs = $timeline->largadaMs;
 
         foreach ($timeline->stayIntervals($area)[$carro] ?? [] as [$inMs, $outMs]) {
             if ($inMs > $nowMs) {
                 continue;
+            }
+            if ($startMs !== null && $startMs <= $nowMs) {
+                if ($outMs !== null && $outMs <= $startMs) {
+                    continue;
+                }
+                $inMs = max($inMs, $startMs);
             }
             if ($outMs === null || $outMs > $nowMs) {
                 $stats['dentro'] = true;

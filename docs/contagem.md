@@ -1410,7 +1410,10 @@ For the live stream it also carries the stops. Per car, `box` and
 `{dentro, desde_ms, paradas, total_ms, ultima_ms}`: whether the car is inside
 now and since when, the number of completed stays, the total time inside
 (including a stay under way, so it keeps running between recalculations) and
-the duration of the last completed stay. And `ultimas_paradas`: the last ten
+the duration of the last completed stay. Once the race has a start only race
+time counts: a stay that ended before the start is not a stop, and one under
+way at the start counts from the start (`desde_ms` is then the start; the
+review table says "desde antes da largada"). And `ultimas_paradas`: the last ten
 entries and exits of both areas across the field, newest first, each
 `{area, tipo, carro, ts_ms, inferida, presumida}`. `inferida` is an exit a
 reviewer marked; `presumida` is an exit nobody logged, which the count
