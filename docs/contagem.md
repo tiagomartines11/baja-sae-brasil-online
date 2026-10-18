@@ -1255,7 +1255,13 @@ its own (`SensorTrains`, `UnreadAssigner::matchMarks`):
   stays untimed ("ambígua");
 - otherwise by the times: each counter's own delay within the train is
   taken out of the crossings' times, the crossings are moved by the common
-  lag that lines them up best with the marks, and a mark gets the crossing
+  lag that lines them up best with the marks (only lags with the marks
+  before the crossings, or at most 0.5 s after them,
+  `MARCA_DEPOIS_DAS_LEITURAS_MS`: with the habits out a crossing is the
+  middle of its counters' presses, and a mark two seconds after that is a
+  pairing no counter's hand explains; such a lag once timed a car's pass
+  with the mark of the car behind it, 2.8 s late, race simulator, two
+  counters), and a mark gets the crossing
   it is paired with when every other answer (another pairing, another lag)
   is clearly worse: by 0.5 s in a train with as many marks as crossings,
   by 1 s otherwise (a false trigger or a missed car may be in it);

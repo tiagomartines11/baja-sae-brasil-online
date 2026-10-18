@@ -103,6 +103,44 @@ final class SensorTrainTest extends EngineTestCase
     }
 
     /**
+     * SITUATION (race simulator, seed 5, two counters, "??" and sensor):
+     * car 13 crosses at 04:05.67 and car 24 at about 04:08.4; the sensor
+     * marks both and falsely triggers at 04:10.01. Counter 1 types 13 at
+     * 04:06.42 and presses "??" for 24 at 04:08.23; counter 2 types 13 at
+     * 04:07.09 and 24 at 04:08.08. One train: three marks, two crossings.
+     *
+     * EXPECTED: car 13's pass is not timed by 04:08.47 (car 24's mark) or
+     * by the false trigger: pairing them so means marks two seconds after
+     * every counter's Enter, which no counter's hand explains, and it once
+     * beat the true pairing by more than the margin. The pass is timed by
+     * its own mark or not at all, and the per-car recount says the same.
+     */
+    public function testMarksSecondsAfterEveryCounterDoNotTimeTheCarInFront(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->addSensor(3);
+        $race->start('00:00');
+        $race->firstCrossing([13, 24]);
+        $race->entry(1, 13, '04:06.417');
+        $race->entry(2, 13, '04:07.086');
+        $race->entry(2, 24, '04:08.082');
+        $race->unread(1, '04:08.228');
+        foreach (['04:05.670', '04:08.471', '04:10.013'] as $at) {
+            $race->mark(3, $at);
+        }
+        $input = $race->input('10:00');
+
+        $result = Engine::run($input);
+
+        $pass = $this->groupOf($result, 13);
+        $this->assertTrue($pass->contado);
+        $this->assertContains($pass->marcaSensor?->tsMs, [null, RaceScenario::ms('04:05.670')]);
+        $this->assertLessThan(RaceScenario::ms('04:08.000'), $pass->tsMs);
+        $alone = Engine::countCars(self::whatTheRecountLoads($input, [13], []), [13]);
+        $this->assertSame(self::rows($result->laps, 13), self::rows($alone->lapsByCar[13], 13));
+    }
+
+    /**
      * SITUATION: race control records the start at 01:00, a moment after
      * the pack really left. Car 7 crosses at 00:59.80 and the sensor marks
      * it there; the three counters press Enter after the start instant

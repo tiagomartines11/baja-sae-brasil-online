@@ -70,8 +70,10 @@ final class UnreadPassSyntheticTest extends EngineTestCase
      *
      * EXPECTED: of the marks matched to a pass, at least 99.5 % are the car
      * that really crossed (measured: 99.7 %), and at least 74 % of the real
-     * crossings get the sensor's time (measured: 76 to 77 %; before the
-     * trains were decided on their own, 69 to 70 %).
+     * crossings get the sensor's time (measured: 77.0 to 77.6 %; 76.5 to
+     * 77.0 % before the lag between counters and sensor was bounded to
+     * what a counter's hand explains; before the trains were decided on
+     * their own, 69 to 70 %).
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('counterSetups')]
     public function testAtFullSizeTheSensorTimesThreePassesInFourAndAlmostNeverWithTheWrongCar(int $counters): void
