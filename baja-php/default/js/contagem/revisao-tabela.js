@@ -3,7 +3,7 @@
 
 import { el, substituir } from './revisao-dom.js';
 import {
-  AVISO_TEMPO_DE_VOLTA, NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, idade, tempoDeProva,
+  AVISO_TEMPO_DE_VOLTA, NOMES_DE_STATUS, SEM_VALOR, duracao, horaDoDia, tempoDeProva,
 } from './revisao-formato.js';
 import {
   NOMES_DE_SITUACAO, avisoDeVoltasCurtas, dispositivosDaFonte, fonteSilenciosa, situacaoDoCarroFora,
@@ -15,8 +15,8 @@ import {
 import { descreverParada } from './revisao-raias-logica.js';
 import { exclusoesAbertas } from './revisao-decisoes.js';
 import {
-  FILTROS_VAZIOS, avisoDeHistoricoIncompleto, filtrarHistorico, historicoVazio, linhasDoHistorico, opcoesDosFiltros, resumoDoHistorico,
-  temFiltro,
+  FILTROS_VAZIOS, avisoDeHistoricoIncompleto, filtrarHistorico, historicoVazio, idadeDaLinha, linhasDoHistorico, opcoesDosFiltros,
+  resumoDoHistorico, temFiltro,
 } from './revisao-historico.js';
 import {
   ehObservadora, linhasDaObservacao, tituloDaObservacao,
@@ -358,7 +358,7 @@ function linhaDoHistorico(linha, estado, ocupado, acoes) {
     onclick: abrir ? (evento) => { if (!evento.target.closest('button')) abrir(); } : null,
   },
   el('td', { class: 'num' }, decisao ? `#${decisao.id}` : SEM_VALOR),
-  el('td', {}, `há ${idade(estado.servidor_agora_ms - linha.quandoMs)}`),
+  el('td', {}, idadeDaLinha(estado, linha)),
   el('td', {}, linha.automatica
     ? 'automático'
     : [decisao.usuario ?? SEM_VALOR, decisao.origem === 'contador' ? ' (contador, no aparelho)' : '']),

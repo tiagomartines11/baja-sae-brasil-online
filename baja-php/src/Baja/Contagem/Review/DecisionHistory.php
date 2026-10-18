@@ -47,17 +47,20 @@ final class DecisionHistory
                              d.desfaz_decisao_id, d.origem, d.usuario, d.motivo, d.criado_em_ms,
                              p.passagem_id AS registro_id, p.equipe_numero AS registro_carro, p.fonte_id AS registro_fonte_id,
                              p.ts_ms AS registro_ts_ms, p.qualidade_tempo AS registro_qualidade,
-                             f.nome AS fonte_nome';
+                             f.nome AS fonte_nome, pa.fonte_id AS alvo_fonte_id, fa.nome AS alvo_fonte_nome';
 
     /**
      * The decision, the decision an undo undid (one level: an undo is never
-     * undone), the entry either is about, and the source named by the
-     * decision or by that entry.
+     * undone), the entry either is about, the source named by the
+     * decision or by that entry, and the late entry a "usar_tempo" joined
+     * to it, with its source (the decision changed how that one counts too).
      */
     private const FROM = 'FROM contagem_decisao d
                      LEFT JOIN contagem_decisao desfeita ON desfeita.decisao_id = d.desfaz_decisao_id
                      LEFT JOIN contagem_passagem p ON p.passagem_id = COALESCE(d.passagem_id, desfeita.passagem_id)
-                     LEFT JOIN contagem_fonte f ON f.fonte_id = COALESCE(d.fonte_id, p.fonte_id)';
+                     LEFT JOIN contagem_fonte f ON f.fonte_id = COALESCE(d.fonte_id, p.fonte_id)
+                     LEFT JOIN contagem_passagem pa ON pa.passagem_id = COALESCE(d.passagem_alvo_id, desfeita.passagem_alvo_id)
+                     LEFT JOIN contagem_fonte fa ON fa.fonte_id = pa.fonte_id';
 
     /**
      * The whole history, newest first; at most $limit decisions, the newest.
@@ -229,6 +232,10 @@ final class DecisionHistory
             // the entry it is about (followed through an undo).
             'fonte_id' => self::intOrNull($row['fonte_id']) ?? self::intOrNull($row['registro_fonte_id']),
             'fonte_nome' => $row['fonte_nome'],
+            // The source of the late entry a "usar_tempo" joined to the
+            // chosen one (followed through an undo); null otherwise.
+            'fonte_alvo_id' => self::intOrNull($row['alvo_fonte_id']),
+            'fonte_alvo_nome' => $row['alvo_fonte_nome'],
             // The entry's car as typed, and the car it counts for now.
             // Null for a decision about no stored entry.
             'carro_digitado' => $typedCar,

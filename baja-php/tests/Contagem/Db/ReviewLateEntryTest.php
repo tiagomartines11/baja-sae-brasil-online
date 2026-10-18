@@ -81,6 +81,12 @@ final class ReviewLateEntryTest extends ReviewDbTestCase
         $this->assertSame($onTime, $entries[$late]['grupo']['tempo_escolhido_id']);
         $stored = $this->fetchValue('SELECT passagem_alvo_id FROM contagem_decisao WHERE decisao_id = ?', [$answer['body']['decisao_id']]);
         $this->assertSame($late, (int) $stored);
+        // The history row names both counters: the late one's entry now
+        // counts differently too, and the "Contador" filter must find it.
+        $row = $after['historico'][0];
+        $this->assertSame($answer['body']['decisao_id'], $row['id']);
+        $this->assertSame([(int) $this->fontes[1]->getFonteId(), (int) $this->fontes[0]->getFonteId()], [$row['fonte_id'], $row['fonte_alvo_id']]);
+        $this->assertSame($this->fontes[0]->getNome(), $row['fonte_alvo_nome']);
 
         $again = $this->decide($decision, [$onTime, $late], $this->currentSignatureOf([$onTime, $late]));
         $this->assertSame(409, $again['status']);

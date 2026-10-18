@@ -18,8 +18,8 @@ import assert from 'node:assert/strict';
 
 import { descreverDecisao, fraseDoHistorico } from '../../default/js/contagem/revisao-decisoes.js';
 import {
-  FILTROS_VAZIOS, QUEM_AUTOMATICO, QUEM_CONTADOR, avisoDeHistoricoIncompleto, filtrarHistorico, guardarFiltros, historicoVazio,
-  lerFiltrosGuardados, linhasDoHistorico, normalizarFiltros, opcoesDosFiltros, resumoDoHistorico, temFiltro,
+  FILTROS_VAZIOS, QUEM_AUTOMATICO, QUEM_CONTADOR, avisoDeHistoricoIncompleto, chaveDoHistorico, filtrarHistorico, guardarFiltros,
+  historicoVazio, idadeDaLinha, lerFiltrosGuardados, linhasDoHistorico, normalizarFiltros, opcoesDosFiltros, resumoDoHistorico, temFiltro,
 } from '../../default/js/contagem/revisao-historico.js';
 
 const LARGADA_MS = 1760000000000;
@@ -193,6 +193,24 @@ test('"usar o tempo" reads well with and without a late entry joined to it', () 
   assert.equal(descreverDecisao(base), 'Usou o horário da passagem #531 (carro 1, Contagem 2) para a volta');
 });
 
+test('"usar o tempo" with a late entry joined is found under either counter, and so is its undo', () => {
+  const usar = decisao({
+    id: 30, tipo: 'usar_tempo', passagem_id: 531, passagem_alvo_id: 533, carro_digitado: 1, carro: 1, fonte_id: 2,
+    fonte_nome: 'Contagem 2', fonte_alvo_id: 1, fonte_alvo_nome: 'Contagem 1', passagem_ts_ms: minuto(60), criado_em_ms: minuto(61),
+    ativa: false, pode_desfazer: false,
+  });
+  const desfez = decisao({
+    id: 31, tipo: 'desfazer', desfaz_decisao_id: 30, carro_digitado: 1, carro: 1, fonte_id: 2, fonte_nome: 'Contagem 2',
+    fonte_alvo_id: 1, criado_em_ms: minuto(62), pode_desfazer: false,
+  });
+  const linhas = linhasDoHistorico({ ...ESTADO, historico: [desfez, usar] });
+  const com = (fonte) => ids(filtrarHistorico(linhas, { ...FILTROS_VAZIOS, fonte })).filter((chave) => ['decisao:30', 'decisao:31'].includes(chave));
+
+  assert.deepEqual(com('2'), ['decisao:31', 'decisao:30'], 'the counter whose time was chosen');
+  assert.deepEqual(com('1'), ['decisao:31', 'decisao:30'], 'the late counter, whose entry now counts as a witness');
+  assert.deepEqual(com('3'), []);
+});
+
 test('an undo whose decision is not in the list still names the entry', () => {
   assert.equal(fraseDoHistorico({ tipo: 'desfazer', desfaz_decisao_id: 3, carro_digitado: 3, carro: 3, fonte_nome: 'Contagem 1' }),
     'Desfez a decisão #3 (carro 3, Contagem 1)');
@@ -276,7 +294,9 @@ test('the lists offer every counter, every reviewer once, the counter on the pho
   const opcoes = opcoesDosFiltros(ESTADO, linhasDoHistorico(ESTADO));
 
   assert.deepEqual(opcoes.fontes.map((opcao) => opcao.rotulo), ['Contagem 1', 'Contagem 2', 'Contagem 3']);
-  assert.deepEqual(opcoes.quem.map((opcao) => opcao.rotulo), ['Contador1', 'jbresolin', 'contador (no aparelho)', 'automático']);
+  // Contador1 only voided on the phone: that is "contador (no aparelho)",
+  // not a person of the list.
+  assert.deepEqual(opcoes.quem.map((opcao) => opcao.rotulo), ['jbresolin', 'contador (no aparelho)', 'automático']);
   assert.ok(opcoes.tipos.some((opcao) => opcao.valor === 'usar_tempo'));
 });
 
@@ -326,4 +346,36 @@ test('storage that refuses or holds rubbish leaves the filters empty, without an
   const lixo = armazenamentoFalso();
   lixo.setItem('contagem-revisao-historico:END', '{não é json');
   assert.deepEqual(lerFiltrosGuardados(lixo, 'END'), FILTROS_VAZIOS);
+});
+
+// ---- what is redrawn when ---------------------------------------------------------
+
+test('a line\'s age reads "agora", never "há agora", and moves in the bar\'s steps', () => {
+  const linha = { quandoMs: minuto(10) };
+  const aos = (ms) => idadeDaLinha({ servidor_agora_ms: minuto(10) + ms }, linha);
+  assert.equal(aos(500), 'agora');
+  assert.equal(aos(1999), 'agora');
+  assert.equal(aos(16000), 'há 15 s');
+  assert.equal(aos(3 * 60000 + 5000), 'há 3 min');
+});
+
+test('the history is redrawn when a decision changes, not at every recalculation or status change', () => {
+  // During a race the state's version changes every few seconds and cars go
+  // "parado" and back; the history drew 2,700 nodes each time for nothing.
+  const agora = minuto(120);
+  const estado = { ...ESTADO, versao: 'a', servidor_agora_ms: agora, carros: [{ carro: 3, status: 'normal' }] };
+  const chave = chaveDoHistorico(estado);
+
+  assert.equal(chaveDoHistorico({ ...estado, versao: 'b', carros: [{ carro: 3, status: 'parado' }] }), chave, 'new version, new status');
+  assert.equal(chaveDoHistorico({ ...estado, servidor_agora_ms: agora + 20000 }), chave, 'the same minute');
+  assert.notEqual(chaveDoHistorico({ ...estado, servidor_agora_ms: agora + 60000 }), chave, 'the ages move once a minute');
+
+  const desfeita = HISTORICO.map((linha) => (linha.id === 13 ? { ...linha, ativa: false, pode_desfazer: false } : linha));
+  assert.notEqual(chaveDoHistorico({ ...estado, historico: desfeita }), chave, 'a decision undone');
+  const nova = decisao({ id: 17, tipo: 'confirmar', passagem_id: 800, carro_digitado: 4, carro: 4, criado_em_ms: agora - 1000 });
+  const comNova = { ...estado, historico: [nova, ...HISTORICO] };
+  assert.notEqual(chaveDoHistorico(comNova), chave, 'a new decision');
+  // A decision of the last minute: its age moves in 15 s steps.
+  assert.notEqual(chaveDoHistorico({ ...comNova, servidor_agora_ms: agora + 15000 }), chaveDoHistorico(comNova));
+  assert.equal(chaveDoHistorico({ ...comNova, servidor_agora_ms: agora + 5000 }), chaveDoHistorico(comNova));
 });

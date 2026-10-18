@@ -9,6 +9,7 @@ import { desenharDetalheDeAlerta, desenharDetalheDeCarro, desenharDetalheDeEntra
 import { el, estaDigitandoEm, substituir } from './revisao-dom.js';
 import { avisoDeReconciliacao } from './revisao-frases.js';
 import { encontrarAlerta } from './revisao-fila.js';
+import { chaveDoHistorico as chaveDasLinhasDoHistorico } from './revisao-historico.js';
 import { encontrarEntrada } from './revisao-raias-logica.js';
 import { desenharFontes, desenharHistorico, desenharTabelaDeCarros } from './revisao-tabela.js';
 import {
@@ -161,8 +162,12 @@ export function criarDesenho(ganchos) {
         tela.ordemDosCarros, (coluna) => { escolherOrdemDosCarros(coluna); desenharTudo(); });
       desenhado.listas = chave;
     }
-    // The history has its own key: changing a filter redraws it and nothing else.
-    const chaveDoHistorico = JSON.stringify([chave, tela.filtrosDoHistorico]);
+    // The history has its own key, of what it shows only (see
+    // chaveDoHistorico): changing a filter redraws it and nothing else, and
+    // a recalculation that changed no decision leaves it alone.
+    const chaveDoHistorico = JSON.stringify([
+      chaveDasLinhasDoHistorico(tela.estado), tela.filtrosDoHistorico, tela.ocupado, semConexao(),
+    ]);
     if (chaveDoHistorico !== desenhado.historico) {
       desenharHistorico(pagina.historico, tela.estado, tela.filtrosDoHistorico, tela.ocupado || semConexao(), {
         desfazer: ganchos.acoes.desfazer, abrir: ganchos.abrirDoHistorico,

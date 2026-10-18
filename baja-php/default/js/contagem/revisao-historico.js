@@ -8,6 +8,7 @@
 // these filters: by car, by counter, by person and by type.
 
 import { saidaPresumidaDoAlerta } from './revisao-alertas.js';
+import { haQuanto } from './revisao-formato.js';
 import { descreverResolucaoAutomatica, fraseDoHistorico } from './revisao-frases.js';
 
 // The "Quem" of what the system did on its own, and of a void the counter
@@ -92,6 +93,9 @@ function linhaDeDecisao(decisao, porId, contexto) {
     quem,
     carros: carrosDaDecisao(decisao, desfeita),
     fonteId: decisao.fonte_id ?? (desfeita?.fonte_id ?? null),
+    // A "usar_tempo" that joined a late entry changed how that counter's
+    // entry counts too: the "Contador" filter finds it under either.
+    fonteAlvoId: decisao.fonte_alvo_id ?? (desfeita?.fonte_alvo_id ?? null),
     // An undo in force has no effect of its own to show: the decision it
     // undid reads "desfeita".
     emVigor: Boolean(decisao.ativa) && decisao.tipo !== 'desfazer',
@@ -113,6 +117,7 @@ function linhaAutomatica(alerta, estado, contexto) {
     quem: [QUEM_AUTOMATICO],
     carros: [...(alerta.carros ?? [])],
     fonteId: alerta.fonte_id ?? null,
+    fonteAlvoId: null,
     // What the system did stands for as long as the flag is there: it is
     // worked out afresh at every calculation.
     emVigor: true,
@@ -133,7 +138,7 @@ function ehResolucaoAutomatica(alerta) {
 // Every line of the history panel, newest first: the decisions, and the
 // system's own resolutions among them as read-only lines. Each line:
 //   {chave, automatica, decisao, alerta, tipo, quandoMs, quem: string[],
-//    carros: number[], fonteId, emVigor, desfeita, texto, alvo}
+//    carros: number[], fonteId, fonteAlvoId, emVigor, desfeita, texto, alvo}
 // `alvo` is what a click opens: {tipo: 'carro', numero, momentoMs,
 // passagemIds} or {tipo: 'alerta', id}; null when there is nothing to open.
 //
@@ -195,7 +200,7 @@ export function filtrarHistorico(linhas, filtros) {
   const f = normalizarFiltros(filtros);
   const carro = f.carro === '' ? null : Number(f.carro);
   return linhas.filter((linha) => (carro === null || linha.carros.includes(carro))
-    && (f.fonte === '' || String(linha.fonteId ?? '') === f.fonte)
+    && (f.fonte === '' || String(linha.fonteId ?? '') === f.fonte || String(linha.fonteAlvoId ?? '') === f.fonte)
     && (f.quem === '' || linha.quem.includes(f.quem))
     && (f.tipo === '' || linha.tipo === f.tipo)
     && (!f.soEmVigor || linha.emVigor));
@@ -212,7 +217,11 @@ export function opcoesDosFiltros(estado, linhas, filtros = FILTROS_VAZIOS) {
     : [...opcoes, { valor, rotulo: `${valor} (não está nesta prova)` }]);
 
   const fontes = (estado?.fontes ?? []).map((fonte) => ({ valor: String(fonte.id), rotulo: fonte.nome }));
-  const usuarios = [...new Set(linhas.flatMap((linha) => linha.quem)
+  // People are the reviewers. Whoever was logged in on a counter's phone
+  // is under "contador (no aparelho)", not a person of their own.
+  const usuarios = [...new Set(linhas
+    .filter((linha) => linha.decisao && linha.decisao.origem !== QUEM_CONTADOR)
+    .flatMap((linha) => linha.quem)
     .filter((quem) => quem.startsWith('usuario:'))
     .map((quem) => quem.slice('usuario:'.length)))]
     .sort((a, b) => a.localeCompare(b, 'pt-BR'));
@@ -226,6 +235,31 @@ export function opcoesDosFiltros(estado, linhas, filtros = FILTROS_VAZIOS) {
     quem: comEscolhido(quem, f.quem),
     tipos: comEscolhido(TIPOS_DO_HISTORICO, f.tipo),
   };
+}
+
+// The "Quando" of a line: "agora", "há 15 s", "há 3 min", in the status
+// bar's steps (never "há agora").
+export const idadeDaLinha = (estado, linha) => haQuanto((estado?.servidor_agora_ms ?? 0) - linha.quandoMs);
+
+// Everything the history panel shows, as one string: the panel is redrawn
+// only when this changes. Not the state's version, which changes with every
+// recalculation (every few seconds during a race), nor the cars' live
+// status: rebuilding about 2,700 nodes that often cost a tablet a tenth of
+// a second each time, and replaced "Desfazer" under the reviewer's pointer.
+// The ages of the last minute's lines move in the bar's 15 s steps; older
+// ones once a minute.
+export function chaveDoHistorico(estado, linhas = linhasDoHistorico(estado)) {
+  const agoraMs = estado?.servidor_agora_ms ?? 0;
+  return JSON.stringify([
+    linhas.map((linha) => [
+      linha.chave, linha.texto, linha.tipo, linha.emVigor, linha.desfeita, linha.decisao?.pode_desfazer ?? null,
+      linha.alvo, linha.quem, linha.carros, linha.fonteId, linha.fonteAlvoId,
+      agoraMs - linha.quandoMs < 60000 ? idadeDaLinha(estado, linha) : null,
+    ]),
+    Math.floor(agoraMs / 60000),
+    (estado?.fontes ?? []).map((fonte) => [fonte.id, fonte.nome]),
+    avisoDeHistoricoIncompleto(estado),
+  ]);
 }
 
 // "12 de 81 decisões" while a filter is set, "81 decisões" without. The

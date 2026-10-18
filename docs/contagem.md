@@ -367,9 +367,11 @@ once. The person leaving then presses **Encerrar meu turno**.
   still in force carries **em vigor**; an undone one is struck through; an
   undo says what it undid ("Desfez a decisão #11: anulou a passagem #352
   (carro 3, Contagem 1)"). Filters above it combine: **Carro** (the car
-  typed or the car the entry counts for now), **Contador**, **Quem** (a
-  person, "contador (no aparelho)" for voids made on a phone, or
-  "automático"), **Tipo**, and **Só em vigor**; the heading says "12 de 81
+  typed or the car the entry counts for now), **Contador** (a "usar o
+  tempo" that joined a late entry is found under either counter),
+  **Quem** (a reviewer, "contador (no aparelho)" for voids made on a
+  phone, whoever was logged in there, or "automático"), **Tipo**, and
+  **Só em vigor**; the heading says "12 de 81
   decisões", the system's lines counted apart ("+ 2 do sistema"), and
   **Limpar filtros** brings everything back. A system line sits at the
   moment of its entry (flags carry no time of their own); an assumed exit
@@ -382,7 +384,11 @@ once. The person leaving then presses **Encerrar meu turno**.
   the state (about 30 KB for the 81 decisions of 26SE), so a filter sees
   every decision, not only a first page; past 1000 decisions only the
   newest are sent and the panel says so (the exclusions, added passes and
-  marked exits in force are always sent, older or not). Open-ended source exclusions stay
+  marked exits in force are always sent, older or not). The panel is
+  redrawn only when what it shows changes (a decision, an undo, a filter),
+  not at every recalculation, so "Desfazer" does not move under the
+  pointer; the ages ("agora", "há 15 s", "há 3 min") move in the status
+  bar's steps. Open-ended source exclusions stay
   loud in the Fontes block and the status bar as well.
 - A flag about a lone entry reaches back to a little before the car's
   previous official pass (at most one expected lap and half a minute
