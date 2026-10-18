@@ -338,12 +338,53 @@ final class UnreadFlags
         $options = implode('; ', array_map(fn(array $candidate): string => $this->describeCandidate($candidate), array_slice($candidates, 0, 3)));
         if ($isSensor) {
             $flag->motivo = sprintf('%s marcou uma passagem que nenhum contador registrou. Pode ser uma passagem que todos perderam: %s. Atribua o carro (a passagem passa a contar) ou anule a marca.', $name, $options);
+        } elseif ($candidates === [] && ($own = $this->ownTypingOfACarReadThere($entry)) !== null) {
+            // The others did read a car there, but this source typed it too.
+            $flag->motivo = sprintf(
+                '%s registrou uma passagem sem número ("??") e também digitou o carro %d %s (%s s): provavelmente um toque a mais. Anule o registro ou, se souber o carro, atribua-o.',
+                $name,
+                $own['carro'],
+                $own['desvio_ms'] >= 0 ? 'logo depois' : 'logo antes',
+                self::seconds(abs($own['desvio_ms']))
+            );
         } elseif ($candidates === []) {
             $flag->motivo = sprintf('%s registrou uma passagem sem número ("??") e nenhuma outra fonte registrou carro nesse momento, nem havia carro esperado na linha. Atribua o carro, se souber qual foi, ou anule o registro.', $name);
         } else {
             $flag->motivo = sprintf('%s registrou uma passagem sem número ("??"). Pode ser: %s. Escolha o carro ou anule o registro.', $name, $options);
         }
         return $flag;
+    }
+
+    /**
+     * The car the entry's own source typed closest to it, within a matching
+     * window, that another source read within the tolerance of the entry:
+     * a crossing that is no candidate only because this source typed it.
+     *
+     * @return array{carro: int, desvio_ms: int}|null desvio_ms: the typing minus the entry
+     */
+    private function ownTypingOfACarReadThere(Entry $entry): ?array
+    {
+        $toleranceMs = max(1, $this->settings->agreementSpreadMs());
+        $best = null;
+        foreach ($this->readTimes[$entry->fonteId] ?? [] as $carro => $times) {
+            $readByAnother = false;
+            foreach (array_keys($this->readTimes) as $fonteId) {
+                if ($fonteId !== $entry->fonteId && $this->sourceReadNear($fonteId, (int) $carro, $entry->tsMs, $toleranceMs)) {
+                    $readByAnother = true;
+                    break;
+                }
+            }
+            if (!$readByAnother) {
+                continue;
+            }
+            foreach ($times as $tsMs) {
+                $offsetMs = $tsMs - $entry->tsMs;
+                if (abs($offsetMs) <= $this->settings->janelaMs && ($best === null || abs($offsetMs) < abs($best['desvio_ms']))) {
+                    $best = ['carro' => (int) $carro, 'desvio_ms' => $offsetMs];
+                }
+            }
+        }
+        return $best;
     }
 
     /** @param array<string, mixed> $candidate */
@@ -382,10 +423,11 @@ final class UnreadFlags
         $flag->atribuicao = $assignment;
         $names = array_map(fn(int $fonteId): string => $this->passFlags->sourceName($fonteId), $assignment['fonte_ids']);
         $flag->motivo = sprintf(
-            '%s registrou uma passagem sem número ("??"); foi atribuída ao carro %d, que %s registrou a %s s, sem outro carro possível por perto.',
+            '%s registrou uma passagem sem número ("??"); foi atribuída ao carro %d, que %s %s a %s s, sem outro carro possível por perto.',
             $source->nome,
             $assignment['carro'],
             self::sentenceList($names),
+            count($names) > 1 ? 'registraram' : 'registrou',
             self::seconds(abs($assignment['desvio_ms']))
         );
         return $flag;

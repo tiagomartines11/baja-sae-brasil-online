@@ -58,6 +58,7 @@ final class UnreadPassTest extends EngineTestCase
         $this->assertSame([1, 3], $record->atribuicao['fonte_ids']);
         $this->assertEqualsCanonicalizing([$read[1], $read[3]], $record->atribuicao['passagem_ids']);
         $this->assertNull($record->atribuicao['margem_ms'], 'no other car was possible at all');
+        $this->assertMatchesRegularExpression('/carro 7, que .+ e .+ registraram a 0,6 s,/', $record->motivo);
         $this->assertArrayHasKey('atribuicao', $record->toArray());
 
         $this->assertSame(1, $result->sourceStats[2]->ilegiveis);
@@ -335,8 +336,36 @@ final class UnreadPassTest extends EngineTestCase
         $this->assertSame([], $flag->carros);
         $this->assertNull($flag->sugestao);
 
+        $this->assertStringContainsString('nenhuma outra fonte registrou carro nesse momento', $flag->motivo);
+
         $race->confirm($unread);
         $this->assertNoOpenFlags($race->run('10:00'));
+    }
+
+    /**
+     * SITUATION: car 7 crosses at 04:00. Counters 1 and 3 type it; counter
+     * 2 presses "??" at 04:00.2 and then types 7 as well, 0.9 s later.
+     *
+     * EXPECTED: car 7 is no candidate (counter 2 typed it: the "??" cannot
+     * be that same crossing of car 7), so there is none. But the flag does
+     * not say that nobody registered a car: it says counter 2 typed car 7
+     * right after, probably one press too many, which points to voiding it.
+     */
+    public function testAnUnreadPassItsOwnCounterTypedAsWellSaysSo(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([7]);
+        $race->entry(1, 7, '04:00');
+        $race->entry(3, 7, '04:00.1');
+        $unread = $race->unread(2, '04:00.2');
+        $race->entry(2, 7, '04:01.1');
+
+        $flag = $this->assertSingleOpenFlag($race->run('10:00'), Flag::NUMERO_ILEGIVEL);
+        $this->assertSame([$unread], $flag->passagemIds);
+        $this->assertSame([], $flag->candidatos);
+        $this->assertStringContainsString('também digitou o carro 7 logo depois (0,9 s): provavelmente um toque a mais', $flag->motivo);
+        $this->assertStringNotContainsString('nenhuma outra fonte', $flag->motivo);
     }
 
     /**
