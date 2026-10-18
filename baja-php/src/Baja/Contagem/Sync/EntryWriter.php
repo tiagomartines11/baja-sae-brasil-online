@@ -92,7 +92,7 @@ final class EntryWriter
 
     /**
      * @param array<int, mixed> $entries as decoded from the request
-     * @return array{uuids: string[], new: int, cars: int[], times: int[]}
+     * @return array{uuids: string[], new: int, new_ids: int[], cars: int[], times: int[]}
      */
     public function storeEntries(array $entries): array
     {
@@ -142,6 +142,8 @@ final class EntryWriter
         );
 
         $newCount = 0;
+        $newIds = [];
+        $connection = Propel::getWriteConnection('resultados');
         foreach ($valid as $key => $entry) {
             if (isset($alreadyStored[$key])) {
                 continue;
@@ -174,6 +176,7 @@ final class EntryWriter
                 $fromSystem ? UploadFields::imageRefOf($raw) : null,
                 $fromSystem ? UploadFields::confidenceOf($raw) : null,
             ]);
+            $newIds[] = (int) $connection->lastInsertId();
             $newCount++;
         }
 
@@ -181,7 +184,7 @@ final class EntryWriter
         // attempt stored the entries and then failed before publishing, the
         // phone sends them again; they are no longer new, but their cars
         // still have to be recounted.
-        return ['uuids' => $acknowledged, 'new' => $newCount, 'cars' => array_keys($cars), 'times' => $times];
+        return ['uuids' => $acknowledged, 'new' => $newCount, 'new_ids' => $newIds, 'cars' => array_keys($cars), 'times' => $times];
     }
 
     /**

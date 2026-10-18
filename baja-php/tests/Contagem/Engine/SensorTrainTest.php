@@ -136,7 +136,7 @@ final class SensorTrainTest extends EngineTestCase
         $config->unreadRate = 0.05;
         $input = SyntheticRace::generate($config)->input();
 
-        $this->assertSame([SensorTrains::MARCAS => [], SensorTrains::TUDO => []], SensorTrains::rangesToLoad($input, [5], [SensorTrains::MARCAS => [], SensorTrains::TUDO => []]));
+        $this->assertSame([SensorTrains::MARCAS => [], SensorTrains::TUDO => [], SensorTrains::ILEGIVEIS => []], SensorTrains::rangesToLoad($input, [5], [SensorTrains::MARCAS => [], SensorTrains::TUDO => []]));
         $this->assertSame([], SensorTrains::carsAround($input, [$input->entries[100]->tsMs], [$input->entries[100]->carro]));
     }
 
@@ -185,7 +185,9 @@ final class SensorTrainTest extends EngineTestCase
      * EXPECTED: every car whose rows the change moves is a car of the
      * upload (the car typed) or one SensorTrains::carsAround() names from
      * what the recount loads around the moment: the cars of the trains
-     * there. A recount of those cars is all the change needs.
+     * there. A recount of those cars is all the change needs. For an
+     * upload that only added the entry, SensorTrains::carsWhoseMarksMoved()
+     * names fewer cars, and still every car the entry moved.
      */
     #[DataProvider('races')]
     public function testAnUploadMovesNoPassTimeOutsideTheCarsItRecounts(int $seed, int $counters): void
@@ -195,6 +197,7 @@ final class SensorTrainTest extends EngineTestCase
         $dice = new Randomizer(new Mt19937($seed));
         $sensorId = $race->sensorSourceId();
         $moved = 0;
+        $spared = 0;
         for ($try = 0; $try < 15; $try++) {
             $entry = $input->entries[$dice->getInt(0, count($input->entries) - 1)];
             $without = clone $input;
@@ -210,10 +213,17 @@ final class SensorTrainTest extends EngineTestCase
                     'Seed %d: %s entry %d (%s at %d) changed cars it does not recount.',
                     $seed, $what, $entry->id, $entry->fonteId === $sensorId ? 'a mark' : 'car ' . $entry->carro, $entry->tsMs
                 ));
+                if ($what === 'stored') {
+                    $loaded = self::whatTheRecountLoads($after, [], [$entry->tsMs], $changedCars, [$entry->id]);
+                    $fewer = array_merge($changedCars, SensorTrains::carsWhoseMarksMoved($loaded, [$entry->id]));
+                    $this->assertSame([], array_values(array_diff($changed, $fewer)), sprintf('Seed %d: the new entry %d changed cars the precise rule does not recount.', $seed, $entry->id));
+                    $spared += count(array_diff($recounted, $fewer));
+                }
                 $moved += count(array_diff($changed, $entry->carro === null ? [] : [$entry->carro]));
             }
         }
         $this->assertGreaterThan(0, $moved, 'some changes did move another car (through the marks)');
+        $this->assertGreaterThan(0, $spared, 'the precise rule spared recounts');
     }
 
     // ----- helpers -----
@@ -276,8 +286,9 @@ final class SensorTrainTest extends EngineTestCase
      * @param int[] $cars
      * @param int[] $momentsMs
      * @param int[] $changedCars
+     * @param int[] $withoutEntryIds also complete what the race without these entries needs
      */
-    private static function whatTheRecountLoads(EngineInput $full, array $cars, array $momentsMs, array $changedCars = []): EngineInput
+    private static function whatTheRecountLoads(EngineInput $full, array $cars, array $momentsMs, array $changedCars = [], array $withoutEntryIds = []): EngineInput
     {
         $wanted = array_fill_keys($cars, true);
         $loaded = clone $full;
@@ -291,21 +302,37 @@ final class SensorTrainTest extends EngineTestCase
         }
         $marks = array_values(array_filter($full->entries, fn(Entry $entry) => isset($sensorIds[$entry->fonteId])));
         $ranges = [SensorTrains::MARCAS => [], SensorTrains::TUDO => []];
+        $resolved = [];
         while (true) {
             $missing = SensorTrains::rangesToLoad($loaded, $cars, $ranges, $momentsMs, $changedCars);
-            if ($missing[SensorTrains::MARCAS] === [] && $missing[SensorTrains::TUDO] === []) {
+            if ($withoutEntryIds !== []) {
+                $before = SensorTrains::rangesToLoad(SensorTrains::without($loaded, $withoutEntryIds), $cars, $ranges, $momentsMs, $changedCars);
+                foreach ($before as $kind => $more) {
+                    $missing[$kind] = $kind === SensorTrains::ILEGIVEIS ? array_merge($missing[$kind], $more) : UnreadAssigner::merged(array_merge($missing[$kind], $more));
+                }
+            }
+            $unread = array_values(array_filter($loaded->entries, fn(Entry $entry) => in_array($entry->id, $missing[SensorTrains::ILEGIVEIS], true) && !isset($resolved[$entry->id])));
+            foreach ($unread as $entry) {
+                $resolved[$entry->id] = true;
+            }
+            if ($missing[SensorTrains::MARCAS] === [] && $missing[SensorTrains::TUDO] === [] && $unread === []) {
                 return $loaded;
             }
             $loaded->entries = self::union($loaded->entries, self::entriesIn($full->entries, $missing[SensorTrains::TUDO]));
             $loaded->entries = self::union($loaded->entries, self::entriesIn($marks, $missing[SensorTrains::MARCAS]));
-            foreach ($missing as $kind => $missingRanges) {
-                $ranges[$kind] = UnreadAssigner::merged(array_merge($ranges[$kind], $missingRanges));
+            foreach ([SensorTrains::MARCAS, SensorTrains::TUDO] as $kind) {
+                $ranges[$kind] = UnreadAssigner::merged(array_merge($ranges[$kind], $missing[$kind]));
             }
-            self::addAroundUnread($full, $loaded);
+            if ($unread !== []) {
+                self::addAroundUnread($full, $loaded, $unread);
+            }
         }
     }
 
-    private static function addAroundUnread(EngineInput $full, EngineInput $loaded): void
+    /**
+     * @param Entry[]|null $around only around these (the ones just loaded); null: around every loaded entry
+     */
+    private static function addAroundUnread(EngineInput $full, EngineInput $loaded, ?array $around = null): void
     {
         $sourcesById = [];
         foreach ($full->sources as $source) {
@@ -313,7 +340,7 @@ final class SensorTrainTest extends EngineTestCase
         }
         $counterUnread = array_filter($full->entries, fn(Entry $entry) => $entry->carro === null && !$sourcesById[$entry->fonteId]->isTimingSensor());
         $items = DecisionApplier::apply($counterUnread, $full->decisions, $sourcesById)->unreadEntries;
-        $moments = array_map(fn(Entry $entry) => $entry->tsMs, $loaded->entries);
+        $moments = array_map(fn(Entry $entry) => $entry->tsMs, $around ?? $loaded->entries);
         $ranges = UnreadAssigner::rangesToLoad($items, $moments, $full->settings);
         $loaded->entries = self::union($loaded->entries, self::entriesIn($full->entries, $ranges));
     }

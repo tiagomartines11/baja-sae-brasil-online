@@ -35,6 +35,15 @@ use Baja\Contagem\Engine\Data\Source;
  * read two or more of the train's cars has them in the same relative order,
  * and together they put every car before or after every other, that is the
  * order the marks were made in.
+ *
+ * THE PER-CAR RECOUNT of an upload must time its cars' passes as the whole
+ * race does. It loads what their trains need (rangesToLoad(), round after
+ * round: the marks near each crossing, the readings a few seconds around
+ * those marks, the entries around a "??" that may be a reading of one of
+ * them), and recounts the other cars whose marks the upload moved: for an
+ * upload that only added entries, the cars whose mark differs with and
+ * without them (carsWhoseMarksMoved()); otherwise every car of the trains
+ * near what it changed (carsAround()).
  */
 final class SensorTrains
 {
@@ -65,6 +74,14 @@ final class SensorTrains
     public const TUDO = 'tudo';
 
     /**
+     * rangesToLoad(): the counters' "??" that may be readings of a train's
+     * crossing (within a spread of one of its readings, or the tolerance of
+     * one of its marks), by id: which car each is needs the entries around
+     * it (UnreadAssigner::rangesToLoad()).
+     */
+    public const ILEGIVEIS = 'ilegiveis';
+
+    /**
      * What a per-car recount must still load to match the marks around its
      * cars exactly as the whole race does: the stretches of time where the
      * sensors' marks are missing (`MARCAS`), and those where every entry is
@@ -89,18 +106,19 @@ final class SensorTrains
      * @param array{marcas: array<int, array{0: int, 1: int}>, tudo: array<int, array{0: int, 1: int}>} $loaded what was loaded so far, each merged
      * @param int[] $momentsMs
      * @param int[] $changedCars
-     * @return array{marcas: array<int, array{0: int, 1: int}>, tudo: array<int, array{0: int, 1: int}>} merged; both empty when nothing is missing
+     * @return array{marcas: array<int, array{0: int, 1: int}>, tudo: array<int, array{0: int, 1: int}>, ilegiveis: int[]} merged;
+     *         the ranges both empty when nothing is missing
      */
     public static function rangesToLoad(EngineInput $input, array $cars, array $loaded, array $momentsMs = [], array $changedCars = []): array
     {
-        $missing = [self::MARCAS => [], self::TUDO => []];
+        $missing = [self::MARCAS => [], self::TUDO => [], self::ILEGIVEIS => []];
         if (($cars === [] && $momentsMs === []) || !self::anySensorCounts($input->sources)) {
             return $missing;
         }
         $picture = self::picture($input);
         $spreadMs = $input->settings->agreementSpreadMs();
         $toleranceMs = $picture['tolerancia'];
-        [$seedCrossings, $seedMarks] = self::seeds($picture, $cars, $momentsMs, $changedCars, $spreadMs, $toleranceMs);
+        [$seedCrossings, $seedMarks] = self::seeds($picture, $cars, $momentsMs, $changedCars, self::markMoments($input, $momentsMs), $spreadMs, $toleranceMs);
 
         $fullyLoaded = array_fill_keys($cars, true);
         $needs = [self::MARCAS => [], self::TUDO => []];
@@ -116,9 +134,16 @@ final class SensorTrains
             // The changed cars' crossings around the moment, and the marks there.
             $needs[self::TUDO][] = [$momentMs - $spreadMs, $momentMs + $spreadMs];
         }
+        $firstRound = $loaded[self::MARCAS] === [] && $loaded[self::TUDO] === [];
         foreach (array_keys($seedCrossings) as $index) {
+            $crossing = $picture['crossings'][$index];
             // A changed crossing: the marks near any of its readings are seeds.
-            $crossingNeeds($picture['crossings'][$index], !isset($fullyLoaded[$picture['crossings'][$index]['carro']]));
+            $crossingNeeds($crossing, !isset($fullyLoaded[$crossing['carro']]));
+            if ($firstRound && isset($fullyLoaded[$crossing['carro']])) {
+                // What a mark next to it will need, asked for at once: most
+                // crossings have one, and a round costs more than the rows.
+                $needs[self::TUDO][] = [$crossing['ts_ms'] - 2 * $toleranceMs - $spreadMs, $crossing['ts_ms'] + 2 * $toleranceMs];
+            }
         }
         $marksToSee = [];
         foreach ($picture['marcas'] as $marks) {
@@ -128,16 +153,33 @@ final class SensorTrains
                 }
             }
         }
+        $trainMarkTimes = [];
+        $trainReadingTimes = [];
         foreach (self::trainsOf($picture, $seedCrossings, $seedMarks) as [$marks, $crossings]) {
             foreach ($crossings as $crossing) {
                 $crossingNeeds($crossing, false);
+                foreach ($crossing['entradas'] as $reading) {
+                    $trainReadingTimes[] = $reading->tsMs;
+                }
             }
             foreach ($marks as $mark) {
                 $marksToSee[] = $mark;
+                $trainMarkTimes[] = $mark->tsMs;
             }
         }
         foreach ($marksToSee as $mark) {
             $needs[self::TUDO][] = [$mark->tsMs - $toleranceMs - $spreadMs, $mark->tsMs + $toleranceMs];
+        }
+        sort($trainMarkTimes);
+        sort($trainReadingTimes);
+        $isNear = function (array $sortedTimes, int $tsMs, int $withinMs): bool {
+            $first = Stats::countAtMost($sortedTimes, $tsMs - $withinMs - 1);
+            return $first < count($sortedTimes) && $sortedTimes[$first] <= $tsMs + $withinMs;
+        };
+        foreach ($picture['ilegiveis'] as $unread) {
+            if ($isNear($trainMarkTimes, $unread->tsMs, $toleranceMs) || $isNear($trainReadingTimes, $unread->tsMs, $spreadMs)) {
+                $missing[self::ILEGIVEIS][] = $unread->id;
+            }
         }
 
         // What is missing is asked for with a little room around it: a
@@ -179,7 +221,9 @@ final class SensorTrains
      * the one at the moment). Any train it is in, or was in, holds a mark
      * within the tolerance of one of those readings, and every other part
      * of such a train is still joined to one of those marks. A mark that
-     * is gone left only the crossings it was joined to.
+     * came or went was joined to the crossings within the tolerance of it:
+     * every part of its train, before or after, holds one of those (they
+     * are looked at too, with their trains).
      *
      * @param int[] $momentsMs
      * @param int[] $changedCars
@@ -193,24 +237,12 @@ final class SensorTrains
         $picture = self::picture($input);
         $spreadMs = $input->settings->agreementSpreadMs();
         $toleranceMs = $picture['tolerancia'];
-        [, $seedMarks] = self::seeds($picture, [], $momentsMs, $changedCars, $spreadMs, $toleranceMs);
+        $markMoments = self::markMoments($input, $momentsMs);
+        [$seedCrossings, $seedMarks] = self::seeds($picture, [], $momentsMs, $changedCars, $markMoments, $spreadMs, $toleranceMs);
         $cars = [];
-        foreach (self::trainsOf($picture, [], $seedMarks) as [, $crossings]) {
+        foreach (self::trainsOf($picture, $seedCrossings, $seedMarks) as [, $crossings]) {
             foreach ($crossings as $crossing) {
                 $cars[$crossing['carro']] = true;
-            }
-        }
-        $sensorIds = [];
-        foreach ($input->sources as $source) {
-            if ($source->isTimingSensor()) {
-                $sensorIds[$source->id] = true;
-            }
-        }
-        $moments = array_fill_keys($momentsMs, true);
-        $markMoments = [];
-        foreach ($input->entries as $entry) {
-            if (isset($sensorIds[$entry->fonteId], $moments[$entry->tsMs])) {
-                $markMoments[] = $entry->tsMs;
             }
         }
         foreach ($picture['crossings'] as $crossing) {
@@ -226,11 +258,85 @@ final class SensorTrains
     }
 
     /**
+     * The cars whose passes the marks time otherwise because these entries
+     * were added (and nothing else changed): the marks are matched with and
+     * without them, and every car a mark goes to, or went to, otherwise is
+     * named. A new reading of a car rarely changes what its neighbours in
+     * a train get; when it does, they are recounted. The input must hold
+     * what rangesToLoad() asks for, around the entries' moments, for the
+     * race with them and without them.
+     *
+     * @param int[] $newEntryIds
+     * @return int[]
+     */
+    public static function carsWhoseMarksMoved(EngineInput $input, array $newEntryIds): array
+    {
+        if (!self::anySensorCounts($input->sources)) {
+            return [];
+        }
+        $before = self::crossingOfEachMark(self::without($input, $newEntryIds));
+        $after = self::crossingOfEachMark($input);
+        $cars = [];
+        foreach (array_keys($before + $after) as $markId) {
+            $was = $before[$markId] ?? null;
+            $is = $after[$markId] ?? null;
+            if ($was === $is) {
+                continue;
+            }
+            foreach ([$was, $is] as $crossing) {
+                if ($crossing !== null) {
+                    $cars[$crossing[0]] = true;
+                }
+            }
+        }
+        $cars = array_keys($cars);
+        sort($cars);
+        return $cars;
+    }
+
+    /** The same input without these entries. */
+    public static function without(EngineInput $input, array $entryIds): EngineInput
+    {
+        $leftOut = array_fill_keys($entryIds, true);
+        $before = clone $input;
+        $before->entries = array_values(array_filter($input->entries, fn(Entry $entry): bool => !isset($leftOut[$entry->id])));
+        return $before;
+    }
+
+    /**
+     * Each matched mark of the input: the car and the first reading of the
+     * crossing it times (as UnreadAssigner::matchMarks() pairs them, before
+     * they are given to pass groups).
+     *
+     * @return array<int, array{0: int, 1: int}> mark id => [car, id of the crossing's first reading]
+     */
+    private static function crossingOfEachMark(EngineInput $input): array
+    {
+        $unread = LapCounter::count($input, [])->unread;
+        if ($unread === null) {
+            return [];
+        }
+        $sensorIds = [];
+        foreach ($input->sources as $source) {
+            if ($source->isTimingSensor()) {
+                $sensorIds[$source->id] = true;
+            }
+        }
+        $crossings = [];
+        foreach ($unread->assignments as $entryId => $assignment) {
+            if (isset($sensorIds[$unread->sourceOfEntry($entryId)])) {
+                $crossings[$entryId] = [$assignment['carro'], min($assignment['passagem_ids'])];
+            }
+        }
+        return $crossings;
+    }
+
+    /**
      * The crossings and the marks of an input as LapCounter and
      * UnreadAssigner::matchMarks() see them: after decisions, with the
      * "??" the engine gives a car among the readings.
      *
-     * @return array{crossings: array<int, array<string, mixed>>, marcas: array<int, Entry[]>, tolerancia: int}
+     * @return array{crossings: array<int, array<string, mixed>>, marcas: array<int, Entry[]>, ilegiveis: Entry[], tolerancia: int}
      */
     private static function picture(EngineInput $input): array
     {
@@ -257,33 +363,72 @@ final class SensorTrains
         return [
             'crossings' => self::crossings($applied->entries, $sourcesById, $knownCars, $input->settings->agreementSpreadMs()),
             'marcas' => $marksBySource,
+            // The counters' "??" nobody gave a car, of known time.
+            'ilegiveis' => array_values(array_filter($applied->unreadEntries, fn(Entry $entry): bool => $entry->qualidadeTempo !== Entry::TEMPO_DESCONHECIDO)),
             'tolerancia' => UnreadAssigner::sensorToleranceMs($input->settings),
         ];
     }
 
     /**
+     * The moments, of these, at which a timing sensor has an entry (a mark,
+     * stored or voided): what changed there is a mark.
+     *
+     * @param int[] $momentsMs
+     * @return int[]
+     */
+    private static function markMoments(EngineInput $input, array $momentsMs): array
+    {
+        if ($momentsMs === []) {
+            return [];
+        }
+        $sensorIds = [];
+        foreach ($input->sources as $source) {
+            if ($source->isTimingSensor()) {
+                $sensorIds[$source->id] = true;
+            }
+        }
+        $moments = array_fill_keys($momentsMs, true);
+        $found = [];
+        foreach ($input->entries as $entry) {
+            if (isset($sensorIds[$entry->fonteId], $moments[$entry->tsMs])) {
+                $found[$entry->tsMs] = true;
+            }
+        }
+        return array_keys($found);
+    }
+
+    /**
      * Where to start looking: the crossings of the cars, the crossings of
-     * the changed cars read within a spread of a moment, and the marks
-     * within the tolerance of a moment or of any reading of those.
+     * the changed cars read within a spread of a moment, the crossings
+     * within the tolerance of a mark that came or went, and the marks
+     * within the tolerance of a moment or of any reading of the changed
+     * crossings.
      *
      * @param array<string, mixed> $picture
      * @param int[] $cars
      * @param int[] $momentsMs
      * @param int[] $changedCars
+     * @param int[] $markMomentsMs
      * @return array{0: array<int, true>, 1: array<int, true>} positions in the picture's crossings, and ids of marks
      */
-    private static function seeds(array $picture, array $cars, array $momentsMs, array $changedCars, int $spreadMs, int $toleranceMs): array
+    private static function seeds(array $picture, array $cars, array $momentsMs, array $changedCars, array $markMomentsMs, int $spreadMs, int $toleranceMs): array
     {
         $wantedCars = array_fill_keys($cars, true);
         $changed = array_fill_keys($changedCars, true);
         $moments = $momentsMs;
         sort($moments);
+        $markMoments = $markMomentsMs;
+        sort($markMoments);
         $seedCrossings = [];
         $near = $moments;
         foreach ($picture['crossings'] as $index => $crossing) {
             if (isset($wantedCars[$crossing['carro']])) {
                 $seedCrossings[$index] = true;
                 continue;
+            }
+            $first = Stats::countAtMost($markMoments, $crossing['ts_ms'] - $toleranceMs - 1);
+            if ($first < count($markMoments) && $markMoments[$first] <= $crossing['ts_ms'] + $toleranceMs) {
+                $seedCrossings[$index] = true;
             }
             if ($moments === [] || !isset($changed[$crossing['carro']])) {
                 continue;

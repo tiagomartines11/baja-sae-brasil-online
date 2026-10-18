@@ -73,17 +73,24 @@ final class Recount
      * matched to, and which car that is depends on the cars a second or two
      * around it (SensorTrains): with $nearMs, the cars of the trains near
      * those moments are recounted too. Nothing is added while the prova has
-     * no sensor.
+     * no sensor. A sensor's own upload ($onlyMarks) changes no "??": its
+     * marks are no reading of any car. When the change only added entries
+     * ($newEntryIds), the race before it is the same race without them, and
+     * only the cars whose marks the new entries really moved are recounted
+     * (nearly always none but the cars of the upload).
      *
      * @param int[] $cars
      * @param int[] $nearMs
+     * @param int[]|null $newEntryIds
      */
-    public function forCars(array $cars, array $nearMs = []): PublishOutcome
+    public function forCars(array $cars, array $nearMs = [], bool $onlyMarks = false, ?array $newEntryIds = null): PublishOutcome
     {
         $settings = $this->service->getSettings();
         if ($nearMs !== []) {
-            $cars = array_merge($cars, $this->loader->carsNearUnread($settings, $nearMs));
-            $cars = array_merge($cars, $this->loader->carsAroundSensorMarks($settings, $nearMs, $cars));
+            if (!$onlyMarks) {
+                $cars = array_merge($cars, $this->loader->carsNearUnread($settings, $nearMs));
+            }
+            $cars = array_merge($cars, $this->loader->carsAroundSensorMarks($settings, $nearMs, $cars, $onlyMarks, $newEntryIds));
         }
         $cars = array_values(array_unique(array_map('intval', $cars)));
         if ($cars === []) {

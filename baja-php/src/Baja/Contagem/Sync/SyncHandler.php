@@ -121,7 +121,7 @@ final class SyncHandler
                 if ($stored['stop_events_stored']) {
                     $service->markChanged(true);
                 }
-                $service->recountCars($stored['cars'], $stored['times']);
+                $service->recountCars($stored['cars'], $stored['times'], $current['fonte_tipo'] === Source::TIPO_SENSOR, $stored['only_new_ids']);
                 return $stored;
             }, ProvaLock::WAIT_FOR_AN_UPLOAD_SECONDS);
         } catch (LockBusy $busy) {
@@ -164,7 +164,7 @@ final class SyncHandler
         );
         $result = [
             'stored_uuids' => [], 'voided_uuids' => [], 'fixed_uuids' => [], 'fixes_recusados' => [],
-            'cars' => [], 'times' => [], 'stop_events_stored' => false, 'refused' => [],
+            'cars' => [], 'times' => [], 'stop_events_stored' => false, 'refused' => [], 'only_new_ids' => null,
         ];
 
         $connection = Propel::getWriteConnection('resultados');
@@ -190,6 +190,12 @@ final class SyncHandler
                 $result['fixes_recusados'] = $fixes['refused'];
                 $result['cars'] = array_values(array_unique(array_merge($entries['cars'], $voids['cars'], $fixes['cars'])));
                 $result['times'] = array_merge($entries['times'], $voids['times'], $fixes['times']);
+                // An upload that only added entries, all of them new: what
+                // the race was before it is known exactly (the same, without
+                // them), so the recount can tell which other cars it moved.
+                if ($entries['new'] === count($entries['uuids']) && $upload->voids === [] && $upload->fixes === []) {
+                    $result['only_new_ids'] = $entries['new_ids'];
+                }
             }
             $result['refused'] = $writer->refused;
             $heartbeat->save();

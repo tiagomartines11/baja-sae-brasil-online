@@ -101,9 +101,13 @@ final class EngineInputLoader
      *
      * @param int[] $momentsMs moments of the entries an upload stored, voided or fixed
      * @param int[] $changedCars the cars those entries count (or counted) for, and the cars a "??" near them may be or was
+     * @param bool $onlyMarks the entries are a timing sensor's marks (they change no "??")
+     * @param int[]|null $newEntryIds when the change only added entries, their ids: then only the cars
+     *        whose marks they moved (SensorTrains::carsWhoseMarksMoved()), and the race without them is
+     *        loaded as completely as the race with them
      * @return int[]
      */
-    public function carsAroundSensorMarks(Settings $settings, array $momentsMs, array $changedCars): array
+    public function carsAroundSensorMarks(Settings $settings, array $momentsMs, array $changedCars, bool $onlyMarks = false, ?array $newEntryIds = null): array
     {
         if ($momentsMs === [] || !$this->hasUnreadEntries() || !$this->hasSensor) {
             return [];
@@ -113,8 +117,9 @@ final class EngineInputLoader
             return [];
         }
         // A "??" near the moments may now count for another car: the
-        // crossings around it changed too.
-        $raw = $this->counterUnreadEntries();
+        // crossings around it changed too. (Not after a mark: a mark is no
+        // reading of any car.)
+        $raw = $onlyMarks ? [] : $this->counterUnreadEntries();
         $items = $raw === [] ? [] : $this->unreadItems($input, $raw);
         $moments = $momentsMs;
         if ($items !== []) {
@@ -127,8 +132,10 @@ final class EngineInputLoader
                 }
             }
         }
-        $this->addSensorTrains($input, [], $moments, $changedCars);
-        return SensorTrains::carsAround($input, $moments, $changedCars);
+        $this->addSensorTrains($input, [], $moments, $changedCars, $newEntryIds ?? []);
+        return $newEntryIds === null
+            ? SensorTrains::carsAround($input, $moments, $changedCars)
+            : SensorTrains::carsWhoseMarksMoved($input, $newEntryIds);
     }
 
     /**
@@ -141,16 +148,36 @@ final class EngineInputLoader
      * @param int[] $cars
      * @param int[] $momentsMs
      * @param int[] $changedCars
+     * @param int[] $withoutEntryIds also complete the trains of the race without these entries
      */
-    private function addSensorTrains(EngineInput $input, array $cars, array $momentsMs = [], array $changedCars = []): void
+    private function addSensorTrains(EngineInput $input, array $cars, array $momentsMs = [], array $changedCars = [], array $withoutEntryIds = []): void
     {
         if (!$this->hasUnreadEntries() || !$this->hasSensor || !SensorTrains::anySensorCounts($input->sources)) {
             return;
         }
         $loaded = [SensorTrains::MARCAS => [], SensorTrains::TUDO => []];
+        $resolvedUnread = [];
         while (true) {
             $missing = SensorTrains::rangesToLoad($input, $cars, $loaded, $momentsMs, $changedCars);
-            if ($missing[SensorTrains::MARCAS] === [] && $missing[SensorTrains::TUDO] === []) {
+            if ($withoutEntryIds !== []) {
+                $before = SensorTrains::rangesToLoad(SensorTrains::without($input, $withoutEntryIds), $cars, $loaded, $momentsMs, $changedCars);
+                foreach ($before as $kind => $more) {
+                    $missing[$kind] = $kind === SensorTrains::ILEGIVEIS ? array_merge($missing[$kind], $more) : UnreadAssigner::merged(array_merge($missing[$kind], $more));
+                }
+            }
+            // A counter's "??" that may be a reading of a train's crossing:
+            // which car it is needs the entries around it.
+            $unread = [];
+            $toResolve = array_diff_key(array_fill_keys($missing[SensorTrains::ILEGIVEIS], true), $resolvedUnread);
+            if ($toResolve !== []) {
+                foreach ($input->entries as $entry) {
+                    if (isset($toResolve[$entry->id])) {
+                        $unread[] = $entry;
+                    }
+                }
+                $resolvedUnread += $toResolve;
+            }
+            if ($missing[SensorTrains::MARCAS] === [] && $missing[SensorTrains::TUDO] === [] && $unread === []) {
                 return;
             }
             if ($missing[SensorTrains::TUDO] !== []) {
@@ -159,13 +186,11 @@ final class EngineInputLoader
             if ($missing[SensorTrains::MARCAS] !== []) {
                 $input->entries = self::union($input->entries, $this->loadEntriesBetween($input->sources, $missing[SensorTrains::MARCAS], true));
             }
-            foreach ($missing as $kind => $ranges) {
-                $loaded[$kind] = UnreadAssigner::merged(array_merge($loaded[$kind], $ranges));
+            foreach ([SensorTrains::MARCAS, SensorTrains::TUDO] as $kind) {
+                $loaded[$kind] = UnreadAssigner::merged(array_merge($loaded[$kind], $missing[$kind]));
             }
-            if ($missing[SensorTrains::TUDO] !== []) {
-                // A "??" among what came in counts for a car read around
-                // it, and so is a reading of that car's crossing.
-                $this->addEntriesAroundUnread($input, null);
+            if ($unread !== []) {
+                $this->addEntriesAroundUnread($input, null, $unread);
             }
         }
     }
@@ -257,8 +282,9 @@ final class EngineInputLoader
      * the prova has no "??".
      *
      * @param array{0: int, 1: int}|null $window also every "??" in this stretch of time, as a timeline shows it
+     * @param Entry[]|null $around only around these entries (the ones just loaded); null for every entry of the input
      */
-    private function addEntriesAroundUnread(EngineInput $input, ?array $window): void
+    private function addEntriesAroundUnread(EngineInput $input, ?array $window, ?array $around = null): void
     {
         if (!$this->hasUnreadEntries()) {
             return;
@@ -271,7 +297,7 @@ final class EngineInputLoader
             }
             return;
         }
-        $moments = array_map(fn(Entry $entry): int => $entry->tsMs, $input->entries);
+        $moments = array_map(fn(Entry $entry): int => $entry->tsMs, $around ?? $input->entries);
         if ($window !== null) {
             $stepMs = max(1000, UnreadAssigner::reachMs($input->settings));
             for ($momentMs = $window[0]; $momentMs < $window[1] + $stepMs; $momentMs += $stepMs) {

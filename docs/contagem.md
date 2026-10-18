@@ -587,6 +587,15 @@ What a chip tells (the legend under the timeline says the same):
 A counted chip's tooltip gives the lap number and the lap time, as the car
 table times it: "volta 22 · 1:15" (`grupo.volta_ms`).
 
+A timing sensor's mark is in the sensor's lane. One that times a pass has
+`marca_do_sensor`, the car of that pass, and the same `grupo` as the
+counters' entries of the pass; that group says `tempo_do_sensor` (its time
+is the mark) and `marca_sensor_id`. A mark that times no pass is out of
+use (`motivo_fora_de_uso` 'marca_do_sensor'). A piece of the timeline, or a
+car's timeline, shows each mark with its pass even when that pass's car
+has no entry in the piece (the piece recounts the cars of the marks'
+trains too).
+
 ### What the flags mean
 
 | Flag | Meaning |
@@ -973,6 +982,12 @@ Two scripts run without a browser (see the top of each file):
   posts like an automatic system (`--taxas-sensor '{"perdida": 20,
   "falsas_por_hora": 60}'`: misses per thousand, false marks per hour).
   The set-up helper makes the sensor source, taking part, the first time.
+  `"ilegivel_corrigido": 300` has the counters give the number afterwards
+  to 30 % of their "??". In the checks a "??" its counter gave the right
+  number is a counter that typed the crossing right; one left without a
+  number is not (its car is the engine's reckoning, or a reviewer's). With
+  a sensor the runner also says how many counted passes its marks time
+  (the `tempo_do_sensor` column of the laps export).
 - `node baja-php/scripts/contagem-invariante.mjs --ate 300`: the invariant
   of [the hold rule](#the-hold-rule) over many simulated races, engine only,
   no database.
@@ -1185,19 +1200,66 @@ its type cannot change to or from `sensor` (the page says why): its rows
 would change meaning, every number ignored or every mark a "??" to review.
 Create a new source instead.
 
-**A sensor never counts a pass.** Its marks are matched with the counters'
-pass groups after the matching, in the same way as a "??" (each group at
-its counters' earliest entry, since they press Enter as the car is on the
-line or after; within 2.5 s; and, in a cluster of marks, with the counters'
-common lag taken out, so two cars side by side are told apart by their
-order). A matched mark is the pass's timing-only witness
-(`PassGroup::$marcaSensor`): it is no vote, nobody waits for it, and a
-pass without one is no miss of anybody but the sensor. Its time becomes
-the time the laps on either side of that pass are measured from (and so
-the best lap), and the counters' habits are measured against it. **The pass
-time itself (and `LAST`) stays the counters'**: the per-car recount of an
-upload must give exactly what the whole race gives, and matching marks
-needs every car around them, which that recount does not load.
+**A sensor never counts a pass, but it times it.** A mark matched to a
+pass is the pass's timing-only witness (`PassGroup::$marcaSensor`): it is
+no vote, nobody waits for it, and a pass without one is no miss of anybody
+but the sensor. Its time **is the pass time**: `LAST`, the lap row's time,
+the order of two cars at the line, the hold rule's "too soon", and the
+laps on either side (precisely timed, so they may be best laps). The
+counters' habits are measured against it. A precise source in the pass,
+or a reviewer's "usar o tempo", still comes first.
+
+**How a mark finds its pass.** The marks are put against the *crossings*
+the counters read: per car, its readings (a "??" the engine gave the car
+included) no more than a spread (4 s) apart, at their earliest reading,
+since a counter presses Enter as the car is on the line or after. A mark
+and a crossing within 2.5 s of each other belong together, and so does
+everything within 2.5 s of either: a **train**. Each train is decided on
+its own (`SensorTrains`, `UnreadAssigner::matchMarks`):
+
+- one mark, one crossing (most trains): that is its pass;
+- otherwise by the times: each counter's own delay within the train is
+  taken out of the crossings' times, the crossings are moved by the common
+  lag that lines them up best with the marks, and a mark gets the crossing
+  it is paired with when every other answer (another pairing, another lag)
+  is clearly worse: by 0.5 s in a train with as many marks as crossings,
+  by 1 s otherwise (a false trigger or a missed car may be in it);
+- where the times leave marks unclear, **the counters' order**: as many
+  marks as crossings (a train with a false trigger or a missed car is
+  never put in order), every counter that read two of the cars typed them
+  in the same order and together they order them all, the marks at least
+  0.5 s apart (closer, a counter's hand swaps two cars too often for the
+  order to prove anything), each counter's gap between two cars within
+  0.5 s of the gap between their marks, and nothing the times made clear
+  contradicted. Then the marks go to the cars in that order;
+- anything else stays untimed: the pass keeps the counters' time, and the
+  mark is left over ("ambígua" in the statistics, no flag).
+
+**The per-upload count gives the same pass times as the whole race.** A
+mark only depends on the readings and marks a few seconds around it. So the
+recount of an upload loads, for each car it recounts, the marks within
+2.5 s of each of its crossings and every entry a few seconds around those
+marks, round after round until no train is missing a piece
+(`SensorTrains::rangesToLoad`); and it recounts, besides the cars of the
+upload, the cars whose marks the upload moved: for an upload that only
+added entries, the marks are matched with and without them and the cars
+whose mark changed are recounted (nearly always none); for a void or a fix,
+every car of a train near the moment (`SensorTrains::carsAround`). A
+sensor's own upload recounts the cars of the trains around its marks, and
+none around a "??" (a mark is no reading of any car). Tests check this
+for every car of generated races and for single uploads and voids
+(`SensorTrainTest`), and through the upload endpoint
+(`IncrementalEqualsRebuildTest`, with a sensor). The cost is in
+[Two paths](#two-paths).
+
+**Exports.** The Passagens export has a last column `marca_cronometra_carro`
+(for a mark, the car whose pass it times) and the Voltas export a last
+column `tempo_do_sensor` ("sim" when the row's time is a sensor's mark);
+the other columns keep their places.
+
+**Moving the start.** The question "N registros de M carros" counts the
+counters' "??" (a crossing somebody saw) and not the sensor's marks (a mark
+alone never counts, before the start or after).
 
 Its statistics (review block and Fontes page): marks, how many time a pass,
 how many were near passes but not safely paired (no flag: nothing is lost
@@ -1212,11 +1274,27 @@ sides), before the finish: then it is probably a crossing every counter
 missed. It never counts until a reviewer says which car it was; then it is
 that car's pass on the reviewer's word, timed by the sensor.
 
-**Measured** (same races, the sensor missing 2 % of the crossings and
-marking one crossing that did not happen every minute): 70 % of the passes
-got the sensor's time, and 99.6 % of those got the right mark (three
-counters; 99.8 % with two). The wrong ones are cars a second apart in a
-train, timed by the car next to them. About 2 marks a race were flagged
+**Measured** (`UnreadPassSyntheticTest`, eight races at full size: 64 cars,
+four hours, 230 s laps, the usual mistakes, "??" on 2 % of the crossings,
+the sensor missing 2 % of the crossings and marking one crossing that did
+not happen every minute):
+
+| | three counters | two counters |
+|---|---|---|
+| passes timed by the sensor | 76.5 % (19 993 of 26 129) | 77.0 % (20 091 of 26 102) |
+| of those, the right car | 99.67 % (65 wrong) | 99.71 % (58 wrong) |
+| before trains were decided on their own | 69.7 %, 99.66 % right | 69.1 %, 99.71 % right |
+| by the counters' order alone | +18 marks, all right | +26 marks, all right |
+
+The test asserts at least 99.5 % right and 74 % timed. Most of the gain is
+the trains decided one by one with each counter's delay taken out; the
+counters' order adds little in these races, because a simulated counter
+types two cars less than half a second apart in either order (its hand
+is ±0.4 s), and cars further apart are already told apart by the times.
+What stays untimed is mostly cars side by side (marks under 0.3 s apart)
+and trains with a false trigger or a missed car. The wrong ones are a mark
+of a false trigger next to a crossing whose own mark was missed, or a car
+a few tenths of a second from the next. About 2 marks a race were flagged
 with three counters, 6 with two, all of them false triggers; none was a
 crossing nobody saw, because the simulated counters never all miss one.
 
@@ -1289,11 +1367,30 @@ Rules that make this safe:
   around it. So where a "??" lies near the cars of an upload, the quick
   recount also loads the entries around it and recounts the cars it may
   be, or was, given (`EngineInputLoader::carsNearUnread`), and
-  `IncrementalEqualsRebuildTest` checks that with "??" and fixes too. A
-  timing sensor's marks need nothing of the sort: they change no count and
-  no pass time, so the loader never reads them for this (a sensor sends one
-  per crossing). With a sensor and no "??", an upload costs two cheap
-  queries more than before; with neither, one.
+  `IncrementalEqualsRebuildTest` checks that with "??" and fixes too. The
+  other exception is a timing sensor's mark: it is the pass time, and which
+  pass it times depends on the cars a second or two around it, so the
+  recount also loads the marks and readings around its cars' crossings and
+  recounts the cars whose marks the change moved
+  ([The timing sensor](#the-timing-sensor)). With neither "??" nor sensor
+  an upload costs what it did (one cheap query more than before stage 1);
+  with a "??" and no sensor, no query more for the sensor.
+- **What an upload costs** (64 cars, three counters, three hours into a
+  four-hour race, one entry per upload, median; measured on the test
+  stack):
+
+  | | a counter's upload | a sensor's upload |
+  |---|---|---|
+  | no "??", no sensor | 20 ms, 20 queries | |
+  | sensor, no "??" | 45 to 60 ms, 33 to 36 queries | 12 to 20 ms, 16 to 18 queries |
+  | "??" on 2 % of crossings, no sensor | 41 ms, 28 queries | |
+  | "??" and sensor | 160 to 190 ms, 40 to 44 queries | 13 to 16 ms, 18 queries |
+
+  Every upload that changes a published value also recalculates the points
+  of every car (about 200 queries), as before. With a sensor the extra time
+  is the trains' entries (a few seconds around each crossing of each car
+  recounted) and working out, round by round, what is still missing; with
+  "??" as well, each car the "??" path recounts brings its own trains.
 - A lap count is never visible without its points: the write and the
   recalculation of points are one transaction, in the request that changed
   the count.
@@ -1331,7 +1428,10 @@ Measured for the engine alone (see `PerformanceTest`, budgets enforced, best
 of five runs): recounting one car in a full-size race takes well under a
 millisecond (budget 10 ms); a full run of a real-size race (64 cars × 70
 laps × 3 counters) is budgeted at 100 ms and a stress race of 39 000 entries
-at 300 ms.
+at 300 ms. With a timing sensor (64 cars, four hours, "??" on 2 % of the
+crossings) a full run takes about 85 ms, against about 30 ms for the same
+race without the sensor and 65 ms when trains were not yet decided one by
+one: matching some 3 500 marks, train by train, is most of it.
 
 ### Infrastructure
 
@@ -1385,10 +1485,10 @@ entry points: `Engine::countCars()` (the official passes of a few cars) and
 | 1 | `DecisionApplier` | Drops voided entries, moves reassigned ones, drops entries of excluded sources, adds reviewer passes, cancels undone decisions, notes the times a reviewer chose (`usar_tempo`); sets aside the "??" nobody gave a car and the sensor's marks |
 | 1b | `UnreadAssigner` | Gives a "??" the car the other sources read around it, where that is clear and decides no count (see [Passagens sem número](#passagens-sem-número--e-sensor-de-tempo)) |
 | 2 | `DuplicateFilter` | Voids double taps and handover duplicates; flags other repeats |
-| 3 | `PassMatcher`, `PassTimeFuser` | Groups entries per car by time (never by typing order); the pass time of each group |
+| 3 | `PassMatcher`, `PassTimeFuser`, `UnreadAssigner::matchMarks` | Groups entries per car by time (never by typing order); the pass time of each group; a timing sensor's marks matched with the passes they time, train by train (`SensorTrains`), each mark then the time of its pass |
 | 4 | `PublishRule`, `PassRoles`, `LapBuilder` | Which groups are official passes; leaves out the start crossing and late finishers; numbers pass zero and the laps |
 | — | *(up to here is `LapCounter`: all the fast path needs)* | |
-| 5 | `UnreadAssigner::matchMarks`, `PassTimeFuser::removeHabits`, `PaceModel` | A timing sensor's marks matched with the passes they time; lap durations with each counter's habit removed; expected lap per car; the field pace now and once a minute since the start (`ritmo`, `ritmoHistorico`) |
+| 5 | `PassTimeFuser::removeHabits`, `PaceModel` | Lap durations with each counter's habit removed; expected lap per car; the field pace now and once a minute since the start (`ritmo`, `ritmoHistorico`) |
 | 6 | `FlagDetector`, `SwapFinder`, `LateFirstPass`, `UnreadFlags` | The flags and their suggestions |
 | 7 | `CarStatus`, `SourceStatsBuilder` | Status of each car now; statistics per source |
 
@@ -1482,10 +1582,12 @@ entries are too far apart picks one of them instead of their midpoint.
 The pass is precisely timed only when the chosen entry is a `precisa`
 source's own.
 
-**A timing sensor's mark** (whole-race run only) leaves the pass time
-alone, and gives the laps on either side of the pass their time: the
-habit-corrected time of a marked pass is the mark, it counts as precisely
-timed for best lap, and each counter's habit is measured against it.
+**A timing sensor's mark** matched to the pass is its time, in the fast
+path and in a full run alike: the pass time and the habit-corrected time
+are the mark, the pass counts as precisely timed for best lap, and each
+counter's habit is measured against it. Which pass a mark times depends on
+the cars a second or two around it, so the fast path loads those too (see
+[The timing sensor](#the-timing-sensor)).
 
 **Lap durations** use habit-corrected times: for each source the engine
 measures its habitual offset (median of "its time minus the pass time" over
@@ -1764,10 +1866,12 @@ instead of trampling each other. Never run it against production.
 
 ## Choices worth knowing about
 
-- **The pass time is the plain median; habits are removed only for lap
-  durations.** With habits in the pass time, the time of a pass would depend
-  on other cars' entries and on late uploads, and could not be computed by
-  the per-car fast path.
+- **The pass time is the plain median (or a precise source's time, or the
+  timing sensor's mark); habits are removed only for lap durations.** With
+  habits in the pass time, the time of a pass would depend on the whole
+  race's entries and on late uploads, and could not be computed by the
+  per-car fast path. A sensor's mark depends only on what lies a few
+  seconds around it, which the fast path loads.
 - **A lone entry waits while other counters are supposed to be counting.**
   It only counts on its own when no other source is active or all others
   were excluded for that moment.
@@ -1792,8 +1896,9 @@ instead of trampling each other. Never run it against production.
   time.** What looks wrong is flagged for a person.
 - **A "??" never decides a count on its own.** It is applied by itself only
   where two other sources read the crossing; with one reading a person
-  confirms it. A timing sensor never counts a pass at all, and times laps,
-  not passes, so the quick per-car count never needs its marks.
+  confirms it. A timing sensor never counts a pass at all; it times passes,
+  and the quick per-car count loads the marks and readings around its cars
+  to time them exactly as the whole race does.
 - **A pass typed for an unclassified car is stored and flagged, never
   rejected.** A phone's car list can be stale, and storing everything is
   what answers a protest.

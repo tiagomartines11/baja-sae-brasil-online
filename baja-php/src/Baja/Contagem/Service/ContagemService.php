@@ -167,11 +167,13 @@ final class ContagemService
      * and publishes their VOLTAS and LAST. The caller must hold the lock.
      *
      * @param int[] $cars
-     * @param int[] $nearMs moments of the entries the change touched: the cars around a "??" near them are recounted too
+     * @param int[] $nearMs moments of the entries the change touched: the cars around a "??" or a timing sensor's mark near them are recounted too
+     * @param bool $onlyMarks the change is a timing sensor's own (its marks are no reading of any car)
+     * @param int[]|null $newEntryIds when the change only added entries: their ids (see Recount::forCars())
      */
-    public function recountCars(array $cars, array $nearMs = []): PublishOutcome
+    public function recountCars(array $cars, array $nearMs = [], bool $onlyMarks = false, ?array $newEntryIds = null): PublishOutcome
     {
-        return $this->recount->forCars($cars, $nearMs);
+        return $this->recount->forCars($cars, $nearMs, $onlyMarks, $newEntryIds);
     }
 
     // ------------------------------------------------------------------
