@@ -711,9 +711,16 @@ long). A crossing only one counter typed splits that time too, but only where
 a lap can end: both parts at least three quarters of the car's normal lap.
 Without that, a car with two lone crossings and two long stops among its last
 five laps had a normal lap twice its real one, and its next ordinary lap,
-typed right by both counters, was held (race simulator, two counters). A stray
-in the middle of an ordinary lap splits nothing, so it cannot lower the bar
-that holds phantoms. Only the car's own passes are used, so the quick per-car recount
+typed right by both counters, was held (race simulator, two counters). When
+several lone crossings could end a lap, the one that leaves it closest to a
+normal lap ends it, so a stray just before a missed pass does not take its
+place. A stray in the middle of an ordinary lap splits nothing, but strays
+typed while a car stands on the track can split the stop into short parts,
+and the next stop would then be split against the lowered lap. So a split
+never takes the normal lap below the second shortest of the car's last ten
+counted laps (from one pass that counted to the next, nothing split, nothing
+held), or below the normal lap without splits when that one is shorter: strays
+cannot bring the bar under half a lap the car really ran. Only the car's own passes are used, so the quick per-car recount
 of an upload gives exactly what a full run gives. The held pass stays
 pending, flagged `passagem_proxima_demais`, and the flag says which pass is
 held and why ("a 12 s da passagem anterior"). If the pass was real (the car's

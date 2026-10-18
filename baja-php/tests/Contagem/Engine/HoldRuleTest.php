@@ -411,6 +411,163 @@ final class HoldRuleTest extends EngineTestCase
         $this->assertLapCounts([9 => 8], $result);
         $this->assertSame(8, $race->countCars('41:00', [9])->lapCount(9));
     }
+
+    /**
+     * SITUATION: car 9 laps every four minutes, with two counters, then
+     * stands on the track for twenty minutes (24:20 to 44:20). While it
+     * stands there each counter types it once by mistake, three minutes
+     * apart (27:20 and 30:20: strays). At 46:00, 1:40 after its pass at
+     * 44:20, both counters type car 9 by mistake (a phantom); its real pass
+     * is at 48:20.
+     *
+     * WHAT WENT WRONG (review of the first version of the lone-crossing
+     * split): each stray sat three quarters of a normal lap from the
+     * previous end, so both split the stop, the car's laps read 4:00, 4:00,
+     * 3:00, 3:00, 14:00, its normal lap became 3:00 and the bar 1:30, and
+     * the phantom counted, with no flag: a lap the car never ran, in
+     * "confirmadas" mode, without anyone looking.
+     *
+     * EXPECTED: a split never takes the normal lap below the car's counted
+     * laps (four minutes here). The bar stays at 2:00, the phantom is held
+     * and flagged, and car 9 has 8 laps; the quick recount agrees.
+     */
+    public function testStraysDuringAStopOnTrackDoNotLowerTheBar(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        foreach (['04:20', '08:20', '12:20', '16:20', '20:20', '24:20', '44:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->entry(1, 9, '27:20');
+        $race->entry(2, 9, '30:20');
+        $phantom = $race->pass(9, '46:00');
+        $race->pass(9, '48:20');
+
+        $result = $race->run('49:00');
+
+        $held = $result->groupOfEntry($phantom[1]);
+        $this->assertSame(PassGroup::RETIDA_PROXIMA_DEMAIS, $held->motivoRetencao);
+        $this->assertSame(120000, $held->voltaMinimaMs);
+        $this->assertLapCounts([9 => 8], $result);
+        $this->assertCount(1, $this->openFlags($result, Flag::PASSAGEM_PROXIMA_DEMAIS));
+        $this->assertSame(8, $race->countCars('49:00', [9])->lapCount(9));
+    }
+
+    /**
+     * SITUATION: as above, and then a second twenty-minute stop (44:20 to
+     * 64:20) with two more strays, 2:15 apart (46:35 and 48:50). At 65:40,
+     * 1:20 after the pass at 64:20, a phantom both counters typed; the
+     * real pass is at 68:20.
+     *
+     * WHAT WENT WRONG (same review): each stop measured its split against
+     * the normal lap the previous one had already lowered, so the bar kept
+     * falling, 2:00, then 1:30, then 1:07, and the phantom counted.
+     *
+     * EXPECTED: the floor does not move with the splits. The bar is still
+     * 2:00, the phantom is held, 9 laps.
+     */
+    public function testStopAfterStopTheBarDoesNotKeepFalling(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        foreach (['04:20', '08:20', '12:20', '16:20', '20:20', '24:20', '44:20', '64:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->entry(1, 9, '27:20');
+        $race->entry(2, 9, '30:20');
+        $race->entry(1, 9, '46:35');
+        $race->entry(2, 9, '48:50');
+        $phantom = $race->pass(9, '65:40');
+        $race->pass(9, '68:20');
+
+        $result = $race->run('69:00');
+
+        $held = $result->groupOfEntry($phantom[1]);
+        $this->assertSame(PassGroup::RETIDA_PROXIMA_DEMAIS, $held->motivoRetencao);
+        $this->assertSame(120000, $held->voltaMinimaMs);
+        $this->assertLapCounts([9 => 9], $result);
+        $this->assertSame(9, $race->countCars('69:00', [9])->lapCount(9));
+    }
+
+    /**
+     * SITUATION: car 9 laps every four minutes, with two counters. Twice
+     * counter 2 misses it (24:20 and 32:20, typed by counter 1 alone), and
+     * each time counter 2 types it by mistake a minute before (23:20 and
+     * 31:20). Then a phantom both counters typed at 38:00, 1:40 after the
+     * pass at 36:20, and the real pass at 40:20.
+     *
+     * WHAT WENT WRONG (same review): the split took the first lone crossing
+     * far enough from the previous pass, the stray, so the laps read 3:00
+     * and 5:00 instead of 4:00 and 4:00, the bar fell to 1:30 and the
+     * phantom counted; once a reviewer confirmed the two missed passes the
+     * car would have been a lap above the truth.
+     *
+     * EXPECTED: the lone crossing that leaves the lap closest to a normal
+     * one ends it (the missed pass, not the stray), and in any case the
+     * floor keeps the bar at 2:00. The phantom is held: 8 laps, with the
+     * two missed passes still pending (10 once confirmed, the truth).
+     */
+    public function testAStrayJustBeforeAMissedPassDoesNotTakeItsPlace(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        foreach (['04:20', '08:20', '12:20', '16:20', '20:20', '28:20', '36:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->entry(2, 9, '23:20');
+        $race->entry(1, 9, '24:20');
+        $race->entry(2, 9, '31:20');
+        $race->entry(1, 9, '32:20');
+        $phantom = $race->pass(9, '38:00');
+        $race->pass(9, '40:20');
+
+        $result = $race->run('41:00');
+
+        $held = $result->groupOfEntry($phantom[1]);
+        $this->assertSame(PassGroup::RETIDA_PROXIMA_DEMAIS, $held->motivoRetencao);
+        $this->assertSame(120000, $held->voltaMinimaMs);
+        $this->assertLapCounts([9 => 8], $result);
+        $this->assertSame(8, $race->countCars('41:00', [9])->lapCount(9));
+    }
+
+    /**
+     * SITUATION: car 9 laps in four minutes, then slows down to nine (a
+     * damaged car). One counter misses four of its slow laps (30:20,
+     * 48:20, 66:20, 84:20: a lone crossing each), so the gaps between the
+     * passes both counters typed read eighteen minutes. Then both type its
+     * next lap, 8:40 after the previous pass.
+     *
+     * EXPECTED: the floor only keeps a split from going below the car's
+     * counted laps; it does not stop the splits that are right. The lone
+     * crossings split the eighteen-minute gaps into nine-minute laps, the
+     * normal lap is nine minutes (not eighteen), the bar 4:30, and the lap
+     * of 8:40 counts: 9 laps, nothing held.
+     */
+    public function testTheFloorDoesNotStopASplitThatIsRight(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        foreach (['04:20', '08:20', '12:20', '21:20', '39:20', '57:20', '75:20', '93:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->entry(1, 9, '30:20');
+        $race->entry(2, 9, '48:20');
+        $race->entry(1, 9, '66:20');
+        $race->entry(2, 9, '84:20');
+        $real = $race->pass(9, '102:00');
+
+        $result = $race->run('103:00');
+
+        $this->assertTrue($result->groupOfEntry($real[1])->contado, 'The real lap both counters typed counts.');
+        $this->assertLapCounts([9 => 9], $result);
+        $this->assertSame([], $this->openFlags($result, Flag::PASSAGEM_PROXIMA_DEMAIS));
+        $this->assertSame(9, $race->countCars('103:00', [9])->lapCount(9));
+    }
+
     /**
      * SITUATION: car 9 passed at 03:00 and is logged into the pit lane at
      * 05:00. At 06:00 two counters record it at the line (a wrong number:

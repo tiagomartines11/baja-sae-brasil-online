@@ -21,7 +21,9 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * The car's laps behind that normal lap are measured between the passes the
  * counters agreed on, held ones included, and are also split at a crossing
  * only one counter typed when it sits where a lap can end (lapsBetween), so
- * that a lap one counter missed does not read as one twice as long.
+ * that a lap one counter missed does not read as one twice as long. Such a
+ * split never brings the normal lap below the car's own counted laps
+ * (normalLapMs), so strays cannot lower the bar that holds phantoms.
  *
  * A held group is not official. It stays visible as a pending row, with the
  * flag "passagem_proxima_demais", and counts the moment a reviewer confirms
@@ -120,6 +122,11 @@ final class HoldRule
         // A crossing only one counter typed is split at too, but only where
         // a lap can end (see lapsBetween).
         $recentLaps = [];
+        // The same laps without those splits, and the car's counted laps
+        // (from one official pass to the next): what a split may not take
+        // the normal lap below (see normalLapMs).
+        $unsplitLaps = [];
+        $countedLaps = [];
         $previousAgreedMs = null;
         $loneSinceAgreed = [];
         // The pass that may turn out to be the car's first lap after an
@@ -144,8 +151,8 @@ final class HoldRule
                 // The car's usual lap is only worked out when the gap is
                 // short enough for it to matter, which is rare: this runs
                 // for every pass of the race.
-                if (isset($recentLaps[Settings::MIN_LAPS_FOR_MINIMUM_LAP - 1]) && $gapMs < $fraction * max($recentLaps)) {
-                    $minimumMs = $settings->minimumPlausibleLapMs($recentLaps);
+                if (isset($recentLaps[Settings::MIN_LAPS_FOR_MINIMUM_LAP - 1]) && $gapMs < $fraction * max(max($recentLaps), max($unsplitLaps))) {
+                    $minimumMs = self::minimumPlausibleLapMs(self::normalLapMs($recentLaps, $unsplitLaps, $countedLaps), $settings);
                 }
                 $isTooClose = $gapMs < $minimumMs && !$vouched;
             }
@@ -156,18 +163,17 @@ final class HoldRule
                 $isAgreed = $vouched || (isset($group->entries[1]) && !$group->dispersa && count($group->realSourceIds()) >= 2);
                 if ($reference && $isAgreed && $afterMissedExit !== null && $afterMissedExit[1] === $area && $afterMissedExit[2] === $stayEntryMs) {
                     $sinceFirstMs = $timeline->racingMsBetween($afterMissedExit[0]->tsMs, $passMs);
-                    $normalLapMs = Settings::normalLapMs($recentLaps);
-                    if ($normalLapMs !== null && $sinceFirstMs >= $settings->minimumPlausibleLapMs($recentLaps) && $sinceFirstMs <= self::LONGEST_LAP_AFTER_A_MISSED_EXIT * $normalLapMs) {
+                    $normalLapMs = self::normalLapMs($recentLaps, $unsplitLaps, $countedLaps);
+                    if ($normalLapMs !== null && $sinceFirstMs >= self::minimumPlausibleLapMs($normalLapMs, $settings) && $sinceFirstMs <= self::LONGEST_LAP_AFTER_A_MISSED_EXIT * $normalLapMs) {
                         // The car is lapping: it left before the first of
                         // the two passes, and nobody logged it. From here on
                         // the stay is over, for the count and for everything
                         // else that reads the timeline.
                         self::release($afterMissedExit[0], $area);
                         $timeline->assumeExit($area, $carro, $stayEntryMs, $afterMissedExit[0]->tsMs - 1000);
-                        $recentLaps[] = $sinceFirstMs;
-                        if (isset($recentLaps[Settings::LAPS_FOR_MINIMUM_LAP])) {
-                            array_shift($recentLaps);
-                        }
+                        self::addLaps($recentLaps, [$sinceFirstMs], Settings::LAPS_FOR_MINIMUM_LAP);
+                        self::addLaps($unsplitLaps, [$sinceFirstMs], Settings::LAPS_FOR_MINIMUM_LAP);
+                        self::addLaps($countedLaps, [$sinceFirstMs], self::COUNTED_LAPS_KEPT);
                         $afterMissedExit = null;
                         $loneSinceAgreed = [];
                         $previousAgreedMs = $passMs;
@@ -199,21 +205,18 @@ final class HoldRule
                 continue;
             }
 
-            if ($loneSinceAgreed === []) {
-                $recentLaps[] = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
-            } else {
-                array_push($recentLaps, ...self::lapsBetween($previousAgreedMs, $passMs, $loneSinceAgreed, $recentLaps, $timeline, $settings, $hasStays));
-                $loneSinceAgreed = [];
-            }
-            while (isset($recentLaps[Settings::LAPS_FOR_MINIMUM_LAP])) {
-                array_shift($recentLaps);
-            }
+            $lapMs = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
+            self::addLaps($recentLaps, $loneSinceAgreed === [] ? [$lapMs]
+                : self::lapsBetween($previousAgreedMs, $passMs, $loneSinceAgreed, self::normalLapMs($recentLaps, $unsplitLaps, $countedLaps), $timeline, $settings, $hasStays), Settings::LAPS_FOR_MINIMUM_LAP);
+            self::addLaps($unsplitLaps, [$lapMs], Settings::LAPS_FOR_MINIMUM_LAP);
+            $loneSinceAgreed = [];
             $previousAgreedMs = $passMs;
 
             if ($isTooClose) {
                 self::hold($group, $reference, PassGroup::RETIDA_PROXIMA_DEMAIS, $gapMs, $minimumMs);
                 continue;
             }
+            self::addLaps($countedLaps, [$gapMs], self::COUNTED_LAPS_KEPT);
             $previousPassMs = $passMs;
         }
     }
@@ -224,6 +227,67 @@ final class HoldRule
      * minimum plausible lap, when `fracao_volta_minima` is set higher).
      */
     private const SHORTEST_PART_OF_A_SPLIT_LAP = 0.75;
+
+    /** How many of the car's counted laps the floor of its normal lap is taken from (see normalLapMs). */
+    private const COUNTED_LAPS_KEPT = 10;
+
+    /**
+     * @param int[] $laps oldest first; keeps the last $keep
+     * @param int[] $newLaps
+     */
+    private static function addLaps(array &$laps, array $newLaps, int $keep): void
+    {
+        array_push($laps, ...$newLaps);
+        while (isset($laps[$keep])) {
+            array_shift($laps);
+        }
+    }
+
+    /**
+     * The car's normal lap for the hold rule: Settings::normalLapMs of its
+     * laps, lone crossings split at (lapsBetween), but never below what it
+     * would be without those splits, unless the car's own counted laps show
+     * a shorter one.
+     *
+     * WHY. Splitting at a lone crossing is what keeps a lap one counter
+     * missed from reading as one twice as long (race simulator, two
+     * counters: the car's next real lap was held). But a lone crossing may
+     * be a stray, and strays typed while a car stands on the track cut the
+     * long gap into short parts; two of them among the last five laps
+     * lowered the normal lap to three quarters of the real one, the next
+     * long stop lowered it again, and a phantom both counters typed counted
+     * (review of the first version of the split). So a split can bring the
+     * normal lap down only as far as the second shortest of the car's last
+     * ten counted laps (times between two passes that counted, nothing
+     * split, nothing held): a lap the car really did, which strays cannot
+     * shorten. The second shortest, not the shortest, for the reason
+     * Settings::minimumPlausibleLapMs gives. With fewer than two counted
+     * laps a split lowers nothing. When no lone crossing split anything
+     * this is exactly Settings::normalLapMs.
+     *
+     * @param int[] $recentLaps the car's last laps, lone crossings split at
+     * @param int[] $unsplitLaps the same, not split at lone crossings
+     * @param int[] $countedLaps the car's last counted laps
+     */
+    private static function normalLapMs(array $recentLaps, array $unsplitLaps, array $countedLaps): ?int
+    {
+        $normalMs = Settings::normalLapMs($recentLaps);
+        $unsplitMs = Settings::normalLapMs($unsplitLaps);
+        if ($normalMs === null || $unsplitMs === null || $normalMs >= $unsplitMs) {
+            return $normalMs ?? $unsplitMs;
+        }
+        sort($countedLaps);
+        $floorMs = isset($countedLaps[1]) ? min($countedLaps[1], $unsplitMs) : $unsplitMs;
+        return max($normalMs, $floorMs);
+    }
+
+    /** Settings::minimumPlausibleLapMs, for a normal lap already worked out (null: not known yet). */
+    private static function minimumPlausibleLapMs(?int $normalLapMs, Settings $settings): int
+    {
+        $minimumMs = 2 * $settings->janelaMs;
+        $fromOwnLapsMs = (int) ($settings->fracaoVoltaMinima * (int) $normalLapMs);
+        return $fromOwnLapsMs > $minimumMs ? $fromOwnLapsMs : $minimumMs;
+    }
 
     /**
      * A crossing that only one counter typed, nobody vouched for, and that
@@ -241,7 +305,7 @@ final class HoldRule
 
     /**
      * The laps the time between two agreed passes is made of, for the
-     * car's normal lap (Settings::normalLapMs).
+     * car's normal lap.
      *
      * WHY. A crossing only one counter typed is not counted, so without
      * this the lap around it looks twice as long. Two of those and two
@@ -250,34 +314,51 @@ final class HoldRule
      * two counters). So a lone crossing splits the gap, as a held pass
      * does, but only where a lap can end: both parts at least three
      * quarters of the car's normal lap. A stray in the middle of an
-     * ordinary lap splits nothing, so it cannot lower the bar that holds
-     * phantoms; and the split parts are never shorter than a lap the hold
-     * rule itself would let through. A lone crossing while the car is
+     * ordinary lap splits nothing. Strays inside a long gap (a stop on
+     * track) can split it, which is why normalLapMs does not let a split
+     * take the normal lap below the car's counted laps. When several lone
+     * crossings could end the next part, the one that leaves it closest to
+     * a normal lap wins: a stray shortly before a missed pass does not
+     * take the missed pass's place. A lone crossing while the car is
      * logged inside an area, and any while the car has no normal lap yet,
-     * split nothing either.
+     * split nothing.
      *
      * @param PassGroup[] $lone lone crossings between the two passes, in pass-time order
-     * @param int[] $recentLaps the car's laps so far
+     * @param int|null $normalLapMs the car's normal lap so far (normalLapMs)
      * @return int[] the laps, oldest first: one when nothing splits the gap
      */
-    private static function lapsBetween(int $fromMs, int $toMs, array $lone, array $recentLaps, RaceTimeline $timeline, Settings $settings, bool $hasStays): array
+    private static function lapsBetween(int $fromMs, int $toMs, array $lone, ?int $normalLapMs, RaceTimeline $timeline, Settings $settings, bool $hasStays): array
     {
         $raceWasStopped = $timeline->redFlagIntervals !== [];
         $racingMs = fn(int $a, int $b): int => $raceWasStopped ? $timeline->racingMsBetween($a, $b) : $b - $a;
         $laps = [];
-        $normalLapMs = Settings::normalLapMs($recentLaps);
         if ($normalLapMs !== null) {
             $shortestPartMs = max(self::SHORTEST_PART_OF_A_SPLIT_LAP, $settings->fracaoVoltaMinima) * $normalLapMs;
+            $ends = [];
             foreach ($lone as $group) {
-                if ($group->tsMs <= $fromMs || $group->tsMs >= $toMs
-                    || ($hasStays && self::stayTheCarIsLoggedIn($group, $timeline) !== null)) {
-                    continue;
+                if ($group->tsMs > $fromMs && $group->tsMs < $toMs
+                    && !($hasStays && self::stayTheCarIsLoggedIn($group, $timeline) !== null)) {
+                    $ends[] = $group->tsMs;
                 }
-                $beforeMs = $racingMs($fromMs, $group->tsMs);
-                if ($beforeMs >= $shortestPartMs && $racingMs($group->tsMs, $toMs) >= $shortestPartMs) {
-                    $laps[] = $beforeMs;
-                    $fromMs = $group->tsMs;
+            }
+            while (true) {
+                $bestMs = null;
+                $bestMissMs = null;
+                foreach ($ends as $endMs) {
+                    $beforeMs = $endMs > $fromMs ? $racingMs($fromMs, $endMs) : 0;
+                    if ($beforeMs < $shortestPartMs || $racingMs($endMs, $toMs) < $shortestPartMs) {
+                        continue;
+                    }
+                    $missMs = abs($beforeMs - $normalLapMs);
+                    if ($bestMissMs === null || $missMs < $bestMissMs) {
+                        [$bestMs, $bestMissMs] = [$endMs, $missMs];
+                    }
                 }
+                if ($bestMs === null) {
+                    break;
+                }
+                $laps[] = $racingMs($fromMs, $bestMs);
+                $fromMs = $bestMs;
             }
         }
         $laps[] = $racingMs($fromMs, $toMs);
