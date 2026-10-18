@@ -722,15 +722,19 @@ counted laps (from one pass that counted to the next, nothing split, nothing
 held), or below the normal lap without splits when that one is shorter: strays
 cannot bring the bar under half a lap the car really ran. A lap during which
 the pit log or the fueling log has the car inside is left out of all of this
-(the normal lap, the laps without splits, the counted laps): it measures the
-stop, not the car's pace. Counted in full, three laps with a pit stop each
-made a car's normal lap twice its real one, and its next ordinary lap was
-held (race simulator, two counters). Left out, not shortened by the stay: a
-stay logged wrongly then only leaves the normal lap resting on older laps,
-and cannot lower it. A car whose every lap so far held a stop has no normal
-lap yet, and its bar is the two windows. A crossing one counter typed splits
-nothing while the car has no normal lap yet (there is nothing to say where a
-lap can end). Only the car's own passes and logged stays are used, so the quick per-car recount
+(the normal lap, the laps without splits, the counted laps) once the car has
+three laps without a stay: it measures the stop, not the car's pace. Counted
+in full, three laps with a pit stop each made a car's normal lap twice its
+real one, and its next ordinary lap was held (race simulator, two counters).
+Until the car has those three laps, a lap with a stay still counts towards
+its normal lap, with the stay taken out (ten minutes with a six-minute stop
+in it: four). Left out from the start, a car that stopped in one of its
+first laps had no normal lap, its bar fell to the two windows, and a phantom
+both counters typed a minute after its pass counted (review). A stay logged
+wrongly can shorten such a lap too much, but only on the car's first laps,
+and the bar never falls below the two windows. A crossing one counter typed
+splits nothing while the car has no normal lap yet (there is nothing to say
+where a lap can end). Only the car's own passes and logged stays are used, so the quick per-car recount
 of an upload gives exactly what a full run gives. The held pass stays
 pending, flagged `passagem_proxima_demais`, and the flag says which pass is
 held and why ("a 12 s da passagem anterior"). If the pass was real (the car's

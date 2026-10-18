@@ -25,11 +25,12 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * split never brings the normal lap below the car's own counted laps
  * (normalLapMs), so strays cannot lower the bar that holds phantoms. A lap
  * during which the pit log or the fueling log has the car inside is left
- * out of all of those: it measures the stop, not the car's pace (race
- * simulator, two counters: three laps with a pit stop each made a car's
- * normal lap twice its real one, and its next ordinary lap was held). It
- * is left out rather than shortened by the stay: a stay logged wrongly can
- * then only leave the normal lap resting on older laps, never lower it.
+ * out of all of those once the car has three laps without one: it measures
+ * the stop, not the car's pace (race simulator, two counters: three laps
+ * with a pit stop each made a car's normal lap twice its real one, and its
+ * next ordinary lap was held). Until then it is in, shortened by the stay,
+ * so that a car that stopped early still has a normal lap and a bar above
+ * the two windows (lapsBehindTheNormalLap).
  *
  * A held group is not official. It stays visible as a pending row, with the
  * flag "passagem_proxima_demais", and counts the moment a reviewer confirms
@@ -134,6 +135,11 @@ final class HoldRule
         // lap during which the car was logged inside an area.
         $unsplitLaps = [];
         $countedLaps = [];
+        // The first two again, with those laps in as well, each with the
+        // stay taken out: what the normal lap rests on until the car has
+        // three laps without a stay (see lapsBehindTheNormalLap).
+        $recentLapsWithStays = [];
+        $unsplitLapsWithStays = [];
         $previousAgreedMs = null;
         $loneSinceAgreed = [];
         // The pass that may turn out to be the car's first lap after an
@@ -158,8 +164,9 @@ final class HoldRule
                 // The car's usual lap is only worked out when the gap is
                 // short enough for it to matter, which is rare: this runs
                 // for every pass of the race.
-                if (isset($recentLaps[Settings::MIN_LAPS_FOR_MINIMUM_LAP - 1]) && $gapMs < $fraction * max(max($recentLaps), max($unsplitLaps))) {
-                    $minimumMs = self::minimumPlausibleLapMs(self::normalLapMs($recentLaps, $unsplitLaps, $countedLaps), $settings);
+                [$lapsMs, $unsplitLapsMs] = self::lapsBehindTheNormalLap($recentLaps, $unsplitLaps, $recentLapsWithStays, $unsplitLapsWithStays);
+                if (isset($lapsMs[Settings::MIN_LAPS_FOR_MINIMUM_LAP - 1]) && $gapMs < $fraction * max(max($lapsMs), max($unsplitLapsMs))) {
+                    $minimumMs = self::minimumPlausibleLapMs(self::normalLapMs($lapsMs, $unsplitLapsMs, $countedLaps), $settings);
                 }
                 $isTooClose = $gapMs < $minimumMs && !$vouched;
             }
@@ -170,7 +177,7 @@ final class HoldRule
                 $isAgreed = $vouched || (isset($group->entries[1]) && !$group->dispersa && count($group->realSourceIds()) >= 2);
                 if ($reference && $isAgreed && $afterMissedExit !== null && $afterMissedExit[1] === $area && $afterMissedExit[2] === $stayEntryMs) {
                     $sinceFirstMs = $timeline->racingMsBetween($afterMissedExit[0]->tsMs, $passMs);
-                    $normalLapMs = self::normalLapMs($recentLaps, $unsplitLaps, $countedLaps);
+                    $normalLapMs = self::normalLapMs(...self::lapsBehindTheNormalLap($recentLaps, $unsplitLaps, $recentLapsWithStays, $unsplitLapsWithStays), countedLaps: $countedLaps);
                     if ($normalLapMs !== null && $sinceFirstMs >= self::minimumPlausibleLapMs($normalLapMs, $settings) && $sinceFirstMs <= self::LONGEST_LAP_AFTER_A_MISSED_EXIT * $normalLapMs) {
                         // The car is lapping: it left before the first of
                         // the two passes, and nobody logged it. From here on
@@ -180,6 +187,8 @@ final class HoldRule
                         $timeline->assumeExit($area, $carro, $stayEntryMs, $afterMissedExit[0]->tsMs - 1000);
                         self::addLaps($recentLaps, [$sinceFirstMs], Settings::LAPS_FOR_MINIMUM_LAP);
                         self::addLaps($unsplitLaps, [$sinceFirstMs], Settings::LAPS_FOR_MINIMUM_LAP);
+                        self::addLaps($recentLapsWithStays, [$sinceFirstMs], Settings::LAPS_FOR_MINIMUM_LAP);
+                        self::addLaps($unsplitLapsWithStays, [$sinceFirstMs], Settings::LAPS_FOR_MINIMUM_LAP);
                         self::addLaps($countedLaps, [$sinceFirstMs], self::COUNTED_LAPS_KEPT);
                         $afterMissedExit = null;
                         $loneSinceAgreed = [];
@@ -212,11 +221,18 @@ final class HoldRule
                 continue;
             }
 
-            if (!($hasStays && self::overlapsALoggedStay($carro, $previousAgreedMs, $passMs, $timeline))) {
-                $lapMs = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
-                self::addLaps($recentLaps, $loneSinceAgreed === [] ? [$lapMs]
-                    : self::lapsBetween($previousAgreedMs, $passMs, $loneSinceAgreed, self::normalLapMs($recentLaps, $unsplitLaps, $countedLaps), $timeline, $settings, $hasStays), Settings::LAPS_FOR_MINIMUM_LAP);
+            $lapMs = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
+            if ($hasStays && self::overlapsALoggedStay($carro, $previousAgreedMs, $passMs, $timeline)) {
+                $lapMs = max(0, $lapMs - self::loggedStayMsBetween($carro, $previousAgreedMs, $passMs, $timeline));
+                self::addLaps($recentLapsWithStays, [$lapMs], Settings::LAPS_FOR_MINIMUM_LAP);
+                self::addLaps($unsplitLapsWithStays, [$lapMs], Settings::LAPS_FOR_MINIMUM_LAP);
+            } else {
+                $laps = $loneSinceAgreed === [] ? [$lapMs]
+                    : self::lapsBetween($previousAgreedMs, $passMs, $loneSinceAgreed, self::normalLapMs(...self::lapsBehindTheNormalLap($recentLaps, $unsplitLaps, $recentLapsWithStays, $unsplitLapsWithStays), countedLaps: $countedLaps), $timeline, $settings, $hasStays);
+                self::addLaps($recentLaps, $laps, Settings::LAPS_FOR_MINIMUM_LAP);
                 self::addLaps($unsplitLaps, [$lapMs], Settings::LAPS_FOR_MINIMUM_LAP);
+                self::addLaps($recentLapsWithStays, $laps, Settings::LAPS_FOR_MINIMUM_LAP);
+                self::addLaps($unsplitLapsWithStays, [$lapMs], Settings::LAPS_FOR_MINIMUM_LAP);
             }
             $loneSinceAgreed = [];
             $previousAgreedMs = $passMs;
@@ -374,6 +390,63 @@ final class HoldRule
         }
         $laps[] = $racingMs($fromMs, $toMs);
         return $laps;
+    }
+
+    /**
+     * The laps the car's normal lap is worked out from: [split, unsplit].
+     * Those without a logged stay once the car has three of them; until
+     * then, all of its laps, a lap with a logged stay shortened by the
+     * stay.
+     *
+     * WHY. A lap with a stop in it measures the stop, not the car's pace,
+     * so it is left out once there is enough without it. Leaving it out
+     * from the start left a car that stopped early in the race with no
+     * normal lap at all: its bar fell to two windows and a phantom both
+     * counters typed a minute after its pass counted (review of the first
+     * version of this rule). Shortened by the stay, the lap is close to the
+     * car's pace. A stay logged wrongly (typed for the wrong car, its exit
+     * late) can shorten a lap too much, but the bar never falls below the
+     * two windows it would be at without the lap, and only for the car's
+     * first laps.
+     *
+     * @param int[] $recentLaps
+     * @param int[] $unsplitLaps
+     * @param int[] $recentLapsWithStays
+     * @param int[] $unsplitLapsWithStays
+     * @return array{0: int[], 1: int[]}
+     */
+    private static function lapsBehindTheNormalLap(array $recentLaps, array $unsplitLaps, array $recentLapsWithStays, array $unsplitLapsWithStays): array
+    {
+        return isset($unsplitLaps[Settings::MIN_LAPS_FOR_MINIMUM_LAP - 1]) ? [$recentLaps, $unsplitLaps] : [$recentLapsWithStays, $unsplitLapsWithStays];
+    }
+
+    /**
+     * How long, in racing time, the pit log or the fueling log has the car
+     * inside between the two moments (a car still inside: up to $toMs).
+     */
+    private static function loggedStayMsBetween(int $carro, int $fromMs, int $toMs, RaceTimeline $timeline): int
+    {
+        $parts = [];
+        foreach ([$timeline->pitIntervals[$carro] ?? [], $timeline->fuelIntervals[$carro] ?? []] as $stays) {
+            foreach ($stays as [$inMs, $outMs]) {
+                $startMs = max($inMs, $fromMs);
+                $endMs = min($outMs ?? $toMs, $toMs);
+                if ($endMs > $startMs) {
+                    $parts[] = [$startMs, $endMs];
+                }
+            }
+        }
+        sort($parts);
+        $insideMs = 0;
+        $coveredToMs = $fromMs;
+        foreach ($parts as [$startMs, $endMs]) {
+            $startMs = max($startMs, $coveredToMs);
+            if ($endMs > $startMs) {
+                $insideMs += $timeline->racingMsBetween($startMs, $endMs);
+                $coveredToMs = $endMs;
+            }
+        }
+        return $insideMs;
     }
 
     /**

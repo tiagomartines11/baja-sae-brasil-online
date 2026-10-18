@@ -621,6 +621,85 @@ final class HoldRuleTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: car 9 laps in four minutes, with two counters: 00:20,
+     * 04:20, then a six-minute pit stop the pit log recorded (06:00 to
+     * 12:00), 14:20, 18:20. At 19:20, a minute after its pass, both
+     * counters type 9 (a phantom), and the car really crosses at 22:20.
+     *
+     * WHAT WENT WRONG (review of the first version of the rule above): the
+     * pit lap was simply left out, so the car had two laps and no normal
+     * lap, the bar fell to two windows (40 s) and the phantom counted: five
+     * laps against a truth of four, and no flag.
+     *
+     * EXPECTED: until the car has three laps without a stop, a lap with a
+     * logged stay still counts towards its normal lap, with the stay taken
+     * out (10:00 minus 6:00: four minutes). The normal lap is four minutes,
+     * the bar 2:00, the phantom is held: 4 laps, the quick recount agrees.
+     */
+    public function testAStopInsideOneOfTheFirstLapsDoesNotLowerTheBar(): void
+    {
+        foreach (['box', 'abastecimento'] as $area) {
+            $race = RaceScenario::withCounters(2);
+            $race->start('00:00');
+            $race->firstCrossing([9]);
+            $race->pass(9, '04:20');
+            if ($area === 'box') {
+                $race->pitIn(9, '06:00');
+                $race->pitOut(9, '12:00');
+            } else {
+                $race->fuelIn(9, '06:00');
+                $race->fuelOut(9, '12:00');
+            }
+            $race->pass(9, '14:20');
+            $race->pass(9, '18:20');
+            $phantom = $race->pass(9, '19:20');
+            $race->pass(9, '22:20');
+
+            $result = $race->run('23:00');
+
+            $held = $result->groupOfEntry($phantom[1]);
+            $this->assertSame(PassGroup::RETIDA_PROXIMA_DEMAIS, $held->motivoRetencao, $area);
+            $this->assertSame(120000, $held->voltaMinimaMs, $area);
+            $this->assertLapCounts([9 => 4], $result);
+            $this->assertSame(4, $race->countCars('23:00', [9])->lapCount(9), $area);
+        }
+    }
+
+    /**
+     * SITUATION: car 9 laps in four minutes, with two counters, but the pit
+     * log has it inside for a minute in the middle of each of its first
+     * three laps (a stay typed for the wrong car). After its fourth lap,
+     * both counters type 9 again 1:10 after its pass (a phantom).
+     *
+     * EXPECTED: the stays shorten those laps to three minutes, so the bar
+     * is 1:30, never the two windows, and the phantom is held: 5 laps.
+     */
+    public function testStaysLoggedForTheWrongCarDoNotLetAPhantomCount(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        $t = 20;
+        for ($lap = 0; $lap < 4; $lap++) {
+            if ($lap < 3) {
+                $race->pitIn(9, RaceScenario::clock($t + 60));
+                $race->pitOut(9, RaceScenario::clock($t + 120));
+            }
+            $t += 240;
+            $race->pass(9, RaceScenario::clock($t));
+        }
+        $phantom = $race->pass(9, RaceScenario::clock($t + 70));
+        $race->pass(9, RaceScenario::clock($t + 240));
+        $now = RaceScenario::clock($t + 260);
+
+        $result = $race->run($now);
+
+        $this->assertSame(PassGroup::RETIDA_PROXIMA_DEMAIS, $result->groupOfEntry($phantom[1])->motivoRetencao);
+        $this->assertLapCounts([9 => 5], $result);
+        $this->assertSame(5, $race->countCars($now, [9])->lapCount(9));
+    }
+
+    /**
      * SITUATION: car 9 passed at 03:00 and is logged into the pit lane at
      * 05:00. At 06:00 two counters record it at the line (a wrong number:
      * the car is standing in its pit). It is logged out at 06:10 and

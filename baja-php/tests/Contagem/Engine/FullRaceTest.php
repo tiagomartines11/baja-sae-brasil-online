@@ -334,6 +334,57 @@ final class FullRaceTest extends EngineTestCase
     }
 
     /**
+     * One race in four of those above, again with every kind of mistake
+     * that two counters make on one crossing.
+     *
+     * @return array<string, array{0: int}>
+     */
+    public static function stopOftenSeeds(): array
+    {
+        $howMany = max(15, intdiv((int) (getenv('CONTAGEM_INVARIANT_SEEDS') ?: 60), 4));
+        $cases = [];
+        for ($seed = 3001; $seed <= 3000 + $howMany; $seed++) {
+            $cases["seed $seed"] = [$seed];
+        }
+        return $cases;
+    }
+
+    /**
+     * THE INVARIANT, for cars that stop often: the same, with a pit stop on
+     * one lap in six and a fueling stop on one in eight, so that many cars
+     * stop in their first laps, before they have three laps without a stop.
+     *
+     * WHY: the laps with a stop count towards a car's normal lap until it
+     * has three without one, shortened by the stay (HoldRule); the races
+     * above stop too rarely to try that much (a pit stop on one lap in
+     * fifty).
+     *
+     * EXPECTED: as above, no car is ever ahead of the truth.
+     */
+    #[DataProvider('stopOftenSeeds')]
+    public function testInTheSafeModeNoCarThatStopsOftenIsEverAheadOfTheTruth(int $seed): void
+    {
+        $config = SyntheticRaceConfig::withSeed($seed)->withFinish()->withRaceDayTrouble();
+        $config->windowEdgeTypoRate = 0.01;
+        $config->repeatAndLatecomerRate = 0.01;
+        $config->typoOntoPassingCarRate = 0.01;
+        $config->pitStopRate = 0.16;
+        $config->fuelStopRate = 0.12;
+        $race = SyntheticRace::generate($config);
+
+        foreach (Settings::PASSAGENS_INICIAIS as $passagemInicial) {
+            $input = $race->input();
+            $input->settings->passagemInicial = $passagemInicial;
+            $result = Engine::run($input);
+
+            $this->assertNoCarIsEverAheadOfTheTruth($race, $result, "Seed $seed, $passagemInicial.");
+            foreach ($race->truthLaps($passagemInicial) as $car => $trueLaps) {
+                $this->assertLessThanOrEqual($trueLaps, $result->lapCount($car), "Seed $seed, $passagemInicial: car $car has more laps than it drove.");
+            }
+        }
+    }
+
+    /**
      * SITUATION: the one mistake no two-of-three count can always catch.
      * Two counters type the SAME wrong number for a crossing: 14 when car
      * 41 passed. The third types 41. So two counters "agree" on a pass of
