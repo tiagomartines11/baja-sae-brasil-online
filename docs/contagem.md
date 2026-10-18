@@ -402,7 +402,10 @@ once. The person leaving then presses **Encerrar meu turno**.
   "registro_tardio") as before its first. It opens zoomed out as far as
   needed, down to the live view's scale, to show the previous pass and
   all its entries; when even that does not fit, its last entry is kept
-  in view near the right edge.
+  in view near the right edge. Its own entries, first to last, always
+  fit: on a phone it zooms out further for them, down to 3 px/s (a pair
+  a minute apart on a 390 px screen), and never scrolls its first entry
+  under the lane names.
 - Flags that put a count in doubt right now are listed first and say so
   ("o carro 23 pode estar com uma volta a menos" / "a mais"); the rest
   follow in the order of the standings.

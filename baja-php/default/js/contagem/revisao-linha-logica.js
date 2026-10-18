@@ -259,24 +259,43 @@ export function rolagemPara(tsMs, fracao, deMs, escala, larguraPx) {
   return Math.max(0, Math.round(((tsMs - deMs) / 1000) * escala - fracao * visivelPx));
 }
 
-// The scale a flag opens at: ESCALA_ALERTA, or less, down to the live
-// view's, so that what must be seen of it (trechoEssencialDoAlerta: the
-// previous pass the gap is measured from, the late entry of a pair) fits
-// the lanes in view with room for the last chip.
-export function escalaDoAlerta(essencial, larguraPx) {
+// The scale a flag opens at: ESCALA_ALERTA, or less, so that what must be
+// seen of it (trechoEssencialDoAlerta: the previous pass the gap is
+// measured from, the late entry of a pair) fits the lanes in view with
+// room for the last chip. For that whole stretch it zooms out no further
+// than the live view's scale; when the stretch does not fit even then,
+// the flag's own entries (`proprio`, first to last: momentosDoAlerta) must
+// still fit, and for them it goes down to ESCALA_MINIMA_DO_ALERTA.
+export function escalaDoAlerta(essencial, larguraPx, proprio = null) {
   const visivelPx = Math.max(0, larguraPx - LARGURA_DO_NOME_PX) - ESPACO_DO_CHIP_PX;
   const segundos = (essencial.ate - essencial.de) / 1000;
   if (visivelPx <= 0 || segundos <= 0) {
     return ESCALA_ALERTA;
   }
-  return Math.max(ESCALA_AO_VIVO, Math.min(ESCALA_ALERTA, visivelPx / segundos));
+  const escala = Math.min(ESCALA_ALERTA, visivelPx / segundos);
+  if (escala >= ESCALA_AO_VIVO || proprio === null) {
+    return Math.max(ESCALA_AO_VIVO, escala);
+  }
+  const segundosProprios = (proprio.ate - proprio.de) / 1000;
+  return segundosProprios <= 0
+    ? ESCALA_AO_VIVO
+    : Math.max(ESCALA_MINIMA_DO_ALERTA, Math.min(ESCALA_AO_VIVO, visivelPx / segundosProprios));
 }
+
+// How far a flag zooms out so that its own entries fit: the late entry of
+// a "registro_tardio" is typed up to a minute after the flag's, and a
+// phone (390 px) shows about 250 px of lanes, 190 px once the last chip has
+// its room: 190 px / 60 s is just over 3 px/s. A chip (40 px) is then
+// about 13 s wide; chips closer than that go on a second row.
+export const ESCALA_MINIMA_DO_ALERTA = 3;
 
 // Where a flag's window goes on screen. A window that fits is centred;
 // else what must be seen of it (`essencial`), when that fits; else the
 // flag's last entry goes near the right edge, so as much as possible of
-// the lap before it is in view, with room left for that chip on a phone.
-export function rolagemParaAlerta(janelaDoAlerta, essencial, deMs, escala, larguraPx) {
+// the lap before it is in view, with room left for that chip on a phone,
+// but never so far right that the flag's first entry (`proprio.de`) is
+// off the left edge.
+export function rolagemParaAlerta(janelaDoAlerta, essencial, deMs, escala, larguraPx, proprio = null) {
   const visivelPx = Math.max(0, larguraPx - LARGURA_DO_NOME_PX);
   const larguraDaJanelaPx = ((janelaDoAlerta.ate - janelaDoAlerta.de) / 1000) * escala;
   if (larguraDaJanelaPx <= visivelPx) {
@@ -287,7 +306,8 @@ export function rolagemParaAlerta(janelaDoAlerta, essencial, deMs, escala, largu
     return Math.max(0, rolagemPara(essencial.de, 0, deMs, escala, larguraPx) - Math.round((visivelPx - essencialPx) / 2));
   }
   const fracao = visivelPx > 0 ? Math.min(0.85, (visivelPx - ESPACO_DO_CHIP_PX) / visivelPx) : 0.85;
-  return rolagemPara(essencial.ate, Math.max(0, fracao), deMs, escala, larguraPx);
+  const rolagem = rolagemPara(essencial.ate, Math.max(0, fracao), deMs, escala, larguraPx);
+  return proprio === null ? rolagem : Math.min(rolagem, rolagemPara(proprio.de, 0, deMs, escala, larguraPx));
 }
 
 // A chip and its outline, in pixels.

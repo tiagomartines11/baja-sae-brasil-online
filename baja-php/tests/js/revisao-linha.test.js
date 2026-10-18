@@ -20,7 +20,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  ALEM_DO_AGORA_MS, ATUALIZAR_NO_MAXIMO_A_CADA_MS, ATUALIZAR_O_PASSADO_A_CADA_MS, ESCALA_AO_VIVO, LARGURA_DO_NOME_PX, MAXIMO_DE_PEDACOS, PEDACO_MS,
+  ALEM_DO_AGORA_MS, ATUALIZAR_NO_MAXIMO_A_CADA_MS, ATUALIZAR_O_PASSADO_A_CADA_MS, ESCALA_AO_VIVO, ESCALA_MINIMA_DO_ALERTA, LARGURA_DO_NOME_PX, MAXIMO_DE_PEDACOS, PEDACO_MS,
   aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, escalaDoAlerta, estenderFaixa, faixaAoVivo, faixaEntre, faltaPorErro, inicioDoPedaco, intervaloDoPedaco, juntarPedacos,
   lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha, momentoEmDestaque, pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara,
   rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
@@ -302,6 +302,43 @@ test('a flag opens with its late entry and the previous pass in view, zooming ou
 
   // A flag of about a minute keeps the flag scale.
   assert.equal(escalaDoAlerta({ de: T0, ate: T0 + 10000 }, largura), ESCALA_ALERTA);
+});
+
+// At browser QA a "registro_tardio" pair 30 s apart opened on a 390 px
+// phone at the live scale: 240 px plus the chip did not fit 252 px of
+// lanes, and the flag's first entry sat under the lane names.
+test('on a phone a flag zooms out further so that its own entries fit, and scrolls to them', () => {
+  const telefone = 252 + LARGURA_DO_NOME_PX;
+  const tardio = {
+    ts_ms: T0 + 300000,
+    tempos_possiveis: [{ passagem_id: 1, ts_ms: T0 + 300000 }, { passagem_id: 2, ts_ms: T0 + 330000 }],
+    passagem_anterior: { ts_ms: T0 + 114000 },
+  };
+  const janela = janelaDoAlerta(tardio, 30000, 190000);
+  const essencial = trechoEssencialDoAlerta(tardio, janela);
+  const proprio = { de: T0 + 300000, ate: T0 + 330000 };
+  const escala = escalaDoAlerta(essencial, telefone, proprio);
+  assert.ok(escala < ESCALA_AO_VIVO && escala >= ESCALA_MINIMA_DO_ALERTA, `below the live scale: ${escala}`);
+  assert.ok(30 * escala + 60 <= 252, 'the pair and its last chip fit the lanes');
+  const visto = trechoVisivel(rolagemParaAlerta(janela, essencial, janela.de, escala, telefone, proprio), telefone, janela.de, escala);
+  assert.ok(visto.de <= T0 + 300000, `the first entry is not under the lane names: ${JSON.stringify(visto)}`);
+  assert.ok(visto.ate >= T0 + 330000 + (40 / escala) * 1000, 'the last chip whole');
+
+  // A pair a whole minute apart still fits, at the lowest scale.
+  const umMinuto = escalaDoAlerta(essencial, telefone, { de: T0 + 270000, ate: T0 + 330000 });
+  assert.ok(60 * umMinuto + 60 <= 252 && umMinuto >= ESCALA_MINIMA_DO_ALERTA, `a minute apart: ${umMinuto}`);
+
+  // The stretch back to the previous pass alone never takes it below the live scale.
+  assert.equal(escalaDoAlerta(essencial, telefone, { de: T0 + 300000, ate: T0 + 310000 }), ESCALA_AO_VIVO);
+  assert.equal(escalaDoAlerta({ de: T0 + 100000, ate: T0 + 200000 }, telefone, { de: T0 + 200000, ate: T0 + 200000 }), ESCALA_AO_VIVO,
+    'a lone entry far from its previous pass');
+
+  // On a PC, with the stretch too wide, the flag's last entry at 85% unless
+  // that would push a long pair's first entry off the left edge.
+  const largura = 300 + LARGURA_DO_NOME_PX;
+  const longo = { de: T0 + 300000, ate: T0 + 330000 };
+  const rolagem = rolagemParaAlerta(janela, essencial, janela.de, 8, largura, longo);
+  assert.equal(rolagem, rolagemPara(T0 + 300000, 0, janela.de, 8, largura));
 });
 
 // At QA a "Saída marcada" line opened its car near the moment with no mark:
