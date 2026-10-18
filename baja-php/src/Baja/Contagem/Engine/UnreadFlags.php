@@ -64,6 +64,9 @@ final class UnreadFlags
     /** @var array<int, array<int, int[]>> fonteId => carro => times of that source's read entries, in order */
     private array $readTimes = [];
 
+    /** @var array<int, true> ids of the entries in an official pass (default rule) */
+    private array $officialEntryIds = [];
+
     /**
      * @param array<int, Source> $sourcesById
      * @param int[] $validCars
@@ -122,6 +125,9 @@ final class UnreadFlags
             foreach ($laps as $lap) {
                 if ($lap->isOfficialPass()) {
                     $this->passTimesByCar[$carro][] = $lap->tsMs;
+                    foreach ($lap->grupo?->entryIds() ?? [] as $entryId) {
+                        $this->officialEntryIds[$entryId] = true;
+                    }
                 }
             }
         }
@@ -183,6 +189,7 @@ final class UnreadFlags
                 'score' => round(1 - 0.5 * min(1.0, abs($crossing['desvio_ms']) / $toleranceMs), 2),
                 'ts_ms' => $crossing['ts_ms'],
                 'fonte_ids' => $crossing['fonte_ids'],
+                'passagem_ids' => $crossing['passagem_ids'],
                 'desvio_ms' => $crossing['desvio_ms'],
             ];
         }
@@ -314,7 +321,12 @@ final class UnreadFlags
             return $flag;
         }
         $top = $candidates[0] ?? null;
-        if (!$isSensor && $top !== null && $top['motivo'] === 'outros_contadores') {
+        // A suggests the closest car only when the "??" would join a pass
+        // that already counts: then no count changes. A lone reading may be
+        // a wrong number (a counter typed 9 as 6 crossed, another read 6 a
+        // few tenths further away): with the "??" it would count, and a "??"
+        // never decides a count without a person choosing that car.
+        if (!$isSensor && $top !== null && $top['motivo'] === 'outros_contadores' && $this->joinsAnOfficialPass($top)) {
             $flag->sugestao = ['tipo' => Decision::REATRIBUIR, 'passagem_id' => $entry->id, 'equipe_numero' => $top['carro']];
         }
         // The car may be a lap short when the likeliest answer is a pass
@@ -332,6 +344,17 @@ final class UnreadFlags
             $flag->motivo = sprintf('%s registrou uma passagem sem número ("??"). Pode ser: %s. Escolha o carro ou anule o registro.', $name, $options);
         }
         return $flag;
+    }
+
+    /** @param array<string, mixed> $candidate */
+    private function joinsAnOfficialPass(array $candidate): bool
+    {
+        foreach ($candidate['passagem_ids'] ?? [] as $entryId) {
+            if (isset($this->officialEntryIds[$entryId])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** @param array<string, mixed> $candidate */

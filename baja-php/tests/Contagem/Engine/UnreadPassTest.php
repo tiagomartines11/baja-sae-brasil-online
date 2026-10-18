@@ -73,10 +73,11 @@ final class UnreadPassTest extends EngineTestCase
      * EXPECTED: car 7 is still the only answer, but here the "??" would be
      * the vote that makes the pass count, and counter 1's reading could be
      * a wrong number. So it is not applied by itself: the reviewer gets
-     * "numero_ilegivel" suggesting car 7, saying car 7 may be a lap short.
-     * Accepting it counts the pass.
+     * "numero_ilegivel" with car 7, saying car 7 may be a lap short, and no
+     * suggestion (A would make a lone reading count at one keystroke).
+     * Choosing car 7 counts the pass.
      */
-    public function testAnUnreadPassThatWouldDecideTheCountIsOnlySuggested(): void
+    public function testAnUnreadPassThatWouldDecideTheCountIsOnlyACandidate(): void
     {
         $race = RaceScenario::withCounters(3);
         $race->start('00:00');
@@ -89,11 +90,41 @@ final class UnreadPassTest extends EngineTestCase
         $this->assertLapCounts([7 => 0], $result);
         $flag = $this->openFlags($result, Flag::NUMERO_ILEGIVEL)[0];
         $this->assertSame([7], array_column($flag->candidatos, 'carro'));
-        $this->assertSame(['tipo' => Decision::REATRIBUIR, 'passagem_id' => $unread, 'equipe_numero' => 7], $flag->sugestao);
+        $this->assertNull($flag->sugestao, 'a lone reading never counts at one keystroke');
         $this->assertSame(Flag::DUVIDA_A_MENOS, $flag->contagemEmDuvida);
 
-        $race->accept($flag);
+        $race->reassign($unread, 7);
         $this->assertLapCounts([7 => 1], $race->run('10:00'));
+    }
+
+    /**
+     * SITUATION (seed 7 of the simulator): car 6 crosses at 04:00. Counter
+     * 1 types 6; counter 3 types 9 by mistake 0.43 s later; counter 2
+     * presses "??" 0.4 s after that. Car 9 is nowhere near.
+     *
+     * EXPECTED: both readings are lone ones, and the wrong one is the
+     * closer. No suggestion: accepting the closest would give car 9 a lap
+     * it never drove and take car 6's. Both cars are candidates, and
+     * neither count moves until a person chooses.
+     */
+    public function testALoneReadingIsNeverSuggestedWhenItWouldAddALap(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([6, 9]);
+        $race->entry(1, 6, '04:00');
+        $race->entry(3, 9, '04:00.43');
+        $unread = $race->unread(2, '04:00.83');
+
+        $result = $race->run('10:00');
+
+        $flags = $this->openFlags($result, Flag::NUMERO_ILEGIVEL);
+        $this->assertCount(1, $flags);
+        $flag = $flags[0];
+        $this->assertSame([$unread], $flag->passagemIds);
+        $this->assertSame([9, 6], array_column($flag->candidatos, 'carro'));
+        $this->assertNull($flag->sugestao);
+        $this->assertLapCounts([6 => 0, 9 => 0], $result);
     }
 
     /**

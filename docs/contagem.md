@@ -665,7 +665,7 @@ From `default/js/contagem/revisao-alertas.js`, which is what the screen runs.
 | `saida_presumida` | none | none: hiding the flag would leave the log wrong | **Confirmar saída** (asks nothing: it changes no count); **Descartar esta passagem** (asks) |
 | `volta_curta` | none | Está correto, parar de avisar | **Descartar a primeira passagem** / **a segunda passagem** (asks) |
 | `divergencia_total` | none | none | |
-| `numero_ilegivel` | **Atribuir ao carro N** (`reatribuir`), N being the closest car another counter read; it asks when that reading is a lone one (the "??" makes it two: +1 volta). None for a sensor's mark or when no counter read a car near. On the screen A is the first candidate's button, marked A | **Deixar sem carro, parar de avisar** (changes no count) | one button per candidate, keys **1** to **6**, and "Outro carro" for any car (each a `reatribuir`, asked first when it adds a pass, see [below](#on-the-review-screen)); **Anular (não passou carro)** on V (for a mark: "Anular a marca (não foi passagem)") |
+| `numero_ilegivel` | **Atribuir ao carro N** (`reatribuir`), N being the closest car another counter read, only when that car's pass already counts (the "??" joins it, no count changes). None when that reading is a lone one (the "??" would make it count: the reviewer picks the car's button, which asks), for a sensor's mark, or when no counter read a car near. On the screen A is the first candidate's button, marked A | **Deixar sem carro, parar de avisar** (changes no count) | one button per candidate, keys **1** to **6**, and "Outro carro" for any car (each a `reatribuir`, asked first when it adds a pass, see [below](#on-the-review-screen)); **Anular (não passou carro)** on V (for a mark: "Anular a marca (não foi passagem)") |
 | `numero_atribuido` | none (resolved by the system) | none | **Não é o carro N…** opens the other cars read near it (keys 1 to 6), "Outro carro" and "Anular (não passou carro)": a reviewer's decision wins over the engine's |
 
 "Marcar saída" records an exit for that car one second before the pass,
@@ -1167,7 +1167,10 @@ gave car 29 a lap it never drove, in one generated race in sixteen. So a
 **What is flagged.** Every other "??" (once the other counters have synced
 past it) raises `numero_ilegivel`, with the cars it may have been, most
 likely first: `outros_contadores` (another source read it nearby; the
-suggestion is the closest of these), `carro_esperado` (the car was due at
+suggestion, A, is the closest of these when the "??" would join a pass that
+already counts, and none otherwise: with a lone reading A would make that
+reading count, and in simulated races (seeds 2, 3 and 7) the closer lone
+reading was a wrong number, so accepting it gave a car a lap it never drove), `carro_esperado` (the car was due at
 the line then, by its last pass and its expected lap, and has not passed
 since) and `volta_faltando` (the car's passes before and after are about
 two laps apart, and the "??" about a lap from each). The reviewer picks the
