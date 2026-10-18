@@ -41,7 +41,7 @@ final class TimelineWindow
         $inWindow = fn(int $tsMs): bool => $tsMs >= $fromMs && $tsMs <= $untilMs;
 
         $cars = self::carsTypedBetween($service->getProva(), $fromMs, $untilMs);
-        $recount = CarsRecount::load($service, $cars, [$fromMs, $untilMs]);
+        $recount = CarsRecount::load($service, $cars, [$fromMs, $untilMs], [], true);
 
         return self::describe(
             $service,

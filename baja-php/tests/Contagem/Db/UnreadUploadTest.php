@@ -433,6 +433,51 @@ final class UnreadUploadTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: the race above. The review page polls the timeline of
+     * 5:00 to 8:20, which holds only the mark at 6:40 that times no pass,
+     * and the timeline of 8:20 to 11:40, which holds nothing.
+     *
+     * EXPECTED: the mark is shown out of use, and the first window costs no
+     * more queries than the empty one: every car typed in a window is
+     * recounted, so a mark well inside it that times none of them times no
+     * pass at all, and its train is not looked for again on every poll.
+     */
+    public function testAMarkThatTimesNoPassCostsTheTimelineNoQuery(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $sensorToken = $this->apiToken($sensor);
+        foreach ($this->fontes as $index => $fonte) {
+            $token = $this->issueToken($fonte, self::USER_PREFIX . 'contador' . $index);
+            $this->upload($token, [
+                $this->entryPayload(self::newUuid(), self::CAR_B, $this->at(30)),
+                $this->entryPayload(self::newUuid(), self::CAR_B, $this->at(0) + [220000, 220400, 221200][$index]),
+            ]);
+        }
+        $this->upload($sensorToken, [
+            $this->unreadPayload(self::newUuid(), $this->at(0) + 218300) + ['mode' => 'api'],
+            $this->unreadPayload(self::newUuid(), $this->at(400)) + ['mode' => 'api'],
+        ]);
+        $connection = \Propel\Runtime\Propel::getWriteConnection('resultados');
+        $queriesOf = function (int $fromS, int $untilS) use ($connection): array {
+            $this->newRequest();
+            $connection->useDebug(true);
+            $before = $connection->getQueryCount();
+            $window = \Baja\Contagem\Review\TimelineWindow::forWindow($this->service, $this->at($fromS), $this->at($untilS));
+            $queries = $connection->getQueryCount() - $before;
+            $connection->useDebug(false);
+            return [$queries, $window];
+        };
+
+        [$withTheMark, $window] = $queriesOf(300, 500);
+        [$empty] = $queriesOf(500, 700);
+
+        $marks = $this->entriesOfLane($window, (int) $sensor->getFonteId());
+        $this->assertCount(1, $marks);
+        $this->assertSame('marca_do_sensor', $marks[0]['motivo_fora_de_uso']);
+        $this->assertSame($empty, $withTheMark);
+    }
+
+    /**
      * SITUATION: the same race, exported from race control: the raw
      * entries ("Passagens") and the laps ("Voltas").
      *

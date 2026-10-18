@@ -594,7 +594,10 @@ is the mark) and `marca_sensor_id`. A mark that times no pass is out of
 use (`motivo_fora_de_uso` 'marca_do_sensor'). A piece of the timeline, or a
 car's timeline, shows each mark with its pass even when that pass's car
 has no entry in the piece (the piece recounts the cars of the marks'
-trains too).
+trains too). Only a mark near the piece's edges is looked at that way: the
+piece recounts every car typed in it, so a mark well inside it that times
+none of them (a false trigger) times no pass, and costs a poll nothing
+more.
 
 ### What the flags mean
 
@@ -1258,6 +1261,15 @@ for every car of generated races and for single uploads and voids
 column `tempo_do_sensor` ("sim" when the row's time is a sensor's mark);
 the other columns keep their places.
 
+**The start and the finish.** A pass is before the start, or after the
+finish, by its pass time: with a sensor, the mark, which nearly always
+comes before every counter's Enter. A car that crossed just before a start
+recorded a moment late is before the start even when every counter typed
+it after the start instant (`PassGroup::inicioMs()`). A pass whose mark is
+before the finish and whose counters' entries are all after it lies on
+both sides of the finish, as with a precise source among the entries
+(flag `no_encerramento`); it counts before the finish, by the mark.
+
 **Moving the start.** The question "N registros de M carros" counts the
 counters' "??" (a crossing somebody saw) and not the sensor's marks (a mark
 alone never counts, before the start or after).
@@ -1295,7 +1307,15 @@ is ±0.4 s), and cars further apart are already told apart by the times.
 What stays untimed is mostly cars side by side (marks under 0.3 s apart)
 and trains with a false trigger or a missed car. The wrong ones are a mark
 of a false trigger next to a crossing whose own mark was missed, or a car
-a few tenths of a second from the next. About 2 marks a race were flagged
+a few tenths of a second from the next. One case the times cannot tell:
+two cars under a second apart, the sensor missing the first and a false
+trigger right after the second, the marks' gap about the cars' gap. The
+two marks then line up with the two crossings at a lag near zero as well
+as the real lag lines one of them up, so both cars get the wrong mark,
+late by the gap. Limiting the lag to its likely sign does not help (that
+lag is near zero, not after the counters), and the race-wide habit of the
+counters is not known to the per-car recount, which must give the whole
+race's answer. About 2 marks a race were flagged
 with three counters, 6 with two, all of them false triggers; none was a
 crossing nobody saw, because the simulated counters never all miss one.
 

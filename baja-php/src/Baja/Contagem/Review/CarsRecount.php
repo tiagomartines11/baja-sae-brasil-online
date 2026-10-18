@@ -13,6 +13,8 @@ use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\DecisionApplier;
 use Baja\Contagem\Engine\LapCounter;
 use Baja\Contagem\Engine\RaceTimeline;
+use Baja\Contagem\Engine\Settings;
+use Baja\Contagem\Engine\UnreadAssigner;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\EngineInputLoader;
 
@@ -76,8 +78,9 @@ final class CarsRecount
      * @param int[] $cars the cars the caller wants to show
      * @param array{0: int, 1: int}|null $window also recount the cars of passes a reviewer added between these two moments
      * @param int[] $alsoEntryIds stored entries to load whatever car they count for (a "??" has none)
+     * @param bool $everyCarOfTheWindow $cars are every car typed in the window (a timeline of a stretch of time)
      */
-    public static function load(ContagemService $service, array $cars, ?array $window = null, array $alsoEntryIds = []): self
+    public static function load(ContagemService $service, array $cars, ?array $window = null, array $alsoEntryIds = [], bool $everyCarOfTheWindow = false): self
     {
         $loader = new EngineInputLoader($service->getProva());
         $settings = $service->getSettings();
@@ -99,7 +102,7 @@ final class CarsRecount
         // window). Where a mark times none of the recounted cars, the cars
         // of its train are recounted too, so that it is shown with its
         // pass, or as timing none, exactly as the whole race says.
-        $loose = $recount->marksTimingNoRecountedCar($window, $alsoEntryIds);
+        $loose = $recount->marksTimingNoRecountedCar($window, $alsoEntryIds, $everyCarOfTheWindow ? self::marginOfAMark($settings) : null);
         if ($loose !== []) {
             $moreCars = array_diff($loader->carsAroundSensorMarks($settings, $loose, []), $cars);
             if ($moreCars !== []) {
@@ -209,19 +212,36 @@ final class CarsRecount
      *
      * @param array{0: int, 1: int}|null $window
      * @param int[] $entryIds
+     * @param int|null $insideMs when every car typed in the window is recounted: only the marks this close to its edges
      * @return int[]
      */
-    private function marksTimingNoRecountedCar(?array $window, array $entryIds): array
+    private function marksTimingNoRecountedCar(?array $window, array $entryIds, ?int $insideMs): array
     {
         $asked = array_fill_keys($entryIds, true);
         $moments = [];
         foreach ($this->applied->sensorMarks as $mark) {
-            $onScreen = isset($asked[$mark->id]) || ($window !== null && $mark->tsMs >= $window[0] && $mark->tsMs <= $window[1]);
+            // Every car typed in the window is recounted: a mark further than
+            // $insideMs inside it that times none of them has no reading of
+            // any other car near enough to time (a false trigger, or a mark
+            // left over in its train). Looking for its train again would
+            // only cost every poll of the timeline its queries.
+            $nearAnEdge = $window !== null && ($insideMs === null || $mark->tsMs < $window[0] + $insideMs || $mark->tsMs > $window[1] - $insideMs);
+            $onScreen = isset($asked[$mark->id]) || ($nearAnEdge && $mark->tsMs >= $window[0] && $mark->tsMs <= $window[1]);
             if ($onScreen && !isset($this->groupTimedByMark[$mark->id]) && $mark->qualidadeTempo !== Entry::TEMPO_DESCONHECIDO) {
                 $moments[] = $mark->tsMs;
             }
         }
         return $moments;
+    }
+
+    /**
+     * How far from a sensor's mark the readings of a pass it may time can
+     * lie, with room to spare: its tolerance (UnreadAssigner::sensorToleranceMs())
+     * and the reach of a crossing's readings around an unread entry.
+     */
+    private static function marginOfAMark(Settings $settings): int
+    {
+        return UnreadAssigner::sensorToleranceMs($settings) + UnreadAssigner::reachMs($settings);
     }
 
     /**
