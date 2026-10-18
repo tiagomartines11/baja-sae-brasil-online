@@ -31,4 +31,5 @@ if ($fromMs === false || $untilMs === false || $untilMs <= $fromMs) {
     Pagina::sendJson(400, ['erro' => 'pedido_invalido', 'mensagem' => 'Intervalo inválido.']);
 }
 
-Pagina::sendJson(200, TimelineWindow::forWindow($service, $fromMs, $untilMs));
+// Every review page asks for the same pieces of the grid: shared.
+Pagina::sendJson(200, TimelineWindow::forWindowShared($service, $fromMs, $untilMs));

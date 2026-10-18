@@ -7,7 +7,9 @@ use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Service\ChangeCounter;
 use Baja\Contagem\Service\ContagemService;
+use Baja\Contagem\Service\RedisClient;
 use Baja\Model\Prova;
 use Propel\Runtime\Propel;
 
@@ -50,6 +52,52 @@ final class TimelineWindow
             $untilMs,
             null
         );
+    }
+
+    /**
+     * How long one answer of forWindowShared() is handed to other review
+     * pages. Matches the review page's ATUALIZAR_NO_MAXIMO_A_CADA_MS: what
+     * moves with the clock alone (a lone entry still waiting) is at most
+     * one refresh behind.
+     */
+    public const SHARED_SECONDS = 5;
+
+    /**
+     * forWindow(), shared between review pages. The pieces sit on a fixed
+     * grid, so every page following the race asks for the same ones at the
+     * same moment, and each costs a recount of nearly the whole field. The
+     * answer is kept under the prova's change count, which every upload,
+     * decision, setting and race-control action raises: a change is never
+     * hidden, only the same question asked again within a few seconds is
+     * answered from memory. Without Redis every request computes its own.
+     *
+     * @return array<string, mixed>
+     */
+    public static function forWindowShared(ContagemService $service, int $fromMs, int $untilMs): array
+    {
+        $prova = $service->getProva();
+        $changes = (new ChangeCounter((string) $prova->getEventoId(), (string) $prova->getProvaId()))->current();
+        $redis = $changes === null ? null : RedisClient::get();
+        if ($redis === null) {
+            return self::forWindow($service, $fromMs, $untilMs);
+        }
+        $key = 'contagem:' . $prova->getEventoId() . ':' . $prova->getProvaId() . ':janela:' . $fromMs . ':' . $untilMs . ':' . $changes;
+        try {
+            $cached = $redis->get($key);
+            $decoded = is_string($cached) ? json_decode($cached, true) : null;
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        } catch (\Throwable $error) {
+            error_log('Contagem\TimelineWindow: cache read failed: ' . $error->getMessage());
+        }
+        $window = self::forWindow($service, $fromMs, $untilMs);
+        try {
+            $redis->setex($key, self::SHARED_SECONDS, (string) json_encode($window, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+        } catch (\Throwable $error) {
+            error_log('Contagem\TimelineWindow: cache write failed: ' . $error->getMessage());
+        }
+        return $window;
     }
 
     /**
@@ -348,8 +396,12 @@ final class TimelineWindow
      */
     private static function carsTypedBetween(Prova $prova, int $fromMs, int $untilMs): array
     {
+        // The index is named: right after a race is reset, the table's
+        // statistics are stale and MySQL picks the uuid index instead,
+        // reading every entry of each source (10 ms against 1 ms), and this
+        // runs for every piece of the timeline.
         $sql = 'SELECT DISTINCT p.equipe_numero
-                  FROM contagem_passagem p
+                  FROM contagem_passagem p FORCE INDEX (contagem_passagem_fonte_ts_idx)
                   JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
                  WHERE f.evento_id = :evento AND f.prova_id = :prova
                    AND p.ts_ms BETWEEN :de AND :ate';

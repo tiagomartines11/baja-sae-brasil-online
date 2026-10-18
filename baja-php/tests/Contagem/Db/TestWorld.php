@@ -185,6 +185,12 @@ final class TestWorld
                 $prefix . 'snapshot_resumo',
                 $prefix . 'correcoes'
             );
+            // Timeline pieces shared between pages, kept under the change
+            // count that was just reset: the next test would get them.
+            $shared = $redis->keys($prefix . 'janela:*');
+            if (is_array($shared) && $shared !== []) {
+                $redis->del($shared);
+            }
         }
         // The snapshot also has a copy in a local file (see SnapshotStore).
         (new \Baja\Contagem\Service\SnapshotStore(

@@ -497,8 +497,13 @@ What it loads: two-minute pieces on a fixed grid (`contagem_janela.php?de=&ate=`
 kept by the page. A piece is asked again when the state's version changed,
 and only while it is in view: at most every 5 s for the piece of "now" and
 the one before it, every 30 s for older ones (each piece costs the server a
-recount of every car typed in it, and the past rarely changes). A
-reviewer's own decision reloads what is on screen at once, and a flag's
+recount of every car typed in it, and the past rarely changes). The
+server keeps each piece's answer for 5 s in Redis under the prova's change
+count, so every review page asking for the same piece in that time shares
+one recount, and any upload, decision or setting change gives a fresh one.
+A piece recounts the cars typed in it plus the cars its own entries were
+moved to; a typo fixed elsewhere in those cars' races does not pull more
+cars in. A reviewer's own decision reloads what is on screen at once, and a flag's
 pieces are loaded afresh when it is opened. At most half an hour of
 pieces is kept on screen. The lanes have a fixed height and scroll inside,
 and the header is one line, so nothing below moves when a piece arrives.

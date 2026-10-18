@@ -230,6 +230,42 @@ final class ReviewTimelineTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: at minute 1 counters 1 and 2 type car B and counter 3
+     * types car A (a slip, moved to car B by a reviewer). At minute 20
+     * counter 3 types car A once more, also a slip, moved to car C.
+     *
+     * EXPECTED: the piece around minute 1 recounts A (typed there) and B
+     * (where the slip of minute 1 now counts), and shows the slip in B's
+     * group. Car C, whose only link to the piece is a fix made twenty
+     * minutes later, is not recounted: that second round cost every piece
+     * nearly a whole engine run.
+     */
+    public function testAPieceRecountsOnlyTheCarsItsOwnEntriesCountFor(): void
+    {
+        $this->startRace(self::RACE_START_MS);
+        $this->addEntry($this->fontes[0], self::CAR_B, $this->at(60));
+        $this->addEntry($this->fontes[1], self::CAR_B, $this->at(61));
+        $slipNow = $this->addEntry($this->fontes[2], self::CAR_A, $this->at(62));
+        $slipLater = $this->addEntry($this->fontes[2], self::CAR_A, $this->at(1200));
+        $this->syncAll($this->at(1300));
+        Clock::freezeAt($this->at(1400));
+        $this->recompute();
+        foreach ([[$slipNow, self::CAR_B], [$slipLater, self::CAR_C]] as [$entryId, $car]) {
+            $answer = $this->decideAboutEntry(['tipo' => 'reatribuir', 'passagem_id' => $entryId, 'equipe_numero' => $car], $entryId);
+            $this->assertSame(200, $answer['status']);
+        }
+
+        $this->newRequest();
+        $recount = \Baja\Contagem\Review\CarsRecount::load($this->service, [self::CAR_A, self::CAR_B], [$this->at(0), $this->at(120)]);
+        $this->assertEqualsCanonicalizing([self::CAR_A, self::CAR_B], $recount->cars);
+
+        $slip = $this->entriesById(TimelineWindow::forWindow($this->service, $this->at(0), $this->at(120)))[$slipNow];
+        $this->assertSame(self::CAR_B, $slip['carro']);
+        $this->assertCount(3, $slip['grupo']['passagem_ids']);
+        $this->assertSame($this->currentSignatureOf([$slipNow]), $slip['assinatura']);
+    }
+
+    /**
      * SITUATION: around minute 1 of the race:
      *   - counter 1 double-taps car A (two entries two seconds apart);
      *   - counter 2 types car A once, and a reviewer later voids that entry;
@@ -292,6 +328,38 @@ final class ReviewTimelineTest extends ReviewDbTestCase
      * @param array<string, mixed> $timeline what TimelineWindow answered
      * @return array<int, array<string, mixed>> entry id => the entry as described on the timeline
      */
+    /**
+     * SITUATION: three review pages follow the race. Each asks every few
+     * seconds for the same two-minute pieces, and each piece costs a
+     * recount of nearly the whole field.
+     *
+     * EXPECTED: while nothing changed, the second page gets the first
+     * page's answer (an entry slipped into the table without telling
+     * anybody stays unseen, which shows the answer was shared). As soon
+     * as the change count moves, as it does on every upload or decision,
+     * the next request computes afresh and shows the entry.
+     */
+    public function testPagesAskingForTheSamePieceShareOneAnswerUntilSomethingChanges(): void
+    {
+        $this->startRace(self::RACE_START_MS);
+        $this->allCountersSee(self::CAR_A, 60);
+        $this->syncAll($this->at(100));
+        $this->newRequest();
+        $this->service->markChanged();
+        [$from, $until] = [$this->at(0), $this->at(120) - 1];
+
+        $first = TimelineWindow::forWindowShared($this->service, $from, $until);
+        $this->assertCount(3, $this->entriesById($first));
+
+        $sneaked = $this->addEntry($this->fontes[0], self::CAR_B, $this->at(90));
+        $this->newRequest();
+        $this->assertSame($first, TimelineWindow::forWindowShared($this->service, $from, $until));
+
+        $this->service->markChanged();
+        $fresh = $this->entriesById(TimelineWindow::forWindowShared($this->service, $from, $until));
+        $this->assertArrayHasKey($sneaked, $fresh);
+    }
+
     private function entriesById(array $timeline): array
     {
         $entries = [];

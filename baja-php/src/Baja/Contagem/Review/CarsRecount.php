@@ -263,8 +263,14 @@ final class CarsRecount
     }
 
     /**
+     * With a window, only the entries the timeline will show count: the
+     * ones typed inside it (by their raw time, as TimelineWindow picks
+     * them) and the passes reviewers added inside it. A typo fixed an hour
+     * earlier in the race of a car on screen must not pull another whole
+     * car into every piece.
+     *
      * @param array{0: int, 1: int}|null $window
-     * @return int[] the cars the loaded entries count for after decisions, plus the cars of added passes in the window
+     * @return int[] the cars the loaded entries (in the window, if given) count for after decisions, plus the cars of added passes in the window
      */
     private static function carsTheEntriesCountFor(EngineInput $input, ?array $window): array
     {
@@ -272,12 +278,19 @@ final class CarsRecount
         foreach ($input->sources as $source) {
             $sourcesById[$source->id] = $source;
         }
+        $rawTsById = [];
+        foreach ($input->entries as $raw) {
+            $rawTsById[$raw->id] = $raw->tsMs;
+        }
+        $inWindow = fn(int $tsMs): bool => $window === null || ($tsMs >= $window[0] && $tsMs <= $window[1]);
         $cars = [];
         foreach (DecisionApplier::apply($input->entries, $input->decisions, $sourcesById)->entries as $entry) {
             $isAddedPass = $entry->fonteId === Source::REVISOR_ID;
             if (!$isAddedPass) {
-                $cars[$entry->carro] = true;
-            } elseif ($window !== null && $entry->tsMs >= $window[0] && $entry->tsMs <= $window[1]) {
+                if ($inWindow($rawTsById[$entry->id] ?? $entry->tsMs)) {
+                    $cars[$entry->carro] = true;
+                }
+            } elseif ($window !== null && $inWindow($entry->tsMs)) {
                 $cars[$entry->carro] = true;
             }
         }
