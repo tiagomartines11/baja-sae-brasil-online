@@ -6,7 +6,8 @@
 //     written the record; only then does the record appear in memory, on the
 //     screen and in the upload queue.
 //  2. Nothing is ever deleted. An uploaded entry is MARKED sent, an undone one
-//     is MARKED voided. The full history stays available for the CSV export.
+//     is MARKED voided, a corrected "??" keeps `car: null` and gains the
+//     number in `fix_car`. The full history stays available for the CSV export.
 //  3. A record gets its sequence number the instant it is handed over, before
 //     the disk is even asked. Two cars typed in the same instant therefore
 //     keep the order in which they were typed, whichever write finishes first.
@@ -43,6 +44,15 @@ function hasFinalTime(record) {
 /** An undo still to be confirmed. (The undo of an entry the server refused has nothing to undo there.) */
 function isUnconfirmedVoid(record) {
     return record.voided && !record.void_sent && !record.void_refused && !record.refused;
+}
+
+/**
+ * A correction of a "??" ("Informar número") still to be confirmed. The
+ * fields live on the entry itself, like the undo marks; an entry stored by
+ * an earlier version of this page simply has none of them.
+ */
+function isUnconfirmedFix(record) {
+    return Number.isInteger(record.fix_car) && !record.fix_sent && !record.fix_refused && !record.refused;
 }
 
 export class LocalStore {
@@ -187,6 +197,45 @@ export class LocalStore {
         }
     }
 
+    /**
+     * "Informar número" on a "??" of this device. Only an entry recorded
+     * without a number can be corrected, and only while the server has not
+     * refused a correction of it. A second correction replaces the first
+     * (the newest counts, on the server too) and goes up again.
+     * @returns {Promise<?object>} the record, or null when it cannot be corrected
+     */
+    async setEntryFix(uuid, car, fixedAtMs) {
+        const record = this.findEntry(uuid);
+        if (!record || record.car !== null || record.refused || record.fix_refused || !Number.isInteger(car)) {
+            return null;
+        }
+        if (record.fix_car === car) {
+            // The same number again (a double tap, a replayed simulation): nothing new.
+            return record;
+        }
+        const changes = { fix_car: car, fix_at_ms: fixedAtMs, fix_sent: false };
+        await this.trackWrite(() => this.storage.patch('entries', uuid, changes));
+        Object.assign(record, changes);
+        return record;
+    }
+
+    /**
+     * @param {Array<{uuid: string, car: number}>} fixes the corrections the
+     *        server confirmed, with the number each request carried. One the
+     *        counter changed again meanwhile stays in the queue: the server
+     *        has the older number, not the newest.
+     */
+    async markFixesSent(fixes) {
+        for (const { uuid, car } of fixes) {
+            const record = this.findEntry(uuid);
+            if (!record || record.fix_car !== car || record.fix_sent) {
+                continue;
+            }
+            await this.storage.patch('entries', uuid, { fix_sent: true });
+            record.fix_sent = true;
+        }
+    }
+
     findEntry(uuid) {
         return this.entries.find((record) => record.uuid === uuid);
     }
@@ -213,6 +262,11 @@ export class LocalStore {
      */
     voidsReadyToSend() {
         return this.entries.filter((record) => record.sent && isUnconfirmedVoid(record));
+    }
+
+    /** Corrections not confirmed yet; like a void, only once the entry is on the server. */
+    fixesReadyToSend() {
+        return this.entries.filter((record) => record.sent && isUnconfirmedFix(record));
     }
 
     // ---- pit events (entries and exits on the pit and fueling page) ----
@@ -313,7 +367,8 @@ export class LocalStore {
     /** Number of things the server has not confirmed yet (and still may). */
     pendingCount() {
         const unconfirmedVoids = this.entries.filter(isUnconfirmedVoid).length;
-        return this.unsentEntries().length + unconfirmedVoids + this.unsentPitEvents().length;
+        const unconfirmedFixes = this.entries.filter(isUnconfirmedFix).length;
+        return this.unsentEntries().length + unconfirmedVoids + unconfirmedFixes + this.unsentPitEvents().length;
     }
 
     // ---- meta: device token, revoked mark, last server answer ----

@@ -77,7 +77,7 @@ test('a refused entry is still in the local log and in "Exportar meus dados"', a
     // entry, with the reason in its last column.
     assert.deepEqual(device.store.allEntries().map((entry) => entry.car), [41]);
     const lines = buildEntriesCsv(device.store.allEntries()).trim().split('\r\n');
-    assert.match(lines[1], /^uuid-1;41;.*;simulacao;nao;nao;nao;simulacao_nao_permitida$/);
+    assert.match(lines[1], /^uuid-1;41;.*;simulacao;nao;nao;nao;simulacao_nao_permitida;;$/);
 });
 
 test('the counter is told, in a banner that stays', async () => {

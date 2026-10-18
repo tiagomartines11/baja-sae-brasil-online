@@ -27,6 +27,12 @@ export const TAXAS_PADRAO = {
     desconhecido: 2,      // an extra entry for a number no car has
     nao_classificado: 2,  // an extra entry for a car that may not race
     no_box: 2,            // an extra entry for a car that is in the pit lane
+    // "??": could not read the number. Off unless asked for, so a seed
+    // makes the race it always made. Drawn from a stream of its own.
+    ilegivel: 0,
+    // Of those "??", how many the counter later gives the number to
+    // ("Informar número"), 5 to 15 s after.
+    ilegivel_corrigido: 0,
 };
 
 /** Mistakes of the person logging an area, per thousand events. */
@@ -43,6 +49,8 @@ export const ERRO = {
     DESCONHECIDO: 'desconhecido',
     NAO_CLASSIFICADO: 'nao_classificado',
     NO_BOX: 'no_box',
+    ILEGIVEL: 'ilegivel',
+    ILEGIVEL_CORRIGIDO: 'ilegivel_corrigido',
     PARADA_PERDIDA: 'parada_perdida',
     PARADA_ATRASADA: 'parada_atrasada',
 };
@@ -72,6 +80,9 @@ export function timingFor(janelaMs) {
         strayMaxMs: Math.trunc(janelaMs / 5),
     };
 }
+
+// Mixed into the seed of the "??" stream.
+const SAL_ILEGIVEL = 0x3f3f;
 
 /** The keys next to each key of a numeric keypad (1 2 3 / 4 5 6 / 7 8 9 / 0). */
 const NEIGHBOUR_KEYS = {
@@ -156,13 +167,17 @@ export function wrongNumberFor(carro, prng, carsInTheRace = new Set()) {
  * @param {number[]} [options.naoClassificados] cars that are present but may not race
  * @param {number}   [options.janelaMs] the prova's matching window; see timingFor()
  * @param {object}   [options.taxas]  overrides of TAXAS_PADRAO
- * @returns {{acoes: Array<{tsMs: number, carro: number}>, erros: Array<object>}}
- *          `acoes` sorted by time; each error says what was done and when
+ * @returns {{acoes: Array<{tsMs: number, carro: ?number, corrige?: object}>, erros: Array<object>}}
+ *          `acoes` sorted by time; each error says what was done and when.
+ *          `carro` null is a "??"; an action with `corrige` is not a pass
+ *          but the number given afterwards to that "??" action.
  */
 export function planCounter({ roteiro, semente, fonteId, naoClassificados = [], janelaMs = 20000, taxas = {} }) {
     const rates = { ...TAXAS_PADRAO, ...taxas };
     const timing = timingFor(janelaMs);
     const prng = new Prng(deriveSeed(semente, fonteId));
+    // Separate, so that turning "??" on changes nothing else in the plan.
+    const unreadPrng = new Prng(deriveSeed(deriveSeed(semente, fonteId), SAL_ILEGIVEL));
     const racing = new Set(roteiro.carros);
     const acoes = [];
     const erros = [];
@@ -183,7 +198,25 @@ export function planCounter({ roteiro, semente, fonteId, naoClassificados = [], 
                 noteError(ERRO.NUMERO_ERRADO, typedAtMs, carro, wrong);
             }
         }
-        acoes.push({ tsMs: typedAtMs, carro: typed });
+        if (rates.ilegivel > 0 && unreadPrng.chance(rates.ilegivel)) {
+            // "??" instead of a number (a wrong number drawn above is then
+            // not typed after all).
+            if (typed !== carro) {
+                erros.pop();
+                typed = carro;
+            }
+            const unread = { tsMs: typedAtMs, carro: null };
+            acoes.push(unread);
+            noteError(ERRO.ILEGIVEL, typedAtMs, carro, null);
+            if (rates.ilegivel_corrigido > 0 && unreadPrng.chance(rates.ilegivel_corrigido)) {
+                const fixedAtMs = typedAtMs + unreadPrng.between(5000, 15000);
+                acoes.push({ tsMs: fixedAtMs, carro, corrige: unread });
+                noteError(ERRO.ILEGIVEL_CORRIGIDO, fixedAtMs, carro, carro);
+            }
+            typed = null;
+        } else {
+            acoes.push({ tsMs: typedAtMs, carro: typed });
+        }
 
         if (prng.chance(rates.toque_duplo)) {
             const againAtMs = typedAtMs + prng.between(timing.doubleTapMinMs, timing.doubleTapMaxMs);

@@ -97,7 +97,10 @@ function plansFor(api, roteiro, { semente, taxas, area }) {
         });
         return [{
             plano: withStableIds(plano, race, fonteId),
-            registrar: (action) => api.registrarPassagem({ car: action.carro, tsMs: action.tsMs, uuid: action.uuid }),
+            // An action with `corrige` is "Informar número" on that earlier "??".
+            registrar: (action) => (action.corrige
+                ? api.corrigirPassagem({ uuid: action.corrige.uuid, car: action.carro })
+                : api.registrarPassagem({ car: action.carro, tsMs: action.tsMs, uuid: action.uuid })),
         }];
     }
     const areas = [AREA_BOX, AREA_ABASTECIMENTO].filter((candidate) => {

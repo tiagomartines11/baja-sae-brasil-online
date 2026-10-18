@@ -11,23 +11,27 @@
 // store, big flash, recent list, upload queue. The only differences are the
 // time (`tsMs`, in SERVER time, instead of "now") and the mode (`modo`,
 // 'simulacao' unless given). See exposeForSimulation at the end of main().
+// `car: null` records a "??"; `corrigirPassagem({ uuid, car })` gives one
+// its number, as "Informar número" does.
 
 import { startPage } from './page-setup.js';
 import { CountSession } from './count-session.js';
 import { generateUuid } from './uuid.js';
 import { buildEntriesCsv } from './csv-export.js';
 import { createFeedback, canVibrate, recordThenPrepareSound } from './feedback.js';
-import { carListIsKnown } from './warnings.js';
+import { carListIsKnown, effectiveCar } from './warnings.js';
 import { RecordingBlockedError, TEXTO_BLOQUEIO } from './access.js';
-import { createRecentList } from './contar-recentes.js';
+import { createRecentList, timeText } from './contar-recentes.js';
 import {
-    createFlash, instructionFlash, notRecordedFlash, passFlash, undoFlash,
+    correctionBannerText, correctionEndedFlash, createFlash, fixFlash, instructionFlash, notRecordedFlash,
+    passFlash, undoFlash,
 } from './contar-destaque.js';
+import { CorrectionMode, FIM_CORRECAO } from './correction-mode.js';
 import { wireCountKeys } from './contar-teclas.js';
 import { createTilesPanel } from './contar-blocos.js';
 import { TilesControl } from './tiles-control.js';
 import {
-    MODO, MODOS, TECLA, NumberBuffer, loadEntryMode, saveEntryMode,
+    MODO, MODOS, TECLA, NumberBuffer, loadEntryMode, saveEntryMode, typedUnreadMark,
 } from './entry-modes.js';
 
 const KEYPAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'apagar', '0', 'registrar'];
@@ -64,15 +68,26 @@ async function main() {
         warningFull: element('destaque-aviso-completo'),
     });
 
+    // "Informar número" on a "??" (see correction-mode.js).
+    const correction = new CorrectionMode({
+        onChange: () => renderCorrection(),
+        onEnd: (ended) => {
+            endCorrection(ended).catch(() => {});
+        },
+    });
+
     const recentList = createRecentList({
         listElement: element('lista-recentes'),
         session,
         timeZone: page.config.fuso || null,
+        correctingUuid: () => correction.uuid(),
+        onInform: (entry) => startCorrection(entry),
         onUndo: async (uuid) => {
             const undone = store.findEntry(uuid);
+            correction.forget(uuid);
             await session.undo(uuid);
             if (undone) {
-                flash.show(undoFlash(undone.car));
+                flash.show(undoFlash(effectiveCar(undone)));
             }
             recentList.render();
             queue.requestSync();
@@ -85,7 +100,7 @@ async function main() {
      * Every pass goes through here: Enter, the keypad's OK, a tile, "Passou",
      * and the simulation.
      *
-     * @param {number}  car
+     * @param {?number} car  null for "??"
      * @param {?number} typingMs
      * @param {object}  [options]
      * @param {?number} [options.tsMs] time of the pass in SERVER time; left out = right now
@@ -118,7 +133,8 @@ async function main() {
         if (!simulated) {
             if (serious) {
                 feedback.erro();
-            } else if (result.avisos.length > 0) {
+            } else if (result.avisos.length > 0 || car === null) {
+                // "??" sounds like a warning: something is left to do.
                 feedback.aviso();
             } else {
                 feedback.registrado();
@@ -143,9 +159,27 @@ async function main() {
     function confirmBuffer() {
         const confirmed = page.shiftEnded() ? null : buffer.confirm(monotonicNow());
         renderBuffer();
-        if (confirmed !== null) {
+        if (confirmed === null) {
+            return;
+        }
+        // While correcting a "??", the number typed is its number: no pass.
+        if (correction.pressCar(confirmed.car) === null) {
             recordTypedPass({ car: confirmed.car, typingMs: Math.round(confirmed.typingMs) });
         }
+    }
+
+    /**
+     * "??": a car crossed and its number could not be read. Recorded at
+     * once, like Enter, and whatever was typed is thrown away. (It does
+     * nothing while correcting: "Passou um carro" records then.)
+     */
+    function pressUnread() {
+        if (correction.active()) {
+            return;
+        }
+        buffer.clear();
+        renderBuffer();
+        recordTypedPass({ car: null, typingMs: null });
     }
 
     function renderBuffer() {
@@ -161,8 +195,18 @@ async function main() {
     // focus is anywhere else are handled by the page-wide listener below.
 
     element('campo-numero').addEventListener('input', (event) => {
+        if (typedUnreadMark(event.target.value)) {
+            // "?" typed in the box: the "??" button. The "?" itself goes.
+            event.target.value = buffer.text();
+            pressUnread();
+            return;
+        }
         buffer.setText(event.target.value, monotonicNow());
         renderBuffer();
+    });
+    element('btn-ilegivel').addEventListener('click', () => {
+        pressUnread();
+        element('campo-numero').focus();
     });
     element('form-teclado').addEventListener('submit', (event) => {
         event.preventDefault();
@@ -185,6 +229,11 @@ async function main() {
         renderBuffer();
     }
 
+    element('btn-ilegivel-tela').addEventListener('click', (event) => {
+        event.currentTarget.blur();
+        pressUnread();
+    });
+
     const keypad = element('teclado-tela');
     for (const key of KEYPAD_KEYS) {
         const button = document.createElement('button');
@@ -205,7 +254,11 @@ async function main() {
         getMode: () => currentMode,
         isBlocked: () => page.shiftEnded() || page.recordingBlocked() !== null,
         onKey(action) {
-            pressKeypadKey(action.tecla === TECLA.DIGITO ? action.digito : action.tecla);
+            if (action.tecla === TECLA.ILEGIVEL) {
+                pressUnread();
+            } else {
+                pressKeypadKey(action.tecla === TECLA.DIGITO ? action.digito : action.tecla);
+            }
             if (currentMode === MODO.TECLADO) {
                 // Back to the box, so the following keys take the normal path.
                 element('campo-numero').focus();
@@ -222,11 +275,90 @@ async function main() {
         getCars: () => page.validCars() || [],
         confirm: (question) => window.confirm(question),
         onPass: recordTypedPass,
+        isCorrecting: () => correction.active(),
+        onCorrect: (car) => correction.pressCar(car),
+    });
+
+    // ---- correcting a "??" (correction-mode.js) ----
+
+    function startCorrection(entry) {
+        if (page.shiftEnded() || page.recordingBlocked() !== null) {
+            return;
+        }
+        buffer.clear();
+        renderBuffer();
+        tiles.clearSelection();
+        correction.start(entry);
+        if (currentMode === MODO.TECLADO) {
+            element('campo-numero').focus();
+        }
+    }
+
+    /** The banner over the big flash, and what may be pressed meanwhile. */
+    function renderCorrection() {
+        const entry = correction.entry();
+        // Digits typed for a correction that ended (timeout, Cancelar) must
+        // not become a pass at the next Enter.
+        buffer.clear();
+        renderBuffer();
+        element('correcao').hidden = entry === null;
+        document.body.classList.toggle('corrigindo', entry !== null);
+        if (entry !== null) {
+            element('correcao-texto').textContent = correctionBannerText(
+                entry, currentMode, timeText(entry, page.config.fuso || null),
+            );
+        }
+        // Disabled, not hidden: nothing on the screen moves.
+        for (const id of ['btn-ilegivel', 'btn-ilegivel-tela']) {
+            element(id).disabled = entry !== null;
+        }
+        tiles.renderSelection();
+        recentList.render();
+    }
+
+    async function endCorrection({ motivo, uuid, car }) {
+        if (motivo === FIM_CORRECAO.PASSAGEM) {
+            // The "??" of that crossing is already recorded, and on the flash.
+            return;
+        }
+        if (motivo !== FIM_CORRECAO.CORRIGIDO) {
+            flash.show(correctionEndedFlash(motivo));
+            return;
+        }
+        await applyFix(uuid, car);
+    }
+
+    /** Stores and queues a correction. Also the simulation's way in. */
+    async function applyFix(uuid, car) {
+        let result;
+        try {
+            result = await session.fixUnread(uuid, car);
+        } catch (storageError) {
+            const blocked = storageError instanceof RecordingBlockedError;
+            flash.show(notRecordedFlash(car, blocked ? TEXTO_BLOQUEIO[storageError.motivo] : null));
+            feedback.erro();
+            throw storageError;
+        }
+        flash.show(result === null ? correctionEndedFlash(FIM_CORRECAO.CANCELADO) : fixFlash({ car, nomeEquipe: result.nomeEquipe }));
+        recentList.render();
+        queue.requestSync();
+        return result;
+    }
+
+    element('btn-correcao-cancelar').addEventListener('click', () => correction.cancel());
+    element('btn-correcao-passou').addEventListener('click', (event) => {
+        event.currentTarget.blur();
+        // The crossing first (its time is this tap), then the mode ends.
+        recordTypedPass({ car: null, typingMs: null });
+        correction.escapeToPass();
     });
 
     // ---- switching modes ----
 
     function applyMode(mode) {
+        // "Toque no carro" / "digite o número" belong to the mode the
+        // correction was started in: changing mode ends it.
+        correction.cancel();
         currentMode = mode;
         buffer.clear();
         renderBuffer();
@@ -296,7 +428,7 @@ async function main() {
         abastecimento: page.fuelingEnabled,
         /**
          * @param {object}  pass
-         * @param {number}  pass.car
+         * @param {?number} pass.car        null for "??"
          * @param {?number} [pass.tsMs]     intended time, SERVER time in ms; left out = now
          * @param {string}  [pass.modo]     'simulacao' unless given
          * @param {?number} [pass.typingMs]
@@ -307,6 +439,17 @@ async function main() {
          */
         registrarPassagem({ car, tsMs = null, modo = MODO_SIMULACAO, typingMs = null, uuid = null }) {
             return recordPass(car, typingMs, { tsMs, modo, uuid });
+        },
+        /**
+         * "Informar número" on a "??" of this page, without the screen's
+         * correction mode.
+         * @param {object} fix
+         * @param {string} fix.uuid  the "??" entry
+         * @param {number} fix.car
+         * @returns {Promise<?object>} null when that entry cannot be corrected
+         */
+        corrigirPassagem({ uuid, car }) {
+            return applyFix(uuid, car);
         },
         /**
          * While true, this page never tells the server "you have everything

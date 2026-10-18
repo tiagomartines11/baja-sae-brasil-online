@@ -55,18 +55,33 @@ const TIME_HEADERS = [
     'horario_dispositivo_ms', 'horario_dispositivo_utc',
 ];
 
+/** Empty when there is no correction; else 'na_fila', 'enviada' or 'recusada'. */
+function fixStateOf(entry) {
+    if (!Number.isInteger(entry.fix_car)) {
+        return '';
+    }
+    if (entry.fix_refused) {
+        return 'recusada';
+    }
+    return entry.fix_sent ? 'enviada' : 'na_fila';
+}
+
 /** @param {Array} entries LocalStore.allEntries() */
 export function buildEntriesCsv(entries) {
     const lines = [csvLine([
         'uuid', 'carro', ...TIME_HEADERS, 'digitacao_ms', 'modo', 'enviado', 'anulado', 'anulacao_enviada',
-        'recusado_pelo_servidor',
+        'recusado_pelo_servidor', 'numero_informado', 'correcao',
     ])];
     for (const entry of entries) {
         lines.push(csvLine([
-            entry.uuid, entry.car, ...timeCells(entry), entry.typing_ms, entry.mode,
+            // "??": recorded without a number. The number given afterwards
+            // ("Informar número") is in its own column, never in this one.
+            entry.uuid, entry.car === null ? '??' : entry.car, ...timeCells(entry), entry.typing_ms, entry.mode,
             yesOrNo(entry.sent), yesOrNo(entry.voided), yesOrNo(entry.void_sent),
             // Empty for an ordinary entry; otherwise the reason.
             entry.refused ? entry.refused_reason : '',
+            Number.isInteger(entry.fix_car) ? entry.fix_car : '',
+            fixStateOf(entry),
         ]));
     }
     return BYTE_ORDER_MARK + lines.join(LINE_END) + LINE_END;

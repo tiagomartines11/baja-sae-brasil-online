@@ -19,20 +19,27 @@ export const MOTIVO_SEM_CONFIRMACAO = 'sem_confirmacao';
 // With one answer every 5 seconds this is under half a minute.
 export const MISSES_BEFORE_GIVING_UP = 5;
 
+/** Reason kept on a "??" correction the server answered with `fixes_recusados`. */
+export const MOTIVO_CORRECAO_RECUSADA = 'correcao_recusada';
+
 function marksFor(collection, refused, reason) {
-    return collection === 'voids'
-        ? { void_refused: refused, void_refused_reason: reason }
-        : { refused, refused_reason: reason };
+    if (collection === 'voids') {
+        return { void_refused: refused, void_refused_reason: reason };
+    }
+    if (collection === 'fixes') {
+        return { fix_refused: refused, fix_refused_reason: reason };
+    }
+    return { refused, refused_reason: reason };
 }
 
-/** The undo of an entry ('voids') is a mark on the entry itself. */
+/** The undo of an entry ('voids') and the correction of a "??" ('fixes') are marks on the entry itself. */
 function storeCollectionOf(collection) {
-    return collection === 'voids' ? 'entries' : collection;
+    return collection === 'voids' || collection === 'fixes' ? 'entries' : collection;
 }
 
 /**
  * @param {object} store      LocalStore
- * @param {string} collection 'entries', 'pit_events' or 'voids'
+ * @param {string} collection 'entries', 'pit_events', 'voids' or 'fixes'
  */
 export function markRefused(store, collection, uuid, reason) {
     return store.patchRecord(storeCollectionOf(collection), uuid, marksFor(collection, true, reason));
@@ -47,6 +54,13 @@ export function refusedRecords(store) {
         }
         if (record.void_refused) {
             refused.push({ collection: 'voids', record, motivo: record.void_refused_reason });
+        }
+        // A correction the server turned down is shown on its row of the
+        // recent list ("correção recusada"), not in the banner: the entry
+        // itself is on the server, and the reviewer still sees it as "??".
+        // Only one the safety net gave up on is here, for "Tentar de novo".
+        if (record.fix_refused && record.fix_refused_reason === MOTIVO_SEM_CONFIRMACAO) {
+            refused.push({ collection: 'fixes', record, motivo: record.fix_refused_reason });
         }
     }
     for (const record of store.allPitEvents()) {
@@ -86,7 +100,7 @@ export class UnacknowledgedTracker {
     }
 
     /**
-     * @param {string}   collection   'entries', 'pit_events' or 'voids'
+     * @param {string}   collection   'entries', 'pit_events', 'voids' or 'fixes'
      * @param {string[]} sentUuids    in the order they were in the request
      * @param {Set}      acknowledged the uuids the answer named
      * @returns {string[]} uuids that have now been skipped too many times

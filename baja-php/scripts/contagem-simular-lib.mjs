@@ -77,6 +77,10 @@ export class ClientDevice {
     }
 
     recordPass(action) {
+        if (action.corrige) {
+            // "Informar número" on an earlier "??" of this counter.
+            return this.counting.fixUnread(action.corrige.uuid, action.carro);
+        }
         return this.counting.recordPass({ car: action.carro, typingMs: null, mode: MODE_SIMULATION, tsMs: action.tsMs, uuid: action.uuid });
     }
 

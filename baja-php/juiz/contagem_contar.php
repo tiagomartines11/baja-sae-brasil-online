@@ -56,18 +56,32 @@ OfflineShell::printStatusBar($fonte->getNome(), 'Também contando aqui:');
             <span id="destaque-aviso-curto" aria-hidden="true"></span>
             <span id="destaque-aviso-completo" class="so-leitor"></span>
         </div>
+        <?php // "Informar número" on a "??": drawn OVER the box, same size, so nothing below moves
+              // (correction-mode.js). "Passou um carro" records a "??" at once and ends it. ?>
+        <div id="correcao" class="correcao" hidden>
+            <p id="correcao-texto" class="correcao-texto"></p>
+            <div class="correcao-botoes">
+                <button type="button" id="btn-correcao-cancelar" class="botao-correcao-cancelar">Cancelar</button>
+                <button type="button" id="btn-correcao-passou" class="botao-correcao-passou">Passou um carro</button>
+            </div>
+        </div>
     </section>
 
     <section class="entrada" aria-label="Registrar passagem">
         <div id="modo-teclado" hidden>
             <form id="form-teclado" class="form-teclado" autocomplete="off">
+                <?php // "??": the number could not be read. Also the "?" key. On the left, away from Registrar. ?>
+                <button type="button" id="btn-ilegivel" class="botao-ilegivel" aria-label="Não consegui ler o número">??</button>
                 <input id="campo-numero" class="campo-numero" type="text" inputmode="numeric" pattern="[0-9]*"
                        maxlength="4" enterkeyhint="done" autocomplete="off" aria-label="Número do carro">
                 <button type="submit" class="botao-registrar">Registrar</button>
             </form>
         </div>
         <div id="modo-teclado_tela" hidden>
-            <div id="visor-numero" class="visor-numero" aria-live="polite">&nbsp;</div>
+            <div class="visor-linha">
+                <button type="button" id="btn-ilegivel-tela" class="botao-ilegivel" aria-label="Não consegui ler o número">??</button>
+                <div id="visor-numero" class="visor-numero" aria-live="polite">&nbsp;</div>
+            </div>
             <div id="teclado-tela" class="teclado-tela"></div>
         </div>
         <div id="modo-blocos" hidden>

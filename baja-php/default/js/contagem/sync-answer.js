@@ -2,7 +2,7 @@
 // (Split from sync-queue.js, which decides WHEN to talk to the server.)
 
 import { resolveHeldRecords } from './held-records.js';
-import { markRefused, MOTIVO_SEM_CONFIRMACAO } from './refused-records.js';
+import { markRefused, MOTIVO_CORRECAO_RECUSADA, MOTIVO_SEM_CONFIRMACAO } from './refused-records.js';
 
 export const META_LAST_SYNC = 'ultimo_sync_ms';
 export const META_SERVER_INFO = 'servidor';
@@ -49,10 +49,37 @@ function serverTimesOf(body) {
 }
 
 /**
+ * Corrections of a "??": `fixed_uuids` the server stored, `fixes_recusados`
+ * the ones it will never apply (the entry is not this device's, or was not
+ * stored without a number). Either answer takes the correction out of the
+ * queue; a refused one is shown on its row ("correção recusada").
+ * @returns {Promise<{answered: Set<string>}>} uuids the answer accounted for
+ */
+async function applyFixAnswer(store, request, body) {
+    const sent = Array.isArray(request.fixes) ? request.fixes : [];
+    const answered = new Set();
+    if (sent.length === 0) {
+        return { answered };
+    }
+    const fixed = new Set(Array.isArray(body.fixed_uuids) ? body.fixed_uuids : []);
+    const refused = new Set(Array.isArray(body.fixes_recusados) ? body.fixes_recusados : []);
+    for (const fix of sent) {
+        if (refused.has(fix.uuid)) {
+            await markRefused(store, 'fixes', fix.uuid, MOTIVO_CORRECAO_RECUSADA);
+            answered.add(fix.uuid);
+        } else if (fixed.has(fix.uuid)) {
+            answered.add(fix.uuid);
+        }
+    }
+    await store.markFixesSent(sent.filter((fix) => fixed.has(fix.uuid) && !refused.has(fix.uuid)));
+    return { answered };
+}
+
+/**
  * Marks as refused what the server named in `refused`, and what several
  * answers in a row have skipped (see refused-records.js).
  */
-async function applyRefusals({ store, tracker, request, body, stored, voided }) {
+async function applyRefusals({ store, tracker, request, body, stored, voided, fixesAnswered }) {
     const refusedByServer = new Map();
     for (const item of Array.isArray(body.refused) ? body.refused : []) {
         if (item && typeof item.uuid === 'string') {
@@ -63,6 +90,7 @@ async function applyRefusals({ store, tracker, request, body, stored, voided }) 
         entries: uuidsOf(request.entries),
         pit_events: uuidsOf(request.pit_events),
         voids: uuidsOf(request.voids),
+        fixes: uuidsOf(request.fixes || []),
     };
     for (const collection of ['entries', 'pit_events']) {
         for (const uuid of sentByCollection[collection]) {
@@ -73,8 +101,9 @@ async function applyRefusals({ store, tracker, request, body, stored, voided }) 
     }
     // The safety net looks only at what the server neither stored nor refused.
     const accountedFor = new Set([...stored, ...refusedByServer.keys()]);
-    for (const collection of ['entries', 'pit_events', 'voids']) {
-        const acknowledged = collection === 'voids' ? voided : accountedFor;
+    const acknowledgedBy = { voids: voided, fixes: fixesAnswered };
+    for (const collection of ['entries', 'pit_events', 'voids', 'fixes']) {
+        const acknowledged = acknowledgedBy[collection] || accountedFor;
         for (const uuid of tracker.noteAnswer(collection, sentByCollection[collection], acknowledged)) {
             await markRefused(store, collection, uuid, MOTIVO_SEM_CONFIRMACAO);
         }
@@ -116,7 +145,8 @@ export async function applySyncAnswer({ store, clock, tracker, request, body, ti
     await store.markEntriesSent(storedEntries, answeredAtServerMs);
     await store.markPitEventsSent(storedPitEvents, answeredAtServerMs);
     await store.markVoidsSent(confirmedVoids);
-    await applyRefusals({ store, tracker, request, body, stored, voided });
+    const fixes = await applyFixAnswer(store, request, body);
+    await applyRefusals({ store, tracker, request, body, stored, voided, fixesAnswered: fixes.answered });
 
     // Kept on disk so that a reload without network still knows the car
     // list, the race start and the warning window.
@@ -129,5 +159,8 @@ export async function applySyncAnswer({ store, clock, tracker, request, body, ti
         await store.setMeta(META_ANCHOR, clock.anchorToPersist());
     }
 
-    return { confirmados: storedEntries.length + storedPitEvents.length + confirmedVoids.length, carimbados };
+    return {
+        confirmados: storedEntries.length + storedPitEvents.length + confirmedVoids.length + fixes.answered.size,
+        carimbados,
+    };
 }

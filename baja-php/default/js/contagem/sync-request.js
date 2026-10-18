@@ -81,6 +81,8 @@ export function buildSyncRequest({
     const entries = store.entriesReadyToSend().slice(0, batchSize).map(entryForUpload);
     const voids = store.voidsReadyToSend().slice(0, batchSize).map((record) => ({ uuid: record.uuid }));
     const pitEvents = store.pitEventsReadyToSend().slice(0, batchSize).map(pitEventForUpload);
+    // "Informar número" on a "??": the number the counter gave afterwards.
+    const fixes = store.fixesReadyToSend().slice(0, batchSize).map((record) => ({ uuid: record.uuid, car: record.fix_car }));
     const serverHasEverything = nothingIsWaiting(store);
     // Null until this page load has an anchor, and while the one it has is
     // in doubt. "Everything up to WHEN?" has no answer then, so the promise
@@ -94,6 +96,11 @@ export function buildSyncRequest({
         now_ms: nowMs,
         queue_empty: serverHasEverything && nowMs !== null && vouchesForHistory && !suppressQueueEmpty,
     };
+    // Left out while there is none, so a page that never pressed "??"
+    // sends exactly what it always sent.
+    if (fixes.length > 0) {
+        request.fixes = fixes;
+    }
     // The field is left out entirely unless it is true, so an ordinary
     // request looks exactly as it always did.
     if (encerrando && serverHasEverything) {

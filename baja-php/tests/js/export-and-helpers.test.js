@@ -32,15 +32,16 @@ test('the export contains every entry: uploaded, waiting and undone', async () =
 
     // Expected: a header and one line per entry, nothing left out. After the
     // mode come: uploaded? undone? undo uploaded? and, last, the reason when
-    // the server refused the entry (empty for an ordinary one).
+    // the server refused the entry (empty for an ordinary one), then the
+    // number given to a "??" afterwards and that correction's state.
     assert.equal(lines[0],
         'uuid;carro;horario_oficial_ms;horario_oficial_utc;qualidade_horario;'
         + 'horario_dispositivo_ms;horario_dispositivo_utc;digitacao_ms;modo;enviado;anulado;anulacao_enviada;'
-        + 'recusado_pelo_servidor');
+        + 'recusado_pelo_servidor;numero_informado;correcao');
     assert.equal(lines.length, 4);
-    assert.match(lines[1], /^uuid-1;7;.*;teclado;sim;nao;nao;$/);
-    assert.match(lines[2], /^uuid-2;41;.*;teclado;sim;sim;sim;$/);
-    assert.match(lines[3], /^uuid-3;12;.*;blocos;nao;nao;nao;$/);
+    assert.match(lines[1], /^uuid-1;7;.*;teclado;sim;nao;nao;;;$/);
+    assert.match(lines[2], /^uuid-2;41;.*;teclado;sim;sim;sim;;;$/);
+    assert.match(lines[3], /^uuid-3;12;.*;blocos;nao;nao;nao;;;$/);
 });
 
 test('the export shows the official time, how sure it is, and what the phone clock said', () => {
@@ -76,7 +77,7 @@ test('an entry the server refused is in the export, with the reason', () => {
         refused: true, refused_reason: 'simulacao_nao_permitida',
     }]);
 
-    assert.match(csv, /;simulacao;nao;nao;nao;simulacao_nao_permitida\r\n$/);
+    assert.match(csv, /;simulacao;nao;nao;nao;simulacao_nao_permitida;;\r\n$/);
 });
 
 test('the export opens correctly in Excel: byte-order mark, semicolons, quoted specials', () => {

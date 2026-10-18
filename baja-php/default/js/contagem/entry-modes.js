@@ -146,6 +146,8 @@ export const TECLA = {
     DIGITO: 'digito',
     APAGAR: 'apagar',
     REGISTRAR: 'registrar',
+    // "?": the "??" button, a pass whose number could not be read.
+    ILEGIVEL: 'ilegivel',
     // The key must do NOTHING: not what the page would do with it, and not
     // what the browser would do with it either (the page cancels it).
     NADA: 'nada',
@@ -155,6 +157,18 @@ const DO_NOTHING = { tecla: TECLA.NADA, digito: null };
 
 function isDigit(key) {
     return /^[0-9]$/.test(key);
+}
+
+/** The key that records "??" from a physical keyboard. */
+export const TECLA_ILEGIVEL = '?';
+
+/**
+ * Keyboard mode: the browser's number box takes "?" like any other
+ * character (a phone's keyboard sends no key code the page could catch).
+ * A "?" anywhere in the box means the counter pressed "??".
+ */
+export function typedUnreadMark(rawText) {
+    return String(rawText).includes(TECLA_ILEGIVEL);
 }
 
 /**
@@ -193,7 +207,7 @@ export function keyActionFor(key, { mode, typedInNumberBox, focusOnKeypadKey = f
         // and the box would fill with "777" (or a held Enter would submit
         // again and again). Leaving the key alone is not enough here: the
         // repeat has to be cancelled. A held Backspace may keep deleting.
-        return key.repeat && (isDigit(key.key) || key.key === 'Enter') ? DO_NOTHING : null;
+        return key.repeat && (isDigit(key.key) || key.key === 'Enter' || key.key === TECLA_ILEGIVEL) ? DO_NOTHING : null;
     }
     // On the keypad the last key that was tapped keeps the focus, and a
     // browser "clicks" the focused button when Space is pressed: a stray
@@ -204,7 +218,10 @@ export function keyActionFor(key, { mode, typedInNumberBox, focusOnKeypadKey = f
     }
     // A key held down a moment too long must not become "77" or two passes.
     if (key.repeat) {
-        return isDigit(key.key) || key.key === 'Enter' ? DO_NOTHING : null;
+        return isDigit(key.key) || key.key === 'Enter' || key.key === TECLA_ILEGIVEL ? DO_NOTHING : null;
+    }
+    if (key.key === TECLA_ILEGIVEL) {
+        return { tecla: TECLA.ILEGIVEL, digito: null };
     }
     if (isDigit(key.key)) {
         return { tecla: TECLA.DIGITO, digito: key.key };

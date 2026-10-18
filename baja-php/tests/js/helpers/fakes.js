@@ -221,6 +221,13 @@ export class FakeServer {
         this.storedEntries = new Map();
         this.storedPitEvents = new Map();
         this.voidedUuids = new Set();
+        // "Informar número": uuid -> the car of the newest accepted correction.
+        this.fixes = new Map();
+        // Every correction accepted, in order (to see that a resend is harmless).
+        this.fixLog = [];
+        // False plays a server from before corrections existed: it ignores
+        // `fixes` and answers neither `fixed_uuids` nor `fixes_recusados`.
+        this.answersFixes = true;
         // How many times each uuid was INSERTED. Must never exceed 1.
         this.insertCount = new Map();
         // Every request body that reached the server, in order.
@@ -319,6 +326,23 @@ export class FakeServer {
                 voidedUuids.push(voidRequest.uuid);
             }
         }
+        // The contract: a correction is applied only to an entry of this
+        // device stored without a number; any other is answered in
+        // `fixes_recusados`. The newest correction of an entry counts.
+        const fixedUuids = [];
+        const refusedFixes = [];
+        for (const fix of this.answersFixes ? (request.fixes || []) : []) {
+            const entry = this.storedEntries.get(fix.uuid);
+            if (entry && entry.car === null && Number.isInteger(fix.car)) {
+                if (this.fixes.get(fix.uuid) !== fix.car) {
+                    this.fixes.set(fix.uuid, fix.car);
+                    this.fixLog.push({ ...fix });
+                }
+                fixedUuids.push(fix.uuid);
+            } else {
+                refusedFixes.push(fix.uuid);
+            }
+        }
         this.deviceClock.advance(this.processingDelayMs);
         const serverSentMs = this.deviceClock.serverNow();
         this.deviceClock.advance(this.downloadDelayMs);
@@ -331,6 +355,7 @@ export class FakeServer {
             body: {
                 stored_uuids: storedUuids,
                 voided_uuids: voidedUuids,
+                ...(this.answersFixes ? { fixed_uuids: fixedUuids, fixes_recusados: refusedFixes } : {}),
                 server_now_ms: serverReceivedMs,
                 ...(this.sendsBothTimes ? { server_received_ms: serverReceivedMs, server_sent_ms: serverSentMs } : {}),
                 ...this.extraAnswerFields,
@@ -468,6 +493,8 @@ export async function createDevice({
     device.runClockGuardTimer = () => runClockGuard(device.serverClock, device.queue);
     /** The counter types a car number and presses Enter. */
     device.type = (car, mode = 'teclado') => device.session.recordPass({ car, typingMs: 500, mode });
+    /** The counter presses "??": a car crossed, its number could not be read. */
+    device.typeUnread = (mode = 'teclado_tela') => device.session.recordPass({ car: null, typingMs: null, mode });
     await boot({ anchored });
     return device;
 }

@@ -232,6 +232,54 @@ test('the list of injected mistakes of several people is one list, oldest first'
 });
 
 // ---------------------------------------------------------------------------
+// "??": a counter who could not read the number
+// ---------------------------------------------------------------------------
+
+test('"??" is off unless asked for: the default plan is the plan a seed always made', () => {
+    // The "??" draws come from a stream of their own, so leaving the rate
+    // out (or at 0) changes nothing in any other mistake.
+    const withoutIt = Object.fromEntries(Object.entries(TAXAS_PADRAO).filter(([name]) => !name.startsWith('ilegivel')));
+    assert.equal(TAXAS_PADRAO.ilegivel, 0);
+    assert.deepEqual(counter(1, { taxas: withoutIt }), counter(1));
+    assert.ok(counter(1).acoes.every((action) => Number.isInteger(action.carro)));
+});
+
+test('with `ilegivel`, some crossings are typed as "??" (car null), written down with the real car', () => {
+    const plan = counter(1, { taxas: { ...NO_MISTAKES, ilegivel: 200 } });
+    const unread = plan.acoes.filter((action) => action.carro === null);
+    const noted = plan.erros.filter((error) => error.tipo === ERRO.ILEGIVEL);
+
+    assert.ok(unread.length > 0);
+    assert.equal(plan.acoes.length, race.travessias.length, 'still one entry per crossing');
+    assert.equal(noted.length, unread.length);
+    for (const error of noted) {
+        assert.ok(CARS.includes(error.carro), 'the answer key says which car it was');
+        assert.equal(error.digitado, null);
+    }
+    // Every entry is still typed when it would have been without "??".
+    const times = (taxas) => counter(1, { taxas }).acoes.map((action) => action.tsMs);
+    assert.deepEqual(times({ ...TAXAS_PADRAO, ilegivel: 200 }), times(TAXAS_PADRAO));
+});
+
+test('with `ilegivel_corrigido`, the counter later gives some "??" their number', () => {
+    const plan = counter(1, { taxas: { ...NO_MISTAKES, ilegivel: 300, ilegivel_corrigido: 500 } });
+    const fixes = plan.acoes.filter((action) => action.corrige);
+
+    assert.ok(fixes.length > 0);
+    for (const fix of fixes) {
+        assert.equal(fix.corrige.carro, null, 'it points at a "??" action of the same plan');
+        assert.ok(plan.acoes.includes(fix.corrige));
+        const later = fix.tsMs - fix.corrige.tsMs;
+        assert.ok(later >= 5000 && later <= 15000, 'some seconds after: ' + later);
+        assert.ok(CARS.includes(fix.carro));
+    }
+    assert.equal(plan.erros.filter((error) => error.tipo === ERRO.ILEGIVEL_CORRIGIDO).length, fixes.length);
+    const ided = withStableIds(plan, { semente: 42, largadaMs: START_MS, voltaMediaMs: 240_000 }, 1);
+    assert.ok(ided.acoes.filter((action) => action.corrige).every((fix) => typeof fix.corrige.uuid === 'string'),
+        'the page is told which entry to correct');
+});
+
+// ---------------------------------------------------------------------------
 // The player
 // ---------------------------------------------------------------------------
 

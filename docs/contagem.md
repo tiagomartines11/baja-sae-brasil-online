@@ -225,6 +225,30 @@ to the start recorded in race control.
 - Wrong number? Press **desfazer** next to it in the recent list. Do not try
   to compensate by skipping the next lap. The big box above the keys then
   says "Desfeito: carro N".
+- **Could not read the number? Press "??"** as the car crosses, instead of
+  guessing or typing nothing. It is in the same place in every mode: left
+  of the number box (the **?** key does the same), left of the number on
+  the keypad, the first tile. It records the pass with its time and no
+  car; the box says "?? registrado" and "Informe o número depois".
+  "??" never warns "REPETIDO". The server matches it with what the other
+  counters saw, so a "??" is far better than a guess.
+- **Giving a "??" its number afterwards.** A "??" row in the recent list
+  has a big **Informar número** button (a "??" still without a number stays
+  in the list after ten more entries). Tap it: a blue banner covers the big
+  box, "Corrigindo o registro das 14:03:07 — toque no carro" ("digite o
+  número" in the keyboard modes), and the keys and tiles get a blue frame.
+  **The next car you tap or type is that "??"'s number: it is not a new
+  pass and takes no time.** The mode then ends by itself; it also ends with
+  **Cancelar**, after 20 s without a car ("Correção cancelada: tempo
+  esgotado"), or when you change mode. **If a car crosses while you are
+  correcting, press "Passou um carro"**: it records a "??" for that crossing
+  at that instant and ends the correction (the "??" buttons and "Passou"
+  are disabled meanwhile, so that nothing else records by accident).
+- The row then shows the car with a small **corrigido** mark ("corrigido
+  (na fila)" until it is uploaded) and a smaller **Corrigir número**: you
+  can correct it again, the newest number counts. **correção recusada**
+  means the server will not take it (for example a reviewer's decision is
+  already there); tell the controller the number.
 - After each entry the big box above the keys shows the number, the team
   and at most **one short warning line** ("REPETIDO há 3 s: desfazer?",
   "NÃO CLASSIF.: avise o resp.", "Número fora da lista"; with two, the most
@@ -895,6 +919,10 @@ seed is used.
    `contagemSimular({semente: 42, voltaMediaS: 60})`.
    It refuses to start, and says which preset to apply, when the time
    settings do not fit the lap. It never changes settings itself.
+   `taxas: {ilegivel: 30, ilegivel_corrigido: 500}` adds "??" (per thousand
+   crossings, off by default) and has the counter give the number to some
+   of them (per thousand "??", 5 to 15 s later). Both draw from a stream of
+   their own: every other mistake of the seed stays the same.
 5. Review as in a race. `contagemGabarito()` prints the true lap count of
    each car so far and the mistakes that tab injected, with their times;
    `contagemGabarito({baixar: true})` downloads both as CSV.
@@ -1351,6 +1379,14 @@ time)` only when `queue_empty` is true and `now_ms` is not null, and never
 backwards. `pit_events[].tipo` is `box_entrada`, `box_saida`,
 `abastecimento_entrada` or `abastecimento_saida`.
 
+`fixes: [{"uuid", "car"}]` gives a counter's own "??" (an entry sent with
+`"car": null`) the number typed afterwards. The page leaves the field out
+when it has none, sends a correction only once its entry is in
+`stored_uuids`, and sends it again until the answer names it in
+`fixed_uuids` (stored) or `fixes_recusados` (never stored; shown as
+"correção recusada" on the row). Like a void, it falls under the
+safety net below.
+
 The response lists the uuids now stored, the server time (stamped when the
 request arrived), the race state, the classified cars (`valid_cars`) and the
 present but unclassified ones, the cars inside each area (for pit-log
@@ -1582,4 +1618,13 @@ instead of trampling each other. Never run it against production.
   reader text. A change there must keep every state at the same height:
   the placeholder, a clean pass, a repeat, two warnings, "NÃO REGISTRADO", a
   long team name, an undo, a held count, a banner. This was checked in
-  headless Chromium at 360 px wide; jsdom cannot measure layout.
+  headless Chromium at 360 px wide; jsdom cannot measure layout. The "??"
+  states (its flash, the correction banner over the box, a correction, its
+  end) were checked the same way.
+- **A correction of a "??" on the phone is one car, then over.** Taking the
+  next car for the correction is what makes it quick, and also what makes
+  it dangerous: a counter who forgot would turn a crossing into a
+  correction and lose it. Hence the 20 s limit, the blue banner over the
+  box and frame round the keys, and "Passou um carro", which records a "??"
+  at the tap rather than merely leaving the mode, so that the crossing
+  keeps its precise time whatever the counter does next.

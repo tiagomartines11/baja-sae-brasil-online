@@ -11,7 +11,14 @@
 // a tile records the pass at once. Faster, but a slip of the finger is a
 // recorded pass, so the page asks before switching it on.
 
+// THE "??" TILE is always the first one. It works like a car tile whose car
+// is "not readable": selected and then "Passou", or at once with one tap.
+// The pass is then recorded with no number (car null).
+
 const PREFERENCE_ONE_TAP = 'um_toque';
+
+/** What `selected()` returns while the "??" tile is selected. */
+export const BLOCO_ILEGIVEL = 'ilegivel';
 
 export class TilesControl {
     /**
@@ -36,7 +43,10 @@ export class TilesControl {
         this.clearSelection();
     }
 
-    /** @returns {?number} the car waiting for "Passou" (always null in one-tap mode) */
+    /**
+     * @returns {?(number|string)} the car waiting for "Passou", BLOCO_ILEGIVEL
+     *          for "??" (always null in one-tap mode)
+     */
     selected() {
         return this.selectedCar;
     }
@@ -47,20 +57,21 @@ export class TilesControl {
     }
 
     /**
-     * @returns {?{car: number, typingMs: ?number}} the pass to record NOW
+     * @param {?number} car null for the "??" tile
+     * @returns {?{car: ?number, typingMs: ?number}} the pass to record NOW
      *          (one-tap mode), or null when the tap only selected the car
      */
     tapTile(car) {
         if (this.oneTap()) {
             return { car, typingMs: null };
         }
-        this.selectedCar = car;
+        this.selectedCar = car === null ? BLOCO_ILEGIVEL : car;
         this.selectedAtMs = this.monotonicNow();
         return null;
     }
 
     /**
-     * @returns {?{car: number, typingMs: number}} the pass to record NOW, or
+     * @returns {?{car: ?number, typingMs: number}} the pass to record NOW, or
      *          null when no car is selected (a stray tap records nothing).
      *          `typingMs` is how long the car was selected before it
      *          crossed, the tiles' equivalent of the typing time.
@@ -70,7 +81,7 @@ export class TilesControl {
             return null;
         }
         const pass = {
-            car: this.selectedCar,
+            car: this.selectedCar === BLOCO_ILEGIVEL ? null : this.selectedCar,
             typingMs: Math.max(0, Math.round(this.monotonicNow() - this.selectedAtMs)),
         };
         // One selection, one pass: a second tap on "Passou" must not count

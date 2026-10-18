@@ -5,10 +5,20 @@
 //   2. write the entry to the local store and wait for the disk;
 //   3. only then hand it back to be shown and uploaded.
 
-import { computeWarnings, teamNameOf } from './warnings.js';
+import { computeWarnings, effectiveCar, teamNameOf } from './warnings.js';
 import { RecordingBlockedError } from './access.js';
 
 export const RECENT_LIST_SIZE = 10;
+
+// A "??" still without a number stays in the recent list after it is
+// older than the last 10, so that "Informar número" is still there when
+// the counter has a moment. At most this many of them.
+export const UNREAD_KEPT_IN_LIST = 10;
+
+/** A "??" the counter can still give a number to. */
+export function waitsForNumber(entry) {
+    return entry.car === null && !entry.voided && !entry.refused && !entry.fix_refused && !Number.isInteger(entry.fix_car);
+}
 
 export class CountSession {
     /**
@@ -43,8 +53,8 @@ export class CountSession {
      * simulation all end here.
      *
      * @param {object}  pass
-     * @param {number}  pass.car
-     * @param {?number} pass.typingMs  null when nothing was typed (one-tap tile)
+     * @param {?number} pass.car       null for "??": the number could not be read
+     * @param {?number} pass.typingMs  null when nothing was typed (one-tap tile, "??")
      * @param {string}  pass.mode      one of MODO.* ('simulacao' for a simulated pass)
      * @param {?number} [pass.tsMs]    the time of the pass, in SERVER time, when
      *        it is not "right now" (the simulation). Leave it out for a real pass.
@@ -71,7 +81,7 @@ export class CountSession {
 
         const alreadyRecorded = uuid === null ? undefined : this.store.findEntry(uuid);
         if (alreadyRecorded) {
-            return { entry: alreadyRecorded, avisos: [], nomeEquipe: teamNameOf(alreadyRecorded.car, validCars, unclassifiedCars) };
+            return { entry: alreadyRecorded, avisos: [], nomeEquipe: teamNameOf(effectiveCar(alreadyRecorded), validCars, unclassifiedCars) };
         }
 
         // Warnings look at the entries that existed BEFORE this one.
@@ -107,17 +117,46 @@ export class CountSession {
     }
 
     /**
-     * The newest entries first, voided ones included (shown struck through).
+     * "Informar número" on a "??" of this device: the number goes up as a
+     * correction (`fixes`), never as a new pass. Takes no time: the time of
+     * the pass is the one the "??" got.
+     * @returns {Promise<?{entry: object, nomeEquipe: ?string}>} null when
+     *          that entry cannot be corrected (not a "??", refused before).
+     *          Rejects like recordPass: blocked, or the disk refused it.
+     */
+    async fixUnread(uuid, car) {
+        const blockedBecause = this.recordingBlocked();
+        if (blockedBecause !== null) {
+            throw new RecordingBlockedError(blockedBecause);
+        }
+        const entry = await this.store.setEntryFix(uuid, car, this.clock.now());
+        if (entry === null) {
+            return null;
+        }
+        return { entry, nomeEquipe: teamNameOf(car, this.getValidCars(), this.getUnclassifiedCars()) };
+    }
+
+    /**
+     * The newest entries first, voided ones included (shown struck through),
+     * then the older "??" still waiting for a number (see UNREAD_KEPT_IN_LIST).
      * `avisos`: the warnings the entry got when typed on this page load
-     * (empty after a reload).
+     * (empty after a reload). `carro`: the number shown (null for a "??").
      */
     recentEntries(limit = RECENT_LIST_SIZE) {
         const validCars = this.getValidCars();
         const unclassifiedCars = this.getUnclassifiedCars();
-        return this.store.allEntries().slice(-limit).reverse().map((entry) => ({
-            ...entry,
-            nomeEquipe: teamNameOf(entry.car, validCars, unclassifiedCars),
-            avisos: this.warningsByUuid.get(entry.uuid) || [],
-        }));
+        const all = this.store.allEntries();
+        const newest = all.slice(-limit).reverse();
+        const olderUnread = all.slice(0, Math.max(0, all.length - limit)).filter(waitsForNumber)
+            .slice(-UNREAD_KEPT_IN_LIST).reverse();
+        return newest.concat(olderUnread).map((entry) => {
+            const carro = effectiveCar(entry);
+            return {
+                ...entry,
+                carro,
+                nomeEquipe: carro === null ? null : teamNameOf(carro, validCars, unclassifiedCars),
+                avisos: this.warningsByUuid.get(entry.uuid) || [],
+            };
+        });
     }
 }

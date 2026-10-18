@@ -24,7 +24,7 @@ export const DEFAULT_JANELA_MS = 20000;
 
 /**
  * @param {object}  input
- * @param {number}  input.car           number just typed
+ * @param {?number} input.car           number just typed; null for "??" (no warning at all)
  * @param {object}  [input.time]        the new entry's time fields (ServerClock.stamp())
  * @param {number}  [input.tsDeviceMs]  instead of `time`: only the system clock reading
  * @param {Array}   input.ownEntries    this device's earlier entries (store records)
@@ -38,6 +38,11 @@ export const DEFAULT_JANELA_MS = 20000;
  */
 export function computeWarnings({ car, time, tsDeviceMs, ownEntries, validCars, unclassifiedCars = null, janelaMs }) {
     const warnings = [];
+    if (car === null) {
+        // "??": no number, so nothing to check it against. Above all no
+        // REPETIDO: two unread cars in a row are two different crossings.
+        return warnings;
+    }
     const windowMs = Number.isFinite(janelaMs) && janelaMs > 0 ? janelaMs : DEFAULT_JANELA_MS;
     const newEntry = time || { ts_device_ms: tsDeviceMs };
     const hasNumber = (cars) => Array.isArray(cars) && cars.some((listed) => listed.numero === car);
@@ -120,7 +125,7 @@ function latestActiveEntryOfCar(ownEntries, car, newEntry) {
     let closest = null;
     let closestGapMs = Infinity;
     for (const entry of ownEntries) {
-        if (entry.car !== car || entry.voided) {
+        if (effectiveCar(entry) !== car || entry.voided) {
             continue;
         }
         const gapMs = Math.abs(elapsedBetween(entry, newEntry));
@@ -130,6 +135,18 @@ function latestActiveEntryOfCar(ownEntries, car, newEntry) {
         }
     }
     return closest;
+}
+
+/**
+ * The car an entry stands for on this phone: the number typed, or, for a
+ * "??" the counter corrected afterwards, the number given then (unless the
+ * server refused that correction). Null for a "??" still without a number.
+ */
+export function effectiveCar(entry) {
+    if (entry.car === null && Number.isInteger(entry.fix_car) && !entry.fix_refused) {
+        return entry.fix_car;
+    }
+    return entry.car;
 }
 
 /** @returns {?string} team name for the big flash, or null for an unknown number */
