@@ -310,13 +310,38 @@ export function candidatosDoAlerta(alerta, janela, estado) {
   });
 }
 
+// The cars the "??"'s own source typed around the other sources' readings
+// of them (within a matching window of one of them): as the engine says, a
+// counter cannot have typed car 7 and pressed "??" for that same crossing
+// of car 7. Given that car, its two entries would be one double tap, and
+// the one it typed would be the one ignored.
+function carrosDaPropriaFonte(janela, entrada, leituras, janelaMs) {
+  const proprias = (janela?.raias ?? [])
+    .filter((raia) => raia.fonte_id === entrada.fonte_id)
+    .flatMap((raia) => raia.entradas ?? [])
+    .filter((outra) => outra.id !== entrada.id && temCarro(outra) && !outra.anulada && !outra.anulada_auto
+      && !outra.fora_de_uso && outra.qualidade_tempo !== 'desconhecido');
+  const carros = new Set();
+  for (const leitura of leituras) {
+    const digitou = proprias.some((propria) => propria.carro === leitura.carro
+      && leitura.entradas.some((outra) => Math.abs(outra.ts_ms - propria.ts_ms) <= janelaMs));
+    if (digitou) {
+      carros.add(leitura.carro);
+    }
+  }
+  return carros;
+}
+
 // "Não é o carro 7": the other cars a "??" the engine assigned may have
 // been, from the timeline on screen (the other sources' readings near it),
-// keys 1 to 6. Same shape as candidatosDoAlerta().
+// keys 1 to 6. Same shape as candidatosDoAlerta(). A car the "??"'s own
+// source typed right there is none (carrosDaPropriaFonte()).
 export function candidatosParaTrocar(entrada, janela, estado) {
   const nomeDaFonte = NOME_DA_FONTE(estado);
-  return leiturasPerto(janela, entrada, toleranciaDoIlegivel(estado))
-    .filter((leitura) => leitura.carro !== entrada.carro)
+  const leituras = leiturasPerto(janela, entrada, toleranciaDoIlegivel(estado));
+  const daPropriaFonte = carrosDaPropriaFonte(janela, entrada, leituras, Number(estado?.configuracoes?.janela_ms) || 20000);
+  return leituras
+    .filter((leitura) => leitura.carro !== entrada.carro && !daPropriaFonte.has(leitura.carro))
     .slice(0, MAXIMO_DE_CANDIDATOS)
     .map((leitura, indice) => {
       const efeito = efeitoDeAtribuir(entrada, leitura.carro, { janela, estado, sensor: false });

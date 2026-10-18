@@ -1386,7 +1386,9 @@ atribuiu o ?? #123 de Contagem 2 ao carro 7", type "Número atribuído
 (sistema)"), with "Ver". Nothing is stored for it, so no history row
 changes and nothing new travels with the history difference. **Não é o
 carro 7…**, on that flag or on the chip, opens the other cars the other
-sources read near it, "Outro carro" and "Anular (não passou carro)"; a
+sources read near it (not one the "??"'s own counter typed right there:
+given that car, its two entries would be a double tap, and the one it
+typed would be ignored), "Outro carro" and "Anular (não passou carro)"; a
 reviewer's decision wins over the engine's, and the line then gives way to
 the reviewer's ("Atribuiu o ?? #123 (Contagem 2) ao carro 21"). A counter's
 fix on the phone is listed the same way, "Quem: contador (no aparelho)".

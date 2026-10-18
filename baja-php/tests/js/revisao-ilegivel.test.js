@@ -259,6 +259,21 @@ test('"Não é o carro 7": the other cars read near a "??" the engine assigned',
     ['Carro 5 — Contagem 3 leu o carro 5 a 1,5 s (+1 volta)']);
 });
 
+test('"Não é o carro 7" never offers a car the "??"\'s own counter typed right there (that would be a double tap)', () => {
+  const { janela, estado } = cenario();
+  const auto = { ...automatico(), ts_ms: em(600) };
+  // Contagem 2 itself typed car 5 two seconds after its "??".
+  const proprio5 = entrada({ id: 21, fonte_id: 2, carro: 5, carro_digitado: 5, ts_ms: em(602) + 100 });
+  janela.raias[1].entradas = [auto, proprio5];
+  assert.deepEqual(candidatosParaTrocar(auto, janela, estado), []);
+  // Voided, it is no reading: car 5 is offered again.
+  janela.raias[1].entradas = [auto, { ...proprio5, anulada: true }];
+  assert.deepEqual(candidatosParaTrocar(auto, janela, estado).map((candidato) => candidato.carro), [5]);
+  // Car 5 typed by Contagem 2 a lap earlier says nothing about this crossing.
+  janela.raias[1].entradas = [auto, { ...proprio5, ts_ms: em(600) - 230000 }];
+  assert.deepEqual(candidatosParaTrocar(auto, janela, estado).map((candidato) => candidato.carro), [5]);
+});
+
 test('a car typed for a "??" is checked before anything is sent', () => {
   const { estado } = cenario();
   assert.equal(problemaAoAtribuir(null, pendente(), estado), 'Informe o número do carro que passou.');
