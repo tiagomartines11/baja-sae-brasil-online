@@ -309,7 +309,8 @@ export function rolagemParaAlerta(janelaDoAlerta, essencial, deMs, escala, largu
   }
   const fracao = visivelPx > 0 ? Math.min(0.85, (visivelPx - ESPACO_DO_CHIP_PX) / visivelPx) : 0.85;
   const rolagem = rolagemPara(essencial.ate, Math.max(0, fracao), deMs, escala, larguraPx);
-  return proprio === null ? rolagem : Math.min(rolagem, rolagemPara(proprio.de, 0, deMs, escala, larguraPx));
+  // A few pixels before the first entry, for its chip's outline.
+  return proprio === null ? rolagem : Math.max(0, Math.min(rolagem, rolagemPara(proprio.de, 0, deMs, escala, larguraPx) - 8));
 }
 
 // A chip and its outline, in pixels.

@@ -321,7 +321,7 @@ test('on a phone a flag zooms out further so that its own entries fit, and scrol
   assert.ok(escala < ESCALA_AO_VIVO && escala >= ESCALA_MINIMA_DO_ALERTA, `below the live scale: ${escala}`);
   assert.ok(30 * escala + 60 <= 252, 'the pair and its last chip fit the lanes');
   const visto = trechoVisivel(rolagemParaAlerta(janela, essencial, janela.de, escala, telefone, proprio), telefone, janela.de, escala);
-  assert.ok(visto.de <= T0 + 300000, `the first entry is not under the lane names: ${JSON.stringify(visto)}`);
+  assert.ok(visto.de < T0 + 300000, `the first entry is not under the lane names: ${JSON.stringify(visto)}`);
   assert.ok(visto.ate >= T0 + 330000 + (40 / escala) * 1000, 'the last chip whole');
 
   // A pair a whole minute apart still fits, at the lowest scale.
@@ -338,7 +338,7 @@ test('on a phone a flag zooms out further so that its own entries fit, and scrol
   const largura = 300 + LARGURA_DO_NOME_PX;
   const longo = { de: T0 + 300000, ate: T0 + 330000 };
   const rolagem = rolagemParaAlerta(janela, essencial, janela.de, 8, largura, longo);
-  assert.equal(rolagem, rolagemPara(T0 + 300000, 0, janela.de, 8, largura));
+  assert.equal(rolagem, rolagemPara(T0 + 300000, 0, janela.de, 8, largura) - 8, 'with room for the first chip\'s outline');
 });
 
 // At QA a "Saída marcada" line opened its car near the moment with no mark:
