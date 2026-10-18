@@ -84,9 +84,17 @@ async function buscar(url, oQue) {
 }
 
 // Poll. `versao` null asks for the full state; `alertaId` tells the server
-// which flag this reviewer has open, for "X está olhando".
-export function buscarEstado(prova, versao, alertaId) {
-  return buscar(comParametros('contagem_estado.php', { p: prova, versao, alerta: alertaId }), 'estado');
+// which flag this reviewer has open, for "X está olhando". `historico`
+// ({desde, epoca}, see historicoParaPedir) asks for only the decisions after
+// the newest one the screen holds; null asks for the whole history.
+export function buscarEstado(prova, versao, alertaId, historico = null) {
+  return buscar(comParametros('contagem_estado.php', {
+    p: prova,
+    versao,
+    alerta: alertaId,
+    historico_desde: historico?.desde ?? null,
+    historico_epoca: historico?.epoca ?? null,
+  }), 'estado');
 }
 
 export function buscarJanela(prova, deMs, ateMs) {

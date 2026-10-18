@@ -5,7 +5,9 @@
 // The server sends the whole history (see DecisionHistory::all), so a
 // filter sees every decision of the race, not only the ones loaded so far.
 // At 26SE a race had 81 decisions, and the reviewers asked for exactly
-// these filters: by car, by counter, by person and by type.
+// these filters: by car, by counter, by person and by type. A screen that
+// already holds it gets only the newer decisions with each new state, and
+// merges them in (juntarHistorico).
 
 import { saidaPresumidaDoAlerta } from './revisao-alertas.js';
 import { haQuanto } from './revisao-formato.js';
@@ -174,6 +176,73 @@ export function linhasDoHistorico(estado) {
   return linhas.sort((a, b) => b.quandoMs - a.quandoMs
     || (b.decisao?.id ?? 0) - (a.decisao?.id ?? 0)
     || (a.chave < b.chave ? -1 : a.chave > b.chave ? 1 : 0));
+}
+
+// ---- the history sent as a difference ------------------------------------
+
+// What the server sends only in an answer that is a difference.
+const CHAVES_DA_DIFERENCA = [
+  'historico_desde', 'historico_alteradas', 'historico_fontes', 'historico_quantas', 'historico_mais_antiga_id',
+];
+
+// Folds a full answer into the history the screen holds. Returns the state
+// to use, or null when the answer cannot be fitted to what the screen has:
+// the screen must then ask for everything (a whole answer always fits).
+//
+// An answer whose history is a difference (it has `historico_desde`, see
+// StateSnapshot::withHistoryAfter) carries the decisions after that one,
+// whole, and of the older ones only what other decisions change (see
+// DecisionHistory::DERIVED_FIELDS): every older row is first set back to
+// what it is when nothing touched it (in force, undoable unless it is an
+// undo, counting for the car typed), then `historico_alteradas`
+// ([id, ativa, pode_desfazer, carro]) is applied, and the source names of
+// `historico_fontes`. Rows older than `historico_mais_antiga_id` fell off
+// the server's list and are dropped.
+//
+// Null when the epoch differs (the prova was reset), the screen does not
+// hold the decision the difference starts after, or the result is not
+// `historico_quantas` rows, newest first, each once.
+export function juntarHistorico(estadoAtual, resposta) {
+  if (resposta?.historico_desde === undefined) {
+    return resposta;
+  }
+  if (!estadoAtual || estadoAtual.historico_epoca !== resposta.historico_epoca) {
+    return null;
+  }
+  const desde = resposta.historico_desde;
+  const maisAntiga = resposta.historico_mais_antiga_id ?? 0;
+  const guardado = estadoAtual.historico ?? [];
+  if (desde >= maisAntiga && !guardado.some((decisao) => decisao.id === desde)) {
+    return null;
+  }
+
+  const alteradas = new Map((resposta.historico_alteradas ?? []).map(([id, ativa, podeDesfazer, carro]) => [
+    id, { ativa, pode_desfazer: podeDesfazer, carro },
+  ]));
+  const nomes = resposta.historico_fontes ?? {};
+  const nomeDe = (id, atual) => (id !== null && id !== undefined && Object.prototype.hasOwnProperty.call(nomes, id) ? nomes[id] : atual);
+  const antigas = guardado
+    .filter((decisao) => decisao.id <= desde && decisao.id >= maisAntiga)
+    .map((decisao) => ({
+      ...decisao,
+      ativa: true,
+      pode_desfazer: decisao.tipo !== 'desfazer',
+      carro: decisao.carro_digitado ?? null,
+      ...alteradas.get(decisao.id),
+      fonte_nome: nomeDe(decisao.fonte_id, decisao.fonte_nome),
+      fonte_alvo_nome: nomeDe(decisao.fonte_alvo_id, decisao.fonte_alvo_nome),
+    }));
+
+  const historico = [...(resposta.historico ?? []), ...antigas];
+  const emOrdem = historico.every((decisao, i) => i === 0 || historico[i - 1].id > decisao.id);
+  if (historico.length !== resposta.historico_quantas || !emOrdem) {
+    return null;
+  }
+  const estado = { ...resposta, historico };
+  for (const chave of CHAVES_DA_DIFERENCA) {
+    delete estado[chave];
+  }
+  return estado;
 }
 
 // The filters as typed or stored, made safe: anything unknown or of the

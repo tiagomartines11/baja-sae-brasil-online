@@ -37,11 +37,25 @@ use Propel\Runtime\Propel;
  * was: the car typed, the car the entry counts for now when a reassignment
  * in force moved it, and the counter, with its name. The screen writes them
  * in the line and can filter on them.
+ *
+ * after() is the same list for a screen that already holds it up to some
+ * decision: only the newer rows, and what changed in the older ones.
  */
 final class DecisionHistory
 {
     /** Ten times the decisions of a busy race; see the class comment. */
     public const MAX_ROWS = 1000;
+
+    /**
+     * The fields of a row that can change after the decision was made,
+     * because they are worked out from OTHER decisions: an undo makes an
+     * older row "desfeita", a reassignment (or the undo of one) changes the
+     * car every row about that entry counts for. after() sends them for the
+     * older rows. Everything else in a row is the decision's own columns or
+     * the entry's, and neither is ever edited. A new field worked out from
+     * other rows must be added here (and to the screen's juntarHistorico).
+     */
+    public const DERIVED_FIELDS = ['ativa', 'pode_desfazer', 'carro'];
 
     private const COLUMNS = 'd.decisao_id, d.tipo, d.passagem_id, d.passagem_alvo_id, d.fonte_id, d.equipe_numero, d.ts_ms, d.ts_fim_ms,
                              d.desfaz_decisao_id, d.origem, d.usuario, d.motivo, d.criado_em_ms,
@@ -85,6 +99,105 @@ final class DecisionHistory
             $rows[] = self::describe($row, $activeDecisionIds, $carNow);
         }
         return ['linhas' => array_slice($rows, 0, $limit), 'completo' => count($rows) <= $limit];
+    }
+
+    /**
+     * The history for a screen that holds it up to decision $afterId: the
+     * rows after it, whole, and of the older ones only what can have
+     * changed since (see DERIVED_FIELDS). Decisions are append-only and
+     * their ids grow, so the screen's older rows are exactly the server's.
+     *
+     * - linhas: the rows after $afterId, newest first.
+     * - alteradas: [id, ativa, pode_desfazer, carro] of every older row
+     *   whose derived fields are not what they are for a decision nothing
+     *   touched (see untouched()). The screen sets every older row back to
+     *   that and then applies these: a row that went back (the reassignment
+     *   was undone) is right again without being listed.
+     * - fontes: fonte_id => name, of the sources the older rows name; a
+     *   counter can be renamed.
+     * - quantas, mais_antiga_id: how many rows the whole list has and the
+     *   oldest one, so the screen can check the merge and drop what fell
+     *   off past MAX_ROWS.
+     *
+     * Null when a difference cannot be trusted: nothing to send against
+     * (an empty list), or $afterId is not a decision of this list (newer
+     * than any, so the race was reset; or missing among them).
+     *
+     * @param array<int, array<string, mixed>> $rows the whole history, as all() made it
+     * @return array{linhas: array<int, array<string, mixed>>, alteradas: array<int, array{0: int, 1: bool, 2: bool, 3: ?int}>, fontes: array<int, ?string>, quantas: int, mais_antiga_id: int}|null
+     */
+    public static function after(array $rows, int $afterId): ?array
+    {
+        if ($rows === [] || $afterId < 1) {
+            return null;
+        }
+        $ids = array_map(fn(array $row): int => (int) $row['id'], $rows);
+        $oldestId = min($ids);
+        if ($afterId > max($ids) || ($afterId >= $oldestId && !in_array($afterId, $ids, true))) {
+            return null;
+        }
+
+        $newer = [];
+        $changed = [];
+        $sources = [];
+        foreach ($rows as $row) {
+            if ((int) $row['id'] > $afterId) {
+                $newer[] = $row;
+                continue;
+            }
+            $untouched = self::untouched($row);
+            if ([$row['ativa'], $row['pode_desfazer'], $row['carro']] !== [$untouched['ativa'], $untouched['pode_desfazer'], $untouched['carro']]) {
+                $changed[] = [(int) $row['id'], $row['ativa'], $row['pode_desfazer'], $row['carro']];
+            }
+            foreach (['fonte_id' => 'fonte_nome', 'fonte_alvo_id' => 'fonte_alvo_nome'] as $idField => $nameField) {
+                if ($row[$idField] !== null) {
+                    $sources[(int) $row[$idField]] = $row[$nameField];
+                }
+            }
+        }
+        return [
+            'linhas' => $newer,
+            'alteradas' => $changed,
+            'fontes' => $sources,
+            'quantas' => count($rows),
+            'mais_antiga_id' => $oldestId,
+        ];
+    }
+
+    /**
+     * The derived fields of a row that no other decision touched: in force,
+     * undoable unless it is an undo itself, counting for the car typed.
+     * The screen's juntarHistorico applies the same rule.
+     *
+     * @param array<string, mixed> $row
+     * @return array{ativa: bool, pode_desfazer: bool, carro: ?int}
+     */
+    public static function untouched(array $row): array
+    {
+        return [
+            'ativa' => true,
+            'pode_desfazer' => $row['tipo'] !== Decision::DESFAZER,
+            'carro' => $row['carro_digitado'],
+        ];
+    }
+
+    /**
+     * Changes when the prova is reset ("Zerar corrida" archives every row
+     * it deletes): the decisions a screen holds from before belong to
+     * another race, and their ids may even be given again by the database.
+     * One read of an index.
+     */
+    public static function epoch(Prova $prova): string
+    {
+        $statement = Propel::getConnection('resultados')->prepare(
+            'SELECT arquivo_id FROM contagem_arquivo
+              WHERE evento_id = :evento AND prova_id = :prova
+              ORDER BY arquivado_em_ms DESC, arquivo_id DESC
+              LIMIT 1'
+        );
+        $statement->execute([':evento' => $prova->getEventoId(), ':prova' => $prova->getProvaId()]);
+        $archived = $statement->fetchColumn();
+        return $archived === false ? '0' : (string) $archived;
     }
 
     /**

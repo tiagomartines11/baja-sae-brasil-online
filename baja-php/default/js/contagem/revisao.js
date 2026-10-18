@@ -11,11 +11,11 @@ import { indiceDeUsarTempo } from './revisao-alertas.js';
 import { SessaoExpirada, buscarEstado } from './revisao-api.js';
 import { desenharBarra, desenharBarraSemEstado } from './revisao-barra.js';
 import {
-  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, proximoAtrasoMs, versaoParaPedir,
+  aplicarResposta, avisoDeConexao, criarOrdemDePedidos, historicoParaPedir, proximoAtrasoMs, versaoParaPedir,
 } from './revisao-conexao.js';
 import { alertaSelecionado, atualizarListaDeCarros, criarDesenho, janelaDesatualizada } from './revisao-desenho.js';
 import { estaDigitandoEm } from './revisao-dom.js';
-import { guardarFiltros, lerFiltrosGuardados, normalizarFiltros } from './revisao-historico.js';
+import { guardarFiltros, juntarHistorico, lerFiltrosGuardados, normalizarFiltros } from './revisao-historico.js';
 import { criarLinhaDoTempo } from './revisao-linha.js';
 import { ligarFiltrosDoHistorico } from './revisao-tabela.js';
 import {
@@ -181,8 +181,8 @@ function mostrarLinhaDoTempo() {
 let proximaConsulta = null;
 let consultando = false;
 
-// One poll. `pedirTudo` asks for the whole state even if the version is the
-// one the screen has.
+// One poll. `pedirTudo` asks for the whole state, history included, even if
+// the version is the one the screen has.
 async function consultar(pedirTudo = false) {
   clearTimeout(proximaConsulta);
   if (consultando) {
@@ -190,10 +190,13 @@ async function consultar(pedirTudo = false) {
   }
   consultando = true;
   const numero = ordem.novo();
+  // A history difference that did not fit: ask again for everything, now.
+  let pedirTudoJa = false;
   try {
     const versao = pedirTudo ? null : versaoParaPedir(tela.estado);
+    const historico = pedirTudo ? null : historicoParaPedir(tela.estado);
     const enviadoPerfMs = performance.now();
-    const resposta = await buscarEstado(pagina.prova, versao, tela.selecao?.tipo === 'alerta' ? tela.selecao.id : null);
+    const resposta = await buscarEstado(pagina.prova, versao, tela.selecao?.tipo === 'alerta' ? tela.selecao.id : null, historico);
     // Every answer says what time it is on the server. Paired with this
     // computer's monotonic clock, that is the official clock of the screen.
     relogioOficial.registrar({ servidorAgoraMs: resposta.servidor_agora_ms, enviadoPerfMs, recebidoPerfMs: performance.now() });
@@ -203,7 +206,14 @@ async function consultar(pedirTudo = false) {
       // is AFTER the decision. This answer was made before that and would
       // show the flag as still open; it is left unused.
     } else if (!resposta.inalterado) {
-      receberEstado(resposta, numero);
+      // Only the decisions after the newest one the screen holds, when it
+      // asked for that; see juntarHistorico.
+      const estado = juntarHistorico(tela.estado, resposta);
+      if (estado) {
+        receberEstado(estado, numero);
+      } else {
+        pedirTudoJa = true;
+      }
     } else if (ordem.aceitar(numero) && tela.estado && resposta.versao === tela.estado.versao) {
       tela.estado = aplicarResposta(tela.estado, resposta, pagina.usuario);
     }
@@ -224,7 +234,9 @@ async function consultar(pedirTudo = false) {
   const aviso = avisoDeConexao(tela.falhas, tela.sessaoExpirada);
   pagina.avisoConexao.textContent = aviso ?? '';
   pagina.avisoConexao.className = aviso ? 'revisao-aviso erro' : 'revisao-aviso oculto';
-  proximaConsulta = setTimeout(consultar, proximoAtrasoMs(tela.falhas));
+  proximaConsulta = pedirTudoJa
+    ? setTimeout(() => consultar(true), 0)
+    : setTimeout(consultar, proximoAtrasoMs(tela.falhas));
 }
 
 // After a decision whose outcome is unknown: fetch the whole state now

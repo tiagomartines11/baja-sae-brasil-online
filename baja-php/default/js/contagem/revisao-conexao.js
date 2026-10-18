@@ -40,6 +40,20 @@ export function versaoParaPedir(estado) {
   return estado?.versao ?? null;
 }
 
+// What history to ask for with the next poll: {desde, epoca}, the newest
+// decision the screen holds and the epoch it came with, so that a changed
+// state brings only the decisions after it (merged by juntarHistorico in
+// revisao-historico.js). Null asks for the whole history: there is none to
+// continue, or it came from a server that does not send differences.
+export function historicoParaPedir(estado) {
+  const epoca = estado?.historico_epoca;
+  const historico = estado?.historico ?? [];
+  if (typeof epoca !== 'string' || epoca === '' || historico.length === 0) {
+    return null;
+  }
+  return { desde: Math.max(...historico.map((decisao) => decisao.id)), epoca };
+}
+
 // Puts the answers in order, since the versions cannot.
 //
 // A poll gets a number when it is SENT. The answer to a decision gets its

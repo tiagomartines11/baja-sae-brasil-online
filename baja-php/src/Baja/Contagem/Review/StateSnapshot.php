@@ -30,7 +30,11 @@ use Baja\Contagem\Service\RaceSnapshot;
  *               for a poll.
  *
  * The screen always receives the whole picture, never a difference: a
- * browser that missed a few polls is correct again on the next one.
+ * browser that missed a few polls is correct again on the next one. The
+ * one exception is the decision history, the heaviest part of a long
+ * race and the one that changes least: a screen that holds it up to some
+ * decision gets only what is newer (see withHistoryAfter()), and anything
+ * it cannot fit in makes it ask for the whole state again.
  */
 final class StateSnapshot
 {
@@ -100,6 +104,9 @@ final class StateSnapshot
             'historico' => $history['linhas'],
             'historico_completo' => $history['completo'],
             'historico_em_vigor' => DecisionHistory::inForce($prova, $activeDecisionIds),
+            // Sent back by the screen with the newest decision it holds; a
+            // different one means the prova was reset since.
+            'historico_epoca' => DecisionHistory::epoch($prova),
             'ultima_decisao_id' => self::highestDecisionId($input),
         ];
     }
@@ -214,6 +221,39 @@ final class StateSnapshot
             // reviewers are the ones who must know, not only the error log.
             'correcoes_da_reconciliacao' => $service->lastReconcileCorrections(),
         ];
+    }
+
+    /**
+     * A full state whose history is only what a screen holding it up to
+     * decision $afterId lacks (DecisionHistory::after()), for a poll that
+     * said so. Everything else, the decisions in force included, is sent
+     * whole as always. The state is returned untouched, history and all,
+     * when the screen's copy is of another epoch (the prova was reset) or
+     * cannot be continued.
+     *
+     * The answer says it is a difference with "historico_desde"; the
+     * screen merges it (juntarHistorico in revisao-historico.js).
+     *
+     * @param array<string, mixed> $state as made by live()
+     * @return array<string, mixed>
+     */
+    public static function withHistoryAfter(array $state, int $afterId, string $epoch): array
+    {
+        if (($state['historico_epoca'] ?? null) !== $epoch || !is_array($state['historico'] ?? null)) {
+            return $state;
+        }
+        $delta = DecisionHistory::after($state['historico'], $afterId);
+        if ($delta === null) {
+            return $state;
+        }
+        $state['historico'] = $delta['linhas'];
+        $state['historico_desde'] = $afterId;
+        $state['historico_alteradas'] = $delta['alteradas'];
+        // Cast so that it is {} in JSON, never [].
+        $state['historico_fontes'] = (object) $delta['fontes'];
+        $state['historico_quantas'] = $delta['quantas'];
+        $state['historico_mais_antiga_id'] = $delta['mais_antiga_id'];
+        return $state;
     }
 
     /**

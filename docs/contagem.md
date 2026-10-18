@@ -386,11 +386,14 @@ once. The person leaving then presses **Encerrar meu turno**.
   remembered per prova in the browser. Clicking a line (or **Ver**) opens
   its car on the timeline at the top, which the page scrolls back up to:
   the car's whole race centred on that moment, marked, at that very moment, with the flag's
-  dashed line, with the line's entries outlined as a flag's are, or, for a system line, its flag. The server sends the whole history with
-  the state (about 30 KB for the 81 decisions of 26SE), so a filter sees
-  every decision, not only a first page; past 1000 decisions only the
-  newest are sent and the panel says so (the exclusions, added passes and
-  marked exits in force are always sent, older or not). The panel is
+  dashed line, with the line's entries outlined as a flag's are, or, for a system line, its flag. The screen holds the whole history
+  (about 30 KB for the 81 decisions of 26SE, 144 KB for 300), so a filter
+  sees every decision, not only a first page; past 1000 decisions only the
+  newest are held and the panel says so (the exclusions, added passes and
+  marked exits in force are always sent, older or not). Once it has the
+  history, a new state brings only the decisions made since, and what
+  they changed in the older lines (see
+  [Concurrent reviewers](#concurrent-reviewers)). The panel is
   redrawn only when what it shows changes (a decision, an undo, a filter),
   not at every recalculation, so "Desfazer" does not move under the
   pointer; the ages ("agora", "há 15 s", "há 3 min") move in the status
@@ -1392,6 +1395,35 @@ from the snapshot. Each snapshot has a token, a hash of its content: the
 screen sends the token it has and gets "inalterado" plus the clock-dependent
 parts when nothing changed. Tokens carry no order; the screen orders answers
 by its own request counter.
+
+The decision history travels as a difference. With each poll the screen
+also sends the id of the newest decision it holds and the history's epoch
+(`historico_desde`, `historico_epoca`); a changed state then carries in
+`historico` only the decisions after that one, whole. Decisions are never
+edited and their ids grow, but three fields of an older line are worked
+out from other decisions: `ativa` and `pode_desfazer` (an undo arrived)
+and `carro` (a reassignment, or the undo of one, moved the entry). The
+answer lists, in `historico_alteradas` as `[id, ativa, pode_desfazer,
+carro]`, every older line where these are not what they are for a decision
+nothing touched (in force, undoable unless it is an undo, the car typed);
+the screen sets every older line back to that and applies the list, so a
+line that went back is right without being listed. Source names come in
+`historico_fontes` (a counter can be renamed), and `historico_quantas` and
+`historico_mais_antiga_id` let the screen check the merge and drop what
+fell off past 1000. The server derives all of this rather than leaving it
+to the screen: the screen never has to know the rules of undo and
+reassignment, and a line that a stale snapshot got wrong is put right by
+the next one. The decisions in force and the system's own resolutions are
+sent whole as before. The epoch is the newest row "Zerar corrida" archived
+for the prova, so after a reset the server sends the whole history (the
+new race's ids may even repeat the old ones); it does the same when the
+screen names a decision it does not have or one newer than any. The
+screen asks for the whole state again whenever a difference does not fit
+(another epoch, the decision it started after is missing, the count or
+the order is off). With the 300 decisions of 99PF a changed state went
+from 283 KB to 141 KB, the history's part from 144 KB to under 2 KB.
+Decisions are stored under the count lock, so their ids are committed in
+order and a snapshot never sees a decision without the older ones.
 
 Each flag carries a signature of the entries it is about. A decision is sent
 with the signature of what was on screen and the entries the reviewer was
