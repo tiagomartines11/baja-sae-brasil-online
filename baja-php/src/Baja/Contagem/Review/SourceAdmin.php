@@ -28,8 +28,13 @@ final class SourceAdmin
     public const TYPE_LABELS = [
         Source::TIPO_MANUAL => 'Manual (pessoa contando)',
         Source::TIPO_AUTOMATICA => 'Automática (sistema externo)',
+        Source::TIPO_SENSOR => 'Sensor de tempo (marca só o horário da passagem, nunca o número)',
         Source::TIPO_TOTAIS => 'Totais importados (papel)',
     ];
+
+    /** The help line of the "sensor" type on the form. */
+    public const SENSOR_HELP = 'Um sensor de tempo marca só o horário da passagem, nunca o número. Ele nunca conta uma passagem: '
+        . 'cada marca que coincide com uma passagem dos contadores dá o horário preciso das voltas dela. Envia pela API, como uma fonte automática.';
 
     public const TIMING_LABELS = [
         Source::TEMPO_HUMANA => 'Humana (tempos combinados pela mediana)',
@@ -57,6 +62,11 @@ final class SourceAdmin
     public const PRECISE_TIMING_WARNING = 'Com tempo "precisa", o horário desta fonte passa a ser o horário oficial de cada passagem em que ela '
         . 'estiver, no lugar da mediana dos contadores, e vira a referência para medir o atraso de cada contador. '
         . 'Use só para um sistema cujo relógio você conferiu.';
+
+    /** The same, for a timing sensor: it times laps, never a pass of its own. */
+    public const SENSOR_TIMING_WARNING = 'Como votante, as marcas do sensor passam a medir as voltas: cada marca que coincide com uma passagem '
+        . 'dos contadores dá o horário dela no cálculo das voltas e da melhor volta, e vira a referência para medir o atraso de cada contador. '
+        . 'Ele nunca conta uma passagem nem diz o número do carro. Use só para um sensor cujo relógio você conferiu.';
 
     private const MAX_NAME_LENGTH = 45;
     private const MAX_URL_LENGTH = 255;
@@ -135,9 +145,10 @@ final class SourceAdmin
     /**
      * A new automatic source starts as an OBSERVER: a system nobody has
      * measured yet must not change the count by being plugged in. It is
-     * promoted on this page once its comparison looks good. A source can
-     * also be created switched off, so nothing it sends counts until a
-     * controller switches it on.
+     * promoted on this page once its comparison looks good. So does a timing
+     * sensor: its marks then only show how far they are from the passes. A
+     * source can also be created switched off, so nothing it sends counts
+     * until a controller switches it on.
      *
      * @param array<string, mixed> $post
      * @throws ConfirmationNeeded when a counting source with precise timing is being created and the person was not told what that does
@@ -152,7 +163,7 @@ final class SourceAdmin
         // New sources go to the end of the list.
         $fonte->setOrdem(count(self::sources($prova)) + 1);
         self::applyEditableFields($fonte, $post);
-        $fonte->setPapel($fonte->getTipo() === Source::TIPO_AUTOMATICA ? Source::PAPEL_OBSERVADORA : Source::PAPEL_VOTANTE);
+        $fonte->setPapel(self::mayObserve($fonte) ? Source::PAPEL_OBSERVADORA : Source::PAPEL_VOTANTE);
         self::askAboutPreciseTiming($fonte, false, $post);
         $fonte->save();
         self::rerunEngine($service);
@@ -186,8 +197,11 @@ final class SourceAdmin
         if ($previousRole === Source::PAPEL_OBSERVADORA && $role === Source::PAPEL_VOTANTE) {
             if (($post[self::CAMPO_CONFIRMAR_VOTANTE] ?? '') !== '1') {
                 throw new ConfirmationNeeded(
-                    sprintf('Promover "%s" a votante: a partir de agora o que ela registrar conta na contagem oficial, como um contador. ', $fonte->getNome())
-                        . 'O que ela registrou como observadora continua fora da contagem: a promoção não vale para trás.',
+                    $fonte->getTipo() === Source::TIPO_SENSOR
+                        ? sprintf('Promover "%s" a votante: a partir de agora as marcas dele passam a dar o horário das voltas das passagens com que coincidem. ', $fonte->getNome())
+                            . 'Ele continua sem contar passagem nenhuma. O que ele marcou como observador continua só comparado: a promoção não vale para trás.'
+                        : sprintf('Promover "%s" a votante: a partir de agora o que ela registrar conta na contagem oficial, como um contador. ', $fonte->getNome())
+                            . 'O que ela registrou como observadora continua fora da contagem: a promoção não vale para trás.',
                     self::CAMPO_CONFIRMAR_VOTANTE,
                     'Promover a votante'
                 );
@@ -252,6 +266,31 @@ final class SourceAdmin
     }
 
     /**
+     * How each timing sensor that takes part is doing (SourceStats::$sensor),
+     * from the latest snapshot. Nothing is asked while the prova has no
+     * sensor.
+     *
+     * @return array<int, array<string, mixed>> fonteId => the 'sensor' part of its statistics
+     */
+    public static function sensorStats(ContagemService $service): array
+    {
+        $hasSensor = false;
+        foreach (self::sources($service->getProva()) as $fonte) {
+            $hasSensor = $hasSensor || $fonte->getTipo() === Source::TIPO_SENSOR;
+        }
+        if (!$hasSensor) {
+            return [];
+        }
+        $stats = [];
+        foreach ($service->snapshot()->dados['estado']['fontes'] ?? [] as $row) {
+            if (isset($row['stats']['sensor'])) {
+                $stats[(int) $row['id']] = $row['stats']['sensor'];
+            }
+        }
+        return $stats;
+    }
+
+    /**
      * True for a pass source that is an observer, or was one before being
      * promoted (Source::hasObserved): it has a comparison to show.
      */
@@ -288,16 +327,23 @@ final class SourceAdmin
         return $urls;
     }
 
+    /** Only an automatic source and a timing sensor can be observers. */
+    public static function mayObserve(ContagemFonte $fonte): bool
+    {
+        return $fonte->getTipo() === Source::TIPO_AUTOMATICA || $fonte->getTipo() === Source::TIPO_SENSOR;
+    }
+
     /**
-     * The role chosen on the form. Only an automatic source can be an
-     * observer; another kind of source is always a votante (turning an
-     * observer into a manual source is a promotion, and asked as one).
+     * The role chosen on the form. Only an automatic source or a timing
+     * sensor can be an observer; another kind of source is always a votante
+     * (turning an observer into a manual source is a promotion, and asked
+     * as one).
      *
      * @param array<string, mixed> $post
      */
     private static function postedRole(ContagemFonte $fonte, array $post, string $previousRole): string
     {
-        if ($fonte->getTipo() !== Source::TIPO_AUTOMATICA) {
+        if (!self::mayObserve($fonte)) {
             return Source::PAPEL_VOTANTE;
         }
         $role = $post['papel'] ?? $previousRole;
@@ -318,7 +364,8 @@ final class SourceAdmin
     {
         $countsPrecisely = $fonte->getPapel() === Source::PAPEL_VOTANTE && $fonte->getQualidadeTempo() === Source::TEMPO_PRECISA;
         if ($countsPrecisely && !$wasCountingPrecisely && ($post[self::CAMPO_CONFIRMAR_PRECISA] ?? '') !== '1') {
-            throw new ConfirmationNeeded(self::PRECISE_TIMING_WARNING, self::CAMPO_CONFIRMAR_PRECISA, 'Usar tempo preciso');
+            $warning = $fonte->getTipo() === Source::TIPO_SENSOR ? self::SENSOR_TIMING_WARNING : self::PRECISE_TIMING_WARNING;
+            throw new ConfirmationNeeded($warning, self::CAMPO_CONFIRMAR_PRECISA, 'Usar tempo preciso');
         }
     }
 
@@ -380,8 +427,8 @@ final class SourceAdmin
     public static function createApiToken(ContagemService $service, array $post): string
     {
         $fonte = self::requireSource($service->getProva(), $post['fonte_id'] ?? null);
-        if ($fonte->getTipo() !== Source::TIPO_AUTOMATICA) {
-            throw new InvalidArgumentException('Tokens de API só existem para fontes automáticas.');
+        if ($fonte->getTipo() !== Source::TIPO_AUTOMATICA && $fonte->getTipo() !== Source::TIPO_SENSOR) {
+            throw new InvalidArgumentException('Tokens de API só existem para fontes automáticas e sensores de tempo.');
         }
         $label = self::cleanText($post['rotulo'] ?? '', self::MAX_LABEL_LENGTH);
         return DeviceTokens::issue($fonte, null, $label !== '' ? $label : 'API');
@@ -443,7 +490,8 @@ final class SourceAdmin
         if (!is_string($type) || !isset(self::TYPE_LABELS[$type])) {
             throw new InvalidArgumentException('Tipo de fonte inválido.');
         }
-        $timing = $post['qualidade_tempo'] ?? '';
+        // A timing sensor is there for its time: it is always precise.
+        $timing = $type === Source::TIPO_SENSOR ? Source::TEMPO_PRECISA : ($post['qualidade_tempo'] ?? '');
         if (!is_string($timing) || !isset(self::TIMING_LABELS[$timing])) {
             throw new InvalidArgumentException('Qualidade de tempo inválida.');
         }

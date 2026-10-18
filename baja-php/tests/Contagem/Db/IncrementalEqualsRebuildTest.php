@@ -38,6 +38,9 @@ final class IncrementalEqualsRebuildTest extends DbTestCase
     /** @var array<int, string[]> index of the source => uuids it has uploaded, for voiding later */
     private array $uploadedUuids = [];
 
+    /** @var array<int, array<string, int>> index of the source => its "??" uploaded so far, uuid => the car that really crossed */
+    private array $unreadUuids = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -45,6 +48,7 @@ final class IncrementalEqualsRebuildTest extends DbTestCase
         foreach ($this->fontes as $index => $fonte) {
             $this->tokens[$index] = $this->issueToken($fonte);
             $this->uploadedUuids[$index] = [];
+            $this->unreadUuids[$index] = [];
         }
     }
 
@@ -101,12 +105,71 @@ final class IncrementalEqualsRebuildTest extends DbTestCase
     }
 
     /**
+     * SITUATION: the same kind of race, but each counter presses "??" on
+     * about one crossing in eight, and now and then fixes one of them on the
+     * phone afterwards, to the right car or (a slip) to a wrong one. Which
+     * car a "??" counts for depends on what the OTHER counters read around
+     * it, so an upload of one car can change the count of another.
+     *
+     * EXPECTED: as above: the incremental path, which recounts only the
+     * cars an upload touched and the cars around a "??" near it, publishes
+     * exactly what a rebuild from scratch gives.
+     *
+     * @dataProvider seeds
+     */
+    public function testWithUnreadPassesARebuildFromScratchChangesNothing(int $seed): void
+    {
+        mt_srand($seed);
+        $batches = $this->makeUpARace(12);
+
+        foreach ($batches as $number => $batch) {
+            $this->upload($this->tokens[$batch['source']], $batch['entries'], ['queue_empty' => true]);
+            foreach ($batch['entries'] as $entry) {
+                $this->uploadedUuids[$batch['source']][] = $entry['uuid'];
+                if ($entry['car'] === null) {
+                    $this->unreadUuids[$batch['source']][$entry['uuid']] = $entry['real_car'];
+                }
+            }
+            if ($number % 5 === 2) {
+                $this->aCounterFixesOneOfTheirUnreadPasses($batch['source']);
+            }
+            if ($number % 9 === 4) {
+                $this->aCounterVoidsOneOfTheirEntries($batch['source']);
+            }
+            if ($number === intdiv(count($batches), 3) || $number === intdiv(2 * count($batches), 3)) {
+                $this->assertARebuildChangesNothing('at batch ' . $number);
+            }
+        }
+
+        $this->assertARebuildChangesNothing('at the end');
+        $unread = (int) $this->fetchValue(
+            'SELECT COUNT(*) FROM contagem_passagem p JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
+              WHERE f.evento_id = ? AND p.equipe_numero IS NULL',
+            [self::EVENTO_ID]
+        );
+        $this->assertGreaterThan(5, $unread, 'the made-up race did have "??"');
+    }
+
+    private function aCounterFixesOneOfTheirUnreadPasses(int $source): void
+    {
+        $unread = $this->unreadUuids[$source];
+        if ($unread === []) {
+            return;
+        }
+        $uuids = array_keys($unread);
+        $uuid = $uuids[mt_rand(0, count($uuids) - 1)];
+        $car = mt_rand(1, 4) === 1 ? self::CARS[mt_rand(0, 2)] : $unread[$uuid];
+        $this->upload($this->tokens[$source], [], ['fixes' => [['uuid' => $uuid, 'car' => $car]]]);
+    }
+
+    /**
      * Every counter's entries for the whole race, cut into upload batches
      * and shuffled a little, as phones with different connections deliver.
      *
+     * @param int $unreadPercent how often, in percent, a counter presses "??" instead of typing a car it saw
      * @return array<int, array{source: int, entries: array<int, array<string, mixed>>}>
      */
-    private function makeUpARace(): array
+    private function makeUpARace(int $unreadPercent = 0): array
     {
         $entriesBySource = [0 => [], 1 => [], 2 => []];
         foreach (self::CARS as $position => $car) {
@@ -120,6 +183,13 @@ final class IncrementalEqualsRebuildTest extends DbTestCase
                     }
                     $typed = $roll <= 9 ? $car + 1 : $car; // a wrong number now and then
                     $tsMs = $this->at($crossing) + mt_rand(-1500, 1500);
+                    if ($unreadPercent > 0 && mt_rand(1, 100) <= $unreadPercent) {
+                        // Saw it, could not read it: "??".
+                        $payload = $this->entryPayload(self::newUuid(), $car, $tsMs);
+                        $payload['car'] = null;
+                        $entriesBySource[$source][] = $payload + ['real_car' => $car];
+                        continue;
+                    }
                     $entriesBySource[$source][] = $this->entryPayload(self::newUuid(), $typed, $tsMs);
                     if ($roll >= 98) {
                         // The same car entered twice, a couple of seconds apart.

@@ -61,15 +61,27 @@ final class Recount
      * updates their lap rows and publishes their VOLTAS and LAST. A few
      * milliseconds, however long the race is.
      *
+     * A counter's "??" counts for the car the engine works out from what
+     * the others read around it (UnreadAssigner), so an entry arriving near
+     * one can change the count of a car it is not about: another source's
+     * reading of car 7 is what lets Contagem 2's "??" count for car 7. With
+     * $nearMs (the moments of what the upload touched), the cars read
+     * around the "??" near those moments are recounted as well. Nothing is
+     * added while the prova has no "??".
+     *
      * @param int[] $cars
+     * @param int[] $nearMs
      */
-    public function forCars(array $cars): PublishOutcome
+    public function forCars(array $cars, array $nearMs = []): PublishOutcome
     {
+        $settings = $this->service->getSettings();
+        if ($nearMs !== []) {
+            $cars = array_merge($cars, $this->loader->carsNearUnread($settings, $nearMs));
+        }
         $cars = array_values(array_unique(array_map('intval', $cars)));
         if ($cars === []) {
             return new PublishOutcome();
         }
-        $settings = $this->service->getSettings();
         $count = Engine::countCars($this->loader->loadForCars($settings, $cars), $cars);
 
         $this->lapStore->replaceCars($count->lapsByCar);

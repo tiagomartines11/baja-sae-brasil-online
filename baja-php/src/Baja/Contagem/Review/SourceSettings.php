@@ -54,11 +54,13 @@ final class SourceSettings
             // modes the primary has no effect, so an observer stored there
             // (demoted while another mode was in use) is kept, the way a
             // switched-off one is, and the form still saves.
-            if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA) {
+            if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA || $fonte->getTipo() === Source::TIPO_SENSOR) {
                 $postedPrimary = is_string($post['fonte_principal_id'] ?? null) ? trim($post['fonte_principal_id']) : '';
                 if (($post['modo_publicacao'] ?? null) === Settings::MODO_FONTE_PRINCIPAL && $postedPrimary === (string) $fonte->getFonteId()) {
                     throw new InvalidArgumentException(sprintf(
-                        'A fonte principal não pode ser "%s": ela é observadora e nada do que registra conta. Promova-a a votante antes, ou escolha outra. Nada foi alterado.',
+                        $fonte->getTipo() === Source::TIPO_SENSOR
+                            ? 'A fonte principal não pode ser "%s": um sensor de tempo nunca conta passagens. Escolha outra. Nada foi alterado.'
+                            : 'A fonte principal não pode ser "%s": ela é observadora e nada do que registra conta. Promova-a a votante antes, ou escolha outra. Nada foi alterado.',
                         $fonte->getNome()
                     ));
                 }

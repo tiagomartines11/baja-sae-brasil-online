@@ -34,7 +34,7 @@ use Propel\Runtime\Propel;
  * costs one SELECT (the token) and one UPDATE (the device row). It takes no
  * lock and counts nothing.
  *
- * AN UPLOAD carries entries, voids or pit events. It takes the count lock,
+ * AN UPLOAD carries entries, voids, fixes or pit events. It takes the count lock,
  * stores them, recounts only the cars it touched and publishes them, all
  * before answering: when the phone hears "stored", the results page is
  * already right.
@@ -82,7 +82,7 @@ final class SyncHandler
             if ($heartbeat->changedWhatTheEngineSees()) {
                 (new ChangeCounter($device['evento_id'], $device['prova_id']))->markChanged();
             }
-            $answer = self::answer($device, $nowMs, $heartbeat, [], [], []);
+            $answer = self::answer($device, $nowMs, $heartbeat, [], [], [], [], []);
             $answer['after'] = fn() => self::recalculateIfDue($device['evento_id'], $device['prova_id']);
             return $answer;
         }
@@ -121,7 +121,7 @@ final class SyncHandler
                 if ($stored['stop_events_stored']) {
                     $service->markChanged(true);
                 }
-                $service->recountCars($stored['cars']);
+                $service->recountCars($stored['cars'], $stored['times']);
                 return $stored;
             }, ProvaLock::WAIT_FOR_AN_UPLOAD_SECONDS);
         } catch (LockBusy $busy) {
@@ -138,7 +138,7 @@ final class SyncHandler
             return self::error(403, 'sem_permissao');
         }
 
-        $answer = self::answer($device, $nowMs, $heartbeat, $stored['stored_uuids'], $stored['voided_uuids'], $stored['refused']);
+        $answer = self::answer($device, $nowMs, $heartbeat, $stored['stored_uuids'], $stored['voided_uuids'], $stored['refused'], $stored['fixed_uuids'], $stored['fixes_recusados']);
         $answer['after'] = fn() => $service->refreshSnapshotIfStale();
         return $answer;
     }
@@ -148,7 +148,7 @@ final class SyncHandler
      * transaction.
      *
      * @param array<string, mixed> $device
-     * @return array{stored_uuids: string[], voided_uuids: string[], cars: int[], stop_events_stored: bool, refused: array}
+     * @return array{stored_uuids: string[], voided_uuids: string[], fixed_uuids: string[], fixes_recusados: string[], cars: int[], times: int[], stop_events_stored: bool, refused: array}
      */
     private static function store(array $device, UploadContents $upload, DeviceHeartbeat $heartbeat, int $nowMs, Settings $settings): array
     {
@@ -159,9 +159,13 @@ final class SyncHandler
             $device['prova_id'],
             $device['usuario'],
             $nowMs,
-            $settings
+            $settings,
+            $device['fonte_tipo']
         );
-        $result = ['stored_uuids' => [], 'voided_uuids' => [], 'cars' => [], 'stop_events_stored' => false, 'refused' => []];
+        $result = [
+            'stored_uuids' => [], 'voided_uuids' => [], 'fixed_uuids' => [], 'fixes_recusados' => [],
+            'cars' => [], 'times' => [], 'stop_events_stored' => false, 'refused' => [],
+        ];
 
         $connection = Propel::getWriteConnection('resultados');
         $connection->beginTransaction();
@@ -175,12 +179,17 @@ final class SyncHandler
                 $result['stop_events_stored'] = $written['new'] > 0;
                 // A stop changes which passes of that car are held.
                 $result['cars'] = $written['cars'];
-            } elseif (in_array($device['fonte_tipo'], [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA], true)) {
+            } elseif (in_array($device['fonte_tipo'], [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA, Source::TIPO_SENSOR], true)) {
                 $entries = $writer->storeEntries($upload->entries);
                 $voids = $writer->storeVoids($upload->voids);
+                // Fixes after the entries: a "??" and its fix may travel together.
+                $fixes = $writer->storeFixes($upload->fixes);
                 $result['stored_uuids'] = $entries['uuids'];
                 $result['voided_uuids'] = $voids['uuids'];
-                $result['cars'] = array_values(array_unique(array_merge($entries['cars'], $voids['cars'])));
+                $result['fixed_uuids'] = $fixes['uuids'];
+                $result['fixes_recusados'] = $fixes['refused'];
+                $result['cars'] = array_values(array_unique(array_merge($entries['cars'], $voids['cars'], $fixes['cars'])));
+                $result['times'] = array_merge($entries['times'], $voids['times'], $fixes['times']);
             }
             $result['refused'] = $writer->refused;
             $heartbeat->save();
@@ -232,9 +241,20 @@ final class SyncHandler
      * @param string[] $storedUuids
      * @param string[] $voidedUuids
      * @param array<int, array{uuid: string, motivo: string}> $refused
+     * @param string[] $fixedUuids fixes the device may forget (stored, or refused for good)
+     * @param string[] $refusedFixes of those, the ones that were not stored (see EntryWriter::storeFixes())
      * @return array{status: int, body: array<string, mixed>}
      */
-    private static function answer(array $device, int $nowMs, DeviceHeartbeat $heartbeat, array $storedUuids, array $voidedUuids, array $refused): array
+    private static function answer(
+        array $device,
+        int $nowMs,
+        DeviceHeartbeat $heartbeat,
+        array $storedUuids,
+        array $voidedUuids,
+        array $refused,
+        array $fixedUuids,
+        array $refusedFixes
+    ): array
     {
         $context = (new RaceContext($device['evento_id'], $device['prova_id']))->get();
         $timeline = RaceContext::timelineOf($context);
@@ -246,6 +266,8 @@ final class SyncHandler
                 'stored_uuids' => $storedUuids,
                 'voided_uuids' => $voidedUuids,
                 'refused' => $refused,
+                'fixed_uuids' => $fixedUuids,
+                'fixes_recusados' => $refusedFixes,
                 'server_now_ms' => $nowMs,
                 // The page anchors its clock to the middle of the trip. With
                 // both ends of our own work it can leave that work out: an

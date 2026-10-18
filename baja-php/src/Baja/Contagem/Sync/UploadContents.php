@@ -16,6 +16,13 @@ final class UploadContents
     public array $voids;
     /** @var array<int, mixed> */
     public array $pitEvents;
+    /**
+     * A counter saying which car one of their own "??" was ("era o 17"):
+     * items {uuid, car}. See EntryWriter::storeFixes().
+     *
+     * @var array<int, mixed>
+     */
+    public array $fixes;
 
     /**
      * The page's current time on the SERVER's clock, as it works it out
@@ -36,6 +43,7 @@ final class UploadContents
         $this->entries = self::listOf($request['entries'] ?? null);
         $this->voids = self::listOf($request['voids'] ?? null);
         $this->pitEvents = self::listOf($request['pit_events'] ?? null);
+        $this->fixes = self::listOf($request['fixes'] ?? null);
         $this->nowMs = UploadFields::intOrNull($request['now_ms'] ?? null);
         $this->queueEmpty = ($request['queue_empty'] ?? false) === true;
         $this->closing = ($request['encerrando'] ?? false) === true;
@@ -44,7 +52,7 @@ final class UploadContents
     /** False for a heartbeat: a request with nothing to store. */
     public function carriesData(): bool
     {
-        return $this->entries !== [] || $this->voids !== [] || $this->pitEvents !== [];
+        return $this->entries !== [] || $this->voids !== [] || $this->pitEvents !== [] || $this->fixes !== [];
     }
 
     /**

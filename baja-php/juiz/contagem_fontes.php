@@ -95,6 +95,7 @@ $hasSimulatedRows = $service->hasSimulatedRows();
 $classificationConflict = ScoringFields::classificationConflict($prova);
 // Empty, at no cost, while no source is an observer.
 $observerComparisons = SourceAdmin::observerComparisons($service);
+$sensorStats = SourceAdmin::sensorStats($service);
 
 $options = function (array $labels, $selected) use ($h): string {
     $html = '';
@@ -125,6 +126,8 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         O sistema externo envia para <code>contagem_sync.php</code> com o cabeçalho
         <code>Authorization: Bearer &lt;token&gt;</code> e <code>"mode": "api"</code>, e
         <code>"time_quality": "exato"</code> em cada registro (sem ele o registro fica com horário desconhecido e nunca conta).
+        Um número que o sistema não conseguiu ler vai como <code>"car": null</code>; um sensor de tempo envia sempre assim
+        (o número que ele mandar é ignorado).
     </div>
 <?php } ?>
 
@@ -138,12 +141,22 @@ Pagina::printHeader($prova, 'Fontes e configurações');
             <input type="hidden" name="fonte_id" value="<?= $fonteId ?>">
             <label>Nome <input type="text" name="nome" maxlength="45" required value="<?= $h($fonte->getNome()) ?>"></label>
             <label>Tipo <select name="tipo"><?= $options(SourceAdmin::TYPE_LABELS, $fonte->getTipo()) ?></select></label>
-            <label>Tempo <select name="qualidade_tempo"><?= $options(SourceAdmin::TIMING_LABELS, $fonte->getQualidadeTempo()) ?></select></label>
+            <?php if ($fonte->getTipo() === Source::TIPO_SENSOR) { ?>
+                <input type="hidden" name="qualidade_tempo" value="<?= $h(Source::TEMPO_PRECISA) ?>">
+                <span class="contagem-dica">tempo preciso</span>
+            <?php } else { ?>
+                <label>Tempo <select name="qualidade_tempo"><?= $options(SourceAdmin::TIMING_LABELS, $fonte->getQualidadeTempo()) ?></select></label>
+            <?php } ?>
             <label>Ordem <input type="number" name="ordem" min="0" max="999" required value="<?= (int) $fonte->getOrdem() ?>"></label>
-            <?php if ($fonte->getTipo() === Source::TIPO_AUTOMATICA) { ?>
+            <?php if (SourceAdmin::mayObserve($fonte)) { ?>
                 <label>Papel <select name="papel"><?= $options(SourceAdmin::ROLE_LABELS, $fonte->getPapel()) ?></select></label>
+            <?php } ?>
+            <?php if ($fonte->getTipo() === Source::TIPO_AUTOMATICA) { ?>
                 <label>Endereço das imagens <input type="text" name="imagem_base_url" maxlength="255" size="32"
                        placeholder="ex.: http://camera.local/imagens/ (vazio = sem imagens)" value="<?= $h($fonte->getImagemBaseUrl() ?? '') ?>"></label>
+            <?php } ?>
+            <?php if ($fonte->getTipo() === Source::TIPO_SENSOR) { ?>
+                <span class="contagem-dica">marca só o horário da passagem, nunca o número</span>
             <?php } ?>
             <label><input type="checkbox" name="ativa" value="1" <?= $fonte->getAtiva() ? 'checked' : '' ?>> ativa</label>
             <?php if (!$fonte->getAtiva()) { ?>
@@ -163,7 +176,20 @@ Pagina::printHeader($prova, 'Fontes e configurações');
             <?php } ?>
             <button type="submit">Salvar</button>
         </form>
-        <?php if (isset($observerComparisons[$fonteId])) {
+        <?php if (isset($observerComparisons[$fonteId]) && $fonte->getTipo() === Source::TIPO_SENSOR) {
+            $comparison = $observerComparisons[$fonteId]; ?>
+            <div class="contagem-dica contagem-observacao">
+                <strong>Comparação com a contagem oficial<?= $fonte->getPapel() === Source::PAPEL_OBSERVADORA ? '' : ' (do tempo em que era observador)' ?>:</strong>
+                <?= (int) $comparison['acertos'] ?> de <?= (int) $comparison['entradas'] ?> marcas coincidem com uma passagem oficial,
+                <?= (int) $comparison['faltas'] ?> passagens oficiais sem marca,
+                <?= (int) $comparison['falsos_positivos'] ?> marcas sem passagem.
+                <?php if ($comparison['desvio_mediano_ms'] !== null) { ?>
+                    Diferença para o horário oficial: mediana <?= $h(sprintf('%+.1f', $comparison['desvio_mediano_ms'] / 1000)) ?> s,
+                    90% dentro de <?= $h(sprintf('%.1f', $comparison['desvio_p90_ms'] / 1000)) ?> s.
+                <?php } ?>
+                Detalhe por marca em Controle de corrida, "Exportar CSV".
+            </div>
+        <?php } elseif (isset($observerComparisons[$fonteId])) {
             $comparison = $observerComparisons[$fonteId]; ?>
             <div class="contagem-dica contagem-observacao">
                 <strong>Comparação com a contagem oficial<?= $fonte->getPapel() === Source::PAPEL_OBSERVADORA ? '' : ' (do tempo em que era observadora)' ?>:</strong>
@@ -176,12 +202,29 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                         fn(array $troca) => $troca['carro_real'] . ' lido como ' . $troca['carro_lido'] . ' ×' . $troca['vezes'],
                         $comparison['trocas_frequentes']
                     ))) . ')';
+                }
+                if ((int) ($comparison['ilegiveis'] ?? 0) > 0) {
+                    echo ', ' . (int) $comparison['ilegiveis'] . ' ilegíveis, dos quais ' . (int) $comparison['ilegiveis_com_passagem'] . ' coincidem com uma passagem oficial';
                 } ?>.
                 <?php if ($comparison['desvio_mediano_ms'] !== null) { ?>
                     Diferença para o horário oficial: mediana <?= $h(sprintf('%+.1f', $comparison['desvio_mediano_ms'] / 1000)) ?> s,
                     90% dentro de <?= $h(sprintf('%.1f', $comparison['desvio_p90_ms'] / 1000)) ?> s.
                 <?php } ?>
                 Detalhe por registro em Controle de corrida, "Exportar CSV".
+            </div>
+        <?php } ?>
+        <?php if (isset($sensorStats[$fonteId])) {
+            $sensor = $sensorStats[$fonteId]; ?>
+            <div class="contagem-dica contagem-observacao">
+                <strong>Marcas do sensor:</strong>
+                <?= (int) $sensor['atribuidas'] ?> de <?= (int) $sensor['marcas'] ?> dão o horário de uma passagem,
+                <?= (int) $sensor['ambiguas'] ?> ficaram sem passagem por haver mais de um carro perto,
+                <?= (int) $sensor['sem_passagem'] ?> sem passagem nenhuma por perto,
+                <?= (int) $sensor['passagens_sem_marca'] ?> passagens oficiais sem marca.
+                <?php if ($sensor['desvio_mediano_ms'] !== null) { ?>
+                    Diferença para os contadores: mediana <?= $h(sprintf('%+.1f', $sensor['desvio_mediano_ms'] / 1000)) ?> s,
+                    90% dentro de <?= $h(sprintf('%.1f', $sensor['desvio_p90_ms'] / 1000)) ?> s.
+                <?php } ?>
             </div>
         <?php } ?>
     <?php } ?>
@@ -204,6 +247,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         Uma fonte automática nova começa como <strong>observadora</strong>: o que ela envia é só comparado com a
         contagem oficial e nunca conta. Promovida a votante, passa a contar a partir daquele momento, nunca para trás.
         Tempo "precisa": <?= $h(SourceAdmin::PRECISE_TIMING_WARNING) ?>
+        <?= $h(SourceAdmin::SENSOR_HELP) ?> Como uma fonte automática, começa como observador.
         Quem conta em cada fonte manual é definido em
         <a href="contagem_contadores.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Usuários</a>.
     </p>
@@ -272,7 +316,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
                 </tbody>
             </table>
         <?php } ?>
-        <?php if ($fonte->getTipo() === Source::TIPO_AUTOMATICA) { ?>
+        <?php if ($fonte->getTipo() === Source::TIPO_AUTOMATICA || $fonte->getTipo() === Source::TIPO_SENSOR) { ?>
             <form method="POST" action="<?= $h($action) ?>" class="contagem-acao">
                 <?= $csrf ?>
                 <input type="hidden" name="acao" value="criar_token">

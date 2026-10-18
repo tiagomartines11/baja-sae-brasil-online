@@ -23,7 +23,7 @@ final class UploadFields
     public const INT_MAX = 2147483647;
 
     /**
-     * @param mixed $item one element of "entries", "voids" or "pit_events"
+     * @param mixed $item one element of "entries", "voids", "fixes" or "pit_events"
      * @return string|null the uuid, or null when the element is unusable
      */
     public static function uuidOf($item): ?string
@@ -52,6 +52,18 @@ final class UploadFields
     }
 
     /**
+     * True for an element that says, explicitly, that nobody could read the
+     * car: `"car": null`. A counter's "??", a camera that could not read the
+     * plate. An element with no "car" at all is not one: it is unusable.
+     *
+     * @param array<string, mixed> $item
+     */
+    public static function isUnread(array $item): bool
+    {
+        return array_key_exists('car', $item) && $item['car'] === null;
+    }
+
+    /**
      * Times are milliseconds since 1970 and must stay below 2^53: beyond
      * that, adding two of them (which the engine does to take a median) no
      * longer fits a whole number, PHP silently turns the sum into a
@@ -60,7 +72,7 @@ final class UploadFields
      */
     public const TIME_LIMIT_MS = 9007199254740992;
 
-    /** How many entries, voids or stop events of one request are looked at. The rest wait for the next request. */
+    /** How many entries, voids, fixes or stop events of one request are looked at. The rest wait for the next request. */
     public const MAX_ITEMS_PER_REQUEST = 500;
 
     /** @param mixed $value */

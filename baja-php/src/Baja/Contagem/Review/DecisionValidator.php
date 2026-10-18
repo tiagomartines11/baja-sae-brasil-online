@@ -173,8 +173,11 @@ final class DecisionValidator
                 // "Move it to the car it already counts for" says nothing.
                 // Stored, it would sit in the history as a correction, and
                 // the flag the reviewer meant to settle would stay open.
+                // (Not so for a "??" the engine gave that car by itself:
+                // saying so makes it a person's word, which no later upload
+                // can change.)
                 $entry = $recount->survivingEntry((int) $decision->passagemId);
-                if ($entry !== null && $entry->carro === $decision->carro) {
+                if ($entry !== null && $entry->carro === $decision->carro && !$entry->atribuidoAutomaticamente) {
                     throw new InvalidArgumentException('Este registro já é do carro ' . $decision->carro . '. Informe o carro que realmente passou.');
                 }
             }

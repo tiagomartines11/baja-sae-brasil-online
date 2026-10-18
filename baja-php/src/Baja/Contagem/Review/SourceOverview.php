@@ -163,7 +163,7 @@ final class SourceOverview
             $fonteId = (int) $source['id'];
             $lastSeenMs = $lastSeenBySource[$fonteId] ?? null;
             $countsPasses = !empty($source['ativa'])
-                && in_array($source['tipo'] ?? '', [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA], true);
+                && in_array($source['tipo'] ?? '', [Source::TIPO_MANUAL, Source::TIPO_AUTOMATICA, Source::TIPO_SENSOR], true);
             $silent = $lastSeenMs === null || $nowMs - $lastSeenMs > $settings->fonteOfflineS * 1000;
             $hasOpenDevice = isset($openDevicesBySource[$fonteId]);
             $contact[$fonteId] = [

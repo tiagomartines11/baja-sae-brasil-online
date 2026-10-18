@@ -72,14 +72,15 @@ final class CarsRecount
     /**
      * @param int[] $cars the cars the caller wants to show
      * @param array{0: int, 1: int}|null $window also recount the cars of passes a reviewer added between these two moments
+     * @param int[] $alsoEntryIds stored entries to load whatever car they count for (a "??" has none)
      */
-    public static function load(ContagemService $service, array $cars, ?array $window = null): self
+    public static function load(ContagemService $service, array $cars, ?array $window = null, array $alsoEntryIds = []): self
     {
         $loader = new EngineInputLoader($service->getProva());
         $settings = $service->getSettings();
         $cars = array_values(array_unique(array_map('intval', $cars)));
 
-        $input = $loader->loadForCars($settings, $cars);
+        $input = $loader->loadForCars($settings, $cars, $window, $alsoEntryIds);
         // An entry typed as car 5 and moved to car 6 by a reviewer now sits
         // in a pass group of car 6. To show it in its group, car 6 has to
         // be counted too. One more round is enough: the groups of the
@@ -87,7 +88,7 @@ final class CarsRecount
         $moreCars = array_diff(self::carsTheEntriesCountFor($input, $window), $cars);
         if ($moreCars !== []) {
             $cars = array_values(array_merge($cars, $moreCars));
-            $input = $loader->loadForCars($settings, $cars);
+            $input = $loader->loadForCars($settings, $cars, $window, $alsoEntryIds);
         }
         return new self($input, $cars);
     }
@@ -107,7 +108,7 @@ final class CarsRecount
     public static function loadForEntries(ContagemService $service, array $entryIds): self
     {
         $storedIds = array_values(array_filter($entryIds, fn(int $id) => $id > 0));
-        $recount = self::load($service, self::carsTypedIn($service->getProva(), $storedIds));
+        $recount = self::load($service, self::carsTypedIn($service->getProva(), $storedIds), null, $storedIds);
 
         // A pass a reviewer added exists only as a decision: its car is there.
         $moreCars = [];
@@ -117,7 +118,14 @@ final class CarsRecount
                 $moreCars[] = $decision->carro;
             }
         }
-        return $moreCars === [] ? $recount : self::load($service, array_merge($recount->cars, $moreCars));
+        // A "??" counts for the car somebody, or the engine, gave it.
+        foreach ($storedIds as $entryId) {
+            $surviving = $recount->survivingEntry($entryId);
+            if ($surviving !== null && $surviving->carro !== null && !in_array($surviving->carro, $recount->cars, true)) {
+                $moreCars[] = $surviving->carro;
+            }
+        }
+        return $moreCars === [] ? $recount : self::load($service, array_merge($recount->cars, array_unique($moreCars)), null, $storedIds);
     }
 
     /**
@@ -200,6 +208,8 @@ final class CarsRecount
     public const FONTE_EXCLUIDA = 'fonte_excluida';
     public const FONTE_OBSERVADORA = 'fonte_observadora';
     public const TEMPO_DESCONHECIDO = 'tempo_desconhecido';
+    public const ILEGIVEL = 'ilegivel';
+    public const MARCA_DO_SENSOR = 'marca_do_sensor';
 
     /**
      * Why an entry that is in no pass group is not in use:
@@ -211,11 +221,25 @@ final class CarsRecount
      *   fonte_observadora   its source was an observer at that moment: compared, never counted
      *   fonte_inativa       its source was switched off at that moment
      *   fonte_excluida      a reviewer excluded its source for that period
+     *   marca_do_sensor     a timing sensor's mark: it times laps in the whole-race run, never a pass of its own
+     *   ilegivel            a "??" nobody gave a car and the engine could not tell (flag numero_ilegivel)
      */
     public function reasonNotInUse(Entry $raw): string
     {
         if (isset($this->applied->voidedEntryIds[$raw->id])) {
             return self::ANULADA;
+        }
+        if ($raw->carro === null && !isset($this->survivors[$raw->id])) {
+            foreach ($this->applied->sensorMarks as $mark) {
+                if ($mark->id === $raw->id) {
+                    return self::MARCA_DO_SENSOR;
+                }
+            }
+            foreach ($this->applied->unreadEntries as $unread) {
+                if ($unread->id === $raw->id) {
+                    return self::ILEGIVEL;
+                }
+            }
         }
         if (isset($this->autoVoidedEntryIds[$raw->id])) {
             return self::REPETIDA;
@@ -255,7 +279,7 @@ final class CarsRecount
             'SELECT DISTINCT p.equipe_numero
                FROM contagem_passagem p
                JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
-              WHERE f.evento_id = ? AND f.prova_id = ?
+              WHERE f.evento_id = ? AND f.prova_id = ? AND p.equipe_numero IS NOT NULL
                 AND p.passagem_id IN (' . implode(', ', array_fill(0, count($entryIds), '?')) . ')'
         );
         $statement->execute(array_merge([$prova->getEventoId(), $prova->getProvaId()], $entryIds));
@@ -285,6 +309,9 @@ final class CarsRecount
         $inWindow = fn(int $tsMs): bool => $window === null || ($tsMs >= $window[0] && $tsMs <= $window[1]);
         $cars = [];
         foreach (DecisionApplier::apply($input->entries, $input->decisions, $sourcesById)->entries as $entry) {
+            if ($entry->carro === null) {
+                continue;
+            }
             $isAddedPass = $entry->fonteId === Source::REVISOR_ID;
             if (!$isAddedPass) {
                 if ($inWindow($rawTsById[$entry->id] ?? $entry->tsMs)) {

@@ -46,7 +46,7 @@ final class TimelineWindow
         return self::describe(
             $service,
             $recount,
-            fn(Entry $raw, int $effectiveCar): bool => $inWindow($raw->tsMs),
+            fn(Entry $raw, ?int $effectiveCar): bool => $inWindow($raw->tsMs),
             fn(Ocorrencia $ocorrencia): bool => $inWindow($ocorrencia->tsMs),
             $fromMs,
             $untilMs,
@@ -113,7 +113,7 @@ final class TimelineWindow
         return self::describe(
             $service,
             $recount,
-            fn(Entry $raw, int $effectiveCar): bool => $raw->carroDigitado === $carro || $effectiveCar === $carro,
+            fn(Entry $raw, ?int $effectiveCar): bool => $raw->carroDigitado === $carro || $effectiveCar === $carro,
             fn(Ocorrencia $ocorrencia): bool => $ocorrencia->carro === null || $ocorrencia->carro === $carro,
             null,
             null,
@@ -122,7 +122,7 @@ final class TimelineWindow
     }
 
     /**
-     * @param callable(Entry, int): bool $wantsEntry given the raw entry and the car it counts for now
+     * @param callable(Entry, ?int): bool $wantsEntry given the raw entry and the car it counts for now (null: an unread pass with no car)
      * @param callable(Ocorrencia): bool $wantsOcorrencia
      * @return array<string, mixed>
      */
@@ -209,7 +209,7 @@ final class TimelineWindow
      * @param array<int, true> $shortConfirmed anchors of the passes that end a short confirmed lap
      * @return array<string, mixed>
      */
-    private static function describeEntry(CarsRecount $recount, Entry $raw, int $effectiveCar, array $people, array $shortConfirmed): array
+    private static function describeEntry(CarsRecount $recount, Entry $raw, ?int $effectiveCar, array $people, array $shortConfirmed): array
     {
         $decisions = [];
         foreach ($recount->signatures->decisionIdsOf($raw->id) as $decisaoId) {
@@ -227,6 +227,8 @@ final class TimelineWindow
         $group = $recount->groupOf($raw->id);
         $reasonNotInUse = $group === null ? $recount->reasonNotInUse($raw) : null;
         $autoVoided = $reasonNotInUse === CarsRecount::REPETIDA;
+        $surviving = $recount->survivingEntry($raw->id);
+        $assignedByTheEngine = $surviving !== null && $surviving->atribuidoAutomaticamente;
 
         return [
             'id' => $raw->id,
@@ -242,15 +244,22 @@ final class TimelineWindow
             'anulada_auto' => $autoVoided,
             // Only for an entry voided as a repeat: confirming brings it back
             // as a pass of its own, and this is the shortest lap it would make.
-            'volta_resultante_ms' => $autoVoided && $raw->qualidadeTempo !== Entry::TEMPO_DESCONHECIDO
+            'volta_resultante_ms' => $autoVoided && $effectiveCar !== null && $raw->qualidadeTempo !== Entry::TEMPO_DESCONHECIDO
                 ? $recount->effect->shortestLapIfPassAt($effectiveCar, $raw->tsMs, null, true)
                 : null,
-            'reatribuida' => $effectiveCar !== $raw->carroDigitado,
+            'reatribuida' => $effectiveCar !== $raw->carroDigitado && !$assignedByTheEngine,
+            // A "??" (or a timing sensor's mark): stored with no car. With
+            // `atribuida_automaticamente` the engine worked out its car
+            // (`carro`) by itself; otherwise `carro` is null until somebody
+            // says which car it was.
+            'ilegivel' => $raw->carroDigitado === null,
+            'atribuida_automaticamente' => $assignedByTheEngine,
             // In no group and nobody voided it: before the start, or its
             // source was off or excluded at that moment.
             'fora_de_uso' => in_array($reasonNotInUse, [
                 CarsRecount::ANTES_DA_LARGADA, CarsRecount::FONTE_INATIVA, CarsRecount::FONTE_EXCLUIDA,
                 CarsRecount::FONTE_OBSERVADORA, CarsRecount::TEMPO_DESCONHECIDO,
+                CarsRecount::ILEGIVEL, CarsRecount::MARCA_DO_SENSOR,
             ], true),
             'motivo_fora_de_uso' => $reasonNotInUse,
             'adicionada_por_revisor' => $raw->fonteId === Source::REVISOR_ID,
@@ -409,7 +418,7 @@ final class TimelineWindow
                   FROM contagem_passagem p FORCE INDEX (contagem_passagem_fonte_ts_idx)
                   JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
                  WHERE f.evento_id = :evento AND f.prova_id = :prova
-                   AND p.ts_ms BETWEEN :de AND :ate';
+                   AND p.ts_ms BETWEEN :de AND :ate AND p.equipe_numero IS NOT NULL';
         $statement = Propel::getReadConnection('resultados')->prepare($sql);
         $statement->execute([
             ':evento' => $prova->getEventoId(),

@@ -6,12 +6,13 @@ namespace Baja\Contagem\Sync;
 use Baja\Contagem\Engine\Data\Decision;
 use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\Ocorrencia;
+use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\Settings;
 use Propel\Runtime\Propel;
 
 /**
- * Stores what one upload carried: entries, the counter's own voids, pit
- * lane and fueling events.
+ * Stores what one upload carried: entries, the counter's own voids and
+ * fixes, pit lane and fueling events.
  *
  * Everything here is idempotent. A phone that never received our answer
  * sends the same batch again, possibly many times, and the second copy
@@ -25,8 +26,20 @@ use Propel\Runtime\Propel;
  * everything behind it. An odd time is stored and becomes the reviewer's
  * business (the engine flags it).
  *
+ * UNREAD PASSES. An entry with `"car": null` is a pass whose number nobody
+ * could read: a counter's "??", a camera that could not read the plate. It
+ * is stored with no car (equipe_numero NULL), from a counting page and from
+ * an automatic system alike; whether the page offers "??" at all is the
+ * page's business. Every entry of a timing sensor (tipo "sensor") is stored
+ * that way: a sensor marks the moment, never the car, so a car it sends
+ * anyway is IGNORED, not refused (a refused entry would sit in the
+ * system's queue for ever, and the moment is still good).
+ *
  * Each method returns the uuids the client may now forget ("uuids") and
- * how many of them were new to us ("new").
+ * how many of them were new to us ("new"), the cars whose count it may
+ * have changed ("cars") and the moments of the entries it touched
+ * ("times"): an unread entry changes no car by itself, but may change the
+ * cars around it (see Recount::forCars()).
  */
 final class EntryWriter
 {
@@ -46,6 +59,8 @@ final class EntryWriter
     private int $nowMs;
     private bool $simulationAllowed;
     private bool $fuelingInUse;
+    /** The device belongs to a timing sensor: its entries never carry a car. */
+    private bool $isTimingSensor;
 
     /** @var array<int, array{uuid: string, motivo: string}> entries that will never be stored, with the reason */
     public array $refused = [];
@@ -54,8 +69,17 @@ final class EntryWriter
      * @param Settings $settings the prova's settings as read INSIDE the count lock:
      *        whether simulated records and fueling events are accepted
      */
-    public function __construct(int $fonteId, int $dispositivoId, string $eventoId, string $provaId, ?string $usuario, int $nowMs, Settings $settings)
-    {
+    public function __construct(
+        int $fonteId,
+        int $dispositivoId,
+        string $eventoId,
+        string $provaId,
+        ?string $usuario,
+        int $nowMs,
+        Settings $settings,
+        string $fonteTipo = Source::TIPO_MANUAL
+    ) {
+        $this->isTimingSensor = $fonteTipo === Source::TIPO_SENSOR;
         $this->fonteId = $fonteId;
         $this->dispositivoId = $dispositivoId;
         $this->eventoId = $eventoId;
@@ -68,24 +92,26 @@ final class EntryWriter
 
     /**
      * @param array<int, mixed> $entries as decoded from the request
-     * @return array{uuids: string[], new: int, cars: int[]}
+     * @return array{uuids: string[], new: int, cars: int[], times: int[]}
      */
     public function storeEntries(array $entries): array
     {
         $acknowledged = [];
         $valid = [];
         $cars = [];
+        $times = [];
         foreach ($entries as $entry) {
             $uuid = UploadFields::uuidOf($entry);
             if ($uuid === null) {
                 continue;
             }
-            $car = UploadFields::carOf($entry);
+            $car = $this->isTimingSensor ? null : UploadFields::carOf($entry);
+            $isUnread = $car === null && ($this->isTimingSensor || UploadFields::isUnread($entry));
             $tsMs = UploadFields::intOrNull($entry['ts_ms'] ?? null);
-            if ($car === null || $tsMs === null) {
-                // Not an entry at all (no car, no time): nothing to store.
-                // The client's own safety net marks it as refused after a
-                // few answers that do not acknowledge it.
+            if (($car === null && !$isUnread) || $tsMs === null) {
+                // Not an entry at all (no usable car nor "??", no time):
+                // nothing to store. The client's own safety net marks it as
+                // refused after a few answers that do not acknowledge it.
                 continue;
             }
             if ($this->isForbiddenSimulation($entry)) {
@@ -93,8 +119,12 @@ final class EntryWriter
                 continue;
             }
             $acknowledged[] = $uuid;
-            $cars[$car] = true;
-            $valid[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => $car, 'raw' => $entry] + self::storableTime($tsMs, $entry);
+            if ($car !== null) {
+                $cars[$car] = true;
+            }
+            $stored = ['uuid' => $uuid, 'car' => $car, 'raw' => $entry] + self::storableTime($tsMs, $entry);
+            $valid[UploadFields::key($uuid)] = $stored;
+            $times[] = $stored['ts_ms'];
         }
 
         $alreadyStored = $this->existingValues(
@@ -151,7 +181,7 @@ final class EntryWriter
         // attempt stored the entries and then failed before publishing, the
         // phone sends them again; they are no longer new, but their cars
         // still have to be recounted.
-        return ['uuids' => $acknowledged, 'new' => $newCount, 'cars' => array_keys($cars)];
+        return ['uuids' => $acknowledged, 'new' => $newCount, 'cars' => array_keys($cars), 'times' => $times];
     }
 
     /**
@@ -164,7 +194,7 @@ final class EntryWriter
      * a stale resend must not void it again.
      *
      * @param array<int, mixed> $voids
-     * @return array{uuids: string[], new: int, cars: int[]}
+     * @return array{uuids: string[], new: int, cars: int[], times: int[]}
      */
     public function storeVoids(array $voids): array
     {
@@ -183,7 +213,7 @@ final class EntryWriter
             array_values($uuidByKey)
         );
         if ($entryIdByKey === []) {
-            return ['uuids' => [], 'new' => 0, 'cars' => []];
+            return ['uuids' => [], 'new' => 0, 'cars' => [], 'times' => []];
         }
 
         $voidedByThisCounterBefore = $this->existingValues(
@@ -232,7 +262,143 @@ final class EntryWriter
             $newCount++;
         }
 
-        return ['uuids' => $acknowledged, 'new' => $newCount, 'cars' => $this->carsOfEntries(array_values($entryIdByKey))];
+        return [
+            'uuids' => $acknowledged,
+            'new' => $newCount,
+            'cars' => $this->carsOfEntries(array_values($entryIdByKey)),
+            'times' => $this->timesOfEntries(array_values($entryIdByKey)),
+        ];
+    }
+
+    /**
+     * A counter saying, on the phone, which car one of their own "??" was
+     * ("era o 17"). Stored as a "reatribuir" decision with the counter as
+     * its origin, like a void from the phone; from then on the entry is an
+     * ordinary entry of that car.
+     *
+     * Only an entry of this device's own source that was stored with no car
+     * can be fixed this way. Any other is acknowledged (so the phone stops
+     * sending it) and listed in `refused` (the answer's `fixes_recusados`),
+     * with nothing stored: an entry stored with a car, one that is voided,
+     * one a reviewer reassigned (the reviewer's word stands), any entry of a
+     * timing sensor, and a car that is not a number. A fix for an entry
+     * that has not reached us is not acknowledged: the page sends entries
+     * before their fixes, so it will try again.
+     *
+     * Resending is harmless: nothing is added when this counter already
+     * fixed the entry to the same car, even if a reviewer undid that since
+     * (a stale resend must not bring it back). A fix to ANOTHER car is
+     * stored, and the newest one counts.
+     *
+     * @param array<int, mixed> $fixes
+     * @return array{uuids: string[], refused: string[], new: int, cars: int[], times: int[]}
+     */
+    public function storeFixes(array $fixes): array
+    {
+        $fixByKey = [];
+        foreach ($fixes as $fix) {
+            $uuid = UploadFields::uuidOf($fix);
+            if ($uuid !== null) {
+                // Of two fixes of one entry in a request, the later one counts.
+                $fixByKey[UploadFields::key($uuid)] = ['uuid' => $uuid, 'car' => UploadFields::carOf($fix)];
+            }
+        }
+        $done = ['uuids' => [], 'refused' => [], 'new' => 0, 'cars' => [], 'times' => []];
+        if ($fixByKey === []) {
+            return $done;
+        }
+
+        $entries = [];
+        foreach (array_chunk(array_column($fixByKey, 'uuid'), 500) as $chunk) {
+            $statement = Propel::getWriteConnection('resultados')->prepare(
+                'SELECT uuid_cliente, passagem_id, equipe_numero, ts_ms FROM contagem_passagem
+                  WHERE fonte_id = ? AND uuid_cliente IN (' . implode(', ', array_fill(0, count($chunk), '?')) . ')'
+            );
+            $statement->execute(array_merge([$this->fonteId], $chunk));
+            foreach ($statement->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                $entries[UploadFields::key((string) $row['uuid_cliente'])] = $row;
+            }
+        }
+        $decisions = $this->decisionsOn(array_map(fn(array $row): int => (int) $row['passagem_id'], array_values($entries)));
+
+        $insert = Propel::getWriteConnection('resultados')->prepare(
+            'INSERT INTO contagem_decisao
+                 (evento_id, prova_id, tipo, passagem_id, equipe_numero, origem, usuario, criado_em_ms)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $cars = [];
+        foreach ($fixByKey as $key => $fix) {
+            $entry = $entries[$key] ?? null;
+            if ($entry === null) {
+                continue;
+            }
+            $done['uuids'][] = $fix['uuid'];
+            $entryId = (int) $entry['passagem_id'];
+            $onEntry = $decisions[$entryId] ?? ['anulada' => false, 'pelo_revisor' => false, 'pelo_contador' => []];
+            $car = $fix['car'];
+            if ($car === null || $entry['equipe_numero'] !== null || $this->isTimingSensor || $onEntry['anulada'] || $onEntry['pelo_revisor']) {
+                $done['refused'][] = $fix['uuid'];
+                continue;
+            }
+            $done['times'][] = (int) $entry['ts_ms'];
+            $cars[$car] = true;
+            foreach ($onEntry['pelo_contador'] as $earlierCar) {
+                // The car it counted for until now.
+                $cars[$earlierCar] = true;
+            }
+            if (in_array($car, $onEntry['pelo_contador'], true)) {
+                continue;
+            }
+            $insert->execute([
+                $this->eventoId,
+                $this->provaId,
+                Decision::REATRIBUIR,
+                $entryId,
+                $car,
+                Decision::ORIGEM_CONTADOR,
+                $this->usuario,
+                $this->nowMs,
+            ]);
+            $done['new']++;
+        }
+        $done['cars'] = array_keys($cars);
+        return $done;
+    }
+
+    /**
+     * What has been decided about some entries: whether a void is in force,
+     * whether a reviewer's reassignment is, and every car this counter ever
+     * fixed each one to.
+     *
+     * @param int[] $entryIds
+     * @return array<int, array{anulada: bool, pelo_revisor: bool, pelo_contador: int[]}>
+     */
+    private function decisionsOn(array $entryIds): array
+    {
+        $found = [];
+        foreach (array_chunk($entryIds, 500) as $chunk) {
+            $statement = Propel::getWriteConnection('resultados')->prepare(
+                'SELECT d.passagem_id, d.tipo, d.origem, d.equipe_numero,
+                        EXISTS (SELECT 1 FROM contagem_decisao u WHERE u.tipo = ? AND u.desfaz_decisao_id = d.decisao_id) AS desfeita
+                   FROM contagem_decisao d
+                  WHERE d.tipo IN (?, ?) AND d.passagem_id IN (' . implode(', ', array_fill(0, count($chunk), '?')) . ')
+               ORDER BY d.decisao_id'
+            );
+            $statement->execute(array_merge([Decision::DESFAZER, Decision::ANULAR, Decision::REATRIBUIR], $chunk));
+            foreach ($statement->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+                $entryId = (int) $row['passagem_id'];
+                $found[$entryId] ??= ['anulada' => false, 'pelo_revisor' => false, 'pelo_contador' => []];
+                $inForce = !(bool) $row['desfeita'];
+                if ($row['tipo'] === Decision::ANULAR) {
+                    $found[$entryId]['anulada'] = $found[$entryId]['anulada'] || $inForce;
+                } elseif ($row['origem'] === Decision::ORIGEM_CONTADOR) {
+                    $found[$entryId]['pelo_contador'][] = (int) $row['equipe_numero'];
+                } elseif ($inForce) {
+                    $found[$entryId]['pelo_revisor'] = true;
+                }
+            }
+        }
+        return $found;
     }
 
     /**
@@ -380,7 +546,7 @@ final class EntryWriter
     private function carsOfEntries(array $entryIds): array
     {
         $typed = $this->existingValues(
-            'SELECT equipe_numero FROM contagem_passagem WHERE fonte_id = ? AND passagem_id IN (%s)',
+            'SELECT equipe_numero FROM contagem_passagem WHERE fonte_id = ? AND equipe_numero IS NOT NULL AND passagem_id IN (%s)',
             [$this->fonteId],
             $entryIds
         );
@@ -395,6 +561,22 @@ final class EntryWriter
             $cars[] = (int) substr($key, 1);
         }
         return $cars;
+    }
+
+    /**
+     * The moments of some of this source's entries.
+     *
+     * @param array<int, mixed> $entryIds
+     * @return int[]
+     */
+    private function timesOfEntries(array $entryIds): array
+    {
+        $times = $this->existingValues(
+            'SELECT passagem_id, ts_ms FROM contagem_passagem WHERE fonte_id = ? AND passagem_id IN (%s)',
+            [$this->fonteId],
+            $entryIds
+        );
+        return array_map('intval', array_values($times));
     }
 
     /**
