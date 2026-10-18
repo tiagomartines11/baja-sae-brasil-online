@@ -35,7 +35,7 @@ final class SourceAdmin
 
     /** The help line of the "sensor" type on the form. */
     public const SENSOR_HELP = 'Um sensor de tempo marca só o horário da passagem, nunca o número. Ele nunca conta uma passagem: '
-        . 'cada marca que coincide com uma passagem dos contadores dá o horário preciso das voltas dela. Envia pela API, como uma fonte automática.';
+        . 'cada marca que coincide com uma passagem dos contadores vira o horário preciso dela. Envia pela API, como uma fonte automática.';
 
     public const TIMING_LABELS = [
         Source::TEMPO_HUMANA => 'Humana (tempos combinados pela mediana)',
@@ -64,10 +64,10 @@ final class SourceAdmin
         . 'estiver, no lugar da mediana dos contadores, e vira a referência para medir o atraso de cada contador. '
         . 'Use só para um sistema cujo relógio você conferiu.';
 
-    /** The same, for a timing sensor: it times laps, never a pass of its own. */
-    public const SENSOR_TIMING_WARNING = 'Como votante, as marcas do sensor passam a medir as voltas: cada marca que coincide com uma passagem '
-        . 'dos contadores dá o horário dela no cálculo das voltas e da melhor volta, e vira a referência para medir o atraso de cada contador. '
-        . 'Ele nunca conta uma passagem nem diz o número do carro. Use só para um sensor cujo relógio você conferiu.';
+    /** The same, for a timing sensor: it times passes, never counts one. */
+    public const SENSOR_TIMING_WARNING = 'Como votante, as marcas do sensor passam a dar o horário das passagens: cada marca que coincide com uma passagem '
+        . 'dos contadores vira o horário oficial dela (a última passagem publicada, o tempo das voltas e a melhor volta) e a referência '
+        . 'para medir o atraso de cada contador. Ele nunca conta uma passagem nem diz o número do carro. Use só para um sensor cujo relógio você conferiu.';
 
     private const MAX_NAME_LENGTH = 45;
     private const MAX_URL_LENGTH = 255;
@@ -200,7 +200,7 @@ final class SourceAdmin
             if (($post[self::CAMPO_CONFIRMAR_VOTANTE] ?? '') !== '1') {
                 throw new ConfirmationNeeded(
                     $fonte->getTipo() === Source::TIPO_SENSOR
-                        ? sprintf('Promover "%s" a votante: a partir de agora as marcas dele passam a dar o horário das voltas das passagens com que coincidem. ', $fonte->getNome())
+                        ? sprintf('Promover "%s" a votante: a partir de agora as marcas dele passam a dar o horário oficial das passagens com que coincidem. ', $fonte->getNome())
                             . 'Ele continua sem contar passagem nenhuma. O que ele marcou como observador continua só comparado: a promoção não vale para trás.'
                         : sprintf('Promover "%s" a votante: a partir de agora o que ela registrar conta na contagem oficial, como um contador. ', $fonte->getNome())
                             . 'O que ela registrou como observadora continua fora da contagem: a promoção não vale para trás.',

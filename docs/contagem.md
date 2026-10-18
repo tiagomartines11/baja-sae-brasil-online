@@ -1003,7 +1003,7 @@ Two scripts run without a browser (see the top of each file):
   replace the human ones (the page asks first).
 - **A timing sensor**: type `sensor`, with an API token like an automatic
   system. It marks the moment of every crossing and never the car; it
-  never counts a pass, and its marks time the laps. See
+  never counts a pass, and its marks are the time of the passes. See
   [Passagens sem número (??) e sensor de tempo](#passagens-sem-número--e-sensor-de-tempo).
 - **Paper totals**: create a source of type `totais` and paste
   `carro, voltas` lines. Totals never change the official count; they are
@@ -1195,7 +1195,8 @@ new sensor starts as an **observer**, like a camera: its marks are only
 compared with the official passes (the review block and the Fontes page:
 how many coincide with a pass, the passes with no mark, the marks with no
 pass, and the offset). Promoted to votante (the page asks, in a sensor's
-words), its marks start to time laps. Once a source has recorded anything,
+words), its marks start to time passes: each matched mark is the official
+time of its pass. Once a source has recorded anything,
 its type cannot change to or from `sensor` (the page says why): its rows
 would change meaning, every number ignored or every mark a "??" to review.
 Create a new source instead.

@@ -140,9 +140,10 @@ final class UnreadUploadTest extends ReviewDbTestCase
     /**
      * SITUATION: the sensor is promoted to votante.
      *
-     * EXPECTED: asked first, in words about a sensor (its marks time laps;
-     * it never counts a pass); and, with precise timing, asked about that
-     * too, in the same words. A sensor cannot be the primary source of
+     * EXPECTED: asked first, in words about a sensor (its marks become the
+     * time of the passes they match, the last pass published included; it
+     * never counts a pass); and, with precise timing, asked about that too,
+     * in the same words. A sensor cannot be the primary source of
      * "fonte principal" mode.
      */
     public function testPromotingASensorSaysWhatASensorDoes(): void
@@ -159,7 +160,7 @@ final class UnreadUploadTest extends ReviewDbTestCase
             SourceAdmin::update($this->service, $form);
             $this->fail('the promotion must be asked first');
         } catch (ConfirmationNeeded $question) {
-            $this->assertStringContainsString('horário das voltas', $question->getMessage());
+            $this->assertStringContainsString('horário oficial das passagens', $question->getMessage());
             $this->assertStringContainsString('sem contar passagem', $question->getMessage());
         }
         try {
@@ -168,6 +169,7 @@ final class UnreadUploadTest extends ReviewDbTestCase
             $this->fail('precise timing must be asked too');
         } catch (ConfirmationNeeded $question) {
             $this->assertSame(SourceAdmin::SENSOR_TIMING_WARNING, $question->getMessage());
+            $this->assertStringContainsString('última passagem publicada', $question->getMessage());
         }
         $this->newRequest();
         SourceAdmin::update($this->service, $form + [SourceAdmin::CAMPO_CONFIRMAR_VOTANTE => '1', SourceAdmin::CAMPO_CONFIRMAR_PRECISA => '1']);
