@@ -120,8 +120,8 @@ function desenharRegua(limites, opcoes) {
     style: { left: `${marca.x}px` },
   }, opcoes.largadaMs === null || opcoes.largadaMs === undefined ? '' : relogio(marca.ts_ms - opcoes.largadaMs)));
 
-  // A vertical line at the flag's moment. It lives in the ruler and is
-  // simply tall enough to cross every lane below it.
+  // The flag's moment, in the ruler; desenharLinhaDoMomento draws it
+  // across the lanes.
   const linhaDoAlerta = opcoes.momento === null || opcoes.momento === undefined ? null : el('span', {
     class: 'linha-do-alerta',
     style: { left: `${posicaoDaLinhaDoMomento(opcoes.momento, limites.de, opcoes.escala, LARGURA_DO_CHIP_PX)}px` },
@@ -147,6 +147,19 @@ function desenharRegua(limites, opcoes) {
   return el('div', { class: 'raia raia-regua' },
     el('div', { class: 'raia-nome' }, 'tempo de prova'),
     el('div', { class: 'raia-trilho' }, carregando, marcas, linhaDoAlerta, linhaAgora));
+}
+
+// The flag's moment (or a history line's) as a dashed line across every
+// lane. It is not in the ruler: the sticky ruler is drawn over the lanes,
+// and a line inside it was drawn over the lane names too when the moment
+// is scrolled under them (a phone). Here it is under the names and the
+// ruler, over the tracks.
+function desenharLinhaDoMomento(limites, opcoes) {
+  if (opcoes.momento === null || opcoes.momento === undefined) {
+    return null;
+  }
+  const x = posicaoDaLinhaDoMomento(opcoes.momento, limites.de, opcoes.escala, LARGURA_DO_CHIP_PX);
+  return el('span', { class: 'linha-do-alerta atravessa', style: { left: `calc(var(--largura-nome-raia) + ${x}px)` } });
 }
 
 // The gap between a lone entry and the car's previous official pass,
@@ -195,6 +208,7 @@ export function desenharRaias(janela, opcoes) {
     desenharRegua(limites, opcoes),
     opcoes.lacuna ? desenharLacuna(opcoes.lacuna, limites, opcoes) : null,
     (janela.raias ?? []).map((raia) => desenharRaia(raia, limites, opcoes)),
-    raiasDeOcorrencias(janela).map((raia) => desenharRaiaDeOcorrencias(raia, limites, opcoes)));
+    raiasDeOcorrencias(janela).map((raia) => desenharRaiaDeOcorrencias(raia, limites, opcoes)),
+    desenharLinhaDoMomento(limites, opcoes));
   return { conteudo, extras, limites };
 }

@@ -271,7 +271,7 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 .linha-legenda { margin-top: 4px; font-size: 13px; }
 .linha-legenda summary { cursor: pointer; color: var(--cor-fraca); }
 .linha-legenda p { margin: 4px 0 0; }
-.raias-conteudo { width: max-content; min-width: 100%; }
+.raias-conteudo { position: relative; width: max-content; min-width: 100%; }
 .raia { display: flex; border-bottom: 1px solid var(--cor-fundo); }
 .raia.inativa { opacity: 0.6; }
 
@@ -294,8 +294,11 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 .raia-trilho { position: relative; flex: 0 0 var(--largura-trilho); width: var(--largura-trilho); min-height: 30px; }
 .raia-regua .raia-trilho { height: 20px; min-height: 20px; }
 .marca-tempo { position: absolute; top: 2px; font-size: 11px; color: var(--cor-fraca); border-left: 1px solid var(--cor-borda); padding-left: 3px; white-space: nowrap; }
-/* Lives in the ruler and is tall enough to cross every lane; .raias clips the rest. */
-.linha-do-alerta { position: absolute; top: 0; width: 0; height: 2000px; border-left: 2px dashed var(--cor-ambar); pointer-events: none; z-index: 1; }
+/* The flag's moment: a mark in the ruler, and a line across the lanes that
+   is under the lane names (z-index 2) and the sticky ruler (3), so a moment
+   scrolled under the names never paints over them. */
+.linha-do-alerta { position: absolute; top: 0; width: 0; height: 100%; border-left: 2px dashed var(--cor-ambar); pointer-events: none; z-index: 1; }
+.linha-do-alerta.atravessa { bottom: 0; height: auto; }
 /* The present moment, and stretches still on their way from the server. */
 .linha-agora { position: absolute; top: 0; width: 0; height: 2000px; border-left: 2px solid var(--cor-azul); opacity: 0.5; pointer-events: none; z-index: 1; }
 .trecho-carregando {
