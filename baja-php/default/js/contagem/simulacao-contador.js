@@ -2,9 +2,12 @@
 //
 // A COUNTER types the number of each car that crosses the line, a moment
 // before or after it really crossed, and makes the mistakes people make:
-// misses a car, hits a wrong digit, enters a car twice. A PIT-LOG person
-// taps cars entering and leaving an area, sometimes late, sometimes not at
-// all.
+// misses a car, hits a wrong digit, enters a car twice, and (only when
+// asked for) sees a car and cannot read it: "??". A PIT-LOG person taps
+// cars entering and leaving an area, sometimes late, sometimes not at all.
+// A TIMING SENSOR at the line marks every crossing to the millisecond and
+// never the car, misses a few, and now and then marks something that is no
+// crossing at all.
 //
 // Each person has their own stream of random numbers, derived from the
 // shared seed and from who they are (their source id), so three counters
@@ -35,6 +38,12 @@ export const TAXAS_PADRAO = {
     ilegivel_corrigido: 0,
 };
 
+/** The timing sensor's failings: misses per thousand crossings, false marks per hour. */
+export const TAXAS_SENSOR_PADRAO = {
+    perdida: 20,          // two cars side by side, one beam: no mark
+    falsas_por_hora: 60,  // a marshal, a bird: a mark with no crossing
+};
+
 /** Mistakes of the person logging an area, per thousand events. */
 export const TAXAS_PARADA_PADRAO = {
     perdido: 20,          // the event is not logged at all
@@ -53,6 +62,8 @@ export const ERRO = {
     ILEGIVEL_CORRIGIDO: 'ilegivel_corrigido',
     PARADA_PERDIDA: 'parada_perdida',
     PARADA_ATRASADA: 'parada_atrasada',
+    MARCA_PERDIDA: 'marca_perdida',
+    MARCA_FALSA: 'marca_falsa',
 };
 
 /**
@@ -251,6 +262,45 @@ export function planCounter({ roteiro, semente, fonteId, naoClassificados = [], 
         }
     }
 
+    acoes.sort((a, b) => a.tsMs - b.tsMs);
+    return { acoes, erros };
+}
+
+/**
+ * What a timing sensor at the line marks: every crossing of the race, to
+ * within 20 ms (it is the precise one), except the ones it misses, plus
+ * marks of things that were no crossing, spread over the race. A mark
+ * never carries a car.
+ *
+ * The sensor has a random stream of its own, so adding one to a rehearsal
+ * changes nothing the counters do.
+ *
+ * @param {object} options
+ * @param {object} options.roteiro the shared race script
+ * @param {number} options.semente
+ * @param {object} [options.taxas] overrides of TAXAS_SENSOR_PADRAO
+ * @returns {{acoes: Array<{tsMs: number, carro: null}>, erros: Array<object>}}
+ *          `acoes` sorted by time; a missed crossing and a false mark are errors
+ */
+export function planSensor({ roteiro, semente, taxas = {} }) {
+    const rates = { ...TAXAS_SENSOR_PADRAO, ...taxas };
+    const prng = new Prng(deriveSeed(semente, 100003));
+    const acoes = [];
+    const erros = [];
+    for (const { carro, tsMs } of roteiro.travessias) {
+        if (prng.chance(rates.perdida)) {
+            erros.push({ tipo: ERRO.MARCA_PERDIDA, tsMs, carro });
+            continue;
+        }
+        acoes.push({ tsMs: tsMs + prng.between(-20, 20), carro: null });
+    }
+    const lastCrossingMs = roteiro.travessias.reduce((latest, crossing) => Math.max(latest, crossing.tsMs), roteiro.largadaMs);
+    const falseMarks = Math.trunc(((lastCrossingMs - roteiro.largadaMs) * rates.falsas_por_hora) / 3_600_000);
+    for (let index = 0; index < falseMarks; index++) {
+        const tsMs = roteiro.largadaMs + prng.below(Math.max(1, lastCrossingMs - roteiro.largadaMs));
+        acoes.push({ tsMs, carro: null });
+        erros.push({ tipo: ERRO.MARCA_FALSA, tsMs, carro: null });
+    }
     acoes.sort((a, b) => a.tsMs - b.tsMs);
     return { acoes, erros };
 }

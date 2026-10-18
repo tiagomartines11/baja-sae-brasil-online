@@ -4,12 +4,14 @@
  * does, inside the app container, the things the runner cannot do over the
  * network without a person.
  *
- *   php scripts/contagem-simular-apoio.php <evento> <prova> preparar <largada_ms> <contadores>
+ *   php scripts/contagem-simular-apoio.php <evento> <prova> preparar <largada_ms> <contadores> [sensor]
  *
  *       WIPES the lap counting data of the prova ("Zerar corrida", so the
  *       old rows go to the archive table), starts a race at <largada_ms>,
  *       and creates one device for each of the first <contadores> manual
- *       sources plus one for the pit log. Prints, as JSON, the tokens of
+ *       sources plus one for the pit log. With "sensor", also a timing
+ *       sensor source ("Sensor (simulação)", taking part, precise; made
+ *       once and reused) and a device for it. Prints, as JSON, the tokens of
  *       those devices and what the simulation needs to know about the
  *       prova (car lists, matching window, counting rule).
  *
@@ -125,6 +127,7 @@ if ($command !== 'preparar') {
 }
 $startMs = (int) ($argv[4] ?? 0);
 $counters = max(1, (int) ($argv[5] ?? 3));
+$withSensor = ($argv[6] ?? '') === 'sensor';
 if ($startMs <= 0) {
     refuse('The start time (milliseconds since 1970) is missing.');
 }
@@ -150,6 +153,32 @@ foreach ($sources as $source) {
 }
 $roster = $service->carRoster();
 
+// A timing sensor for the rehearsal: made once, taking part from the start
+// (a real one starts as an observer and is promoted on the Fontes page).
+$sensor = null;
+if ($withSensor) {
+    $sensorSource = ContagemFonteQuery::create()
+        ->filterByEventoId($eventoId)->filterByProvaId($provaId)
+        ->filterByTipo(Source::TIPO_SENSOR)->filterByNome('Sensor (simulação)')->findOne();
+    if ($sensorSource === null) {
+        $sensorSource = new \Baja\Model\ContagemFonte();
+        $sensorSource->setEventoId($eventoId);
+        $sensorSource->setProvaId($provaId);
+        $sensorSource->setNome('Sensor (simulação)');
+        $sensorSource->setTipo(Source::TIPO_SENSOR);
+        $sensorSource->setQualidadeTempo(Source::TEMPO_PRECISA);
+        $sensorSource->setPapel(Source::PAPEL_VOTANTE);
+        $sensorSource->setOrdem(99);
+    }
+    $sensorSource->setAtiva(true);
+    $sensorSource->save();
+    $sensor = [
+        'id' => (int) $sensorSource->getFonteId(),
+        'nome' => (string) $sensorSource->getNome(),
+        'token' => DeviceTokens::issue($sensorSource, SIMULATION_USER, DEVICE_LABEL),
+    ];
+}
+
 // The upload endpoint checks, on every upload of stops, that the pit
 // phone's user still holds the pit log code. The simulated pit phone's
 // user gets that code here (dev stacks only, see the checks above).
@@ -169,4 +198,5 @@ echo json_encode([
     'abastecimento' => $settings->abastecimento,
     'fontes' => $devices,
     'box_token' => DeviceTokens::issue(DeviceTokens::boxSourceFor($prova), SIMULATION_USER, DEVICE_LABEL),
+    'sensor' => $sensor,
 ]), "\n";

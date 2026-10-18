@@ -62,14 +62,19 @@
 //          --domain baja.local, --container baja-app,
 //          --revisor juiz1 (a seeded dev user, password 123456),
 //          --taxas '{"perdido": 10}' (error rates per thousand, see
-//          simulacao-contador.js)
+//          simulacao-contador.js; '{"ilegivel": 20}' makes the counters
+//          press "??" on 2 % of the crossings, which needs a count page
+//          that records "??"),
+//          --sensor 1 (adds a timing sensor that marks every crossing to
+//          the millisecond, posting like an automatic system),
+//          --taxas-sensor '{"perdida": 20, "falsas_por_hora": 60}'
 //
 // Never point it at production.
 
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { generateRaceScript, raceDurationFor, AREA_BOX, AREA_ABASTECIMENTO } from '../default/js/contagem/simulacao-corrida.js';
-import { planCounter, planStopLog, withStableIds } from '../default/js/contagem/simulacao-contador.js';
+import { planCounter, planStopLog, planSensor, withStableIds } from '../default/js/contagem/simulacao-contador.js';
 import { playPlan, mayStartSimulation } from '../default/js/contagem/simulacao-execucao.js';
 import { trueLapCounts, injectedErrors } from '../default/js/contagem/simulacao-gabarito.js';
 import {
@@ -77,7 +82,7 @@ import {
 } from '../default/js/contagem/revisao-decisoes.js';
 import { decisaoMarcarSaida } from '../default/js/contagem/revisao-alertas.js';
 import {
-    ClientDevice, Reviewer, runHelper, fail, matchCrossings, countedTimesByCar, raceClock, CROSSING_TOLERANCE_MS,
+    ClientDevice, SensorDevice, Reviewer, runHelper, fail, matchCrossings, countedTimesByCar, raceClock, CROSSING_TOLERANCE_MS,
 } from './contagem-simular-lib.mjs';
 
 const options = Object.fromEntries(process.argv.slice(2).reduce((pairs, arg, index, all) => {
@@ -93,6 +98,8 @@ const PROVA = options.prova ?? 'END';
 const DOMAIN = options.domain ?? 'baja.local';
 const CONTAINER = options.container ?? 'baja-app';
 const RATES = options.taxas ? JSON.parse(options.taxas) : {};
+const WITH_SENSOR = options.sensor !== undefined && options.sensor !== '0';
+const SENSOR_RATES = options['taxas-sensor'] ? JSON.parse(options['taxas-sensor']) : {};
 
 const JUIZ = `http://juiz.${DOMAIN}/${EVENTO}/`;
 const RESULTADOS = `http://resultados.${DOMAIN}/`;
@@ -153,7 +160,7 @@ const durationMs = raceDurationFor(LAP_MS);
 // starts its last lap just before the end may break down and stop on it,
 // and leaves the pit lane several laps' worth of time after the end.
 const AFTER_THE_END_MS = 6 * LAP_MS + 60000;
-const setup = await helper('preparar', Date.now() - durationMs - AFTER_THE_END_MS, COUNTERS);
+const setup = await helper('preparar', Date.now() - durationMs - AFTER_THE_END_MS, COUNTERS, WITH_SENSOR ? 'sensor' : '');
 const script = generateRaceScript({
     semente: SEED, carros: setup.carros, voltaMediaMs: LAP_MS, largadaMs: setup.largada_ms, abastecimento: setup.abastecimento,
 });
@@ -167,13 +174,15 @@ const counterPlans = setup.fontes.map((source) => withStableIds(planCounter({
 }), raceKey, source.id));
 const stopAreas = setup.abastecimento ? [AREA_BOX, AREA_ABASTECIMENTO] : [AREA_BOX];
 const stopPlans = stopAreas.map((area) => withStableIds(planStopLog({ roteiro: script, semente: SEED, area }), raceKey, area));
+const sensorPlan = setup.sensor ? withStableIds(planSensor({ roteiro: script, semente: SEED, taxas: SENSOR_RATES }), raceKey, 'sensor') : null;
 
 const carList = setup.carros.map((numero) => ({ numero, nome: `Carro ${numero}` }));
 const openDevice = (name, token) => ClientDevice.open({ name, syncUrl: `${JUIZ}contagem_sync.php`, token, cars: carList, janelaMs: setup.janela_ms });
 const counterDevices = [];
 for (const source of setup.fontes) counterDevices.push(await openDevice(source.nome, source.token));
 const pitDevice = await openDevice('pit log', setup.box_token);
-const allDevices = [...counterDevices, pitDevice];
+const sensorDevice = setup.sensor ? new SensorDevice({ syncUrl: `${JUIZ}contagem_sync.php`, token: setup.sensor.token }) : null;
+const allDevices = [...counterDevices, pitDevice, ...(sensorDevice ? [sensorDevice] : [])];
 
 const truthAt = (ateMs) => trueLapCounts(script, { passagemInicial: setup.passagem_inicial, ateMs });
 
@@ -199,6 +208,7 @@ async function carsAboveTheTruth(upToMs) {
 const merged = [
     ...counterPlans.flatMap((plan, index) => plan.acoes.map((action) => ({ ...action, record: () => counterDevices[index].recordPass(action) }))),
     ...stopPlans.flatMap((plan) => plan.acoes.map((action) => ({ ...action, record: () => pitDevice.recordStop(action) }))),
+    ...(sensorPlan ? sensorPlan.acoes.map((action) => ({ ...action, record: () => sensorDevice.recordMark(action) })) : []),
 ].sort((a, b) => a.tsMs - b.tsMs);
 const checkpointTimes = Array.from({ length: CHECKPOINTS }, (unused, index) => script.largadaMs + Math.trunc((durationMs * (index + 1)) / (CHECKPOINTS + 1)));
 const violations = [];
@@ -225,7 +235,7 @@ violations.push(...await carsAboveTheTruth(script.fimMs));
 const refused = allDevices.reduce((sum, device) => sum + device.refusedCount(), 0);
 console.log(`Replay done in ${Math.round((Date.now() - replayStartedAt) / 1000)} s: ${merged.length} records through the client modules, ${refused} refused`);
 
-const errors = injectedErrors([...counterPlans, ...stopPlans]);
+const errors = injectedErrors([...counterPlans, ...stopPlans, ...(sensorPlan ? [sensorPlan] : [])]);
 const errorCounts = {};
 for (const error of errors) errorCounts[error.tipo] = (errorCounts[error.tipo] ?? 0) + 1;
 console.log('Injected mistakes:', JSON.stringify(errorCounts));

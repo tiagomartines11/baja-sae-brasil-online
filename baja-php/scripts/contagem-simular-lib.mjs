@@ -111,6 +111,55 @@ export class ClientDevice {
     }
 }
 
+/**
+ * A simulated timing sensor: an automatic system with an API token, which
+ * posts its marks (never a car) the way such a system does, in batches.
+ * It has no clock of its own to anchor: its times are the plan's, which
+ * are the server's.
+ */
+export class SensorDevice {
+    constructor({ syncUrl, token }) {
+        this.name = 'sensor';
+        this.syncUrl = syncUrl;
+        this.token = token;
+        this.waiting = [];
+        this.refused = 0;
+        this.queue = { flush: () => this.flushEverything() };
+    }
+
+    recordMark(action) {
+        this.waiting.push({ uuid: action.uuid, car: null, ts_ms: action.tsMs, time_quality: 'exato', mode: 'simulacao' });
+    }
+
+    async flushEverything(queueEmpty = false) {
+        for (let attempt = 1; attempt <= 200; attempt++) {
+            const batch = this.waiting.slice(0, 200);
+            if (batch.length === 0 && !queueEmpty) return;
+            const answer = await postJson(fetch, this.syncUrl, {
+                token: this.token,
+                body: { entries: batch, now_ms: Date.now(), queue_empty: batch.length === this.waiting.length && queueEmpty },
+            });
+            if (answer.status !== 200) {
+                await sleep(50);
+                continue;
+            }
+            const stored = new Set(answer.body.stored_uuids ?? []);
+            this.refused += (answer.body.refused ?? []).length;
+            this.waiting = this.waiting.filter((mark) => !stored.has(mark.uuid));
+            if (this.waiting.length === 0) return;
+        }
+        fail(`sensor: ${this.waiting.length} marks were still waiting after 200 upload attempts.`);
+    }
+
+    async sayEverythingWasSent() {
+        await this.flushEverything(true);
+    }
+
+    refusedCount() {
+        return this.refused;
+    }
+}
+
 // ------------------------------------------------------------ the reviewer
 
 /** A logged-in reviewer: what the review screen does, without the screen. */

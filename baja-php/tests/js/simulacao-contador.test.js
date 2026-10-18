@@ -21,7 +21,7 @@ import assert from 'node:assert/strict';
 import { Prng } from '../../default/js/contagem/simulacao-prng.js';
 import { generateRaceScript, AREA_BOX, AREA_ABASTECIMENTO } from '../../default/js/contagem/simulacao-corrida.js';
 import {
-    planCounter, planStopLog, wrongNumberFor, timingFor, withStableIds, ERRO, TAXAS_PADRAO,
+    planCounter, planStopLog, planSensor, wrongNumberFor, timingFor, withStableIds, ERRO, TAXAS_PADRAO, TAXAS_SENSOR_PADRAO,
 } from '../../default/js/contagem/simulacao-contador.js';
 import {
     playPlan, windowFitsLap, replayOverrunMs, mayStartSimulation,
@@ -277,6 +277,48 @@ test('with `ilegivel_corrigido`, the counter later gives some "??" their number'
     const ided = withStableIds(plan, { semente: 42, largadaMs: START_MS, voltaMediaMs: 240_000 }, 1);
     assert.ok(ided.acoes.filter((action) => action.corrige).every((fix) => typeof fix.corrige.uuid === 'string'),
         'the page is told which entry to correct');
+});
+
+test('a counter asked to press "??" records the crossing with no car, and the answer key says which car it was', () => {
+    // Situation: this counter cannot read any number (rate 1000 per thousand).
+    const plan = counter(1, { taxas: { ...NO_MISTAKES, ilegivel: 1000 } });
+
+    assert.equal(plan.acoes.length, race.travessias.length, 'one entry per crossing');
+    assert.ok(plan.acoes.every((action) => action.carro === null));
+    assert.ok(plan.erros.every((error) => error.tipo === ERRO.ILEGIVEL && race.carros.includes(error.carro)));
+});
+
+// ---------------------------------------------------------------------------
+// The timing sensor
+// ---------------------------------------------------------------------------
+
+test('a timing sensor marks every crossing to within 20 ms, and never the car', () => {
+    // Situation: a sensor that misses nothing and is never fooled.
+    const plan = planSensor({ roteiro: race, semente: 42, taxas: { perdida: 0, falsas_por_hora: 0 } });
+
+    assert.equal(plan.acoes.length, race.travessias.length);
+    assert.deepEqual(plan.erros, []);
+    const marks = plan.acoes.map((action) => action.tsMs);
+    for (const crossing of race.travessias) {
+        assert.ok(marks.some((tsMs) => Math.abs(tsMs - crossing.tsMs) <= 20), 'a mark for the crossing at ' + crossing.tsMs);
+    }
+    assert.ok(plan.acoes.every((action) => action.carro === null));
+    assert.deepEqual(marks, [...marks].sort((a, b) => a - b));
+});
+
+test('a timing sensor misses some crossings and marks some that never happened, all in the answer key', () => {
+    // Situation: the default failings (2 % missed, one false mark a minute),
+    // and a sensor that misses everything.
+    const plan = planSensor({ roteiro: race, semente: 42 });
+    const missed = plan.erros.filter((error) => error.tipo === ERRO.MARCA_PERDIDA).length;
+    const invented = plan.erros.filter((error) => error.tipo === ERRO.MARCA_FALSA).length;
+    const hours = (Math.max(...race.travessias.map((crossing) => crossing.tsMs)) - race.largadaMs) / 3_600_000;
+
+    assert.ok(missed > 0, 'some crossings are missed');
+    assert.equal(invented, Math.trunc(hours * TAXAS_SENSOR_PADRAO.falsas_por_hora));
+    assert.equal(plan.acoes.length, race.travessias.length - missed + invented);
+    assert.deepEqual(planSensor({ roteiro: race, semente: 42 }), plan, 'the same every time');
+    assert.equal(planSensor({ roteiro: race, semente: 42, taxas: { perdida: 1000, falsas_por_hora: 0 } }).acoes.length, 0);
 });
 
 // ---------------------------------------------------------------------------
