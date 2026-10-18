@@ -53,6 +53,18 @@ test('a source that recorded nothing since the start and has no device open gets
   assert.ok(colunas.every((coluna) => coluna.comparada));
 });
 
+test('a source promoted or switched on again mid-race keeps its column but is not compared', () => {
+  // Its counts miss every pass before that moment: −N on every car.
+  const promovida = fonte(4, { tipo: 'automatica', papel: 'votante', conta_desde_ms: LARGADA + 7_200_000 });
+  const [comum, camera] = colunasDeFontes(estadoCom([fonte(1, { conta_desde_ms: null }), promovida]), AGORA);
+  assert.equal(comum.comparada, true);
+  assert.equal(camera.comparada, false);
+  assert.equal(camera.motivo, 'fora da contagem até 2:00:00: não é comparada com a contagem');
+  // A period off that ended before the start changes nothing.
+  const [antes] = colunasDeFontes(estadoCom([fonte(1, { conta_desde_ms: LARGADA - 60_000 })]), AGORA);
+  assert.equal(antes.comparada, true);
+});
+
 test('before the start every source has its column, even with nothing recorded', () => {
   const antes = { ...ESTADO_26SE, corrida: { largada_ms: null } };
   assert.deepEqual(colunasDeFontes(antes).map((coluna) => coluna.fonte.id), [1, 2, 3]);

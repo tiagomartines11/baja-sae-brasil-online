@@ -255,6 +255,20 @@ final class Source
         return false;
     }
 
+    /**
+     * The end of the latest period off (switched off, or observing before
+     * a promotion): before that moment some of the race went by without
+     * this source's entries counting. Null when it counted all along.
+     */
+    public function countsWithoutGapSinceMs(): ?int
+    {
+        $latest = null;
+        foreach ($this->periodosForaMs as $period) {
+            $latest = $latest === null ? $period[1] : max($latest, $period[1]);
+        }
+        return $latest;
+    }
+
     public function hasPreciseTime(): bool
     {
         return $this->qualidadeTempo === self::TEMPO_PRECISA;

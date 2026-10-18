@@ -458,7 +458,10 @@ once. The person leaving then presses **Encerrar meu turno**.
   no device open gets no column; one that recorded nothing since the start
   but still has a device open (a phone that died and was never closed)
   keeps its column, greyed and not compared, as does one excluded from the
-  start with no end. Observers get no column.
+  start with no end, and one that did not count part of the race after the
+  start ("fora da contagem até 2:00:00": promoted from observer, or switched
+  on again without counting its time off; the state's `conta_desde_ms`),
+  whose counts miss every pass before. Observers get no column.
 - **Every column header sorts** (a button; keyboard and screen readers
   see `aria-sort`): first click in the usual direction (most laps first,
   oldest last pass first, most signals first, the counter who missed most

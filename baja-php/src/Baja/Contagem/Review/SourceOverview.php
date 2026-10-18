@@ -72,6 +72,11 @@ final class SourceOverview
                 // counted; its stats carry 'observacao').
                 'papel' => $source->papel,
                 'papel_desde_ms' => $source->papelDesdeMs,
+                // The end of its latest period off (promoted from observer,
+                // switched on again without counting the time off): its
+                // per-car counts miss the passes before, so the car table
+                // does not compare them with the count. Null: counted all along.
+                'conta_desde_ms' => $source->countsWithoutGapSinceMs(),
                 'principal' => $primarySourceId !== null && $primarySourceId === $source->id,
                 'stats' => $stats,
             ];

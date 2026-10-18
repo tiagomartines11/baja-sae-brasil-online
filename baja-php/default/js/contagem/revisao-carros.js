@@ -32,8 +32,10 @@ export function excluidaDaCorridaInteira(fonte, estado) {
 // that recorded nothing since the start but still has a device open (a
 // phone that died before the start and was never closed, an idle reader):
 // it may still start counting, so its column stays, but its zeros say
-// nothing about the count. A paper total is a number of laps and is never
-// part of that comparison.
+// nothing about the count. So does one that did not count part of the race
+// after the start (`conta_desde_ms`: promoted from observer, switched on
+// again without its time off). A paper total is a number of laps and is
+// never part of that comparison.
 export function colunasDeFontes(estado, agoraServidorMs = null) {
   const largada = estado?.corrida?.largada_ms ?? null;
   const largou = largada !== null && (agoraServidorMs === null || agoraServidorMs >= largada);
@@ -45,6 +47,13 @@ export function colunasDeFontes(estado, agoraServidorMs = null) {
       }
       if (excluidaDaCorridaInteira(fonte, estado)) {
         return { fonte, comparada: false, motivo: 'excluída desde a largada: não é comparada com a contagem' };
+      }
+      // Promoted from observer, or switched on again without counting the
+      // time off: its per-car counts miss every pass before that moment, so
+      // the column would be one long row of differences.
+      const contaDesde = fonte.conta_desde_ms ?? null;
+      if (largou && fonteVotante(fonte) && contaDesde !== null && contaDesde > largada) {
+        return { fonte, comparada: false, motivo: `fora da contagem até ${tempoDeProva(contaDesde, largada)}: não é comparada com a contagem` };
       }
       if (largou && fonteVotante(fonte) && (fonte.stats?.entradas ?? 0) === 0) {
         return { fonte, comparada: false, motivo: 'não registrou nada desde a largada: não é comparada com a contagem' };

@@ -97,6 +97,12 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
         Clock::freezeAt($this->at(600));
         $this->recompute();
         $this->assertEquals(1, $this->publishedData(self::CAR_A)['VOLTAS']);
+        // The car table does not compare its per-car count (it misses the
+        // passes before 2:00) with the official one: the state says since when.
+        $row = array_values(array_filter($this->freshScreen()['fontes'], fn(array $fonte) => $fonte['id'] === (int) $camera->getFonteId()))[0];
+        $this->assertSame($this->at(120), $row['conta_desde_ms']);
+        $counter = array_values(array_filter($this->freshScreen()['fontes'], fn(array $fonte) => $fonte['id'] === (int) $this->fontes[0]->getFonteId()))[0];
+        $this->assertNull($counter['conta_desde_ms']);
 
         $observed = array_values(array_filter(
             $this->entriesOnTheTimeline(),
