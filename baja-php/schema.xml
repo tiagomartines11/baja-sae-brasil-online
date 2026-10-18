@@ -545,6 +545,11 @@
       <index-column name="equipe_numero"/>
       <index-column name="ts_ms"/>
     </index>
+    <index name="contagem_passagem_equipe_fonte_idx">
+      <index-column name="equipe_numero"/>
+      <index-column name="fonte_id"/>
+      <index-column name="ts_ms"/>
+    </index>
     <index name="contagem_passagem_dispositivo_idx">
       <index-column name="dispositivo_id"/>
     </index>

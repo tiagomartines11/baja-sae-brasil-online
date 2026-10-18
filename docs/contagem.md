@@ -1492,11 +1492,14 @@ Rules that make this safe:
   recount also loads the marks and readings around its cars' crossings and
   recounts the cars whose marks the change moved
   ([The timing sensor](#the-timing-sensor)). With neither "??" nor sensor
-  an upload costs what it did (one cheap query more than before stage 1);
+  an upload costs what it did (one query more than before stage 1, cheap
+  only with the index `contagem_passagem_equipe_fonte_idx`: without it the
+  query reads every entry of the prova, about 4 ms three hours in);
   with a "??" and no sensor, no query more for the sensor.
 - **What an upload costs** (64 cars, three counters, three hours into a
-  four-hour race, one entry per upload, median; measured on the test
-  stack):
+  four-hour race, one entry per upload, uploads as they come in real time
+  through nginx with three reviewers and twenty feed viewers; p50 / p95 in
+  ms, the lock held p50, executed statements p50 / p95; test stack):
 
   | | a counter's upload | a sensor's upload |
   |---|---|---|

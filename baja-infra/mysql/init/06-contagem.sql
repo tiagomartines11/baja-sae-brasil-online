@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS `contagem_passagem` (
   UNIQUE KEY `contagem_passagem_fonte_uuid_UNIQUE` (`fonte_id`,`uuid_cliente`),
   KEY `contagem_passagem_fonte_ts_idx` (`fonte_id`,`ts_ms`),
   KEY `contagem_passagem_equipe_ts_idx` (`equipe_numero`,`ts_ms`),
+  KEY `contagem_passagem_equipe_fonte_idx` (`equipe_numero`,`fonte_id`,`ts_ms`),
   KEY `contagem_passagem_dispositivo_idx` (`dispositivo_id`),
   CONSTRAINT `contagem_passagem_fonte` FOREIGN KEY (`fonte_id`) REFERENCES `contagem_fonte` (`fonte_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `contagem_passagem_dispositivo` FOREIGN KEY (`dispositivo_id`) REFERENCES `contagem_dispositivo` (`dispositivo_id`) ON DELETE CASCADE ON UPDATE CASCADE
