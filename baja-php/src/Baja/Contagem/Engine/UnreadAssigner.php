@@ -45,8 +45,10 @@ use Baja\Contagem\Engine\Data\Source;
  * worse: the total offset grows by at least MARGEM_MINIMA_MS (2 s) and by
  * at least the entry's own offset (the next best is twice as far), or
  * there is no other answer at all. And, for a counter's "??", only when at
- * least two OTHER sources read the crossing, so that the pass counts with
- * or without the "??". Once applied, the entry counts for that car like
+ * least two OTHER sources read the crossing AND their readings agree by
+ * themselves, so that the pass counts with or without the "??": the "??"
+ * must join an agreed pass group of those readings and change no other
+ * (joinsAnAgreedPass()). Once applied, the entry counts for that car like
  * any entry of it: a counter's "??" is that counter's vote. With a single
  * reading the "??" would be the vote that makes the pass count, and that
  * reading may be a wrong number (one counter types car 29 when car 22
@@ -494,7 +496,7 @@ final class UnreadAssigner
             }
             $sourceIds = array_keys($sources);
             sort($sourceIds);
-            $crossings[] = ['carro' => $stretch['carro'], 'ts_ms' => $tsMs, 'passagem_ids' => $ids, 'fonte_ids' => $sourceIds];
+            $crossings[] = ['carro' => $stretch['carro'], 'ts_ms' => $tsMs, 'passagem_ids' => $ids, 'fonte_ids' => $sourceIds, 'entradas' => $stretch['entradas']];
         }
         return $crossings;
     }
@@ -568,7 +570,7 @@ final class UnreadAssigner
                 // by itself only where the pass counts without it: a lone
                 // reading may be a wrong number, and "??" says that a car
                 // crossed, not which one.
-                $decidesNoCount = $isSensor || count($crossing['fonte_ids']) >= 2;
+                $decidesNoCount = $isSensor || (count($crossing['fonte_ids']) >= 2 && $this->joinsAnAgreedPass($entry, $crossing['entradas']));
                 if ($isClear && $decidesNoCount) {
                     $tsMs = $crossing['ts_passagem'] ?? $crossing['ts_ms'];
                     $this->assignments[$entry->id] = [
@@ -604,6 +606,58 @@ final class UnreadAssigner
             }
         }
         return $applied;
+    }
+
+    /**
+     * Whether the "??", given the crossing's car, only joins a pass that
+     * counts without it. PassMatcher groups the crossing's readings twice,
+     * with and without the "??": the group the "??" lands in must, without
+     * it, be the same readings, agreed (within the agreement spread) and
+     * from two sources or more; and the "??" must leave it agreed, and the
+     * rest as it was.
+     *
+     * Two readings of the car two sources made are not enough by
+     * themselves: they may be a typo for a car next to it and the real one
+     * six seconds later, a dispersed group that waits for a person. A "??"
+     * between them would pair with one of them into an agreed group, and
+     * so count a lap the car never drove.
+     *
+     * @param Entry[] $readings the crossing's read entries, in time order
+     */
+    private function joinsAnAgreedPass(Entry $unread, array $readings): bool
+    {
+        $janelaMs = $this->settings->janelaMs;
+        $spreadMs = $this->settings->agreementSpreadMs();
+        $carro = $readings[0]->carro;
+        $without = PassMatcher::match($readings, $janelaMs, [], $spreadMs)[$carro] ?? [];
+        $withIt = $readings;
+        $withIt[] = self::withCar($unread, $carro);
+        usort($withIt, fn(Entry $a, Entry $b): int => [$a->tsMs, $a->id] <=> [$b->tsMs, $b->id]);
+        $with = PassMatcher::match($withIt, $janelaMs, [], $spreadMs)[$carro] ?? [];
+        if (count($with) !== count($without)) {
+            return false;
+        }
+        $agreedWithout = [];
+        foreach ($without as $group) {
+            if (!$group->dispersa && $group->sourceCount() >= 2) {
+                $ids = $group->entryIds();
+                sort($ids);
+                $agreedWithout[implode(',', $ids)] = true;
+            }
+        }
+        foreach ($with as $group) {
+            $ids = $group->entryIds();
+            if (!in_array($unread->id, $ids, true)) {
+                continue;
+            }
+            if ($group->dispersa) {
+                return false;
+            }
+            $others = array_values(array_diff($ids, [$unread->id]));
+            sort($others);
+            return isset($agreedWithout[implode(',', $others)]);
+        }
+        return false;
     }
 
     /**

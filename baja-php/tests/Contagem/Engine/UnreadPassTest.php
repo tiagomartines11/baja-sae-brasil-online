@@ -97,6 +97,65 @@ final class UnreadPassTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: car 7 never crosses near 04:05. Cars 17 and 71 do, at
+     * 04:02 and 04:08. Counter 1 types 7 for car 17 (04:02) and then 71;
+     * counter 3 types 17 and then 7 for car 71 (04:08); counter 2 presses
+     * "??" at 04:05. So two counters "read" car 7, six seconds apart, with
+     * the "??" in the middle: 3 s from their median, and car 17 2.7 s away.
+     *
+     * EXPECTED: those two readings do not agree with each other (they are a
+     * dispersed group that waits for a person), so the "??" is not applied
+     * by itself: paired with either it would make an agreed pass, and car 7
+     * a lap it never drove. Car 7 has no lap, and the "??" is the
+     * reviewer's.
+     */
+    public function testAnUnreadPassNeverTurnsReadingsThatDisagreeIntoALap(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->start('00:00');
+        $race->firstCrossing([7, 17, 71]);
+        $race->entry(1, 7, '04:02');
+        $race->entry(3, 17, '04:02.3');
+        $unread = $race->unread(2, '04:05');
+        $race->entry(3, 7, '04:08');
+        $race->entry(1, 71, '04:08.2');
+
+        $result = $race->run('10:00');
+
+        $this->assertLapCounts([7 => 0], $result);
+        $this->assertContains($unread, array_map(fn($entry) => $entry->id, $result->unreadEntries));
+        $this->assertSame([$unread], $this->openFlags($result, Flag::NUMERO_ILEGIVEL)[0]->passagemIds);
+        $this->assertSame(0, $this->lapsOf($race->countCars('10:00', [7])->lapsByCar[7] ?? []), 'the per-car recount says the same');
+    }
+
+    /**
+     * SITUATION: four counters. Car 17 crosses at 04:02.5: counter 1 types
+     * 7 for it, counter 4 presses "??" (04:03), the others miss it. Car 7
+     * crosses at 04:06.5 and counters 2 and 3 type it.
+     *
+     * EXPECTED: car 7's two real readings agree, but the "??" would not
+     * join them: it is 3.5 s before them and pairs with counter 1's typo
+     * instead, a second agreed pass of car 7. So it is not applied: car 7
+     * has its one lap, and the "??" is the reviewer's.
+     */
+    public function testAnUnreadPassThatWouldNotJoinTheAgreedReadingsIsNotApplied(): void
+    {
+        $race = RaceScenario::withCounters(4);
+        $race->start('00:00');
+        $race->firstCrossing([7, 17]);
+        $race->entry(1, 7, '04:02.5');
+        $unread = $race->unread(4, '04:03');
+        $race->entry(2, 7, '04:06.5');
+        $race->entry(3, 7, '04:06.7');
+
+        $result = $race->run('10:00');
+
+        $this->assertLapCounts([7 => 1], $result);
+        $this->assertContains($unread, array_map(fn($entry) => $entry->id, $result->unreadEntries));
+        $this->assertNotEmpty($this->openFlags($result, Flag::NUMERO_ILEGIVEL));
+    }
+
+    /**
      * SITUATION: cars 7, 9 and 11 cross in a bunch at 04:00, 04:01 and
      * 04:02.5. Counters 1 and 3 type all three; counter 2 types 7 and
      * presses "??" twice, at 04:01.3 and 04:02.6.
