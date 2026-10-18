@@ -1317,7 +1317,15 @@ not happen every minute):
 | before trains were decided on their own | 69.7 %, 99.66 % right | 69.1 %, 99.71 % right |
 | by the counters' order alone | +18 marks, all right | +26 marks, all right |
 
-The test asserts at least 99.5 % right and 74 % timed. Most of the gain is
+The test asserts at least 99.5 % right and 74 % timed. The share is of the
+real crossings the sensor marked. The simulator (`contagem-simular.mjs`)
+says less, about 71 to 73 % on the test stack (seeds 2, 3 and 7), and
+counts differently: of every counted pass, the initial ones and those whose
+mark the sensor missed included. Its counters also press anywhere from
+half a second early to a second and a half late on every crossing, with no
+steady habit of their own to take out, which leaves more trains ambiguous
+than the test's counters (a steady habit, ±0.4 s around it). Not measured
+further. Most of the gain is
 the trains decided one by one with each counter's delay taken out; the
 counters' order adds little in these races, because a simulated counter
 types two cars less than half a second apart in either order (its hand

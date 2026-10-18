@@ -474,8 +474,11 @@ if (sensorPlan) {
 const published = await helper('publicado');
 const wrongCars = new Set(afterSuggestions.map((difference) => difference.car));
 for (const car of script.carros.filter((candidate) => !wrongCars.has(candidate))) {
-    const lastCrossing = script.travessias.filter((crossing) => crossing.carro === car).at(-1);
-    if (!lastCrossing) continue;
+    const crossings = script.travessias.filter((crossing) => crossing.carro === car);
+    // A car with no completed lap (only its pass zero) gets no Input row,
+    // so no LAST: an empty row would list it as if it had run.
+    if (crossings.length < 2) continue;
+    const lastCrossing = crossings.at(-1);
     const trueSeconds = (lastCrossing.tsMs - script.largadaMs) / 1000;
     if (Math.abs((published[car]?.last ?? 0) - trueSeconds) > CROSSING_TOLERANCE_MS / 1000 + 1) {
         problems.push(`car ${car}: LAST is ${published[car]?.last}, its last crossing was at ${Math.round(trueSeconds)} s`);
