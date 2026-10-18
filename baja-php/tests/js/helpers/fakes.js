@@ -228,6 +228,9 @@ export class FakeServer {
         // False plays a server from before corrections existed: it ignores
         // `fixes` and answers neither `fixed_uuids` nor `fixes_recusados`.
         this.answersFixes = true;
+        // False plays a server that names only the corrections it refuses
+        // (`fixes_recusados`, the one list the shared contract fixes).
+        this.answersFixedUuids = true;
         // How many times each uuid was INSERTED. Must never exceed 1.
         this.insertCount = new Map();
         // Every request body that reached the server, in order.
@@ -355,7 +358,8 @@ export class FakeServer {
             body: {
                 stored_uuids: storedUuids,
                 voided_uuids: voidedUuids,
-                ...(this.answersFixes ? { fixed_uuids: fixedUuids, fixes_recusados: refusedFixes } : {}),
+                ...(this.answersFixes && this.answersFixedUuids ? { fixed_uuids: fixedUuids } : {}),
+                ...(this.answersFixes ? { fixes_recusados: refusedFixes } : {}),
                 server_now_ms: serverReceivedMs,
                 ...(this.sendsBothTimes ? { server_received_ms: serverReceivedMs, server_sent_ms: serverSentMs } : {}),
                 ...this.extraAnswerFields,

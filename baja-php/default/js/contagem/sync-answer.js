@@ -53,6 +53,11 @@ function serverTimesOf(body) {
  * the ones it will never apply (the entry is not this device's, or was not
  * stored without a number). Either answer takes the correction out of the
  * queue; a refused one is shown on its row ("correção recusada").
+ *
+ * A server that answers `fixes_recusados` but no `fixed_uuids` knows about
+ * corrections and names only the ones it refuses: every other one it was
+ * sent counts as stored. A server with neither list (from before
+ * corrections) is left to the safety net.
  * @returns {Promise<{answered: Set<string>}>} uuids the answer accounted for
  */
 async function applyFixAnswer(store, request, body) {
@@ -61,8 +66,15 @@ async function applyFixAnswer(store, request, body) {
     if (sent.length === 0) {
         return { answered };
     }
-    const fixed = new Set(Array.isArray(body.fixed_uuids) ? body.fixed_uuids : []);
     const refused = new Set(Array.isArray(body.fixes_recusados) ? body.fixes_recusados : []);
+    let fixed;
+    if (Array.isArray(body.fixed_uuids)) {
+        fixed = new Set(body.fixed_uuids);
+    } else if (Array.isArray(body.fixes_recusados)) {
+        fixed = new Set(sent.map((fix) => fix.uuid).filter((uuid) => !refused.has(uuid)));
+    } else {
+        fixed = new Set();
+    }
     for (const fix of sent) {
         if (refused.has(fix.uuid)) {
             await markRefused(store, 'fixes', fix.uuid, MOTIVO_CORRECAO_RECUSADA);

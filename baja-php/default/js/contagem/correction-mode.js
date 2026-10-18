@@ -12,7 +12,10 @@
 //   - "Passou um carro" ends it AND records a "??" at that very instant: a
 //     car crossing in the middle of a correction is never lost, and its
 //     time is the tap (its number can be given afterwards, like any "??");
-//   - after TEMPO_CORRECAO_MS without a car it ends by itself and says so;
+//   - after TEMPO_CORRECAO_MS without a car it ends by itself and says so.
+//     Each digit typed for it starts that time again: a counter part-way
+//     through the number does not see it vanish (and the rest of it then
+//     typed as a new pass);
 //   - changing the entry mode, or undoing the entry being corrected, ends it.
 //
 // Only one correction at a time: "Informar número" on another row moves the
@@ -70,10 +73,18 @@ export class CorrectionMode {
 
     /** @param {object} entry the "??" record (CountSession.recentEntries() row) */
     start(entry) {
-        this.stopTimer();
         this.current = { uuid: entry.uuid, entry };
-        this.timer = this.setTimeoutFn(() => this.end(FIM_CORRECAO.TEMPO_ESGOTADO), this.timeoutMs);
+        this.touch();
         this.onChange(this.current);
+    }
+
+    /** A digit was typed (or deleted) for the correction: the time starts again. */
+    touch() {
+        if (this.current === null) {
+            return;
+        }
+        this.stopTimer();
+        this.timer = this.setTimeoutFn(() => this.end(FIM_CORRECAO.TEMPO_ESGOTADO), this.timeoutMs);
     }
 
     /**

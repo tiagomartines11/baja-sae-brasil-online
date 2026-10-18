@@ -59,7 +59,10 @@ OfflineShell::printStatusBar($fonte->getNome(), 'Também contando aqui:');
         <?php // "Informar número" on a "??": drawn OVER the box, same size, so nothing below moves
               // (correction-mode.js). "Passou um carro" records a "??" at once and ends it. ?>
         <div id="correcao" class="correcao" hidden>
-            <p id="correcao-texto" class="correcao-texto"></p>
+            <p class="correcao-texto">
+                <span id="correcao-acao" class="correcao-linha"></span>
+                <span id="correcao-registro" class="correcao-linha correcao-registro"></span>
+            </p>
             <div class="correcao-botoes">
                 <button type="button" id="btn-correcao-cancelar" class="botao-correcao-cancelar">Cancelar</button>
                 <button type="button" id="btn-correcao-passou" class="botao-correcao-passou">Passou um carro</button>

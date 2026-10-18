@@ -240,6 +240,46 @@ test('a server that never answers corrections: the safety net gives up, and "Ten
     assert.equal(device.store.findEntry(uuid).fix_sent, true);
 });
 
+test('an undone "??" uploads its void, not its correction, and cannot be corrected any more', async () => {
+    // Situation: the counter gave the "??" a number, then saw it was a
+    // false press and undid it, before the correction went up.
+    const { device, uuid } = await deviceWithUploadedUnread();
+    device.server.behaviour = 'offline';
+    await device.session.fixUnread(uuid, 41);
+    await device.session.undo(uuid);
+    device.server.behaviour = 'ok';
+
+    await device.queue.flush();
+
+    // Expected: only the void goes up, so no pointless counter decision
+    // lands on a voided entry, and nothing is left waiting in the queue.
+    assert.deepEqual(fixesSent(device), []);
+    assert.deepEqual(device.server.receivedRequests.flatMap((request) => request.voids || []), [{ uuid }]);
+    assert.equal(device.store.pendingCount(), 0);
+    assert.equal(await device.session.fixUnread(uuid, 42), null);
+});
+
+test('a server that names only the corrections it refuses: the others count as stored', async () => {
+    // Situation: the shared contract fixes only `fixes_recusados`. A server
+    // that answers that list and no `fixed_uuids` knows about corrections:
+    // it must not end in "correção não confirmada" and the red banner.
+    const { device, uuid } = await deviceWithUploadedUnread();
+    const { entry: other } = await device.typeUnread();
+    await device.queue.flush();
+    device.server.storedEntries.get(other.uuid).car = 12;
+    device.server.answersFixedUuids = false;
+    await device.session.fixUnread(uuid, 41);
+    await device.session.fixUnread(other.uuid, 7);
+
+    await device.queue.flush();
+
+    assert.equal(device.store.findEntry(uuid).fix_sent, true);
+    assert.equal(device.store.findEntry(uuid).fix_refused, undefined);
+    assert.equal(device.store.findEntry(other.uuid).fix_refused_reason, MOTIVO_CORRECAO_RECUSADA);
+    assert.equal(device.store.pendingCount(), 0);
+    assert.deepEqual(device.queue.getState().recusados, []);
+});
+
 test('a page refused by the server records no correction either', async () => {
     const { device, uuid } = await deviceWithUploadedUnread();
     device.server.behaviour = 'no_permission';

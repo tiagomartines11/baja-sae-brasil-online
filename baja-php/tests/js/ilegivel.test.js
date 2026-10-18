@@ -18,7 +18,7 @@ import assert from 'node:assert/strict';
 
 import { AVISO, computeWarnings, effectiveCar } from '../../default/js/contagem/warnings.js';
 import {
-    NIVEL, correctionBannerText, correctionEndedFlash, fixFlash, notRecordedFlash, passFlash, undoFlash, unreadFlash,
+    NIVEL, correctionBannerText, correctionEndedFlash, fixFlash, fixNotStoredFlash, notRecordedFlash, passFlash, undoFlash, unreadFlash,
 } from '../../default/js/contagem/contar-destaque.js';
 import { FIM_CORRECAO } from '../../default/js/contagem/correction-mode.js';
 import { MODO, TECLA, keyActionFor, typedUnreadMark } from '../../default/js/contagem/entry-modes.js';
@@ -126,6 +126,7 @@ test('the new short texts fit the single warning line, and the number row stays 
     const texts = [
         unreadFlash().aviso.curta,
         correctionEndedFlash(FIM_CORRECAO.TEMPO_ESGOTADO).aviso.curta,
+        fixNotStoredFlash(41).aviso.curta,
     ];
     for (const text of texts) {
         assert.ok(text.length <= SHORT_TEXT_BUDGET, '"' + text + '" is ' + text.length + ' characters');
@@ -147,13 +148,27 @@ test('a correction is not a pass: no green, its own colour, and what became of i
     assert.equal(notRecordedFlash(null).numero, '??');
 });
 
-test('the correction banner names the entry and says what to do in the mode on screen', () => {
+test('the correction banner says what to do first, then which entry: a long time text cannot cut the instruction', () => {
     const entry = { uuid: 'a', car: null, ts_ms: T };
-    assert.equal(correctionBannerText(entry, MODO.BLOCOS, '14:03:07'), 'Corrigindo o registro das 14:03:07 — toque no carro');
-    assert.equal(correctionBannerText(entry, MODO.TECLADO_TELA, '14:03:07'), 'Corrigindo o registro das 14:03:07 — digite o número');
-    assert.equal(correctionBannerText(entry, MODO.TECLADO, '14:03:07'), 'Corrigindo o registro das 14:03:07 — digite o número');
-    assert.equal(correctionBannerText({ ...entry, ts_ms: null }, MODO.BLOCOS, 'aguardando horário oficial'),
-        'Corrigindo o registro sem horário — toque no carro');
+    assert.deepEqual(correctionBannerText(entry, MODO.BLOCOS, '14:03:07'),
+        { acao: 'Corrigindo: toque no carro', registro: 'Registro das 14:03:07' });
+    assert.equal(correctionBannerText(entry, MODO.TECLADO_TELA, '14:03:07').acao, 'Corrigindo: digite o número');
+    assert.equal(correctionBannerText(entry, MODO.TECLADO, '14:03:07').acao, 'Corrigindo: digite o número');
+    // The time of an estimated or device-clock "??" is long: it only ever sits on the second line.
+    assert.deepEqual(correctionBannerText(entry, MODO.TECLADO, '14:03:07 (relógio do aparelho)'),
+        { acao: 'Corrigindo: digite o número', registro: 'Registro das 14:03:07 (relógio do aparelho)' });
+    assert.deepEqual(correctionBannerText({ ...entry, ts_ms: null }, MODO.BLOCOS, 'aguardando horário oficial'),
+        { acao: 'Corrigindo: toque no carro', registro: 'Registro sem horário' });
+});
+
+test('a correction the phone could not store says so, and does not say "digite de novo" (that records a pass)', () => {
+    const flash = fixNotStoredFlash(41);
+    assert.equal(flash.numero, '41');
+    assert.equal(flash.equipe, 'Correção NÃO guardada');
+    assert.equal(flash.aviso.curta, 'Toque em Informar número');
+    assert.doesNotMatch(flash.aviso.completa[0], /[Dd]igite de novo/);
+    assert.equal(flash.nivel, NIVEL.ERRO);
+    assert.equal(fixNotStoredFlash(41, 'Turno encerrado.').aviso.completa[0], 'Turno encerrado.');
 });
 
 // ---------------------------------------------------------------------------
@@ -166,8 +181,9 @@ test('the "?" key is "??" wherever the focus is, and a held "?" is one press', (
     assert.deepEqual(keyActionFor({ key: '?' }, { mode: MODO.TECLADO_TELA, typedInNumberBox: false }),
         { tecla: TECLA.ILEGIVEL, digito: null });
     assert.equal(keyActionFor({ key: '?', repeat: true }, away).tecla, TECLA.NADA);
-    // In the number box the box takes it, like a digit; the page sees a "?" in the text.
-    assert.equal(keyActionFor({ key: '?' }, { mode: MODO.TECLADO, typedInNumberBox: true }), null);
+    // In the number box too: taken before the box, which may be full (maxlength) and not take it.
+    assert.deepEqual(keyActionFor({ key: '?' }, { mode: MODO.TECLADO, typedInNumberBox: true }),
+        { tecla: TECLA.ILEGIVEL, digito: null });
     assert.equal(keyActionFor({ key: '?', repeat: true }, { mode: MODO.TECLADO, typedInNumberBox: true }).tecla, TECLA.NADA);
     assert.equal(typedUnreadMark('4?'), true);
     assert.equal(typedUnreadMark('41'), false);

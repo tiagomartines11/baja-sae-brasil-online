@@ -52,7 +52,8 @@ function isUnconfirmedVoid(record) {
  * an earlier version of this page simply has none of them.
  */
 function isUnconfirmedFix(record) {
-    return Number.isInteger(record.fix_car) && !record.fix_sent && !record.fix_refused && !record.refused;
+    // An undone "??" has nothing left to correct: its void goes up, not its number.
+    return Number.isInteger(record.fix_car) && !record.fix_sent && !record.fix_refused && !record.refused && !record.voided;
 }
 
 export class LocalStore {
@@ -206,7 +207,7 @@ export class LocalStore {
      */
     async setEntryFix(uuid, car, fixedAtMs) {
         const record = this.findEntry(uuid);
-        if (!record || record.car !== null || record.refused || record.fix_refused || !Number.isInteger(car)) {
+        if (!record || record.car !== null || record.voided || record.refused || record.fix_refused || !Number.isInteger(car)) {
             return null;
         }
         if (record.fix_car === car) {

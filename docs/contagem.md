@@ -235,20 +235,25 @@ to the start recorded in race control.
 - **Giving a "??" its number afterwards.** A "??" row in the recent list
   has a big **Informar número** button (a "??" still without a number stays
   in the list after ten more entries). Tap it: a blue banner covers the big
-  box, "Corrigindo o registro das 14:03:07 — toque no carro" ("digite o
-  número" in the keyboard modes), and the keys and tiles get a blue frame.
+  box, "Corrigindo: toque no carro" ("digite o número" in the keyboard
+  modes) and under it "Registro das 14:03:07", and the keys and tiles get
+  a blue frame.
   **The next car you tap or type is that "??"'s number: it is not a new
   pass and takes no time.** The mode then ends by itself; it also ends with
-  **Cancelar**, after 20 s without a car ("Correção cancelada: tempo
-  esgotado"), or when you change mode. **If a car crosses while you are
+  **Cancelar**, after 20 s without a car or a digit (each digit typed
+  starts the 20 s again; then "Correção cancelada: tempo esgotado"), or
+  when you change mode. **If a car crosses while you are
   correcting, press "Passou um carro"**: it records a "??" for that crossing
   at that instant and ends the correction (the "??" buttons and "Passou"
   are disabled meanwhile, so that nothing else records by accident).
 - The row then shows the car with a small **corrigido** mark ("corrigido
   (na fila)" until it is uploaded) and a smaller **Corrigir número**: you
   can correct it again, the newest number counts. **correção recusada**
-  means the server will not take it (for example a reviewer's decision is
-  already there); tell the controller the number.
+  means the server will not take it (the server does not hold that entry
+  as a "??" of this phone); tell the controller the number. If the phone
+  could not store the correction, the box says "Correção NÃO guardada":
+  tap **Informar número** again (typing the number now would record a new
+  pass).
 - After each entry the big box above the keys shows the number, the team
   and at most **one short warning line** ("REPETIDO há 3 s: desfazer?",
   "NÃO CLASSIF.: avise o resp.", "Número fora da lista"; with two, the most
@@ -1384,8 +1389,9 @@ backwards. `pit_events[].tipo` is `box_entrada`, `box_saida`,
 when it has none, sends a correction only once its entry is in
 `stored_uuids`, and sends it again until the answer names it in
 `fixed_uuids` (stored) or `fixes_recusados` (never stored; shown as
-"correção recusada" on the row). Like a void, it falls under the
-safety net below.
+"correção recusada" on the row). An answer with `fixes_recusados` and no
+`fixed_uuids` counts every other correction it was sent as stored. Like a
+void, it falls under the safety net below (an answer with neither list).
 
 The response lists the uuids now stored, the server time (stamped when the
 request arrived), the race state, the classified cars (`valid_cars`) and the
@@ -1620,7 +1626,9 @@ instead of trampling each other. Never run it against production.
   long team name, an undo, a held count, a banner. This was checked in
   headless Chromium at 360 px wide; jsdom cannot measure layout. The "??"
   states (its flash, the correction banner over the box, a correction, its
-  end) were checked the same way.
+  end) were checked the same way. The banner's two lines are cut each on
+  its own and the instruction comes first, so a long time ("14:03:07
+  (relógio do aparelho)") can only cut the time.
 - **A correction of a "??" on the phone is one car, then over.** Taking the
   next car for the correction is what makes it quick, and also what makes
   it dangerous: a counter who forgot would turn a crossing into a

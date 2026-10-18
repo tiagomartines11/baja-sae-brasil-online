@@ -23,8 +23,8 @@ import { carListIsKnown, effectiveCar } from './warnings.js';
 import { RecordingBlockedError, TEXTO_BLOQUEIO } from './access.js';
 import { createRecentList, timeText } from './contar-recentes.js';
 import {
-    correctionBannerText, correctionEndedFlash, createFlash, fixFlash, instructionFlash, notRecordedFlash,
-    passFlash, undoFlash,
+    correctionBannerText, correctionEndedFlash, createFlash, fixFlash, fixNotStoredFlash, instructionFlash,
+    notRecordedFlash, passFlash, undoFlash,
 } from './contar-destaque.js';
 import { CorrectionMode, FIM_CORRECAO } from './correction-mode.js';
 import { wireCountKeys } from './contar-teclas.js';
@@ -203,6 +203,7 @@ async function main() {
         }
         buffer.setText(event.target.value, monotonicNow());
         renderBuffer();
+        correction.touch();
     });
     element('btn-ilegivel').addEventListener('click', () => {
         pressUnread();
@@ -227,6 +228,7 @@ async function main() {
             buffer.pressDigit(key, monotonicNow());
         }
         renderBuffer();
+        correction.touch();
     }
 
     element('btn-ilegivel-tela').addEventListener('click', (event) => {
@@ -304,9 +306,9 @@ async function main() {
         element('correcao').hidden = entry === null;
         document.body.classList.toggle('corrigindo', entry !== null);
         if (entry !== null) {
-            element('correcao-texto').textContent = correctionBannerText(
-                entry, currentMode, timeText(entry, page.config.fuso || null),
-            );
+            const banner = correctionBannerText(entry, currentMode, timeText(entry, page.config.fuso || null));
+            element('correcao-acao').textContent = banner.acao;
+            element('correcao-registro').textContent = banner.registro;
         }
         // Disabled, not hidden: nothing on the screen moves.
         for (const id of ['btn-ilegivel', 'btn-ilegivel-tela']) {
@@ -335,7 +337,7 @@ async function main() {
             result = await session.fixUnread(uuid, car);
         } catch (storageError) {
             const blocked = storageError instanceof RecordingBlockedError;
-            flash.show(notRecordedFlash(car, blocked ? TEXTO_BLOQUEIO[storageError.motivo] : null));
+            flash.show(fixNotStoredFlash(car, blocked ? TEXTO_BLOQUEIO[storageError.motivo] : null));
             feedback.erro();
             throw storageError;
         }

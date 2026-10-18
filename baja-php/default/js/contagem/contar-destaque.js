@@ -96,14 +96,27 @@ export function correctionEndedFlash(motivo) {
 }
 
 /**
- * The banner over the big flash while a "??" is being corrected.
+ * The banner over the big flash while a "??" is being corrected. Two lines,
+ * each cut on its own: what to do comes first, so a long time text
+ * ("(relógio do aparelho)") can only cut the time, never the instruction.
  * @param {object}  entry      the "??" record
  * @param {string}  mode       MODO.*: "toque no carro" or "digite o número"
  * @param {string}  timeText   the time of the "??" as the recent list shows it
+ * @returns {{acao: string, registro: string}}
  */
 export function correctionBannerText(entry, mode, timeText) {
-    const what = Number.isFinite(entry.ts_ms) ? 'Corrigindo o registro das ' + timeText : 'Corrigindo o registro sem horário';
-    return what + ' — ' + (mode === MODO.BLOCOS ? 'toque no carro' : 'digite o número');
+    return {
+        acao: 'Corrigindo: ' + (mode === MODO.BLOCOS ? 'toque no carro' : 'digite o número'),
+        registro: Number.isFinite(entry.ts_ms) ? 'Registro das ' + timeText : 'Registro sem horário',
+    };
+}
+
+/** A correction could not be stored: say so, and how to try again (not "digite de novo", which records a pass). */
+export function fixNotStoredFlash(car, blockedText = null) {
+    const aviso = blockedText === null
+        ? { curta: 'Toque em Informar número', completa: ['O aparelho não conseguiu guardar a correção. Toque em Informar número de novo.'] }
+        : { curta: 'Bloqueado: veja o aviso acima', completa: [blockedText] };
+    return { numero: String(car), equipe: 'Correção NÃO guardada', aviso, nivel: NIVEL.ERRO };
 }
 
 /**

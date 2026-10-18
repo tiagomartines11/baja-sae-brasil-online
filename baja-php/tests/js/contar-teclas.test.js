@@ -157,6 +157,23 @@ test('a digit typed while the focus is elsewhere is handled by the page, once pe
     assert.equal(repeat.defaultPrevented, true);
 });
 
+test('"?" in a full number box is still "??": the page takes it before the box', () => {
+    // SITUATION: keyboard mode, four digits already in the box (its
+    // maxlength). The car crossing cannot be read: the counter types "?".
+    //
+    // WHAT WENT WRONG: the box was left to take the "?" like a digit and the
+    // page looked for it in the text. A full box takes nothing, so no
+    // "input" came and the "??" was never recorded.
+    const page = createFakePage();
+    page.numberField.value = '1234';
+
+    const event = page.keyDown('?', page.numberField);
+
+    // EXPECTED: the page records it, and the box does not also get a "?".
+    assert.equal(event.defaultPrevented, true);
+    assert.deepEqual(page.keysHandled, [{ tecla: TECLA.ILEGIVEL, digito: null }]);
+});
+
 // ---------------------------------------------------------------------------
 // Brief 2.6: Space in keypad mode
 // ---------------------------------------------------------------------------

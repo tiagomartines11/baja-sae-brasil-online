@@ -107,6 +107,25 @@ test('after 20 s without a car the mode ends by itself and says why', () => {
     assert.equal(mode.pressCar(41), null, 'a car typed after the timeout is a pass, not a correction');
 });
 
+test('each digit typed for the correction starts the 20 s again; with no correction it does nothing', () => {
+    // A counter part-way through "4", "1" when the time ran out lost the
+    // "4", and the "1" then went into a NEW pass at the next Enter.
+    const { mode, ends, timers } = createMode();
+    mode.touch();
+    assert.equal(timers.pending(), 0, 'no correction open: no timer');
+
+    mode.start(UNREAD);
+    mode.touch();
+    mode.touch();
+    assert.deepEqual(timers.delays(), [TEMPO_CORRECAO_MS], 'one timer, started again, never two');
+    assert.equal(mode.active(), true);
+
+    timers.fireAll();
+    assert.deepEqual(ends, [{ motivo: FIM_CORRECAO.TEMPO_ESGOTADO, uuid: 'uuid-3', car: null }]);
+    mode.touch();
+    assert.equal(timers.pending(), 0, 'a digit after the end starts nothing');
+});
+
 test('"Passou um carro" ends the mode so that the crossing is recorded', () => {
     // The page records a "??" at the tap first (its time is that tap), then
     // calls this; the end says PASSAGEM so the page shows that pass's flash

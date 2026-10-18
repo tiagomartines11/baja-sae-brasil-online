@@ -207,7 +207,13 @@ export function keyActionFor(key, { mode, typedInNumberBox, focusOnKeypadKey = f
         // and the box would fill with "777" (or a held Enter would submit
         // again and again). Leaving the key alone is not enough here: the
         // repeat has to be cancelled. A held Backspace may keep deleting.
-        return key.repeat && (isDigit(key.key) || key.key === 'Enter' || key.key === TECLA_ILEGIVEL) ? DO_NOTHING : null;
+        if (key.repeat) {
+            return isDigit(key.key) || key.key === 'Enter' || key.key === TECLA_ILEGIVEL ? DO_NOTHING : null;
+        }
+        // "?" is taken here, before the box: a full box (maxlength) would not
+        // take it, and no "input" would ever say it was typed. (A phone's
+        // on-screen keyboard often sends no usable key: typedUnreadMark.)
+        return key.key === TECLA_ILEGIVEL ? { tecla: TECLA.ILEGIVEL, digito: null } : null;
     }
     // On the keypad the last key that was tapped keeps the focus, and a
     // browser "clicks" the focused button when Space is pressed: a stray
