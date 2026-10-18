@@ -69,6 +69,9 @@ final class CarsRecount
     /** @var array<int, int> spl_object_id of a pass group => duration of the counted lap it ends, in ms */
     private array $lapTimes = [];
 
+    /** @var array<int, PassGroup> id of a timing sensor's mark => the pass group it times */
+    private array $groupTimedByMark = [];
+
     /**
      * @param int[] $cars the cars the caller wants to show
      * @param array{0: int, 1: int}|null $window also recount the cars of passes a reviewer added between these two moments
@@ -90,7 +93,21 @@ final class CarsRecount
             $cars = array_values(array_merge($cars, $moreCars));
             $input = $loader->loadForCars($settings, $cars, $window, $alsoEntryIds);
         }
-        return new self($input, $cars);
+        $recount = new self($input, $cars);
+        // A timing sensor's mark on screen times the pass of a car of its
+        // train, which may be a car not recounted yet (at the edge of the
+        // window). Where a mark times none of the recounted cars, the cars
+        // of its train are recounted too, so that it is shown with its
+        // pass, or as timing none, exactly as the whole race says.
+        $loose = $recount->marksTimingNoRecountedCar($window, $alsoEntryIds);
+        if ($loose !== []) {
+            $moreCars = array_diff($loader->carsAroundSensorMarks($settings, $loose, []), $cars);
+            if ($moreCars !== []) {
+                $cars = array_values(array_merge($cars, $moreCars));
+                $recount = new self($loader->loadForCars($settings, $cars, $window, $alsoEntryIds), $cars);
+            }
+        }
+        return $recount;
     }
 
     /**
@@ -155,6 +172,9 @@ final class CarsRecount
         foreach ($counter->groupsByCar as $groupsOfOneCar) {
             foreach ($groupsOfOneCar as $group) {
                 $this->groups[] = $group;
+                if ($group->marcaSensor !== null) {
+                    $this->groupTimedByMark[$group->marcaSensor->id] = $group;
+                }
             }
         }
         $this->applied = $counter->applied;
@@ -170,6 +190,38 @@ final class CarsRecount
     public function groupOf(int $entryId): ?PassGroup
     {
         return $this->signatures->groupOf($entryId);
+    }
+
+    /**
+     * The pass group a timing sensor's mark times (PassGroup::$marcaSensor):
+     * the mark is no entry of it, but it is that pass's witness of when
+     * the car crossed. Null for any other entry, and for a mark that times
+     * no pass.
+     */
+    public function groupTimedBy(int $entryId): ?PassGroup
+    {
+        return $this->groupTimedByMark[$entryId] ?? null;
+    }
+
+    /**
+     * The moments of the sensor marks on screen (in the window, or among
+     * the entries asked for) that time none of the recounted cars' passes.
+     *
+     * @param array{0: int, 1: int}|null $window
+     * @param int[] $entryIds
+     * @return int[]
+     */
+    private function marksTimingNoRecountedCar(?array $window, array $entryIds): array
+    {
+        $asked = array_fill_keys($entryIds, true);
+        $moments = [];
+        foreach ($this->applied->sensorMarks as $mark) {
+            $onScreen = isset($asked[$mark->id]) || ($window !== null && $mark->tsMs >= $window[0] && $mark->tsMs <= $window[1]);
+            if ($onScreen && !isset($this->groupTimedByMark[$mark->id]) && $mark->qualidadeTempo !== Entry::TEMPO_DESCONHECIDO) {
+                $moments[] = $mark->tsMs;
+            }
+        }
+        return $moments;
     }
 
     /**
@@ -221,7 +273,7 @@ final class CarsRecount
      *   fonte_observadora   its source was an observer at that moment: compared, never counted
      *   fonte_inativa       its source was switched off at that moment
      *   fonte_excluida      a reviewer excluded its source for that period
-     *   marca_do_sensor     a timing sensor's mark: it times laps in the whole-race run, never a pass of its own
+     *   marca_do_sensor     a timing sensor's mark that times no pass (no pass the counters read, or not told from the car next to it)
      *   ilegivel            a "??" nobody gave a car and the engine could not tell (flag numero_ilegivel)
      */
     public function reasonNotInUse(Entry $raw): string

@@ -367,6 +367,138 @@ final class UnreadUploadTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: the sensor of the test above marked car B's pass at 3:38.3,
+     * and something that was no car at 6:40 (nothing near it). The reviewer
+     * opens the timeline of those minutes, of car B, and of the half second
+     * around the first mark only (the counters' entries of that pass are
+     * outside it).
+     *
+     * EXPECTED: in the sensor's lane, the first mark is shown with car B's
+     * pass: marked as the sensor's mark, with car B, in the same pass group
+     * as the counters' entries of that pass, and that group says the
+     * sensor's mark is its time. The second mark is out of use, as a mark
+     * that times no pass. Car B's own timeline and the half-second window
+     * show the first mark with its pass too.
+     */
+    public function testTheTimelineShowsWhichPassASensorsMarkTimes(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $sensorToken = $this->apiToken($sensor);
+        foreach ($this->fontes as $index => $fonte) {
+            $token = $this->issueToken($fonte, self::USER_PREFIX . 'contador' . $index);
+            $this->upload($token, [
+                $this->entryPayload(self::newUuid(), self::CAR_B, $this->at(30)),
+                $this->entryPayload(self::newUuid(), self::CAR_B, $this->at(0) + [220000, 220400, 221200][$index]),
+            ]);
+        }
+        $timing = self::newUuid();
+        $noise = self::newUuid();
+        $this->upload($sensorToken, [
+            $this->unreadPayload($timing, $this->at(0) + 218300) + ['mode' => 'api'],
+            $this->unreadPayload($noise, $this->at(400)) + ['mode' => 'api'],
+        ]);
+        $timingId = (int) $this->fetchValue('SELECT passagem_id FROM contagem_passagem WHERE uuid_cliente = ?', [$timing]);
+        $sensorId = (int) $sensor->getFonteId();
+
+        $this->newRequest();
+        $window = \Baja\Contagem\Review\TimelineWindow::forWindow($this->service, $this->at(200), $this->at(420));
+        $marks = $this->entriesOfLane($window, $sensorId);
+        $this->assertCount(2, $marks);
+        [$first, $second] = $marks;
+        $this->assertTrue($first['marca_do_sensor']);
+        $this->assertSame(self::CAR_B, $first['carro']);
+        $this->assertFalse($first['fora_de_uso']);
+        $this->assertSame($this->at(0) + 218300, $first['grupo']['ts_ms']);
+        $this->assertTrue($first['grupo']['tempo_do_sensor']);
+        $this->assertSame($timingId, $first['grupo']['marca_sensor_id']);
+        $counterEntry = $this->entriesOfLane($window, (int) $this->fontes[0]->getFonteId())[0];
+        $this->assertSame($counterEntry['grupo'], $first['grupo'], 'the same pass group as the counters\' entries of that pass');
+        $this->assertFalse($second['marca_do_sensor']);
+        $this->assertTrue($second['fora_de_uso']);
+        $this->assertSame('marca_do_sensor', $second['motivo_fora_de_uso']);
+        $this->assertNull($second['carro']);
+
+        $this->newRequest();
+        $ofCarB = $this->entriesOfLane(\Baja\Contagem\Review\TimelineWindow::forCar($this->service, self::CAR_B), $sensorId);
+        $this->assertSame([$timingId], array_column($ofCarB, 'id'));
+        $this->assertTrue($ofCarB[0]['grupo']['tempo_do_sensor']);
+
+        $this->newRequest();
+        $narrow = $this->entriesOfLane(\Baja\Contagem\Review\TimelineWindow::forWindow($this->service, $this->at(218), $this->at(218) + 500), $sensorId);
+        $this->assertSame([$timingId], array_column($narrow, 'id'));
+        $this->assertSame(self::CAR_B, $narrow[0]['carro']);
+        $this->assertSame($timingId, $narrow[0]['grupo']['marca_sensor_id']);
+    }
+
+    /**
+     * SITUATION: the same race, exported from race control: the raw
+     * entries ("Passagens") and the laps ("Voltas").
+     *
+     * EXPECTED: each export has one more column, the last (the others keep
+     * their places): in Passagens, for the sensor's mark, the car whose pass
+     * it times (empty for the mark that times none, and for the counters'
+     * entries); in Voltas, whether the row's time is a sensor's mark: "sim"
+     * for car B's lap 1, "não" for its pass zero.
+     */
+    public function testTheExportsSayWhichPassesTheSensorTimes(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $sensorToken = $this->apiToken($sensor);
+        foreach ($this->fontes as $index => $fonte) {
+            $this->upload($this->issueToken($fonte, self::USER_PREFIX . 'contador' . $index), [
+                $this->entryPayload(self::newUuid(), self::CAR_B, $this->at(30)),
+                $this->entryPayload(self::newUuid(), self::CAR_B, $this->at(0) + [220000, 220400, 221200][$index]),
+            ]);
+        }
+        $timing = self::newUuid();
+        $this->upload($sensorToken, [
+            $this->unreadPayload($timing, $this->at(0) + 218300) + ['mode' => 'api'],
+            $this->unreadPayload(self::newUuid(), $this->at(400)) + ['mode' => 'api'],
+        ]);
+
+        $entries = $this->download(\Baja\Contagem\Review\CsvExport::PASSAGENS);
+        $this->assertSame(\Baja\Contagem\Review\CsvExport::COLUNA_MARCA_CRONOMETRA, end($entries[0]));
+        $byUuid = [];
+        $uuidColumn = array_search('uuid_cliente', $entries[0], true);
+        foreach (array_slice($entries, 1) as $line) {
+            $byUuid[$line[$uuidColumn]] = end($line);
+        }
+        $this->assertSame((string) self::CAR_B, $byUuid[$timing]);
+        $this->assertSame(['' => 7], array_count_values(array_diff_key($byUuid, [$timing => true])), 'the other mark and the six entries of the counters');
+
+        $laps = $this->download(\Baja\Contagem\Review\CsvExport::VOLTAS);
+        $this->assertSame(\Baja\Contagem\Review\CsvExport::COLUNA_TEMPO_DO_SENSOR, end($laps[0]));
+        $this->assertSame([['0', 'não'], ['1', 'sim']], array_map(fn(array $line) => [$line[1], end($line)], array_slice($laps, 1)));
+    }
+
+    /**
+     * SITUATION: in the first 30 seconds, counter 1 typed car A, counter 2
+     * pressed "??", and the timing sensor marked two crossings. The
+     * controller then moves the start to 0:30.
+     *
+     * EXPECTED: the question counts 2 entries of 1 car left before the
+     * start: car A's and the "??" (a crossing a counter saw, which the new
+     * start leaves out like any other), not the sensor's marks (a mark
+     * alone never counts, before the start or after).
+     */
+    public function testMovingTheStartCountsTheUnreadPassesButNotTheSensorsMarks(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $sensorToken = $this->apiToken($sensor);
+        $this->upload($this->issueToken($this->fontes[0]), [$this->entryPayload(self::newUuid(), self::CAR_A, $this->at(10))]);
+        $this->upload($this->issueToken($this->fontes[1]), [$this->unreadPayload(self::newUuid(), $this->at(11))]);
+        $this->upload($sensorToken, [
+            $this->unreadPayload(self::newUuid(), $this->at(9)) + ['mode' => 'api'],
+            $this->unreadPayload(self::newUuid(), $this->at(20)) + ['mode' => 'api'],
+        ]);
+
+        $this->newRequest();
+        $affected = \Baja\Contagem\Review\RaceEventRules::entriesLeftBeforeStart($this->prova, $this->at(0), $this->at(30));
+
+        $this->assertSame(['registros' => 2, 'carros' => 1], $affected);
+    }
+
+    /**
      * SITUATION: a prova with no timing sensor, with a counter's "??" and
      * without.
      *
@@ -556,6 +688,40 @@ final class UnreadUploadTest extends ReviewDbTestCase
     }
 
     // ----- helpers -----
+
+    /**
+     * Runs a CSV export and returns its lines as lists of cells.
+     *
+     * @return array<int, string[]>
+     */
+    private function download(string $type): array
+    {
+        $this->newRequest();
+        ob_start();
+        // The export sends download headers; under the test runner output
+        // has already started, and PHP would only warn about it.
+        @\Baja\Contagem\Review\CsvExport::stream($this->prova, $type);
+        $csv = (string) ob_get_clean();
+        $lines = [];
+        foreach (array_filter(explode("\n", substr($csv, 3))) as $line) {
+            $lines[] = str_getcsv($line, ';', '"', '');
+        }
+        return $lines;
+    }
+
+    /**
+     * @param array<string, mixed> $timeline
+     * @return array<int, array<string, mixed>> the entries of one source's lane, in time order
+     */
+    private function entriesOfLane(array $timeline, int $fonteId): array
+    {
+        foreach ($timeline['raias'] as $lane) {
+            if ($lane['fonte_id'] === $fonteId) {
+                return $lane['entradas'];
+            }
+        }
+        $this->fail('No lane for source ' . $fonteId);
+    }
 
     /** @return array<string, mixed> a "??" as the page sends it */
     private function unreadPayload(string $uuid, int $tsMs): array

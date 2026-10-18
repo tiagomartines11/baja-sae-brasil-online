@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\Data\Ocorrencia;
+use Baja\Contagem\Engine\Data\Source;
 use Baja\Model\Prova;
 use Propel\Runtime\Propel;
 
@@ -153,6 +154,11 @@ final class RaceEventRules
      * (the first start, or a start recorded again after the only one was
      * cancelled) that is every entry typed before the new start.
      *
+     * A counter's "??" is one of them: a crossing somebody saw, which the
+     * new start leaves out like any other (it counts in `registros`, and
+     * has no car for `carros`). A timing sensor's marks are not: a mark
+     * never counts by itself, so a start moved past it loses nothing.
+     *
      * Asked of the write connection and meant to be called while holding
      * the count lock: the numbers are then the ones the action will really
      * leave behind, not the ones of a page drawn a minute ago.
@@ -170,11 +176,11 @@ final class RaceEventRules
                FROM contagem_passagem p
                JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
               WHERE f.evento_id = ? AND f.prova_id = ? AND p.ts_ms >= ? AND p.ts_ms < ?
-                AND p.qualidade_tempo <> ?'
+                AND p.qualidade_tempo <> ? AND f.tipo <> ?'
         );
         // An entry of unknown time carries its phone's own guess: where it
         // falls says nothing, and it never counts by itself anyway.
-        $statement->execute([$prova->getEventoId(), $prova->getProvaId(), $currentStartMs ?? 0, $newStartMs, 'desconhecido']);
+        $statement->execute([$prova->getEventoId(), $prova->getProvaId(), $currentStartMs ?? 0, $newStartMs, 'desconhecido', Source::TIPO_SENSOR]);
         $row = $statement->fetch(\PDO::FETCH_ASSOC) ?: [];
         return ['registros' => (int) ($row['registros'] ?? 0), 'carros' => (int) ($row['carros'] ?? 0)];
     }

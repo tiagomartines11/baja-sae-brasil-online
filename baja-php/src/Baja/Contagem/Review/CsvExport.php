@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Review;
 
+use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\StopReport;
 use Baja\Model\Prova;
@@ -40,6 +41,16 @@ final class CsvExport
     ];
 
     public const OBSERVER_LABEL = 'Fonte observadora x contagem oficial';
+
+    /**
+     * Appended to the Passagens export: for a timing sensor's mark, the car
+     * whose pass it times (empty for a mark that times none, and for every
+     * other entry).
+     */
+    public const COLUNA_MARCA_CRONOMETRA = 'marca_cronometra_carro';
+
+    /** Appended to the Voltas export: the pass time of the row is a timing sensor's mark ("sim"/"não"). */
+    public const COLUNA_TEMPO_DO_SENSOR = 'tempo_do_sensor';
 
     /**
      * The exports to offer for this prova: the usual ones, plus the
@@ -104,15 +115,57 @@ final class CsvExport
         if (!isset(self::QUERIES[$type])) {
             throw new InvalidArgumentException('Tipo de exportação desconhecido.');
         }
+        $timing = in_array($type, [self::PASSAGENS, self::VOLTAS], true) ? self::sensorTiming($prova) : null;
         $statement = Propel::getConnection('resultados')->prepare(self::QUERIES[$type]);
         $statement->execute([':evento' => $prova->getEventoId(), ':prova' => $prova->getProvaId()]);
         // One row at a time: a race has tens of thousands of entries.
-        $oneByOne = (function () use ($statement): \Generator {
+        $oneByOne = (function () use ($statement, $type, $timing): \Generator {
             while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+                // The columns sensor timing adds come last, so that the
+                // ones before keep their places.
+                if ($type === self::PASSAGENS) {
+                    $row[self::COLUNA_MARCA_CRONOMETRA] = $timing['carro_da_marca'][(int) $row['passagem_id']] ?? null;
+                } elseif ($type === self::VOLTAS) {
+                    $key = $row['equipe_numero'] . ':' . $row['numero_volta'] . ':' . $row['ts_ms'];
+                    $row[self::COLUNA_TEMPO_DO_SENSOR] = isset($timing['voltas'][$key]);
+                }
                 yield $row;
             }
         })();
         self::send($prova, $type, $oneByOne);
+    }
+
+    /**
+     * Which passes a timing sensor's marks time, for the exports: the car
+     * each mark times, and the laps whose pass time is a mark (by car,
+     * number and time, as the rows of contagem_volta). Worked out by a run
+     * of the whole engine, only when the prova has a sensor; null otherwise,
+     * and nothing is run.
+     *
+     * @return array{carro_da_marca: array<int, int>, voltas: array<string, true>}|null
+     */
+    private static function sensorTiming(Prova $prova): ?array
+    {
+        $anySensor = false;
+        foreach (SourceAdmin::sources($prova) as $fonte) {
+            $anySensor = $anySensor || $fonte->getTipo() === Source::TIPO_SENSOR;
+        }
+        if (!$anySensor) {
+            return null;
+        }
+        $result = ContagemService::forProva($prova)->compute();
+        $timing = ['carro_da_marca' => [], 'voltas' => []];
+        foreach ($result->groups as $group) {
+            if ($group->marcaSensor !== null) {
+                $timing['carro_da_marca'][$group->marcaSensor->id] = $group->carro;
+            }
+        }
+        foreach ($result->laps as $lap) {
+            if ($lap->grupo !== null && $lap->grupo->tempoDoSensor) {
+                $timing['voltas'][$lap->carro . ':' . $lap->numeroVolta . ':' . $lap->tsMs] = true;
+            }
+        }
+        return $timing;
     }
 
     /**

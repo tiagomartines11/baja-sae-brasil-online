@@ -41,6 +41,28 @@ export function trueLapCounts(roteiro, { passagemInicial = INICIAL_PRIMEIRA_PASS
 }
 
 /**
+ * How many counters typed this crossing for the right car: an entry of
+ * that car within `toleranceMs` of it, or a "??" there that its counter
+ * later gave that car ("Informar número"). A "??" left without a number is
+ * no witness: which car it was is then the engine's reckoning, or a
+ * reviewer's, not the counter's. A correction is no entry of its own, and
+ * a timing sensor's plan has no counter in it.
+ *
+ * @param {Array<{acoes: Array<{tsMs: number, carro: ?number, corrige?: object}>}>} counterPlans
+ * @param {{carro: number, tsMs: number}} crossing
+ * @param {number} [toleranceMs]
+ * @returns {number}
+ */
+export function countersThatTypedIt(counterPlans, crossing, toleranceMs = 1500) {
+    return counterPlans.filter((plan) => {
+        const fixedTo = new Map(plan.acoes.filter((action) => action.corrige).map((fix) => [fix.corrige, fix.carro]));
+        return plan.acoes.some((action) => !action.corrige
+            && (action.carro ?? fixedTo.get(action) ?? null) === crossing.carro
+            && Math.abs(action.tsMs - crossing.tsMs) <= toleranceMs);
+    }).length;
+}
+
+/**
  * The injected mistakes of every simulated person, oldest first.
  *
  * @param {Array<{erros: Array<object>}>} plans the plans of the counters and of the stop loggers

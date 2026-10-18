@@ -63,8 +63,10 @@
 //          --revisor juiz1 (a seeded dev user, password 123456),
 //          --taxas '{"perdido": 10}' (error rates per thousand, see
 //          simulacao-contador.js; '{"ilegivel": 20}' makes the counters
-//          press "??" on 2 % of the crossings, which needs a count page
-//          that records "??"),
+//          press "??" on 2 % of the crossings, and '"ilegivel_corrigido":
+//          300' has them give the number to 30 % of those afterwards: such
+//          a "??" is then a counter that typed the crossing right, one left
+//          without a number is not),
 //          --sensor 1 (adds a timing sensor that marks every crossing to
 //          the millisecond, posting like an automatic system),
 //          --taxas-sensor '{"perdida": 20, "falsas_por_hora": 60}'
@@ -76,7 +78,7 @@ import { fileURLToPath } from 'node:url';
 import { generateRaceScript, raceDurationFor, AREA_BOX, AREA_ABASTECIMENTO } from '../default/js/contagem/simulacao-corrida.js';
 import { planCounter, planStopLog, planSensor, withStableIds } from '../default/js/contagem/simulacao-contador.js';
 import { playPlan, mayStartSimulation } from '../default/js/contagem/simulacao-execucao.js';
-import { trueLapCounts, injectedErrors } from '../default/js/contagem/simulacao-gabarito.js';
+import { trueLapCounts, injectedErrors, countersThatTypedIt } from '../default/js/contagem/simulacao-gabarito.js';
 import {
     pedidosDaSugestao, pedidoParaAlerta, pedidoParaEntrada, pedidoSemAlvo,
 } from '../default/js/contagem/revisao-decisoes.js';
@@ -242,12 +244,11 @@ console.log('Injected mistakes:', JSON.stringify(errorCounts));
 
 // ------------------------------------------------------------ what the plans say
 
-/** How many counters typed this crossing for the right car. */
-function witnessesOf(crossing) {
-    return counterPlans.filter((plan) => plan.acoes.some(
-        (action) => action.carro === crossing.carro && Math.abs(action.tsMs - crossing.tsMs) <= 1500,
-    )).length;
-}
+/**
+ * How many counters typed this crossing for the right car (a "??" counts
+ * once its counter gave it the number; the sensor is no counter).
+ */
+const witnessesOf = (crossing) => countersThatTypedIt(counterPlans, crossing);
 
 /**
  * THE KNOWN LIMIT of "a pass counts when two counters agree": two counters
@@ -458,6 +459,15 @@ for (const { car, missing, phantom } of afterSuggestions) {
         else problems.push(`car ${car} has a counted pass at ${raceClock(passMs, script.largadaMs)} that never happened`);
         console.log(`  car ${car}: counted pass at ${raceClock(passMs, script.largadaMs)} with no crossing; ${verdict}`);
     }
+}
+
+// With a timing sensor: how many counted passes its marks time (the laps
+// export says so per row). Nothing is checked: a mark that cannot be told
+// from the car next to it leaves the pass to the counters' time.
+if (sensorPlan) {
+    const counted = (await reviewer.exportRows('voltas')).filter((row) => row.estado === 'contada' || row.estado === 'inicial');
+    const timed = counted.filter((row) => row.tempo_do_sensor === 'sim').length;
+    console.log(`Timing sensor: ${timed} of ${counted.length} counted passes are timed by its marks.`);
 }
 
 // LAST: for every car that is right, the published time of its last pass.

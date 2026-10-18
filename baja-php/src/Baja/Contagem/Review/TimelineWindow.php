@@ -140,6 +140,11 @@ final class TimelineWindow
         foreach (array_merge($recount->input->entries, $recount->addedPasses()) as $raw) {
             $surviving = $recount->survivingEntry($raw->id);
             $effectiveCar = $surviving !== null ? $surviving->carro : $raw->carro;
+            // A timing sensor's mark is shown with the car whose pass it times.
+            $timedGroup = $recount->groupTimedBy($raw->id);
+            if ($timedGroup !== null) {
+                $effectiveCar = $timedGroup->carro;
+            }
             if (!$wantsEntry($raw, $effectiveCar)) {
                 continue;
             }
@@ -225,10 +230,16 @@ final class TimelineWindow
         }
 
         $group = $recount->groupOf($raw->id);
+        // A timing sensor's mark is no entry of the pass it times, but it is
+        // shown with it: its car, and its pass group.
+        $timedGroup = $group === null ? $recount->groupTimedBy($raw->id) : null;
+        if ($timedGroup !== null) {
+            $group = $timedGroup;
+        }
         $reasonNotInUse = $group === null ? $recount->reasonNotInUse($raw) : null;
         $autoVoided = $reasonNotInUse === CarsRecount::REPETIDA;
         $surviving = $recount->survivingEntry($raw->id);
-        $assignedByTheEngine = $surviving !== null && $surviving->atribuidoAutomaticamente;
+        $assignedByTheEngine = ($surviving !== null && $surviving->atribuidoAutomaticamente) || $timedGroup !== null;
 
         return [
             'id' => $raw->id,
@@ -254,6 +265,10 @@ final class TimelineWindow
             // says which car it was.
             'ilegivel' => $raw->carroDigitado === null,
             'atribuida_automaticamente' => $assignedByTheEngine,
+            // A timing sensor's mark that times the pass in `grupo` (its
+            // car is that pass's). A mark that times no pass is out of use
+            // instead (`motivo_fora_de_uso` 'marca_do_sensor').
+            'marca_do_sensor' => $timedGroup !== null,
             // In no group and nobody voided it: before the start, or its
             // source was off or excluded at that moment.
             'fora_de_uso' => in_array($reasonNotInUse, [
@@ -299,6 +314,10 @@ final class TimelineWindow
      * `volta_curta_confirmada`: the pass ends a lap too short to be real
      * that counts on a reviewer's confirmation. `tempo_escolhido_id`: the
      * entry a reviewer chose to time the pass ("usar_tempo"), or null.
+     * `marca_sensor_id`: the timing sensor's mark matched to the pass, or
+     * null; `tempo_do_sensor`: that mark is the pass time (`ts_ms`). Not
+     * when a precise source in the group, or a reviewer's "usar_tempo",
+     * times the pass: the mark is then only shown with it.
      *
      * @param array<int, true> $shortConfirmed
      * @return array<string, mixed>
@@ -343,6 +362,8 @@ final class TimelineWindow
             'soma_ao_confirmar' => $addsAPass,
             'volta_resultante_ms' => $addsAPass ? $recount->effect->shortestLapIfPassAt($group->carro, $group->tsMs, $group, true) : null,
             'tempo_escolhido_id' => $group->tempoEscolhidoId,
+            'marca_sensor_id' => $group->marcaSensor === null ? null : $group->marcaSensor->id,
+            'tempo_do_sensor' => $group->tempoDoSensor,
             'volta_curta_confirmada' => isset($shortConfirmed[$group->anchorEntryId()]) && $group->contado,
         ];
     }

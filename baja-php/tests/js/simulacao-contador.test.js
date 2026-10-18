@@ -26,7 +26,7 @@ import {
 import {
     playPlan, windowFitsLap, replayOverrunMs, mayStartSimulation,
 } from '../../default/js/contagem/simulacao-execucao.js';
-import { injectedErrors } from '../../default/js/contagem/simulacao-gabarito.js';
+import { injectedErrors, countersThatTypedIt } from '../../default/js/contagem/simulacao-gabarito.js';
 
 const START_MS = 1_760_000_000_000;
 const CARS = [3, 7, 12, 25, 41, 58, 64, 77, 80, 99];
@@ -277,6 +277,23 @@ test('with `ilegivel_corrigido`, the counter later gives some "??" their number'
     const ided = withStableIds(plan, { semente: 42, largadaMs: START_MS, voltaMediaMs: 240_000 }, 1);
     assert.ok(ided.acoes.filter((action) => action.corrige).every((fix) => typeof fix.corrige.uuid === 'string'),
         'the page is told which entry to correct');
+});
+
+test('a "??" its counter later gave the right number is a witness of the crossing; one left without a number, and the fix itself, are not', () => {
+    // Situation: three counters at one crossing of car 7 at 1:00. Counter
+    // A types 7; counter B presses "??" and ten seconds later says it was 7;
+    // counter C presses "??" and never says which car it was.
+    const crossing = { carro: 7, tsMs: START_MS + 60_000 };
+    const unreadOfB = { tsMs: crossing.tsMs + 300, carro: null };
+    const plans = [
+        { acoes: [{ tsMs: crossing.tsMs + 200, carro: 7 }] },
+        { acoes: [unreadOfB, { tsMs: crossing.tsMs + 10_300, carro: 7, corrige: unreadOfB }] },
+        { acoes: [{ tsMs: crossing.tsMs + 400, carro: null }] },
+    ];
+
+    assert.equal(countersThatTypedIt(plans, crossing), 2);
+    assert.equal(countersThatTypedIt(plans, { carro: 12, tsMs: crossing.tsMs }), 0, 'and of no other car');
+    assert.equal(countersThatTypedIt(plans, { carro: 7, tsMs: crossing.tsMs + 10_300 }), 0, 'the fix is no entry at its own moment');
 });
 
 test('a counter asked to press "??" records the crossing with no car, and the answer key says which car it was', () => {
