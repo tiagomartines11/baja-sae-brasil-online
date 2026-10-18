@@ -168,3 +168,46 @@ test('only a whole number is a correction', () => {
     assert.equal(mode.pressCar(null), null, 'the "??" tile while correcting gives no number');
     assert.equal(mode.active(), true, 'and does not end the mode');
 });
+
+test('the timers are called as plain functions, as a browser\'s window timers require', () => {
+    // A browser throws "Illegal invocation" when window.setTimeout is called
+    // as a method of another object; Node does not, so the check is made here.
+    const timers = fakeTimers();
+    const strict = (fn) => function strictTimer(...args) {
+        if (this !== undefined && this !== globalThis) {
+            throw new TypeError('Illegal invocation');
+        }
+        return fn(...args);
+    };
+    const ends = [];
+    const mode = new CorrectionMode({
+        onEnd: (ended) => ends.push(ended),
+        setTimeoutFn: strict(timers.setTimeoutFn),
+        clearTimeoutFn: strict(timers.clearTimeoutFn),
+    });
+    mode.start(UNREAD);
+    assert.equal(mode.active(), true);
+    assert.equal(timers.pending(), 1);
+    mode.touch();
+    assert.equal(timers.pending(), 1);
+    timers.fireAll();
+    assert.deepEqual(ends.map((ended) => ended.motivo), [FIM_CORRECAO.TEMPO_ESGOTADO]);
+});
+
+test('the real global timers work through the mode', () => {
+    const mode = new CorrectionMode({ timeoutMs: 60_000 });
+    mode.start(UNREAD);
+    assert.equal(mode.active(), true);
+    mode.cancel();
+    assert.equal(mode.active(), false);
+});
+
+test('a timer that cannot start leaves no correction open', () => {
+    const mode = new CorrectionMode({
+        setTimeoutFn: () => { throw new TypeError('Illegal invocation'); },
+        clearTimeoutFn: () => {},
+    });
+    assert.throws(() => mode.start(UNREAD), TypeError);
+    assert.equal(mode.active(), false);
+    assert.equal(mode.pressCar(12), null);
+});

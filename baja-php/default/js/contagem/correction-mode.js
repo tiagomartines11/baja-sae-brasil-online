@@ -49,8 +49,11 @@ export class CorrectionMode {
     } = {}) {
         this.onChange = onChange;
         this.onEnd = onEnd;
-        this.setTimeoutFn = setTimeoutFn;
-        this.clearTimeoutFn = clearTimeoutFn;
+        // Called as plain functions, never as methods of this object: a
+        // browser's window timers throw "Illegal invocation" when called
+        // with any other `this` (Node's do not, so tests alone miss it).
+        this.setTimeoutFn = (callback, delayMs) => setTimeoutFn(callback, delayMs);
+        this.clearTimeoutFn = (id) => clearTimeoutFn(id);
         this.timeoutMs = timeoutMs;
         this.current = null;
         this.timer = null;
@@ -73,8 +76,12 @@ export class CorrectionMode {
 
     /** @param {object} entry the "??" record (CountSession.recentEntries() row) */
     start(entry) {
+        // The timer first: if it could not start, no correction is left open
+        // unseen, taking the next car typed for a new pass.
+        this.stopTimer();
+        const timer = this.setTimeoutFn(() => this.end(FIM_CORRECAO.TEMPO_ESGOTADO), this.timeoutMs);
         this.current = { uuid: entry.uuid, entry };
-        this.touch();
+        this.timer = timer;
         this.onChange(this.current);
     }
 
