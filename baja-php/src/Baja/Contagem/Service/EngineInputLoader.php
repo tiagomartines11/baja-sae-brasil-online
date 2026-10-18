@@ -40,6 +40,9 @@ final class EngineInputLoader
     /** Whether the prova has any entry stored with no car; asked once. */
     private ?bool $hasUnread = null;
 
+    /** @var Entry[]|null the counters' and cameras' entries stored with no car; loaded once (see counterUnreadEntries()) */
+    private ?array $counterUnread = null;
+
     public function __construct(Prova $prova)
     {
         $this->prova = $prova;
@@ -86,7 +89,8 @@ final class EngineInputLoader
      * a counter's "??" (see UnreadAssigner): the cars that "??" near those
      * moments may be, or was, given, and the cars read right at the moments
      * themselves. Empty, after one cheap query, while the prova has no
-     * "??"; and when none is near the moments.
+     * "??"; and when none is near the moments. A timing sensor's marks are
+     * no "??" here: with a sensor and no "??" it is two cheap queries.
      *
      * @param int[] $momentsMs moments of the entries an upload stored, voided or fixed
      * @return int[]
@@ -96,8 +100,13 @@ final class EngineInputLoader
         if ($momentsMs === [] || !$this->hasUnreadEntries()) {
             return [];
         }
+        // A timing sensor's marks move no count by lying near (they only
+        // time passes), so with a sensor and no "??" this stops here.
+        $raw = $this->counterUnreadEntries();
+        if ($raw === []) {
+            return [];
+        }
         $input = $this->everythingButEntries($settings);
-        $raw = $this->loadUnreadEntries();
         $reachMs = UnreadAssigner::reachMs($settings);
         // Only the moments with a "??" within reach (decided or voided ones
         // included: what it counted for before may change too).
@@ -168,11 +177,11 @@ final class EngineInputLoader
         if (!$this->hasUnreadEntries()) {
             return;
         }
-        $raw = $this->loadUnreadEntries();
-        $items = $this->unreadItems($input, $raw);
+        $raw = $this->counterUnreadEntries();
+        $items = $raw === [] ? [] : $this->unreadItems($input, $raw);
         if ($items === []) {
             if ($window !== null) {
-                $input->entries = self::union($input->entries, array_filter($raw, fn(Entry $entry): bool => $entry->tsMs >= $window[0] && $entry->tsMs <= $window[1]));
+                $input->entries = self::union($input->entries, $this->loadUnreadEntriesBetween($window));
             }
             return;
         }
@@ -206,15 +215,42 @@ final class EngineInputLoader
         return $this->hasUnread;
     }
 
-    /** @return Entry[] every entry of the prova stored with no car */
-    private function loadUnreadEntries(): array
+    /**
+     * Every entry of the prova stored with no car except a timing sensor's
+     * marks: a sensor sends one per crossing, thousands in a long race, and
+     * none of them is a "??" whose car a recount must work out. Loaded once.
+     *
+     * @return Entry[]
+     */
+    private function counterUnreadEntries(): array
+    {
+        if ($this->counterUnread === null) {
+            $this->counterUnread = $this->entriesFrom(
+                'SELECT p.passagem_id, p.fonte_id, p.dispositivo_id, p.equipe_numero, p.ts_ms, p.qualidade_tempo
+                   FROM contagem_passagem p
+                   JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
+                  WHERE f.evento_id = ? AND f.prova_id = ? AND f.tipo <> ? AND p.equipe_numero IS NULL',
+                [$this->eventoId, $this->provaId, Source::TIPO_SENSOR]
+            );
+        }
+        return $this->counterUnread;
+    }
+
+    /**
+     * Every entry stored with no car (a sensor's marks included) between two
+     * moments, as a timeline shows them.
+     *
+     * @param array{0: int, 1: int} $window
+     * @return Entry[]
+     */
+    private function loadUnreadEntriesBetween(array $window): array
     {
         return $this->entriesFrom(
             'SELECT p.passagem_id, p.fonte_id, p.dispositivo_id, p.equipe_numero, p.ts_ms, p.qualidade_tempo
                FROM contagem_passagem p
                JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
-              WHERE f.evento_id = ? AND f.prova_id = ? AND p.equipe_numero IS NULL',
-            [$this->eventoId, $this->provaId]
+              WHERE f.evento_id = ? AND f.prova_id = ? AND p.equipe_numero IS NULL AND p.ts_ms BETWEEN ? AND ?',
+            [$this->eventoId, $this->provaId, $window[0], $window[1]]
         );
     }
 

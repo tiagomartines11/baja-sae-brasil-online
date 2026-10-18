@@ -186,6 +186,41 @@ final class UnreadUploadTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: the controller edits a sensor that has marked a pass, and
+     * picks "manual" as its type; then edits a counter that has typed a car
+     * and picks "sensor de tempo".
+     *
+     * EXPECTED: both refused, with the reason: the rows already recorded
+     * would change meaning (every mark a "??" to review; every number
+     * ignored). A sensor with nothing recorded yet may still change type.
+     */
+    public function testASourceWithRecordsCannotTurnIntoOrOutOfASensor(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $this->upload($this->apiToken($sensor), [$this->unreadPayload(self::newUuid(), $this->at(60)) + ['mode' => 'api']]);
+        $this->addEntry($this->fontes[0], self::CAR_A, $this->at(60));
+        $empty = $this->newSource('Sensor novo', Source::TIPO_SENSOR);
+        $form = fn(ContagemFonte $fonte, string $tipo): array => [
+            'fonte_id' => (string) $fonte->getFonteId(), 'nome' => (string) $fonte->getNome(), 'tipo' => $tipo,
+            'qualidade_tempo' => Source::TEMPO_PRECISA, 'ordem' => '4', 'ativa' => '1', 'papel' => Source::PAPEL_VOTANTE,
+        ];
+
+        foreach ([[$sensor, Source::TIPO_MANUAL], [$this->fontes[0], Source::TIPO_SENSOR]] as [$fonte, $tipo]) {
+            try {
+                $this->newRequest();
+                SourceAdmin::update($this->service, $form($fonte, $tipo));
+                $this->fail('a source with records cannot change to or from a sensor');
+            } catch (InvalidArgumentException $refused) {
+                $this->assertStringContainsString('já tem registros', $refused->getMessage());
+            }
+        }
+        $this->newRequest();
+        SourceAdmin::update($this->service, $form($empty, Source::TIPO_AUTOMATICA));
+        $this->assertSame(Source::TIPO_AUTOMATICA, $this->sourceNamed('Sensor novo')->getTipo());
+        $this->assertSame(Source::TIPO_SENSOR, $this->sourceNamed('Sensor')->getTipo());
+    }
+
+    /**
      * SITUATION: car A's pass zero is seen by counters 1 and 2 at 0:30. At
      * 3:40 counter 1 types A and counter 2 presses "??" (counter 3 missed
      * it): one reading only, so the engine does not apply car A by itself
@@ -221,6 +256,80 @@ final class UnreadUploadTest extends ReviewDbTestCase
         $this->upload($token, [], ['fixes' => [['uuid' => $uuid, 'car' => self::CAR_B]]]);
         $this->assertSame(2, $this->countRows('contagem_decisao', 'evento_id = ? AND tipo = ?', [self::EVENTO_ID, Decision::REATRIBUIR]));
         $this->assertSame(0, (int) $this->publishedData(self::CAR_A)['VOLTAS'], 'the newest fix counts');
+    }
+
+    /**
+     * SITUATION: as above, but counter 2 changes their mind twice: "era o
+     * 11", then "não, o 22", then "era o 11 mesmo".
+     *
+     * EXPECTED: each change is stored and the newest counts, so car A has
+     * its lap again at the end. Only resending the CURRENT car is the
+     * harmless repeat: a car the counter named before is not.
+     */
+    public function testACounterGoingBackToTheirFirstFixIsStored(): void
+    {
+        $token = $this->issueToken($this->fontes[1]);
+        $this->recordCountedPass(self::CAR_A, $this->at(30));
+        $this->recompute();
+        $this->addEntry($this->fontes[0], self::CAR_A, $this->at(220));
+        $uuid = self::newUuid();
+        $this->upload($token, [$this->unreadPayload($uuid, $this->at(220) + 500)]);
+
+        $this->upload($token, [], ['fixes' => [['uuid' => $uuid, 'car' => self::CAR_A]]]);
+        $this->upload($token, [], ['fixes' => [['uuid' => $uuid, 'car' => self::CAR_B]]]);
+        $this->assertSame(0, (int) ($this->publishedData(self::CAR_A)['VOLTAS'] ?? 0));
+        $answer = $this->upload($token, [], ['fixes' => [['uuid' => $uuid, 'car' => self::CAR_A]]]);
+
+        $this->assertSame([$uuid], $answer['body']['fixed_uuids']);
+        $this->assertSame([], $answer['body']['fixes_recusados']);
+        $this->assertSame(3, $this->countRows('contagem_decisao', 'evento_id = ? AND tipo = ?', [self::EVENTO_ID, Decision::REATRIBUIR]));
+        $this->assertSame(1, (int) $this->publishedData(self::CAR_A)['VOLTAS'], 'the newest fix counts');
+        $this->assertARebuildChangesNothing('after going back');
+    }
+
+    /**
+     * SITUATION: a rehearsal phone pointed at a real race (no simulation
+     * allowed) sends a simulated "??" and, in the same request, its fix.
+     *
+     * EXPECTED: the entry is refused, as any simulated entry there, and the
+     * fix is acknowledged and refused with it: its entry will never reach
+     * the server, so the phone must not keep sending it.
+     */
+    public function testAFixOfARefusedEntryIsRefusedWithIt(): void
+    {
+        $token = $this->issueToken($this->fontes[1]);
+        $uuid = self::newUuid();
+
+        $answer = $this->upload($token, [['mode' => 'simulacao'] + $this->unreadPayload($uuid, $this->at(60))], ['fixes' => [['uuid' => $uuid, 'car' => self::CAR_A]]]);
+
+        $this->assertSame([['uuid' => $uuid, 'motivo' => 'simulacao_nao_permitida']], $answer['body']['refused']);
+        $this->assertSame([$uuid], $answer['body']['fixed_uuids']);
+        $this->assertSame([$uuid], $answer['body']['fixes_recusados']);
+        $this->assertSame(0, $this->countDecisions());
+    }
+
+    /**
+     * SITUATION: a timing sensor marks every crossing, and nobody pressed
+     * "??". A counter's reading of car A lies a second from a mark, and car
+     * B was read by everyone two seconds from it.
+     *
+     * EXPECTED: the quick count of that upload recounts car A alone. A
+     * sensor's marks change no count by lying near (they only time passes),
+     * so nothing around them is loaded or recounted: with a sensor at the
+     * line, that would be every upload of the race.
+     */
+    public function testASensorsMarksAddNoCarsToAnUploadsRecount(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $this->upload($this->apiToken($sensor), [$this->unreadPayload(self::newUuid(), $this->at(219)) + ['mode' => 'api']]);
+        foreach ($this->fontes as $fonte) {
+            $this->addEntry($fonte, self::CAR_B, $this->at(221));
+        }
+        $this->addEntry($this->fontes[0], self::CAR_A, $this->at(220));
+
+        $this->newRequest();
+        $loader = new \Baja\Contagem\Service\EngineInputLoader($this->prova);
+        $this->assertSame([], $loader->carsNearUnread($this->service->getSettings(), [$this->at(220)]));
     }
 
     /**

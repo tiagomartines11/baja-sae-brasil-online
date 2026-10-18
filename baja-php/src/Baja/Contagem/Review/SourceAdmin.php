@@ -12,6 +12,7 @@ use Baja\Model\ContagemDispositivo;
 use Baja\Model\ContagemDispositivoQuery;
 use Baja\Model\ContagemFonte;
 use Baja\Model\ContagemFonteQuery;
+use Baja\Model\ContagemPassagemQuery;
 use Baja\Model\EquipeQuery;
 use Baja\Model\Prova;
 use InvalidArgumentException;
@@ -191,6 +192,7 @@ final class SourceAdmin
         $staysActive = ($post['ativa'] ?? '') === '1';
         $role = self::postedRole($fonte, $post, $previousRole);
         self::refuseBreakingThePrimarySource($service->getSettings(), $fonte, $staysActive, $previousType, $role);
+        self::refuseReinterpretingSensorMarks($fonte, $previousType);
 
         $nowMs = Clock::nowMs();
         $periods = Source::periodsFromJson($fonte->getPeriodosFora());
@@ -402,6 +404,27 @@ final class SourceAdmin
             throw new InvalidArgumentException(
                 'Esta é a fonte principal e o modo de publicação é "fonte principal": ela não pode virar observadora, '
                 . 'porque nada do que uma observadora registra conta. Troque a fonte principal ou o modo de publicação nas configurações primeiro.'
+            );
+        }
+    }
+
+    /**
+     * A timing sensor's marks and a counter's entries mean different things
+     * with the same rows: turned into a sensor, a counter's numbers would be
+     * ignored; turned into a counter, every mark of a sensor would become a
+     * "??" to review. Once the source has recorded anything, its type stays
+     * what it was on that side.
+     */
+    private static function refuseReinterpretingSensorMarks(ContagemFonte $fonte, string $previousType): void
+    {
+        $type = (string) $fonte->getTipo();
+        if ($type === $previousType || ($type !== Source::TIPO_SENSOR && $previousType !== Source::TIPO_SENSOR)) {
+            return;
+        }
+        if (ContagemPassagemQuery::create()->filterByFonteId($fonte->getFonteId())->exists()) {
+            throw new InvalidArgumentException(
+                sprintf('"%s" já tem registros: não é possível transformá-la em sensor de tempo, nem um sensor em outro tipo. ', $fonte->getNome())
+                . 'Crie uma fonte nova com o tipo certo.'
             );
         }
     }

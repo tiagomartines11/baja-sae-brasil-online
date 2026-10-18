@@ -281,14 +281,17 @@ final class EntryWriter
      * sending it) and listed in `refused` (the answer's `fixes_recusados`),
      * with nothing stored: an entry stored with a car, one that is voided,
      * one a reviewer reassigned (the reviewer's word stands), any entry of a
-     * timing sensor, and a car that is not a number. A fix for an entry
-     * that has not reached us is not acknowledged: the page sends entries
-     * before their fixes, so it will try again.
+     * timing sensor, and a car that is not a number. So is a fix whose
+     * entry travelled in the same request and was refused (`refused`): it
+     * will never be stored. A fix for an entry that has not reached us is
+     * not acknowledged: the page sends entries before their fixes, so it
+     * will try again.
      *
-     * Resending is harmless: nothing is added when this counter already
-     * fixed the entry to the same car, even if a reviewer undid that since
-     * (a stale resend must not bring it back). A fix to ANOTHER car is
-     * stored, and the newest one counts.
+     * Resending is harmless: nothing is added when this counter's NEWEST
+     * fix of the entry already names the same car, even if a reviewer undid
+     * it since (a stale resend must not bring it back). A fix to another
+     * car is stored, and the newest one counts: fixed to 17, then to 71,
+     * then back to 17, the entry is car 17 again.
      *
      * @param array<int, mixed> $fixes
      * @return array{uuids: string[], refused: string[], new: int, cars: int[], times: int[]}
@@ -326,10 +329,19 @@ final class EntryWriter
                  (evento_id, prova_id, tipo, passagem_id, equipe_numero, origem, usuario, criado_em_ms)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
+        $refusedEntries = [];
+        foreach ($this->refused as $refused) {
+            $refusedEntries[UploadFields::key($refused['uuid'])] = true;
+        }
         $cars = [];
         foreach ($fixByKey as $key => $fix) {
             $entry = $entries[$key] ?? null;
             if ($entry === null) {
+                if (isset($refusedEntries[$key])) {
+                    // Its entry travelled with it and will never be stored.
+                    $done['uuids'][] = $fix['uuid'];
+                    $done['refused'][] = $fix['uuid'];
+                }
                 continue;
             }
             $done['uuids'][] = $fix['uuid'];
@@ -346,7 +358,8 @@ final class EntryWriter
                 // The car it counted for until now.
                 $cars[$earlierCar] = true;
             }
-            if (in_array($car, $onEntry['pelo_contador'], true)) {
+            if ($car === ($onEntry['pelo_contador'] === [] ? null : $onEntry['pelo_contador'][count($onEntry['pelo_contador']) - 1])) {
+                // The counter's newest fix already says so.
                 continue;
             }
             $insert->execute([
@@ -368,7 +381,7 @@ final class EntryWriter
     /**
      * What has been decided about some entries: whether a void is in force,
      * whether a reviewer's reassignment is, and every car this counter ever
-     * fixed each one to.
+     * fixed each one to, oldest first.
      *
      * @param int[] $entryIds
      * @return array<int, array{anulada: bool, pelo_revisor: bool, pelo_contador: int[]}>

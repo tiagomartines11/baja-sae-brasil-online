@@ -1120,8 +1120,14 @@ the answer is clear and cannot change a count:
 - the best answer is clearly better than the next: without it the total
   offset grows by at least 2 s and by at least the "??"'s own offset (the
   next is twice as far), or there is no other answer at all; and
-- at least two other sources read that crossing, so the pass counts with
-  or without the "??".
+- at least two other sources read that crossing, and their readings agree
+  by themselves: grouped as PassMatcher groups them, without the "??" they
+  are one agreed pass (within `dispersao_alerta_ms`), and the "??" joins
+  that same pass, leaves it agreed and changes no other group. So the pass
+  counts with or without the "??". Two readings six seconds apart (a typo
+  for the car next to it, and the real car later) are a dispersed group
+  that waits for a person; a "??" between them would pair with one of them
+  and count a lap the car never drove, so it is flagged instead.
 
 Then the "??" is that counter's entry for the car (its vote, its timing,
 no miss), and the review screen's list of what the system resolved says so
@@ -1148,13 +1154,15 @@ confirming the car the engine chose makes it a person's word.
 `fixes: [{uuid, car}]` for one of its own "??", and the server stores a
 `reatribuir` with the counter as its origin, like a void from the phone.
 Only for an entry of that phone's own source that was stored with no car;
-see [Upload protocol](#upload-protocol) for what is refused.
+see [Upload protocol](#upload-protocol) for what is refused. The counter's
+newest fix counts: 17, then 71, then 17 again leaves it car 17.
 
 **Measured** (`UnreadPassSyntheticTest`, and the same races at full size:
 64 cars, four hours, 230 s laps, the usual mistakes, each counter pressing
 "??" on 2 % of the crossings it would have typed right): with **three
 counters**, 92 % of the "??" were applied by themselves, all of them to the
-car that really crossed (1425 of 1425 over eight races); the other 8 % were
+car that really crossed (1439 of 1439 over eight races, without the
+race-day trouble); the other 8 % were
 flagged, each with the right car among its candidates. With **two
 counters** every "??" is flagged (the other one reading is never enough),
 with the right car among the candidates 99.8 % of the times there was one. No car ever had
@@ -1172,7 +1180,10 @@ new sensor starts as an **observer**, like a camera: its marks are only
 compared with the official passes (the review block and the Fontes page:
 how many coincide with a pass, the passes with no mark, the marks with no
 pass, and the offset). Promoted to votante (the page asks, in a sensor's
-words), its marks start to time laps.
+words), its marks start to time laps. Once a source has recorded anything,
+its type cannot change to or from `sensor` (the page says why): its rows
+would change meaning, every number ignored or every mark a "??" to review.
+Create a new source instead.
 
 **A sensor never counts a pass.** Its marks are matched with the counters'
 pass groups after the matching, in the same way as a "??" (each group at
@@ -1280,7 +1291,9 @@ Rules that make this safe:
   be, or was, given (`EngineInputLoader::carsNearUnread`), and
   `IncrementalEqualsRebuildTest` checks that with "??" and fixes too. A
   timing sensor's marks need nothing of the sort: they change no count and
-  no pass time.
+  no pass time, so the loader never reads them for this (a sensor sends one
+  per crossing). With a sensor and no "??", an upload costs two cheap
+  queries more than before; with neither, one.
 - A lap count is never visible without its points: the write and the
   recalculation of points are one transaction, in the request that changed
   the count.
@@ -1560,7 +1573,7 @@ entries again changes nothing, and never changes a stored time.
 |---|---|
 | 200 | Stored. Forget the uuids listed in `stored_uuids` and `voided_uuids` |
 | 200 with `refused: [{uuid, motivo}]` | Those will never be stored (today: simulated records on a prova that does not allow simulation). Mark them "recusado pelo servidor" and move on; they stay on the device and in its export |
-| 200 with `fixed_uuids` and `fixes_recusados` | Forget the fixes listed in `fixed_uuids`. Those also in `fixes_recusados` were not stored and never will be: the entry was typed with a number, is voided, was reassigned by a reviewer (whose word stands), belongs to a timing sensor, or the car is no number. A fix whose entry has not reached the server is in neither list: send it again after the entry |
+| 200 with `fixed_uuids` and `fixes_recusados` | Forget the fixes listed in `fixed_uuids`. Those also in `fixes_recusados` were not stored and never will be: the entry was typed with a number, is voided, was reassigned by a reviewer (whose word stands), belongs to a timing sensor, the car is no number, or the entry travelled in the same request and was itself refused. A fix whose entry has not reached the server is in neither list: send it again after the entry. A fix of an entry the page marked "recusado pelo servidor" in an earlier answer will never be acknowledged: drop it |
 | 200 with `encerrado: true` | This request closed the device ("Encerrar meu turno"). The page trusts only this |
 | 401 `{"erro": "token_invalido"}` | The device was revoked (or never existed). Stop uploading, keep the data, offer the export, and ask for a new token now and then |
 | any other failure, including 503 `ocupado` | Not stored. Try again |
@@ -1579,8 +1592,9 @@ never counted. An external system may add `"imagem"` and `"confianca"` to
 each entry (see [Visão computacional](#visão-computacional)); from any
 other mode they are ignored. A fix (`fixes`) is a counter saying which car
 one of their own "??" was: stored as a `reatribuir` with the counter as its
-origin; sending the same fix again stores nothing, a fix to another car is
-stored and the newest counts. At most 500 entries (and 500 voids, 500 fixes, 500 stop events) of one
+origin; sending again the car of the counter's newest fix stores nothing,
+a fix to any other car (a car named in an older fix included) is stored and
+the newest counts. At most 500 entries (and 500 voids, 500 fixes, 500 stop events) of one
 request are looked at; the rest are not acknowledged and must be sent again.
 A time outside 0 … 2^53 ms is stored clamped, as of unknown time, with the
 value sent kept in `ts_dispositivo_ms`. A fueling event is refused
