@@ -705,7 +705,15 @@ matching windows (40 s) and `fracao_volta_minima` (half) of that car's own
 normal lap, once it has three laps. The normal lap is the second shortest of
 its last five (the shortest, with exactly three): a plain median was tried
 and let two long laps early in a race hold the car's next real laps one after
-the other. Only the car's own passes are used, so the quick per-car recount
+the other. Its laps are the times between the passes the counters agreed on
+(a held one included: holding a pass must not make the next lap look twice as
+long). A crossing only one counter typed splits that time too, but only where
+a lap can end: both parts at least three quarters of the car's normal lap.
+Without that, a car with two lone crossings and two long stops among its last
+five laps had a normal lap twice its real one, and its next ordinary lap,
+typed right by both counters, was held (race simulator, two counters). A stray
+in the middle of an ordinary lap splits nothing, so it cannot lower the bar
+that holds phantoms. Only the car's own passes are used, so the quick per-car recount
 of an upload gives exactly what a full run gives. The held pass stays
 pending, flagged `passagem_proxima_demais`, and the flag says which pass is
 held and why ("a 12 s da passagem anterior"). If the pass was real (the car's

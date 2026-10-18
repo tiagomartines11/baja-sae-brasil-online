@@ -18,6 +18,11 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * than the car's minimum plausible lap (Settings::minimumPlausibleLapMs: two
  * matching windows, or half the car's own normal lap).
  *
+ * The car's laps behind that normal lap are measured between the passes the
+ * counters agreed on, held ones included, and are also split at a crossing
+ * only one counter typed when it sits where a lap can end (lapsBetween), so
+ * that a lap one counter missed does not read as one twice as long.
+ *
  * A held group is not official. It stays visible as a pending row, with the
  * flag "passagem_proxima_demais", and counts the moment a reviewer confirms
  * it. What a reviewer said always counts: a confirmed group and an added
@@ -112,14 +117,20 @@ final class HoldRule
         // group is one of those too. If it were not, holding a pass would
         // make the lap after it look twice as long, the car's "normal lap"
         // would grow, and the next ordinary lap would be held as well.
+        // A crossing only one counter typed is split at too, but only where
+        // a lap can end (see lapsBetween).
         $recentLaps = [];
         $previousAgreedMs = null;
+        $loneSinceAgreed = [];
         // The pass that may turn out to be the car's first lap after an
         // exit nobody logged: [group, area, entry time of the stay].
         $afterMissedExit = null;
 
         foreach ($groups as $group) {
             if (!($reference ? $group->referencia : $group->contado)) {
+                if ($previousAgreedMs !== null && self::isLoneCrossing($group, $reference)) {
+                    $loneSinceAgreed[] = $group;
+                }
                 continue;
             }
             $passMs = $group->tsMs;
@@ -158,6 +169,7 @@ final class HoldRule
                             array_shift($recentLaps);
                         }
                         $afterMissedExit = null;
+                        $loneSinceAgreed = [];
                         $previousAgreedMs = $passMs;
                         $previousPassMs = $passMs;
                         continue;
@@ -187,8 +199,13 @@ final class HoldRule
                 continue;
             }
 
-            $recentLaps[] = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
-            if (isset($recentLaps[Settings::LAPS_FOR_MINIMUM_LAP])) {
+            if ($loneSinceAgreed === []) {
+                $recentLaps[] = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
+            } else {
+                array_push($recentLaps, ...self::lapsBetween($previousAgreedMs, $passMs, $loneSinceAgreed, $recentLaps, $timeline, $settings, $hasStays));
+                $loneSinceAgreed = [];
+            }
+            while (isset($recentLaps[Settings::LAPS_FOR_MINIMUM_LAP])) {
                 array_shift($recentLaps);
             }
             $previousAgreedMs = $passMs;
@@ -199,6 +216,72 @@ final class HoldRule
             }
             $previousPassMs = $passMs;
         }
+    }
+
+    /**
+     * A lone crossing splits a gap between agreed passes only when both
+     * parts are at least this many of the car's normal laps (or its
+     * minimum plausible lap, when `fracao_volta_minima` is set higher).
+     */
+    private const SHORTEST_PART_OF_A_SPLIT_LAP = 0.75;
+
+    /**
+     * A crossing that only one counter typed, nobody vouched for, and that
+     * the race rules do not leave out: either a pass the other counter
+     * missed, or a stray.
+     */
+    private static function isLoneCrossing(PassGroup $group, bool $reference): bool
+    {
+        return $group->isUnconfirmedSingleSource()
+            && !$group->antesDaLargada
+            && !$group->dentroDaJanelaDeLargada
+            && !$group->dispersa
+            && !($reference ? $group->retidaNaReferencia : $group->retida);
+    }
+
+    /**
+     * The laps the time between two agreed passes is made of, for the
+     * car's normal lap (Settings::normalLapMs).
+     *
+     * WHY. A crossing only one counter typed is not counted, so without
+     * this the lap around it looks twice as long. Two of those and two
+     * long stops among a car's last five laps made its normal lap twice
+     * the real one, and its next ordinary lap was held (race simulator,
+     * two counters). So a lone crossing splits the gap, as a held pass
+     * does, but only where a lap can end: both parts at least three
+     * quarters of the car's normal lap. A stray in the middle of an
+     * ordinary lap splits nothing, so it cannot lower the bar that holds
+     * phantoms; and the split parts are never shorter than a lap the hold
+     * rule itself would let through. A lone crossing while the car is
+     * logged inside an area, and any while the car has no normal lap yet,
+     * split nothing either.
+     *
+     * @param PassGroup[] $lone lone crossings between the two passes, in pass-time order
+     * @param int[] $recentLaps the car's laps so far
+     * @return int[] the laps, oldest first: one when nothing splits the gap
+     */
+    private static function lapsBetween(int $fromMs, int $toMs, array $lone, array $recentLaps, RaceTimeline $timeline, Settings $settings, bool $hasStays): array
+    {
+        $raceWasStopped = $timeline->redFlagIntervals !== [];
+        $racingMs = fn(int $a, int $b): int => $raceWasStopped ? $timeline->racingMsBetween($a, $b) : $b - $a;
+        $laps = [];
+        $normalLapMs = Settings::normalLapMs($recentLaps);
+        if ($normalLapMs !== null) {
+            $shortestPartMs = max(self::SHORTEST_PART_OF_A_SPLIT_LAP, $settings->fracaoVoltaMinima) * $normalLapMs;
+            foreach ($lone as $group) {
+                if ($group->tsMs <= $fromMs || $group->tsMs >= $toMs
+                    || ($hasStays && self::stayTheCarIsLoggedIn($group, $timeline) !== null)) {
+                    continue;
+                }
+                $beforeMs = $racingMs($fromMs, $group->tsMs);
+                if ($beforeMs >= $shortestPartMs && $racingMs($group->tsMs, $toMs) >= $shortestPartMs) {
+                    $laps[] = $beforeMs;
+                    $fromMs = $group->tsMs;
+                }
+            }
+        }
+        $laps[] = $racingMs($fromMs, $toMs);
+        return $laps;
     }
 
     /**

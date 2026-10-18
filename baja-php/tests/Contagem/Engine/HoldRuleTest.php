@@ -317,6 +317,101 @@ final class HoldRuleTest extends EngineTestCase
     }
 
     /**
+     * Two counters. Car 9 laps every four minutes. Twice only one counter
+     * types it (20:20 and 28:20: a lap short each time, a lone entry
+     * flagged for review), and then it stops on track twice for sixteen
+     * minutes (52:20 and 72:20).
+     */
+    private function carNineWithTwoLoneMissesAndTwoLongStops(): RaceScenario
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        foreach (['04:20', '08:20', '12:20', '16:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->entry(1, 9, '20:20');
+        $race->pass(9, '24:20');
+        $race->entry(2, 9, '28:20');
+        $race->pass(9, '32:20');
+        $race->pass(9, '52:20');
+        $race->pass(9, '72:20');
+        return $race;
+    }
+
+    /**
+     * SITUATION: the car above then runs an ordinary lap, 3:50 (a little
+     * quicker than its usual four minutes), and both counters type it.
+     *
+     * WHAT WENT WRONG (found by the race simulator, two counters): the lone
+     * crossings were not passes the hold rule measures laps between, so
+     * each one made the car's lap look eight minutes long. Its last five
+     * laps read 4:00, 8:00, 8:00, 20:00, 20:00, its normal lap (the second
+     * shortest) became 8:00, the minimum plausible lap 4:00, and the real
+     * lap of 3:50 that both counters typed was held as "próxima demais".
+     *
+     * EXPECTED: a lone crossing that sits where a lap of the car is
+     * believable (at least three quarters of its normal lap after the
+     * previous pass and before the next one) splits the gap in two laps
+     * for the normal-lap estimate, the way a held pass does. The normal lap
+     * stays at 4:00, the bar at 2:00, and the pass at 76:10 counts: 9 laps
+     * (the two lone crossings still wait for a reviewer). The quick per-car
+     * recount agrees.
+     */
+    public function testALoneCrossingDoesNotMakeTheCarsNormalLapLookTwiceAsLong(): void
+    {
+        $race = $this->carNineWithTwoLoneMissesAndTwoLongStops();
+        $real = $race->pass(9, '76:10');
+
+        $result = $race->run('77:00');
+
+        $group = $result->groupOfEntry($real[1]);
+        $this->assertTrue($group->contado, 'The real lap both counters typed counts.');
+        $this->assertNull($group->motivoRetencao);
+        $this->assertLapCounts([9 => 9], $result);
+        $this->assertSame([], $this->openFlags($result, Flag::PASSAGEM_PROXIMA_DEMAIS));
+        $this->assertSame(9, $race->countCars('77:00', [9])->lapCount(9), 'The fast path agrees.');
+    }
+
+    /**
+     * SITUATION: the bar must not drop where it protects. Car 9 laps every
+     * four minutes, with two counters. In two of its last laps a counter
+     * types it alone in the MIDDLE of the lap (22:20 and 26:20: strays,
+     * two minutes after a pass), and then it stops on track for six
+     * minutes (28:20 to 38:20), with another stray halfway (33:20). At
+     * 40:10, 1:50 after its pass at 38:20, both counters type car 9 by
+     * mistake (a shared wrong number: a phantom).
+     *
+     * EXPECTED: a stray two minutes into a four-minute lap is not where a
+     * lap can end, so it splits nothing (had it split, the car's laps would
+     * read 2:00 and its bar 1:00, and the phantom would count). The stray
+     * in the long lap may split it, but only into parts no shorter than
+     * three quarters of a normal lap, which leaves the bar where it was:
+     * the normal lap is still 4:00, the bar 2:00, and the phantom is held.
+     * Eight laps, not nine; the quick recount agrees.
+     */
+    public function testALoneStrayInTheMiddleOfALapDoesNotLowerTheBar(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        foreach (['04:20', '08:20', '12:20', '16:20', '20:20', '24:20', '28:20', '38:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $race->entry(1, 9, '22:20');
+        $race->entry(2, 9, '26:20');
+        $race->entry(1, 9, '33:20');
+        $phantom = $race->pass(9, '40:10');
+
+        $result = $race->run('41:00');
+
+        $held = $result->groupOfEntry($phantom[1]);
+        $this->assertSame(PassGroup::RETIDA_PROXIMA_DEMAIS, $held->motivoRetencao);
+        $this->assertSame(120000, $held->voltaMinimaMs);
+        $this->assertLapCounts([9 => 8], $result);
+        $this->assertSame(8, $race->countCars('41:00', [9])->lapCount(9));
+    }
+    /**
      * SITUATION: car 9 passed at 03:00 and is logged into the pit lane at
      * 05:00. At 06:00 two counters record it at the line (a wrong number:
      * the car is standing in its pit). It is logged out at 06:10 and
