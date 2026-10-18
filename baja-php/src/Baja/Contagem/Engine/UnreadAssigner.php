@@ -64,12 +64,13 @@ use Baja\Contagem\Engine\Data\Source;
  * (PassGroup::$marcaSensor): a precise sensor's mark times the laps that
  * pass ends and begins (PassTimeFuser::removeHabits()). It changes no
  * count and not the pass time itself, so the per-car recount of an upload,
- * which never looks at marks, still gives what the whole race gives. Two things differ from a "??": the counters
- * press Enter a little after the car crosses and the sensor does not, so in
- * a cluster with two pairs or more the crossings are first moved by the
- * median of that lag; and the tolerance is narrower (sensorToleranceMs()),
- * as is the margin (MARGEM_MINIMA_SENSOR_MS): a wrong pairing there times a
- * pass by the car next to it, a second away, and changes no count.
+ * which never looks at marks, still gives what the whole race gives. Two
+ * things differ from a "??": the counters press Enter a little after the
+ * car crosses and the sensor does not, so in a cluster with two pairs or
+ * more the crossings are first moved by the median of that lag; and the
+ * tolerance is narrower (sensorToleranceMs()), as is the margin
+ * (MARGEM_MINIMA_SENSOR_MS): a wrong pairing there times a pass by the car
+ * next to it, a second away, and changes no count.
  *
  * Nothing here is stored: it is worked out again on every run, like the
  * repeats DuplicateFilter voids. A decision on the entry (a reviewer's or

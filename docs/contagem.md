@@ -582,6 +582,7 @@ What a chip tells (the legend under the timeline says the same):
 | amber, thick border | a lap too short to be real that counts because a reviewer vouched for it (`volta_curta_confirmada`); its box offers the undo first, which asks: **Desfazer a confirmação (−1 volta)**, **Desfazer o "usar o tempo"** when the reviewer chose its time, or **Remover a passagem adicionada** when a pass a reviewer added joined it |
 | dark dotted border | one counter alone, not counting yet |
 | teal, italic | an observer source's entry (compared, never counted); a click shows its picture |
+| "??" | a pass recorded without a number; with a car beside it when the engine gave it one by itself (`atribuida_automaticamente`) |
 
 A counted chip's tooltip gives the lap number and the lap time, as the car
 table times it: "volta 22 · 1:15" (`grupo.volta_ms`).
@@ -607,6 +608,8 @@ table times it: "volta 22 · 1:15" (`grupo.volta_ms`).
 | `saida_presumida` | Informational: the log had the car inside, the counters agreed on two passes a lap apart, and the count assumed the exit and counted both. Nothing is held |
 | `volta_curta` | Two official passes of a car closer together than a lap can be, in the cases the hold rule does not cover (a reviewer confirmed one, or the mode is `todas`). The flag names both passes. A lap that is impossibly short and counts on a reviewer's confirmation is not reopened, but it is marked (`volta_curta_confirmada`, below) |
 | `divergencia_total` | Imported paper totals differ from the official count, or do not list a car that has laps |
+| `numero_ilegivel` | A pass recorded without a number ("??", or a timing sensor's mark nobody else recorded) whose car the engine could not settle by itself. It lists the candidates (`candidatos`: car, why, score, the crossing's time), most likely first. See [Passagens sem número](#passagens-sem-número--e-sensor-de-tempo) |
+| `numero_atribuido` | Resolved by the system, for the record: a "??" the engine gave a car by itself, with what it matched (`atribuicao`) |
 
 **A short lap a reviewer confirmed** stays visible: the review screen
 marks it on the car's row and on the timeline ("volta curta confirmada"),
@@ -643,6 +646,7 @@ From `default/js/contagem/revisao-alertas.js`, which is what the screen runs.
 | `saida_presumida` | none | none: hiding the flag would leave the log wrong | **Confirmar saída** (asks nothing: it changes no count); **Descartar esta passagem** (asks) |
 | `volta_curta` | none | Está correto, parar de avisar | **Descartar a primeira passagem** / **a segunda passagem** (asks) |
 | `divergencia_total` | none | none | |
+| `numero_ilegivel` | **Trocar para o carro N** (`reatribuir`), N being the closest car another counter read; none for a sensor's mark or when no counter read a car near | Está correto, parar de avisar (changes no count) | pick another car (`reatribuir`; on a sensor's mark this makes the pass count, on the reviewer's word); void the entry |
 
 "Marcar saída" records an exit for that car one second before the pass,
 attributed to the reviewer and shown on the lane as inferred. It closes the
@@ -963,6 +967,12 @@ Two scripts run without a browser (see the top of each file):
   since publishing is what it checks. With `--de 1 --ate 24` it runs one
   race per seed and prints how many passed, failed, and passed only through
   that tolerance.
+- `--taxas '{"ilegivel": 20}'` makes the counters press "??" on 2 % of the
+  crossings (it needs a count page that records "??"), and `--sensor 1`
+  adds a timing sensor that marks every crossing to the millisecond and
+  posts like an automatic system (`--taxas-sensor '{"perdida": 20,
+  "falsas_por_hora": 60}'`: misses per thousand, false marks per hour).
+  The set-up helper makes the sensor source, taking part, the first time.
 - `node baja-php/scripts/contagem-invariante.mjs --ate 300`: the invariant
   of [the hold rule](#the-hold-rule) over many simulated races, engine only,
   no database.
@@ -976,6 +986,10 @@ Two scripts run without a browser (see the top of each file):
   (see [Visão computacional](#visão-computacional)). If its timing is
   trustworthy set its timing grade to `precisa`; once it counts, its times
   replace the human ones (the page asks first).
+- **A timing sensor**: type `sensor`, with an API token like an automatic
+  system. It marks the moment of every crossing and never the car; it
+  never counts a pass, and its marks time the laps. See
+  [Passagens sem número (??) e sensor de tempo](#passagens-sem-número--e-sensor-de-tempo).
 - **Paper totals**: create a source of type `totais` and paste
   `carro, voltas` lines. Totals never change the official count; they are
   compared with it and differences are flagged.
@@ -1006,9 +1020,13 @@ official passes:
 | leitura trocada | no pass of its car, but another car's official pass within 2 s that it has no entry for: it read that number wrong (car X read as Y) |
 | falso positivo | neither: it saw a car that did not pass |
 | falta | an official pass, while it was observing and had synced past it, with no entry |
+| ilegível | a "??" (it saw a car and could not read it); `ilegiveis_com_passagem` counts those within 2 s of an official pass it has nothing else for, which is then no `falta`: that is how often it fails to read, as opposed to how often it is blind |
 
 plus the median offset from the pass time and the 90th percentile of its
-size. The reference is the official passes only. After the finish cars
+size. A timing sensor on trial reads no car: each mark is paired with the
+nearest official pass of any car within `dispersao_alerta_ms`, a paired one
+is a hit (its offset measured), an unpaired one a false positive, and a pass
+with no mark a miss. The reference is the official passes only. After the finish cars
 still cross the line on their way to the pits, so an entry from after the
 finish that pairs with no official pass is left out instead of being a
 false positive. Before the finish a real crossing the rules did not count
@@ -1070,6 +1088,127 @@ the track on the local network, and plan for:
   then says "imagem só na rede local", and the "abrir em outra aba" link
   remains as the fallback (an http link opened on its own is allowed).
 
+## Passagens sem número (??) e sensor de tempo
+
+A car goes by and the counter cannot read its number: mud on the plate, a
+bunch of three, the sun. Before, the counter typed nothing and was charged
+a miss. Now there is a third answer, **"??"**: "a car crossed here, I could
+not read which". A camera that cannot read a plate says the same, and a
+**timing sensor** at the line (a beam, a loop) says nothing else: it marks
+the moment of every crossing, precisely, and never the car.
+
+**What is recorded.** An entry with no car (`contagem_passagem.equipe_numero`
+NULL), at the moment of the press, like any other. Nothing is lost: the
+timeline shows it, the history and the CSV keep it, and its counter is no
+longer charged a miss for that crossing once it has a car. The source's
+statistics count them (`ilegiveis`, and `ilegiveis_atribuidas` for those the
+engine applied by itself).
+
+**Which car it was** is worked out on every count, not stored
+(`UnreadAssigner`, step 1b of [the engine](#the-engine)). For each source
+on its own, its "??" are put against the crossings the OTHER sources read
+around them: per car, their entries no more than a matching window apart,
+timed by their median, within `dispersao_alerta_ms` (4 s) of the "??". A
+crossing in which the same source typed a number is no candidate: a counter
+cannot have typed car 7 and pressed "??" for the same crossing of car 7.
+Several "??" of one source close together (a bunch) are solved together,
+one crossing each, the pairing with the smallest total time offset first.
+
+**What is applied by itself.** A "??" gets its car with nobody asked when
+the answer is clear and cannot change a count:
+
+- the best answer is clearly better than the next: without it the total
+  offset grows by at least 2 s and by at least the "??"'s own offset (the
+  next is twice as far), or there is no other answer at all; and
+- at least two other sources read that crossing, so the pass counts with
+  or without the "??".
+
+Then the "??" is that counter's entry for the car (its vote, its timing,
+no miss), and the review screen's list of what the system resolved says so
+(`numero_atribuido`, with the crossing's entries and sources and the
+offset). With a single reading the "??" would be the vote that makes the
+pass count, and that reading may be a wrong number: one counter types 29
+when 22 crosses, another misses it, the third presses "??". Applied, that
+gave car 29 a lap it never drove, in one generated race in sixteen. So a
+"??" never decides a count on its own; a person does.
+
+**What is flagged.** Every other "??" (once the other counters have synced
+past it) raises `numero_ilegivel`, with the cars it may have been, most
+likely first: `outros_contadores` (another source read it nearby; the
+suggestion is the closest of these), `carro_esperado` (the car was due at
+the line then, by its last pass and its expected lap, and has not passed
+since) and `volta_faltando` (the car's passes before and after are about
+two laps apart, and the "??" about a lap from each). The reviewer picks the
+car ("trocar de carro", a `reatribuir`) or voids the entry; "confirmar"
+only stops the warning. A decision on the entry, by a reviewer or by its
+own counter on the phone, always wins over the engine's reckoning, and
+confirming the car the engine chose makes it a person's word.
+
+**The counter fixes it on the phone.** "Ah, it was 17": the page sends
+`fixes: [{uuid, car}]` for one of its own "??", and the server stores a
+`reatribuir` with the counter as its origin, like a void from the phone.
+Only for an entry of that phone's own source that was stored with no car;
+see [Upload protocol](#upload-protocol) for what is refused.
+
+**Measured** (`UnreadPassSyntheticTest`, and the same races at full size:
+64 cars, four hours, 230 s laps, the usual mistakes, each counter pressing
+"??" on 2 % of the crossings it would have typed right): with **three
+counters**, 92 % of the "??" were applied by themselves, all of them to the
+car that really crossed (1425 of 1425 over eight races); the other 8 % were
+flagged, each with the right car among its candidates. With **two
+counters** every "??" is flagged (the other one reading is never enough),
+with the right car among the candidates 99.8 % of the times there was one. No car ever had
+more laps than it drove before a reviewer acted. A race with no "??"
+counts exactly as before, and costs nothing more.
+
+### The timing sensor
+
+A source of type **`sensor`** ("Sensor de tempo: marca só o horário da
+passagem, nunca o número"), created on the Fontes page. Its system posts
+like an automatic one, with an API token ("criar token"); every entry it
+sends is stored with no car (a car it sends anyway is ignored, not refused,
+because the moment is still good), and its timing is always `precisa`. A
+new sensor starts as an **observer**, like a camera: its marks are only
+compared with the official passes (the review block and the Fontes page:
+how many coincide with a pass, the passes with no mark, the marks with no
+pass, and the offset). Promoted to votante (the page asks, in a sensor's
+words), its marks start to time laps.
+
+**A sensor never counts a pass.** Its marks are matched with the counters'
+pass groups after the matching, in the same way as a "??" (each group at
+its counters' earliest entry, since they press Enter as the car is on the
+line or after; within 2.5 s; and, in a cluster of marks, with the counters'
+common lag taken out, so two cars side by side are told apart by their
+order). A matched mark is the pass's timing-only witness
+(`PassGroup::$marcaSensor`): it is no vote, nobody waits for it, and a
+pass without one is no miss of anybody but the sensor. Its time becomes
+the time the laps on either side of that pass are measured from (and so
+the best lap), and the counters' habits are measured against it. **The pass
+time itself (and `LAST`) stays the counters'**: the per-car recount of an
+upload must give exactly what the whole race gives, and matching marks
+needs every car around them, which that recount does not load.
+
+Its statistics (review block and Fontes page): marks, how many time a pass,
+how many were near passes but not safely paired (no flag: nothing is lost
+but a precise time), how many had no pass anywhere near (noise), the passes
+it did not mark while it was synced, and its offset from the counters.
+
+A mark with no pass the counters recorded is usually noise. It raises
+`numero_ilegivel` only when some car was due right then (read strictly:
+nobody recorded that car within a matching window, and either it is less
+than a lap overdue or its passes around are exactly one lap apart on both
+sides), before the finish: then it is probably a crossing every counter
+missed. It never counts until a reviewer says which car it was; then it is
+that car's pass on the reviewer's word, timed by the sensor.
+
+**Measured** (same races, the sensor missing 2 % of the crossings and
+marking one crossing that did not happen every minute): 70 % of the passes
+got the sensor's time, and 99.6 % of those got the right mark (three
+counters; 99.8 % with two). The wrong ones are cars a second apart in a
+train, timed by the car next to them. About 2 marks a race were flagged
+with three counters, 6 with two, all of them false triggers; none was a
+crossing nobody saw, because the simulated counters never all miss one.
+
 ---
 
 # Part 2 — How it works
@@ -1084,7 +1223,7 @@ integer milliseconds since the Unix epoch, UTC.
 | `contagem_fonte` | Sources | Fontes page |
 | `contagem_fonte_usuario` | Which user may count on which source | Usuários page. The pit log has no rows here: its code is in `user.permissions` |
 | `contagem_dispositivo` | Devices and their token hashes, last contact, "synced through", closed | Device registration, sync |
-| `contagem_passagem` | Raw entries. **Append-only** | Sync |
+| `contagem_passagem` | Raw entries. **Append-only**. `equipe_numero` is NULL for a pass recorded without a number ("??", a timing sensor's mark) | Sync |
 | `contagem_ocorrencia` | Race control events and stops (pit lane, fueling station). Append-only | Controle page, pit log |
 | `contagem_decisao` | Corrections. Append-only | Review screen, counters' "desfazer" |
 | `contagem_volta` | Derived passes and laps. Disposable | Engine |
@@ -1134,7 +1273,14 @@ Rules that make this safe:
   decisions, and which sources are switched on or excluded.** Not on other
   cars, not on which phones have synced, not on the pace. That is why
   recounting one car gives exactly what a full recount would
-  (`CountCarsTest` checks it for many generated races).
+  (`CountCarsTest` checks it for many generated races). The one exception
+  is a "??": which car it was comes from what the other sources read
+  around it. So where a "??" lies near the cars of an upload, the quick
+  recount also loads the entries around it and recounts the cars it may
+  be, or was, given (`EngineInputLoader::carsNearUnread`), and
+  `IncrementalEqualsRebuildTest` checks that with "??" and fixes too. A
+  timing sensor's marks need nothing of the sort: they change no count and
+  no pass time.
 - A lap count is never visible without its points: the write and the
   recalculation of points are one transaction, in the request that changed
   the count.
@@ -1201,7 +1347,8 @@ at 300 ms.
   file's "Columns added later" block, safe to run twice:
   `contagem_decisao.passagem_alvo_id` (the "usar_tempo" decision),
   `contagem_fonte.papel`, `papel_desde_ms`, `periodos_fora`,
-  `imagem_base_url` and `contagem_passagem.imagem_ref`, `confianca`.
+  `imagem_base_url` and `contagem_passagem.imagem_ref`, `confianca`; and
+  `contagem_passagem.equipe_numero` becomes nullable (a "??" has no car).
   Every recount reads them, so run the file again before deploying the code
   that uses them.
 - **Cloudflare.** `s-maxage` does nothing by itself: Cloudflare does not
@@ -1222,13 +1369,14 @@ entry points: `Engine::countCars()` (the official passes of a few cars) and
 
 | Step | Class | What it does |
 |---|---|---|
-| 1 | `DecisionApplier` | Drops voided entries, moves reassigned ones, drops entries of excluded sources, adds reviewer passes, cancels undone decisions, notes the times a reviewer chose (`usar_tempo`) |
+| 1 | `DecisionApplier` | Drops voided entries, moves reassigned ones, drops entries of excluded sources, adds reviewer passes, cancels undone decisions, notes the times a reviewer chose (`usar_tempo`); sets aside the "??" nobody gave a car and the sensor's marks |
+| 1b | `UnreadAssigner` | Gives a "??" the car the other sources read around it, where that is clear and decides no count (see [Passagens sem número](#passagens-sem-número--e-sensor-de-tempo)) |
 | 2 | `DuplicateFilter` | Voids double taps and handover duplicates; flags other repeats |
 | 3 | `PassMatcher`, `PassTimeFuser` | Groups entries per car by time (never by typing order); the pass time of each group |
 | 4 | `PublishRule`, `PassRoles`, `LapBuilder` | Which groups are official passes; leaves out the start crossing and late finishers; numbers pass zero and the laps |
 | — | *(up to here is `LapCounter`: all the fast path needs)* | |
-| 5 | `PassTimeFuser::removeHabits`, `PaceModel` | Lap durations with each counter's habit removed; expected lap per car; the field pace now and once a minute since the start (`ritmo`, `ritmoHistorico`) |
-| 6 | `FlagDetector`, `SwapFinder`, `LateFirstPass` | The flags and their suggestions |
+| 5 | `UnreadAssigner::matchMarks`, `PassTimeFuser::removeHabits`, `PaceModel` | A timing sensor's marks matched with the passes they time; lap durations with each counter's habit removed; expected lap per car; the field pace now and once a minute since the start (`ritmo`, `ritmoHistorico`) |
+| 6 | `FlagDetector`, `SwapFinder`, `LateFirstPass`, `UnreadFlags` | The flags and their suggestions |
 | 7 | `CarStatus`, `SourceStatsBuilder` | Status of each car now; statistics per source |
 
 Supporting classes: `RaceTimeline` (start, red flags, finish, pit and
@@ -1321,6 +1469,11 @@ entries are too far apart picks one of them instead of their midpoint.
 The pass is precisely timed only when the chosen entry is a `precisa`
 source's own.
 
+**A timing sensor's mark** (whole-race run only) leaves the pass time
+alone, and gives the laps on either side of the pass their time: the
+habit-corrected time of a marked pass is the mark, it counts as precisely
+timed for best lap, and each counter's habit is measured against it.
+
 **Lap durations** use habit-corrected times: for each source the engine
 measures its habitual offset (median of "its time minus the pass time" over
 its 30 matched entries *before* the group, never after) and removes it.
@@ -1366,6 +1519,7 @@ It needs no phpBB session.
                   "ts_device_ms": 1760000123456,
                   "anchor": {"server_ms": 1759999990000, "rtt_ms": 84, "age_ms": 10000}}],
   "voids":      [{"uuid": "…"}],
+  "fixes":      [{"uuid": "…", "car": 17}],
   "pit_events": [{"uuid": "…", "car": 41, "tipo": "box_entrada",
                   "ts_ms": 1760000000000, "time_quality": "exato",
                   "ts_device_ms": 1760000123456}],
@@ -1377,7 +1531,10 @@ It needs no phpBB session.
 
 `ts_ms` is the final time, in server time (see [How time is
 taken](#how-time-is-taken)); `time_quality` is `exato`, `estimado` or
-`desconhecido`; `ts_device_ms` and `anchor` are kept for audit. `now_ms` is
+`desconhecido`; `ts_device_ms` and `anchor` are kept for audit. `"car": null`
+is a pass recorded without a number ("??"); an entry with no `car` at all
+is not stored. A timing sensor's entries are always stored with no car,
+whatever they say. `now_ms` is
 the page's idea of the server's time right now, or null when it has no
 anchor: the device's "synced through" mark moves to `min(now_ms, server
 time)` only when `queue_empty` is true and `now_ms` is not null, and never
@@ -1403,6 +1560,7 @@ entries again changes nothing, and never changes a stored time.
 |---|---|
 | 200 | Stored. Forget the uuids listed in `stored_uuids` and `voided_uuids` |
 | 200 with `refused: [{uuid, motivo}]` | Those will never be stored (today: simulated records on a prova that does not allow simulation). Mark them "recusado pelo servidor" and move on; they stay on the device and in its export |
+| 200 with `fixed_uuids` and `fixes_recusados` | Forget the fixes listed in `fixed_uuids`. Those also in `fixes_recusados` were not stored and never will be: the entry was typed with a number, is voided, was reassigned by a reviewer (whose word stands), belongs to a timing sensor, or the car is no number. A fix whose entry has not reached the server is in neither list: send it again after the entry |
 | 200 with `encerrado: true` | This request closed the device ("Encerrar meu turno"). The page trusts only this |
 | 401 `{"erro": "token_invalido"}` | The device was revoked (or never existed). Stop uploading, keep the data, offer the export, and ask for a new token now and then |
 | any other failure, including 503 `ocupado` | Not stored. Try again |
@@ -1419,7 +1577,10 @@ send `"time_quality": "exato"`** with each entry when it vouches for its
 times: an entry without `time_quality` is stored as of unknown time and is
 never counted. An external system may add `"imagem"` and `"confianca"` to
 each entry (see [Visão computacional](#visão-computacional)); from any
-other mode they are ignored. At most 500 entries (and 500 voids, 500 stop events) of one
+other mode they are ignored. A fix (`fixes`) is a counter saying which car
+one of their own "??" was: stored as a `reatribuir` with the counter as its
+origin; sending the same fix again stores nothing, a fix to another car is
+stored and the newest counts. At most 500 entries (and 500 voids, 500 fixes, 500 stop events) of one
 request are looked at; the rest are not acknowledged and must be sent again.
 A time outside 0 … 2^53 ms is stored clamped, as of unknown time, with the
 value sent kept in `ts_dispositivo_ms`. A fueling event is refused
@@ -1577,7 +1738,10 @@ The tests are written to be read as the specification. Each one says what
 situation it sets up, what a human counter did wrong, and what the system is
 expected to do. `Engine/Support/RaceScenario` builds small hand-written
 races; `Engine/Support/SyntheticRace` generates whole races from a seed,
-with known truth and configurable human error. No real race data is in the
+with known truth and configurable human error (and, when asked, "??" and a
+timing sensor: `unreadRate`, `timingSensor`, `sensorMissRate`,
+`sensorFalseTriggersPerMinute`, drawn from a random stream of their own so
+that a race without them is the race the seed always gave). No real race data is in the
 repository.
 
 The database suite builds a made-up event (`00NE`) for each test and removes
@@ -1612,6 +1776,10 @@ instead of trampling each other. Never run it against production.
   links them again or presses "liberar".
 - **An entry's stored time never changes, and no entry is refused for its
   time.** What looks wrong is flagged for a person.
+- **A "??" never decides a count on its own.** It is applied by itself only
+  where two other sources read the crossing; with one reading a person
+  confirms it. A timing sensor never counts a pass at all, and times laps,
+  not passes, so the quick per-car count never needs its marks.
 - **A pass typed for an unclassified car is stored and flagged, never
   rejected.** A phone's car list can be stale, and storing everything is
   what answers a protest.

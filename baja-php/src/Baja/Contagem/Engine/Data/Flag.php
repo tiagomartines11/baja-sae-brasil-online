@@ -197,9 +197,10 @@ final class Flag
      * most likely first, each as ['carro', 'motivo', 'score', 'ts_ms']:
      * motivo 'outros_contadores' (other sources read that car within the
      * tolerance; ts_ms is their crossing), 'carro_esperado' (the car was
-     * due at the line then, by the pace, and has no pass near; ts_ms null)
-     * or 'volta_faltando' (the car's laps around then are one pass short;
-     * ts_ms null). score goes from 0 to 1. Null elsewhere.
+     * due at the line then, by the pace, and has had no official pass
+     * since; ts_ms null) or 'volta_faltando' (the car's passes before and
+     * after are one short; ts_ms null). score goes from 0 to 1. Null
+     * elsewhere.
      *
      * @var array<int, array{carro: int, motivo: string, score: float, ts_ms: ?int}>|null
      */
