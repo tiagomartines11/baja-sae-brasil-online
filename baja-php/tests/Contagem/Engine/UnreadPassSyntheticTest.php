@@ -56,6 +56,44 @@ final class UnreadPassSyntheticTest extends EngineTestCase
         $this->assertGreaterThanOrEqual(0.95, $tally['candidato_certo'] / max(1, $tally['sinalizadas_com_carro']), 'a flagged "??" lists the right car: ' . self::describe($tally));
     }
 
+    /** @return array<string, array{0: int}> */
+    public static function counterSetups(): array
+    {
+        return ['three counters' => [3], 'two counters' => [2]];
+    }
+
+    /**
+     * SITUATION: eight races at full size: 64 cars, four hours, 230 s laps,
+     * the usual mistakes, "??" on 2 % of the crossings, and a sensor missing
+     * 2 % of the crossings and marking one that did not happen every
+     * minute. Cars come a second apart all the time: trains are everywhere.
+     *
+     * EXPECTED: of the marks matched to a pass, at least 99.5 % are the car
+     * that really crossed (measured: 99.7 %), and at least 74 % of the real
+     * crossings get the sensor's time (measured: 76 to 77 %; before the
+     * trains were decided on their own, 69 to 70 %).
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('counterSetups')]
+    public function testAtFullSizeTheSensorTimesThreePassesInFourAndAlmostNeverWithTheWrongCar(int $counters): void
+    {
+        $tally = self::emptyTally();
+        for ($seed = 1; $seed <= 8; $seed++) {
+            $config = SyntheticRaceConfig::withSeed($seed)->withFinish();
+            $config->cars = 64;
+            $config->raceMinutes = 240;
+            $config->baseLapSeconds = 230;
+            $config->counters = $counters;
+            $config->unreadRate = 0.02;
+            $config->timingSensor = true;
+            $config->sensorMissRate = 0.02;
+            $config->sensorFalseTriggersPerMinute = 1.0;
+            $race = SyntheticRace::generate($config);
+            $tally = self::addUp($tally, self::measure($race, Engine::run($race->input())));
+        }
+        $this->assertGreaterThanOrEqual(0.995, $tally['marcas_certas'] / max(1, $tally['marcas_atribuidas']), self::describe($tally));
+        $this->assertGreaterThanOrEqual(0.74, $tally['marcas_atribuidas'] / $tally['marcas_reais'], self::describe($tally));
+    }
+
     /**
      * EXPECTED: the same race without "??" and without a sensor is the
      * race the seed always gave: the new random draws leave it alone.

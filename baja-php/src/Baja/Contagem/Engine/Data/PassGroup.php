@@ -28,10 +28,11 @@ final class PassGroup
 
     /**
      * The pass time: the middle value (median) of the times the sources
-     * recorded, or the time of a precise source when there is one. It only
-     * depends on the group's own entries, so it never changes after the fact
-     * unless the group itself changes. Used for ordering, for LAST and for
-     * car status.
+     * recorded, or the time of a precise source when there is one, or the
+     * mark of a timing sensor (`$tempoDoSensor`). It only depends on the
+     * group's own entries and on the marks and readings a few seconds
+     * around it, so it never changes after the fact unless those do. Used
+     * for ordering, for LAST and for car status.
      */
     public int $tsMs = 0;
 
@@ -59,13 +60,20 @@ final class PassGroup
 
     /**
      * The mark of a timing sensor matched to this crossing (a copy, carrying
-     * this car; see UnreadAssigner), in the whole-race run. It is no entry
-     * of the group: it never votes, is never expected and is no counter's
-     * miss. A precise sensor's mark times the laps this pass ends and
-     * begins (`tsAjustadoMs`), never the pass time itself. Null for nearly
-     * every group.
+     * this car; see UnreadAssigner::matchMarks()). It is no entry of the
+     * group: it never votes, never counts, is never expected and is no
+     * counter's miss. It is the pass time (`$tempoDoSensor`). Null when no
+     * sensor marked the pass, or its mark could not be told from the car's
+     * next to it.
      */
     public ?Entry $marcaSensor = null;
+
+    /**
+     * The pass time is the sensor's mark (`$marcaSensor`): `tsMs` and
+     * `tsAjustadoMs` are its time, and `tempoPreciso` is set. Not when a
+     * precise source in the group or a reviewer's "usar_tempo" times it.
+     */
+    public bool $tempoDoSensor = false;
 
     /** The group contains a pass added by a reviewer ("adicionar"). */
     public bool $adicionadoPorRevisor = false;

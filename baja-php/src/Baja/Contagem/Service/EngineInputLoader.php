@@ -9,6 +9,7 @@ use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\DecisionApplier;
+use Baja\Contagem\Engine\SensorTrains;
 use Baja\Contagem\Engine\Settings;
 use Baja\Contagem\Engine\Stats;
 use Baja\Contagem\Engine\UnreadAssigner;
@@ -26,7 +27,10 @@ use Propel\Runtime\Propel;
  *   runs inside an upload. A long race has tens of thousands of entries and
  *   one new entry concerns a couple of hundred of them. Plus, where a
  *   counter pressed "??" near those cars, the entries around it: which car
- *   it was is worked out from them (UnreadAssigner).
+ *   it was is worked out from them (UnreadAssigner). And, with a timing
+ *   sensor, the marks and readings a few seconds around each of their
+ *   crossings: which mark times which pass is worked out from them
+ *   (SensorTrains).
  *
  * Plain prepared SQL instead of Propel objects, on purpose: building a
  * Propel object per row costs several times more than the engine itself.
@@ -39,6 +43,9 @@ final class EngineInputLoader
 
     /** Whether the prova has any entry stored with no car; asked once. */
     private ?bool $hasUnread = null;
+
+    /** Whether the prova has a timing sensor source; asked with $hasUnread (a sensor's marks are entries with no car). */
+    private bool $hasSensor = false;
 
     /** @var Entry[]|null the counters' and cameras' entries stored with no car; loaded once (see counterUnreadEntries()) */
     private ?array $counterUnread = null;
@@ -81,7 +88,86 @@ final class EngineInputLoader
         }
         $input->entries = $this->loadEntries($cars, array_merge($reassignedEntryIds, $alsoEntryIds));
         $this->addEntriesAroundUnread($input, $window);
+        $this->addSensorTrains($input, $cars);
         return $input;
+    }
+
+    /**
+     * The cars whose pass times a change at these moments may have moved
+     * through a timing sensor's marks: which mark times which pass is
+     * decided train by train, and a train holds the cars a second or two
+     * around a mark (SensorTrains::carsAround()). Empty, with no query of
+     * its own, while the prova has no sensor (nor any entry with no car).
+     *
+     * @param int[] $momentsMs moments of the entries an upload stored, voided or fixed
+     * @param int[] $changedCars the cars those entries count (or counted) for, and the cars a "??" near them may be or was
+     * @return int[]
+     */
+    public function carsAroundSensorMarks(Settings $settings, array $momentsMs, array $changedCars): array
+    {
+        if ($momentsMs === [] || !$this->hasUnreadEntries() || !$this->hasSensor) {
+            return [];
+        }
+        $input = $this->everythingButEntries($settings);
+        if (!SensorTrains::anySensorCounts($input->sources)) {
+            return [];
+        }
+        // A "??" near the moments may now count for another car: the
+        // crossings around it changed too.
+        $raw = $this->counterUnreadEntries();
+        $items = $raw === [] ? [] : $this->unreadItems($input, $raw);
+        $moments = $momentsMs;
+        if ($items !== []) {
+            $ranges = UnreadAssigner::rangesToLoad($items, $momentsMs, $settings);
+            $starts = array_column($ranges, 0);
+            foreach ($items as $item) {
+                $index = Stats::countAtMost($starts, $item->tsMs) - 1;
+                if ($index >= 0 && $item->tsMs <= $ranges[$index][1]) {
+                    $moments[] = $item->tsMs;
+                }
+            }
+        }
+        $this->addSensorTrains($input, [], $moments, $changedCars);
+        return SensorTrains::carsAround($input, $moments, $changedCars);
+    }
+
+    /**
+     * Adds what SensorTrains needs to match the marks around the given cars
+     * (or the given moments) exactly as the whole-race run does: it asks
+     * for the stretches of time it is missing, round after round, until it
+     * misses none (usually two rounds, one query each). Nothing, and no
+     * query, while no timing sensor takes part.
+     *
+     * @param int[] $cars
+     * @param int[] $momentsMs
+     * @param int[] $changedCars
+     */
+    private function addSensorTrains(EngineInput $input, array $cars, array $momentsMs = [], array $changedCars = []): void
+    {
+        if (!$this->hasUnreadEntries() || !$this->hasSensor || !SensorTrains::anySensorCounts($input->sources)) {
+            return;
+        }
+        $loaded = [SensorTrains::MARCAS => [], SensorTrains::TUDO => []];
+        while (true) {
+            $missing = SensorTrains::rangesToLoad($input, $cars, $loaded, $momentsMs, $changedCars);
+            if ($missing[SensorTrains::MARCAS] === [] && $missing[SensorTrains::TUDO] === []) {
+                return;
+            }
+            if ($missing[SensorTrains::TUDO] !== []) {
+                $input->entries = self::union($input->entries, $this->loadEntriesBetween($input->sources, $missing[SensorTrains::TUDO]));
+            }
+            if ($missing[SensorTrains::MARCAS] !== []) {
+                $input->entries = self::union($input->entries, $this->loadEntriesBetween($input->sources, $missing[SensorTrains::MARCAS], true));
+            }
+            foreach ($missing as $kind => $ranges) {
+                $loaded[$kind] = UnreadAssigner::merged(array_merge($loaded[$kind], $ranges));
+            }
+            if ($missing[SensorTrains::TUDO] !== []) {
+                // A "??" among what came in counts for a car read around
+                // it, and so is a reading of that car's crossing.
+                $this->addEntriesAroundUnread($input, null);
+            }
+        }
     }
 
     /**
@@ -128,7 +214,7 @@ final class EngineInputLoader
         foreach ($near as $momentMs) {
             $ranges[] = [$momentMs - $reachMs, $momentMs + $reachMs];
         }
-        $input->entries = $this->loadEntriesBetween(UnreadAssigner::merged($ranges));
+        $input->entries = $this->loadEntriesBetween($input->sources, UnreadAssigner::merged($ranges));
 
         $sourcesById = [];
         foreach ($input->sources as $source) {
@@ -197,20 +283,27 @@ final class EngineInputLoader
             $ranges = UnreadAssigner::merged(array_merge($ranges, [$window]));
         }
         if ($ranges !== []) {
-            $input->entries = self::union($input->entries, $this->loadEntriesBetween($ranges));
+            $input->entries = self::union($input->entries, $this->loadEntriesBetween($input->sources, $ranges));
         }
     }
 
-    /** True when the prova has at least one entry stored with no car. One indexed look-up. */
+    /**
+     * True when the prova has at least one entry stored with no car. One
+     * indexed look-up, which also tells whether the prova has a timing
+     * sensor ($hasSensor): its marks are such entries.
+     */
     private function hasUnreadEntries(): bool
     {
         if ($this->hasUnread === null) {
             $rows = $this->fetchAll(
-                'SELECT 1 FROM contagem_passagem p JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
-                  WHERE f.evento_id = :evento AND f.prova_id = :prova AND p.equipe_numero IS NULL LIMIT 1',
-                $this->provaParams()
+                'SELECT EXISTS (SELECT 1 FROM contagem_passagem p JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
+                                 WHERE f.evento_id = ? AND f.prova_id = ? AND p.equipe_numero IS NULL) AS sem_carro,
+                        EXISTS (SELECT 1 FROM contagem_fonte f
+                                 WHERE f.evento_id = ? AND f.prova_id = ? AND f.tipo = ?) AS sensor',
+                [$this->eventoId, $this->provaId, $this->eventoId, $this->provaId, Source::TIPO_SENSOR]
             );
-            $this->hasUnread = $rows !== [];
+            $this->hasUnread = (int) ($rows[0]['sem_carro'] ?? 0) === 1;
+            $this->hasSensor = $this->hasUnread && (int) ($rows[0]['sensor'] ?? 0) === 1;
         }
         return $this->hasUnread;
     }
@@ -272,21 +365,36 @@ final class EngineInputLoader
     }
 
     /**
-     * Every entry of the prova between the moments of each range.
+     * Every entry of the prova between the moments of each range (only the
+     * timing sensors' marks, with $onlySensors).
      *
+     * The sources are named in the query, not joined: then the database
+     * reads each source's entries by time from its (fonte_id, ts_ms) index,
+     * range by range, instead of every entry of every source (measured: a
+     * fifth of the time for a long race).
+     *
+     * @param Source[] $sources the prova's sources (EngineInput::$sources)
      * @param array<int, array{0: int, 1: int}> $ranges
      * @return Entry[]
      */
-    private function loadEntriesBetween(array $ranges): array
+    private function loadEntriesBetween(array $sources, array $ranges, bool $onlySensors = false): array
     {
+        $sourceIds = [];
+        foreach ($sources as $source) {
+            if ($source->recordsPasses() && (!$onlySensors || $source->isTimingSensor())) {
+                $sourceIds[] = $source->id;
+            }
+        }
+        if ($sourceIds === [] || $ranges === []) {
+            return [];
+        }
         $entries = [];
         foreach (array_chunk($ranges, 100) as $chunk) {
             $sql = 'SELECT p.passagem_id, p.fonte_id, p.dispositivo_id, p.equipe_numero, p.ts_ms, p.qualidade_tempo
                       FROM contagem_passagem p
-                      JOIN contagem_fonte f ON f.fonte_id = p.fonte_id
-                     WHERE f.evento_id = ? AND f.prova_id = ? AND ('
+                     WHERE p.fonte_id IN (' . implode(', ', array_fill(0, count($sourceIds), '?')) . ') AND ('
                 . implode(' OR ', array_fill(0, count($chunk), 'p.ts_ms BETWEEN ? AND ?')) . ')';
-            $params = [$this->eventoId, $this->provaId];
+            $params = $sourceIds;
             foreach ($chunk as [$fromMs, $untilMs]) {
                 $params[] = $fromMs;
                 $params[] = $untilMs;

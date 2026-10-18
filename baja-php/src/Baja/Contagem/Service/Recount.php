@@ -69,6 +69,12 @@ final class Recount
      * around the "??" near those moments are recounted as well. Nothing is
      * added while the prova has no "??".
      *
+     * Likewise a timing sensor's mark is the pass time of the car it is
+     * matched to, and which car that is depends on the cars a second or two
+     * around it (SensorTrains): with $nearMs, the cars of the trains near
+     * those moments are recounted too. Nothing is added while the prova has
+     * no sensor.
+     *
      * @param int[] $cars
      * @param int[] $nearMs
      */
@@ -77,6 +83,7 @@ final class Recount
         $settings = $this->service->getSettings();
         if ($nearMs !== []) {
             $cars = array_merge($cars, $this->loader->carsNearUnread($settings, $nearMs));
+            $cars = array_merge($cars, $this->loader->carsAroundSensorMarks($settings, $nearMs, $cars));
         }
         $cars = array_values(array_unique(array_map('intval', $cars)));
         if ($cars === []) {

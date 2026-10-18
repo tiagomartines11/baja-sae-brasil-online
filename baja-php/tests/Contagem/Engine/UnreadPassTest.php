@@ -358,13 +358,12 @@ final class UnreadPassTest extends EngineTestCase
      * 04:00.50; the three counters press Enter at 04:00.8, 04:01.2 and
      * 04:01.5 (the median is 04:01.2), the sensor marks 04:00.50.
      *
-     * EXPECTED: the mark is matched to car 7's crossing and times its lap:
-     * the lap that pass ends is measured from the sensor's mark (220.5 s
-     * from the pass zero at 00:20), and the pass is precisely timed (it may
-     * give a best lap). It is no vote and no entry of the group: the count
-     * is the counters'. The pass time itself (and so LAST) stays the
-     * counters' median, as the per-car recount of an upload, which never
-     * looks at marks, also says.
+     * EXPECTED: the mark is matched to car 7's crossing and is its pass
+     * time: the pass is at 04:00.50 (and so LAST and the lap row), the lap
+     * it ends is measured from the mark (220.5 s from the pass zero at
+     * 00:20), and the pass is precisely timed (it may give a best lap). It
+     * is no vote and no entry of the group: the count is the counters'.
+     * The per-car recount of an upload says the same.
      */
     public function testASensorMarkTimesTheLap(): void
     {
@@ -384,7 +383,8 @@ final class UnreadPassTest extends EngineTestCase
         $this->assertSame(7, $group->marcaSensor->carro);
         $this->assertSame(RaceScenario::ms('04:00.50'), $group->tsAjustadoMs);
         $this->assertTrue($group->tempoPreciso);
-        $this->assertSame(RaceScenario::ms('04:01.2'), $group->tsMs);
+        $this->assertSame(RaceScenario::ms('04:00.50'), $group->tsMs);
+        $this->assertTrue($group->tempoDoSensor);
         $this->assertSame([1, 2, 3], $group->realSourceIds());
         $lap = array_values(array_filter($result->laps, fn($lap) => $lap->carro === 7 && $lap->numeroVolta === 1))[0];
         $this->assertSame(220500, $lap->tempoVoltaMs);
@@ -395,7 +395,7 @@ final class UnreadPassTest extends EngineTestCase
         $this->assertSame([], array_filter($result->flags, fn(Flag $flag) => $flag->tipo === Flag::NUMERO_ATRIBUIDO), 'a sensor would fill the list with them');
 
         $fast = $race->countCars('10:00', [7])->lapsByCar[7];
-        $this->assertSame(RaceScenario::ms('04:01.2'), $fast[1]->tsMs, 'the per-car recount gives the same pass time');
+        $this->assertSame(RaceScenario::ms('04:00.50'), $fast[1]->tsMs, 'the per-car recount gives the same pass time');
     }
 
     /**

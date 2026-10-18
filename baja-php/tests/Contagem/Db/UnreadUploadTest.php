@@ -333,6 +333,69 @@ final class UnreadUploadTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: a timing sensor at the line. The three counters read car B
+     * at 3:40.0, 3:40.4 and 3:41.2 (LAST 220: the median), each uploading
+     * at once. The sensor's system uploads its mark a little later: 3:38.3.
+     *
+     * EXPECTED: the mark's upload, which has no car, recounts car B and its
+     * pass time is the mark: LAST 218 and the lap row's time, at once, as a
+     * rebuild from scratch says too.
+     */
+    public function testASensorsMarkIsThePassTimeAsSoonAsItIsUploaded(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $sensorToken = $this->apiToken($sensor);
+        $tokens = [];
+        foreach ($this->fontes as $index => $fonte) {
+            $tokens[$index] = $this->issueToken($fonte, self::USER_PREFIX . 'contador' . $index);
+            $this->upload($tokens[$index], [$this->entryPayload(self::newUuid(), self::CAR_B, $this->at(30))]);
+        }
+        foreach ([0 => 220000, 1 => 220400, 2 => 221200] as $index => $offsetMs) {
+            $this->upload($tokens[$index], [$this->entryPayload(self::newUuid(), self::CAR_B, $this->at(0) + $offsetMs)]);
+        }
+        $this->assertSame(220, (int) $this->publishedData(self::CAR_B)['LAST'], 'timed by the counters');
+
+        $this->upload($sensorToken, [$this->unreadPayload(self::newUuid(), $this->at(0) + 218300) + ['mode' => 'api']]);
+
+        $this->assertSame(218, (int) $this->publishedData(self::CAR_B)['LAST'], 'timed by the sensor');
+        $this->assertSame(1, $this->countRows(
+            'contagem_volta',
+            'evento_id = ? AND prova_id = ? AND equipe_numero = ? AND numero_volta = 1 AND ts_ms = ?',
+            [self::EVENTO_ID, self::PROVA_ID, self::CAR_B, $this->at(0) + 218300]
+        ));
+        $this->assertARebuildChangesNothing('after the mark');
+    }
+
+    /**
+     * SITUATION: a prova with no timing sensor, with a counter's "??" and
+     * without.
+     *
+     * EXPECTED: once the one look-up an upload already makes ("any entry
+     * with no car?") has been made, asking which cars a sensor's marks move
+     * costs no query at all.
+     */
+    public function testWithoutASensorTheMarksCostAnUploadNoQuery(): void
+    {
+        foreach ([false, true] as $withUnread) {
+            if ($withUnread) {
+                $this->upload($this->issueToken($this->fontes[1]), [$this->unreadPayload(self::newUuid(), $this->at(100))]);
+            }
+            $this->newRequest();
+            $loader = new \Baja\Contagem\Service\EngineInputLoader($this->prova);
+            $settings = $this->service->getSettings();
+            $loader->carsNearUnread($settings, [$this->at(100)]);
+            $connection = \Propel\Runtime\Propel::getWriteConnection('resultados');
+            $connection->useDebug(true);
+            $before = $connection->getQueryCount();
+            $cars = $loader->carsAroundSensorMarks($settings, [$this->at(100)], [self::CAR_A]);
+            $queries = $connection->getQueryCount() - $before;
+            $connection->useDebug(false);
+            $this->assertSame([], $cars);
+            $this->assertSame(0, $queries, $withUnread ? 'with a "??"' : 'with no entry without a car');
+        }
+    }
+
+    /**
      * SITUATION: fixes a counter's phone has no business making: of an entry
      * typed with a number, of a "??" the counter voided, of a "??" a
      * reviewer already reassigned, with a car that is no number, and of

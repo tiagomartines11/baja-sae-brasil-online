@@ -34,7 +34,9 @@ final class Engine
      *
      * The input must hold every entry that counts for those cars after
      * decisions (so also entries typed as another car and reassigned to one
-     * of them); entries of other cars may be left out.
+     * of them); entries of other cars may be left out, except those around
+     * a "??" near them (UnreadAssigner::rangesToLoad()) and, with a timing
+     * sensor, those around their crossings (SensorTrains::rangesToLoad()).
      *
      * @param int[] $cars
      */
@@ -63,11 +65,6 @@ final class Engine
         $result->unknownTimeEntries = $counter->unknownTimeEntries;
         $result->unreadEntries = $counter->unread === null ? [] : $counter->unread->leftUnread;
 
-        if ($counter->unread !== null && $counter->applied->sensorMarks !== []) {
-            // A timing sensor's marks change no count and no pass time, so
-            // the per-car recount leaves them out; here they time the laps.
-            $counter->unread->matchMarks($counter->applied->sensorMarks, $counter->groupsByCar);
-        }
         $groupsInTimeOrder = self::inTimeOrder($counter->groupsByCar);
         $fuser = PassTimeFuser::removeHabits($groupsInTimeOrder, $counter->sourcesById);
 

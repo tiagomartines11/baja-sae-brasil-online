@@ -4,7 +4,10 @@ declare(strict_types=1);
 namespace Baja\Tests\Contagem\Db;
 
 use Baja\Contagem\Engine\Data\Decision;
+use Baja\Contagem\Engine\Data\Source;
+use Baja\Contagem\Review\SourceAdmin;
 use Baja\Contagem\Service\Clock;
+use Baja\Model\ContagemFonte;
 
 /**
  * The quick count and the full recount must always agree.
@@ -148,6 +151,132 @@ final class IncrementalEqualsRebuildTest extends DbTestCase
             [self::EVENTO_ID]
         );
         $this->assertGreaterThan(5, $unread, 'the made-up race did have "??"');
+    }
+
+    /**
+     * SITUATION: the three cars run as a pack, crossing the line a fraction
+     * of a second to a second and a half apart, and a timing sensor at the
+     * line marks every crossing (and misses some, and marks some that did
+     * not happen). The counters type with the usual mistakes, now and then
+     * press "??", and each has a habit of pressing late; the counters'
+     * phones and the sensor's system upload in small batches, mixed. Now
+     * and then a counter voids an entry, or the sensor's system voids a
+     * mark.
+     *
+     * Which mark times which pass depends on the cars a second or two
+     * around it, so an upload of one car (or a mark, which has no car) can
+     * change the pass time of another.
+     *
+     * EXPECTED: at every checkpoint, the quick path has published exactly
+     * what a rebuild from scratch gives: laps, LAST and the lap rows' times,
+     * many of which are the sensor's marks.
+     *
+     * @dataProvider seeds
+     */
+    public function testWithATimingSensorARebuildFromScratchChangesNothing(int $seed): void
+    {
+        mt_srand($seed);
+        $sensor = $this->aVotingSensor();
+        $sensorIndex = count($this->fontes);
+        $this->tokens[$sensorIndex] = SourceAdmin::createApiToken($this->service, ['fonte_id' => (string) $sensor->getFonteId(), 'rotulo' => 'API']);
+        $this->uploadedUuids[$sensorIndex] = [];
+        $batches = $this->makeUpAPackRace($sensorIndex);
+
+        foreach ($batches as $number => $batch) {
+            $this->upload($this->tokens[$batch['source']], $batch['entries'], ['queue_empty' => true]);
+            foreach ($batch['entries'] as $entry) {
+                $this->uploadedUuids[$batch['source']][] = $entry['uuid'];
+            }
+            if ($number % 11 === 5) {
+                $this->aCounterVoidsOneOfTheirEntries($batch['source']);
+            }
+            if ($number === intdiv(count($batches), 3) || $number === intdiv(2 * count($batches), 3)) {
+                $this->assertARebuildChangesNothing('at batch ' . $number);
+            }
+        }
+
+        $this->assertARebuildChangesNothing('at the end');
+        $this->newRequest();
+        $timed = 0;
+        foreach ($this->service->compute()->groups as $group) {
+            $timed += $group->tempoDoSensor ? 1 : 0;
+        }
+        $this->assertGreaterThan(20, $timed, 'the sensor timed passes');
+    }
+
+    private function aVotingSensor(): ContagemFonte
+    {
+        $fonte = new ContagemFonte();
+        $fonte->setEventoId(self::EVENTO_ID);
+        $fonte->setProvaId(self::PROVA_ID);
+        $fonte->setNome('Sensor');
+        $fonte->setTipo(Source::TIPO_SENSOR);
+        $fonte->setQualidadeTempo(Source::TEMPO_PRECISA);
+        $fonte->setAtiva(true);
+        $fonte->setOrdem(9);
+        $fonte->setPapel(Source::PAPEL_VOTANTE);
+        $fonte->save();
+        return $fonte;
+    }
+
+    /**
+     * The pack race of the sensor test, cut into upload batches: the
+     * counters' (4 entries each) and the sensor's (3 marks each), mixed.
+     *
+     * @return array<int, array{source: int, entries: array<int, array<string, mixed>>}>
+     */
+    private function makeUpAPackRace(int $sensorIndex): array
+    {
+        $habitMs = [0 => 200, 1 => 900, 2 => 1300];
+        $entriesBySource = [0 => [], 1 => [], 2 => [], $sensorIndex => []];
+        for ($crossing = 40000; $crossing < 2400000; $crossing += 170000 + mt_rand(-5000, 5000)) {
+            $order = self::CARS;
+            if (mt_rand(1, 3) === 1) {
+                shuffle($order);
+            }
+            $carMs = $crossing;
+            foreach ($order as $car) {
+                if (mt_rand(1, 100) > 3) {
+                    $entriesBySource[$sensorIndex][] = $this->markPayload(self::newUuid(), $this->at(0) + $carMs + mt_rand(-20, 20));
+                }
+                foreach ([0, 1, 2] as $source) {
+                    $roll = mt_rand(1, 100);
+                    if ($roll <= 5) {
+                        continue; // missed
+                    }
+                    $tsMs = $this->at(0) + $carMs + $habitMs[$source] + mt_rand(-300, 300);
+                    $payload = $this->entryPayload(self::newUuid(), $roll <= 8 ? $car + 1 : $car, $tsMs);
+                    if ($roll >= 95) {
+                        $payload['car'] = null; // "??"
+                    }
+                    $entriesBySource[$source][] = $payload;
+                }
+                $carMs += mt_rand(300, 1500);
+            }
+            if (mt_rand(1, 4) === 1) {
+                // Something that is no car crossing: a marshal, a bird.
+                $entriesBySource[$sensorIndex][] = $this->markPayload(self::newUuid(), $this->at(0) + $crossing + mt_rand(-4000, 8000));
+            }
+        }
+
+        $batches = [];
+        foreach ($entriesBySource as $source => $entries) {
+            usort($entries, fn(array $a, array $b): int => $a['ts_ms'] <=> $b['ts_ms']);
+            foreach (array_chunk($entries, $source === $sensorIndex ? 3 : 4) as $chunkNumber => $chunk) {
+                $batches[] = ['key' => $chunkNumber * 10 + mt_rand(0, 25), 'source' => $source, 'entries' => $chunk];
+            }
+        }
+        usort($batches, fn(array $a, array $b): int => [$a['key'], $a['source']] <=> [$b['key'], $b['source']]);
+        return $batches;
+    }
+
+    /** @return array<string, mixed> a mark as a timing sensor's system sends it: no car */
+    private function markPayload(string $uuid, int $tsMs): array
+    {
+        $payload = $this->entryPayload($uuid, 0, $tsMs);
+        $payload['car'] = null;
+        $payload['mode'] = 'api';
+        return $payload;
     }
 
     private function aCounterFixesOneOfTheirUnreadPasses(int $source): void
