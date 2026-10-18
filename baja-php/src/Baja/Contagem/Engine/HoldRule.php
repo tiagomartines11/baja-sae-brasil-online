@@ -23,7 +23,13 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * only one counter typed when it sits where a lap can end (lapsBetween), so
  * that a lap one counter missed does not read as one twice as long. Such a
  * split never brings the normal lap below the car's own counted laps
- * (normalLapMs), so strays cannot lower the bar that holds phantoms.
+ * (normalLapMs), so strays cannot lower the bar that holds phantoms. A lap
+ * during which the pit log or the fueling log has the car inside is left
+ * out of all of those: it measures the stop, not the car's pace (race
+ * simulator, two counters: three laps with a pit stop each made a car's
+ * normal lap twice its real one, and its next ordinary lap was held). It
+ * is left out rather than shortened by the stay: a stay logged wrongly can
+ * then only leave the normal lap resting on older laps, never lower it.
  *
  * A held group is not official. It stays visible as a pending row, with the
  * flag "passagem_proxima_demais", and counts the moment a reviewer confirms
@@ -59,7 +65,7 @@ use Baja\Contagem\Engine\Data\PassGroup;
  * also be too close to the car's previous pass. Anything else stays held.
  *
  * ONLY THE CAR'S OWN DATA. The rule looks at the car's own pass times and
- * the race's red flags, never at other cars or at the pace of the field, so
+ * logged stays and the race's red flags, never at other cars or at the pace of the field, so
  * recounting one car alone gives exactly what a full run gives.
  *
  * It is applied twice, independently: to what counts in the publish mode in
@@ -124,7 +130,8 @@ final class HoldRule
         $recentLaps = [];
         // The same laps without those splits, and the car's counted laps
         // (from one official pass to the next): what a split may not take
-        // the normal lap below (see normalLapMs).
+        // the normal lap below (see normalLapMs). None of the three holds a
+        // lap during which the car was logged inside an area.
         $unsplitLaps = [];
         $countedLaps = [];
         $previousAgreedMs = null;
@@ -205,10 +212,12 @@ final class HoldRule
                 continue;
             }
 
-            $lapMs = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
-            self::addLaps($recentLaps, $loneSinceAgreed === [] ? [$lapMs]
-                : self::lapsBetween($previousAgreedMs, $passMs, $loneSinceAgreed, self::normalLapMs($recentLaps, $unsplitLaps, $countedLaps), $timeline, $settings, $hasStays), Settings::LAPS_FOR_MINIMUM_LAP);
-            self::addLaps($unsplitLaps, [$lapMs], Settings::LAPS_FOR_MINIMUM_LAP);
+            if (!($hasStays && self::overlapsALoggedStay($carro, $previousAgreedMs, $passMs, $timeline))) {
+                $lapMs = $raceWasStopped ? $timeline->racingMsBetween($previousAgreedMs, $passMs) : $passMs - $previousAgreedMs;
+                self::addLaps($recentLaps, $loneSinceAgreed === [] ? [$lapMs]
+                    : self::lapsBetween($previousAgreedMs, $passMs, $loneSinceAgreed, self::normalLapMs($recentLaps, $unsplitLaps, $countedLaps), $timeline, $settings, $hasStays), Settings::LAPS_FOR_MINIMUM_LAP);
+                self::addLaps($unsplitLaps, [$lapMs], Settings::LAPS_FOR_MINIMUM_LAP);
+            }
             $loneSinceAgreed = [];
             $previousAgreedMs = $passMs;
 
@@ -216,7 +225,9 @@ final class HoldRule
                 self::hold($group, $reference, PassGroup::RETIDA_PROXIMA_DEMAIS, $gapMs, $minimumMs);
                 continue;
             }
-            self::addLaps($countedLaps, [$gapMs], self::COUNTED_LAPS_KEPT);
+            if (!($hasStays && self::overlapsALoggedStay($carro, $previousPassMs, $passMs, $timeline))) {
+                self::addLaps($countedLaps, [$gapMs], self::COUNTED_LAPS_KEPT);
+            }
             $previousPassMs = $passMs;
         }
     }
@@ -259,7 +270,7 @@ final class HoldRule
      * (review of the first version of the split). So a split can bring the
      * normal lap down only as far as the second shortest of the car's last
      * ten counted laps (times between two passes that counted, nothing
-     * split, nothing held): a lap the car really did, which strays cannot
+     * split, nothing held, no logged stay): a lap the car really did, which strays cannot
      * shorten. The second shortest, not the shortest, for the reason
      * Settings::minimumPlausibleLapMs gives. With fewer than two counted
      * laps a split lowers nothing. When no lone crossing split anything
@@ -363,6 +374,16 @@ final class HoldRule
         }
         $laps[] = $racingMs($fromMs, $toMs);
         return $laps;
+    }
+
+    /**
+     * Whether the pit log or the fueling log has the car inside at some
+     * moment between the two passes: the time between them is then no lap
+     * of the car's pace (see holdAlongOneChain).
+     */
+    private static function overlapsALoggedStay(int $carro, int $fromMs, int $toMs, RaceTimeline $timeline): bool
+    {
+        return $timeline->overlapsPitStay($carro, $fromMs, $toMs) || $timeline->overlapsFuelStay($carro, $fromMs, $toMs);
     }
 
     /**

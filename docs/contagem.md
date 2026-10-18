@@ -720,7 +720,17 @@ and the next stop would then be split against the lowered lap. So a split
 never takes the normal lap below the second shortest of the car's last ten
 counted laps (from one pass that counted to the next, nothing split, nothing
 held), or below the normal lap without splits when that one is shorter: strays
-cannot bring the bar under half a lap the car really ran. Only the car's own passes are used, so the quick per-car recount
+cannot bring the bar under half a lap the car really ran. A lap during which
+the pit log or the fueling log has the car inside is left out of all of this
+(the normal lap, the laps without splits, the counted laps): it measures the
+stop, not the car's pace. Counted in full, three laps with a pit stop each
+made a car's normal lap twice its real one, and its next ordinary lap was
+held (race simulator, two counters). Left out, not shortened by the stay: a
+stay logged wrongly then only leaves the normal lap resting on older laps,
+and cannot lower it. A car whose every lap so far held a stop has no normal
+lap yet, and its bar is the two windows. A crossing one counter typed splits
+nothing while the car has no normal lap yet (there is nothing to say where a
+lap can end). Only the car's own passes and logged stays are used, so the quick per-car recount
 of an upload gives exactly what a full run gives. The held pass stays
 pending, flagged `passagem_proxima_demais`, and the flag says which pass is
 held and why ("a 12 s da passagem anterior"). If the pass was real (the car's

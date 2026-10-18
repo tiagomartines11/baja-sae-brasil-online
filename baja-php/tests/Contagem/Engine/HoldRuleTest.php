@@ -569,6 +569,58 @@ final class HoldRuleTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: car 9 laps in four minutes, with two counters. Its first
+     * three laps each hold a five-minute pit stop the pit log recorded
+     * (02:00-07:00, 11:00-16:00, 20:00-25:00), so they read nine minutes;
+     * then it stands on the track for twenty minutes (27:20 to 47:20,
+     * nobody logs that), and its next lap, at 51:20, is an ordinary four
+     * minutes both counters typed. Three more laps follow, then a phantom
+     * both counters typed at 65:00, 1:40 after the pass at 63:20, and the
+     * real pass at 67:20.
+     *
+     * WHAT WENT WRONG (race simulator, seed 6, two counters): the laps
+     * behind the normal lap counted the pit stays at full length, so they
+     * read 9:00, 9:00, 9:00, 20:00, the normal lap was nine minutes, the
+     * bar 4:30, and the real lap at 51:20 was held.
+     *
+     * EXPECTED: a lap the car spent part of logged inside the pit lane (or
+     * the fueling station) says nothing of its pace and is left out of the
+     * normal lap. With only the twenty-minute stop left the car has no
+     * normal lap yet, the bar is two windows, and the lap at 51:20 counts.
+     * The laps that follow give it its four-minute normal lap again, the
+     * bar is back at 2:00 and the phantom is held: 9 laps, the quick
+     * recount agrees.
+     */
+    public function testPitStopsInsideALapDoNotMakeTheCarsNormalLapLonger(): void
+    {
+        $race = RaceScenario::withCounters(2);
+        $race->start('00:00');
+        $race->firstCrossing([9]);
+        foreach ([['02:00', '07:00', '09:20'], ['11:00', '16:00', '18:20'], ['20:00', '25:00', '27:20']] as [$in, $out, $crossing]) {
+            $race->pitIn(9, $in);
+            $race->pitOut(9, $out);
+            $race->pass(9, $crossing);
+        }
+        $race->pass(9, '47:20');
+        $afterTheStop = $race->pass(9, '51:20');
+        foreach (['55:20', '59:20', '63:20'] as $crossing) {
+            $race->pass(9, $crossing);
+        }
+        $phantom = $race->pass(9, '65:00');
+        $race->pass(9, '67:20');
+
+        $result = $race->run('68:00');
+
+        $this->assertTrue($result->groupOfEntry($afterTheStop[1])->contado, 'The real lap after the stop counts.');
+        $held = $result->groupOfEntry($phantom[1]);
+        $this->assertSame(PassGroup::RETIDA_PROXIMA_DEMAIS, $held->motivoRetencao);
+        $this->assertSame(120000, $held->voltaMinimaMs);
+        $this->assertLapCounts([9 => 9], $result);
+        $this->assertCount(1, $this->openFlags($result, Flag::PASSAGEM_PROXIMA_DEMAIS));
+        $this->assertSame(9, $race->countCars('68:00', [9])->lapCount(9));
+    }
+
+    /**
      * SITUATION: car 9 passed at 03:00 and is logged into the pit lane at
      * 05:00. At 06:00 two counters record it at the line (a wrong number:
      * the car is standing in its pit). It is logged out at 06:10 and
