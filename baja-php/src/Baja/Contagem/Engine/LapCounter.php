@@ -19,7 +19,6 @@ use Baja\Contagem\Engine\Data\Source;
  *   2. DuplicateFilter   drop double taps and handover duplicates
  *   3. PassMatcher       group entries of the same crossing
  *      PassTimeFuser     the pass time of each group
- *      UnreadAssigner    a timing sensor's marks time the groups they match
  *   4. PublishRule       which groups are official passes
  *      PassRoles         leave out the start crossing and late finishers
  *      HoldRule          hold a pass that comes too soon after the previous one
@@ -34,7 +33,8 @@ use Baja\Contagem\Engine\Data\Source;
  * the other sources read around it, whatever car that is, so the input of
  * a per-car recount also holds the entries around the unread ones nearby
  * (UnreadAssigner::rangesToLoad()), and the assignment is made before the
- * cars are picked out.
+ * cars are picked out. A timing sensor's marks change no count and no
+ * pass time; they are matched in the whole-race run only (Engine::run()).
  *
  * No entry is dropped because of its time. Entries from before the start
  * are grouped like the others and marked (see PassRoles). The one exception
@@ -92,12 +92,7 @@ final class LapCounter
         }
         $counter->availability = new SourceAvailability($counter->sourcesById, $counter->applied, $input->settings->janelaMs);
 
-        // A timing sensor's marks are matched with the pass groups of
-        // every car near them, so with marks around, the cars whose entries
-        // the input holds for that (EngineInputLoader) are matched too, and
-        // only the requested ones are kept afterwards.
-        $hasMarks = $counter->applied->sensorMarks !== [];
-        $entries = $counter->entriesInTimeOrder($hasMarks ? null : $onlyCars);
+        $entries = $counter->entriesInTimeOrder($onlyCars);
         $counter->duplicates = DuplicateFilter::filter($entries, $input->settings, $counter->applied->confirmedEntryIds, $counter->sourcesById, $counter->timeline->largadaMs);
         $counter->groupsByCar = PassMatcher::match(
             $counter->duplicates->keptEntries,
@@ -110,12 +105,6 @@ final class LapCounter
 
         foreach ($counter->groupsByCar as $groups) {
             PassTimeFuser::setPassTimes($groups, $counter->sourcesById);
-        }
-        if ($hasMarks && $counter->unread !== null) {
-            PassTimeFuser::setPassTimes($counter->unread->matchMarks($counter->applied->sensorMarks, $counter->groupsByCar), $counter->sourcesById);
-            if ($onlyCars !== null) {
-                $counter->groupsByCar = array_intersect_key($counter->groupsByCar, array_fill_keys($onlyCars, true));
-            }
         }
         $unclassifiedCars = array_fill_keys($input->unclassifiedCars, true);
         $counter->ruleApplied = PublishRule::decide($counter->groupsByCar, $input->settings, $counter->availability, $unclassifiedCars);

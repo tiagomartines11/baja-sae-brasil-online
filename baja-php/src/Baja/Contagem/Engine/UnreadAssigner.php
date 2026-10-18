@@ -58,11 +58,13 @@ use Baja\Contagem\Engine\Data\Source;
  * is never given a car nobody typed.
  *
  * A TIMING SENSOR'S MARK never votes, so it can wait for the matching: it
- * is put against the PASS GROUPS of every car (matchMarks(), after
- * PassMatcher), each at its counters' earliest entry, in the same way. A matched
- * mark is attached to its group as a timing-only witness
- * (PassGroup::$marcaSensor), and a precise sensor's time becomes the time
- * of that pass (PassTimeFuser). Two things differ from a "??": the counters
+ * is put against the PASS GROUPS of every car (matchMarks(), in the
+ * whole-race run), each at its counters' earliest entry, in the same way. A
+ * matched mark is attached to its group as a timing-only witness
+ * (PassGroup::$marcaSensor): a precise sensor's mark times the laps that
+ * pass ends and begins (PassTimeFuser::removeHabits()). It changes no
+ * count and not the pass time itself, so the per-car recount of an upload,
+ * which never looks at marks, still gives what the whole race gives. Two things differ from a "??": the counters
  * press Enter a little after the car crosses and the sensor does not, so in
  * a cluster with two pairs or more the crossings are first moved by the
  * median of that lag; and the tolerance is narrower (sensorToleranceMs()),
@@ -74,8 +76,8 @@ use Baja\Contagem\Engine\Data\Source;
  * its own counter's "reatribuir", or a void) takes it out of here
  * altogether, so a person's word always wins.
  *
- * THE COUNT OF A CAR now depends on the entries of other cars around its
- * unread entries, so the per-car recount of an upload must be given those
+ * THE COUNT OF A CAR now depends on the entries of other cars around a
+ * counter's "??", so the per-car recount of an upload must be given those
  * too: rangesToLoad() says which (EngineInputLoader loads them). Habits are
  * not removed from the times here: they are only known to the whole-race
  * run, and the per-car recount must give exactly what the whole race does.
@@ -172,9 +174,29 @@ final class UnreadAssigner
             return $assigner;
         }
 
-        [$stretches, $longestMs] = self::readCrossings($applied->entries, $sourcesById, $settings->janelaMs, $knownCars);
-        $firstTimes = array_column($stretches, 'de');
+        // Only the entries within reach of an unread one can decide it: the
+        // same ones the per-car recount loads (rangesToLoad()), so that both
+        // cut the cars' entries into the same crossings.
         $toleranceMs = $settings->agreementSpreadMs();
+        $reachMs = self::reachMs($settings);
+        $ranges = [];
+        foreach ($bySource as $entries) {
+            foreach (self::clusters($entries, 2 * $toleranceMs) as $cluster) {
+                $ranges[] = [$cluster[0]->tsMs - $reachMs, $cluster[count($cluster) - 1]->tsMs + $reachMs];
+            }
+        }
+        $ranges = self::merged($ranges);
+        $rangeStarts = array_column($ranges, 0);
+        $nearby = [];
+        foreach ($applied->entries as $entry) {
+            $index = Stats::countAtMost($rangeStarts, $entry->tsMs) - 1;
+            if ($index >= 0 && $entry->tsMs <= $ranges[$index][1]) {
+                $nearby[] = $entry;
+            }
+        }
+
+        [$stretches, $longestMs] = self::readCrossings($nearby, $sourcesById, $settings->janelaMs, $knownCars);
+        $firstTimes = array_column($stretches, 'de');
         foreach ($bySource as $fonteId => $entries) {
             foreach (self::clusters($entries, 2 * $toleranceMs) as $cluster) {
                 $crossings = self::crossingsNotReadBy(
@@ -202,8 +224,8 @@ final class UnreadAssigner
     /**
      * Matches the timing sensors' marks with the pass groups, as the
      * witnesses that time them (PassGroup::$marcaSensor). Call after
-     * PassMatcher and PassTimeFuser::setPassTimes(), with the groups of
-     * every car near the marks; time the marked groups again afterwards.
+     * PassMatcher and PassTimeFuser::setPassTimes(), with every car's
+     * groups, and before PassTimeFuser::removeHabits().
      *
      * @param Entry[] $marks AppliedDecisions::$sensorMarks
      * @param array<int, PassGroup[]> $groupsByCar
@@ -300,7 +322,7 @@ final class UnreadAssigner
      * the cars' entries). Merged, earliest first; empty when no unread
      * entry is near.
      *
-     * @param Entry[] $items unread entries and sensor marks after decisions (AppliedDecisions::$unreadEntries and $sensorMarks)
+     * @param Entry[] $items unread entries after decisions (AppliedDecisions::$unreadEntries; a sensor's marks need nothing)
      * @param int[] $momentsMs
      * @return array<int, array{0: int, 1: int}>
      */
@@ -519,7 +541,7 @@ final class UnreadAssigner
 
         $entryTimes = array_map(fn(Entry $entry): int => $entry->tsMs, $cluster);
         $crossingTimes = array_column($crossings, 'ts_ms');
-        [$bestScore, $pairs] = self::bestMatching($entryTimes, $crossingTimes, $toleranceMs, null);
+        [$bestScore, $pairs, $fromStart] = self::bestMatching($entryTimes, $crossingTimes, $toleranceMs);
         if ($isSensor && count($pairs) >= self::MARCAS_PARA_ATRASO) {
             // The counters press Enter a little after a car crosses, all of
             // them, and the sensor does not: its marks come a fairly
@@ -529,15 +551,16 @@ final class UnreadAssigner
             // by side are told apart by their order, not by that delay.
             $lagMs = (int) round((float) Stats::median(array_map(fn(int $position, int $index): int => $entryTimes[$position] - $crossingTimes[$index], array_keys($pairs), $pairs)));
             $crossingTimes = array_map(fn(int $tsMs): int => $tsMs + $lagMs, $crossingTimes);
-            [$bestScore, $pairs] = self::bestMatching($entryTimes, $crossingTimes, $toleranceMs, null);
+            [$bestScore, $pairs, $fromStart] = self::bestMatching($entryTimes, $crossingTimes, $toleranceMs);
         }
+        $toEnd = $pairs === [] ? [] : self::bestToTheEnd($entryTimes, $crossingTimes, $toleranceMs);
 
         $applied = [];
         foreach ($cluster as $position => $entry) {
             $crossingIndex = $pairs[$position] ?? null;
             if ($crossingIndex !== null) {
                 $crossing = $crossings[$crossingIndex];
-                $marginMs = self::marginOf($position, $crossingIndex, $pairs, $bestScore, $entryTimes, $crossingTimes, $toleranceMs);
+                $marginMs = self::marginOf($position, $crossingIndex, $pairs, $bestScore, $fromStart, $toEnd, $entryTimes, $crossingTimes, $toleranceMs);
                 $minimumMs = max($isSensor ? self::MARGEM_MINIMA_SENSOR_MS : self::MARGEM_MINIMA_MS, abs($entry->tsMs - $crossingTimes[$crossingIndex]));
                 $isClear = $marginMs === null || $marginMs >= $minimumMs;
                 // A counter's "??" is a vote once it has a car. It is applied
@@ -588,26 +611,63 @@ final class UnreadAssigner
      * there is no other answer at all: without this pair the entry simply
      * has no crossing, and every other entry keeps its own.
      *
-     * The best answer without the pair comes from the same programme with
-     * the pair forbidden. That programme only knows answers that do not
-     * cross, and the answer that matters most may: two entries swapping
-     * their crossings (two cars side by side). Those swaps are tried one by
-     * one as well.
+     * The best answer without the pair comes from the two tables of the
+     * programme, from the start and to the end. An answer is a path through
+     * the table, and every path enters the corner that the pair leads into
+     * exactly once: by the pair itself or by one of the moves along that
+     * corner's two edges. The best path without the pair is the best of
+     * those other ways in. That only knows answers that do not cross, and
+     * the answer that matters most may: two entries swapping their
+     * crossings (two cars side by side). Those swaps are tried one by one
+     * as well.
      *
      * @param array<int, int> $pairs the best answer, entry position => crossing index
+     * @param array<int, array<int, int>> $fromStart bestMatching()'s table
+     * @param array<int, array<int, int>> $toEnd bestToTheEnd()'s table
      * @param int[] $entryTimes
      * @param int[] $crossingTimes
      */
-    private static function marginOf(int $position, int $crossingIndex, array $pairs, int $bestScore, array $entryTimes, array $crossingTimes, int $toleranceMs): ?int
-    {
-        [$alternativeScore, $alternative] = self::bestMatching($entryTimes, $crossingTimes, $toleranceMs, [$position, $crossingIndex]);
-        $others = $pairs;
-        unset($others[$position]);
-        ksort($alternative);
-        ksort($others);
-        $marginMs = $alternative === $others ? null : $bestScore - $alternativeScore;
-
+    private static function marginOf(
+        int $position,
+        int $crossingIndex,
+        array $pairs,
+        int $bestScore,
+        array $fromStart,
+        array $toEnd,
+        array $entryTimes,
+        array $crossingTimes,
+        int $toleranceMs
+    ): ?int {
+        $pairValue = $toleranceMs + 1;
+        $value = function (int $entry, int $crossing) use ($entryTimes, $crossingTimes, $toleranceMs, $pairValue): ?int {
+            $distanceMs = abs($entryTimes[$entry] - $crossingTimes[$crossing]);
+            return $distanceMs <= $toleranceMs ? $pairValue - $distanceMs : null;
+        };
+        // In table coordinates the pair leads from (i - 1, j - 1) into (i, j).
+        $i = $position + 1;
+        $j = $crossingIndex + 1;
+        $entryCount = count($entryTimes);
+        $crossingCount = count($crossingTimes);
+        $alternativeScore = PHP_INT_MIN;
+        for ($a = $i; $a <= $entryCount; $a++) {
+            // Passing over crossing j - 1 into column j.
+            $alternativeScore = max($alternativeScore, $fromStart[$a][$j - 1] + $toEnd[$a][$j]);
+            if ($a > $i && ($pair = $value($a - 1, $j - 1)) !== null) {
+                $alternativeScore = max($alternativeScore, $fromStart[$a - 1][$j - 1] + $pair + $toEnd[$a][$j]);
+            }
+        }
+        for ($b = $j; $b <= $crossingCount; $b++) {
+            // Leaving entry i - 1 without a crossing, into row i.
+            $alternativeScore = max($alternativeScore, $fromStart[$i - 1][$b] + $toEnd[$i][$b]);
+            if ($b > $j && ($pair = $value($i - 1, $b - 1)) !== null) {
+                $alternativeScore = max($alternativeScore, $fromStart[$i - 1][$b - 1] + $pair + $toEnd[$i][$b]);
+            }
+        }
         $ownMs = abs($entryTimes[$position] - $crossingTimes[$crossingIndex]);
+        // Just dropping the pair is always possible; if nothing does better,
+        // there is no other answer for this entry.
+        $marginMs = $alternativeScore <= $bestScore - ($pairValue - $ownMs) ? null : $bestScore - $alternativeScore;
+
         foreach ($pairs as $otherPosition => $otherIndex) {
             if ($otherPosition === $position) {
                 continue;
@@ -635,10 +695,10 @@ final class UnreadAssigner
      *
      * @param int[] $entryTimes
      * @param int[] $crossingTimes
-     * @param array{0: int, 1: int}|null $forbidden a pair that may not be used
-     * @return array{0: int, 1: array<int, int>} the score and entry position => crossing index
+     * @return array{0: int, 1: array<int, int>, 2: array<int, array<int, int>>} the score, entry position =>
+     *         crossing index, and the table: [i][j] the best score of the first i entries with the first j crossings
      */
-    private static function bestMatching(array $entryTimes, array $crossingTimes, int $toleranceMs, ?array $forbidden): array
+    private static function bestMatching(array $entryTimes, array $crossingTimes, int $toleranceMs): array
     {
         $pairValue = $toleranceMs + 1;
         $entryCount = count($entryTimes);
@@ -648,7 +708,7 @@ final class UnreadAssigner
             for ($j = 1; $j <= $crossingCount; $j++) {
                 $best = $score[$i - 1][$j] > $score[$i][$j - 1] ? $score[$i - 1][$j] : $score[$i][$j - 1];
                 $distanceMs = abs($entryTimes[$i - 1] - $crossingTimes[$j - 1]);
-                if ($distanceMs <= $toleranceMs && ($forbidden === null || $forbidden[0] !== $i - 1 || $forbidden[1] !== $j - 1)) {
+                if ($distanceMs <= $toleranceMs) {
                     $paired = $score[$i - 1][$j - 1] + $pairValue - $distanceMs;
                     if ($paired > $best) {
                         $best = $paired;
@@ -663,8 +723,7 @@ final class UnreadAssigner
         $j = $crossingCount;
         while ($i > 0 && $j > 0) {
             $distanceMs = abs($entryTimes[$i - 1] - $crossingTimes[$j - 1]);
-            $mayPair = $distanceMs <= $toleranceMs && ($forbidden === null || $forbidden[0] !== $i - 1 || $forbidden[1] !== $j - 1);
-            if ($mayPair && $score[$i][$j] === $score[$i - 1][$j - 1] + $pairValue - $distanceMs) {
+            if ($distanceMs <= $toleranceMs && $score[$i][$j] === $score[$i - 1][$j - 1] + $pairValue - $distanceMs) {
                 $pairs[$i - 1] = $j - 1;
                 $i--;
                 $j--;
@@ -674,6 +733,36 @@ final class UnreadAssigner
                 $j--;
             }
         }
-        return [$score[$entryCount][$crossingCount], $pairs];
+        return [$score[$entryCount][$crossingCount], $pairs, $score];
+    }
+
+    /**
+     * bestMatching()'s table the other way round: [i][j] is the best score
+     * of the entries from position i on with the crossings from index j on.
+     *
+     * @param int[] $entryTimes
+     * @param int[] $crossingTimes
+     * @return array<int, array<int, int>>
+     */
+    private static function bestToTheEnd(array $entryTimes, array $crossingTimes, int $toleranceMs): array
+    {
+        $pairValue = $toleranceMs + 1;
+        $entryCount = count($entryTimes);
+        $crossingCount = count($crossingTimes);
+        $score = array_fill(0, $entryCount + 1, array_fill(0, $crossingCount + 1, 0));
+        for ($i = $entryCount - 1; $i >= 0; $i--) {
+            for ($j = $crossingCount - 1; $j >= 0; $j--) {
+                $best = $score[$i + 1][$j] > $score[$i][$j + 1] ? $score[$i + 1][$j] : $score[$i][$j + 1];
+                $distanceMs = abs($entryTimes[$i] - $crossingTimes[$j]);
+                if ($distanceMs <= $toleranceMs) {
+                    $paired = $score[$i + 1][$j + 1] + $pairValue - $distanceMs;
+                    if ($paired > $best) {
+                        $best = $paired;
+                    }
+                }
+                $score[$i][$j] = $best;
+            }
+        }
+        return $score;
     }
 }

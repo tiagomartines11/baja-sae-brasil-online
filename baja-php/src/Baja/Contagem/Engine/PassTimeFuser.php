@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Contagem\Engine;
 
+use Baja\Contagem\Engine\Data\Entry;
 use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
 
@@ -28,8 +29,12 @@ use Baja\Contagem\Engine\Data\Source;
  *    the whole race a little, and published lap times would flicker by a
  *    second between one run and the next.
  *
- * A precise timing sensor's mark matched to the crossing
- * (PassGroup::$marcaSensor) times it as a precise source's entry would.
+ * A precise TIMING SENSOR's mark matched to the crossing
+ * (PassGroup::$marcaSensor, whole-race run only) is no entry of the group
+ * and leaves its pass time alone: the pass time must come out the same in
+ * the per-car recount of an upload, which never matches marks. It times
+ * the lap durations instead: the habit-corrected time of a marked pass is
+ * the mark's, and the counters' habits are measured against it.
  *
  * A pass a reviewer timed by one entry ("usar_tempo": the other counter
  * typed late) takes that entry's time for both. The other entries are
@@ -79,12 +84,6 @@ final class PassTimeFuser
                         $preciseTime = $entry->tsMs;
                     }
                 }
-                // A timing sensor's mark matched to the crossing times it
-                // like a precise source's own entry, without being a vote.
-                $mark = $group->marcaSensor;
-                if ($preciseTime === null && $mark !== null && isset($preciseSourceIds[$mark->fonteId])) {
-                    $preciseTime = $mark->tsMs;
-                }
             }
             $group->tempoPreciso = $preciseTime !== null;
             $group->tsMs = $preciseTime ?? $medianMs;
@@ -131,6 +130,11 @@ final class PassTimeFuser
 
             if ($group->tempoEscolhidoId !== null) {
                 self::timeByTheChosenEntry($group, $habit, $preciseSourceIds);
+                continue;
+            }
+            $mark = $group->marcaSensor;
+            if ($mark !== null && !$group->tempoPreciso && isset($preciseSourceIds[$mark->fonteId])) {
+                self::timeByTheSensor($group, $mark, $habit, $recentDifferences);
                 continue;
             }
 
@@ -229,6 +233,33 @@ final class PassTimeFuser
         $group->tsAjustadoMs = $chosen === null || isset($preciseSourceIds[$chosen->fonteId])
             ? $group->tsMs
             : $chosen->tsMs - ($habit[$chosen->fonteId] ?? 0);
+    }
+
+    /**
+     * A pass a precise timing sensor marked: the mark is when the car
+     * crossed. The spread is the counters' own, and each counter learns its
+     * habit against the mark, as against a precise source's entry.
+     *
+     * @param array<int, int> $habit
+     * @param array<int, RecentMedian> $recentDifferences
+     */
+    private static function timeByTheSensor(PassGroup $group, Entry $mark, array &$habit, array &$recentDifferences): void
+    {
+        $corrected = [];
+        foreach ($group->entries as $entry) {
+            $corrected[] = $entry->tsMs - ($habit[$entry->fonteId] ?? 0);
+        }
+        $group->dispersaoMs = max($corrected) - min($corrected);
+        $group->tempoPreciso = true;
+        $group->tsAjustadoMs = $mark->tsMs;
+        foreach ($group->entries as $entry) {
+            $fonteId = $entry->fonteId;
+            if ($fonteId === Source::REVISOR_ID) {
+                continue;
+            }
+            $differences = $recentDifferences[$fonteId] ?? ($recentDifferences[$fonteId] = new RecentMedian(self::HABIT_SAMPLE_SIZE));
+            $habit[$fonteId] = $differences->addAndRound($entry->tsMs - $mark->tsMs);
+        }
     }
 
     /** The whole millisecond halfway between two times; a half rounds up, as round() does. */
