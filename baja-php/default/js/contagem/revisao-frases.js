@@ -71,28 +71,42 @@ export function descreverSugestao(alerta) {
 // "(carro 3, Contagem 1)": which entry a decision was about, from the
 // fields the server adds to a history row. For a reassignment the car as
 // typed; otherwise the car the entry counts for now, with the typed one
-// when they differ. Empty when the row says nothing about an entry.
+// when they differ. "(??, Contagem 2)" or "(carro 7, era ??, Contagem 2)"
+// for an entry stored with no number. Empty when the row says nothing
+// about an entry.
 function doRegistro(decisao, comCarroAtual = true) {
   const digitado = decisao.carro_digitado ?? null;
   const atual = decisao.carro ?? digitado;
   const partes = [];
   if (digitado !== null) {
     partes.push(!comCarroAtual || atual === digitado ? `carro ${digitado}` : `carro ${atual}, digitado ${digitado}`);
+  } else if (sobreIlegivel(decisao)) {
+    partes.push(comCarroAtual && atual !== null ? `carro ${atual}, era ??` : '??');
   }
-  if (decisao.fonte_nome && digitado !== null) {
+  if (decisao.fonte_nome && (digitado !== null || sobreIlegivel(decisao))) {
     partes.push(decisao.fonte_nome);
   }
   return partes.length === 0 ? '' : ` (${partes.join(', ')})`;
 }
 
+// A row about a stored entry that has no number: a "??" or a sensor's mark.
+const sobreIlegivel = (decisao) => decisao.carro_digitado === null
+  && ((decisao.passagem_id ?? null) !== null || (decisao.passagem_ts_ms ?? null) !== null) && decisao.tipo !== 'adicionar';
+
 // One line of the history panel. `desfeita` is, for an undo, the history
 // row of the decision it undid, when the screen has it: the line then says
 // what that decision was.
-export function descreverDecisao(decisao, nomeDaFonte = () => null, desfeita = null) {
+// `tipoDaFonte(id)` tells a timing sensor's mark from a "??".
+export function descreverDecisao(decisao, nomeDaFonte = () => null, desfeita = null, tipoDaFonte = () => null) {
   switch (decisao.tipo) {
     case 'anular':
       return `Anulou a passagem #${decisao.passagem_id}${doRegistro(decisao)}`;
     case 'reatribuir':
+      if (sobreIlegivel(decisao)) {
+        // "Atribuiu o ?? #123 (Contagem 2) ao carro 7", like the system's own line.
+        const oQue = tipoDaFonte(decisao.fonte_id) === 'sensor' ? 'a marca do sensor' : 'o ??';
+        return `Atribuiu ${oQue} #${decisao.passagem_id}${decisao.fonte_nome ? ` (${decisao.fonte_nome})` : ''} ao carro ${decisao.equipe_numero}`;
+      }
       return `Trocou a passagem #${decisao.passagem_id}${doRegistro(decisao, false)} para o carro ${decisao.equipe_numero}`;
     case 'confirmar':
       return `Confirmou a passagem #${decisao.passagem_id}${doRegistro(decisao)}`;
@@ -110,7 +124,7 @@ export function descreverDecisao(decisao, nomeDaFonte = () => null, desfeita = n
         decisao.ts_fim_ms === null || decisao.ts_fim_ms === undefined ? 'até segunda ordem' : 'por um período'}`;
     case 'desfazer':
       if (desfeita && desfeita.tipo !== 'desfazer') {
-        const oQue = descreverDecisao(desfeita, nomeDaFonte);
+        const oQue = descreverDecisao(desfeita, nomeDaFonte, null, tipoDaFonte);
         return `Desfez a decisão #${decisao.desfaz_decisao_id}: ${oQue.charAt(0).toLowerCase()}${oQue.slice(1)}`;
       }
       return `Desfez a decisão #${decisao.desfaz_decisao_id}${doRegistro(decisao)}`;
@@ -141,13 +155,13 @@ function momentoDaDecisao(decisao, largadaMs) {
 
 // The whole "O quê" of a history row: the decision, when it acts, and the
 // reason typed with it. For an undo, the decision it undid with its moment.
-//   contexto: {nomeDaFonte(id), largadaMs, desfeita}  see descreverDecisao
-export function fraseDoHistorico(decisao, { nomeDaFonte = () => null, largadaMs = null, desfeita = null } = {}) {
+//   contexto: {nomeDaFonte(id), tipoDaFonte(id), largadaMs, desfeita}  see descreverDecisao
+export function fraseDoHistorico(decisao, { nomeDaFonte = () => null, tipoDaFonte = () => null, largadaMs = null, desfeita = null } = {}) {
   const ehDesfeitaConhecida = decisao.tipo === 'desfazer' && desfeita && desfeita.tipo !== 'desfazer';
   const momento = momentoDaDecisao(ehDesfeitaConhecida ? desfeita : decisao, largadaMs);
   // The "motivo" of a marked exit is its area, already said in the sentence.
   const motivo = decisao.motivo && decisao.tipo !== 'marcar_saida' ? ` — ${decisao.motivo}` : '';
-  return descreverDecisao(decisao, nomeDaFonte, desfeita) + momento + motivo;
+  return descreverDecisao(decisao, nomeDaFonte, desfeita, tipoDaFonte) + momento + motivo;
 }
 
 // The system's own resolutions, listed in the history beside the

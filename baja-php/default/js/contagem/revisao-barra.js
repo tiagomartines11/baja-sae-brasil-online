@@ -12,6 +12,7 @@ import { fraseDeDuvida } from './revisao-alertas.js';
 import { avisosDaPontuacao, recalculoDosPontos } from './revisao-frases.js';
 import { horarioOficial, idadeDoCalculo } from './revisao-relogio.js';
 import { ehObservadora } from './revisao-observacao.js';
+import { carrosDoAlertaIlegivel, dicaDosIlegiveisDaFonte, nomeDoAlertaIlegivel } from './revisao-ilegivel.js';
 
 // ---- what the bar says (pure, tested) --------------------------------------
 //
@@ -47,6 +48,8 @@ export function descreverChip(fonte, estado, agoraServidorMs, excluidas = new Se
       ehObservadora(fonte) ? 'observadora: comparada com a contagem, nunca conta' : null,
       situacao.titulo,
       resumo ? `dispositivos: ${resumo}` : null,
+      // In the tooltip only: the chip's text keeps its fixed shape.
+      dicaDosIlegiveisDaFonte(fonte),
     ].filter(Boolean).join(' · '),
     dispositivos: comProblema > 0 ? `· ${comProblema} disp.` : null,
   };
@@ -230,8 +233,8 @@ function itemDaFila(alerta, estado, selecionadoId, aoEscolher) {
 
   return el('li', {},
     el('button', { type: 'button', class: classes.join(' '), onclick: () => aoEscolher(alerta.id) },
-      el('span', { class: 'tipo' }, NOMES_DE_ALERTA[alerta.tipo] ?? alerta.tipo),
-      el('span', { class: 'carros' }, `carro ${listaDeCarros(alerta.carros)}`),
+      el('span', { class: 'tipo' }, nomeDoAlertaIlegivel(alerta, estado) ?? NOMES_DE_ALERTA[alerta.tipo] ?? alerta.tipo),
+      el('span', { class: 'carros' }, carrosDoAlertaIlegivel(alerta) ?? `carro ${listaDeCarros(alerta.carros)}`),
       el('span', { class: 'quando' }, quandoDoAlerta(alerta, estado.corrida.largada_ms)),
       alerta.prioridade !== null && alerta.prioridade !== undefined
         ? el('span', { class: 'posicao', title: 'melhor posição entre os carros envolvidos' }, `P${alerta.prioridade}`)

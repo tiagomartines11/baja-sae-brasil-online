@@ -26,6 +26,8 @@ export const NOMES_DE_ALERTA = {
   saida_presumida: 'Saída do box presumida: o registro não tem a saída',
   dispersao_alta: 'Registros afastados demais entre si',
   registro_tardio: 'Mesma passagem registrada com atraso',
+  numero_ilegivel: 'Passagem sem número (??)',
+  numero_atribuido: 'Número atribuído automaticamente',
 };
 
 export const NOMES_DE_STATUS = {

@@ -24,8 +24,13 @@
 //                      refuses a pass for it
 //   saida_presumida    the pass counts already (the engine assumed the exit);
 //                      there is nothing to add for that car at that moment
+//   numero_ilegivel, numero_atribuido
+//                      the first car is only a candidate: what settles it is
+//                      giving the "??" its car; a pass added for it as well
+//                      would count that crossing twice
 const TIPOS_SEM_CARRO_AO_ADICIONAR = [
   'troca_provavel', 'dispersao_alta', 'no_box', 'no_abastecimento', 'carro_desconhecido', 'saida_presumida',
+  'numero_ilegivel', 'numero_atribuido',
 ];
 
 // A "troca provável" with no lone entry: every counter of one pass skipped

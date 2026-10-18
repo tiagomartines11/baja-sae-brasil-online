@@ -650,3 +650,92 @@ tr.aviso-tabela td { background: var(--fundo-ambar); color: var(--cor-ambar); wh
 /* "Editar manualmente" on a probable swap: the form that settles the flag first, the other one clearly apart. */
 .edicao-manual .acao-mover { border-left: 4px solid var(--cor-verde); }
 .edicao-manual .separador-manual { margin: 12px 0 4px; padding-top: 8px; border-top: 1px dashed var(--cor-fraca); }
+
+/* ---- passes without a number ("??") and the timing sensor ---- */
+
+/* A "??" nobody gave a car yet: purple, dashed, its own look (not the grey
+   of a void or of an entry out of use: it needs a person). The "??" family
+   keeps the purple: the marker of a car the system gave one by itself. */
+:root { --cor-ilegivel: #6b3fa0; --fundo-ilegivel: #f1eafa; }
+.chip.ilegivel-pendente { border: 2px dashed var(--cor-ilegivel); background: var(--fundo-ilegivel); color: var(--cor-ilegivel); }
+/* Small markers in a chip's lower corners: who gave a "??" its car, and
+   "S" when a sensor's mark times the pass. Real elements, not ::after, so
+   they never fight the "0" and "C" corners above. */
+.chip .marcador {
+  position: absolute;
+  bottom: -6px;
+  padding: 0 3px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: bold;
+  line-height: 11px;
+  text-decoration: none;
+  pointer-events: none;
+}
+.chip .marcador-auto { right: -6px; background: var(--cor-ilegivel); }
+.chip .marcador-contador { right: -5px; background: var(--cor-fraca); }
+.chip .marcador-revisor { right: -5px; background: var(--cor-azul); }
+.chip .marcador-sensor { left: -5px; background: var(--cor-verde); }
+/* On a "??" flag: the passes of the cars it may have been, numbered as
+   their buttons (1 to 6). */
+.chip .marcador-candidato { top: -7px; bottom: auto; left: -5px; background: var(--cor-ambar); font-size: 10px; line-height: 12px; }
+.chip.candidato { outline: 2px solid var(--cor-ambar); outline-offset: 1px; }
+
+/* The timing sensor's lane: thin ticks at the exact moment, not chips. */
+.raia-sensor .raia-trilho { background: #f2f8f4; }
+.raia-sensor .raia-nome { color: var(--cor-verde); }
+.marca-sensor {
+  position: absolute;
+  width: 8px;
+  height: 26px;
+  margin: 2px 0 0 -4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cor-verde);
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1;
+}
+.marca-sensor::before { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px; background: var(--cor-fraca); opacity: 0.45; }
+.marca-sensor.com-passagem::before { background: var(--cor-verde); opacity: 1; }
+.marca-sensor.atribuida::before { background: var(--cor-azul); opacity: 1; width: 3px; }
+.marca-sensor.anulada::before { background: var(--cor-vermelha); opacity: 0.5; }
+/* A mark a reviewer gave a car: the car beside the tick. */
+.marca-sensor.atribuida { width: auto; min-width: 8px; padding-left: 8px; color: var(--cor-azul); text-align: left; white-space: nowrap; }
+.marca-sensor.em-destaque::before, .marca-sensor.ligada::before { width: 4px; left: 2px; background: var(--cor-ambar); opacity: 1; }
+.marca-sensor.selecionada::before { width: 4px; left: 2px; background: var(--cor-azul); opacity: 1; }
+.marca-sensor.apagada { opacity: 0.35; }
+.marca-sensor:focus-visible { outline: 2px solid var(--cor-azul); }
+/* The counters' entries of the pass a picked mark times (and the other way round). */
+.chip.ligada { outline: 2px dotted var(--cor-verde); outline-offset: 2px; }
+
+/* The cars a "??" may have been: big buttons, the likeliest first. */
+.candidatos { margin: 8px 0; }
+.lista-candidatos { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.lista-candidatos button.candidato {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--cor-ilegivel);
+  border-radius: 4px;
+  background: var(--fundo-ilegivel);
+  color: var(--cor-texto);
+  font: inherit;
+  text-align: left;
+}
+.lista-candidatos button.candidato .rotulo { font-weight: bold; }
+.lista-candidatos button.candidato small { display: block; margin-top: 2px; color: var(--cor-fraca); }
+.lista-candidatos button.candidato.soma-volta { border-color: var(--cor-ambar); background: var(--fundo-ambar); }
+.lista-candidatos button.candidato:disabled { opacity: 0.6; }
+.candidatos .atribuir-outro { margin: 4px 10px 4px 0; }
+.candidatos .anular-ilegivel { padding: 6px 12px; border: 1px solid var(--cor-borda); border-radius: 4px; background: var(--cor-painel); }
+.ilegivel-onde { margin: 4px 0; }
+
+@media (max-width: 900px) {
+  .lista-candidatos button.candidato { padding: 12px; }
+  .candidatos .anular-ilegivel { width: 100%; padding: 12px; }
+}

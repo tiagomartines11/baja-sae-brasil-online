@@ -12,6 +12,7 @@
 import { saidaPresumidaDoAlerta } from './revisao-alertas.js';
 import { haQuanto } from './revisao-formato.js';
 import { descreverResolucaoAutomatica, fraseDoHistorico } from './revisao-frases.js';
+import { linhaDaAtribuicao } from './revisao-ilegivel.js';
 
 // The "Quem" of what the system did on its own, and of a void the counter
 // made on the phone (whoever was logged in there).
@@ -31,6 +32,7 @@ export const TIPOS_DO_HISTORICO = [
   { valor: 'desfazer', rotulo: 'Desfazer' },
   { valor: 'repetida_ignorada', rotulo: 'Repetida ignorada (sistema)' },
   { valor: 'saida_presumida', rotulo: 'Saída presumida (sistema)' },
+  { valor: 'numero_atribuido', rotulo: 'Número atribuído (sistema)' },
 ];
 
 export const FILTROS_VAZIOS = Object.freeze({ carro: '', fonte: '', quem: '', tipo: '', soEmVigor: false });
@@ -124,7 +126,12 @@ function linhaAutomatica(alerta, estado, contexto) {
     // worked out afresh at every calculation.
     emVigor: true,
     desfeita: false,
-    texto: descreverResolucaoAutomatica(alerta, { nomeDaFonte: contexto.nomeDaFonte, area }),
+    // "Sistema: atribuiu o ?? #123 de Contagem 2 ao carro 7": nothing is
+    // stored for it; a reviewer's or the counter's own "reatribuir" on that
+    // entry takes its place, and this line goes.
+    texto: alerta.tipo === 'numero_atribuido'
+      ? linhaDaAtribuicao(alerta, contexto.nomeDaFonte)
+      : descreverResolucaoAutomatica(alerta, { nomeDaFonte: contexto.nomeDaFonte, area }),
     alvo: { tipo: 'alerta', id: alerta.id },
   };
 }
@@ -156,8 +163,10 @@ export function linhasDoHistorico(estado) {
   const decisoes = [...historico, ...(estado?.historico_em_vigor ?? []).filter((decisao) => !presentes.has(decisao.id))];
 
   const fontes = new Map((estado?.fontes ?? []).map((fonte) => [fonte.id, fonte.nome]));
+  const tipos = new Map((estado?.fontes ?? []).map((fonte) => [fonte.id, fonte.tipo]));
   const contexto = {
     nomeDaFonte: (id) => fontes.get(id) ?? null,
+    tipoDaFonte: (id) => tipos.get(id) ?? null,
     largadaMs: estado?.corrida?.largada_ms ?? null,
   };
   const porId = new Map(decisoes.map((decisao) => [decisao.id, decisao]));

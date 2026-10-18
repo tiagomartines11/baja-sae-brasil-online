@@ -17,8 +17,17 @@ import { rotuloDeUsarTempo } from './revisao-frases.js';
 //              them may be the same crossing counted twice
 //   'a_menos'  a pass is held back and may be real
 // Returns the sentence shown on the flag, or null when the count is not in doubt.
+//
+// A "??" (numero_ilegivel) puts no count in doubt by itself: it is the
+// first car it may have been that may be a lap short, if it was that car,
+// and the sentence says it that way.
 export function fraseDeDuvida(alerta) {
   const carro = (alerta?.carros ?? [])[0];
+  if (alerta?.tipo === 'numero_ilegivel' && alerta.contagem_em_duvida === 'a_menos') {
+    return carro === undefined
+      ? 'Se esta passagem foi de algum carro, ele pode estar com uma volta a menos.'
+      : `Se esta passagem foi do carro ${carro}, ele pode estar com uma volta a menos.`;
+  }
   const quem = carro === undefined ? 'O carro' : `O carro ${carro}`;
   if (alerta?.contagem_em_duvida === 'a_mais') {
     return `${quem} pode estar com uma volta a mais.`;
@@ -93,6 +102,10 @@ export function acaoDeConfirmar(alerta) {
   }
   if (somaPassagem(alerta)) {
     return { rotulo: rotuloDeContar(alerta), maisUmaPassagem: true };
+  }
+  if (alerta.tipo === 'numero_ilegivel') {
+    // Nothing "is correct" about a pass with no car: K leaves it with none.
+    return { rotulo: 'Deixar sem carro, parar de avisar', maisUmaPassagem: false };
   }
   return { rotulo: 'Está correto, parar de avisar', maisUmaPassagem: false };
 }
@@ -334,6 +347,20 @@ export function acaoDeAceitar(alerta, estado = null) {
         rotulo: 'Descartar esta passagem',
         pergunta: `Descartar esta passagem do carro ${carros}? Todos os registros dela são anulados de uma vez. Pode ser desfeito pelo histórico.`,
       };
+    case 'reatribuir':
+      if (alerta.tipo === 'numero_ilegivel') {
+        // The closest car another counter read. When that reading is the
+        // only one, the "??" is the second witness the pass needs: it may
+        // start to count, so A asks (see efeitoDeAtribuir).
+        return {
+          rotulo: `Atribuir ao carro ${sugestao.equipe_numero}`,
+          pergunta: alerta.contagem_em_duvida === 'a_menos'
+            ? `Atribuir este "??" ao carro ${sugestao.equipe_numero}? Só uma outra contagem registrou o carro ${sugestao.equipe_numero} aqui; `
+              + 'com este registro são dois, e a passagem pode passar a CONTAR (+1 volta). Pode ser desfeito pelo histórico. Atribuir?'
+            : null,
+        };
+      }
+      return { rotulo: 'Aceitar sugestão', pergunta: null };
     case 'reatribuir_grupo': {
       const quantos = (sugestao.passagem_ids ?? []).length;
       return {

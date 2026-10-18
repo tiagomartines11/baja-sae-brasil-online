@@ -21,6 +21,7 @@ import {
 import {
   ehObservadora, linhasDaObservacao, tituloDaObservacao,
 } from './revisao-observacao.js';
+import { linhasDoSensor, textoDosIlegiveis } from './revisao-ilegivel.js';
 
 // One column header: a button that sorts by it (see proximaOrdem), with
 // aria-sort and an arrow on the column in use.
@@ -200,7 +201,9 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
   // An observer counts nothing, so the counter's numbers (entries in use,
   // misses) say nothing about it: its own comparison takes their place. A
   // promoted one shows both, the comparison of the time it observed below.
-  const observacao = linhasDaObservacao(stats?.observacao);
+  const observacao = linhasDaObservacao(stats?.observacao, fonte);
+  const ilegiveis = textoDosIlegiveis(stats);
+  const doSensor = linhasDoSensor(stats?.sensor);
   const sincronizado = stats
     ? [el('dt', {}, 'sincronizado até'), el('dd', {},
       stats.nada_a_esperar ? 'nenhum dispositivo aberto' : tempoDeProva(stats.sincronizado_ate_ms, largada))]
@@ -212,6 +215,12 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
   let numeros = el('p', { class: 'vazio' }, 'Sem estatísticas.');
   if (stats && observacao && ehObservadora(fonte)) {
     numeros = comparacao(true);
+  } else if (stats && doSensor) {
+    // A sensor that counts reads no car: what it did with its marks, not a
+    // counter's misses and swaps. Its comparison as an observer, if it was one, below.
+    numeros = [el('p', {}, 'Sensor de tempo: marca o horário das passagens; os contadores dizem o carro.'),
+      el('dl', {}, doSensor.map(([rotulo, valor, dica]) => [el('dt', { class: 'com-dica', title: dica }, rotulo), el('dd', {}, valor)]), sincronizado),
+      observacao ? comparacao(false) : null];
   } else if (stats) {
     numeros = [el('dl', {},
       el('dt', {}, 'registros em uso'), el('dd', {}, numero(stats.entradas)),
@@ -219,6 +228,8 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
       el('dt', {}, 'trocas corrigidas'), el('dd', {}, numero(stats.trocas)),
       el('dt', {}, 'repetidas anuladas'), el('dd', {}, numero(stats.repetidas_anuladas)),
       el('dt', {}, 'atraso mediano'), el('dd', {}, `${Math.round((stats.desvio_mediano_ms ?? 0) / 1000)} s`),
+      // Only a source that recorded "??" has the line at all.
+      ilegiveis === null ? null : [el('dt', {}, 'ilegíveis'), el('dd', {}, ilegiveis.replace(/^ilegíveis: /, ''))],
       sincronizado), observacao ? comparacao(false) : null];
   }
 

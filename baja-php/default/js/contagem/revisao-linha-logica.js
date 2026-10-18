@@ -136,10 +136,17 @@ export function momentoEmDestaque(modo, alerta) {
 // other entries are drawn weakly while every other car is dimmed. In a
 // car's own race nothing is dimmed: all of it is that car. A car opened
 // from a line of the history has that line's entries (`idsEmDestaque` of
-// the selection) outlined strongly, as a flag's.
+// the selection) outlined strongly, as a flag's. A "??" flag names three
+// cars and offers up to six: the passes of all six stand out, each
+// numbered as its button (`candidatos`, car -> 1..6).
 export function destaqueDaLinha(selecao, alerta, modo) {
   if (selecao?.tipo === 'alerta' && alerta) {
-    return { ids: alerta.passagem_ids ?? [], carros: alerta.carros ?? [] };
+    const candidatos = new Map((alerta.tipo === 'numero_ilegivel' ? alerta.candidatos ?? [] : [])
+      .slice(0, 6).map((candidato, indice) => [candidato.carro, indice + 1]));
+    const carros = [...new Set([...(alerta.carros ?? []), ...candidatos.keys()])];
+    return candidatos.size > 0
+      ? { ids: alerta.passagem_ids ?? [], carros, candidatos }
+      : { ids: alerta.passagem_ids ?? [], carros };
   }
   if (selecao?.tipo === 'carro') {
     const ids = selecao.idsEmDestaque ?? [];

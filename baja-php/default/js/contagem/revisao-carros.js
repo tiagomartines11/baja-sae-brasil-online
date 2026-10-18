@@ -122,10 +122,15 @@ export function sinaisDoCarro(carro, estado, colunas) {
   const doCarro = (estado?.alertas_abertos ?? [])
     .filter((alerta) => !alerta.auto_resolvido && (alerta.carros ?? []).includes(carro.carro));
   const tipos = [...new Set(doCarro.map((alerta) => NOMES_DE_ALERTA[alerta.tipo] ?? alerta.tipo))];
+  // A "??" names up to three cars it may have been. It is an open flag of
+  // each, but it may change the count of the likeliest one only: the
+  // others are not red for a crossing that is probably not theirs.
+  const poeEmDuvida = (alerta) => contagemEmDuvida(alerta)
+    && (alerta.tipo !== 'numero_ilegivel' || (alerta.carros ?? [])[0] === carro.carro);
   return {
     acima,
     alertas: doCarro.length,
-    emDuvida: doCarro.filter(contagemEmDuvida).length,
+    emDuvida: doCarro.filter(poeEmDuvida).length,
     tipos,
     curtas: (carro.voltas_curtas_confirmadas ?? []).length,
   };

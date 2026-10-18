@@ -63,9 +63,11 @@ export const ALCANCE_SEM_RITMO_MS = 5 * 60 * 1000;
 
 // The first and last moments of a flag's own entries: its moment, and the
 // times it offers to choose from ("tempos_possiveis"), such as the late
-// entry of a "registro_tardio", typed up to a minute after the flag's.
+// entry of a "registro_tardio", typed up to a minute after the flag's, or
+// the crossings of the cars a "??" may have been ("candidatos").
 export function momentosDoAlerta(alerta) {
-  const tempos = [alerta.ts_ms, ...(alerta.tempos_possiveis ?? []).map((tempo) => tempo.ts_ms)]
+  const tempos = [alerta.ts_ms, ...(alerta.tempos_possiveis ?? []).map((tempo) => tempo.ts_ms),
+    ...(alerta.candidatos ?? []).map((candidato) => candidato.ts_ms)]
     .filter((ts) => typeof ts === 'number');
   return { primeiroMs: Math.min(...tempos), ultimoMs: Math.max(...tempos) };
 }

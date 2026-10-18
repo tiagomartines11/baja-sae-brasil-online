@@ -17,6 +17,7 @@ import { problemaAoMover } from './revisao-edicao-manual.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { interpretarTempoDeProva } from './revisao-formato.js';
 import { encontrarEntrada } from './revisao-raias-logica.js';
+import { efeitoDeAtribuir, fonteEhSensor, problemaAoAtribuir } from './revisao-ilegivel.js';
 import { agoraServidorMs, mostrarMensagem, pagina, semConexao, tela } from './revisao-tela.js';
 
 const DESFECHO_DESCONHECIDO = 'O servidor não respondeu como esperado. NÃO se sabe se a decisão foi registrada: '
@@ -82,6 +83,7 @@ export function criarAcoes(ganchos) {
     }
     tela.ocupado = false;
     tela.entradaSelecionadaId = null;
+    tela.trocandoAtribuicao = null;
     ganchos.desenharTudo();
     if (desfechoConhecido) {
       ganchos.carregarJanela();
@@ -282,6 +284,50 @@ export function criarAcoes(ganchos) {
     enviar(pedidoParaEntrada(comMotivo(decisoes[opcao.acao](), tela.motivo), entrada, tela.estado));
   }
 
+  // A car for a "??" or a sensor's mark: one of the candidates, or a car
+  // typed. A "reatribuir", as "Trocar" on a chip; asked first when it adds
+  // a pass (efeitoDeAtribuir). Sent as a decision on the selected flag when
+  // the entry is the flag's, otherwise on the chip itself.
+  function atribuir(entradaId, carro) {
+    const alerta = alertaSelecionado();
+    const doAlerta = alerta && (alerta.passagem_ids ?? []).includes(entradaId);
+    const entrada = encontrarEntrada(tela.janela, entradaId);
+    if (doAlerta ? !alertaQuePodeSerDecidido() : !entrada) {
+      return;
+    }
+    const problema = problemaAoAtribuir(carro, entrada, tela.estado);
+    if (problema) {
+      mostrarMensagem(problema, 'erro');
+      return;
+    }
+    const alvo = entrada ?? { id: entradaId, fonte_id: alerta.fonte_id, ts_ms: alerta.ts_ms };
+    const efeito = efeitoDeAtribuir(alvo, carro, { janela: tela.janela, estado: tela.estado, sensor: fonteEhSensor(tela.estado, alvo.fonte_id) });
+    if (efeito.pergunta !== null && !window.confirm(efeito.pergunta)) {
+      return;
+    }
+    const decisao = comMotivo(decisaoReatribuir(entradaId, carro), tela.motivo);
+    if (doAlerta) {
+      enviarSobreAlerta(decisao, alerta);
+    } else {
+      enviar(pedidoParaEntrada(decisao, entrada, tela.estado));
+    }
+  }
+
+  // "Anular (não passou carro)" in the block of a "??": the same void as V.
+  function anularEntrada(entradaId) {
+    const alerta = alertaSelecionado();
+    if (alerta && (alerta.passagem_ids ?? []).includes(entradaId)) {
+      if (alertaQuePodeSerDecidido()) {
+        enviarSobreAlerta(comMotivo(decisaoAnular(entradaId), tela.motivo), alerta);
+      }
+      return;
+    }
+    const entrada = encontrarEntrada(tela.janela, entradaId);
+    if (entrada) {
+      enviar(pedidoParaEntrada(comMotivo(decisaoAnular(entradaId), tela.motivo), entrada, tela.estado));
+    }
+  }
+
   // Reviewers type times as time of race; the server wants an absolute
   // moment. Null (with a message) when the text is not a time or the race
   // has no start to count from.
@@ -367,6 +413,8 @@ export function criarAcoes(ganchos) {
     usarTempo,
     anular,
     acaoNaEntrada,
+    atribuir,
+    anularEntrada,
     adicionar,
     excluirFonte,
     encerrarExclusao,

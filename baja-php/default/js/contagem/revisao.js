@@ -8,6 +8,8 @@
 
 import { criarAcoes } from './revisao-acoes.js';
 import { indiceDeUsarTempo } from './revisao-alertas.js';
+import { candidatosDoAlerta, candidatosParaTrocar, indiceDeCandidato } from './revisao-ilegivel.js';
+import { encontrarEntrada } from './revisao-raias-logica.js';
 import { SessaoExpirada, buscarEstado } from './revisao-api.js';
 import { desenharBarra, desenharBarraSemEstado } from './revisao-barra.js';
 import {
@@ -48,6 +50,10 @@ const acoesDoDetalhe = {
   eraOutroCarro: (id) => { tela.entradaSelecionadaId = id; desenharDetalhe(); },
   anular: acoes.anular,
   acaoNaEntrada: acoes.acaoNaEntrada,
+  atribuir: acoes.atribuir,
+  anularEntrada: acoes.anularEntrada,
+  // "Não é o carro 7…" on a "??" the engine gave a car: opens (or closes) the other cars.
+  alternarTroca: (id) => { tela.trocandoAtribuicao = tela.trocandoAtribuicao === id ? null : id; desenharDetalhe(); },
   adicionar: acoes.adicionar,
   alternarManual: () => { tela.modoManual = !tela.modoManual; desenharDetalhe(); },
   anotarMotivo: (texto) => { tela.motivo = texto; },
@@ -113,6 +119,7 @@ function selecionar(selecao) {
   tela.erroDaJanela = false;
   tela.entradaSelecionadaId = null;
   tela.modoManual = false;
+  tela.trocandoAtribuicao = null;
   tela.motivo = '';
   mostrarMensagem(null);
   linha.novaSelecao();
@@ -125,6 +132,7 @@ function fecharSelecao() {
   tela.janela = null;
   tela.entradaSelecionadaId = null;
   tela.modoManual = false;
+  tela.trocandoAtribuicao = null;
   desenharTudo();
 }
 
@@ -267,8 +275,16 @@ document.addEventListener('keydown', (evento) => {
   }
   // K does nothing on a flag that has no K button (a repeat): confirmarAlerta checks.
   // 1, 2, 3 are the "Usar o tempo de …" buttons, and only where the flag
-  // has that button: elsewhere the key is left alone.
+  // has that button: elsewhere the key is left alone. On a "??" 1 to 6
+  // are its candidates, and on an assignment the engine made, once
+  // "Não é o carro N…" is open, the other cars.
   const alerta = alertaSelecionado();
+  const candidato = alerta ? candidatoDaTecla(evento.key, alerta) : null;
+  if (candidato && !tela.ocupado) {
+    evento.preventDefault();
+    acoes.atribuir(alerta.passagem_ids[0], candidato.carro);
+    return;
+  }
   const atalhos = { a: acoes.aceitar, k: acoes.confirmarAlerta, v: acoes.anular };
   const indice = alerta ? indiceDeUsarTempo(evento.key, alerta, tela.estado) : null;
   const acao = indice !== null ? () => acoes.usarTempo(indice) : atalhos[evento.key.toLowerCase()];
@@ -278,6 +294,19 @@ document.addEventListener('keydown', (evento) => {
     acao();
   }
 });
+
+// The candidate a key 1 to 6 presses on the selected flag, or null.
+function candidatoDaTecla(tecla, alerta) {
+  let candidatos = [];
+  if (alerta.tipo === 'numero_ilegivel') {
+    candidatos = candidatosDoAlerta(alerta, tela.janela, tela.estado);
+  } else if (alerta.tipo === 'numero_atribuido' && tela.trocandoAtribuicao === alerta.passagem_ids?.[0]) {
+    const entrada = encontrarEntrada(tela.janela, tela.trocandoAtribuicao);
+    candidatos = entrada ? candidatosParaTrocar(entrada, tela.janela, tela.estado) : [];
+  }
+  const indice = indiceDeCandidato(tecla, candidatos);
+  return indice === null ? null : candidatos[indice];
+}
 
 // The clock and the "há 12 s" ages keep moving between two answers.
 setInterval(() => {

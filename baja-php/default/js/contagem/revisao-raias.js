@@ -8,9 +8,13 @@ import {
   classesDoChip, comHorarioConhecido, descreverParada, descricaoDoChip, distribuirEmLinhas, entradasDeHorarioDesconhecido,
   limitesDaJanela, marcasDeTempo, posicaoDaLinhaDoMomento, posicaoPx, raiasDeOcorrencias, rotuloDaMarca,
 } from './revisao-raias-logica.js';
+import { ehRaiaDeSensor, marcadorDoChip, textoDoChip } from './revisao-ilegivel.js';
 
 const LARGURA_DO_CHIP_PX = 40;
 const ALTURA_DA_LINHA_PX = 30;
+// A timing sensor's mark is a tick at its exact moment, with room to be
+// clicked: two marks a second apart share a row at the live view's scale.
+const LARGURA_DA_MARCA_PX = 8;
 
 const NOMES_DE_OCORRENCIA = {
   largada: 'largada',
@@ -23,25 +27,51 @@ const NOMES_DE_OCORRENCIA = {
   abastecimento_saida: 'saiu',
 };
 
+// What goes inside a chip: the car (or "??"), the small marker of who gave
+// a "??" its car, "S" when a sensor's mark times the pass, and the number
+// of a "??" flag's candidate.
+function conteudoDoChip(entrada, naRaiaDoSensor, opcoes) {
+  const marcador = naRaiaDoSensor ? null : marcadorDoChip(entrada);
+  const candidato = opcoes.candidatos?.get?.(entrada.carro);
+  return [
+    textoDoChip(entrada, naRaiaDoSensor),
+    marcador ? el('span', { class: marcador.classe, 'aria-hidden': 'true' }, marcador.texto) : null,
+    !naRaiaDoSensor && entrada.grupo?.tempo_do_sensor ? el('span', { class: 'marcador marcador-sensor', 'aria-hidden': 'true' }, 'S') : null,
+    candidato && !(opcoes.idsEmDestaque ?? []).includes(entrada.id)
+      ? el('span', { class: 'marcador marcador-candidato', 'aria-hidden': 'true' }, String(candidato)) : null,
+  ];
+}
+
+// Only `opcoes.contextoDosIlegiveis` and the lane change the tooltip.
+const contextoDaDica = (opcoes, naRaiaDoSensor) => ({ ...(opcoes.contextoDosIlegiveis ?? {}), naRaiaDoSensor });
+
 function desenharRaia(raia, limites, opcoes) {
-  const { entradas, linhas } = distribuirEmLinhas(comHorarioConhecido(raia.entradas ?? []), limites.de, opcoes.escala, LARGURA_DO_CHIP_PX);
+  const sensor = ehRaiaDeSensor(raia);
+  const { entradas, linhas } = distribuirEmLinhas(comHorarioConhecido(raia.entradas ?? []), limites.de, opcoes.escala,
+    sensor ? LARGURA_DA_MARCA_PX : LARGURA_DO_CHIP_PX);
+  const extras = { naRaiaDoSensor: sensor, ligadas: opcoes.ligadas ?? [], candidatos: opcoes.candidatos };
 
   const chips = entradas.map((entrada) => el('button', {
     type: 'button',
-    class: classesDoChip(entrada, opcoes.idsEmDestaque, opcoes.entradaSelecionadaId, opcoes.carrosEmFoco ?? []).join(' '),
-    title: `${descricaoDoChip(entrada)} · ${relogio(entrada.ts_ms - (opcoes.largadaMs ?? entrada.ts_ms))}`,
+    class: classesDoChip(entrada, opcoes.idsEmDestaque, opcoes.entradaSelecionadaId, opcoes.carrosEmFoco ?? [], extras).join(' '),
+    title: `${descricaoDoChip(entrada, contextoDaDica(opcoes, sensor))} · ${relogio(entrada.ts_ms - (opcoes.largadaMs ?? entrada.ts_ms))}`,
+    'aria-label': sensor ? `marca do sensor, ${relogio(entrada.ts_ms - (opcoes.largadaMs ?? entrada.ts_ms))}` : null,
     style: { left: `${entrada.x}px`, top: `${entrada.linha * ALTURA_DA_LINHA_PX}px` },
     // Lets a redraw give the keyboard focus back to the same entry.
     'data-entrada': entrada.id,
     onclick: () => opcoes.aoEscolherEntrada(entrada.id),
-  }, String(entrada.carro)));
+  }, conteudoDoChip(entrada, sensor, opcoes)));
 
   // An observer (a camera, say) is compared with the count and never
   // counts: its lane says so, in its own colour rather than greyed out.
+  // A timing sensor's lane has a look of its own too: ticks, not chips.
   const observadora = raia.papel === 'observadora';
-  const classe = ['raia', raia.ativa === false ? 'inativa' : '', observadora ? 'observadora' : ''].filter(Boolean).join(' ');
+  const classe = ['raia', raia.ativa === false ? 'inativa' : '', observadora ? 'observadora' : '', sensor ? 'raia-sensor' : '']
+    .filter(Boolean).join(' ');
+  const dica = [raia.nome, sensor ? 'sensor de tempo: marca o horário de cada passagem, nunca o carro' : null,
+    observadora ? 'fonte observadora, só comparada com a contagem oficial' : null].filter(Boolean).join(': ');
   return el('div', { class: classe },
-    el('div', { class: 'raia-nome', title: observadora ? `${raia.nome}: fonte observadora, só comparada com a contagem oficial` : raia.nome },
+    el('div', { class: 'raia-nome', title: dica },
       raia.nome, observadora ? el('small', {}, ' observadora') : null),
     el('div', { class: 'raia-trilho', style: { height: `${linhas * ALTURA_DA_LINHA_PX}px` } }, chips));
 }
@@ -95,10 +125,11 @@ function desenharHorarioDesconhecido(janela, opcoes) {
     'registros enviados sem o horário oficial. Não estão na linha do tempo e não contam sozinhos. ',
     entradas.map((entrada) => el('button', {
       type: 'button',
+      // Listed, not placed on a time axis: even a sensor's mark is a chip here.
       class: `${classesDoChip(entrada, opcoes.idsEmDestaque, opcoes.entradaSelecionadaId, opcoes.carrosEmFoco ?? []).join(' ')} solto`,
-      title: `${entrada.raia} · ${descricaoDoChip(entrada)}`,
+      title: `${entrada.raia} · ${descricaoDoChip(entrada, contextoDaDica(opcoes, false))}`,
       onclick: () => opcoes.aoEscolherEntrada(entrada.id),
-    }, String(entrada.carro))));
+    }, conteudoDoChip(entrada, false, opcoes))));
 }
 
 // Pit and fueling events whose time nobody knows: the engine pairs none of
@@ -190,6 +221,9 @@ function desenharLacuna(lacuna, limites, opcoes) {
 //   lacuna                 lacunaDaPassagemAnterior(), or null
 //   trechosCarregando      [{de, ate}] still loading
 //   aoEscolherEntrada(id)  called when a chip is clicked
+//   contextoDosIlegiveis   {atribuicoes, nomeDaFonte}: the tooltip of a "??" the engine gave a car
+//   candidatos             Map car -> 1..6: the cars a "??" flag offers, numbered on their chips
+//   ligadas                ids tied to the picked chip (a sensor's mark and its pass)
 // Returns {conteudo, extras, limites}: what goes in the scrolling area,
 // what is listed under it (entries and stops of unknown time), and the
 // moments the left and right edges of the lanes stand for (null when there

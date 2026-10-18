@@ -2,6 +2,9 @@
 // tested with `node --test`; the drawing itself is in revisao-raias.js.
 
 import { duracao } from './revisao-formato.js';
+import {
+  DICA_TEMPO_DO_SENSOR, classesDoIlegivel, descricaoDoIlegivel, ehMarcaDoSensor, situacaoDoIlegivel,
+} from './revisao-ilegivel.js';
 
 // Pixels per second. A flag shows about a minute and must spread the chips
 // out; a car's whole race is hours long and must still fit a scroll bar.
@@ -187,8 +190,20 @@ export function marcasDeTempo(deMs, ateMs, escalaPxPorSegundo, espacoMinimoPx = 
 // `carrosEmFoco` are the cars of the flag (or the car) the reviewer picked:
 // their other entries are drawn weakly ("do-carro") and every other car's
 // are dimmed ("apagada"), so the flag's own entries ("em-destaque") stand
-// out without hiding what is around them. Empty: nothing is dimmed.
-export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId, carrosEmFoco = []) {
+// out without hiding what is around them. Empty: nothing is dimmed. A "??"
+// nobody gave a car yet is never dimmed: it may be the car in focus.
+//
+// `extras` (all optional):
+//   naRaiaDoSensor  the entry is in a timing sensor's lane: a mark, drawn
+//                   as a tick ("marca-sensor") rather than a chip
+//   ligadas         ids of the entries tied to the chip the reviewer picked:
+//                   a sensor's mark and the counters' entries of the pass it times
+//   candidatos      car -> 1..6, the cars a "??" flag offers: their entries
+//                   are numbered like the flag's buttons
+export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId, carrosEmFoco = [], extras = {}) {
+  if (ehMarcaDoSensor(entrada, extras.naRaiaDoSensor)) {
+    return classesDaMarca(entrada, idsEmDestaque, entradaSelecionadaId, carrosEmFoco, extras);
+  }
   const classes = ['chip'];
   if (entrada.anulada) {
     classes.push('anulada');
@@ -202,12 +217,15 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId, carr
   } else if (entrada.motivo_fora_de_uso === 'fonte_observadora') {
     // Out of use by design, not by accident: it has a look of its own.
     classes.push('observadora');
+  } else if (entrada.motivo_fora_de_uso === 'ilegivel') {
+    // Waiting for somebody to say which car: not the grey of a void.
   } else if (entrada.fora_de_uso) {
     classes.push('fora-de-uso');
   }
   if (entrada.reatribuida) {
     classes.push('reatribuida');
   }
+  classes.push(...classesDoIlegivel(entrada));
   if (entrada.adicionada_por_revisor) {
     classes.push('do-revisor');
   }
@@ -224,6 +242,10 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId, carr
   // The entry a reviewer chose to time the pass ("usar_tempo").
   if (entrada.grupo?.tempo_escolhido_id === entrada.id) {
     classes.push('tempo-escolhido');
+  }
+  // A timing sensor's mark times this pass: its time is the sensor's.
+  if (entrada.grupo?.tempo_do_sensor) {
+    classes.push('tempo-do-sensor');
   }
   // Passes the rules of the race keep out of the lap count, and the pass
   // zero, must be told apart from laps at a glance.
@@ -246,16 +268,60 @@ export function classesDoChip(entrada, idsEmDestaque, entradaSelecionadaId, carr
   } else if (temHorarioDesconhecido(entrada)) {
     classes.push('tempo-desconhecido');
   }
+  destaqueDoChip(classes, entrada, idsEmDestaque, entradaSelecionadaId, carrosEmFoco, extras);
+  return classes;
+}
+
+// What the selection does to a chip or a mark: outlined (the flag's own),
+// drawn weakly (the cars in focus), dimmed (every other car), picked, tied
+// to the picked one, or numbered as a candidate of a "??" flag.
+function destaqueDoChip(classes, entrada, idsEmDestaque, entradaSelecionadaId, carrosEmFoco, extras) {
   if (idsEmDestaque.includes(entrada.id)) {
     classes.push('em-destaque');
   } else if (carrosEmFoco.length > 0) {
     const doCarro = carrosEmFoco.includes(entrada.carro) || carrosEmFoco.includes(entrada.carro_digitado);
-    classes.push(doCarro ? 'do-carro' : 'apagada');
+    if (doCarro) {
+      classes.push('do-carro');
+    } else if (situacaoDoIlegivel(entrada) !== 'pendente') {
+      classes.push('apagada');
+    }
+  }
+  if (extras.candidatos?.has?.(entrada.carro) && !idsEmDestaque.includes(entrada.id)) {
+    classes.push('candidato');
+  }
+  if ((extras.ligadas ?? []).includes(entrada.id) && entrada.id !== entradaSelecionadaId) {
+    classes.push('ligada');
   }
   if (entrada.id === entradaSelecionadaId) {
     classes.push('selecionada');
   }
+}
+
+// A timing sensor's mark: a thin tick at its exact moment. Green and solid
+// when it times a pass, faint when it has none, with the car when a
+// reviewer gave it one.
+function classesDaMarca(entrada, idsEmDestaque, entradaSelecionadaId, carrosEmFoco, extras) {
+  const classes = classesDoIlegivel(entrada, true);
+  if (entrada.grupo?.contado) {
+    classes.push('contada');
+  }
+  destaqueDoChip(classes, entrada, idsEmDestaque, entradaSelecionadaId, entrada.grupo || entrada.reatribuida ? carrosEmFoco : [], extras);
   return classes;
+}
+
+// The entries tied to the one the reviewer picked: a sensor's mark and the
+// counters' entries of the pass it times (`grupo.marca_sensor_id`), either
+// way. Empty when the pick has nothing to do with a mark.
+export function entradasLigadas(janela, entradaSelecionadaId) {
+  const escolhida = encontrarEntrada(janela, entradaSelecionadaId);
+  if (!escolhida?.grupo) {
+    return [];
+  }
+  const marcaId = escolhida.grupo.marca_sensor_id ?? null;
+  if (escolhida.marca_do_sensor) {
+    return (escolhida.grupo.passagem_ids ?? []).filter((id) => id !== escolhida.id);
+  }
+  return marcaId === null ? [] : [marcaId];
 }
 
 // One counter alone typed this pass and nobody decided yet: it waits for
@@ -323,16 +389,20 @@ export function descricaoDaAnulacao(entrada) {
   return `${quem}${anulacao.usuario ? ` (${anulacao.usuario})` : ''}${anulacao.motivo ? ` — ${anulacao.motivo}` : ''}`;
 }
 
-// What the tooltip of a chip says.
-export function descricaoDoChip(entrada) {
-  const partes = [entrada.adicionada_por_revisor ? 'passagem adicionada pelo revisor' : `passagem #${entrada.id}`];
-  if (entrada.reatribuida) {
+// What the tooltip of a chip says. `contexto` is for a "??" and a sensor's
+// mark (see descricaoDoIlegivel): {atribuicoes, nomeDaFonte, naRaiaDoSensor}.
+export function descricaoDoChip(entrada, contexto = {}) {
+  const doIlegivel = descricaoDoIlegivel(entrada, contexto);
+  const partes = doIlegivel ?? [entrada.adicionada_por_revisor ? 'passagem adicionada pelo revisor' : `passagem #${entrada.id}`];
+  if (entrada.reatribuida && doIlegivel === null) {
     partes.push(`digitado ${entrada.carro_digitado}, trocado para ${entrada.carro}`);
   }
   if (entrada.anulada) {
     partes.push(descricaoDaAnulacao(entrada));
   } else if (entrada.anulada_auto) {
     partes.push('anulada automaticamente (repetida)');
+  } else if (doIlegivel !== null && ['ilegivel', 'marca_do_sensor'].includes(entrada.motivo_fora_de_uso)) {
+    // Said above, in the words of a "??" or a mark.
   } else if (entrada.fora_de_uso) {
     partes.push(MOTIVOS_FORA_DE_USO[entrada.motivo_fora_de_uso]
       ?? 'fora de uso (fonte excluída ou inativa, ou registro anterior à largada)');
@@ -353,6 +423,9 @@ export function descricaoDoChip(entrada) {
     }
     if (entrada.grupo.volta_curta_confirmada) {
       partes.push('VOLTA CURTA CONFIRMADA: curta demais para ser real, conta porque a revisão confirmou');
+    }
+    if (entrada.grupo.tempo_do_sensor && !entrada.marca_do_sensor) {
+      partes.push(DICA_TEMPO_DO_SENSOR);
     }
   }
   if (entrada.imagem_url) {

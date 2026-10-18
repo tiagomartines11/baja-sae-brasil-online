@@ -398,7 +398,8 @@ once. The person leaving then presses **Encerrar meu turno**.
 - **Histórico de decisões** is one list, newest first, of every decision of
   the race, with what the system resolved on its own among them as
   read-only lines ("Sistema: ignorou a repetida #452 (carro 7, Contagem 1,
-  toque duplo)", "Sistema: presumiu a saída do box do carro 7"). A decision
+  toque duplo)", "Sistema: presumiu a saída do box do carro 7", "Sistema:
+  atribuiu o ?? #123 de Contagem 2 ao carro 7"). A decision
   still in force carries **em vigor**; an undone one is struck through; an
   undo says what it undid ("Desfez a decisão #11: anulou a passagem #352
   (carro 3, Contagem 1)"). Filters above it combine: **Carro** (the car
@@ -498,7 +499,8 @@ once. The person leaving then presses **Encerrar meu turno**.
   start with no end, and one that did not count part of the race after the
   start ("fora da contagem até 2:00:00": promoted from observer, or switched
   on again without counting its time off; the state's `conta_desde_ms`),
-  whose counts miss every pass before. Observers get no column.
+  whose counts miss every pass before. Observers get no column, nor does
+  a timing sensor (it reads no car: its column would be "−N" on every row).
 - **Every column header sorts** (a button; keyboard and screen readers
   see `aria-sort`): first click in the usual direction (most laps first,
   oldest last pass first, most signals first, the counter who missed most
@@ -582,7 +584,12 @@ What a chip tells (the legend under the timeline says the same):
 | amber, thick border | a lap too short to be real that counts because a reviewer vouched for it (`volta_curta_confirmada`); its box offers the undo first, which asks: **Desfazer a confirmação (−1 volta)**, **Desfazer o "usar o tempo"** when the reviewer chose its time, or **Remover a passagem adicionada** when a pass a reviewer added joined it |
 | dark dotted border | one counter alone, not counting yet |
 | teal, italic | an observer source's entry (compared, never counted); a click shows its picture |
-| "??" | a pass recorded without a number; with a car beside it when the engine gave it one by itself (`atribuida_automaticamente`) |
+| purple, dashed, "??" | a pass recorded without a number that nobody gave a car yet; never dimmed when another car is in focus (it may be that car) |
+| car, "auto" in a purple corner | a "??" the engine gave that car by itself (`atribuida_automaticamente`); the tooltip says why ("atribuído automaticamente ao carro 7: Contagem 1 e 2 leram o carro 7 a 0,4 s") |
+| car, "C" (not struck through) / "R" | a "??" its own counter gave a car on the phone / a reviewer did |
+| "S" in the lower left corner | a timing sensor's mark times this pass (`grupo.tempo_do_sensor`) |
+| sensor lane: green tick / faint tick | a mark that times a pass ("marca do sensor: tempo desta passagem"; picking it, or a chip of its pass, outlines the other) / a mark with no pass ("marca sem passagem") |
+| amber number in the upper left corner | on a "??" flag: the entries of the cars it may have been, numbered as their buttons |
 
 A counted chip's tooltip gives the lap number and the lap time, as the car
 table times it: "volta 22 · 1:15" (`grupo.volta_ms`).
@@ -658,7 +665,8 @@ From `default/js/contagem/revisao-alertas.js`, which is what the screen runs.
 | `saida_presumida` | none | none: hiding the flag would leave the log wrong | **Confirmar saída** (asks nothing: it changes no count); **Descartar esta passagem** (asks) |
 | `volta_curta` | none | Está correto, parar de avisar | **Descartar a primeira passagem** / **a segunda passagem** (asks) |
 | `divergencia_total` | none | none | |
-| `numero_ilegivel` | **Trocar para o carro N** (`reatribuir`), N being the closest car another counter read; none for a sensor's mark or when no counter read a car near | Está correto, parar de avisar (changes no count) | pick another car (`reatribuir`; on a sensor's mark this makes the pass count, on the reviewer's word); void the entry |
+| `numero_ilegivel` | **Atribuir ao carro N** (`reatribuir`), N being the closest car another counter read; it asks when that reading is a lone one (the "??" makes it two: +1 volta). None for a sensor's mark or when no counter read a car near. On the screen A is the first candidate's button, marked A | **Deixar sem carro, parar de avisar** (changes no count) | one button per candidate, keys **1** to **6**, and "Outro carro" for any car (each a `reatribuir`, asked first when it adds a pass, see [below](#on-the-review-screen)); **Anular (não passou carro)** on V (for a mark: "Anular a marca (não foi passagem)") |
+| `numero_atribuido` | none (resolved by the system) | none | **Não é o carro N…** opens the other cars read near it (keys 1 to 6), "Outro carro" and "Anular (não passou carro)": a reviewer's decision wins over the engine's |
 
 "Marcar saída" records an exit for that car one second before the pass,
 attributed to the reviewer and shown on the lane as inferred. It closes the
@@ -1318,6 +1326,78 @@ counters is not known to the per-car recount, which must give the whole
 race's answer. About 2 marks a race were flagged
 with three counters, 6 with two, all of them false triggers; none was a
 crossing nobody saw, because the simulated counters never all miss one.
+
+### On the review screen
+
+What a "??" looks like on the timeline, in its own lane: **purple, dashed,
+"??"** while nobody gave it a car (not the grey of a void or of an entry
+out of use: it waits for a person); **the car with a purple "auto"**
+when the engine gave it one (the tooltip says why: "atribuído
+automaticamente ao carro 7: Contagem 1 e 2 leram o carro 7 a 0,4 s",
+from the `numero_atribuido` flag); the car with **"C"** when its own
+counter fixed it on the phone, **"R"** when a reviewer did. A voided one
+is struck through like any void.
+
+*The car filter.* An assigned "??" belongs to its car, in its whole race
+("Só o carro 7") and in focus among the others. A "??" nobody gave a car
+is never dimmed when another car is in focus: it may be that car. A car's
+whole race also brings in the open "??" whose flag names it among its
+candidates (`TimelineWindow::forCar`, from the stored state's flags, like
+the confirmed short laps), drawn as "??" at their moment: the one beside a
+lone entry of the car is often its missing witness. Every car near some
+"??" would have been too loose a rule (a pack of five, and every "??" in
+every car's race); one the engine ruled out says nothing about the car.
+
+*The flag* (`numero_ilegivel`) says when, which source, and the cars it
+may have been as big buttons, most likely first, keys 1 to 6:
+"Carro 7 — Contagem 1 e 2 leram o carro 7 a 0,4 s" (who read it, from the
+timeline on screen), "Carro 12 — esperado por volta deste horário",
+"Carro 3 — ficaria sem esta volta". Under each, what it does: "junta-se à
+passagem do carro 7, que já conta" (nothing is asked), "fica como registro
+solitário do carro 12: sozinho, ainda não conta", or, marked "(+1 volta)"
+and asked first with the short-lap question of K, "com este registro, dois
+contadores concordam" (the only other reading of that car was a lone one).
+"Outro carro" takes any number; V voids it ("não passou carro"). Each is a
+`reatribuir` of the entry, the decision "Trocar" on a chip stores, so it
+shows in the history and undoes from there. The timeline zooms to the "??"
+and outlines the entries of every candidate car, each with its button's
+number. The doubt sentence names the likeliest car only, as a condition:
+"Se esta passagem foi do carro 7, ele pode estar com uma volta a menos";
+in the car table the flag counts as an open flag of each car it names,
+red only on the likeliest one's row. On a sensor's mark the words are a
+mark's ("Marca do sensor sem passagem", "Anular a marca (não foi
+passagem)"), and giving it a car always adds a pass on the reviewer's word
+(+1 volta, asked). The same buttons are in the box of a "??" chip picked
+on the timeline.
+
+*What the system did* (`numero_atribuido`) is listed under "Resolvidos
+automaticamente" and in the history as an **automático** line ("Sistema:
+atribuiu o ?? #123 de Contagem 2 ao carro 7", type "Número atribuído
+(sistema)"), with "Ver". Nothing is stored for it, so no history row
+changes and nothing new travels with the history difference. **Não é o
+carro 7…**, on that flag or on the chip, opens the other cars the other
+sources read near it, "Outro carro" and "Anular (não passou carro)"; a
+reviewer's decision wins over the engine's, and the line then gives way to
+the reviewer's ("Atribuiu o ?? #123 (Contagem 2) ao carro 21"). A counter's
+fix on the phone is listed the same way, "Quem: contador (no aparelho)".
+
+*The sensor* has a lane of its own: a thin tick at each mark's exact moment,
+green when it times a pass ("marca do sensor: tempo desta passagem"),
+faint when it has none ("marca sem passagem"). The counters' chips of a pass
+it times carry a small green "S" ("horário desta passagem: a marca do
+sensor (preciso)"); picking the mark outlines them, and picking one of them
+outlines the mark. A mark offers only "Anular" and a car: confirming it or
+discarding "its" pass would act on the counters' pass.
+
+*The sources.* A counter's block adds "ilegíveis: 3 (1 atribuído)" when it
+recorded any (and the status bar chip's tooltip says it, the chip's text
+keeping its shape). A sensor that counts shows what it did with its marks:
+marcas, atribuídas (they time a pass), ambíguas, sem passagem, passagens
+sem marca and desvio (median offset from the counters, and 90 %; each
+label explained in its tooltip). An observer keeps its comparison, with
+a camera's "??" as "ilegíveis: 4 (3 numa passagem oficial)" and a sensor
+on trial in a sensor's words (marcas numa passagem oficial, passagens oficiais sem
+marca, marcas sem passagem).
 
 ---
 

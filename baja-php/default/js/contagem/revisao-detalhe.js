@@ -18,6 +18,10 @@ import { acoesDaEntrada, descreverSugestao, repeticoesEmAberto, rotuloDeDesfazer
 import { quandoDoAlerta, situacaoDoCarroFora } from './revisao-fila.js';
 import { SEM_IMAGEM_NA_REDE, imagemDaEntrada } from './revisao-observacao.js';
 import { descricaoDoChip, encontrarEntrada } from './revisao-raias-logica.js';
+import {
+  atribuicoesAutomaticas, candidatosDoAlerta, candidatosParaTrocar, ehIlegivel, ehMarcaDoSensor, fonteEhSensor, fraseDaAtribuicao,
+  nomeDoAlertaIlegivel, rotuloDaEntrada, situacaoDoIlegivel,
+} from './revisao-ilegivel.js';
 
 function campoDeCarro(valorInicial) {
   return el('input', {
@@ -99,9 +103,100 @@ function edicaoManual(contexto, alerta) {
     adicionar);
 }
 
+const nomeDaFonte = (estado, id) => (estado.fontes ?? []).find((fonte) => fonte.id === id)?.nome ?? null;
+
+// What the tooltips and the panel say about a "??" or a mark.
+function contextoDaDica(contexto, entrada) {
+  return {
+    atribuicoes: atribuicoesAutomaticas(contexto.estado),
+    nomeDaFonte: (id) => nomeDaFonte(contexto.estado, id),
+    naRaiaDoSensor: fonteEhSensor(contexto.estado, entrada.fonte_id),
+  };
+}
+
+// The cars a "??" (or a sensor's mark) may have been: one big button each,
+// most likely first, with the key that presses it (1 to 6; the suggested
+// one is A as well), a field for any other car and, where the flag's own
+// V is not at hand, the void. Each stores a "reatribuir" of the entry;
+// what it does to the count is under it, and it asks first when it adds
+// a pass (see efeitoDeAtribuir).
+//   opcoes: {entradaId, candidatos, sensor, comAnular, teclaA}
+function blocoDeCandidatos(contexto, opcoes) {
+  const semDecisao = contexto.ocupado || !contexto.podeDecidir;
+  const carro = campoDeCarro('');
+  const vazio = opcoes.sensor
+    ? 'Nenhum carro provável: nenhum carro era esperado na linha neste momento.'
+    : 'Nenhum carro provável: nenhuma outra contagem registrou carro neste momento, nem havia carro esperado na linha.';
+  return el('div', { class: 'candidatos' },
+    opcoes.candidatos.length === 0
+      ? el('p', { class: 'contagem-dica' }, vazio)
+      : el('ol', { class: 'lista-candidatos' }, opcoes.candidatos.map((candidato) => el('li', {},
+        el('button', {
+          type: 'button',
+          class: candidato.efeito.voltas > 0 ? 'candidato soma-volta' : 'candidato',
+          disabled: semDecisao,
+          'data-carro': candidato.carro,
+          onclick: () => contexto.acoes.atribuir(opcoes.entradaId, candidato.carro),
+        },
+        el('kbd', {}, candidato.tecla), opcoes.teclaA === candidato.carro ? [' ', el('kbd', {}, 'A')] : null, ' ',
+        el('span', { class: 'rotulo' }, candidato.rotulo),
+        el('small', {}, candidato.efeito.nota))))),
+    el('form', {
+      class: 'em-linha atribuir-outro',
+      onsubmit: (evento) => {
+        evento.preventDefault();
+        contexto.acoes.atribuir(opcoes.entradaId, carro.value === '' ? null : Number(carro.value));
+      },
+    }, 'Outro carro: ', carro, ' ', el('button', { type: 'submit', disabled: semDecisao }, 'Atribuir')),
+    opcoes.comAnular
+      ? el('button', { type: 'button', class: 'anular-ilegivel', disabled: semDecisao, onclick: () => contexto.acoes.anularEntrada(opcoes.entradaId) },
+        opcoes.sensor ? 'Anular a marca (não foi passagem)' : 'Anular (não passou carro)')
+      : null);
+}
+
+// The open "numero_ilegivel" flag of an entry, if any.
+const alertaDoIlegivel = (estado, entradaId) => (estado.alertas_abertos ?? [])
+  .find((alerta) => alerta.tipo === 'numero_ilegivel' && (alerta.passagem_ids ?? [])[0] === entradaId) ?? null;
+
+// A "??" or a mark clicked on the timeline: who gave it its car, and the
+// cars it may have been. Null for an entry typed with a number. On the
+// flag about this very entry the flag's own buttons are above already.
+function partesDoIlegivel(contexto, entrada) {
+  const sensor = fonteEhSensor(contexto.estado, entrada.fonte_id);
+  const doAlerta = alertaDoIlegivel(contexto.estado, entrada.id);
+  const doProprioAlerta = (contexto.alerta?.passagem_ids ?? [])[0] === entrada.id
+    && ['numero_ilegivel', 'numero_atribuido'].includes(contexto.alerta?.tipo);
+  if (doProprioAlerta || entrada.anulada) {
+    return null;
+  }
+  const situacao = situacaoDoIlegivel(entrada);
+  if (situacao === 'automatico') {
+    const trocando = contexto.trocandoId === entrada.id;
+    return [
+      el('div', { class: 'botoes' }, el('button', { type: 'button', class: trocando ? 'ativo' : '', onclick: () => contexto.acoes.alternarTroca(entrada.id) },
+        `Não é o carro ${entrada.carro}…`)),
+      trocando ? blocoDeCandidatos(contexto, {
+        entradaId: entrada.id, candidatos: candidatosParaTrocar(entrada, contexto.janela, contexto.estado), sensor: false, comAnular: true,
+      }) : null,
+    ];
+  }
+  if (situacao === 'pendente' || (ehMarcaDoSensor(entrada) && !entrada.grupo && !entrada.reatribuida)) {
+    const candidatos = doAlerta
+      ? candidatosDoAlerta(doAlerta, contexto.janela, contexto.estado)
+      : candidatosParaTrocar(entrada, contexto.janela, contexto.estado);
+    return [el('p', { class: 'contagem-dica' }, sensor ? 'Que carro passou nesta marca?' : 'Que carro era?'),
+      blocoDeCandidatos(contexto, { entradaId: entrada.id, candidatos, sensor, comAnular: true })];
+  }
+  return null;
+}
+
 // What can be done with the chip the reviewer clicked.
 function caixaDaEntrada(contexto, entrada) {
-  const botoes = acoesDaEntrada(entrada, repeticoesEmAberto(contexto.estado), contexto.janela).map((opcao) => {
+  const doIlegivel = ehIlegivel(entrada) || ehMarcaDoSensor(entrada) ? partesDoIlegivel(contexto, entrada) : null;
+  // The block of candidates has its own field and void.
+  const opcoesDaEntrada = acoesDaEntrada(entrada, repeticoesEmAberto(contexto.estado), contexto.janela)
+    .filter((opcao) => doIlegivel === null || !['anular', 'reatribuir'].includes(opcao.acao));
+  const botoes = opcoesDaEntrada.map((opcao) => {
     const agir = (extra) => contexto.acoes.acaoNaEntrada(opcao, entrada, extra);
     switch (opcao.acao) {
       case 'desfazer_confirmacao':
@@ -122,7 +217,10 @@ function caixaDaEntrada(contexto, entrada) {
       case 'remover':
         return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() }, 'Remover a passagem adicionada');
       case 'desfazer_troca':
-        return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() }, `Voltar para o carro digitado (${entrada.carro_digitado})`);
+        return el('button', { type: 'button', disabled: contexto.ocupado, onclick: () => agir() },
+          entrada.carro_digitado === null || entrada.carro_digitado === undefined
+            ? 'Voltar a ficar sem número (??)'
+            : `Voltar para o carro digitado (${entrada.carro_digitado})`);
       default: {
         const carro = campoDeCarro('');
         return el('form', {
@@ -138,10 +236,12 @@ function caixaDaEntrada(contexto, entrada) {
 
   return el('div', { class: 'caixa-entrada' },
     el('p', {},
-      el('strong', {}, `Carro ${entrada.carro}`), ' · ', descricaoDoChip(entrada), ' · ',
+      el('strong', {}, rotuloDaEntrada(entrada, fonteEhSensor(contexto.estado, entrada.fonte_id))), ' · ',
+      descricaoDoChip(entrada, contextoDaDica(contexto, entrada)), ' · ',
       entrada.qualidade_tempo === 'desconhecido' ? 'sem horário' : tempoDeProva(entrada.ts_ms, contexto.estado.corrida.largada_ms)),
     figuraDaEntrada(entrada),
-    el('div', { class: 'botoes' }, botoes));
+    el('div', { class: 'botoes' }, botoes),
+    doIlegivel);
 }
 
 // The picture an automatic source linked to the entry, if any. It comes
@@ -186,8 +286,60 @@ function entradaSelecionada(contexto) {
   return entrada ? caixaDaEntrada(contexto, entrada) : null;
 }
 
+// A "??" flag: the moment and the source, then the cars it may have been.
+// An assignment the engine made by itself: why, and "Não é o carro 7…",
+// which opens the other cars read near it.
+function partesDoAlertaIlegivel(contexto, alerta) {
+  const { estado } = contexto;
+  const entradaId = (alerta.passagem_ids ?? [])[0];
+  const sensor = fonteEhSensor(estado, alerta.fonte_id);
+  const fonte = nomeDaFonte(estado, alerta.fonte_id) ?? 'fonte desconhecida';
+  const onde = el('p', { class: 'ilegivel-onde' },
+    el('strong', {}, sensor ? 'Marca do sensor' : 'Passagem sem número ("??")'),
+    ` · ${fonte} · ${tempoDeProva(alerta.ts_ms, estado.corrida.largada_ms)}`);
+  if (alerta.tipo === 'numero_ilegivel') {
+    return [onde, blocoDeCandidatos(contexto, {
+      entradaId,
+      candidatos: candidatosDoAlerta(alerta, contexto.janela, estado),
+      sensor,
+      comAnular: false,
+      teclaA: alerta.sugestao?.tipo === 'reatribuir' ? alerta.sugestao.equipe_numero : null,
+    })];
+  }
+  const carro = alerta.atribuicao?.carro ?? (alerta.carros ?? [])[0];
+  const entrada = encontrarEntrada(contexto.janela, entradaId);
+  const trocando = contexto.trocandoId === entradaId;
+  return [
+    onde,
+    el('p', { class: 'vazio' }, `Resolvido automaticamente (${alerta.atribuicao
+      ? fraseDaAtribuicao(alerta.atribuicao, (id) => nomeDaFonte(estado, id))
+      : `atribuído automaticamente ao carro ${carro}`}). Uma decisão de revisor sobre este registro vale mais que a do sistema.`),
+    el('div', { class: 'botoes' },
+      el('button', { type: 'button', class: trocando ? 'ativo' : '', onclick: () => contexto.acoes.alternarTroca(entradaId) },
+        `Não é o carro ${carro}…`)),
+    trocando && entrada
+      ? blocoDeCandidatos(contexto, {
+        entradaId, candidatos: candidatosParaTrocar(entrada, contexto.janela, estado), sensor: false, comAnular: true,
+      })
+      : null,
+    trocando && !entrada ? esperaPelaLinha(contexto) : null,
+  ];
+}
+
+// The title of a flag: its kind and its cars; for a "??" the cars it may have been.
+function tituloDoAlerta(alerta, estado) {
+  const ilegivel = nomeDoAlertaIlegivel(alerta, estado);
+  if (ilegivel !== null) {
+    const carros = alerta.tipo === 'numero_atribuido' ? ` · carro ${listaDeCarros(alerta.carros)}` : '';
+    return `${ilegivel}${carros}`;
+  }
+  return `${NOMES_DE_ALERTA[alerta.tipo] ?? alerta.tipo} · carro ${listaDeCarros(alerta.carros)}`;
+}
+
 export function desenharDetalheDeAlerta(container, contexto) {
   const { alerta, estado, acoes, ocupado } = contexto;
+  const ilegivel = ['numero_ilegivel', 'numero_atribuido'].includes(alerta.tipo);
+  const sensor = ilegivel && fonteEhSensor(estado, alerta.fonte_id);
   const olhando = alerta.olhando ?? [];
   // A / K / V act on the timeline below. While it is loading, or behind the
   // flag list, there is nothing to act on.
@@ -223,22 +375,25 @@ export function desenharDetalheDeAlerta(container, contexto) {
 
   substituir(container,
     el('header', { class: 'detalhe-titulo' },
-      el('h2', {}, `${NOMES_DE_ALERTA[alerta.tipo] ?? alerta.tipo} · carro ${listaDeCarros(alerta.carros)}`),
+      el('h2', {}, tituloDoAlerta(alerta, estado)),
       el('span', { class: 'quando' }, quandoDoAlerta(alerta, estado.corrida.largada_ms)),
       el('button', { type: 'button', class: 'fechar', onclick: acoes.fechar }, 'Fechar')),
     olhando.length > 0 ? el('p', { class: 'olhando' }, `${olhando.join(', ')} também está olhando este alerta.`) : null,
     // Said first and loud: a standings number may be wrong while this is open.
     duvida ? el('p', { class: 'contagem-em-duvida', role: 'alert' }, el('strong', {}, 'Contagem em dúvida: '), duvida) : null,
     el('p', { class: 'motivo' }, alerta.motivo),
-    el('p', { class: 'sugestao' }, descreverSugestao(alerta)),
+    ilegivel ? null : el('p', { class: 'sugestao' }, descreverSugestao(alerta)),
+    ilegivel ? partesDoAlertaIlegivel(contexto, alerta) : null,
     semHorario
       ? el('p', { class: 'contagem-dica' }, 'Este registro não tem horário confiável e não conta. Se a passagem aconteceu, use "Adicionar passagem…" '
         + 'e digite o tempo de prova; depois anule este registro (V) para fechar o alerta.')
       : null,
-    alerta.auto_resolvido
+    alerta.auto_resolvido && alerta.tipo === 'numero_atribuido' ? null : alerta.auto_resolvido
       ? el('p', { class: 'vazio' }, 'Resolvido automaticamente. Use os registros abaixo se quiser mudar o resultado.')
       : el('div', { class: 'botoes botoes-decisao' },
-        el('button', {
+        // On a "??" the candidates above are the choices, the suggested
+        // one marked A; a second button saying the same would only confuse.
+        ilegivel ? null : el('button', {
           type: 'button', class: aceitar?.pergunta ? 'primario soma-volta' : 'primario', disabled: semDecisao || !aceitar, onclick: acoes.aceitar,
         }, `${aceitar?.rotulo ?? 'Aceitar sugestão'} `, el('kbd', {}, 'A')),
         // No K on a repeat: "keep both" would count the car twice.
@@ -254,13 +409,15 @@ export function desenharDetalheDeAlerta(container, contexto) {
         tempos,
         extras,
         el('button', { type: 'button', disabled: semDecisao || semEntradas, onclick: acoes.anular },
-          'Anular registro ', el('kbd', {}, 'V')),
+          `${ilegivel ? (sensor ? 'Anular a marca (não foi passagem)' : 'Anular (não passou carro)') : 'Anular registro'} `, el('kbd', {}, 'V')),
         // On an entry of unknown time the form is opened by "Adicionar passagem…" above.
         semHorario ? null : el('button', { type: 'button', class: contexto.modoManual ? 'ativo' : '', onclick: acoes.alternarManual },
           'Editar manualmente')),
     campoDeMotivo(contexto),
     esperaPelaLinha(contexto),
-    el('p', { class: 'contagem-dica' }, 'Os registros deste alerta estão contornados na linha do tempo acima; clique em um para agir sobre ele.'),
+    el('p', { class: 'contagem-dica' }, alerta.tipo === 'numero_ilegivel'
+      ? 'O registro sem número está contornado na linha do tempo acima; as passagens dos carros possíveis têm o número do botão.'
+      : 'Os registros deste alerta estão contornados na linha do tempo acima; clique em um para agir sobre ele.'),
     entradaSelecionada(contexto),
     // What is filled in there, and whether a "move the stray entry" form
     // comes first, depends on the kind of flag: see edicaoManualDoAlerta().
@@ -270,9 +427,10 @@ export function desenharDetalheDeAlerta(container, contexto) {
 // A chip clicked on the live timeline, with no flag or car open.
 export function desenharDetalheDeEntrada(container, contexto) {
   const entrada = encontrarEntrada(contexto.janela, contexto.entradaSelecionadaId);
+  const rotulo = rotuloDaEntrada(entrada, fonteEhSensor(contexto.estado, entrada.fonte_id));
   substituir(container,
     el('header', { class: 'detalhe-titulo' },
-      el('h2', {}, `Registro · carro ${entrada.carro}`),
+      el('h2', {}, ehIlegivel(entrada) || ehMarcaDoSensor(entrada) ? rotulo : `Registro · carro ${entrada.carro}`),
       el('button', { type: 'button', class: 'fechar', onclick: () => contexto.acoes.escolherEntrada(entrada.id) }, 'Fechar')),
     caixaDaEntrada(contexto, entrada),
     campoDeMotivo(contexto));

@@ -4,11 +4,13 @@ declare(strict_types=1);
 namespace Baja\Contagem\Review;
 
 use Baja\Contagem\Engine\Data\Entry;
+use Baja\Contagem\Engine\Data\Flag;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Service\ChangeCounter;
 use Baja\Contagem\Service\ContagemService;
+use Baja\Contagem\Service\RaceSnapshot;
 use Baja\Contagem\Service\RedisClient;
 use Baja\Model\Prova;
 use Propel\Runtime\Propel;
@@ -50,7 +52,8 @@ final class TimelineWindow
             fn(Ocorrencia $ocorrencia): bool => $inWindow($ocorrencia->tsMs),
             $fromMs,
             $untilMs,
-            null
+            null,
+            $service->storedSnapshot()
         );
     }
 
@@ -108,22 +111,32 @@ final class TimelineWindow
      */
     public static function forCar(ContagemService $service, int $carro): array
     {
-        $recount = CarsRecount::load($service, [$carro]);
+        // A "??" nobody gave a car yet may have been this one: the ones whose
+        // flag lists it among the candidates are part of its race on screen.
+        $snapshot = $service->storedSnapshot();
+        $maybeThisCar = self::unreadEntriesThatMayBe($snapshot, $carro);
+        $recount = CarsRecount::load($service, [$carro], null, array_keys($maybeThisCar));
 
         return self::describe(
             $service,
             $recount,
-            fn(Entry $raw, ?int $effectiveCar): bool => $raw->carroDigitado === $carro || $effectiveCar === $carro,
+            // Also the entries of its passes that carry no car of their own
+            // (a timing sensor's mark that times one of them).
+            fn(Entry $raw, ?int $effectiveCar): bool => $raw->carroDigitado === $carro || $effectiveCar === $carro
+                || ($effectiveCar === null && isset($maybeThisCar[$raw->id]))
+                || ($raw->carroDigitado === null && $recount->groupOf($raw->id)?->carro === $carro),
             fn(Ocorrencia $ocorrencia): bool => $ocorrencia->carro === null || $ocorrencia->carro === $carro,
             null,
             null,
-            $carro
+            $carro,
+            $snapshot
         );
     }
 
     /**
      * @param callable(Entry, ?int): bool $wantsEntry given the raw entry and the car it counts for now (null: an unread pass with no car)
      * @param callable(Ocorrencia): bool $wantsOcorrencia
+     * @param RaceSnapshot|null $snapshot the stored snapshot, read once by the caller
      * @return array<string, mixed>
      */
     private static function describe(
@@ -133,7 +146,8 @@ final class TimelineWindow
         callable $wantsOcorrencia,
         ?int $fromMs,
         ?int $untilMs,
-        ?int $carro
+        ?int $carro,
+        ?RaceSnapshot $snapshot
     ): array {
         $wanted = [];
         $decisionIds = [];
@@ -156,7 +170,7 @@ final class TimelineWindow
         // Who decided, when and why: what a chip's tooltip says about a
         // void, and what "Restaurar" asks about a counter's own one.
         $people = DecisionHistory::peopleOf($service->getProva(), array_values($decisionIds));
-        $shortConfirmed = self::shortConfirmedLaps($service);
+        $shortConfirmed = self::shortConfirmedLaps($snapshot);
 
         $entriesBySource = [];
         foreach ($wanted as [$raw, $effectiveCar]) {
@@ -189,6 +203,28 @@ final class TimelineWindow
     }
 
     /**
+     * The "??" (and sensor marks) whose open "numero_ilegivel" flag names
+     * the car among its candidates, by entry id. Read from the stored
+     * snapshot, as old as the flags on screen, like shortConfirmedLaps().
+     * Nothing to read in a race with no such flag.
+     *
+     * @return array<int, true>
+     */
+    private static function unreadEntriesThatMayBe(?RaceSnapshot $snapshot, int $carro): array
+    {
+        $ids = [];
+        foreach ($snapshot === null ? [] : ($snapshot->dados['estado']['alertas_abertos'] ?? []) as $flag) {
+            if (($flag['tipo'] ?? null) !== Flag::NUMERO_ILEGIVEL || !isset($flag['passagem_ids'][0])) {
+                continue;
+            }
+            if (in_array($carro, array_map('intval', array_column($flag['candidatos'] ?? [], 'carro')), true)) {
+                $ids[(int) $flag['passagem_ids'][0]] = true;
+            }
+        }
+        return $ids;
+    }
+
+    /**
      * The laps the last whole-race run marked as too short to be real and
      * counted on a reviewer's word (CarTable's `voltas_curtas_confirmadas`),
      * by the anchor entry of the pass that ends them. They need the pace of
@@ -197,10 +233,9 @@ final class TimelineWindow
      *
      * @return array<int, true>
      */
-    private static function shortConfirmedLaps(ContagemService $service): array
+    private static function shortConfirmedLaps(?RaceSnapshot $snapshot): array
     {
         $anchors = [];
-        $snapshot = $service->storedSnapshot();
         foreach ($snapshot === null ? [] : ($snapshot->dados['estado']['carros'] ?? []) as $row) {
             foreach ($row['voltas_curtas_confirmadas'] ?? [] as $lap) {
                 $anchors[(int) $lap['ancora']] = true;

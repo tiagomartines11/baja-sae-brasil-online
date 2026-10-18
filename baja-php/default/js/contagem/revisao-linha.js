@@ -22,7 +22,8 @@ import {
   pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara, rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from './revisao-linha-logica.js';
 import { desenharRaias } from './revisao-raias.js';
-import { encontrarEntrada } from './revisao-raias-logica.js';
+import { encontrarEntrada, entradasLigadas } from './revisao-raias-logica.js';
+import { atribuicoesAutomaticas } from './revisao-ilegivel.js';
 import { agoraServidorMs, pagina, tela } from './revisao-tela.js';
 
 // Pieces kept in memory at most; the oldest outside the stretch on screen go first.
@@ -300,6 +301,12 @@ export function criarLinhaDoTempo(ganchos) {
 
   // ---- drawing -----------------------------------------------------------------------
 
+  // Why the engine gave each "??" its car, and the sources' names, for the tooltips.
+  function contextoDosIlegiveis() {
+    const fontes = new Map((tela.estado.fontes ?? []).map((fonte) => [fonte.id, fonte.nome]));
+    return { atribuicoes: atribuicoesAutomaticas(tela.estado), nomeDaFonte: (id) => fontes.get(id) ?? null };
+  }
+
   function desenhar(alerta) {
     const modo = linha.modo;
     const juntada = modo.fonte === 'pedacos' ? janelaJuntada() : null;
@@ -315,7 +322,10 @@ export function criarLinhaDoTempo(ganchos) {
 
     const largadaMs = tela.estado.corrida?.largada_ms ?? null;
     const momento = momentoEmDestaque(modo, alerta);
-    const doQueSeVe = [modo.chave, modo.escala, linha.faixa, destaque, tela.entradaSelecionadaId, largadaMs, lacuna, momento];
+    const candidatos = destaque.candidatos ? [...destaque.candidatos] : null;
+    const doQueSeVe = [modo.chave, modo.escala, linha.faixa, { ...destaque, candidatos }, tela.entradaSelecionadaId, largadaMs, lacuna, momento,
+      // What the tooltip of a "??" the engine gave a car says comes from the flags.
+      (tela.estado.alertas_resolvidos ?? []).length];
     const chave = JSON.stringify([linha.geracao, carregando.length, ...doQueSeVe]);
     if (chave === linha.desenhado && linha.alvo === null) {
       return;
@@ -357,6 +367,9 @@ export function criarLinhaDoTempo(ganchos) {
       lacuna,
       trechosCarregando: carregando,
       aoEscolherEntrada: ganchos.escolherEntrada,
+      contextoDosIlegiveis: contextoDosIlegiveis(),
+      candidatos: destaque.candidatos ?? null,
+      ligadas: entradasLigadas(janela, tela.entradaSelecionadaId),
     });
     substituir(elementos.rolagem, conteudo);
     // Entries and stops of unknown time belong to a car's whole race; in a

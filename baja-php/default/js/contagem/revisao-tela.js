@@ -57,6 +57,7 @@ export const tela = {
   erroDaJanela: false,
   entradaSelecionadaId: null,
   modoManual: false,
+  trocandoAtribuicao: null, // the "??" whose engine-given car is being changed ("Não é o carro 7…")
   motivo: '',              // optional reason typed for the next decision in the detail panel
   // The history's filters (see revisao-historico.js); revisao.js fills them
   // with the ones this browser remembers for the prova.

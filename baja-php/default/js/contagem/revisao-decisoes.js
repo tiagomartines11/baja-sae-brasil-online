@@ -4,6 +4,7 @@
 //
 import { acaoDeAceitar, perguntaAoContarNaEntrada } from './revisao-alertas.js';
 import { perguntaAoDesfazer, perguntaAoDesfazerVoltaCurta } from './revisao-frases.js';
+import { ehMarcaDoSensor } from './revisao-ilegivel.js';
 
 // A request always says what the reviewer was looking at ("passagem_ids"
 // and their "assinatura"). If any of it changed on the server in the
@@ -272,6 +273,10 @@ export function confirmarSomaPassagem(entrada) {
 //   - on an entry that is in no pass and was not voided as a repeat (its
 //     source was off or excluded, or it is before the start): there is
 //     nothing to confirm.
+//
+// A timing sensor's mark is no vote: confirming it, or discarding "its"
+// pass, would act on the counters' pass it only times. It can be voided
+// (a false trigger) or given a car (see efeitoDeAtribuir), nothing else.
 export function acoesDaEntrada(entrada, repeticoes = new Set(), janela = null) {
   if (entrada.adicionada_por_revisor) {
     // Its id is minus the id of the "adicionar" decision that created it.
@@ -283,6 +288,10 @@ export function acoesDaEntrada(entrada, repeticoes = new Set(), janela = null) {
     return [{ acao: 'restaurar', decisaoId: anulacao.id, decisao: anulacao }];
   }
   const acoes = [];
+  if (ehMarcaDoSensor(entrada)) {
+    const troca = decisoes.find((decisao) => decisao.tipo === 'reatribuir');
+    return [{ acao: 'anular' }, { acao: 'reatribuir' }, ...(troca ? [{ acao: 'desfazer_troca', decisaoId: troca.id }] : [])];
+  }
   const confirmacao = entrada.grupo?.volta_curta_confirmada ? confirmacaoDaPassagem(entrada, janela) : null;
   if (confirmacao) {
     acoes.push({ acao: 'desfazer_confirmacao', decisaoId: confirmacao.id, tipo: confirmacao.tipo });

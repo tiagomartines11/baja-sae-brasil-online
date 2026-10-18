@@ -92,6 +92,10 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
                 "0" no canto = passagem zero (não é volta); tracejado = não conta (antes da largada, janela de largada ou depois do encerramento);
                 tracejado vermelho com fundo = passagem retida (não conta até um revisor decidir);
                 "~" = horário estimado; "?" = horário desconhecido (fora da linha do tempo).
+                Roxo tracejado "??" = passagem sem número, ainda sem carro (não conta até alguém dizer qual foi; não fica apagada com outro carro em destaque);
+                "auto" no canto = o sistema deu o carro a um "??"; "C" sem risco = o contador informou o número no aparelho; "R" = a revisão informou.
+                Raia do sensor: traço verde = marca que dá o horário da passagem (os registros dela levam "S"), traço claro = marca sem passagem.
+                Num alerta "??", os números no canto dos registros são os botões de cada carro possível.
             </p>
         </details>
     </section>

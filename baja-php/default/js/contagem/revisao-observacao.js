@@ -14,9 +14,11 @@ export function ehObservadora(fonte) {
 
 // The sources that get a column of the car table: switched on and counting.
 // An observer's passes are no part of any car's count, so a column of them
-// beside the official count would only be read as a disagreement.
+// beside the official count would only be read as a disagreement. Nor are
+// a timing sensor's: it never reads a car, and its column would say "−N"
+// on every row.
 export function fontesDaTabela(fontes) {
-  return (fontes ?? []).filter((fonte) => fonte.ativa && !ehObservadora(fonte));
+  return (fontes ?? []).filter((fonte) => fonte.ativa && !ehObservadora(fonte) && fonte.tipo !== 'sensor');
 }
 
 function segundos(ms, comSinal) {
@@ -26,16 +28,30 @@ function segundos(ms, comSinal) {
 
 // The observer's comparison as [label, value] lines for the source block.
 // Null when the source is no observer (or the server sent no comparison).
-export function linhasDaObservacao(observacao) {
+// A timing sensor reads no number: its hits are marks that fall on an
+// official pass, and it never reads one wrong. A camera's "??" (it saw a
+// car and could not read it) are counted apart, with how many fell on an
+// official pass it had nothing else for.
+export function linhasDaObservacao(observacao, fonte = null) {
   if (!observacao) {
     return null;
   }
-  const linhas = [
-    ['acertos', `${observacao.acertos} de ${observacao.entradas}`],
-    ['passagens oficiais não vistas', String(observacao.faltas)],
-    ['falsos positivos', String(observacao.falsos_positivos)],
-    ['números lidos errado', String(observacao.leituras_trocadas)],
-  ];
+  const sensor = fonte?.tipo === 'sensor';
+  const linhas = sensor
+    ? [
+      ['marcas numa passagem oficial', `${observacao.acertos} de ${observacao.entradas}`],
+      ['passagens oficiais sem marca', String(observacao.faltas)],
+      ['marcas sem passagem', String(observacao.falsos_positivos)],
+    ]
+    : [
+      ['acertos', `${observacao.acertos} de ${observacao.entradas}`],
+      ['passagens oficiais não vistas', String(observacao.faltas)],
+      ['falsos positivos', String(observacao.falsos_positivos)],
+      ['números lidos errado', String(observacao.leituras_trocadas)],
+    ];
+  if (!sensor && observacao.ilegiveis) {
+    linhas.push(['ilegíveis', `${observacao.ilegiveis} (${observacao.ilegiveis_com_passagem ?? 0} numa passagem oficial)`]);
+  }
   const trocas = observacao.trocas_frequentes ?? [];
   if (trocas.length > 0) {
     linhas.push(['trocas mais comuns', trocas.map((troca) => `${troca.carro_real} lido como ${troca.carro_lido} (${troca.vezes}×)`).join(', ')]);

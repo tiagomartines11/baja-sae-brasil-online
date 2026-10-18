@@ -734,6 +734,47 @@ final class UnreadUploadTest extends ReviewDbTestCase
         $this->assertSame([[null, true, 'ilegivel']], $shown);
     }
 
+    /**
+     * SITUATION: car B has its pass zero. Later counter 1 alone reads car
+     * B and counter 2 presses "??" 0.3 s after: one reading is not enough
+     * for the engine, so the "??" is flagged, car B its first candidate.
+     * The reviewer opens car B's whole race ("só o carro B"), then car A's.
+     *
+     * EXPECTED: the "??" is in car B's race, with no car (it may be car B's
+     * missing witness), and not in car A's, which the flag does not name.
+     */
+    public function testAPendingUnreadPassIsInTheRaceOfEachCarItMayBe(): void
+    {
+        $this->recordCountedPass(self::CAR_B, $this->at(30));
+        $this->addEntry($this->fontes[0], self::CAR_B, $this->at(260));
+        $token = $this->issueToken($this->fontes[1]);
+        $uuid = self::newUuid();
+        $this->upload($token, [$this->unreadPayload($uuid, $this->at(260) + 300)]);
+        $unreadId = (int) $this->fetchValue('SELECT passagem_id FROM contagem_passagem WHERE uuid_cliente = ?', [$uuid]);
+        $this->syncAll($this->at(890));
+
+        $state = $this->freshScreen();
+        $flags = array_values(array_filter($state['alertas_abertos'], fn(array $flag): bool => $flag['tipo'] === Flag::NUMERO_ILEGIVEL));
+        $this->assertSame([$unreadId], $flags[0]['passagem_ids'] ?? null);
+        $this->assertSame(self::CAR_B, $flags[0]['candidatos'][0]['carro']);
+
+        $shownFor = function (int $car) use ($unreadId): array {
+            $this->newRequest();
+            $race = \Baja\Contagem\Review\TimelineWindow::forCar($this->service, $car);
+            $shown = [];
+            foreach ($race['raias'] as $lane) {
+                foreach ($lane['entradas'] as $entry) {
+                    if ($entry['id'] === $unreadId) {
+                        $shown[] = [$entry['carro'], $entry['ilegivel'], $entry['motivo_fora_de_uso']];
+                    }
+                }
+            }
+            return $shown;
+        };
+        $this->assertSame([[null, true, 'ilegivel']], $shownFor(self::CAR_B));
+        $this->assertSame([], $shownFor(self::CAR_A));
+    }
+
     // ----- helpers -----
 
     /**
