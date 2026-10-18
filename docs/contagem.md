@@ -383,8 +383,8 @@ once. The person leaving then presses **Encerrar meu turno**.
   decision is then listed instead. The filters are
   remembered per prova in the browser. Clicking a line (or **Ver**) opens
   its car on the timeline at the top, which the page scrolls back up to:
-  the car's whole race centred on that moment with the line's entries
-  outlined as a flag's are, or, for a system line, its flag. The server sends the whole history with
+  the car's whole race centred on that moment, marked with the flag's
+  dashed line, with the line's entries outlined as a flag's are, or, for a system line, its flag. The server sends the whole history with
   the state (about 30 KB for the 81 decisions of 26SE), so a filter sees
   every decision, not only a first page; past 1000 decisions only the
   newest are sent and the panel says so (the exclusions, added passes and

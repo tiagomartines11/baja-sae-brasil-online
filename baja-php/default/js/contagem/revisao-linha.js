@@ -18,7 +18,7 @@ import { el, substituir } from './revisao-dom.js';
 import { MEIA_JANELA_MS, janelaDoAlerta, trechoEssencialDoAlerta, voltaEsperadaDoAlerta } from './revisao-fila.js';
 import {
   ALEM_DO_AGORA_MS, ANTES_DA_LARGADA_MS, FRACAO_DO_AGORA, PEDACO_MS, aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, escalaDoAlerta, estenderFaixa,
-  faixaAoVivo, faltaPorErro, faixaEntre, intervaloDoPedaco, juntarPedacos, lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha,
+  faixaAoVivo, faltaPorErro, faixaEntre, intervaloDoPedaco, juntarPedacos, lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha, momentoEmDestaque,
   pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara, rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from './revisao-linha-logica.js';
 import { desenharRaias } from './revisao-raias.js';
@@ -311,7 +311,7 @@ export function criarLinhaDoTempo(ganchos) {
     desenharCabecalho(alerta, carregando.length > 0 || (modo.fonte === 'carro' && !janela));
 
     const largadaMs = tela.estado.corrida?.largada_ms ?? null;
-    const alertaEmMs = alerta && modo.fonte === 'pedacos' && !modo.aoVivo ? alerta.ts_ms : null;
+    const alertaEmMs = momentoEmDestaque(modo, alerta);
     const doQueSeVe = [modo.chave, modo.escala, linha.faixa, destaque, tela.entradaSelecionadaId, largadaMs, lacuna, alertaEmMs];
     const chave = JSON.stringify([linha.geracao, carregando.length, ...doQueSeVe]);
     if (chave === linha.desenhado && linha.alvo === null) {

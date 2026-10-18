@@ -22,7 +22,7 @@ import assert from 'node:assert/strict';
 import {
   ALEM_DO_AGORA_MS, ATUALIZAR_NO_MAXIMO_A_CADA_MS, ATUALIZAR_O_PASSADO_A_CADA_MS, ESCALA_AO_VIVO, LARGURA_DO_NOME_PX, MAXIMO_DE_PEDACOS, PEDACO_MS,
   aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, escalaDoAlerta, estenderFaixa, faixaAoVivo, faixaEntre, faltaPorErro, inicioDoPedaco, intervaloDoPedaco, juntarPedacos,
-  lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha, pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara,
+  lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha, momentoEmDestaque, pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara,
   rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from '../../default/js/contagem/revisao-linha-logica.js';
 import { ESCALA_ALERTA, ESCALA_CARRO } from '../../default/js/contagem/revisao-raias-logica.js';
@@ -302,6 +302,18 @@ test('a flag opens with its late entry and the previous pass in view, zooming ou
 
   // A flag of about a minute keeps the flag scale.
   assert.equal(escalaDoAlerta({ de: T0, ate: T0 + 10000 }, largura), ESCALA_ALERTA);
+});
+
+// At QA a "Saída marcada" line opened its car near the moment with no mark:
+// such a line has no chip to outline.
+test('a car opened from a line of the history marks that line\'s moment, as a flag marks its own', () => {
+  const daLinha = modoDaLinha({ tipo: 'carro', numero: 3, momentoMs: T0 + 5000 }, null);
+  assert.equal(momentoEmDestaque(daLinha, null), T0 + 5000);
+  assert.equal(momentoEmDestaque(modoDaLinha({ tipo: 'carro', numero: 3, momentoMs: T0 + 5000 }, null, false), null), T0 + 5000, 'among all cars');
+  assert.equal(momentoEmDestaque(modoDaLinha({ tipo: 'carro', numero: 3 }, null), null), null, 'opened from the car table');
+  assert.equal(momentoEmDestaque(modoDaLinha(null, null), null), null, 'live');
+  const alerta = { id: 'solitaria:1', tipo: 'solitaria', carros: [3], ts_ms: T0 + 9000 };
+  assert.equal(momentoEmDestaque(modoDaLinha({ tipo: 'alerta', id: alerta.id }, alerta), alerta), T0 + 9000);
 });
 
 test('switching "só o carro" off goes to the chip picked, or the car\'s last pass', () => {
