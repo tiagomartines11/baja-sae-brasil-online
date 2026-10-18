@@ -573,7 +573,7 @@ table.carros, table.historico { border-collapse: collapse; width: 100%; }
 
 /* status bar: official clock and age of the calculation */
 .horario-oficial { color: var(--cor-fraca); }
-.horario-oficial strong { color: var(--cor-texto); font-size: 16px; font-variant-numeric: tabular-nums; }
+.horario-oficial strong { display: inline-block; min-width: 8ch; text-align: right; color: var(--cor-texto); font-size: 16px; font-variant-numeric: tabular-nums; }
 .calculo { color: var(--cor-fraca); font-variant-numeric: tabular-nums; }
 .calculo.atrasado { padding: 2px 8px; border-radius: 4px; background: var(--fundo-vermelho); color: var(--cor-vermelha); font-weight: bold; }
 

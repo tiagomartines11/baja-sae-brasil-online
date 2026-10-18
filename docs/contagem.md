@@ -410,7 +410,10 @@ once. The person leaving then presses **Encerrar meu turno**.
   two lines that never wrap (what does not fit is cut, the whole text is in
   the tooltip), and pills whose text has a fixed shape. Ages move in steps
   ("agora" for the first 15 s, then 15 s, 30 s, 45 s, whole minutes), in a
-  slot of fixed width, with the exact age in the tooltip. On a phone the bar
+  slot of fixed width, with the exact age in the tooltip. While the official
+  clock (re)synchronises, the official time and the race clock show dashes
+  of their own width ("--:--:--"), "sincronizando…" in the tooltip, so the
+  line does not shift. On a phone the bar
   wraps as needed. First line: official time, race clock, open flags,
   "publicado agora / há 30 s", "calculado agora / há 30 s", other reviewers.
   "calculado" is how old the flags and lap times on screen are; it turns

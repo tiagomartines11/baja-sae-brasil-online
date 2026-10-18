@@ -123,9 +123,23 @@ function chipDaFonte(fonte, estado, agoraServidorMs, excluidas) {
     chip.dispositivos === null ? null : el('span', { class: 'chip-dispositivos' }, ` ${chip.dispositivos}`));
 }
 
+// While the official clock is (re)synchronising, the bar shows dashes of
+// the clocks' own shape, not the word "sincronizando…": that word is wider
+// than a time and pushed the rest of the line about 140 px sideways for a
+// second (the anchor is dropped on load and after the computer sleeps).
+// The word is in the tooltip.
+export const HORARIO_SINCRONIZANDO = '--:--:--';
+export const RELOGIO_SINCRONIZANDO = '-:--:--';
+const DICA_SINCRONIZANDO = 'Sincronizando com o horário do servidor…';
+
+export const textoDoHorario = (oficialMs) => (oficialMs === null || oficialMs === undefined ? HORARIO_SINCRONIZANDO : horarioOficial(oficialMs));
+
 function horario(oficialMs) {
-  return el('span', { class: 'horario-oficial', title: 'Horário do servidor, igual em todas as telas; não depende do relógio deste computador' },
-    'Horário oficial ', el('strong', {}, horarioOficial(oficialMs)));
+  const sincronizando = oficialMs === null || oficialMs === undefined;
+  return el('span', {
+    class: sincronizando ? 'horario-oficial sincronizando' : 'horario-oficial',
+    title: sincronizando ? DICA_SINCRONIZANDO : 'Horário do servidor, igual em todas as telas; não depende do relógio deste computador',
+  }, 'Horário oficial ', el('strong', {}, textoDoHorario(oficialMs)));
 }
 
 // The bar before the first answer: there is no state yet, and the official
@@ -181,8 +195,10 @@ export function desenharBarra(container, estado, agoraServidorMs, oficialMs = ag
   substituir(container,
     el('div', { class: 'barra-linha barra-tempo' },
       horario(oficialMs),
-      el('span', { class: `relogio estado-${corrida.estado}`, title: 'Tempo de prova, contado a partir da largada pelo horário oficial' },
-        el('strong', {}, oficialMs === null ? 'sincronizando…' : relogio(decorrido)), ' ', NOMES_DE_ESTADO[corrida.estado] ?? corrida.estado),
+      el('span', {
+        class: `relogio estado-${corrida.estado}`,
+        title: oficialMs === null ? DICA_SINCRONIZANDO : 'Tempo de prova, contado a partir da largada pelo horário oficial',
+      }, el('strong', {}, oficialMs === null ? RELOGIO_SINCRONIZANDO : relogio(decorrido)), ' ', NOMES_DE_ESTADO[corrida.estado] ?? corrida.estado),
       el('span', { class: abertos > 0 ? 'pendencias com-alertas' : 'pendencias' }, resumoDeAlertas(abertos)),
       el(publicacao.classe.includes('desligada') ? 'strong' : 'span', { class: publicacao.classe, title: publicacao.titulo },
         comIdade(publicacao.rotulo, publicacao.idade)),

@@ -13,10 +13,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  avisosDosResultados, descreverCalculo, descreverChip, descreverPontos, descreverPublicacao,
+  HORARIO_SINCRONIZANDO, RELOGIO_SINCRONIZANDO, avisosDosResultados, descreverCalculo, descreverChip, descreverPontos, descreverPublicacao,
+  textoDoHorario,
 } from '../../default/js/contagem/revisao-barra.js';
+import { relogio } from '../../default/js/contagem/revisao-formato.js';
 
 const AGORA = 1_792_250_000_000;
+
+// At QA the first line slid about 140 px sideways whenever the official
+// clock dropped its anchor: "sincronizando…" is wider than a time.
+test('while the clock synchronises, the clocks show dashes of their own shape', () => {
+  assert.equal(textoDoHorario(null), HORARIO_SINCRONIZANDO);
+  assert.equal(textoDoHorario(AGORA).length, HORARIO_SINCRONIZANDO.length);
+  assert.equal(relogio(3600000 + 39 * 60000 + 5000).length, RELOGIO_SINCRONIZANDO.length);
+});
 
 test('just published reads "publicado agora", never "publicado há agora"', () => {
   const publicacao = descreverPublicacao({ publicado_em_ms: AGORA - 900 }, AGORA);
