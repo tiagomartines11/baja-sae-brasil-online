@@ -66,8 +66,9 @@ final class Recount
      * one can change the count of a car it is not about: another source's
      * reading of car 7 is what lets Contagem 2's "??" count for car 7. With
      * $nearMs (the moments of what the upload touched), the cars read
-     * around the "??" near those moments are recounted as well. Nothing is
-     * added while the prova has no "??".
+     * around the "??" near those moments are recounted as well; when the
+     * change only added entries ($newEntryIds), only the cars whose "??"
+     * assignment they changed. Nothing is added while the prova has no "??".
      *
      * Likewise a timing sensor's mark is the pass time of the car it is
      * matched to, and which car that is depends on the cars a second or two
@@ -88,7 +89,7 @@ final class Recount
         $settings = $this->service->getSettings();
         if ($nearMs !== []) {
             if (!$onlyMarks) {
-                $cars = array_merge($cars, $this->loader->carsNearUnread($settings, $nearMs));
+                $cars = array_merge($cars, $this->loader->carsNearUnread($settings, $nearMs, $newEntryIds));
             }
             $cars = array_merge($cars, $this->loader->carsAroundSensorMarks($settings, $nearMs, $cars, $onlyMarks, $newEntryIds));
         }

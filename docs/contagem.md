@@ -1480,8 +1480,12 @@ Rules that make this safe:
   (`CountCarsTest` checks it for many generated races). The one exception
   is a "??": which car it was comes from what the other sources read
   around it. So where a "??" lies near the cars of an upload, the quick
-  recount also loads the entries around it and recounts the cars it may
-  be, or was, given (`EngineInputLoader::carsNearUnread`), and
+  recount also loads the entries around it and recounts the cars whose
+  count it may have moved (`EngineInputLoader::carsNearUnread`): for an
+  upload that only added entries, the "??" near them are given their cars
+  with and without the new entries, and only the cars whose "??" changed
+  are recounted (nearly always none but the upload's own); for a void or
+  a fix, every car such a "??" may be, or was, given.
   `IncrementalEqualsRebuildTest` checks that with "??" and fixes too. The
   other exception is a timing sensor's mark: it is the pass time, and which
   pass it times depends on the cars a second or two around it, so the
@@ -1496,16 +1500,21 @@ Rules that make this safe:
 
   | | a counter's upload | a sensor's upload |
   |---|---|---|
-  | no "??", no sensor | 20 ms, 20 queries | |
-  | sensor, no "??" | 45 to 60 ms, 33 to 36 queries | 12 to 20 ms, 16 to 18 queries |
-  | "??" on 2 % of crossings, no sensor | 41 ms, 28 queries | |
-  | "??" and sensor | 160 to 190 ms, 40 to 44 queries | 13 to 16 ms, 18 queries |
+  | no "??", no sensor | 32 / 126, lock 26, 27 / 223 queries | |
+  | "??" on 2 % of crossings, no sensor | 88 / 194, lock 80, 47 / 243 queries | |
+  | sensor, no "??" | 63 / 181, lock 55, 48 / 244 queries | 59 / 174, lock 49, 42 / 242 queries |
+  | "??" and sensor | 117 / 253 (159 / 362 before the "??" path recounted only the cars whose "??" moved), lock 145 before | 89 / 259, lock 72, 40 / 237 queries |
 
-  Every upload that changes a published value also recalculates the points
-  of every car (about 200 queries), as before. With a sensor the extra time
-  is the trains' entries (a few seconds around each crossing of each car
-  recounted) and working out, round by round, what is still missing; with
-  "??" as well, each car the "??" path recounts brings its own trains.
+  A counter's own "??" upload with both: 29 ms p50 (130 before). Measured
+  in the process for that last row (SyncHandler::handle, 215 uploads): a
+  counter's upload 100 ms p50 / 211 p90, against 163 / 268 before.
+
+  The p95 is the points of every car (about 200 queries), recalculated
+  whenever an upload changes a published value, as before. With a sensor
+  the extra time is the trains' entries (a few seconds around each crossing
+  of each car recounted) and working out, round by round, what is still
+  missing. A sensor's own upload recounts the cars of the trains around its
+  mark (1.2 to 1.5 cars, 3 000 to 4 500 entries loaded with both).
 - A lap count is never visible without its points: the write and the
   recalculation of points are one transaction, in the request that changed
   the count.

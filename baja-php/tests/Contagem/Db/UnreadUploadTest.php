@@ -335,6 +335,42 @@ final class UnreadUploadTest extends ReviewDbTestCase
     }
 
     /**
+     * SITUATION: cars A and B cross a second apart at 3:40 and 3:41;
+     * counters 1 and 3 type both, counter 2 presses "??" at 3:40.4 (no
+     * evidence either way: flagged, A and B its candidates). Then counter 1
+     * uploads car C at 4:00, 20 s later.
+     *
+     * EXPECTED: that upload changes no "??"'s car, so besides car C (the
+     * upload's own) nothing is recounted: not every candidate of every
+     * "??" near it. When an upload does change one (counter 2 itself types
+     * car A at 3:40.9: its "??" can no longer be A, and nobody else read
+     * a car there alone), the car that "??" counted for is recounted.
+     */
+    public function testAnUploadOfNewEntriesRecountsOnlyTheCarsWhoseUnreadPassItMoved(): void
+    {
+        $settings = $this->service->getSettings();
+        foreach ([0, 2] as $index) {
+            $this->addEntry($this->fontes[$index], self::CAR_A, $this->at(220));
+            $this->addEntry($this->fontes[$index], self::CAR_B, $this->at(221));
+        }
+        $this->upload($this->issueToken($this->fontes[1]), [$this->unreadPayload(self::newUuid(), $this->at(220) + 400)]);
+        $newC = $this->addEntry($this->fontes[0], self::CAR_C, $this->at(240));
+
+        $this->newRequest();
+        $loader = new \Baja\Contagem\Service\EngineInputLoader($this->prova);
+        $this->assertSame([], $loader->carsNearUnread($settings, [$this->at(240)], [$newC]));
+        $this->assertEqualsCanonicalizing([self::CAR_A, self::CAR_B, self::CAR_C], $loader->carsNearUnread($settings, [$this->at(240)]), 'a void or a fix still recounts all of them');
+
+        // Counter 2's "??" alone with car A, read by counters 1 and 3: given A by itself.
+        $this->executeSql('DELETE FROM contagem_passagem WHERE equipe_numero = ?', [self::CAR_B]);
+        $this->newRequest();
+        $this->assertSame([self::CAR_A], (new \Baja\Contagem\Service\EngineInputLoader($this->prova))->carsNearUnread($settings, [$this->at(220) + 400], [$this->unreadIdAt($this->at(220) + 400)]), 'the "??" itself, new: it counts for A now');
+        $ownA = $this->addEntry($this->fontes[1], self::CAR_A, $this->at(220) + 900);
+        $this->newRequest();
+        $this->assertSame([self::CAR_A], (new \Baja\Contagem\Service\EngineInputLoader($this->prova))->carsNearUnread($settings, [$this->at(220) + 900], [$ownA]));
+    }
+
+    /**
      * SITUATION: a timing sensor at the line. The three counters read car B
      * at 3:40.0, 3:40.4 and 3:41.2 (LAST 220: the median), each uploading
      * at once. The sensor's system uploads its mark a little later: 3:38.3.
@@ -825,6 +861,11 @@ final class UnreadUploadTest extends ReviewDbTestCase
     }
 
     /** @return array<string, mixed> a "??" as the page sends it */
+    private function unreadIdAt(int $tsMs): int
+    {
+        return (int) $this->fetchValue('SELECT passagem_id FROM contagem_passagem WHERE equipe_numero IS NULL AND ts_ms = ?', [$tsMs]);
+    }
+
     private function unreadPayload(string $uuid, int $tsMs): array
     {
         $payload = $this->entryPayload($uuid, 0, $tsMs);

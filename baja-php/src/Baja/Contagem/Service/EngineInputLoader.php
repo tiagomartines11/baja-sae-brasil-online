@@ -203,10 +203,18 @@ final class EngineInputLoader
      * "??"; and when none is near the moments. A timing sensor's marks are
      * no "??" here: with a sensor and no "??" it is two cheap queries.
      *
+     * When the change only added entries ($newEntryIds), the race before
+     * it is the same race without them: then only the cars whose "??"
+     * assignment the new entries really changed (the car a "??" counted
+     * for before, and the one it counts for now) are returned, as
+     * carsAroundSensorMarks() does for marks. Usually none: the cars of
+     * the upload itself are recounted anyway.
+     *
      * @param int[] $momentsMs moments of the entries an upload stored, voided or fixed
+     * @param int[]|null $newEntryIds when the change only added entries, their ids
      * @return int[]
      */
-    public function carsNearUnread(Settings $settings, array $momentsMs): array
+    public function carsNearUnread(Settings $settings, array $momentsMs, ?array $newEntryIds = null): array
     {
         if ($momentsMs === [] || !$this->hasUnreadEntries()) {
             return [];
@@ -249,6 +257,13 @@ final class EngineInputLoader
         $knownCars = $input->validCars === [] ? [] : array_fill_keys(array_merge($input->validCars, $input->unclassifiedCars), true);
         $assigner = UnreadAssigner::assign($applied, $settings, $sourcesById, $knownCars);
 
+        if ($newEntryIds !== null) {
+            $isNew = array_fill_keys($newEntryIds, true);
+            $before = array_values(array_filter($input->entries, fn(Entry $entry): bool => !isset($isNew[$entry->id])));
+            $assignerBefore = UnreadAssigner::assign(DecisionApplier::apply($before, $input->decisions, $sourcesById), $settings, $sourcesById, $knownCars);
+            return self::carsWhoseAssignmentChanged($assignerBefore->assignments, $assigner->assignments);
+        }
+
         $cars = [];
         foreach ($assigner->assignments as $assignment) {
             $cars[$assignment['carro']] = true;
@@ -269,6 +284,32 @@ final class EngineInputLoader
                 if (abs($entry->tsMs - $momentMs) <= $aroundMs) {
                     $cars[$entry->carro] = true;
                     break;
+                }
+            }
+        }
+        return array_keys($cars);
+    }
+
+    /**
+     * The cars a "??" counted for in one list of assignments and not, or at
+     * another crossing, in the other.
+     *
+     * @param array<int, array{carro: int, ts_ms: int}> $before entry id => assignment (UnreadAssigner::$assignments)
+     * @param array<int, array{carro: int, ts_ms: int}> $after
+     * @return int[]
+     */
+    private static function carsWhoseAssignmentChanged(array $before, array $after): array
+    {
+        $cars = [];
+        foreach ($before + $after as $entryId => $any) {
+            $was = $before[$entryId] ?? null;
+            $is = $after[$entryId] ?? null;
+            if ($was !== null && $is !== null && $was['carro'] === $is['carro'] && $was['ts_ms'] === $is['ts_ms']) {
+                continue;
+            }
+            foreach ([$was, $is] as $assignment) {
+                if ($assignment !== null) {
+                    $cars[$assignment['carro']] = true;
                 }
             }
         }
