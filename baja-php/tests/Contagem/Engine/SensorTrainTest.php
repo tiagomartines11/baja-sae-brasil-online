@@ -141,6 +141,47 @@ final class SensorTrainTest extends EngineTestCase
     }
 
     /**
+     * SITUATION: a sensor whose marks come late (its beam a few metres past
+     * the counters' line, or its clock slow). Cars 13 and 24 cross 1.6 s
+     * apart at about 04:00; both counters type each car 0.3 s and 0.35 s
+     * after it crosses, and the sensor marks each 0.8 s, or 1.3 s, after
+     * the counters' Enter.
+     *
+     * WHAT WENT WRONG (review of the bound on the lag in a train): a lag
+     * that late was not tried at all, so it did not count against the
+     * lag one car gap away either; that one paired car 24 with car 13's
+     * mark, with a clear margin.
+     *
+     * EXPECTED: each pass is timed by its own mark or by none, and the
+     * per-car recount says the same.
+     */
+    public function testALateSensorDoesNotTimeACarByTheMarkOfTheCarInFront(): void
+    {
+        foreach ([0.8, 1.3] as $lateS) {
+            $race = RaceScenario::withCounters(2);
+            $race->addSensor(3);
+            $race->start('00:00');
+            $race->firstCrossing([13, 24]);
+            $marks = [];
+            foreach ([13 => 0.0, 24 => 1.6] as $car => $crossingS) {
+                $race->entry(1, $car, sprintf('04:%06.3f', $crossingS + 0.3));
+                $race->entry(2, $car, sprintf('04:%06.3f', $crossingS + 0.35));
+                $marks[$car] = sprintf('04:%06.3f', $crossingS + 0.325 + $lateS);
+                $race->mark(3, $marks[$car]);
+            }
+            $input = $race->input('10:00');
+
+            $result = Engine::run($input);
+
+            foreach ($marks as $car => $mark) {
+                $this->assertContains($this->groupOf($result, $car)->marcaSensor?->tsMs, [null, RaceScenario::ms($mark)], "car $car, sensor {$lateS} s late");
+                $alone = Engine::countCars(self::whatTheRecountLoads($input, [$car], []), [$car]);
+                $this->assertSame(self::rows($result->laps, $car), self::rows($alone->lapsByCar[$car], $car));
+            }
+        }
+    }
+
+    /**
      * SITUATION: race control records the start at 01:00, a moment after
      * the pack really left. Car 7 crosses at 00:59.80 and the sensor marks
      * it there; the three counters press Enter after the start instant

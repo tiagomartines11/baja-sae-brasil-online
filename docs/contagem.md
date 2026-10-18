@@ -1265,13 +1265,17 @@ its own (`SensorTrains`, `UnreadAssigner::matchMarks`):
   stays untimed ("ambígua");
 - otherwise by the times: each counter's own delay within the train is
   taken out of the crossings' times, the crossings are moved by the common
-  lag that lines them up best with the marks (only lags with the marks
-  before the crossings, or at most 0.5 s after them,
+  lag that lines them up best with the marks (only a lag with the marks
+  before the crossings, or at most 1 s after them, is applied,
   `MARCA_DEPOIS_DAS_LEITURAS_MS`: with the habits out a crossing is the
   middle of its counters' presses, and a mark two seconds after that is a
-  pairing no counter's hand explains; such a lag once timed a car's pass
-  with the mark of the car behind it, 2.8 s late, race simulator, two
-  counters), and a mark gets the crossing
+  pairing neither a counter pressing early nor a sensor a little past the
+  line explains; such a lag once timed a car's pass with the mark of the
+  car behind it, 2.8 s late, race simulator, two counters. A later lag is
+  still tried and still counts as another answer: with a sensor later than
+  that the train goes untimed rather than shifted by one car, which
+  happened to 8 % of the marks with the sensor 0.8 s late when the later
+  lags were left out altogether), and a mark gets the crossing
   it is paired with when every other answer (another pairing, another lag)
   is clearly worse: by 0.5 s in a train with as many marks as crossings,
   by 1 s otherwise (a false trigger or a missed car may be in it);
@@ -1342,8 +1346,9 @@ not happen every minute):
 
 | | three counters | two counters |
 |---|---|---|
-| passes timed by the sensor | 76.5 % (19 988 of 26 129) | 77.0 % (20 089 of 26 102) |
-| of those, the right car | 99.70 % (60 wrong) | 99.72 % (56 wrong) |
+| passes timed by the sensor | 76.5 % (19 986 of 26 129) | 77.0 % (20 089 of 26 102) |
+| of those, the right car | 99.71 % (58 wrong) | 99.72 % (56 wrong) |
+| every mark 0.8 s later (a sensor past the line) | 67.8 %, 99.64 % right | 70.5 %, 99.60 % right |
 | before the 1 s rule for a mark alone with a crossing | 19 993, 65 wrong | 20 091, 58 wrong |
 | before trains were decided on their own | 69.7 %, 99.66 % right | 69.1 %, 99.71 % right |
 | by the counters' order alone | +18 marks, all right | +26 marks, all right |

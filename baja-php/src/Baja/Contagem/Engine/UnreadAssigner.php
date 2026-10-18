@@ -144,18 +144,24 @@ final class UnreadAssigner
     public const MARCA_DEPOIS_DA_PRIMEIRA_LEITURA_MS = 1000;
 
     /**
-     * In a train (bestShift()), the marks may come at most this long after
-     * the crossings, each counter's habit taken out: the lag tried between
-     * the counters and the sensor is never more. With the habits out, a
-     * crossing's time is the middle of its counters' presses, and a counter
-     * rarely presses more than half a second before the car is on the line.
-     * Measured (UnreadPassSyntheticTest, full size, two counters): 500 ms
-     * matched 77.6 % of the crossings, 99.75 % right; 1000 ms 77.3 %,
-     * 99.72 %; no bound 77.0 %, 99.72 %; 250 ms 77.6 %, 99.67 %; 0 ms
-     * 75.1 %, 98.1 % (the true lag of two counters with early habits is
-     * a little after the middle).
+     * In a train (bestShift()), the lag between the counters and the sensor
+     * is never taken to be more than this the sensor's way: the marks at
+     * most this long after the crossings, each counter's habit taken out.
+     * The same second MARCA_DEPOIS_DA_PRIMEIRA_LEITURA_MS allows a mark
+     * alone: room for counters that press early (half a second, in the
+     * race simulator) plus a sensor whose beam sits a little past the
+     * counters' line or whose clock is a little slow. A later lag is still
+     * tried and still competes for the margin: when it pairs the marks
+     * better than every lag allowed, the train goes untimed (or in the
+     * counters' order) instead of being shifted by a car.
+     * Measured (UnreadPassSyntheticTest, full size, 8 seeds, every mark
+     * moved later by an offset): with two
+     * counters, at no offset 76.96 % of the crossings timed, 99.72 % right
+     * (any bound from 750 ms); at +0.8 s 70.5 % and 99.60 % (500 ms: 61.3 %);
+     * at +1.5 s 53.6 % and 99.19 %. A bound that also took the late lags
+     * out of the margin timed 92.4 % right at +0.8 s.
      */
-    public const MARCA_DEPOIS_DAS_LEITURAS_MS = 500;
+    public const MARCA_DEPOIS_DAS_LEITURAS_MS = 1000;
 
     /** A train with at least this many marks and crossings tells by how much the counters lag behind the sensor (bestShift()). */
     private const MARCAS_PARA_ATRASO = 2;
@@ -940,14 +946,19 @@ final class UnreadAssigner
      * well is an answer too: how much worse it is, per mark, comes back
      * with the best, for the margin.
      *
-     * Only lags a counter's hand can explain are tried: the marks before
-     * the crossings (habits taken out), or at most
-     * MARCA_DEPOIS_DAS_LEITURAS_MS after them. A lag of two seconds the
-     * other way, marks after every counter's Enter, once lined up a car's
-     * pass with the mark of the car behind it and a false trigger with that
-     * car, and beat the true lag by more than the margin (race simulator,
-     * two counters: a pass timed 2.8 s late). When no lag is left, nothing
-     * in the train is paired: its marks stay candidates.
+     * Only a lag a counter's hand and the sensor's place can explain is
+     * applied: the marks before the crossings (habits taken out), or at
+     * most MARCA_DEPOIS_DAS_LEITURAS_MS after them. A lag of two seconds
+     * the other way, marks after every counter's Enter, once lined up a
+     * car's pass with the mark of the car behind it and a false trigger
+     * with that car, and beat the true lag by more than the margin (race
+     * simulator, two counters: a pass timed 2.8 s late). Every lag is still
+     * tried, and one that is not allowed still counts for the margin: if
+     * the true lag is a late one (a sensor slower than that), the allowed
+     * lag one car away must not win with a clear margin it never had
+     * (review of the bound: 92 % of the marks right with the sensor 0.8 s
+     * late). When no lag is allowed, nothing in the train is paired: its
+     * marks stay candidates.
      *
      * @param int[] $entryTimes
      * @param int[] $crossingTimes
@@ -962,7 +973,7 @@ final class UnreadAssigner
         foreach ($entryTimes as $entryMs) {
             foreach ($crossingTimes as $crossingMs) {
                 $lagMs = (int) round(($entryMs - $crossingMs) / self::PASSO_DO_ATRASO_MS) * self::PASSO_DO_ATRASO_MS;
-                if (abs($lagMs) <= $toleranceMs && $lagMs <= self::MARCA_DEPOIS_DAS_LEITURAS_MS) {
+                if (abs($lagMs) <= $toleranceMs) {
                     $lags[$lagMs] = abs($lagMs);
                 }
             }
@@ -975,7 +986,7 @@ final class UnreadAssigner
             $shifted = array_map(fn(int $tsMs): int => $tsMs + $lagMs, $crossingTimes);
             [$score, $pairs, $table] = self::bestMatching($entryTimes, $shifted, $toleranceMs, $crossingTimes);
             $tries[] = [$score, $pairs];
-            if ($best === null || $score > $best[0]) {
+            if ($lagMs <= self::MARCA_DEPOIS_DAS_LEITURAS_MS && ($best === null || $score > $best[0])) {
                 $best = [$score, $pairs, $table, $shifted];
             }
         }
