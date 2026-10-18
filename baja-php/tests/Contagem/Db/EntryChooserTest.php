@@ -245,6 +245,22 @@ final class EntryChooserTest extends DbTestCase
     }
 
     /**
+     * SITUATION: the prova is named with characters that mean something
+     * in HTML ("Enduro <B> & cia").
+     *
+     * EXPECTED: the start page shows the name as text.
+     */
+    public function testTheStartPageShowsTheProvaNameAsText(): void
+    {
+        $username = self::USER_PREFIX . 'so_box';
+        $this->createUser($username, ['index', self::PIT_CODE]);
+        $this->executeSql('UPDATE prova SET nome = ? WHERE evento_id = ? AND prova_id = ?', ['Enduro <B> & cia', self::EVENTO_ID, self::PROVA_ID]);
+
+        $start = $this->renderJuizPage('index.php', $username);
+        $this->assertStringContainsString('>Enduro &lt;B&gt; &amp; cia</a>', $start);
+    }
+
+    /**
      * SITUATION: a counter linked to Contagem 1 only clicks the prova.
      *
      * WHAT CHANGED: contagem.php used to send them on to the count page

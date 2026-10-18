@@ -35,17 +35,17 @@ foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->get
     // log. contagem.php then sends each of them to the right place.
     if ($prova->getType() == ContagemAccess::PROVA_TYPE) {
         if (ContagemAccess::mayEnter($prova)) {
-            echo '<tr style="height: 40px"><td><a href="contagem.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+            echo '<tr style="height: 40px"><td><a href="contagem.php?p=' . htmlspecialchars(rawurlencode((string) $prova->getProvaId())) . '">' . htmlspecialchars((string) $prova->getNome()) . '</a></td></tr>';
         }
         continue;
     }
     if (Session::hasPermission($prova->getProvaId()) && (count($prova->getParamsInputs()) > 0 || $prova->getType() == 'tournament')) {
         if ($prova->getType() == 'normal') {
-            echo '<tr style="height: 40px"><td><a href="dashboard.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+            echo '<tr style="height: 40px"><td><a href="dashboard.php?p=' . htmlspecialchars(rawurlencode((string) $prova->getProvaId())) . '">' . htmlspecialchars((string) $prova->getNome()) . '</a></td></tr>';
         } elseif ($prova->getType() == 'tournament'){
-            echo '<tr style="height: 40px"><td><a href="tournament_entry.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+            echo '<tr style="height: 40px"><td><a href="tournament_entry.php?p=' . htmlspecialchars(rawurlencode((string) $prova->getProvaId())) . '">' . htmlspecialchars((string) $prova->getNome()) . '</a></td></tr>';
         } else {
-            echo '<tr style="height: 40px"><td><a href="rolling_entry.php?p=' . $prova->getProvaId() . '">' . $prova->getNome() . '</a></td></tr>';
+            echo '<tr style="height: 40px"><td><a href="rolling_entry.php?p=' . htmlspecialchars(rawurlencode((string) $prova->getProvaId())) . '">' . htmlspecialchars((string) $prova->getNome()) . '</a></td></tr>';
         }
     }
 }
