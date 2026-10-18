@@ -12,13 +12,20 @@ import assert from 'node:assert/strict';
 
 import {
   classesDoChip, descricaoDoChip, distribuirEmLinhas, encontrarEntrada, limitesDaJanela, marcasDeTempo, posicaoPx,
-  entradasDeHorarioDesconhecido, raiasDeOcorrencias,
+  entradasDeHorarioDesconhecido, posicaoDaLinhaDoMomento, raiasDeOcorrencias,
 } from '../../default/js/contagem/revisao-raias-logica.js';
 
 test('a moment is placed in proportion to the time since the left edge', () => {
   // The window starts at 100 000 ms; at 10 pixels per second an entry
   // 3 seconds later is drawn 30 pixels from the left.
   assert.equal(posicaoPx(103000, 100000, 10), 30);
+});
+
+// At browser QA a car opened from a line of the history, in its whole
+// race (0.5 px/s), had the line 20 px, some 40 s, after the line's moment.
+test('the dashed line crosses a flag\'s chip in its middle, and a plain moment where it is', () => {
+  assert.equal(posicaoDaLinhaDoMomento({ ts_ms: 103000, doChip: true }, 100000, 10, 40), 30 + 20);
+  assert.equal(posicaoDaLinhaDoMomento({ ts_ms: 180000, doChip: false }, 100000, 0.5, 40), posicaoPx(180000, 100000, 0.5));
 });
 
 test('a flag\'s window uses the limits that came with it', () => {

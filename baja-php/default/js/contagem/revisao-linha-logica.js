@@ -119,15 +119,17 @@ export function modoDaLinha(selecao, alerta, soCarro = true) {
   return { fonte: 'pedacos', carro: null, escala: ESCALA_AO_VIVO, aoVivo: true, chave: 'ao_vivo' };
 }
 
-// The moment marked with the dashed line across the lanes: a flag's
-// moment while it is zoomed on, or the moment of the history line a car
-// was opened from (a "saída marcada" has no chip of its own to outline).
+// The moment marked with the dashed line across the lanes, as
+// {ts_ms, doChip}: a flag's moment while it is zoomed on (the moment of
+// one of its chips: doChip), or the moment of the history line a car was
+// opened from (a "saída marcada" has no chip of its own to outline).
 // Null otherwise.
 export function momentoEmDestaque(modo, alerta) {
   if (alerta) {
-    return modo.fonte === 'pedacos' && !modo.aoVivo ? alerta.ts_ms ?? null : null;
+    const tsMs = modo.fonte === 'pedacos' && !modo.aoVivo ? alerta.ts_ms ?? null : null;
+    return tsMs === null ? null : { ts_ms: tsMs, doChip: true };
   }
-  return modo.momentoMs ?? null;
+  return modo.momentoMs === null || modo.momentoMs === undefined ? null : { ts_ms: modo.momentoMs, doChip: false };
 }
 
 // Which entries stand out: the flag's own (strongly), and the cars whose

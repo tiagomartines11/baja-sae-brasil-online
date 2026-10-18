@@ -136,6 +136,15 @@ export function posicaoPx(tsMs, deMs, escalaPxPorSegundo) {
   return Math.round(((tsMs - deMs) / 1000) * escalaPxPorSegundo);
 }
 
+// Where the dashed line across the lanes goes (`momento`: momentoEmDestaque
+// in revisao-linha-logica.js). A flag's moment is one of its chips, and the
+// line crosses that chip's middle; a plain moment (the history line a car
+// was opened from) is drawn where it is: at a whole race's scale half a
+// chip is more than half a minute.
+export function posicaoDaLinhaDoMomento(momento, deMs, escalaPxPorSegundo, larguraDoChipPx) {
+  return posicaoPx(momento.ts_ms, deMs, escalaPxPorSegundo) + (momento.doChip ? larguraDoChipPx / 2 : 0);
+}
+
 // Two entries of the same source a second apart would be drawn on top of
 // each other. This puts each chip on the first row of its lane where it
 // does not touch the previous chip of that row.

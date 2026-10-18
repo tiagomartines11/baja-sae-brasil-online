@@ -6,7 +6,7 @@ import { el } from './revisao-dom.js';
 import { relogio } from './revisao-formato.js';
 import {
   classesDoChip, comHorarioConhecido, descreverParada, descricaoDoChip, distribuirEmLinhas, entradasDeHorarioDesconhecido,
-  limitesDaJanela, marcasDeTempo, posicaoPx, raiasDeOcorrencias, rotuloDaMarca,
+  limitesDaJanela, marcasDeTempo, posicaoDaLinhaDoMomento, posicaoPx, raiasDeOcorrencias, rotuloDaMarca,
 } from './revisao-raias-logica.js';
 
 const LARGURA_DO_CHIP_PX = 40;
@@ -122,9 +122,9 @@ function desenharRegua(limites, opcoes) {
 
   // A vertical line at the flag's moment. It lives in the ruler and is
   // simply tall enough to cross every lane below it.
-  const linhaDoAlerta = opcoes.alertaEmMs === null || opcoes.alertaEmMs === undefined ? null : el('span', {
+  const linhaDoAlerta = opcoes.momento === null || opcoes.momento === undefined ? null : el('span', {
     class: 'linha-do-alerta',
-    style: { left: `${posicaoPx(opcoes.alertaEmMs, limites.de, opcoes.escala) + LARGURA_DO_CHIP_PX / 2}px` },
+    style: { left: `${posicaoDaLinhaDoMomento(opcoes.momento, limites.de, opcoes.escala, LARGURA_DO_CHIP_PX)}px` },
   });
   // The present moment, moved every second by revisao-linha.js. Hidden
   // while it is past the end of the lanes, which it would stretch.
@@ -172,7 +172,7 @@ function desenharLacuna(lacuna, limites, opcoes) {
 //   idsEmDestaque          entry ids of the selected flag, or of the history line a car was opened from
 //   carrosEmFoco           cars whose other entries are drawn weakly (the rest dimmed)
 //   entradaSelecionadaId   the chip the reviewer clicked
-//   alertaEmMs             the flag's moment (a line across the lanes), or null
+//   momento                momentoEmDestaque(): the moment of the line across the lanes, or null
 //   agoraMs                the present moment (a line), or null
 //   lacuna                 lacunaDaPassagemAnterior(), or null
 //   trechosCarregando      [{de, ate}] still loading

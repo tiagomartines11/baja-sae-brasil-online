@@ -314,8 +314,8 @@ export function criarLinhaDoTempo(ganchos) {
     desenharCabecalho(alerta, carregando.length > 0 || (modo.fonte === 'carro' && !janela));
 
     const largadaMs = tela.estado.corrida?.largada_ms ?? null;
-    const alertaEmMs = momentoEmDestaque(modo, alerta);
-    const doQueSeVe = [modo.chave, modo.escala, linha.faixa, destaque, tela.entradaSelecionadaId, largadaMs, lacuna, alertaEmMs];
+    const momento = momentoEmDestaque(modo, alerta);
+    const doQueSeVe = [modo.chave, modo.escala, linha.faixa, destaque, tela.entradaSelecionadaId, largadaMs, lacuna, momento];
     const chave = JSON.stringify([linha.geracao, carregando.length, ...doQueSeVe]);
     if (chave === linha.desenhado && linha.alvo === null) {
       return;
@@ -352,7 +352,7 @@ export function criarLinhaDoTempo(ganchos) {
       idsEmDestaque: destaque.ids,
       carrosEmFoco: destaque.carros,
       entradaSelecionadaId: tela.entradaSelecionadaId,
-      alertaEmMs,
+      momento,
       agoraMs: modo.fonte === 'pedacos' ? agoraMs() : null,
       lacuna,
       trechosCarregando: carregando,

@@ -345,12 +345,14 @@ test('on a phone a flag zooms out further so that its own entries fit, and scrol
 // such a line has no chip to outline.
 test('a car opened from a line of the history marks that line\'s moment, as a flag marks its own', () => {
   const daLinha = modoDaLinha({ tipo: 'carro', numero: 3, momentoMs: T0 + 5000 }, null);
-  assert.equal(momentoEmDestaque(daLinha, null), T0 + 5000);
-  assert.equal(momentoEmDestaque(modoDaLinha({ tipo: 'carro', numero: 3, momentoMs: T0 + 5000 }, null, false), null), T0 + 5000, 'among all cars');
+  assert.deepEqual(momentoEmDestaque(daLinha, null), { ts_ms: T0 + 5000, doChip: false });
+  assert.deepEqual(momentoEmDestaque(modoDaLinha({ tipo: 'carro', numero: 3, momentoMs: T0 + 5000 }, null, false), null),
+    { ts_ms: T0 + 5000, doChip: false }, 'among all cars');
   assert.equal(momentoEmDestaque(modoDaLinha({ tipo: 'carro', numero: 3 }, null), null), null, 'opened from the car table');
   assert.equal(momentoEmDestaque(modoDaLinha(null, null), null), null, 'live');
   const alerta = { id: 'solitaria:1', tipo: 'solitaria', carros: [3], ts_ms: T0 + 9000 };
-  assert.equal(momentoEmDestaque(modoDaLinha({ tipo: 'alerta', id: alerta.id }, alerta), alerta), T0 + 9000);
+  assert.deepEqual(momentoEmDestaque(modoDaLinha({ tipo: 'alerta', id: alerta.id }, alerta), alerta), { ts_ms: T0 + 9000, doChip: true },
+    'a flag\'s moment is its chip\'s');
 });
 
 test('switching "só o carro" off goes to the chip picked, or the car\'s last pass', () => {
