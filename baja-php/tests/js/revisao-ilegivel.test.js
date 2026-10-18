@@ -385,7 +385,7 @@ test('a counting sensor shows what it did with its marks', () => {
     ['atribuídas', '398'],
     ['ambíguas', '6'],
     ['sem passagem', '8'],
-    ['passagens sem marca', '5'],
+    ['passagens sem horário', '5'],
     ['desvio', '−0,3 s (90% até 0,8 s)'],
   ]);
   assert.ok(linhasDoSensor(sensor).every(([, , dica]) => dica.length > 10));

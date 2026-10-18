@@ -1293,7 +1293,8 @@ alone never counts, before the start or after).
 Its statistics (review block and Fontes page): marks, how many time a pass,
 how many were near passes but not safely paired (no flag: nothing is lost
 but a precise time), how many had no pass anywhere near (noise), the passes
-it did not mark while it was synced, and its offset from the counters.
+it gave no time to while it was synced (missed, or their mark ambiguous),
+and its offset from the counters.
 
 A mark with no pass the counters recorded is usually noise. It raises
 `numero_ilegivel` only when some car was due right then (read strictly:
@@ -1407,7 +1408,8 @@ discarding "its" pass would act on the counters' pass.
 recorded any (and the status bar chip's tooltip says it, the chip's text
 keeping its shape). A sensor that counts shows what it did with its marks:
 marcas, atribuídas (they time a pass), ambíguas, sem passagem, passagens
-sem marca and desvio (median offset from the counters, and 90 %; each
+sem horário (official passes no mark times: the sensor missed them, or
+their mark was left ambiguous) and desvio (median offset from the counters, and 90 %; each
 label explained in its tooltip). An observer keeps its comparison, with
 a camera's "??" as "ilegíveis: 4 (3 numa passagem oficial)" and a sensor
 on trial in a sensor's words (marcas numa passagem oficial, passagens oficiais sem

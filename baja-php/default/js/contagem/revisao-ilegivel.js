@@ -173,7 +173,7 @@ export function descricaoDoIlegivel(entrada, contexto = {}) {
     } else if (temCarro(entrada) && entrada.reatribuida) {
       partes.push(`atribuída ao carro ${entrada.carro} pela revisão: conta na palavra do revisor, no horário do sensor`);
     } else {
-      partes.push('marca sem passagem: nenhuma passagem dos contadores ligada a ela; não conta');
+      partes.push('marca sem passagem: não dá o horário de nenhuma passagem (perto de uma, sem par seguro, ou sem passagem dos contadores por perto); não conta');
     }
     return partes;
   }
@@ -494,7 +494,7 @@ export function linhasDoSensor(sensor) {
     ['atribuídas', String(sensor.atribuidas ?? 0), 'marcas que dão o horário de uma passagem dos contadores'],
     ['ambíguas', String(sensor.ambiguas ?? 0), 'perto de passagens dos contadores, mas sem par seguro: não dão horário a nenhuma (não é alerta)'],
     ['sem passagem', String(sensor.sem_passagem ?? 0), 'nenhuma passagem dos contadores por perto: em geral ruído'],
-    ['passagens sem marca', String(sensor.passagens_sem_marca ?? 0), 'passagens oficiais que o sensor não marcou enquanto estava sincronizado'],
+    ['passagens sem horário', String(sensor.passagens_sem_marca ?? 0), 'passagens oficiais sem o horário do sensor enquanto ele estava sincronizado: ou ele não marcou, ou a marca ficou sem par seguro (ambígua)'],
     ['desvio', desvio, 'diferença mediana entre a marca e a passagem dos contadores que ela marca, e o tamanho de 90% das diferenças'],
   ];
 }
