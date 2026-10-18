@@ -799,9 +799,18 @@ button {
     font-variant-numeric: tabular-nums;
 }
 
+/* Always three lines high, whatever it says ("Toque no carro que vem
+   chegando" takes three at phone width, a team name one): the panel, and
+   so the "Passou" button, never moves when a tile is picked. */
 .selecionado-equipe {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    height: 3.6em;
+    overflow: hidden;
     font-size: 15px;
     font-weight: 700;
+    line-height: 1.2;
     overflow-wrap: anywhere;
 }
 
