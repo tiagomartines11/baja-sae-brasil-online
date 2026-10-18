@@ -334,9 +334,10 @@ export function criarAcoes(ganchos) {
   }
 
   // "Desfazer" in the history (and "Desfazer a exclusão"). Undoing a
-  // counter's own void asks first, as "Restaurar" on its chip does.
+  // counter's own void asks first, as "Restaurar" on its chip does, and so
+  // does undoing what may cost a car a lap (see perguntaAoDesfazer).
   function desfazer(decisao) {
-    const pergunta = perguntaAoDesfazer(decisao);
+    const pergunta = perguntaAoDesfazer(decisao, tela.estado);
     if (pergunta !== null && !window.confirm(pergunta)) {
       return;
     }

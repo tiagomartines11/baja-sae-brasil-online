@@ -358,7 +358,11 @@ once. The person leaving then presses **Encerrar meu turno**.
   próprio aparelho (Contador1, 14:03:27). Desfazer mesmo assim?"), from the
   history as from "Restaurar" on the chip: the counter usually typed it
   wrong and retyped it at once, and at 26SE undoing two such voids and
-  confirming the retyped entries gave three cars a lap each. A voided
+  confirming the retyped entries gave three cars a lap each. Undoing a
+  "usar o tempo" from the history also asks (it confirmed the pass too, so
+  the car may lose a lap), and undoing what makes a lap too short to be
+  real count asks the chip's own "−1 volta" question (the car rows list
+  the entries of each such pass for this). A voided
   chip's tooltip says who voided it and why.
 - **Histórico de decisões** is one list, newest first, of every decision of
   the race, with what the system resolved on its own among them as

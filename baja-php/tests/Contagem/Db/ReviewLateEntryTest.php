@@ -233,6 +233,9 @@ final class ReviewLateEntryTest extends ReviewDbTestCase
         $this->assertCount(1, $row['voltas_curtas_confirmadas']);
         $this->assertSame(3, $row['voltas_curtas_confirmadas'][0]['numero_volta']);
         $this->assertSame($stray, $row['voltas_curtas_confirmadas'][0]['ancora']);
+        // Every entry of the pass, so that "Desfazer" in the history knows
+        // a confirmation of any of them costs the car a lap.
+        $this->assertSame([$stray], $row['voltas_curtas_confirmadas'][0]['passagem_ids']);
         $this->assertSame(20000, $row['voltas_curtas_confirmadas'][0]['volta_ms']);
         $entries = $this->entriesOf(TimelineWindow::forCar($this->service, self::CAR_A));
         $this->assertTrue($entries[$stray]['grupo']['volta_curta_confirmada']);

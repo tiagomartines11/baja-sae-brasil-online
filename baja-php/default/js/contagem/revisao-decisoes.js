@@ -3,7 +3,7 @@
 // Pure functions, tested with `node --test`.
 //
 import { acaoDeAceitar, perguntaAoContarNaEntrada } from './revisao-alertas.js';
-import { perguntaAoDesfazer } from './revisao-frases.js';
+import { perguntaAoDesfazer, perguntaAoDesfazerVoltaCurta } from './revisao-frases.js';
 
 // A request always says what the reviewer was looking at ("passagem_ids"
 // and their "assinatura"). If any of it changed on the server in the
@@ -363,20 +363,7 @@ export function perguntaAoAgirNaEntrada(opcao, entrada, estado = null) {
       + 'Pode ser desfeito pelo histórico.';
   }
   if (opcao.acao === 'desfazer_confirmacao') {
-    const curta = 'Ela fecha uma volta curta demais para ser real';
-    if (opcao.tipo === 'usar_tempo') {
-      return `Desfazer o "usar o tempo" desta passagem do carro ${entrada.carro}? ${curta} `
-        + 'e só conta porque um revisor escolheu o tempo dela, o que também a confirmou. Sem essa decisão ela volta a não contar '
-        + '(e um registro juntado a ela se separa de novo): o carro perde uma volta (−1 volta). Pode ser desfeito pelo histórico.';
-    }
-    if (opcao.tipo === 'adicionar') {
-      return `Remover a passagem que um revisor adicionou ao carro ${entrada.carro} neste momento? ${curta} `
-        + 'e só conta porque a passagem adicionada se juntou a este registro. Sem ela a passagem volta a não contar: '
-        + 'o carro perde uma volta (−1 volta). Pode ser desfeito pelo histórico.';
-    }
-    return `Desfazer a confirmação desta passagem do carro ${entrada.carro}? ${curta} `
-      + 'e só conta porque um revisor confirmou. Sem a confirmação ela volta a não contar: o carro perde uma volta (−1 volta). '
-      + 'Pode ser desfeito pelo histórico.';
+    return perguntaAoDesfazerVoltaCurta(opcao.tipo, entrada.carro);
   }
   return null;
 }

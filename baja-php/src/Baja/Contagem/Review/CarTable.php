@@ -21,7 +21,9 @@ use Baja\Contagem\Engine\Data\EngineResult;
  *
  * A row also lists `voltas_curtas_confirmadas`: the laps of the car that
  * are too short to be real and count on a reviewer's confirmation, each
- * {numero_volta, ancora, ts_ms, volta_ms}. They raise no flag (a
+ * {numero_volta, ancora, passagem_ids, ts_ms, volta_ms} (passagem_ids: the
+ * entries of its pass, an added pass as minus its decision's id, so the
+ * history can tell that undoing a confirmation of one costs a lap). They raise no flag (a
  * confirmed pass is not flagged again); this keeps them in sight.
  *
  * A number that is not even "inscrito" is a typo. A number that is
@@ -53,6 +55,7 @@ final class CarTable
                 $shortConfirmedByCar[$lap->carro][] = [
                     'numero_volta' => $lap->numeroVolta,
                     'ancora' => $lap->grupo->anchorEntryId(),
+                    'passagem_ids' => $lap->grupo->entryIds(),
                     'ts_ms' => $lap->tsMs,
                     'volta_ms' => $result->timeline->racingMsBetween($lap->grupoAnterior->tsMs, $lap->grupo->tsMs),
                 ];

@@ -177,6 +177,38 @@ export function perguntaSobreVoltaCurta(voltaMs) {
     + 'O mais provável é ser a mesma passagem registrada duas vezes. Contar mesmo assim?';
 }
 
+// The question before undoing what makes a pass that ends a lap too short
+// to be real count: a confirmation, a chosen time (which confirms too), or
+// an added pass that joined a counter's entry. The chip's "Desfazer a
+// confirmação (−1 volta)" and the history's "Desfazer" ask the same.
+//   tipo  'confirmar', 'usar_tempo' or 'adicionar'
+export function perguntaAoDesfazerVoltaCurta(tipo, carro) {
+  const curta = 'Ela fecha uma volta curta demais para ser real';
+  if (tipo === 'usar_tempo') {
+    return `Desfazer o "usar o tempo" desta passagem do carro ${carro}? ${curta} `
+      + 'e só conta porque um revisor escolheu o tempo dela, o que também a confirmou. Sem essa decisão ela volta a não contar '
+      + '(e um registro juntado a ela se separa de novo): o carro perde uma volta (−1 volta). Pode ser desfeito pelo histórico.';
+  }
+  if (tipo === 'adicionar') {
+    return `Remover a passagem que um revisor adicionou ao carro ${carro} neste momento? ${curta} `
+      + 'e só conta porque a passagem adicionada se juntou a este registro. Sem ela a passagem volta a não contar: '
+      + 'o carro perde uma volta (−1 volta). Pode ser desfeito pelo histórico.';
+  }
+  return `Desfazer a confirmação desta passagem do carro ${carro}? ${curta} `
+    + 'e só conta porque um revisor confirmou. Sem a confirmação ela volta a não contar: o carro perde uma volta (−1 volta). '
+    + 'Pode ser desfeito pelo histórico.';
+}
+
+// Does this decision make a pass count that ends a lap too short to be
+// real? From the cars' `voltas_curtas_confirmadas`, which list the entries
+// of each such pass (an added pass as minus its decision's id).
+function fazContarVoltaCurta(decisao, estado) {
+  const ids = decisao.tipo === 'adicionar' ? [-decisao.id] : [decisao.passagem_id, decisao.passagem_alvo_id];
+  const procurados = ids.filter((id) => id !== null && id !== undefined);
+  return (estado?.carros ?? []).some((carro) => (carro.voltas_curtas_confirmadas ?? [])
+    .some((volta) => (volta.passagem_ids ?? []).some((id) => procurados.includes(id))));
+}
+
 // The question before undoing a decision; null when nothing is asked.
 //
 // A counter who voids their own entry on the phone knows something the
@@ -184,16 +216,30 @@ export function perguntaSobreVoltaCurta(voltaMs) {
 // such voids and confirmed the retyped entries a second later, and two cars
 // got a lap they never drove. So undoing a counter's own void asks first,
 // wherever the button is (the history, the chip's "Restaurar").
+//
+// Undoing what makes a lap too short to be real count asks what the chip
+// asks (perguntaAoDesfazerVoltaCurta), and undoing a chosen time always
+// asks: it confirmed the pass too, so the car may lose a lap.
 // `decisao` is a history row, or a chip's decision ({id, tipo, origem,
-// usuario, criado_em_ms, motivo}).
-export function perguntaAoDesfazer(decisao) {
-  if (decisao?.tipo !== 'anular' || decisao.origem !== 'contador') {
-    return null;
+// usuario, criado_em_ms, motivo}); `estado` the state, for the short laps.
+export function perguntaAoDesfazer(decisao, estado = null) {
+  if (decisao?.tipo === 'anular' && decisao.origem === 'contador') {
+    const quem = [decisao.usuario, decisao.criado_em_ms ? horaDoDia(decisao.criado_em_ms) : null].filter(Boolean).join(', ');
+    const motivo = decisao.motivo ? ` Motivo dado: "${decisao.motivo}".` : '';
+    return `O contador anulou este registro no próprio aparelho${quem ? ` (${quem})` : ''}.${motivo} `
+      + 'Normalmente ele digitou errado e registrou de novo logo depois. Desfazer mesmo assim?';
   }
-  const quem = [decisao.usuario, decisao.criado_em_ms ? horaDoDia(decisao.criado_em_ms) : null].filter(Boolean).join(', ');
-  const motivo = decisao.motivo ? ` Motivo dado: "${decisao.motivo}".` : '';
-  return `O contador anulou este registro no próprio aparelho${quem ? ` (${quem})` : ''}.${motivo} `
-    + 'Normalmente ele digitou errado e registrou de novo logo depois. Desfazer mesmo assim?';
+  const carro = decisao?.carro ?? decisao?.carro_digitado ?? decisao?.equipe_numero ?? null;
+  if (['confirmar', 'usar_tempo', 'adicionar'].includes(decisao?.tipo) && fazContarVoltaCurta(decisao, estado)) {
+    return perguntaAoDesfazerVoltaCurta(decisao.tipo, carro);
+  }
+  if (decisao?.tipo === 'usar_tempo') {
+    const doCarro = carro === null ? '' : ` do carro ${carro}`;
+    const juntado = decisao.passagem_alvo_id ? ` e o registro #${decisao.passagem_alvo_id}, juntado a ela, se separa de novo` : '';
+    return `Desfazer o "usar o tempo" da passagem #${decisao.passagem_id}${doCarro}? A escolha do horário também confirmou `
+      + `a passagem: sem ela, a passagem pode voltar a não contar (o carro perde uma volta, −1 volta)${juntado}.`;
+  }
+  return null;
 }
 
 // The button of one time a reviewer may choose ("usar_tempo"):

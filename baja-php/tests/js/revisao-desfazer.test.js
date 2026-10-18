@@ -79,6 +79,39 @@ test('"Restaurar" on the chip asks the same question as "Desfazer" in the histor
   assert.equal(perguntaAoAgirNaEntrada(acoesDaEntrada(pelaRevisao)[0], pelaRevisao, ESTADO), null);
 });
 
+// At QA, "Desfazer" in the history took a lap off with no question for a
+// "usar o tempo" (car 7, 11 to 10) and for the confirmation of a short lap,
+// while the chip asked for the very same undo.
+test('undoing a chosen time from the history asks, because the car may lose a lap', () => {
+  const linha = {
+    id: 6664, tipo: 'usar_tempo', origem: 'revisor', passagem_id: 549, passagem_alvo_id: null, carro: 7, carro_digitado: 7,
+    ativa: true, pode_desfazer: true,
+  };
+  assert.match(perguntaAoDesfazer(linha, ESTADO), /^Desfazer o "usar o tempo" da passagem #549 do carro 7\? .*−1 volta/);
+  assert.match(perguntaAoDesfazer({ ...linha, passagem_alvo_id: 550 }, ESTADO), /registro #550, juntado a ela, se separa de novo/);
+});
+
+test('undoing from the history what makes a short lap count asks what the chip asks', () => {
+  // Car 20's lap 9 is too short; it counts because entry 358 was confirmed.
+  const estado = {
+    ...ESTADO,
+    carros: [...ESTADO.carros, { carro: 20, voltas_curtas_confirmadas: [{ numero_volta: 9, ancora: 354, passagem_ids: [354, 358] }] }],
+  };
+  const confirmacao = { id: 70, tipo: 'confirmar', origem: 'revisor', passagem_id: 358, carro: 20, carro_digitado: 20 };
+  const entrada = { id: 358, carro: 20, grupo: { passagem_ids: [354, 358], volta_curta_confirmada: true, contado: true }, decisoes: [confirmacao] };
+  const [desfazerConfirmacao] = acoesDaEntrada(entrada);
+
+  assert.equal(desfazerConfirmacao.acao, 'desfazer_confirmacao');
+  assert.equal(perguntaAoDesfazer(confirmacao, estado), perguntaAoAgirNaEntrada(desfazerConfirmacao, entrada, estado));
+  assert.match(perguntaAoDesfazer(confirmacao, estado), /−1 volta/);
+  // A pass a reviewer added that joined it: minus the decision's id.
+  const adicionada = { id: 71, tipo: 'adicionar', origem: 'revisor', equipe_numero: 20 };
+  const comAdicionada = { ...estado, carros: [{ carro: 20, voltas_curtas_confirmadas: [{ passagem_ids: [354, -71] }] }] };
+  assert.match(perguntaAoDesfazer(adicionada, comAdicionada), /^Remover a passagem que um revisor adicionou ao carro 20/);
+  // The confirmation of a plausible lap still asks nothing.
+  assert.equal(perguntaAoDesfazer({ ...confirmacao, passagem_id: 999 }, estado), null);
+});
+
 // ---- "Contar esta passagem" on a chip -----------------------------------------
 
 test('counting a lone entry on its chip asks the short-lap question K asks', () => {
