@@ -248,18 +248,35 @@ export function rolagemPara(tsMs, fracao, deMs, escala, larguraPx) {
   return Math.max(0, Math.round(((tsMs - deMs) / 1000) * escala - fracao * visivelPx));
 }
 
-// Where a flag's window goes on screen. A window that fits is centred; a
-// wider one (it reaches back to the car's previous pass) puts the flag's
-// moment near the right edge, so as much as possible of the lap before it
-// is in view, with room left for the flag's own chip on a phone.
-export function rolagemParaAlerta(janelaDoAlerta, alertaTsMs, deMs, escala, larguraPx) {
+// The scale a flag opens at: ESCALA_ALERTA, or less, down to the live
+// view's, so that what must be seen of it (trechoEssencialDoAlerta: the
+// previous pass the gap is measured from, the late entry of a pair) fits
+// the lanes in view with room for the last chip.
+export function escalaDoAlerta(essencial, larguraPx) {
+  const visivelPx = Math.max(0, larguraPx - LARGURA_DO_NOME_PX) - ESPACO_DO_CHIP_PX;
+  const segundos = (essencial.ate - essencial.de) / 1000;
+  if (visivelPx <= 0 || segundos <= 0) {
+    return ESCALA_ALERTA;
+  }
+  return Math.max(ESCALA_AO_VIVO, Math.min(ESCALA_ALERTA, visivelPx / segundos));
+}
+
+// Where a flag's window goes on screen. A window that fits is centred;
+// else what must be seen of it (`essencial`), when that fits; else the
+// flag's last entry goes near the right edge, so as much as possible of
+// the lap before it is in view, with room left for that chip on a phone.
+export function rolagemParaAlerta(janelaDoAlerta, essencial, deMs, escala, larguraPx) {
   const visivelPx = Math.max(0, larguraPx - LARGURA_DO_NOME_PX);
   const larguraDaJanelaPx = ((janelaDoAlerta.ate - janelaDoAlerta.de) / 1000) * escala;
   if (larguraDaJanelaPx <= visivelPx) {
     return rolagemPara((janelaDoAlerta.de + janelaDoAlerta.ate) / 2, 0.5, deMs, escala, larguraPx);
   }
+  const essencialPx = ((essencial.ate - essencial.de) / 1000) * escala + ESPACO_DO_CHIP_PX;
+  if (essencialPx <= visivelPx) {
+    return Math.max(0, rolagemPara(essencial.de, 0, deMs, escala, larguraPx) - Math.round((visivelPx - essencialPx) / 2));
+  }
   const fracao = visivelPx > 0 ? Math.min(0.85, (visivelPx - ESPACO_DO_CHIP_PX) / visivelPx) : 0.85;
-  return rolagemPara(alertaTsMs, Math.max(0, fracao), deMs, escala, larguraPx);
+  return rolagemPara(essencial.ate, Math.max(0, fracao), deMs, escala, larguraPx);
 }
 
 // A chip and its outline, in pixels.

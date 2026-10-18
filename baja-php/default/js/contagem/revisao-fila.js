@@ -61,28 +61,56 @@ export const MARGEM_ANTES_DA_ANTERIOR_MS = 5000;
 // expected lap is not known: a slow lap of a slow car.
 export const ALCANCE_SEM_RITMO_MS = 5 * 60 * 1000;
 
+// The first and last moments of a flag's own entries: its moment, and the
+// times it offers to choose from ("tempos_possiveis"), such as the late
+// entry of a "registro_tardio", typed up to a minute after the flag's.
+export function momentosDoAlerta(alerta) {
+  const tempos = [alerta.ts_ms, ...(alerta.tempos_possiveis ?? []).map((tempo) => tempo.ts_ms)]
+    .filter((ts) => typeof ts === 'number');
+  return { primeiroMs: Math.min(...tempos), ultimoMs: Math.max(...tempos) };
+}
+
 // The stretch of the race to load for a flag. Null when the flag has no
 // moment (for example a difference to an imported total).
 //
-// About a minute around the flag's moment. A flag about a lone entry
+// About a minute around the flag's own entries. A flag about a lone entry
 // names the car's previous official pass ("passagem_anterior"), and the
 // window then starts a little before it, so the lap the entry would make
 // is on screen: at a race the previous pass was 77 s back, outside the
 // minute, and a 75 s lap was confirmed as real. Never further back than
 // one expected lap of the car plus half a minute (five minutes when the
 // pace is not known): a car that was stopped would otherwise load half an
-// hour of race at this scale.
+// hour of race at this scale. It reaches as far after the flag's last
+// entry as before its first.
 export function janelaDoAlerta(alerta, meiaJanelaMs = MEIA_JANELA_MS, voltaEsperadaMs = null) {
   if (!alerta || alerta.ts_ms === null || alerta.ts_ms === undefined) {
     return null;
   }
-  let de = alerta.ts_ms - meiaJanelaMs;
+  const { primeiroMs, ultimoMs } = momentosDoAlerta(alerta);
+  let de = primeiroMs - meiaJanelaMs;
   const anteriorMs = alerta.passagem_anterior?.ts_ms;
   if (anteriorMs !== null && anteriorMs !== undefined && anteriorMs < alerta.ts_ms) {
     const alcanceMs = voltaEsperadaMs ? voltaEsperadaMs + meiaJanelaMs : ALCANCE_SEM_RITMO_MS;
     de = Math.min(de, Math.max(anteriorMs - MARGEM_ANTES_DA_ANTERIOR_MS, alerta.ts_ms - alcanceMs));
   }
-  return { de, ate: alerta.ts_ms + meiaJanelaMs };
+  return { de, ate: ultimoMs + meiaJanelaMs };
+}
+
+// What of a flag's window must be in view when it opens: from a little
+// before the previous pass the gap is measured from (when the window
+// reaches it) or before the flag's first entry, to its last entry. The
+// view zooms out, down to the live view's scale, to fit it; when it still
+// does not fit, the flag's last entry is kept in view (see
+// rolagemParaAlerta in revisao-linha-logica.js).
+export function trechoEssencialDoAlerta(alerta, janela) {
+  const { primeiroMs, ultimoMs } = momentosDoAlerta(alerta);
+  const anteriorMs = alerta.passagem_anterior?.ts_ms;
+  const alcancaAAnterior = typeof anteriorMs === 'number' && anteriorMs < primeiroMs
+    && anteriorMs - MARGEM_ANTES_DA_ANTERIOR_MS >= janela.de;
+  return {
+    de: alcancaAAnterior ? anteriorMs - MARGEM_ANTES_DA_ANTERIOR_MS : primeiroMs - MARGEM_ANTES_DA_ANTERIOR_MS,
+    ate: ultimoMs,
+  };
 }
 
 // The expected lap of the (first) car of a flag, from the car table; null when unknown.

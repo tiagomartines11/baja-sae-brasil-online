@@ -21,11 +21,12 @@ import assert from 'node:assert/strict';
 
 import {
   ALEM_DO_AGORA_MS, ATUALIZAR_NO_MAXIMO_A_CADA_MS, ATUALIZAR_O_PASSADO_A_CADA_MS, ESCALA_AO_VIVO, LARGURA_DO_NOME_PX, MAXIMO_DE_PEDACOS, PEDACO_MS,
-  aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, estenderFaixa, faixaAoVivo, faixaEntre, faltaPorErro, inicioDoPedaco, intervaloDoPedaco, juntarPedacos,
+  aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, escalaDoAlerta, estenderFaixa, faixaAoVivo, faixaEntre, faltaPorErro, inicioDoPedaco, intervaloDoPedaco, juntarPedacos,
   lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha, pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara,
   rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from '../../default/js/contagem/revisao-linha-logica.js';
 import { ESCALA_ALERTA, ESCALA_CARRO } from '../../default/js/contagem/revisao-raias-logica.js';
+import { MARGEM_ANTES_DA_ANTERIOR_MS, janelaDoAlerta, trechoEssencialDoAlerta } from '../../default/js/contagem/revisao-fila.js';
 
 const MIN = 60 * 1000;
 // A moment on the grid, so the arithmetic below is easy to follow.
@@ -252,15 +253,55 @@ test('a flag of about a minute is centred; one reaching back to the previous pas
   const largura = 1000 + LARGURA_DO_NOME_PX;
   // 60 s at 14 px/s = 840 px: fits. Its middle at the middle of the view.
   const curta = { de: T0 + 100000, ate: T0 + 160000 };
-  assert.equal(rolagemParaAlerta(curta, T0 + 130000, T0, 14, largura), rolagemPara(T0 + 130000, 0.5, T0, 14, largura));
+  assert.equal(rolagemParaAlerta(curta, { de: T0 + 125000, ate: T0 + 130000 }, T0, 14, largura),
+    rolagemPara(T0 + 130000, 0.5, T0, 14, largura));
 
-  // 3 min back to the previous pass: 2520 px, too wide. The flag at 85%.
+  // 3 min back to the previous pass: 2520 px, too wide, and so is what must
+  // be seen (2.5 min). The flag's last entry at 85%.
   const longa = { de: T0, ate: T0 + 180000 };
-  assert.equal(rolagemParaAlerta(longa, T0 + 150000, T0, 14, largura), rolagemPara(T0 + 150000, 0.85, T0, 14, largura));
+  const essencial = { de: T0, ate: T0 + 150000 };
+  assert.equal(rolagemParaAlerta(longa, essencial, T0, 14, largura), rolagemPara(T0 + 150000, 0.85, T0, 14, largura));
 
   // On a phone (252 px of lanes) 85% would cut the flag's own chip in half: it keeps 60 px.
   const telefone = 252 + LARGURA_DO_NOME_PX;
-  assert.equal(rolagemParaAlerta(longa, T0 + 150000, T0, 14, telefone), 2100 - (252 - 60));
+  assert.equal(rolagemParaAlerta(longa, essencial, T0, 14, telefone), 2100 - (252 - 60));
+});
+
+// At 26SE-follow-up QA a "registro_tardio" opened with its late entry off
+// the right edge, and a lone entry with the previous pass its gap is
+// measured from just off the left edge.
+test('a flag opens with its late entry and the previous pass in view, zooming out down to the live scale', () => {
+  const largura = 1170 + LARGURA_DO_NOME_PX;
+  // A lone entry 80 s after the car's previous pass.
+  const solitaria = { ts_ms: T0 + 200000, passagem_anterior: { ts_ms: T0 + 120000 } };
+  const janelaS = janelaDoAlerta(solitaria, 30000, 180000);
+  const essencialS = trechoEssencialDoAlerta(solitaria, janelaS);
+  assert.deepEqual(essencialS, { de: T0 + 120000 - MARGEM_ANTES_DA_ANTERIOR_MS, ate: T0 + 200000 });
+  const escalaS = escalaDoAlerta(essencialS, largura);
+  assert.ok(escalaS < ESCALA_ALERTA && escalaS >= ESCALA_AO_VIVO, `zoomed out a little: ${escalaS}`);
+  const rolagemS = rolagemParaAlerta(janelaS, essencialS, janelaS.de, escalaS, largura);
+  const vistoS = trechoVisivel(rolagemS, largura, janelaS.de, escalaS);
+  assert.ok(vistoS.de <= T0 + 120000 && vistoS.ate >= T0 + 200000, 'the previous pass and the entry');
+
+  // A late pair: the late entry 30 s after the flag's, the previous pass a
+  // whole lap (186 s) before. All of it does not fit even at the live
+  // scale; the pair does, at the right, with as much of the lap as fits.
+  const tardio = {
+    ts_ms: T0 + 300000,
+    tempos_possiveis: [{ passagem_id: 1, ts_ms: T0 + 300000 }, { passagem_id: 2, ts_ms: T0 + 330000 }],
+    passagem_anterior: { ts_ms: T0 + 114000 },
+  };
+  const janelaT = janelaDoAlerta(tardio, 30000, 190000);
+  assert.equal(janelaT.ate, T0 + 360000, 'loaded as far past the late entry as before the first');
+  const essencialT = trechoEssencialDoAlerta(tardio, janelaT);
+  assert.equal(essencialT.ate, T0 + 330000);
+  const escalaT = escalaDoAlerta(essencialT, largura);
+  assert.equal(escalaT, ESCALA_AO_VIVO);
+  const vistoT = trechoVisivel(rolagemParaAlerta(janelaT, essencialT, janelaT.de, escalaT, largura), largura, janelaT.de, escalaT);
+  assert.ok(vistoT.de <= T0 + 300000 && vistoT.ate >= T0 + 330000 + 2000, `both entries of the pair: ${JSON.stringify(vistoT)}`);
+
+  // A flag of about a minute keeps the flag scale.
+  assert.equal(escalaDoAlerta({ de: T0, ate: T0 + 10000 }, largura), ESCALA_ALERTA);
 });
 
 test('switching "só o carro" off goes to the chip picked, or the car\'s last pass', () => {

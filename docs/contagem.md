@@ -393,7 +393,12 @@ once. The person leaving then presses **Encerrar meu turno**.
 - A flag about a lone entry reaches back to a little before the car's
   previous official pass (at most one expected lap and half a minute
   back), so the lap the entry would make is on screen, and draws the gap
-  in words: "76 s desde a passagem anterior; volta normal ~3:40".
+  in words: "76 s desde a passagem anterior; volta normal ~3:40". A flag
+  reaches as far after its last entry (the late one of a
+  "registro_tardio") as before its first. It opens zoomed out as far as
+  needed, down to the live view's scale, to show the previous pass and
+  all its entries; when even that does not fit, its last entry is kept
+  in view near the right edge.
 - Flags that put a count in doubt right now are listed first and say so
   ("o carro 23 pode estar com uma volta a menos" / "a mais"); the rest
   follow in the order of the standings.

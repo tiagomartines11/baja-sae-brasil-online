@@ -15,9 +15,9 @@
 import { buscarCarro, buscarJanela } from './revisao-api.js';
 import { alertaSelecionado } from './revisao-desenho.js';
 import { el, substituir } from './revisao-dom.js';
-import { MEIA_JANELA_MS, janelaDoAlerta, voltaEsperadaDoAlerta } from './revisao-fila.js';
+import { MEIA_JANELA_MS, janelaDoAlerta, trechoEssencialDoAlerta, voltaEsperadaDoAlerta } from './revisao-fila.js';
 import {
-  ALEM_DO_AGORA_MS, ANTES_DA_LARGADA_MS, FRACAO_DO_AGORA, PEDACO_MS, aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, estenderFaixa,
+  ALEM_DO_AGORA_MS, ANTES_DA_LARGADA_MS, FRACAO_DO_AGORA, PEDACO_MS, aindaSeguindo, alvoDaCorridaDoCarro, centroAoVerTodos, destaqueDaLinha, escalaDoAlerta, estenderFaixa,
   faixaAoVivo, faltaPorErro, faixaEntre, intervaloDoPedaco, juntarPedacos, lacunaDaPassagemAnterior, limitesDaFaixa, modoDaLinha,
   pedacosAPedir, pedacosDaFaixa, pedacosVisiveis, rolagemPara, rolagemParaAlerta, situacaoDaLinha, trechoVisivel,
 } from './revisao-linha-logica.js';
@@ -225,8 +225,12 @@ export function criarLinhaDoTempo(ganchos) {
       ? janelaDoAlerta(alerta, MEIA_JANELA_MS, voltaEsperadaDoAlerta(alerta, tela.estado))
       : null;
     if (limitesDoAlerta) {
+      // Zoomed out, if need be, so that the previous pass and a late entry
+      // are in view with the flag's own entry.
+      const essencial = trechoEssencialDoAlerta(alerta, limitesDoAlerta);
+      linha.modo = { ...modo, escala: escalaDoAlerta(essencial, elementos.rolagem.clientWidth) };
       linha.faixa = faixaEntre(limitesDoAlerta.de, limitesDoAlerta.ate);
-      linha.alvo = { tipo: 'alerta', janela: limitesDoAlerta, ts: alerta.ts_ms };
+      linha.alvo = { tipo: 'alerta', janela: limitesDoAlerta, essencial };
       iniciarRodada(alerta, limitesDoAlerta);
     } else if (modo.aoVivo) {
       linha.faixa = faixaAoVivo(agoraMs());
@@ -377,7 +381,7 @@ export function criarLinhaDoTempo(ganchos) {
     const de = linha.limites.de;
     let alvoPx = null;
     if (linha.alvo?.tipo === 'alerta') {
-      alvoPx = rolagemParaAlerta(linha.alvo.janela, linha.alvo.ts, de, escala, largura);
+      alvoPx = rolagemParaAlerta(linha.alvo.janela, linha.alvo.essencial, de, escala, largura);
     } else if (linha.alvo?.tipo === 'centro') {
       alvoPx = rolagemPara(linha.alvo.ts, 0.5, de, escala, largura);
     } else if (linha.alvo?.tipo === 'fim') {
