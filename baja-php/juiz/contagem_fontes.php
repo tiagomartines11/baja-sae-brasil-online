@@ -150,7 +150,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
             <?php } ?>
             <label>Ordem <input type="number" name="ordem" min="0" max="999" required value="<?= (int) $fonte->getOrdem() ?>"></label>
             <?php if (SourceAdmin::mayObserve($fonte)) { ?>
-                <label>Papel <select name="papel"><?= $options(SourceAdmin::ROLE_LABELS, $fonte->getPapel()) ?></select></label>
+                <label>Papel <select name="papel"><?= $options(SourceAdmin::roleLabels((string) $fonte->getTipo()), $fonte->getPapel()) ?></select></label>
             <?php } ?>
             <?php if ($fonte->getTipo() === Source::TIPO_AUTOMATICA) { ?>
                 <label>Endereço das imagens <input type="text" name="imagem_base_url" maxlength="255" size="32"
@@ -167,6 +167,8 @@ Pagina::printHeader($prova, 'Fontes e configurações');
             <?php if ($settings->fontePrincipalId === $fonteId) { ?><span class="contagem-etiqueta">principal</span><?php } ?>
             <?php if ($fonte->getPapel() === Source::PAPEL_OBSERVADORA) { ?>
                 <span class="contagem-etiqueta">observadora<?= $fonte->getPapelDesdeMs() !== null ? ' desde ' . $h(Pagina::formatClock((int) $fonte->getPapelDesdeMs())) : '' ?></span>
+            <?php } elseif ($fonte->getPapelDesdeMs() !== null && $fonte->getTipo() === Source::TIPO_SENSOR) { ?>
+                <span class="contagem-dica">votante desde <?= $h(Pagina::formatClock((int) $fonte->getPapelDesdeMs())) ?>; as marcas de quando era observador não dão horário</span>
             <?php } elseif ($fonte->getPapelDesdeMs() !== null) { ?>
                 <span class="contagem-dica">votante desde <?= $h(Pagina::formatClock((int) $fonte->getPapelDesdeMs())) ?>; o que registrou antes como observadora não conta</span>
             <?php } ?>
@@ -234,33 +236,57 @@ Pagina::printHeader($prova, 'Fontes e configurações');
     <?php } ?>
 
     <h3>Nova fonte</h3>
-    <form method="POST" action="<?= $h($action) ?>" class="contagem-fonte">
+    <form method="POST" action="<?= $h($action) ?>" class="contagem-fonte" id="nova-fonte">
         <?= $csrf ?>
         <input type="hidden" name="acao" value="criar_fonte">
         <label>Nome <input type="text" name="nome" maxlength="45" required placeholder="Contagem 4"></label>
         <label>Tipo <select name="tipo"><?= $options(SourceAdmin::TYPE_LABELS, Source::TIPO_MANUAL) ?></select></label>
-        <label>Tempo <select name="qualidade_tempo"><?= $options(SourceAdmin::TIMING_LABELS, Source::TEMPO_HUMANA) ?></select></label>
-        <label>Papel (automática e sensor) <select name="papel"><?= $options(SourceAdmin::ROLE_LABELS, Source::PAPEL_OBSERVADORA) ?></select></label>
+        <label data-tipos="<?= $h(Source::TIPO_MANUAL . ' ' . Source::TIPO_AUTOMATICA . ' ' . Source::TIPO_TOTAIS) ?>">Tempo <select name="qualidade_tempo"><?= $options(SourceAdmin::TIMING_LABELS, Source::TEMPO_HUMANA) ?></select></label>
+        <?php // Only an automatic source and a sensor have a role; the script below hides it for the others and words it for the type chosen. ?>
+        <label data-tipos="<?= $h(Source::TIPO_AUTOMATICA . ' ' . Source::TIPO_SENSOR) ?>">Papel (automática e sensor) <select name="papel"
+            data-rotulos="<?= $h(json_encode([
+                Source::TIPO_AUTOMATICA => SourceAdmin::roleLabels(Source::TIPO_AUTOMATICA),
+                Source::TIPO_SENSOR => SourceAdmin::roleLabels(Source::TIPO_SENSOR),
+            ], JSON_UNESCAPED_UNICODE)) ?>"><?= $options(SourceAdmin::ROLE_LABELS, Source::PAPEL_OBSERVADORA) ?></select></label>
         <label><input type="checkbox" name="<?= $h(SourceAdmin::CAMPO_CRIAR_DESATIVADA) ?>" value="1"> criar desativada</label>
         <button type="submit">Criar</button>
     </form>
-    <?php // The role chosen at creation, in the words of each source's own line above. ?>
-    <ul class="contagem-dica contagem-resumo-papeis">
-        <?php foreach (SourceSummary::roleChoices() as $role => $line) { ?>
-            <li><strong><?= $h($role === Source::PAPEL_OBSERVADORA ? 'Observadora' : 'Votante') ?>:</strong> <?= $h($line) ?></li>
+    <?php // What a source of the type chosen does, by role, in the words of each source's own line above. ?>
+    <ul class="contagem-dica contagem-resumo-papeis" id="nova-fonte-resumo">
+        <?php foreach (SourceSummary::typeChoices() as $type => $lines) { ?>
+            <li data-tipos="<?= $h($type) ?>"><?php foreach ($lines as $title => $line) { ?>
+                <span class="contagem-resumo-papel"><strong><?= $h($title) ?>:</strong> <?= $h($line) ?></span>
+            <?php } ?></li>
         <?php } ?>
-        <li><strong>Manual:</strong> <?= $h(SourceSummary::line(Source::TIPO_MANUAL, Source::PAPEL_VOTANTE, Source::TEMPO_HUMANA)) ?>
-            Manual e totais não têm papel.</li>
     </ul>
+    <script>
+    (function () {
+        var form = document.getElementById('nova-fonte');
+        var resumo = document.getElementById('nova-fonte-resumo');
+        var papel = form.elements.papel;
+        var rotulos = JSON.parse(papel.getAttribute('data-rotulos'));
+        function mostrar() {
+            var tipo = form.elements.tipo.value;
+            var partes = [].slice.call(form.querySelectorAll('[data-tipos]')).concat([].slice.call(resumo.querySelectorAll('[data-tipos]')));
+            partes.forEach(function (parte) {
+                parte.hidden = parte.getAttribute('data-tipos').split(' ').indexOf(tipo) < 0;
+            });
+            [].forEach.call(papel.options, function (opcao) {
+                if (rotulos[tipo] && rotulos[tipo][opcao.value]) {
+                    opcao.textContent = rotulos[tipo][opcao.value];
+                }
+            });
+            papel.disabled = !rotulos[tipo];
+        }
+        form.elements.tipo.addEventListener('change', mostrar);
+        mostrar();
+    })();
+    </script>
     <p class="contagem-dica">
-        Fontes não são apagadas. Desativar uma fonte faz o sistema parar de esperar por ela a partir de agora;
-        tudo o que ela registrou até esse momento continua contando. Ao reativá-la, o que ela enviou enquanto
-        estava desativada continua fora da contagem, a menos que você marque a opção de contar também esse período.
+        Automática e sensor começam como observadores, a menos que você escolha "Votante" (e confirme); promovidos depois,
+        valem a partir daquele momento, nunca para trás.
+        Fontes não são apagadas: desativada, uma fonte para de valer a partir dali, e o que registrou antes continua.
         Para descartar registros de um período, use "Excluir esta fonte" na tela de revisão.
-        Uma fonte automática nova começa como <strong>observadora</strong>: o que ela envia é só comparado com a
-        contagem oficial e nunca conta. Promovida a votante, passa a contar a partir daquele momento, nunca para trás.
-        Tempo "precisa": <?= $h(SourceAdmin::PRECISE_TIMING_WARNING) ?>
-        <?= $h(SourceAdmin::SENSOR_HELP) ?>
         Quem conta em cada fonte manual é definido em
         <a href="contagem_contadores.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Usuários</a>.
     </p>

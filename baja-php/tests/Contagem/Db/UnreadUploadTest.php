@@ -258,10 +258,38 @@ final class UnreadUploadTest extends ReviewDbTestCase
         $page = html_entity_decode($this->renderJuizPage('contagem_fontes.php', self::USER_PREFIX . 'controle', ['p' => self::PROVA_ID]), ENT_QUOTES);
 
         $this->assertStringContainsString('O que esta fonte faz:', $page);
-        $this->assertStringContainsString('Contagem: não conta. Horário: o do sensor em 1 de 1 passagens até agora; nas outras, o dos contadores.', $page);
+        $this->assertStringContainsString('Contagem: não conta. Horário: o do sensor em 1 de 1 passagens contadas até agora; nas outras, o dos contadores.', $page);
         $this->assertStringContainsString('Só medida: não muda a contagem nem o horário das passagens.', $page);
         $this->assertStringContainsString('Contagem: vota em cada passagem. Horário: entra na mediana dos contadores.', $page);
-        $this->assertMatchesRegularExpression('#<select name="papel"><option value="votante">[^<]*</option><option value="observadora" selected>#', $page);
+        // A votante sensor's role does not read as "it counts".
+        $this->assertStringContainsString('<option value="votante" selected>Votante (dá o horário onde uma marca coincide; não conta)</option>', $page);
+        $this->assertStringNotContainsString('participa da contagem oficial', $page);
+        // "Nova fonte": the role (observer chosen) belongs to an automatic source and a sensor only, and is hidden for the others.
+        $create = substr($page, (int) strpos($page, 'id="nova-fonte"'));
+        $this->assertMatchesRegularExpression('#<label data-tipos="automatica sensor">Papel[^<]*<select name="papel"\s+data-rotulos=.*?\}\}"><option value="votante">[^<]*</option><option value="observadora" selected>#', $create);
+        $this->assertStringContainsString('<li data-tipos="sensor">', $create);
+        $this->assertStringContainsString('a menos que você escolha "Votante" (e confirme)', $create);
+    }
+
+    /**
+     * SITUATION: a sensor that takes part is switched off.
+     *
+     * EXPECTED: its line says first that it changes nothing now; the
+     * figures of the time it was on are not given as what it does.
+     */
+    public function testASensorSwitchedOffSaysItChangesNothingNow(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $sensor->setAtiva(false);
+        $sensor->setDesativadaEmMs($this->at(10));
+        $sensor->save();
+        $this->recompute();
+        $this->createUser(self::USER_PREFIX . 'controle', ['index', self::EVENTO_ID . '_' . self::PROVA_ID]);
+
+        $page = html_entity_decode($this->renderJuizPage('contagem_fontes.php', self::USER_PREFIX . 'controle', ['p' => self::PROVA_ID]), ENT_QUOTES);
+
+        $this->assertStringContainsString('<strong>O que esta fonte faz:</strong>
+            Desativada: não muda nada a partir de agora. Quando ativa: Contagem: não conta.', $page);
     }
 
     /**

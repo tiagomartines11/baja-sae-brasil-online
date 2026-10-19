@@ -50,10 +50,13 @@ final class SourceStats
      * 'sem_passagem' (no pass the counters recorded anywhere near: noise,
      * or a crossing everybody missed), 'passagens_sem_marca' (official
      * passes while it was taking part and synced, with no mark: its
-     * misses), and 'desvio_mediano_ms' / 'desvio_p90_ms' (its mark minus
+     * misses), 'passagens_com_marca' (counted passes with one of its
+     * marks) and, of those, 'passagens_com_horario' (the ones its mark
+     * times: not those a reviewer's "usar o tempo" or a precise source
+     * times), and 'desvio_mediano_ms' / 'desvio_p90_ms' (its mark minus
      * the counters' time of the pass, over the matched ones; null without).
      *
-     * @var array{marcas: int, atribuidas: int, ambiguas: int, sem_passagem: int, passagens_sem_marca: int, desvio_mediano_ms: ?int, desvio_p90_ms: ?int}|null
+     * @var array{marcas: int, atribuidas: int, ambiguas: int, sem_passagem: int, passagens_sem_marca: int, passagens_com_marca: int, passagens_com_horario: int, desvio_mediano_ms: ?int, desvio_p90_ms: ?int}|null
      */
     public ?array $sensor = null;
 

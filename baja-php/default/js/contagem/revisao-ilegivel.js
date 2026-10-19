@@ -494,20 +494,32 @@ export function linhasDoSensor(sensor) {
     ['atribuídas', String(sensor.atribuidas ?? 0), 'marcas que dão o horário de uma passagem dos contadores'],
     ['ambíguas', String(sensor.ambiguas ?? 0), 'perto de passagens dos contadores, mas sem par seguro: não dão horário a nenhuma (não é alerta)'],
     ['sem passagem', String(sensor.sem_passagem ?? 0), 'nenhuma passagem dos contadores por perto: em geral ruído'],
-    ['passagens sem horário', String(sensor.passagens_sem_marca ?? 0), 'passagens oficiais sem o horário do sensor enquanto ele estava sincronizado: ou ele não marcou, ou a marca ficou sem par seguro (ambígua)'],
+    ['sem marca do sensor', String(sensor.passagens_sem_marca ?? 0), 'passagens oficiais sem marca do sensor enquanto ele estava sincronizado (ou ele não marcou, ou a marca ficou sem par seguro): valem com o horário dos contadores'],
     ['desvio', desvio, 'diferença mediana entre a marca e a passagem dos contadores que ela marca, e o tamanho de 90% das diferenças'],
   ];
 }
 
 // What a counting sensor does, in one line above its numbers: it counts
-// nothing, and the pass time is its mark's wherever a mark was matched
-// ("atribuídas"), the counters' everywhere else (the passes it missed,
-// "passagens_sem_marca"). The Fontes page says the same (SourceSummary).
-export function resumoDoSensor(sensor) {
-  const comMarca = sensor?.atribuidas ?? 0;
-  const total = comMarca + (sensor?.passagens_sem_marca ?? 0);
-  const onde = total > 0 ? `em ${comMarca} de ${total} passagens até agora` : 'em cada passagem em que uma marca dele coincide';
-  return `Sensor de tempo. Contagem: não conta. Horário oficial: o do sensor ${onde}; nas outras, o dos contadores.`;
+// nothing, and the pass time is its mark's in the counted passes its marks
+// time ("passagens_com_horario"), out of those with one of its marks or
+// missed by it ("passagens_com_marca" + "passagens_sem_marca"); the
+// counters' everywhere else. A switched-off one changes nothing now. The
+// Fontes page says the same (SourceSummary).
+export function resumoDoSensor(sensor, ativa = true) {
+  const regra = 'Contagem: não conta. Horário oficial: o do sensor em cada passagem em que uma marca dele coincide; nas outras, o dos contadores.';
+  if (!ativa) {
+    return `Sensor de tempo. Desativado: não muda nada a partir de agora. Quando ativo: ${regra}`;
+  }
+  const comHorario = sensor?.passagens_com_horario;
+  const comMarca = sensor?.passagens_com_marca;
+  const total = (comMarca ?? 0) + (sensor?.passagens_sem_marca ?? 0);
+  if (!Number.isInteger(comHorario) || !Number.isInteger(comMarca) || total === 0) {
+    return `Sensor de tempo. ${regra}`;
+  }
+  const outras = comMarca > comHorario
+    ? `nas outras, o dos contadores (em ${comMarca - comHorario} com marca, o de um "Usar o tempo" ou de uma fonte de tempo preciso)`
+    : 'nas outras, o dos contadores';
+  return `Sensor de tempo. Contagem: não conta. Horário oficial: o do sensor em ${comHorario} de ${total} passagens contadas até agora; ${outras}.`;
 }
 
 // The words of the status bar chip's tooltip: "ilegíveis: 3 (2 atribuídos)",

@@ -9,6 +9,7 @@ use Baja\Contagem\Engine\Data\Flag;
 use Baja\Contagem\Engine\Data\PassGroup;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\UnreadAssigner;
+use Baja\Contagem\Review\SourceSummary;
 use Baja\Tests\Contagem\Engine\Support\EngineTestCase;
 use Baja\Tests\Contagem\Engine\Support\RaceScenario;
 
@@ -451,11 +452,59 @@ final class UnreadPassTest extends EngineTestCase
         $this->assertLapCounts([7 => 1], $result);
         $this->assertNoOpenFlags($result);
         $this->assertSame(1, $result->sourceStats[4]->sensor['atribuidas']);
+        $this->assertSame(1, $result->sourceStats[4]->sensor['passagens_com_marca']);
+        $this->assertSame(1, $result->sourceStats[4]->sensor['passagens_com_horario']);
         $this->assertSame(-700, $result->sourceStats[4]->sensor['desvio_mediano_ms']);
         $this->assertSame([], array_filter($result->flags, fn(Flag $flag) => $flag->tipo === Flag::NUMERO_ATRIBUIDO), 'a sensor would fill the list with them');
 
         $fast = $race->countCars('10:00', [7])->lapsByCar[7];
         $this->assertSame(RaceScenario::ms('04:00.50'), $fast[1]->tsMs, 'the per-car recount gives the same pass time');
+    }
+
+    /**
+     * SITUATION: car 7's crossing at 04:00 has a sensor mark, and the
+     * reviewer chose a counter's time for it ("Usar o tempo"); its crossing
+     * at 08:00 has a mark and nothing else; the sensor misses the one at
+     * 12:00, and the pass zero.
+     *
+     * EXPECTED: the reviewer's choice comes before the mark, so the sensor
+     * times one of the two counted passes with its mark, out of four
+     * counted passes ("o do sensor em 1 de 4"): the Fontes page must not
+     * count a mark that a "Usar o tempo" overrode as a pass the sensor
+     * times.
+     */
+    public function testTheSensorsFiguresAreCountedPassesItTimes(): void
+    {
+        $race = RaceScenario::withCounters(3);
+        $race->addSensor(4);
+        $race->start('00:00');
+        $race->firstCrossing([7]);
+        $chosen = $race->entry(1, 7, '04:00.8');
+        $race->entry(2, 7, '04:01.2');
+        $race->entry(3, 7, '04:01.5');
+        $race->mark(4, '04:00.50');
+        foreach (['08:00', '12:00'] as $at) {
+            $race->entry(1, 7, $at . '.8');
+            $race->entry(2, 7, $at . '.9');
+            $race->entry(3, 7, $at . '.95');
+        }
+        $race->mark(4, '08:00.50');
+        $race->useTimeOf($chosen);
+
+        $result = $race->run('20:00');
+
+        $this->assertLapCounts([7 => 3], $result);
+        $this->assertFalse($this->groupAt($result, 7, '04:00')->tempoDoSensor, 'the reviewer chose the time');
+        $this->assertTrue($this->groupAt($result, 7, '08:00')->tempoDoSensor);
+        $sensor = $result->sourceStats[4]->sensor;
+        $this->assertSame(2, $sensor['passagens_com_marca']);
+        $this->assertSame(1, $sensor['passagens_com_horario']);
+        $this->assertSame(2, $sensor['passagens_sem_marca'], 'the one at 12:00 and the pass zero');
+        $this->assertSame(
+            'Contagem: não conta. Horário: o do sensor em 1 de 4 passagens contadas até agora; '
+            . 'nas outras, o dos contadores (em 1 com marca, o de um "Usar o tempo" ou de uma fonte de tempo preciso).',
+            SourceSummary::sensorLine($sensor)
+        );
     }
 
     /**

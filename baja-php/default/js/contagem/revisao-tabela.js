@@ -219,7 +219,7 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
     // A sensor that counts reads no car: what it did with its marks, not a
     // counter's misses and swaps (none at all before its first mark). Its
     // comparison as an observer, if it was one, below.
-    numeros = [el('p', {}, resumoDoSensor(stats.sensor)),
+    numeros = [el('p', {}, resumoDoSensor(stats.sensor, fonte.ativa !== false)),
       el('dl', {}, (doSensor ?? []).map(([rotulo, valor, dica]) => [el('dt', { class: 'com-dica', title: dica }, rotulo), el('dd', {}, valor)]), sincronizado),
       observacao ? comparacao(false) : null];
   } else if (stats) {

@@ -28,17 +28,25 @@ final class SourceSummary
     public const SENSOR_RULE = 'Contagem: não conta. Horário: o do sensor em cada passagem em que uma marca dele coincide; '
         . 'nas outras, o dos contadores.';
 
+    /** The start of the line of a source switched off: what it does once it is on follows. */
+    public const INACTIVE = 'Desativada: não muda nada a partir de agora. Quando ativa:';
+
     /** The line of a source as it is stored; `$sensorStats` is SourceStats::$sensor of a counting sensor. */
     public static function forSource(ContagemFonte $fonte, ?array $sensorStats = null): string
     {
-        return self::line((string) $fonte->getTipo(), (string) $fonte->getPapel(), (string) $fonte->getQualidadeTempo(), $sensorStats);
+        return self::line((string) $fonte->getTipo(), (string) $fonte->getPapel(), (string) $fonte->getQualidadeTempo(), $sensorStats, (bool) $fonte->getAtiva());
     }
 
     /**
-     * @param array<string, mixed>|null $sensorStats 'atribuidas' and 'passagens_sem_marca', for a counting sensor
+     * @param array<string, mixed>|null $sensorStats 'passagens_com_horario', 'passagens_com_marca' and 'passagens_sem_marca', for a counting sensor
+     * @param bool $active false for a source switched off: it changes nothing now (Source::wasCountingAt)
      */
-    public static function line(string $type, string $role, string $timing, ?array $sensorStats = null): string
+    public static function line(string $type, string $role, string $timing, ?array $sensorStats = null, bool $active = true): string
     {
+        if (!$active && $type !== Source::TIPO_TOTAIS && $type !== Source::TIPO_BOX) {
+            // Its figures are those of the time it was on: the rule, not them.
+            return self::INACTIVE . ' ' . self::line($type, $role, $timing);
+        }
         if ($type === Source::TIPO_TOTAIS) {
             return 'Contagem: não conta; os totais só são comparados com a contagem oficial. Horário: nenhum.';
         }
@@ -59,29 +67,56 @@ final class SourceSummary
             : $count . ' Horário: entra na mediana dos contadores.';
     }
 
-    /** "Contagem: não conta. Horário: o do sensor em 398 de 403 passagens até agora; nas outras, o dos contadores." */
+    /**
+     * "Contagem: não conta. Horário: o do sensor em 398 de 403 passagens
+     * contadas até agora; nas outras, o dos contadores." Both numbers are
+     * counted passes: those its marks time, out of those with a mark or
+     * missed by it. A pass with its mark that a "Usar o tempo" or a precise
+     * source times is said apart.
+     */
     public static function sensorLine(?array $sensorStats): string
     {
-        $timed = (int) ($sensorStats['atribuidas'] ?? 0);
-        $total = $timed + (int) ($sensorStats['passagens_sem_marca'] ?? 0);
-        if ($sensorStats === null || $total === 0) {
+        if ($sensorStats === null || !isset($sensorStats['passagens_com_horario'], $sensorStats['passagens_com_marca'])) {
+            // None yet, or figures from before these were kept.
             return self::SENSOR_RULE;
         }
-        return sprintf('Contagem: não conta. Horário: o do sensor em %d de %d passagens até agora; nas outras, o dos contadores.', $timed, $total);
+        $timed = (int) $sensorStats['passagens_com_horario'];
+        $marked = (int) $sensorStats['passagens_com_marca'];
+        $total = $marked + (int) ($sensorStats['passagens_sem_marca'] ?? 0);
+        if ($total === 0) {
+            return self::SENSOR_RULE;
+        }
+        $others = $marked > $timed
+            ? sprintf('nas outras, o dos contadores (em %d com marca, o de um "Usar o tempo" ou de uma fonte de tempo preciso)', $marked - $timed)
+            : 'nas outras, o dos contadores';
+        return sprintf('Contagem: não conta. Horário: o do sensor em %d de %d passagens contadas até agora; %s.', $timed, $total, $others);
     }
 
     /**
-     * What each role does, for the role chosen at creation: [role => line],
-     * for an automatic source and a timing sensor.
+     * What a new source of each type does, by role where it has one, for
+     * the "Nova fonte" form: [type => [title => line]]. The form shows the
+     * lines of the type chosen.
      *
-     * @return array<string, string>
+     * @return array<string, array<string, string>>
      */
-    public static function roleChoices(): array
+    public static function typeChoices(): array
     {
         return [
-            Source::PAPEL_OBSERVADORA => self::OBSERVER,
-            Source::PAPEL_VOTANTE => 'Automática: vota em cada passagem, como um contador. Sensor: não conta; o horário dele vale nas passagens '
-                . 'em que uma marca coincide, e nas outras o dos contadores.',
+            Source::TIPO_MANUAL => [
+                'Manual' => self::line(Source::TIPO_MANUAL, Source::PAPEL_VOTANTE, Source::TEMPO_HUMANA)
+                    . ' Com tempo "Precisa": vale o horário desta fonte nas passagens em que ela estiver.',
+            ],
+            Source::TIPO_AUTOMATICA => [
+                'Observadora' => self::OBSERVER,
+                'Votante' => self::line(Source::TIPO_AUTOMATICA, Source::PAPEL_VOTANTE, Source::TEMPO_HUMANA),
+            ],
+            Source::TIPO_SENSOR => [
+                'Observador' => self::OBSERVER,
+                'Votante' => self::SENSOR_RULE,
+            ],
+            Source::TIPO_TOTAIS => [
+                'Totais' => self::line(Source::TIPO_TOTAIS, Source::PAPEL_VOTANTE, Source::TEMPO_HUMANA),
+            ],
         ];
     }
 }

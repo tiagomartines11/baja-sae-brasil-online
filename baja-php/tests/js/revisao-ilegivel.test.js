@@ -385,7 +385,7 @@ test('a counting sensor shows what it did with its marks', () => {
     ['atribuídas', '398'],
     ['ambíguas', '6'],
     ['sem passagem', '8'],
-    ['passagens sem horário', '5'],
+    ['sem marca do sensor', '5'],
     ['desvio', '−0,3 s (90% até 0,8 s)'],
   ]);
   assert.ok(linhasDoSensor(sensor).every(([, , dica]) => dica.length > 10));
@@ -422,10 +422,19 @@ test('names that differ only in their last word are said once', () => {
 // the counters'. The block says it in one line: no count, and the pass time
 // is the sensor's in N of the M passes, the counters' in the others.
 test('a counting sensor says in one line what it does to the count and to the times', () => {
-  const sensor = { marcas: 412, atribuidas: 398, ambiguas: 6, sem_passagem: 8, passagens_sem_marca: 5 };
+  // 400 counted passes with one of its marks, 398 timed by it (2 by a "Usar o tempo"); 5 missed.
+  // "atribuidas" (every matched mark, counted pass or not) is not the numerator.
+  const sensor = { marcas: 412, atribuidas: 404, ambiguas: 6, sem_passagem: 8, passagens_sem_marca: 5, passagens_com_marca: 400, passagens_com_horario: 398 };
   assert.equal(resumoDoSensor(sensor),
-    'Sensor de tempo. Contagem: não conta. Horário oficial: o do sensor em 398 de 403 passagens até agora; nas outras, o dos contadores.');
-  // Nothing timed yet: the rule, without numbers.
-  assert.match(resumoDoSensor({ atribuidas: 0, passagens_sem_marca: 0 }), /o do sensor em cada passagem em que uma marca dele coincide; nas outras, o dos contadores/);
+    'Sensor de tempo. Contagem: não conta. Horário oficial: o do sensor em 398 de 405 passagens contadas até agora; '
+    + 'nas outras, o dos contadores (em 2 com marca, o de um "Usar o tempo" ou de uma fonte de tempo preciso).');
+  assert.equal(resumoDoSensor({ ...sensor, passagens_com_horario: 400 }),
+    'Sensor de tempo. Contagem: não conta. Horário oficial: o do sensor em 400 de 405 passagens contadas até agora; nas outras, o dos contadores.');
+  // Nothing timed yet, or figures from before these were kept: the rule, without numbers.
+  const regra = /o do sensor em cada passagem em que uma marca dele coincide; nas outras, o dos contadores/;
+  assert.match(resumoDoSensor({ atribuidas: 0, passagens_sem_marca: 0, passagens_com_marca: 0, passagens_com_horario: 0 }), regra);
+  assert.match(resumoDoSensor({ atribuidas: 398, passagens_sem_marca: 5 }), regra);
   assert.match(resumoDoSensor(undefined), /Contagem: não conta/);
+  // Switched off, it changes nothing now: said first.
+  assert.match(resumoDoSensor(sensor, false), /^Sensor de tempo\. Desativado: não muda nada a partir de agora\. Quando ativo: Contagem: não conta\./);
 });

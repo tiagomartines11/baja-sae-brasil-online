@@ -273,7 +273,7 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 .linha-legenda summary { cursor: pointer; color: var(--cor-fraca); }
 /* The legend: real sample chips, smaller, each with a word or two. The
    explanation is the item's tooltip, or the line below once tapped. */
-.legenda-itens { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; margin-top: 6px; }
+.legenda-itens { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 0; margin-top: 8px; }
 /* The groups do not box their items: everything wraps as one line. */
 .legenda-grupo { display: contents; }
 .legenda-inicio { display: inline-flex; align-items: center; white-space: nowrap; }
@@ -306,8 +306,17 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
   font-size: 11px;
   line-height: 1;
 }
-.legenda-item .amostra.marca-sensor { position: relative; flex: 0 0 auto; height: 18px; margin: 0 0 0 2px; }
+.legenda-item .amostra.marca-sensor { position: relative; flex: 0 0 auto; height: 18px; margin: 0 2px 0 4px; }
+/* Room only where a sample's corner marker or thick outline would touch its neighbour. */
+.legenda-item .amostra.tempo-estimado, .legenda-item .amostra.tempo-do-sensor, .legenda-item .amostra.candidato { margin-left: 8px; }
+.legenda-item .amostra.em-destaque, .legenda-item .amostra.candidato,
+.legenda-item .amostra:has(.marcador-auto, .marcador-contador, .marcador-revisor) { margin-right: 6px; }
 .legenda-explicacao { margin: 4px 0 0; color: var(--cor-fraca); }
+/* A real chip is a button, whose text ".revisao button" sets back to the
+   page's weight and the button's colour; the sample, a span, does the same
+   (a chip's own class still sets its colour: .chip.anulada is stronger). */
+.amostra.chip { font-weight: normal; color: buttontext; }
+.amostra.marca-sensor { font-weight: normal; }
 .raias-conteudo { position: relative; width: max-content; min-width: 100%; }
 .raia { display: flex; border-bottom: 1px solid var(--cor-fundo); }
 .raia.inativa { opacity: 0.6; }
@@ -786,3 +795,15 @@ tr.aviso-tabela td { background: var(--fundo-ambar); color: var(--cor-ambar); wh
 /* A long type or role label must not push a phone's page sideways. */
 .contagem-fonte label { max-width: 100%; }
 .contagem-fonte select { max-width: 100%; min-width: 0; }
+.contagem-resumo-fonte, .contagem-resumo-papeis { overflow-wrap: anywhere; }
+.contagem-resumo-papel { display: block; }
+.contagem-fonte [hidden], .contagem-resumo-papeis [hidden] { display: none; }
+/* The site's theme gives the body a 520 px minimum: on a phone every
+   counting page (not only the review screen) is as wide as the screen,
+   and a wide table scrolls inside itself instead. */
+body:has(> .contagem-pagina), body:has(.contagem-pagina) { min-width: 0; }
+@media (max-width: 600px) {
+  .contagem-pagina .contagem-tabela { display: block; overflow-x: auto; }
+  .contagem-configuracoes label, .contagem-configuracoes select { max-width: 100%; min-width: 0; }
+  .contagem-pagina { overflow-wrap: anywhere; }
+}

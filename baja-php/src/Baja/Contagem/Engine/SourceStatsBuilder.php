@@ -166,7 +166,15 @@ final class SourceStatsBuilder
                 }
             }
             $missed = 0;
+            // Of the counted passes with one of its marks, those it times
+            // (a reviewer's "usar o tempo" or a precise source may time the others).
+            $marked = 0;
+            $timed = 0;
             foreach ($groups as $group) {
+                if ($group->contado && $group->tsMs >= $startMs && $group->marcaSensor !== null && $group->marcaSensor->fonteId === $source->id) {
+                    $marked++;
+                    $timed += $group->tempoDoSensor ? 1 : 0;
+                }
                 if (!$group->contado || $group->marcaSensor !== null || $group->hasSource($source->id) || $group->tsMs < $startMs) {
                     continue;
                 }
@@ -183,6 +191,8 @@ final class SourceStatsBuilder
                 'ambiguas' => $ambiguous,
                 'sem_passagem' => $noPass,
                 'passagens_sem_marca' => $missed,
+                'passagens_com_marca' => $marked,
+                'passagens_com_horario' => $timed,
                 'desvio_mediano_ms' => $offsets === [] ? null : (int) round((float) Stats::median($offsets)),
                 'desvio_p90_ms' => $absolute === [] ? null : $absolute[(int) ceil(0.9 * count($absolute)) - 1],
             ];

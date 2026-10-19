@@ -33,20 +33,39 @@ final class SourceAdmin
         Source::TIPO_TOTAIS => 'Totais importados (papel)',
     ];
 
-    /** The help line of the "sensor" type on the form. */
-    public const SENSOR_HELP = 'Sensor de tempo: marca só o horário da passagem, nunca o número. Contagem: nunca conta. '
-        . 'Horário: como votante, vale o do sensor em cada passagem em que uma marca dele coincide; nas outras, o dos contadores. '
-        . 'Envia pela API, como uma fonte automática, e começa como observador (só medido).';
-
     public const TIMING_LABELS = [
         Source::TEMPO_HUMANA => 'Humana (tempos combinados pela mediana)',
         Source::TEMPO_PRECISA => 'Precisa (o tempo desta fonte vale como está)',
     ];
 
+    /** The roles, in words that fit an automatic source and a sensor alike (see roleLabels()). */
     public const ROLE_LABELS = [
-        Source::PAPEL_VOTANTE => 'Votante (participa da contagem oficial)',
+        Source::PAPEL_VOTANTE => 'Votante (automática: conta; sensor: dá o horário, não conta)',
         Source::PAPEL_OBSERVADORA => 'Observadora (só medida: não muda contagem nem horário)',
     ];
+
+    /**
+     * The role choice of a source of this type. A sensor that takes part
+     * never counts a pass: "votante" must not read as "it counts".
+     *
+     * @return array<string, string>
+     */
+    public static function roleLabels(string $type): array
+    {
+        if ($type === Source::TIPO_SENSOR) {
+            return [
+                Source::PAPEL_VOTANTE => 'Votante (dá o horário onde uma marca coincide; não conta)',
+                Source::PAPEL_OBSERVADORA => 'Observador (só medido: não muda contagem nem horário)',
+            ];
+        }
+        if ($type === Source::TIPO_AUTOMATICA) {
+            return [
+                Source::PAPEL_VOTANTE => 'Votante (conta, como um contador)',
+                Source::PAPEL_OBSERVADORA => self::ROLE_LABELS[Source::PAPEL_OBSERVADORA],
+            ];
+        }
+        return self::ROLE_LABELS;
+    }
 
     /** Form field: "I was told a promotion counts from now on, and said yes". */
     public const CAMPO_CONFIRMAR_VOTANTE = 'confirmar_votante';
