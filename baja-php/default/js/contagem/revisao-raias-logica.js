@@ -3,7 +3,7 @@
 
 import { duracao } from './revisao-formato.js';
 import {
-  DICA_TEMPO_DO_SENSOR, classesDoIlegivel, descricaoDoIlegivel, ehMarcaDoSensor, situacaoDoIlegivel,
+  DICA_TEMPO_DO_SENSOR, classesDoIlegivel, descricaoDoIlegivel, ehMarcaDoSensor, marcadorDoChip, situacaoDoIlegivel,
 } from './revisao-ilegivel.js';
 
 // Pixels per second. A flag shows about a minute and must spread the chips
@@ -309,6 +309,26 @@ function classesDaMarca(entrada, idsEmDestaque, entradaSelecionadaId, carrosEmFo
   }
   destaqueDoChip(classes, entrada, idsEmDestaque, entradaSelecionadaId, entrada.grupo || entrada.reatribuida ? carrosEmFoco : [], extras);
   return classes;
+}
+
+// The small markers drawn inside a chip, as [{classe, texto}]: who gave a
+// "??" its car, "S" when a sensor's mark times the pass, and the number of
+// a "??" flag's candidate. `opcoes`: {candidatos (Map car -> 1..6), idsEmDestaque}.
+// The lanes and the legend under them both draw from this.
+export function marcadoresDoChip(entrada, naRaiaDoSensor = false, opcoes = {}) {
+  const marcadores = [];
+  const marcador = naRaiaDoSensor ? null : marcadorDoChip(entrada);
+  if (marcador) {
+    marcadores.push({ classe: marcador.classe, texto: marcador.texto });
+  }
+  if (!naRaiaDoSensor && entrada.grupo?.tempo_do_sensor) {
+    marcadores.push({ classe: 'marcador marcador-sensor', texto: 'S' });
+  }
+  const candidato = opcoes.candidatos?.get?.(entrada.carro);
+  if (candidato && !(opcoes.idsEmDestaque ?? []).includes(entrada.id)) {
+    marcadores.push({ classe: 'marcador marcador-candidato', texto: String(candidato) });
+  }
+  return marcadores;
 }
 
 // The entries tied to the one the reviewer picked: a sensor's mark and the

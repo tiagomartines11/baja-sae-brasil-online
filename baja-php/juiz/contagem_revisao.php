@@ -80,23 +80,11 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
             <div class="raias linha-raias" id="linha-raias"></div>
             <div class="linha-extras" id="linha-extras"></div>
         </div>
-        <details class="linha-legenda">
-            <summary>Legenda</summary>
-            <p class="contagem-dica">
-                Clique em um registro para agir sobre ele. Verde = conta. Com um alerta ou carro aberto: contorno âmbar grosso = registro do alerta,
-                contorno âmbar fino = outros registros do mesmo carro, apagados = outros carros.
-                Riscado = anulado: borda vermelha pela revisão, "C" = pelo próprio contador, pontilhado = repetição anulada automaticamente.
-                Canto azul = conta porque um revisor confirmou; traço azul embaixo = o horário da passagem é deste registro ("Usar o tempo");
-                âmbar com borda grossa = volta curta demais que conta porque a revisão confirmou (o registro oferece desfazer a confirmação).
-                Borda pontilhada escura = um contador só, ainda não conta. Verde-azulado em itálico = fonte observadora (só comparada, nunca conta).
-                "0" no canto = passagem zero (não é volta); tracejado = não conta (antes da largada, janela de largada ou depois do encerramento);
-                tracejado vermelho com fundo = passagem retida (não conta até um revisor decidir);
-                "~" = horário estimado; "?" = horário desconhecido (fora da linha do tempo).
-                Roxo tracejado "??" = passagem sem número, ainda sem carro (não conta até alguém dizer qual foi; não fica apagada com outro carro em destaque);
-                "auto" no canto = o sistema deu o carro a um "??"; "C" sem risco = o contador informou o número no aparelho; "R" = a revisão informou.
-                Raia do sensor: traço verde = marca que dá o horário da passagem (os registros dela levam "S"), traço claro = marca sem passagem.
-                Num alerta "??", os números no canto dos registros são os botões de cada carro possível.
-            </p>
+        <?php // Sample chips drawn by revisao-legenda.js with the lanes' own classes; each one's explanation is its tooltip (or a tap). ?>
+        <details class="linha-legenda" id="linha-legenda">
+            <summary title="Clique em um registro da linha do tempo para agir sobre ele">Legenda</summary>
+            <div class="legenda-itens" id="legenda-itens"></div>
+            <p class="legenda-explicacao" id="legenda-explicacao" role="status" hidden></p>
         </details>
     </section>
 

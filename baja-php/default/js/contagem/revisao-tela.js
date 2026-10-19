@@ -36,6 +36,11 @@ export const pagina = {
     contagemAbertos: document.getElementById('contagem-alertas'),
     contagemResolvidos: document.getElementById('contagem-resolvidos'),
   },
+  legenda: {
+    detalhes: document.getElementById('linha-legenda'),
+    itens: document.getElementById('legenda-itens'),
+    explicacao: document.getElementById('legenda-explicacao'),
+  },
   carros: document.getElementById('tabela-carros'),
   fontes: document.getElementById('estatisticas-fontes'),
   historico: {

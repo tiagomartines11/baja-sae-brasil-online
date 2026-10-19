@@ -268,9 +268,46 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 .linha-corpo { display: flex; flex-direction: column; height: clamp(190px, 32vh, 330px); margin-top: 6px; }
 .linha-extras { flex: 0 1 auto; max-height: 40%; overflow-y: auto; }
 .linha-raias .raia-regua { position: sticky; top: 0; z-index: 3; background: var(--cor-painel); }
-.linha-legenda { margin-top: 4px; font-size: 13px; }
+.linha-legenda { margin-top: 4px; font-size: 12px; }
+.legenda-itens { font-size: 11.5px; }
 .linha-legenda summary { cursor: pointer; color: var(--cor-fraca); }
-.linha-legenda p { margin: 4px 0 0; }
+/* The legend: real sample chips, smaller, each with a word or two. The
+   explanation is the item's tooltip, or the line below once tapped. */
+.legenda-itens { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; margin-top: 6px; }
+/* The groups do not box their items: everything wraps as one line. */
+.legenda-grupo { display: contents; }
+.legenda-inicio { display: inline-flex; align-items: center; white-space: nowrap; }
+.legenda-titulo { margin: 0 3px 0 8px; color: var(--cor-fraca); font-weight: bold; }
+.legenda-grupo:first-child .legenda-titulo { margin-left: 0; }
+.legenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 4px 2px 2px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: help;
+}
+.legenda-item:hover, .legenda-item:focus-visible { background: var(--cor-fundo); }
+.legenda-item .amostra.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 26px;
+  height: 18px;
+  margin: 0 2px;
+  font-size: 11px;
+  line-height: 1;
+}
+.legenda-item .amostra.marca-sensor { position: relative; flex: 0 0 auto; height: 18px; margin: 0 0 0 2px; }
+.legenda-explicacao { margin: 4px 0 0; color: var(--cor-fraca); }
 .raias-conteudo { position: relative; width: max-content; min-width: 100%; }
 .raia { display: flex; border-bottom: 1px solid var(--cor-fundo); }
 .raia.inativa { opacity: 0.6; }
@@ -384,13 +421,13 @@ kbd { padding: 0 5px; border: 1px solid currentColor; border-radius: 3px; font-s
 /* Counts on a reviewer's word: a blue corner. The entry that times the pass
    ("usar o tempo"): a blue bar along the bottom. Prefixed with .raias so a
    later background shorthand (a held pass, one before the start) keeps them. */
-.raias .chip.confirmada-pelo-revisor { background-image: linear-gradient(135deg, transparent 72%, var(--cor-azul) 72%); }
-.raias .chip.tempo-escolhido { box-shadow: inset 0 -3px 0 var(--cor-azul); }
+.raias .chip.confirmada-pelo-revisor, .legenda-itens .chip.confirmada-pelo-revisor { background-image: linear-gradient(135deg, transparent 72%, var(--cor-azul) 72%); }
+.raias .chip.tempo-escolhido, .legenda-itens .chip.tempo-escolhido { box-shadow: inset 0 -3px 0 var(--cor-azul); }
 /* One counter alone, not counting yet: dotted, dark. */
 .chip.solitaria-pendente { border: 2px dotted var(--cor-texto); }
 /* A lap too short to be real that counts because a reviewer confirmed it:
    how 26SE cars 1, 3 and 20 got a lap too many. Amber, and thick. */
-.raias .chip.volta-curta-confirmada { background-color: var(--fundo-ambar); border: 2px solid var(--cor-ambar); color: var(--cor-ambar); }
+.raias .chip.volta-curta-confirmada, .legenda-itens .chip.volta-curta-confirmada { background-color: var(--fundo-ambar); border: 2px solid var(--cor-ambar); color: var(--cor-ambar); }
 
 .marca-box, .marca-corrida { position: absolute; top: 4px; padding: 1px 6px; border-radius: 3px; font-size: 11px; white-space: nowrap; }
 .marca-box { background: var(--fundo-ambar); border: 1px solid var(--cor-ambar); }

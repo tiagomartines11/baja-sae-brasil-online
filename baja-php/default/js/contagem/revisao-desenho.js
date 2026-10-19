@@ -10,10 +10,11 @@ import { el, estaDigitandoEm, substituir } from './revisao-dom.js';
 import { avisoDeReconciliacao } from './revisao-frases.js';
 import { encontrarAlerta } from './revisao-fila.js';
 import { chaveDoHistorico as chaveDasLinhasDoHistorico } from './revisao-historico.js';
+import { criarLegenda } from './revisao-legenda.js';
 import { encontrarEntrada } from './revisao-raias-logica.js';
 import { desenharFontes, desenharHistorico, desenharTabelaDeCarros } from './revisao-tabela.js';
 import {
-  agoraServidorMs, escolherOrdemDosCarros, horarioOficialMs, pagina, semConexao, tela,
+  agoraServidorMs, armazenamentoLocal, escolherOrdemDosCarros, horarioOficialMs, pagina, semConexao, tela,
 } from './revisao-tela.js';
 
 export const alertaSelecionado = () => (tela.selecao?.tipo === 'alerta' ? encontrarAlerta(tela.estado, tela.selecao.id) : null);
@@ -94,6 +95,8 @@ export function criarDesenho(ganchos) {
   }
 
   const desenhado = { listas: null, fontes: null, historico: null, detalhe: null };
+  // Keeps its own key: redrawn only when the prova gets a "??", a sensor or an observer.
+  const desenharLegenda = criarLegenda(pagina.legenda, armazenamentoLocal());
 
   function desenharDetalhe() {
     if (!tela.estado) {
@@ -143,6 +146,7 @@ export function criarDesenho(ganchos) {
     }
     // First: what the timeline loaded decides whether the flag's buttons are on.
     ganchos.desenharLinha();
+    desenharLegenda(tela.estado);
     desenharBarra(pagina.barra, tela.estado, agoraServidorMs(), horarioOficialMs());
     // Permanent while the prova accepts simulated entries.
     pagina.faixaSimulacao?.classList.toggle('oculto', !tela.estado.simulacao);

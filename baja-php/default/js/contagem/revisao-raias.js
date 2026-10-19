@@ -6,9 +6,9 @@ import { el } from './revisao-dom.js';
 import { relogio } from './revisao-formato.js';
 import {
   classesDoChip, comHorarioConhecido, descreverParada, descricaoDoChip, distribuirEmLinhas, entradasDeHorarioDesconhecido,
-  limitesDaJanela, marcasDeTempo, posicaoDaLinhaDoMomento, posicaoPx, raiasDeOcorrencias, rotuloDaMarca,
+  limitesDaJanela, marcadoresDoChip, marcasDeTempo, posicaoDaLinhaDoMomento, posicaoPx, raiasDeOcorrencias, rotuloDaMarca,
 } from './revisao-raias-logica.js';
-import { ehRaiaDeSensor, marcadorDoChip, textoDoChip } from './revisao-ilegivel.js';
+import { ehRaiaDeSensor, textoDoChip } from './revisao-ilegivel.js';
 
 const LARGURA_DO_CHIP_PX = 40;
 const ALTURA_DA_LINHA_PX = 30;
@@ -30,15 +30,12 @@ const NOMES_DE_OCORRENCIA = {
 // What goes inside a chip: the car (or "??"), the small marker of who gave
 // a "??" its car, "S" when a sensor's mark times the pass, and the number
 // of a "??" flag's candidate.
-function conteudoDoChip(entrada, naRaiaDoSensor, opcoes) {
-  const marcador = naRaiaDoSensor ? null : marcadorDoChip(entrada);
-  const candidato = opcoes.candidatos?.get?.(entrada.carro);
+// The legend under the timeline draws its samples with this too.
+export function conteudoDoChip(entrada, naRaiaDoSensor, opcoes) {
   return [
     textoDoChip(entrada, naRaiaDoSensor),
-    marcador ? el('span', { class: marcador.classe, 'aria-hidden': 'true' }, marcador.texto) : null,
-    !naRaiaDoSensor && entrada.grupo?.tempo_do_sensor ? el('span', { class: 'marcador marcador-sensor', 'aria-hidden': 'true' }, 'S') : null,
-    candidato && !(opcoes.idsEmDestaque ?? []).includes(entrada.id)
-      ? el('span', { class: 'marcador marcador-candidato', 'aria-hidden': 'true' }, String(candidato)) : null,
+    marcadoresDoChip(entrada, naRaiaDoSensor, opcoes)
+      .map((marcador) => el('span', { class: marcador.classe, 'aria-hidden': 'true' }, marcador.texto)),
   ];
 }
 

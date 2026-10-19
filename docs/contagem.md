@@ -571,7 +571,17 @@ pieces are loaded afresh when it is opened. At most half an hour of
 pieces is kept on screen. The lanes have a fixed height and scroll inside,
 and the header is one line, so nothing below moves when a piece arrives.
 
-What a chip tells (the legend under the timeline says the same):
+What a chip tells. The **Legenda** under the timeline (closed at first;
+open or closed is remembered in this browser) shows it as real sample
+chips, a word or two beside each, grouped as Passagens, Anuladas, Revisão,
+Destaque, "??" and Sensor. Each sample is a made-up entry drawn by the
+lanes' own code (`classesDoChip`, `marcadoresDoChip`, in
+`revisao-legenda-logica.js`), so it cannot drift from the timeline; the
+long explanation is the item's tooltip, or the line under the legend once
+the item is tapped (a phone has no tooltip). The "??" samples show only
+when the prova has a "??", a camera or a flag about one; the sensor's only
+with a sensor; the observer's only with an observer. A plain race fits
+two lines at 1280 px; with "??" and a sensor it takes three.
 
 | Look | Meaning |
 |---|---|
