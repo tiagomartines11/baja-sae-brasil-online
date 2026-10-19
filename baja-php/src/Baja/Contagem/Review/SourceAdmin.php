@@ -34,8 +34,9 @@ final class SourceAdmin
     ];
 
     /** The help line of the "sensor" type on the form. */
-    public const SENSOR_HELP = 'Um sensor de tempo marca só o horário da passagem, nunca o número. Ele nunca conta uma passagem: '
-        . 'cada marca que coincide com uma passagem dos contadores vira o horário preciso dela. Envia pela API, como uma fonte automática.';
+    public const SENSOR_HELP = 'Sensor de tempo: marca só o horário da passagem, nunca o número. Contagem: nunca conta. '
+        . 'Horário: como votante, vale o do sensor em cada passagem em que uma marca dele coincide; nas outras, o dos contadores. '
+        . 'Envia pela API, como uma fonte automática, e começa como observador (só medido).';
 
     public const TIMING_LABELS = [
         Source::TEMPO_HUMANA => 'Humana (tempos combinados pela mediana)',
@@ -43,8 +44,8 @@ final class SourceAdmin
     ];
 
     public const ROLE_LABELS = [
-        Source::PAPEL_VOTANTE => 'Votante (conta na contagem oficial)',
-        Source::PAPEL_OBSERVADORA => 'Observadora (só comparada com a contagem; nunca conta)',
+        Source::PAPEL_VOTANTE => 'Votante (participa da contagem oficial)',
+        Source::PAPEL_OBSERVADORA => 'Observadora (só medida: não muda contagem nem horário)',
     ];
 
     /** Form field: "I was told a promotion counts from now on, and said yes". */
@@ -59,15 +60,24 @@ final class SourceAdmin
     /** Form field of "Nova fonte": '1' creates the source switched off. */
     public const CAMPO_CRIAR_DESATIVADA = 'criar_desativada';
 
-    /** What a precise source does, said the same way wherever it is asked. */
-    public const PRECISE_TIMING_WARNING = 'Com tempo "precisa", o horário desta fonte passa a ser o horário oficial de cada passagem em que ela '
-        . 'estiver, no lugar da mediana dos contadores, e vira a referência para medir o atraso de cada contador. '
+    /**
+     * What a precise source does, said the same way wherever it is asked.
+     * The first sentence answers "whose time counts?".
+     */
+    public const PRECISE_TIMING_WARNING = 'Horário: em cada passagem em que esta fonte estiver, vale o horário dela, não a mediana dos contadores; '
+        . 'nas outras, vale a mediana. Esse horário vira também a referência para medir o atraso de cada contador. '
         . 'Use só para um sistema cujo relógio você conferiu.';
 
-    /** The same, for a timing sensor: it times passes, never counts one. */
-    public const SENSOR_TIMING_WARNING = 'Como votante, as marcas do sensor passam a dar o horário das passagens: cada marca que coincide com uma passagem '
-        . 'dos contadores vira o horário oficial dela (a última passagem publicada, o tempo das voltas e a melhor volta) e a referência '
-        . 'para medir o atraso de cada contador. Ele nunca conta uma passagem nem diz o número do carro. Use só para um sensor cujo relógio você conferiu.';
+    /**
+     * The same, for a timing sensor that takes part: it times passes, never
+     * counts one. The first sentence answers "do the sensor's times replace
+     * the counters'?" (PassTimeFuser::useSensorMarks).
+     */
+    public const SENSOR_TIMING_WARNING = 'Horário: em cada passagem em que uma marca do sensor coincide, vale o horário do sensor, não o dos contadores; '
+        . 'nas passagens sem marca, vale o dos contadores. Contagem: continua só dos contadores; o sensor nunca conta uma passagem nem diz o carro. '
+        . 'O horário do sensor passa a ser o da última passagem publicada, o do tempo das voltas e o da melhor volta. '
+        . 'Um "Usar o tempo" da revisão, ou uma fonte de tempo preciso na mesma passagem, ainda vale antes dele. '
+        . 'Use só um sensor cujo relógio você conferiu.';
 
     private const MAX_NAME_LENGTH = 45;
     private const MAX_URL_LENGTH = 255;
@@ -147,12 +157,14 @@ final class SourceAdmin
      * A new automatic source starts as an OBSERVER: a system nobody has
      * measured yet must not change the count by being plugged in. It is
      * promoted on this page once its comparison looks good. So does a timing
-     * sensor: its marks then only show how far they are from the passes. A
-     * source can also be created switched off, so nothing it sends counts
-     * until a controller switches it on.
+     * sensor: its marks then only show how far they are from the passes. The
+     * form shows the role, observer chosen; picking votante there is asked
+     * first, in the words of the promotion. A source can also be created
+     * switched off, so nothing it sends counts until a controller switches
+     * it on.
      *
      * @param array<string, mixed> $post
-     * @throws ConfirmationNeeded when a counting source with precise timing is being created and the person was not told what that does
+     * @throws ConfirmationNeeded when a source would count (or time passes) from the start and the person was not told what that does
      */
     public static function create(ContagemService $service, array $post): void
     {
@@ -164,7 +176,11 @@ final class SourceAdmin
         // New sources go to the end of the list.
         $fonte->setOrdem(count(self::sources($prova)) + 1);
         self::applyEditableFields($fonte, $post);
-        $fonte->setPapel(self::mayObserve($fonte) ? Source::PAPEL_OBSERVADORA : Source::PAPEL_VOTANTE);
+        $role = self::postedRole($fonte, $post, Source::PAPEL_OBSERVADORA);
+        if ($role === Source::PAPEL_VOTANTE && self::mayObserve($fonte) && ($post[self::CAMPO_CONFIRMAR_VOTANTE] ?? '') !== '1') {
+            throw self::votanteQuestion($fonte, sprintf('Criar "%s" como votante, desde já.', $fonte->getNome()), 'Criar como votante');
+        }
+        $fonte->setPapel($role);
         self::askAboutPreciseTiming($fonte, false, $post);
         $fonte->save();
         self::rerunEngine($service);
@@ -190,21 +206,29 @@ final class SourceAdmin
         $fonte->setOrdem($order);
 
         $staysActive = ($post['ativa'] ?? '') === '1';
+        self::refuseReinterpretingSensorMarks($fonte, $previousType);
+        // A source that only now becomes an automatic one or a sensor, with
+        // nothing recorded yet, is a new one of that kind: it starts as an
+        // observer, as if it had been created so (its form had no role).
+        $becomesObservable = !isset($post['papel']) && self::mayObserve($fonte) && !in_array($previousType, [Source::TIPO_AUTOMATICA, Source::TIPO_SENSOR], true)
+            && !ContagemPassagemQuery::create()->filterByFonteId($fonte->getFonteId())->exists();
+        if ($becomesObservable) {
+            $previousRole = Source::PAPEL_OBSERVADORA;
+            $fonte->setPapel(Source::PAPEL_OBSERVADORA);
+            $fonte->setPapelDesdeMs(null);
+        }
         $role = self::postedRole($fonte, $post, $previousRole);
         self::refuseBreakingThePrimarySource($service->getSettings(), $fonte, $staysActive, $previousType, $role);
-        self::refuseReinterpretingSensorMarks($fonte, $previousType);
 
         $nowMs = Clock::nowMs();
         $periods = Source::periodsFromJson($fonte->getPeriodosFora());
         if ($previousRole === Source::PAPEL_OBSERVADORA && $role === Source::PAPEL_VOTANTE) {
             if (($post[self::CAMPO_CONFIRMAR_VOTANTE] ?? '') !== '1') {
-                throw new ConfirmationNeeded(
+                throw self::votanteQuestion(
+                    $fonte,
                     $fonte->getTipo() === Source::TIPO_SENSOR
-                        ? sprintf('Promover "%s" a votante: a partir de agora as marcas dele passam a dar o horário oficial das passagens com que coincidem. ', $fonte->getNome())
-                            . 'Ele continua sem contar passagem nenhuma. O que ele marcou como observador continua só comparado: a promoção não vale para trás.'
-                        : sprintf('Promover "%s" a votante: a partir de agora o que ela registrar conta na contagem oficial, como um contador. ', $fonte->getNome())
-                            . 'O que ela registrou como observadora continua fora da contagem: a promoção não vale para trás.',
-                    self::CAMPO_CONFIRMAR_VOTANTE,
+                        ? sprintf('Promover "%s" a votante vale a partir de agora: o que ele marcou como observador continua só comparado, não vale para trás.', $fonte->getNome())
+                        : sprintf('Promover "%s" a votante vale a partir de agora: o que ela registrou como observadora continua fora da contagem, não vale para trás.', $fonte->getNome()),
                     'Promover a votante'
                 );
             }
@@ -333,6 +357,28 @@ final class SourceAdmin
     public static function mayObserve(ContagemFonte $fonte): bool
     {
         return $fonte->getTipo() === Source::TIPO_AUTOMATICA || $fonte->getTipo() === Source::TIPO_SENSOR;
+    }
+
+    /**
+     * The question asked before an automatic source or a timing sensor takes
+     * part, created so or promoted: what it will do first, then `$when`.
+     * With precise timing the question says what that does too, and its
+     * "yes" answers both (one question, not two in a row).
+     */
+    private static function votanteQuestion(ContagemFonte $fonte, string $when, string $buttonLabel): ConfirmationNeeded
+    {
+        $precise = $fonte->getQualidadeTempo() === Source::TEMPO_PRECISA;
+        if ($fonte->getTipo() === Source::TIPO_SENSOR) {
+            $message = self::SENSOR_TIMING_WARNING . ' ' . $when;
+        } else {
+            $message = 'Contagem: o que esta fonte registrar conta na contagem oficial, como um contador.'
+                . ($precise ? ' ' . self::PRECISE_TIMING_WARNING : '') . ' ' . $when;
+        }
+        $question = new ConfirmationNeeded($message, self::CAMPO_CONFIRMAR_VOTANTE, $buttonLabel);
+        if ($precise) {
+            $question->campos[self::CAMPO_CONFIRMAR_PRECISA] = '1';
+        }
+        return $question;
     }
 
     /**

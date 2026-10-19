@@ -499,6 +499,17 @@ export function linhasDoSensor(sensor) {
   ];
 }
 
+// What a counting sensor does, in one line above its numbers: it counts
+// nothing, and the pass time is its mark's wherever a mark was matched
+// ("atribuídas"), the counters' everywhere else (the passes it missed,
+// "passagens_sem_marca"). The Fontes page says the same (SourceSummary).
+export function resumoDoSensor(sensor) {
+  const comMarca = sensor?.atribuidas ?? 0;
+  const total = comMarca + (sensor?.passagens_sem_marca ?? 0);
+  const onde = total > 0 ? `em ${comMarca} de ${total} passagens até agora` : 'em cada passagem em que uma marca dele coincide';
+  return `Sensor de tempo. Contagem: não conta. Horário oficial: o do sensor ${onde}; nas outras, o dos contadores.`;
+}
+
 // The words of the status bar chip's tooltip: "ilegíveis: 3 (2 atribuídos)",
 // "sensor: 412 marcas, 398 atribuídas". Null when there is nothing to say.
 export function dicaDosIlegiveisDaFonte(fonte) {

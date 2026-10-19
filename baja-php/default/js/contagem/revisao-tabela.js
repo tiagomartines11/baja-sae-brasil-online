@@ -21,7 +21,7 @@ import {
 import {
   ehObservadora, linhasDaObservacao, tituloDaObservacao,
 } from './revisao-observacao.js';
-import { linhasDoSensor, textoDosIlegiveis } from './revisao-ilegivel.js';
+import { linhasDoSensor, resumoDoSensor, textoDosIlegiveis } from './revisao-ilegivel.js';
 
 // One column header: a button that sorts by it (see proximaOrdem), with
 // aria-sort and an arrow on the column in use.
@@ -215,11 +215,12 @@ function blocoDaFonte(fonte, estado, ocupado, acoes) {
   let numeros = el('p', { class: 'vazio' }, 'Sem estatísticas.');
   if (stats && observacao && ehObservadora(fonte)) {
     numeros = comparacao(true);
-  } else if (stats && doSensor) {
+  } else if (stats && (doSensor || fonte.tipo === 'sensor')) {
     // A sensor that counts reads no car: what it did with its marks, not a
-    // counter's misses and swaps. Its comparison as an observer, if it was one, below.
-    numeros = [el('p', {}, 'Sensor de tempo: marca o horário das passagens; os contadores dizem o carro.'),
-      el('dl', {}, doSensor.map(([rotulo, valor, dica]) => [el('dt', { class: 'com-dica', title: dica }, rotulo), el('dd', {}, valor)]), sincronizado),
+    // counter's misses and swaps (none at all before its first mark). Its
+    // comparison as an observer, if it was one, below.
+    numeros = [el('p', {}, resumoDoSensor(stats.sensor)),
+      el('dl', {}, (doSensor ?? []).map(([rotulo, valor, dica]) => [el('dt', { class: 'com-dica', title: dica }, rotulo), el('dd', {}, valor)]), sincronizado),
       observacao ? comparacao(false) : null];
   } else if (stats) {
     numeros = [el('dl', {},

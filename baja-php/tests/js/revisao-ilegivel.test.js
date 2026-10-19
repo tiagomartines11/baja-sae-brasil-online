@@ -19,7 +19,7 @@ import assert from 'node:assert/strict';
 import {
   atribuicaoDoAceitar, atribuicoesAutomaticas, candidatosDoAlerta, candidatosParaTrocar, carrosDoAlertaIlegivel, efeitoDeAtribuir, indiceDeCandidato,
   linhasDoSensor, listaDeNomes, marcadorDoChip, nomeDoAlertaIlegivel, problemaAoAtribuir, situacaoDoIlegivel, textoDoChip,
-  textoDosIlegiveis, dicaDosIlegiveisDaFonte,
+  textoDosIlegiveis, dicaDosIlegiveisDaFonte, resumoDoSensor,
 } from '../../default/js/contagem/revisao-ilegivel.js';
 import { classesDoChip, descricaoDoChip, entradasLigadas } from '../../default/js/contagem/revisao-raias-logica.js';
 import { acaoDeAceitar, acaoDeConfirmar, fraseDeDuvida } from '../../default/js/contagem/revisao-alertas.js';
@@ -416,4 +416,16 @@ test('names that differ only in their last word are said once', () => {
   assert.equal(listaDeNomes(['Ana', 'Contagem 2']), 'Ana e Contagem 2');
   assert.equal(listaDeNomes(['Contagem 1']), 'Contagem 1');
   assert.equal(listaDeNomes([]), 'outra contagem');
+});
+
+// The user could not tell, from the page, whether a sensor's times replace
+// the counters'. The block says it in one line: no count, and the pass time
+// is the sensor's in N of the M passes, the counters' in the others.
+test('a counting sensor says in one line what it does to the count and to the times', () => {
+  const sensor = { marcas: 412, atribuidas: 398, ambiguas: 6, sem_passagem: 8, passagens_sem_marca: 5 };
+  assert.equal(resumoDoSensor(sensor),
+    'Sensor de tempo. Contagem: não conta. Horário oficial: o do sensor em 398 de 403 passagens até agora; nas outras, o dos contadores.');
+  // Nothing timed yet: the rule, without numbers.
+  assert.match(resumoDoSensor({ atribuidas: 0, passagens_sem_marca: 0 }), /o do sensor em cada passagem em que uma marca dele coincide; nas outras, o dos contadores/);
+  assert.match(resumoDoSensor(undefined), /Contagem: não conta/);
 });

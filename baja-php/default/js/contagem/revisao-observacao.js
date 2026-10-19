@@ -65,9 +65,16 @@ export function linhasDaObservacao(observacao, fonte = null) {
 
 // The sentence above the comparison. A source promoted to votante keeps the
 // comparison of the time it observed, below its counter numbers.
+// A sensor on trial is said in a sensor's words: as an observer its marks
+// time nothing either.
 export function tituloDaObservacao(fonte) {
+  if (fonte?.tipo === 'sensor') {
+    return ehObservadora(fonte)
+      ? 'Observador: só medido. Não muda a contagem nem o horário das passagens; as marcas são só comparadas com as passagens oficiais.'
+      : 'Enquanto era observador (antes da promoção), comparado com as passagens oficiais:';
+  }
   return ehObservadora(fonte)
-    ? 'Observadora: o que registra é só comparado com a contagem oficial e nunca conta.'
+    ? 'Observadora: só medida. Não muda a contagem nem o horário; o que registra é só comparado com a contagem oficial.'
     : 'Enquanto era observadora (antes da promoção), comparada com a contagem oficial:';
 }
 

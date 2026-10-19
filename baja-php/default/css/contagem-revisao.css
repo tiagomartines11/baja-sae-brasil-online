@@ -776,3 +776,13 @@ tr.aviso-tabela td { background: var(--fundo-ambar); color: var(--cor-ambar); wh
   .lista-candidatos button.candidato { padding: 12px; }
   .candidatos .anular-ilegivel { width: 100%; padding: 12px; }
 }
+
+/* ---- Fontes page: what each source does ---- */
+
+/* "O que esta fonte faz": right under the source's form, which it describes. */
+.contagem-resumo-fonte { margin: -4px 0 10px; }
+.contagem-resumo-fonte strong { color: var(--cor-texto); }
+.contagem-resumo-papeis { margin: 0 0 10px; padding-left: 18px; }
+/* A long type or role label must not push a phone's page sideways. */
+.contagem-fonte label { max-width: 100%; }
+.contagem-fonte select { max-width: 100%; min-width: 0; }

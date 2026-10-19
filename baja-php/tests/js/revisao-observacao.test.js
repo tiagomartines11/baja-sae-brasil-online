@@ -86,3 +86,10 @@ test('a promoted source keeps its comparison, told as the time it observed', () 
   assert.match(tituloDaObservacao(promovida), /antes da promoção/);
   assert.deepEqual(fontesDaTabela([promovida]).map((fonte) => fonte.id), [4]);
 });
+
+test('an observer says it changes neither the count nor the times, in a sensor\'s words for a sensor', () => {
+  assert.match(tituloDaObservacao(camera), /Não muda a contagem nem o horário/);
+  const sensor = { id: 5, nome: 'Sensor', tipo: 'sensor', ativa: true, papel: 'observadora' };
+  assert.match(tituloDaObservacao(sensor), /^Observador: só medido\. Não muda a contagem nem o horário das passagens/);
+  assert.match(tituloDaObservacao({ ...sensor, papel: 'votante' }), /^Enquanto era observador \(antes da promoção\)/);
+});

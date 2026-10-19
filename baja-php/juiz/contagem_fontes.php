@@ -8,6 +8,7 @@ use Baja\Contagem\Review\Pagina;
 use Baja\Contagem\Review\SettingsForm;
 use Baja\Contagem\Review\SourceAdmin;
 use Baja\Contagem\Review\SourceSettings;
+use Baja\Contagem\Review\SourceSummary;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\LockBusy;
 use Baja\Contagem\Service\ScoringFields;
@@ -176,6 +177,9 @@ Pagina::printHeader($prova, 'Fontes e configurações');
             <?php } ?>
             <button type="submit">Salvar</button>
         </form>
+        <?php // What it does to the count and to the times, readable again at any time (what was confirmed once is not lost). ?>
+        <p class="contagem-dica contagem-resumo-fonte"><strong><?= $h(SourceSummary::LABEL) ?></strong>
+            <?= $h(SourceSummary::forSource($fonte, $sensorStats[$fonteId] ?? null)) ?></p>
         <?php if (isset($observerComparisons[$fonteId]) && $fonte->getTipo() === Source::TIPO_SENSOR) {
             $comparison = $observerComparisons[$fonteId]; ?>
             <div class="contagem-dica contagem-observacao">
@@ -236,9 +240,18 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         <label>Nome <input type="text" name="nome" maxlength="45" required placeholder="Contagem 4"></label>
         <label>Tipo <select name="tipo"><?= $options(SourceAdmin::TYPE_LABELS, Source::TIPO_MANUAL) ?></select></label>
         <label>Tempo <select name="qualidade_tempo"><?= $options(SourceAdmin::TIMING_LABELS, Source::TEMPO_HUMANA) ?></select></label>
+        <label>Papel (automática e sensor) <select name="papel"><?= $options(SourceAdmin::ROLE_LABELS, Source::PAPEL_OBSERVADORA) ?></select></label>
         <label><input type="checkbox" name="<?= $h(SourceAdmin::CAMPO_CRIAR_DESATIVADA) ?>" value="1"> criar desativada</label>
         <button type="submit">Criar</button>
     </form>
+    <?php // The role chosen at creation, in the words of each source's own line above. ?>
+    <ul class="contagem-dica contagem-resumo-papeis">
+        <?php foreach (SourceSummary::roleChoices() as $role => $line) { ?>
+            <li><strong><?= $h($role === Source::PAPEL_OBSERVADORA ? 'Observadora' : 'Votante') ?>:</strong> <?= $h($line) ?></li>
+        <?php } ?>
+        <li><strong>Manual:</strong> <?= $h(SourceSummary::line(Source::TIPO_MANUAL, Source::PAPEL_VOTANTE, Source::TEMPO_HUMANA)) ?>
+            Manual e totais não têm papel.</li>
+    </ul>
     <p class="contagem-dica">
         Fontes não são apagadas. Desativar uma fonte faz o sistema parar de esperar por ela a partir de agora;
         tudo o que ela registrou até esse momento continua contando. Ao reativá-la, o que ela enviou enquanto
@@ -247,7 +260,7 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         Uma fonte automática nova começa como <strong>observadora</strong>: o que ela envia é só comparado com a
         contagem oficial e nunca conta. Promovida a votante, passa a contar a partir daquele momento, nunca para trás.
         Tempo "precisa": <?= $h(SourceAdmin::PRECISE_TIMING_WARNING) ?>
-        <?= $h(SourceAdmin::SENSOR_HELP) ?> Como uma fonte automática, começa como observador.
+        <?= $h(SourceAdmin::SENSOR_HELP) ?>
         Quem conta em cada fonte manual é definido em
         <a href="contagem_contadores.php?p=<?= $h(rawurlencode($prova->getProvaId())) ?>">Usuários</a>.
     </p>
@@ -262,6 +275,9 @@ Pagina::printHeader($prova, 'Fontes e configurações');
         $devices = SourceAdmin::devices($fonte);
         $blockedUsers = SourceSettings::blockedUsers($fonte); ?>
         <h3><?= $h($fonte->getNome()) ?></h3>
+        <?php if ($fonte->getTipo() === Source::TIPO_BOX) { ?>
+            <p class="contagem-dica contagem-resumo-fonte"><strong><?= $h(SourceSummary::LABEL) ?></strong> <?= $h(SourceSummary::forSource($fonte)) ?></p>
+        <?php } ?>
         <?php if ($blockedUsers !== []) { ?>
             <div class="contagem-aviso">
                 <strong>Bloqueados nesta fonte:</strong>

@@ -117,11 +117,23 @@ final class ObserverSourceAdminTest extends ReviewDbTestCase
      * counts sets the pass time of every pass it is in.
      *
      * EXPECTED: creating it is not asked (an observer counts nothing), but
-     * promoting it asks about the precise timing too, after the promotion.
+     * promoting it asks about the precise timing too, in the same question.
      */
     public function testAPreciseSourceIsAskedAboutBeforeItStartsToCount(): void
     {
         $camera = $this->createCamera(Source::TEMPO_PRECISA);
+        // Asked once: the promotion's question says what the precise timing
+        // does too, and its "yes" answers both.
+        try {
+            $this->submitSourceForm($camera, ['papel' => Source::PAPEL_VOTANTE]);
+            $this->fail('the promotion was not asked');
+        } catch (ConfirmationNeeded $question) {
+            $this->assertSame(SourceAdmin::CAMPO_CONFIRMAR_VOTANTE, $question->campo);
+            $this->assertStringStartsWith('Contagem: o que esta fonte registrar conta na contagem oficial', $question->getMessage());
+            $this->assertStringContainsString(SourceAdmin::PRECISE_TIMING_WARNING, $question->getMessage());
+            $this->assertSame([SourceAdmin::CAMPO_CONFIRMAR_PRECISA => '1'], $question->campos);
+        }
+        // A form that says yes to the promotion alone is still asked about the timing.
         try {
             $this->submitSourceForm($camera, ['papel' => Source::PAPEL_VOTANTE, SourceAdmin::CAMPO_CONFIRMAR_VOTANTE => '1']);
             $this->fail('the precise timing was not asked');

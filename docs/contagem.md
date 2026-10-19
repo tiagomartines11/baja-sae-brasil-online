@@ -1248,8 +1248,32 @@ new sensor starts as an **observer**, like a camera: its marks are only
 compared with the official passes (the review block and the Fontes page:
 how many coincide with a pass, the passes with no mark, the marks with no
 pass, and the offset). Promoted to votante (the page asks, in a sensor's
-words), its marks start to time passes: each matched mark is the official
-time of its pass. Once a source has recorded anything,
+words, once: the first sentence is "Horário: em cada passagem em que uma
+marca do sensor coincide, vale o horário do sensor, não o dos contadores;
+nas passagens sem marca, vale o dos contadores. Contagem: continua só dos
+contadores", and its "yes" also answers the precise-timing question), its
+marks start to time passes: each matched mark is the official time of its
+pass. The "Nova fonte" form shows the role, observer chosen; creating an
+automatic source or a sensor as votante asks the same question first. A
+source created as manual and turned into a sensor (or an automatic one)
+before it recorded anything starts as an observer too: the edit form of a
+manual source has no role, and it used to keep the manual's votante, which
+is how a sensor could be asked about taking part right after creation.
+
+Every source on the Fontes page has a line **"O que esta fonte faz"**
+(`SourceSummary`), so what was confirmed once can be read again: a sensor
+that takes part says "Contagem: não conta. Horário: o do sensor em N de M
+passagens até agora; nas outras, o dos contadores." (N: marks matched to a
+pass, `atribuidas`; M: those plus the official passes with no mark,
+`passagens_sem_marca`); an observer (camera or sensor) "Só medida: não
+muda a contagem nem o horário das passagens."; a counter "Contagem: vota
+em cada passagem. Horário: entra na mediana dos contadores." (with precise
+timing: its own time where it is in the pass); paper totals and the pit
+log say they count nothing. The review page's source block of a sensor
+starts with the same sentence ("Horário oficial: o do sensor em N de M
+passagens até agora"). With a sensor in the field, about a quarter of the
+passes keep the counters' time (missed marks, ambiguous bunches).
+Once a source has recorded anything,
 its type cannot change to or from `sensor` (the page says why): its rows
 would change meaning, every number ignored or every mark a "??" to review.
 Create a new source instead.
@@ -1464,7 +1488,9 @@ discarding "its" pass would act on the counters' pass.
 
 *The sources.* A counter's block adds "ilegíveis: 3 (1 atribuído)" when it
 recorded any (and the status bar chip's tooltip says it, the chip's text
-keeping its shape). A sensor that counts shows what it did with its marks:
+keeping its shape). A sensor that counts first says, in one line, that it
+counts nothing and in how many of the passes the official time is its own
+(the rest keep the counters'), then what it did with its marks:
 marcas, atribuídas (they time a pass), ambíguas, sem passagem, passagens
 sem horário (official passes no mark times: the sensor missed them, or
 their mark was left ambiguous) and desvio (median offset from the counters, and 90 %; each

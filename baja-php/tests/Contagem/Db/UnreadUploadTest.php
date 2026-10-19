@@ -140,11 +140,12 @@ final class UnreadUploadTest extends ReviewDbTestCase
     /**
      * SITUATION: the sensor is promoted to votante.
      *
-     * EXPECTED: asked first, in words about a sensor (its marks become the
-     * time of the passes they match, the last pass published included; it
-     * never counts a pass); and, with precise timing, asked about that too,
-     * in the same words. A sensor cannot be the primary source of
-     * "fonte principal" mode.
+     * EXPECTED: asked once, in words about a sensor, the answer first: in
+     * each pass a mark matches, the sensor's time, not the counters'; in
+     * the others, the counters'; the count stays the counters'. Then that
+     * it is not backwards. The one "yes" also answers the precise timing
+     * (a sensor always has it): no second question in a row. A sensor
+     * cannot be the primary source of "fonte principal" mode.
      */
     public function testPromotingASensorSaysWhatASensorDoes(): void
     {
@@ -160,19 +161,17 @@ final class UnreadUploadTest extends ReviewDbTestCase
             SourceAdmin::update($this->service, $form);
             $this->fail('the promotion must be asked first');
         } catch (ConfirmationNeeded $question) {
-            $this->assertStringContainsString('horário oficial das passagens', $question->getMessage());
-            $this->assertStringContainsString('sem contar passagem', $question->getMessage());
+            $this->assertSame(SourceAdmin::CAMPO_CONFIRMAR_VOTANTE, $question->campo);
+            $this->assertStringStartsWith(SourceAdmin::SENSOR_TIMING_WARNING, $question->getMessage());
+            $this->assertStringStartsWith('Horário: em cada passagem em que uma marca do sensor coincide, vale o horário do sensor, não o dos contadores', $question->getMessage());
+            $this->assertStringContainsString('Contagem: continua só dos contadores', $question->getMessage());
+            $this->assertStringContainsString('não vale para trás', $question->getMessage());
+            $this->assertSame([SourceAdmin::CAMPO_CONFIRMAR_PRECISA => '1'], $question->campos, 'one "yes" answers the precise timing too');
+            $form += $question->campos + [$question->campo => '1'];
         }
-        try {
-            $this->newRequest();
-            SourceAdmin::update($this->service, $form + [SourceAdmin::CAMPO_CONFIRMAR_VOTANTE => '1']);
-            $this->fail('precise timing must be asked too');
-        } catch (ConfirmationNeeded $question) {
-            $this->assertSame(SourceAdmin::SENSOR_TIMING_WARNING, $question->getMessage());
-            $this->assertStringContainsString('última passagem publicada', $question->getMessage());
-        }
+        $this->assertSame(Source::PAPEL_OBSERVADORA, $this->sourceNamed('Sensor')->getPapel(), 'nothing changed before the answer');
         $this->newRequest();
-        SourceAdmin::update($this->service, $form + [SourceAdmin::CAMPO_CONFIRMAR_VOTANTE => '1', SourceAdmin::CAMPO_CONFIRMAR_PRECISA => '1']);
+        SourceAdmin::update($this->service, $form);
         $this->assertSame(Source::PAPEL_VOTANTE, $this->sourceNamed('Sensor')->getPapel());
 
         $this->newRequest();
@@ -185,6 +184,84 @@ final class UnreadUploadTest extends ReviewDbTestCase
         } catch (InvalidArgumentException $refused) {
             $this->assertStringContainsString('sensor de tempo nunca conta', $refused->getMessage());
         }
+    }
+
+    /**
+     * SITUATION: the controller creates a sensor and picks "Votante" as its
+     * role on the form (observer is the one chosen there).
+     *
+     * EXPECTED: asked first, in the sensor's words with the answer first,
+     * and the "yes" answers the precise timing too; confirmed, it takes
+     * part from the start. Nothing is created before the answer.
+     */
+    public function testCreatingASensorAsVotanteSaysWhatItDoes(): void
+    {
+        $post = ['nome' => 'Sensor', 'tipo' => Source::TIPO_SENSOR, 'qualidade_tempo' => Source::TEMPO_HUMANA, 'papel' => Source::PAPEL_VOTANTE];
+        try {
+            $this->newRequest();
+            SourceAdmin::create($this->service, $post);
+            $this->fail('creating a sensor that takes part must be asked');
+        } catch (ConfirmationNeeded $question) {
+            $this->assertStringStartsWith(SourceAdmin::SENSOR_TIMING_WARNING, $question->getMessage());
+            $this->assertStringContainsString('Criar "Sensor" como votante', $question->getMessage());
+            $post += $question->campos + [$question->campo => '1'];
+        }
+        $this->assertNull(ContagemFonteQuery::create()->filterByProvaId(self::PROVA_ID)->filterByNome('Sensor')->findOne());
+        $this->newRequest();
+        SourceAdmin::create($this->service, $post);
+        $this->assertSame(Source::PAPEL_VOTANTE, $this->sourceNamed('Sensor')->getPapel());
+    }
+
+    /**
+     * SITUATION: the controller creates a source, leaving the type "manual",
+     * and then edits it into a sensor before it recorded anything. (How the
+     * user was asked about a sensor that "takes part" while creating one:
+     * a manual source is a votante, and the edit kept that.)
+     *
+     * EXPECTED: no question; it becomes an observer, as a sensor created as
+     * one, with the observer's line on the page.
+     */
+    public function testACounterTurnedIntoASensorBeforeRecordingStartsAsAnObserver(): void
+    {
+        $this->newRequest();
+        SourceAdmin::create($this->service, ['nome' => 'Novo', 'tipo' => Source::TIPO_MANUAL, 'qualidade_tempo' => Source::TEMPO_HUMANA]);
+        $fonte = $this->sourceNamed('Novo');
+        $this->assertSame(Source::PAPEL_VOTANTE, $fonte->getPapel());
+        $this->newRequest();
+        SourceAdmin::update($this->service, [
+            'fonte_id' => (string) $fonte->getFonteId(), 'nome' => 'Novo', 'tipo' => Source::TIPO_SENSOR,
+            'qualidade_tempo' => Source::TEMPO_HUMANA, 'ordem' => '5', 'ativa' => '1',
+        ]);
+        $stored = $this->sourceNamed('Novo');
+        $this->assertSame(Source::TIPO_SENSOR, $stored->getTipo());
+        $this->assertSame(Source::PAPEL_OBSERVADORA, $stored->getPapel());
+        $this->assertNull($stored->getPapelDesdeMs(), 'an observer since it is a sensor');
+    }
+
+    /**
+     * SITUATION: the controller opens the Fontes page with a sensor that
+     * takes part and has timed one pass, a camera on trial and a counter.
+     *
+     * EXPECTED: each says, in one line, what it does to the count and to
+     * the times: the sensor with its figures, the camera only measured; and
+     * the role chosen at creation is the observer, with what each role does.
+     */
+    public function testTheFontesPageSaysWhatEachSourceDoes(): void
+    {
+        $sensor = $this->newSource('Sensor', Source::TIPO_SENSOR);
+        $this->newSource('Câmera', Source::TIPO_AUTOMATICA, Source::PAPEL_OBSERVADORA);
+        $this->recordCountedPass(self::CAR_A, $this->at(30));
+        $this->upload($this->apiToken($sensor), [$this->unreadPayload(self::newUuid(), $this->at(29)) + ['mode' => 'api']]);
+        $this->recompute();
+        $this->createUser(self::USER_PREFIX . 'controle', ['index', self::EVENTO_ID . '_' . self::PROVA_ID]);
+
+        $page = html_entity_decode($this->renderJuizPage('contagem_fontes.php', self::USER_PREFIX . 'controle', ['p' => self::PROVA_ID]), ENT_QUOTES);
+
+        $this->assertStringContainsString('O que esta fonte faz:', $page);
+        $this->assertStringContainsString('Contagem: não conta. Horário: o do sensor em 1 de 1 passagens até agora; nas outras, o dos contadores.', $page);
+        $this->assertStringContainsString('Só medida: não muda a contagem nem o horário das passagens.', $page);
+        $this->assertStringContainsString('Contagem: vota em cada passagem. Horário: entra na mediana dos contadores.', $page);
+        $this->assertMatchesRegularExpression('#<select name="papel"><option value="votante">[^<]*</option><option value="observadora" selected>#', $page);
     }
 
     /**
@@ -873,7 +950,7 @@ final class UnreadUploadTest extends ReviewDbTestCase
         return $payload;
     }
 
-    private function newSource(string $name, string $type): ContagemFonte
+    private function newSource(string $name, string $type, string $role = Source::PAPEL_VOTANTE): ContagemFonte
     {
         $fonte = new ContagemFonte();
         $fonte->setEventoId(self::EVENTO_ID);
@@ -883,7 +960,7 @@ final class UnreadUploadTest extends ReviewDbTestCase
         $fonte->setQualidadeTempo(Source::TEMPO_PRECISA);
         $fonte->setAtiva(true);
         $fonte->setOrdem(9);
-        $fonte->setPapel(Source::PAPEL_VOTANTE);
+        $fonte->setPapel($role);
         $fonte->save();
         return $fonte;
     }
