@@ -6,9 +6,12 @@
 # To apply changes:
 #     cd baja-infra && docker compose down -v && docker compose build phpbb-baja && docker compose up -d
 #
-# The down -v is required: the phpbb_baja_html volume retains its initial
-# content, and rebuilding the image alone won't propagate changes. See
-# baja-php/docs/baja-auth-extension.md "Operating notes" for context.
+# Changing routes ALSO requires phpBB's compiled router to be regenerated.
+# phpBB caches it in cache/production/url_matcher.php, and `extension:enable`
+# is a no-op once the extension is already enabled — so a plain restart will
+# not pick up a new route here. The entrypoint runs `cache:purge` for exactly
+# this reason. Production spent weeks 404-ing both routes below because that
+# cache was compiled before the extension was enabled and never rebuilt.
 # ============================================================================
 
 baja_auth_login:
@@ -22,3 +25,20 @@ baja_auth_logout:
     defaults:
         _controller: baja.auth.controller.main:logout
     methods: [GET, POST]
+
+# A validated no-op redirect, used only as a return hop out of phpBB's own
+# login form (see main::forumLoginUrl). phpBB's redirect() discards off-board
+# targets, so handing it an absolute juiz./fila. URL would strand the user on
+# the board index after they clear a lockout. A board-relative path pointing
+# here is accepted, and this then bounces to the real target.
+#
+# This is what remains of the former /baja/warmup route. That existed to absorb
+# a Cloudflare challenge before the login POST, on the theory that a challenge
+# destroyed the POST body; production logs later showed the POST arriving
+# intact, so the warm-up was removed. This hop is kept for the phpBB redirect
+# problem above, which is real and unrelated.
+baja_auth_return:
+    path: /baja/return
+    defaults:
+        _controller: baja.auth.controller.main:returnTo
+    methods: [GET]

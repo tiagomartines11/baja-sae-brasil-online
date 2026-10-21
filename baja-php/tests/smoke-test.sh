@@ -94,6 +94,18 @@ check_in "anonymous /juiz/timer_action.php by id" "$status" 403
 # the act=login query-string parameter is what triggers the auth branch).
 # All seeded test users share password '123456'.
 COOKIES=$(mktemp -t shim-cookies.XXXXXX)
+
+# Double-submit CSRF token. The controller holds no server-side state — it only
+# checks that the cookie and the form field match — so a fixed value works here.
+# That is the mechanism rather than a weakness: the protection comes from an
+# attacker's page being unable to read or set a cookie on our domain.
+CSRF=smoketestcsrftoken0000000000000000000000000000000000000000000000
+# Real submissions also require Origin. Browsers always send it on a
+# cross-origin POST; curl does not, so pass it explicitly.
+ORIGIN_HDR=(-H "Origin: $BASE_JUIZ")
+# For calls needing both the phpBB session cookies and the token, append the
+# token to the jar curl already wrote.
+csrf_into_jar() { printf '.baja.local\tTRUE\t/\tFALSE\t0\tbaja_csrf\t%s\n' "$CSRF" >> "$1"; }
 trap "rm -f \"$COOKIES\" \"$COOKIES.bak\"" EXIT
 
 # Fetch the login form first so any cookies the page sets are captured.
@@ -136,12 +148,15 @@ check_in "forum-logout simulation: anonymous after _u=1" "$status" 200
 # create a session row and Set-Cookie headers with domain=.baja.local
 # (per phpbb_config.cookie_domain). Response is a 302/303 to the validated
 # redirect target.
+#
+# redirect travels in the query string, matching what the login forms emit.
 : > "$COOKIES"
 status=$(curl -s -o /dev/null -w "%{http_code}" -c "$COOKIES" -X POST \
+    "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
     --data-urlencode "username=juiz1" \
     --data-urlencode "password=123456" \
-    --data-urlencode "redirect=$BASE_JUIZ/index.php" \
-    "$BASE_FORUM/app.php/baja/login")
+    --data-urlencode "csrf=$CSRF" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
 check_in "POST /app.php/baja/login returns redirect" "$status" 302 303
 
 # Cookie jar in Netscape format: domain<TAB>flag<TAB>path<TAB>secure<TAB>exp<TAB>name<TAB>value
@@ -188,8 +203,9 @@ fi
 # 11. Logout endpoint. phpBB's session_kill clears the session row and
 # rotates the cookies (_u → 1 anonymous, _sid → cleared). After the
 # round-trip, the jar should reflect that.
+csrf_into_jar "$COOKIES"
 status=$(curl -s -o /dev/null -w "%{http_code}" -c "$COOKIES" -b "$COOKIES" \
-    "$BASE_FORUM/app.php/baja/logout?redirect=$BASE_JUIZ/login.php")
+    "$BASE_FORUM/app.php/baja/logout?redirect=$BASE_JUIZ/login.php&csrf=$CSRF")
 check_in "GET /app.php/baja/logout returns redirect" "$status" 302 303
 
 u_value=$(awk '$6 == "phpbb3_baja_u" { print $7 }' "$COOKIES")
@@ -207,10 +223,11 @@ fi
 # Location header from the 302 response without following it.
 : > "$COOKIES"
 location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
+    "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
     --data-urlencode "username=juiz1" \
     --data-urlencode "password=123456" \
-    --data-urlencode "redirect=https://evil.com/steal" \
-    "$BASE_FORUM/app.php/baja/login")
+    --data-urlencode "csrf=$CSRF" \
+    "$BASE_FORUM/app.php/baja/login?redirect=https://evil.com/steal")
 if echo "$location" | grep -q 'evil.com'; then
     red "FAIL  open-redirect honored: Location='$location'"
     FAIL=$((FAIL + 1))
@@ -232,13 +249,38 @@ fi
 
 # Replace whatever is in the cookie jar with a fresh login for one user, via
 # the same forum endpoint check 9 uses.
+#
+# /baja/login wants two proofs that the request came from one of our own login
+# forms (checks 23-26 test them one by one): the Origin header of an allowed
+# site, and the CSRF token sent twice, as the baja_csrf cookie and as the csrf
+# form field. A browser adds all of that by itself; curl adds none of it, so it
+# is passed here by hand, exactly as check 9 does. Without it the forum answers
+# with ?error=csrf and no session cookies, and every page asked for afterwards
+# is seen as an anonymous visitor. That is what happened when these lap
+# counting checks (written before the CSRF protection) met it in a merge: all
+# four failed with "marker not found", which points at the pages when the real
+# problem was that nobody was logged in.
+#
+# The redirect target goes in the query string, where the real forms put it.
 login_as() {
     : > "$COOKIES"
-    curl -s -o /dev/null -c "$COOKIES" -X POST \
+    local location
+    location=$(curl -s -o /dev/null -w "%{redirect_url}" -c "$COOKIES" -X POST \
+        "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
         --data-urlencode "username=$1" \
         --data-urlencode "password=123456" \
-        --data-urlencode "redirect=$BASE_JUIZ/index.php" \
-        "$BASE_FORUM/app.php/baja/login"
+        --data-urlencode "csrf=$CSRF" \
+        "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+    # Check the login itself, so that a refusal is reported as a refusal and
+    # not as a page that "did not render". A successful login redirects to the
+    # target with no ?error= and leaves the forum's session cookie in the jar.
+    if [[ "$location" == "$BASE_JUIZ/index.php" ]] && grep -q 'phpbb3_baja_sid' "$COOKIES"; then
+        green "PASS  login_as $1 got a forum session"
+        PASS=$((PASS + 1))
+    else
+        red "FAIL  login_as $1: the forum refused the login (Location='$location')"
+        FAIL=$((FAIL + 1))
+    fi
 }
 
 # check_body NAME BODY MARKER: pass when BODY contains MARKER.
@@ -414,6 +456,276 @@ fi
 
 # Clean up the throw-away row so the dev DB looks like it did before.
 tournament_sql "DELETE FROM tournament WHERE evento_id='$TEST_EVENT' AND prova_id='$TEST_PROVA' AND match_id=$TEST_MATCH;"
+
+# --- Login shim security (fix/login-shim-security) -------------------------
+#
+# Checks 19-28 came in with the login-shim hardening and were numbered 13-25
+# on that branch; develop had meanwhile used 13-18 for lap counting and the
+# tournament hotfix, so they were renumbered on merge. Nothing else changed.
+
+# ---------------------------------------------------------------------------
+# 19-20. The return hop used to escape a lockout.
+#
+# /baja/return is a validated no-op redirect. It exists because phpBB's
+# redirect() discards off-board targets, so forumLoginUrl() hands phpBB a
+# board-relative path pointing here rather than an absolute juiz. URL that
+# phpBB would drop, stranding the user on the board index.
+# ---------------------------------------------------------------------------
+
+location=$(curl -s -o /dev/null -w "%{redirect_url}"     "$BASE_FORUM/app.php/baja/return?redirect=$BASE_JUIZ/index.php")
+if [[ "$location" == "$BASE_JUIZ/index.php" ]]; then
+    green "PASS  return hop bounces to the validated target ('$location')"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  return hop target wrong: expected '$BASE_JUIZ/index.php', got '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+location=$(curl -s -o /dev/null -w "%{redirect_url}"     "$BASE_FORUM/app.php/baja/return?redirect=https://evil.com/steal")
+if echo "$location" | grep -q 'evil\.com'; then
+    red "FAIL  return hop open-redirect honored: Location='$location'"
+    FAIL=$((FAIL + 1))
+else
+    green "PASS  return hop open-redirect rejected (Location='$location')"
+    PASS=$((PASS + 1))
+fi
+
+# ---------------------------------------------------------------------------
+# 21-22. Security regressions from the login-shim review.
+# ---------------------------------------------------------------------------
+
+# 21. Open redirect via backslash. Browsers treat "\" as "/" in special-scheme
+# URLs (WHATWG URL), so "/\evil.com" satisfied validateRedirect's "starts with
+# / but not //" test, was echoed back verbatim, and navigated to
+# http://evil.com/. Control characters are stripped by browsers before parsing
+# and could smuggle a second slash past the same test. Checked on the return
+# hop — the cleanest vector, being unauthenticated and GET — and on login.
+#
+# Assert on the HOST the browser would end up on, not on whether the string
+# contains "evil.com". A same-origin path that merely mentions the name (e.g.
+# /%09/evil.com, where the % is literal) is harmless, and a substring check
+# reports it as a failure.
+for payload in '/\evil.com' '/\/evil.com' "/$(printf '	')/evil.com" "/$(printf '')/evil.com"; do
+    printable=$(printf '%s' "$payload" | cat -v)
+
+    # The return hop is a GET route.
+    loc_return=$(curl -s -o /dev/null -w "%{redirect_url}"         --get --data-urlencode "redirect=$payload"         "$BASE_FORUM/app.php/baja/return")
+
+    # login is POST-only, so a GET would 405 with no Location and the host
+    # check below would pass without validateRedirect ever running. POST it,
+    # deliberately without Origin: the request is refused as CSRF, but only
+    # AFTER the target has been resolved, so the Location still proves what
+    # the validator did with the payload.
+    loc_login=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST         --data-urlencode "redirect=$payload"         "$BASE_FORUM/app.php/baja/login")
+
+    for pair in "return:$loc_return" "login:$loc_login"; do
+        route=${pair%%:*}
+        location=${pair#*:}
+        # Strip scheme, then take everything before the first / — the authority.
+        host=${location#*://}
+        host=${host%%/*}
+        if [[ -z "$location" ]]; then
+            red "FAIL  $route produced no redirect for '$printable' — the check would pass vacuously"
+            FAIL=$((FAIL + 1))
+        elif [[ "$host" == *evil.com ]]; then
+            red "FAIL  $route sent the browser off-domain for '$printable' -> '$location'"
+            FAIL=$((FAIL + 1))
+        else
+            green "PASS  $route kept '$printable' on-domain (host=$host)"
+            PASS=$((PASS + 1))
+        fi
+    done
+done
+
+# 22. Anonymous must never match a user row. The shim represents "no session"
+# as username => '', and findOneByUsername('') is a plain WHERE username = ''.
+# A row with an empty username would therefore authenticate every
+# unauthenticated visitor as that row. Create one directly in the DB — bypassing
+# the application guards, which is the point: this asserts the seam holds even
+# when a row exists — then confirm anonymous access is still refused.
+if command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -q '^baja-mysql$'; then
+    docker exec baja-mysql mysql -uroot -p"${MYSQL_ROOT_PASSWORD:-devrootpass}" -N -e \
+        "INSERT INTO baja_resultados.user (username, permissions) VALUES ('', '| index | admin |');" 2>/dev/null
+
+    body=$(curl -s "$BASE_JUIZ/index.php")
+    if echo "$body" | grep -q 'login.php?act=logout'; then
+        red "FAIL  anonymous authenticated as the empty-username row (auth bypass)"
+        FAIL=$((FAIL + 1))
+    else
+        green "PASS  anonymous does not match the empty-username row"
+        PASS=$((PASS + 1))
+    fi
+
+    docker exec baja-mysql mysql -uroot -p"${MYSQL_ROOT_PASSWORD:-devrootpass}" -N -e \
+        "DELETE FROM baja_resultados.user WHERE username = '';" 2>/dev/null
+else
+    echo "SKIP  empty-username check (needs the baja-mysql container)"
+fi
+
+# ---------------------------------------------------------------------------
+# 23-26. CSRF. A forged login must not authenticate, and a forged logout must
+# not end a session. Each case below omits exactly one of the two required
+# proofs, so a pass means that proof is genuinely load-bearing.
+# ---------------------------------------------------------------------------
+
+# 23. Right token, wrong Origin — the attacker's page.
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
+    -H "Origin: https://evil.com" -b "baja_csrf=$CSRF" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$CSRF" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if echo "$location" | grep -q 'error=csrf'; then
+    green "PASS  login rejected off-domain Origin"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login accepted Origin https://evil.com -> '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+# 24. Right Origin, no token — a forged form cannot read our cookie, so it
+# cannot produce the pair even if it spoofs everything else.
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
+    "${ORIGIN_HDR[@]}" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if echo "$location" | grep -q 'error=csrf'; then
+    green "PASS  login rejected missing CSRF token"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login accepted a request with no CSRF token -> '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+# 25. Cookie and form field present but different — guards against a
+# comparison that only checks both are non-empty.
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
+    "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=not-the-same-value" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if echo "$location" | grep -q 'error=csrf'; then
+    green "PASS  login rejected mismatched CSRF token"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login accepted a mismatched CSRF token -> '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+# 26. Forced logout. /baja/logout answers to GET, so <img src> on any page a
+# judge visits would end their session mid-event. Log in, fire a token-less
+# logout, and confirm the session still works. Origin cannot help here — a
+# top-level GET navigation carries none — so the token is the whole defence.
+: > "$COOKIES"
+curl -s -o /dev/null -c "$COOKIES" -X POST \
+    "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$CSRF" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php"
+
+curl -s -o /dev/null -c "$COOKIES" -b "$COOKIES" \
+    "$BASE_FORUM/app.php/baja/logout?redirect=$BASE_JUIZ/login.php"
+
+body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/index.php")
+if echo "$body" | grep -q 'login.php?act=logout'; then
+    green "PASS  token-less logout did not end the session"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  token-less logout ended the session (forced-logout CSRF)"
+    FAIL=$((FAIL + 1))
+fi
+
+# 27. The token the real page mints must actually work.
+#
+# Every check above supplies both halves of the pair itself, which proves the
+# comparison works but says nothing about whether the login page produces a
+# usable token. It did not: the form embedded a value while setcookie() was a
+# silent no-op — printHeader() had already flushed output — so the cookie was
+# never sent and every genuine login was refused as a forgery, with the suite
+# fully green. So drive the real flow: render the page, take the token from the
+# HTML and the cookie from the jar, and require both that they agree and that
+# logging in with them succeeds.
+REALJAR=$(mktemp -t shim-real.XXXXXX)
+curl -s -L -c "$REALJAR" -b "$REALJAR" -o /tmp/real-login.html "$BASE_JUIZ/login.php"
+form_token=$(grep -o 'name="csrf" value="[a-f0-9]*"' /tmp/real-login.html | sed 's/.*value="//;s/"//')
+jar_token=$(awk '$6 == "baja_csrf" { print $7 }' "$REALJAR")
+
+if [[ -n "$form_token" && "$form_token" == "$jar_token" ]]; then
+    green "PASS  login page mints a CSRF token into both the form and the cookie"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  form token '${form_token:0:12}…' vs cookie '${jar_token:0:12}…' (empty cookie = setcookie ran after output)"
+    FAIL=$((FAIL + 1))
+fi
+
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -c "$REALJAR" -b "$REALJAR" -X POST \
+    "${ORIGIN_HDR[@]}" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$form_token" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+if [[ "$location" == "$BASE_JUIZ/index.php" ]]; then
+    green "PASS  login with the page's own token succeeds"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  login with the page's own token was refused -> '$location'"
+    FAIL=$((FAIL + 1))
+fi
+rm -f "$REALJAR"
+
+# 28. Logout through the link a judge actually clicks.
+#
+# Everything above exercises /app.php/baja/logout directly. Nothing covered
+# juiz/login.php?act=logout, which is the only path in the UI — and that gap
+# let a regression through: the already-logged-in redirect at the top of
+# login.php matches a logged-in user clicking Logout, so once it grew an
+# exit() it swallowed act=logout and the click silently returned the user to
+# index.php, still logged in. Drive the link, not the endpoint.
+REALJAR2=$(mktemp -t shim-logout.XXXXXX)
+curl -s -L -c "$REALJAR2" -b "$REALJAR2" -o /tmp/lo-login.html "$BASE_JUIZ/login.php"
+lo_token=$(grep -o 'name="csrf" value="[a-f0-9]*"' /tmp/lo-login.html | sed 's/.*value="//;s/"//')
+curl -s -o /dev/null -c "$REALJAR2" -b "$REALJAR2" -X POST \
+    "${ORIGIN_HDR[@]}" \
+    --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
+    --data-urlencode "csrf=$lo_token" \
+    "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php"
+
+body=$(curl -s -b "$REALJAR2" "$BASE_JUIZ/index.php")
+if ! echo "$body" | grep -q 'login.php?act=logout'; then
+    red "FAIL  could not log in, so the logout link check is inconclusive"
+    FAIL=$((FAIL + 1))
+else
+    # Follow the link exactly as the browser would, redirects and all.
+    curl -s -L -c "$REALJAR2" -b "$REALJAR2" -o /dev/null "$BASE_JUIZ/login.php?act=logout"
+    after=$(curl -s -b "$REALJAR2" "$BASE_JUIZ/index.php")
+    if echo "$after" | grep -q 'login.php?act=logout'; then
+        red "FAIL  login.php?act=logout left the user logged in (logout link is dead)"
+        FAIL=$((FAIL + 1))
+    else
+        green "PASS  login.php?act=logout actually ends the session"
+        PASS=$((PASS + 1))
+    fi
+fi
+rm -f "$REALJAR2"
+
+# 29. juiz1 keeps the grants of BOTH seed files.
+#
+# Two files seed juiz1's row in baja_resultados.user: 05-seed-baja-resultados.sql
+# (score entry on four provas) and 06-contagem.sql (controller of the Enduro,
+# a laps prova). username is unique, and the second file writes its row with
+# ON DUPLICATE KEY UPDATE, which replaces the whole permissions column. So the
+# two rows must list the same complete set, or the file that runs last quietly
+# throws the other's grants away. That is what happened when the branch that
+# added juiz1 to the first file was merged with the one that added the second:
+# juiz1 came out of a fresh database with the Enduro and nothing else.
+#
+# Checked through the dashboard rather than the database, because the
+# dashboard prints one link per prova the user may enter and so shows both
+# kinds of grant at once: the Enduro is a laps prova (contagem.php), and
+# Manobrabilidade a normal one (dashboard.php). Needs a database seeded by both
+# files; on an older one recreate it (docker compose down -v, then up -d).
+login_as juiz1
+body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/26BR/index.php")
+check_body "juiz1 keeps the Enduro grant from 06-contagem.sql" "$body" 'href="contagem.php?p=END"'
+check_body "juiz1 keeps the score-entry grants from 05-seed-baja-resultados.sql" "$body" 'href="dashboard.php?p=MAN"'
 
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"

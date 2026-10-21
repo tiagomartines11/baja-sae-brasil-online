@@ -14,11 +14,21 @@ $evento = EventoQuery::getCurrentEvent()->getEventoId();
 $provas = ProvaQuery::create()->filterByEventoId($evento)->find();
 
 if (@$_REQUEST['act'] == 'create') {
-    $user = UserQuery::create()->findOneByUsername($_POST['username']);
+    // The form's required attribute is client-side only. An empty username
+    // here would create a row that every anonymous visitor matches in
+    // Session::initSession, since the shim represents no-session as
+    // username => ''. Enforce it server-side too.
+    $novoUsername = trim((string) ($_POST['username'] ?? ''));
+    if ($novoUsername === '') {
+        header("Location: admin_users.php");
+        exit();
+    }
+
+    $user = UserQuery::create()->findOneByUsername($novoUsername);
     $isNew = !$user;
     if ($isNew) {
         $user = new User();
-        $user->setUsername($_POST['username']);
+        $user->setUsername($novoUsername);
     }
     // Only touch the provas of the current event; every other permission the
     // user holds (admin, other events, PREMIACAO, FILA, ...) is preserved.

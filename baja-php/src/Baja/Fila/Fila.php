@@ -198,6 +198,16 @@ class Fila
 
     static function addPermissaoFila($evento_id, $fila_id, $equipe_id, $novo_usuario) {
         try {
+            // An empty username must never reach setUsername() below. The shim
+            // represents an anonymous session as username => '', so a row with
+            // an empty username would be matched by every unauthenticated
+            // visitor in Session::initSession and hand them this permission.
+            // initSession refuses to query on '' as well; this is the other
+            // half, keeping the row from existing at all.
+            if (trim((string) $novo_usuario) === '') {
+                return false;
+            }
+
             if (self::checkPermissaoFila($novo_usuario, $evento_id, $fila_id, $equipe_id)) {
                 return true;
             } else {

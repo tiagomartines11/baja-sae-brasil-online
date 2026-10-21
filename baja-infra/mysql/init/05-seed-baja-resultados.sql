@@ -472,6 +472,35 @@ CREATE TABLE `user` (
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
 INSERT INTO `user` VALUES (1,'superadmin','| index | admin |',NULL);
+--
+-- Judge fixtures matching the phpBB seed (03-seed-phpbb-baja.sql seeds juiz1
+-- and juiz2 there; without matching rows HERE they authenticate against phpBB
+-- but Session::initSession finds no baja user and bounces them to the login
+-- form, which reads as a broken session rather than missing fixture data.
+--
+-- `permissions` is a Propel ARRAY column: '| a | b |', parsed as
+-- substr($v, 2, -2) then explode(' | ') — see Model/Base/User::getPermissions.
+--
+-- 'index' is the sentinel that lets a user reach juiz/index.php at all
+-- (User::SENTINEL_PERMISSIONS); it grants nothing on its own. Score-entry
+-- grants are '<EVENTO_ID>_<PROVA_ID>', matching how Session::hasPermission
+-- prefixes the prova with $_SERVER['REDIRECT_EVENT'] — so these only resolve
+-- under an event-scoped URL such as /26BR/index.php.
+--
+-- Deliberately NOT admin, and deliberately overlapping only partially, so the
+-- two accounts exercise the permission filter in juiz/index.php rather than
+-- both seeing everything: juiz1 gets Manobrabilidade/Abastecimento/Voltas,
+-- juiz2 gets Super Prime/Grid, both share Penalidades and the Enduro.
+--
+-- juiz1's row is ALSO written by 06-contagem.sql, which makes juiz1 the
+-- controller of the Enduro (26BR_END, a laps prova) and uses ON DUPLICATE KEY
+-- UPDATE on the unique username. That statement replaces the whole
+-- permissions column, so whichever file runs last decides what juiz1 may do.
+-- Keep the two rows identical: the grants below include 26BR_END, and the row
+-- in 06-contagem.sql includes the four score-entry grants from here.
+-- Smoke check 29 fails when they drift apart.
+INSERT INTO `user` VALUES (2,'juiz1','| index | 26BR_END | 26BR_MAN | 26BR_ABS | 26BR_VLT | 26BR_PEN |',NULL);
+INSERT INTO `user` VALUES (3,'juiz2','| index | 26BR_END | 26BR_SPP | 26BR_GRI | 26BR_PEN |',NULL);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
