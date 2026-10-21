@@ -92,7 +92,7 @@ $inventada = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao
 T::ok('an unrecognised funcao is an error', in_array(Problema::FUNCAO_DESCONHECIDA, $codigos($inventada), true));
 T::same(null, $inventada->funcao, 'and produces no nearest-match guess');
 
-foreach (['fiscal', 'Fiscal', 'engenheiro'] as $obsoleta) {
+foreach (['engenheiro', 'Engenheiro'] as $obsoleta) {
     $linha = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => $obsoleta, 'documento' => $cpfLivre]);
     T::ok("\"$obsoleta\" is accepted", $linha->funcao !== null);
     T::ok("\"$obsoleta\" raises a warning", in_array(Problema::FUNCAO_OBSOLETA, $codigos($linha), true));
@@ -101,6 +101,13 @@ foreach (['fiscal', 'Fiscal', 'engenheiro'] as $obsoleta) {
 
     $linha->resolver(Problema::FUNCAO_OBSOLETA, Problema::CONFIRMAR);
     T::ok("\"$obsoleta\" commits once confirmed", $linha->podeGravar());
+}
+
+// `fiscal` is an active role: accepted outright, no obsolescence warning.
+foreach (['fiscal', 'Fiscal'] as $ativa) {
+    $linha = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => $ativa, 'documento' => $cpfLivre]);
+    T::same('fiscal', $linha->funcao, "\"$ativa\" resolves to fiscal");
+    T::ok("\"$ativa\" raises no obsolescence warning", !in_array(Problema::FUNCAO_OBSOLETA, $codigos($linha), true));
 }
 
 // --- documents -------------------------------------------------------------------
