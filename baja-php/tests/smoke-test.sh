@@ -73,6 +73,23 @@ check_in "anonymous /juiz/index.php redirects" "$status" 200
 status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/remote.php")
 check_in "anonymous /juiz/remote.php degrades gracefully" "$status" 200 400 403
 
+# 5b. Timers. timer.php is the one juiz page meant to work with no session:
+# it must render the key form rather than redirect to login, a seeded access
+# key must reach the timer, the read-only key must reach it without being able
+# to act, and the sync endpoint must refuse a bad key.
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer.php")
+check_in "anonymous /juiz/timer.php renders key form" "$status" 200
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer_action.php?k=DEVTM2")
+check_in "anonymous /juiz/timer_action.php with seeded key" "$status" 200
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer_action.php?k=DEVVW2")
+check_in "anonymous /juiz/timer_action.php with seeded read-only key" "$status" 200
+status=$(curl -s -o /dev/null -w "%{http_code}" -X POST --data '{"acoes":[{"id":"smoke","acao":"parar","at":0,"state":{"status":"stopped","step":0}}]}' "$BASE_JUIZ/timer_action.php?k=DEVVW2")
+check_in "read-only key cannot post actions" "$status" 403
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer_action.php?k=XXXXXX")
+check_in "anonymous /juiz/timer_action.php with bad key" "$status" 403
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer_action.php?id=1")
+check_in "anonymous /juiz/timer_action.php by id" "$status" 403
+
 # 6. Login flow. The form posts to login.php?act=login (NOT bare login.php —
 # the act=login query-string parameter is what triggers the auth branch).
 # All seeded test users share password '123456'.
