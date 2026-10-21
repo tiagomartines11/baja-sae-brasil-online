@@ -216,13 +216,14 @@ final class Template
      */
     public static function printFooter(): void
     {
+        $privacyNoticeUrl = Config::privacyNoticeUrl();
         ?>
     <p class="muted">
         Encontrou algum problema com um certificado?
         <a href="/requerimento">Abra um requerimento</a>.
-        <?php if (Config::PRIVACY_NOTICE_URL !== ''): ?>
+        <?php if ($privacyNoticeUrl !== ''): ?>
             Consulte também o
-            <a href="<?= htmlspecialchars(Config::PRIVACY_NOTICE_URL, ENT_QUOTES, 'UTF-8') ?>">Aviso de Privacidade</a>.
+            <a href="<?= htmlspecialchars($privacyNoticeUrl, ENT_QUOTES, 'UTF-8') ?>">Aviso de Privacidade</a>.
         <?php endif; ?>
     </p>
 </div>

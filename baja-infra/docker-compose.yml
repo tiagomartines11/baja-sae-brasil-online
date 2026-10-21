@@ -134,6 +134,10 @@ services:
       # the check is skipped and said to be skipped, not that the form breaks.
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
+      # The Aviso de Privacidade the certificate pages and the confirmation
+      # email link to. Empty hides the link; anything that is not an absolute
+      # https:// URL is ignored and logged. See .env.example.
+      PRIVACY_NOTICE_URL: ${PRIVACY_NOTICE_URL}
       # Outbound SMTP for Baja\Util\Mailer. The image has no sendmail, so this
       # is the only mail path. With SMTP_HOST unset the form still works and
       # says plainly that no confirmation is coming.

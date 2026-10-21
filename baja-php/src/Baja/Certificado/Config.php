@@ -2,6 +2,8 @@
 
 namespace Baja\Certificado;
 
+use Baja\Util\Env;
+
 /**
  * Settings for the public certificate pages.
  */
@@ -23,14 +25,77 @@ final class Config
      */
 
     /**
-     * Where the Aviso de Privacidade lives.
+     * Whether the log line about a rejected PRIVACY_NOTICE_URL has gone out.
      *
-     * Empty until there is one to link to — the repository contains no privacy
-     * notice today, and writing one is not a code change. The pages link it
-     * when this is set and say nothing when it is not, rather than shipping a
-     * link to a 404. Filling this in is a one-line edit.
+     * Once per process, not once per call: the footer is rendered on every
+     * page, and a misconfiguration that writes a line per page view buries
+     * everything else in the log without saying anything new.
      */
-    public const PRIVACY_NOTICE_URL = '';
+    private static bool $privacyNoticeUrlRejected = false;
+
+    /**
+     * Where the Aviso de Privacidade lives, or '' when there is nothing to link.
+     *
+     * Read from the PRIVACY_NOTICE_URL environment variable, which
+     * baja-infra/docker-compose.yml passes through and .env.example documents.
+     * It is not written here because the notice is SAE BRASIL's document,
+     * published on SAE BRASIL's own site: where it lives is a fact about the
+     * deployment, not about this code. Staging and production each point at
+     * the published notice, a dev stack usually has nothing set, and moving
+     * the document should not need a release.
+     *
+     * Empty means no link. The three places that print it — the footer of
+     * every certificate page, the /requerimento form and the confirmation
+     * email — say nothing about a notice rather than link to a 404.
+     *
+     * Only an absolute https:// URL is accepted. Anything else is treated as
+     * empty, and the log says so once per process. This value lands in an
+     * href on a public page and in the body of an email sent to an address
+     * nobody has verified, so a wrong value is not a broken link: a
+     * javascript: scheme is script running on the certificate pages, a
+     * relative path is a link into this site that goes nowhere, and a plain
+     * http:// URL sends a participant to a privacy notice over a connection
+     * anyone on the path can rewrite. Dropping the link is the failure that
+     * costs nothing, and the log line is how the mistake gets found.
+     */
+    public static function privacyNoticeUrl(): string
+    {
+        $url = trim((string) Env::get('PRIVACY_NOTICE_URL', ''));
+
+        if ($url === '') {
+            return '';
+        }
+
+        if (self::isAbsoluteHttpsUrl($url)) {
+            return $url;
+        }
+
+        if (!self::$privacyNoticeUrlRejected) {
+            self::$privacyNoticeUrlRejected = true;
+            error_log(
+                'Certificado\Config: PRIVACY_NOTICE_URL is not an absolute https:// URL; '
+                . 'no Aviso de Privacidade will be linked. Value: ' . $url
+            );
+        }
+
+        return '';
+    }
+
+    /**
+     * Whether a value is a URL with an https scheme and a host.
+     *
+     * filter_var alone is not enough: it accepts any scheme it knows, and
+     * http:// is one of them.
+     */
+    private static function isAbsoluteHttpsUrl(string $url): bool
+    {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+
+        return strtolower((string) parse_url($url, PHP_URL_SCHEME)) === 'https'
+            && (string) parse_url($url, PHP_URL_HOST) !== '';
+    }
 
     /**
      * The one message every failure returns.

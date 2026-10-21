@@ -114,6 +114,22 @@ final class Aviso
      */
     public static function confirmarAoParticipante(CertificadoRequerimento $requerimento): bool
     {
+        return Mailer::enviar(
+            [(string) $requerimento->getEmail()],
+            'Recebemos o seu requerimento sobre certificados, protocolo ' . $requerimento->getRequerimentoId(),
+            self::textoDoRecibo($requerimento)
+        );
+    }
+
+    /**
+     * The receipt's body, as the participant will read it.
+     *
+     * Apart from the send so that it can be read without a relay: what this
+     * says and what it leaves out is the part worth a test, and Mailer hands
+     * back nothing but whether the relay accepted the message.
+     */
+    public static function textoDoRecibo(CertificadoRequerimento $requerimento): string
+    {
         $linhas = [
             'Recebemos o seu requerimento sobre certificados SAE BRASIL.',
             '',
@@ -141,16 +157,14 @@ final class Aviso
             'seu endereço por engano.',
         ];
 
-        if (Config::PRIVACY_NOTICE_URL !== '') {
+        $privacyNoticeUrl = Config::privacyNoticeUrl();
+
+        if ($privacyNoticeUrl !== '') {
             $linhas[] = '';
-            $linhas[] = 'Aviso de Privacidade: ' . Config::PRIVACY_NOTICE_URL;
+            $linhas[] = 'Aviso de Privacidade: ' . $privacyNoticeUrl;
         }
 
-        return Mailer::enviar(
-            [(string) $requerimento->getEmail()],
-            'Recebemos o seu requerimento sobre certificados, protocolo ' . $requerimento->getRequerimentoId(),
-            implode("\n", $linhas) . "\n"
-        );
+        return implode("\n", $linhas) . "\n";
     }
 
     /**

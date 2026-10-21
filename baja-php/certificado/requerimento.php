@@ -483,9 +483,10 @@ Template::printHeader('Abrir um requerimento - Certificados SAE BRASIL');
                         Para pedir acesso, correção ou exclusão dos seus dados de contato,
                         responda àquela confirmação citando o protocolo.
                         Certificados válidos já emitidos permanecem verificáveis.
-                        <?php if (Config::PRIVACY_NOTICE_URL !== ''): ?>
+                        <?php $privacyNoticeUrl = Config::privacyNoticeUrl(); ?>
+                        <?php if ($privacyNoticeUrl !== ''): ?>
                             Consulte o
-                            <a href="<?= $e(Config::PRIVACY_NOTICE_URL) ?>">Aviso de Privacidade</a>.
+                            <a href="<?= $e($privacyNoticeUrl) ?>">Aviso de Privacidade</a>.
                         <?php endif; ?>
                     </p>
                 </div>
