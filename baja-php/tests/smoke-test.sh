@@ -296,6 +296,125 @@ status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
     "$BASE_JUIZ/contagem_sync.php")
 check_in "POST /contagem_sync.php without a token is refused" "$status" 401
 
+# 18. Security regression test for tournament_entry.php
+#     (hotfix/tournament-permission).
+#
+# What the page does: tournament_entry.php is the judge page for bracket
+# events (for example the SPR tournament). Two of its request parameters
+# CHANGE results in the database:
+#   ?p=<prova>&reset=<match>                  -> clears the winner of a match
+#   ?p=<prova>&match=<match>&setwinner=<team> -> records a winner
+# Both are plain GET links, so simply opening the URL triggers them.
+#
+# The bug: the page used to act on those parameters BEFORE calling
+# Session::permissionCheck(). On judge pages that call is the ONLY thing
+# that notices "nobody is logged in" and redirects to login.php. So an
+# anonymous visitor who typed the URL could rewrite competition results.
+# The fix moved the permission check to the top of the page.
+#
+# What this test simulates: an attacker with no session. The cookie jar is
+# NOT passed to curl, so both requests below are anonymous.
+#
+# What must happen: each request is answered with a redirect to login.php
+# (HTTP 302), and the tournament table is identical before and after. The
+# table must not change because an anonymous visitor has no right to touch
+# results at all. If it does change, the permission check is running too
+# late (or not at all) and the vulnerability is back.
+#
+# To make the test meaningful we first insert one throw-away match row.
+# Without a real row the vulnerable code would crash before writing (it
+# calls ->setWinner() on a null object) and the test would pass for the
+# wrong reason. The row lives under event 23SU / prova SPR, which the dev
+# seed (baja-infra/mysql/init/05-seed-baja-resultados.sql) always has, and
+# uses teams 5 and 18 from that same event. match_id 9999 is far above any
+# real match so it cannot collide with seeded data. It is deleted at the end.
+#
+# The MySQL root password is read from baja-infra/.env (dev default:
+# devrootpass). Export MYSQL_ROOT_PASSWORD=... to override.
+INFRA_ENV="$(dirname "$0")/../../baja-infra/.env"
+if [[ -z "${MYSQL_ROOT_PASSWORD:-}" && -f "$INFRA_ENV" ]]; then
+    MYSQL_ROOT_PASSWORD=$(grep -E '^MYSQL_ROOT_PASSWORD=' "$INFRA_ENV" | tail -n 1 | cut -d= -f2-)
+fi
+MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-devrootpass}"
+
+# Runs one SQL statement against the app database inside the mysql
+# container. -N drops the column-name header and -B prints tab-separated
+# rows, so the output is stable enough to compare as plain text.
+tournament_sql() {
+    docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" baja-mysql \
+        mysql -N -B -uroot baja_resultados -e "$1"
+}
+
+TEST_EVENT="23SU"
+TEST_PROVA="SPR"
+TEST_MATCH=9999
+TEST_TEAM1=5
+TEST_TEAM2=18
+
+# Remove any leftover from an earlier run that was interrupted, then insert
+# the throw-away row with team 18 already recorded as the winner, so that a
+# successful "reset" would visibly null it out.
+tournament_sql "DELETE FROM tournament WHERE evento_id='$TEST_EVENT' AND prova_id='$TEST_PROVA' AND match_id=$TEST_MATCH;"
+if tournament_sql "INSERT INTO tournament (evento_id, prova_id, match_id, round, equipe1_id, equipe2_id, winner, dados) VALUES ('$TEST_EVENT', '$TEST_PROVA', $TEST_MATCH, '0', '$TEST_TEAM1', '$TEST_TEAM2', $TEST_TEAM2, NULL);"; then
+    green "PASS  seeded throw-away tournament row $TEST_EVENT/$TEST_PROVA/$TEST_MATCH"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  could not seed tournament row (is baja-mysql up and the dev DB seeded?)"
+    FAIL=$((FAIL + 1))
+fi
+
+# Snapshot: every row of the table, in a fixed order. An empty snapshot
+# means we could not talk to the database, which is a failure in itself
+# (otherwise "nothing changed" would be trivially true).
+snapshot_sql="SELECT * FROM tournament ORDER BY evento_id, prova_id, match_id;"
+before_snapshot=$(tournament_sql "$snapshot_sql")
+if [[ -z "$before_snapshot" ]]; then
+    red "FAIL  could not read the tournament table before the requests"
+    FAIL=$((FAIL + 1))
+fi
+
+# Anonymous "reset" request. The /23SU/ prefix in the URL pins the event so
+# the page looks at the rows we seeded. curl prints two things: the HTTP
+# status and the Location header it would have followed (the page sends
+# "Location: login.php"; curl resolves that to an absolute URL for us).
+reset_url="$BASE_JUIZ/$TEST_EVENT/tournament_entry.php?p=$TEST_PROVA&reset=$TEST_MATCH"
+read -r status location < <(curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "$reset_url")
+check_in "anonymous tournament_entry.php?reset= is redirected" "$status" 302
+if [[ "$location" == */login.php ]]; then
+    green "PASS  anonymous reset= redirected to login (Location='$location')"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  anonymous reset= did not redirect to login.php (Location='$location')"
+    FAIL=$((FAIL + 1))
+fi
+
+# Anonymous "setwinner" request, trying to declare team 5 the winner.
+setwinner_url="$BASE_JUIZ/$TEST_EVENT/tournament_entry.php?p=$TEST_PROVA&match=$TEST_MATCH&setwinner=$TEST_TEAM1"
+read -r status location < <(curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "$setwinner_url")
+check_in "anonymous tournament_entry.php?setwinner= is redirected" "$status" 302
+if [[ "$location" == */login.php ]]; then
+    green "PASS  anonymous setwinner= redirected to login (Location='$location')"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  anonymous setwinner= did not redirect to login.php (Location='$location')"
+    FAIL=$((FAIL + 1))
+fi
+
+# The decisive check: the table must be identical. A redirect alone proves
+# nothing, because the vulnerable code ALSO redirected, right after writing.
+after_snapshot=$(tournament_sql "$snapshot_sql")
+if [[ -n "$before_snapshot" && "$before_snapshot" == "$after_snapshot" ]]; then
+    green "PASS  tournament table unchanged by anonymous reset=/setwinner= requests"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  tournament table CHANGED after anonymous requests: results can be edited without logging in"
+    FAIL=$((FAIL + 1))
+    tournament_sql "SELECT * FROM tournament WHERE evento_id='$TEST_EVENT' AND prova_id='$TEST_PROVA' AND match_id=$TEST_MATCH;"
+fi
+
+# Clean up the throw-away row so the dev DB looks like it did before.
+tournament_sql "DELETE FROM tournament WHERE evento_id='$TEST_EVENT' AND prova_id='$TEST_PROVA' AND match_id=$TEST_MATCH;"
+
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"
 [[ $FAIL -eq 0 ]] || exit 1

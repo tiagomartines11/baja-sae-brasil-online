@@ -11,6 +11,7 @@ use Baja\Session;
 if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
+Session::permissionCheck($_page);
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
 function checkBlocked($match, $currentEventId, $_page) {
@@ -155,7 +156,6 @@ if (isset($_REQUEST['setwinner']) && isset($_REQUEST['match'])) {
 
 
 
-Session::permissionCheck($_page);
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
