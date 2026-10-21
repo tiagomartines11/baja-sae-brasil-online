@@ -122,9 +122,14 @@ T::ok('a row MySQL refuses aborts the commit', $explodiu);
 T::same(0, $contar(), 'and the batch leaves zero rows behind');
 
 // A batch that is not fully resolved is refused before anything is written.
+// `engenheiro` is the role used here because it is the one still marked
+// deprecated in Funcao::ROLES, so the row carries an unanswered
+// FUNCAO_OBSOLETA warning. (`fiscal` was the example until it became an
+// active role again; an active role raises nothing and the batch would just
+// be written.)
 $cleanup();
 $naoResolvida = $validador->validar([
-    ['evento' => $evA, 'nome' => $prefix . ' Fabio Lima Testeson', 'funcao' => 'fiscal', 'documento' => synthetic_cpf('777888999')],
+    ['evento' => $evA, 'nome' => $prefix . ' Fabio Lima Testeson', 'funcao' => 'engenheiro', 'documento' => synthetic_cpf('777888999')],
 ]);
 $recusou = false;
 try {

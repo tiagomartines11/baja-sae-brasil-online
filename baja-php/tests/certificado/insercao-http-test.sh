@@ -243,11 +243,14 @@ echo "--- a batch committed in part ---"
 lote_csrf=$(docker exec "$APP" php -r 'echo hash_hmac("sha256", "certificado-lote", "'"$PREFIX_COM"'");')
 
 # Two rows that are ready and two that are not: a deprecated funcao nobody has
-# confirmed, and a funcao that does not exist.
+# confirmed, and a funcao that does not exist. The deprecated one is
+# `engenheiro`, the only role still marked obsoleta in Funcao::ROLES; `fiscal`
+# was the example until it became active again, which made row three ready and
+# the counts below wrong.
 # Documents of their own. Reusing one that another fixture already holds makes
 # these rows name conflicts instead, which is correct behaviour and not what
 # this section is testing. Check digits derived, never real.
-colagem=$(printf '22BR\tZZHttp Parcial Um Testeson\tcompetidor\t81818181800\t\n22BR\tZZHttp Parcial Dois Testeson\tjuiz\t\tZZ777888\n22BR\tZZHttp Parcial Tres Testeson\tfiscal\t82828282899\t\n22BR\tZZHttp Parcial Quatro Testeson\tnaoexiste\t\tZZ777999\n')
+colagem=$(printf '22BR\tZZHttp Parcial Um Testeson\tcompetidor\t81818181800\t\n22BR\tZZHttp Parcial Dois Testeson\tjuiz\t\tZZ777888\n22BR\tZZHttp Parcial Tres Testeson\tengenheiro\t82828282899\t\n22BR\tZZHttp Parcial Quatro Testeson\tnaoexiste\t\tZZ777999\n')
 
 lote_post() { # etapa lote_alvo
     curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baja_u=2" -X POST \
@@ -326,7 +329,9 @@ contains "and a role filter" 'name="funcoes[]"' "$consulta"
 contains "and a name box" 'name="nome"' "$consulta"
 contains "and a document box" 'name="documento"' "$consulta"
 contains "with a cpf/passport/both selector" 'name="tipo_documento"' "$consulta"
-contains "deprecated roles are searchable even though they are not issuable" 'value="fiscal"' "$consulta"
+# `engenheiro` is the role still marked deprecated; the lookup must list it
+# because certificates already issued with it exist and must stay findable.
+contains "deprecated roles are searchable even though they are not issuable" 'value="engenheiro"' "$consulta"
 
 # A search posts. A document number in a query string is a document number in
 # the access log, which is the thing the certificate work package exists to

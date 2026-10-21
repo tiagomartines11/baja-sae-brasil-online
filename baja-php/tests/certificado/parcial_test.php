@@ -36,10 +36,16 @@ $validador = new Validador();
 $gravador  = new Gravador(test_user_id());
 $mapa      = new Mapeamento([0 => 'evento', 1 => 'nome', 2 => 'funcao', 3 => 'cpf', 4 => 'passaporte']);
 
+// Two rows that are ready and two that are not: one with a deprecated funcao
+// nobody has confirmed (a warning), one with a funcao that does not exist (an
+// error). `engenheiro` is the deprecated one because it is the only role still
+// marked `obsoleta` in Funcao::ROLES; `fiscal` played that part until it was
+// made active again, which turned row 3 into a ready row and broke the split
+// below.
 $celulas = [
     [$ev, $prefix . ' Ana Beatriz Testeson',  'competidor', synthetic_cpf('313131313'), ''],
     [$ev, $prefix . ' Bruno Carlos Testeson', 'juiz',       '',                          'AB999111'],
-    [$ev, $prefix . ' Carla Duarte Testeson', 'fiscal',     synthetic_cpf('414141414'), ''],
+    [$ev, $prefix . ' Carla Duarte Testeson', 'engenheiro', synthetic_cpf('414141414'), ''],
     [$ev, $prefix . ' Diego Esteves Testeson', 'inventada', synthetic_cpf('515151515'), ''],
 ];
 $brutas = array_map(static fn (array $c): array => $mapa->aplicar($c), $celulas);

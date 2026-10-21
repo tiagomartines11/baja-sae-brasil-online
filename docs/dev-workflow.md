@@ -67,6 +67,26 @@ Before requesting review:
       All three use synthetic documents with derived check digits, and
       remove their own fixtures. This repository is public: no real CPF,
       name, or dump belongs in a fixture.
+
+      **A fresh dev database needs the Propel migrations first.** The seed
+      in `baja-infra/mysql/init/` records as applied only the migrations
+      whose effect is already in its DDL; the certificate ones (the
+      `participantes` audit and annulment columns, `certificado_requerimento`)
+      are not, so after `docker compose down -v && docker compose up -d`
+      `run.php` dies on its first insert with "Unknown column 'criado_por'".
+      Run, from `baja-infra/`:
+
+      ```
+      docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel migration:migrate \
+          --connection="resultados=mysql:host=mysql;dbname=baja_resultados;user=resultados;password=devresultados"
+      ```
+
+      (`devresultados` is the dev `MYSQL_RESULTADOS_PASSWORD` from
+      `.env.example`; use yours if you changed it.) The migrations that are
+      already in the seed report nothing to do. Also run `run.php` and
+      `insercao-http-test.sh` one after the other, not at the same time:
+      both create partial batches with overlapping synthetic documents and
+      make each other's counts wrong.
 - [ ] If you edited `baja-php/schema.xml`, the generated `Base*` classes,
       table maps and `src/loadDatabase.php` were regenerated and committed:
       `docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build`.

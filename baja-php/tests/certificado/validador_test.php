@@ -325,7 +325,10 @@ T::ok('an unknown event is an error', in_array(Problema::EVENTO_DESCONHECIDO, $c
 // The review screen posts these back, so a value that is not one of the ones
 // offered has to bounce off rather than be recorded.
 
-$naoOferecida = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'fiscal', 'documento' => $cpfLivre]);
+// The row needs a FUNCAO_OBSOLETA warning to answer, so it takes `engenheiro`,
+// the one role still marked deprecated in Funcao::ROLES (`fiscal`, the former
+// example, is active again and would carry no warning to resolve).
+$naoOferecida = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => 'engenheiro', 'documento' => $cpfLivre]);
 $naoOferecida->resolver(Problema::FUNCAO_OBSOLETA, Problema::IGNORAR);
 T::same(null, $naoOferecida->resolucao(Problema::FUNCAO_OBSOLETA), 'a resolution that was not offered is refused');
 T::ok('and the row still cannot be written', !$naoOferecida->podeGravar());
