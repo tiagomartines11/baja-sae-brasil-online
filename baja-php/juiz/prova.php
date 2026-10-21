@@ -130,6 +130,7 @@ Template::printHeader("Detalhes de Prova", false);
                 <tr style="height: 50px">
                     <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                         <span style="float:left"><a href="admin_provas.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
+                        <span style="float:right"><a href="ajuda_prova.php" target="_blank" style="color: white; font-size: 12px;">Ajuda&nbsp;</a></span>
                         <span style="font-size: 28px;"><?= $nova?'Nova Prova':$prova->getNome() ?></span> <br />
                     </th>
                 </tr>
@@ -148,7 +149,7 @@ Template::printHeader("Detalhes de Prova", false);
                     <td><input style="width:700px;" type="text" name="nome" value="<?= $nova?'':$prova->getNome() ?>" /></td>
                 </tr>
                 <tr>
-                    <td rowspan="2">Parâmetros</td>
+                    <td rowspan="2">Parâmetros<br /><a href="ajuda_prova.php" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
                     <td>
                         <?php if (!$nova) { ?>
                         <button type="button" class="bkBotao bkSelected" id="bkAtual" onclick="restoreAtual()">Código Atual</button><br/><br/>

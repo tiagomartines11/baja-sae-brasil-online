@@ -121,6 +121,7 @@ Template::printHeader("Detalhes de Resultado", false);
                 <tr style="height: 50px">
                     <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                         <span style="float:left"><a href="admin_resultados.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
+                        <span style="float:right"><a href="ajuda_resultado.php" target="_blank" style="color: white; font-size: 12px;">Ajuda&nbsp;</a></span>
                         <span style="font-size: 28px;"><?= $novo?'Novo Resultado':$resultado->getNome(); ?></span> <br />
                     </th>
                 </tr>
@@ -139,11 +140,11 @@ Template::printHeader("Detalhes de Resultado", false);
                     <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':$resultado->getNome() ?>" /></td>
                 </tr>
                 <tr>
-                    <td>Inputs</td>
+                    <td>Inputs<br /><a href="ajuda_resultado.php#inputs" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
                     <td><input style="width:700px;" type="text" name="inputs" value="<?= $novo?'':implode(", ",$resultado->getInputs()) ?>" /></td>
                 </tr>
                 <tr>
-                    <td rowspan="2">Colunas</td>
+                    <td rowspan="2">Colunas<br /><a href="ajuda_resultado.php#colunas" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
                     <td>
                         <?php if (!$novo) { ?>
                         <button type="button" class="bkBotao bkSelected" id="bkAtual" onclick="restoreAtual()">Código Atual</button><br/><br/>
