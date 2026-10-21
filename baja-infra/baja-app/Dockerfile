@@ -1,4 +1,6 @@
-FROM php:8.3-fpm-alpine
+# An exact patch tag, because the deploy builds without --pull: a floating
+# tag such as 8.3-fpm-alpine would reuse whatever base image the host cached.
+FROM php:8.3.36-fpm-alpine
 
 # Install runtime deps + build deps for PHP extensions.
 # Build deps are tagged via --virtual .build-deps so we can remove them after.

@@ -6,7 +6,10 @@
 # to phpBB 3.4 first, verify in prod for a week, then bump Formula). With a
 # shared base image, both would have to move together unless we played
 # careful version-pinning games.
-FROM php:8.3-fpm-alpine
+#
+# An exact patch tag, because the deploy builds without --pull: a floating
+# tag such as 8.3-fpm-alpine would reuse whatever base image the host cached.
+FROM php:8.3.36-fpm-alpine
 
 # phpBB version - matched to production
 ARG PHPBB_VERSION=3.3.15
