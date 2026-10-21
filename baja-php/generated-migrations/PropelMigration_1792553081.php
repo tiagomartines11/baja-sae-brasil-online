@@ -1,39 +1,101 @@
--- Lap counting (contagem de voltas): creates the contagem_* tables.
---
--- Apply once to an existing baja_resultados database:
---     mysql -u <user> -p baja_resultados < 2026-contagem.sql
---
--- This file CREATES TABLES, and adds the columns listed under "Columns
--- added later" to tables that already exist. Safe to run again: every
--- statement is CREATE TABLE IF NOT EXISTS or an ADD COLUMN that checks
--- information_schema first, and no row is touched. Nothing else alters a
--- contagem_* table that already exists: a database that got these tables
--- from a much earlier version of this file must drop them first.
---
--- The definitions mirror baja-php/schema.xml, which stays the source of
--- truth for the Propel classes. If one changes, change the other.
--- baja-infra/mysql/init/06-contagem.sql carries the same statements for a
--- fresh dev database (everything between the two "DDL" marker lines is
--- copied there verbatim).
---
--- Character sets. The tables are utf8mb4, like the connection. Two kinds of
--- column are deliberately something else:
---   * evento_id and prova_id are latin1, because they are foreign keys to
---     `prova`, whose columns are latin1, and MySQL refuses a foreign key
---     between columns of different character sets. CHECK THIS before
---     applying to production: `SHOW CREATE TABLE prova`. If prova is not
---     latin1 there, change "CHARACTER SET latin1" below to match it.
---   * tokens and uuids are ascii: they are hex and dashes, compared byte by
---     byte, and an ascii index is a quarter of the size.
---
--- Deleting a prova. The raw record of a race (sources, entries, race-control
--- events, decisions) is ON DELETE RESTRICT towards `prova`: deleting a prova
--- that has lap counting data fails instead of silently erasing the evidence
--- a protest would need. Remove the lap counting data on purpose first.
---
--- Times are BIGINT milliseconds since the Unix epoch (UTC).
+<?php
+use Propel\Generator\Manager\MigrationManager;
 
--- >>> DDL
+/**
+ * Written by hand, not taken from migration:diff, for the reason
+ * PropelMigration_1787052969 records: the diff also emits the drift that
+ * predates this branch, and this migration has no business altering other
+ * tables.
+ *
+ * The lap counting tables exactly as they first shipped (commit 90ead59, the
+ * hand-run baja-infra/mysql/migrations/2026-contagem.sql of that day). Every
+ * column added since is PropelMigration_1792553082, so that one pair of
+ * migrations brings either kind of server to the same schema:
+ *   - a database that already has these tables from that file (staging):
+ *     every statement here is CREATE TABLE IF NOT EXISTS and does nothing,
+ *     and _1792553082 adds the newer columns;
+ *   - a database that has none (production): this creates them, and
+ *     _1792553082 then alters them like any other.
+ * A database whose tables are NEWER than 90ead59 (one that ran a later copy
+ * of that file, with its "Columns added later" block) must record
+ * _1792553082 as applied instead of running it: see docs/contagem.md,
+ * Deploy notes.
+ *
+ * Character sets. The tables are utf8mb4, like the connection. evento_id and
+ * prova_id are latin1 because they are foreign keys to `prova`, whose
+ * columns are latin1 in every database descended from the production dump,
+ * and MySQL refuses a foreign key between columns of different character
+ * sets (error 3780). Tokens and uuids are ascii: hex and dashes, compared
+ * byte by byte.
+ *
+ * The raw record of a race (sources, entries, race-control events,
+ * decisions) is ON DELETE RESTRICT towards `prova`, so deleting a prova that
+ * has lap counting data fails instead of erasing the evidence a protest
+ * would need. contagem_arquivo is where "Zerar corrida" keeps the rows it
+ * deletes, as JSON, and has no foreign keys on purpose.
+ *
+ * The SQL below carries no comments: Propel splits it on semicolons and
+ * tracks quotes while doing so, and an apostrophe in a comment would throw
+ * the split off.
+ *
+ * Data object containing the SQL and PHP code to migrate the database
+ * up to version 1792553081.
+ */
+class PropelMigration_1792553081{
+    /**
+     * @var string
+     */
+    public $comment = 'contagem: the lap counting tables as first shipped (90ead59)';
+
+    /**
+     * @param \Propel\Generator\Manager\MigrationManager $manager
+     *
+     * @return null|false|void
+     */
+    public function preUp(MigrationManager $manager)
+    {
+        // add the pre-migration code here
+    }
+
+    /**
+     * @param \Propel\Generator\Manager\MigrationManager $manager
+     *
+     * @return null|false|void
+     */
+    public function postUp(MigrationManager $manager)
+    {
+        // add the post-migration code here
+    }
+
+    /**
+     * @param \Propel\Generator\Manager\MigrationManager $manager
+     *
+     * @return null|false|void
+     */
+    public function preDown(MigrationManager $manager)
+    {
+        // add the pre-migration code here
+    }
+
+    /**
+     * @param \Propel\Generator\Manager\MigrationManager $manager
+     *
+     * @return null|false|void
+     */
+    public function postDown(MigrationManager $manager)
+    {
+        // add the post-migration code here
+    }
+
+    /**
+     * Get the SQL statements for the Up migration
+     *
+     * @return array list of the SQL strings to execute for the Up migration
+     *               the keys being the datasources
+     */
+    public function getUpSQL(): array
+    {
+        $connection_resultados = <<< 'EOT'
 CREATE TABLE IF NOT EXISTS `contagem_fonte` (
   `fonte_id` int NOT NULL AUTO_INCREMENT,
   `evento_id` char(4) CHARACTER SET latin1 NOT NULL,
@@ -44,10 +106,6 @@ CREATE TABLE IF NOT EXISTS `contagem_fonte` (
   `ativa` tinyint(1) NOT NULL DEFAULT '1',
   `ordem` int NOT NULL DEFAULT '0',
   `desativada_em_ms` bigint DEFAULT NULL,
-  `papel` varchar(12) NOT NULL DEFAULT 'votante',
-  `papel_desde_ms` bigint DEFAULT NULL,
-  `periodos_fora` text,
-  `imagem_base_url` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`fonte_id`),
   KEY `contagem_fonte_prova_idx` (`evento_id`,`prova_id`),
   CONSTRAINT `contagem_fonte_prova` FOREIGN KEY (`evento_id`, `prova_id`) REFERENCES `prova` (`evento_id`, `prova_id`) ON DELETE RESTRICT ON UPDATE CASCADE
@@ -86,7 +144,7 @@ CREATE TABLE IF NOT EXISTS `contagem_passagem` (
   `fonte_id` int NOT NULL,
   `dispositivo_id` int NOT NULL,
   `uuid_cliente` char(36) CHARACTER SET ascii NOT NULL,
-  `equipe_numero` int DEFAULT NULL,
+  `equipe_numero` int NOT NULL,
   `ts_ms` bigint NOT NULL,
   `qualidade_tempo` varchar(12) NOT NULL DEFAULT 'exato',
   `ts_dispositivo_ms` bigint NOT NULL,
@@ -96,13 +154,10 @@ CREATE TABLE IF NOT EXISTS `contagem_passagem` (
   `digitacao_ms` int DEFAULT NULL,
   `modo_entrada` varchar(12) NOT NULL,
   `recebido_em_ms` bigint NOT NULL,
-  `imagem_ref` varchar(64) CHARACTER SET ascii DEFAULT NULL,
-  `confianca` decimal(4,3) DEFAULT NULL,
   PRIMARY KEY (`passagem_id`),
   UNIQUE KEY `contagem_passagem_fonte_uuid_UNIQUE` (`fonte_id`,`uuid_cliente`),
   KEY `contagem_passagem_fonte_ts_idx` (`fonte_id`,`ts_ms`),
   KEY `contagem_passagem_equipe_ts_idx` (`equipe_numero`,`ts_ms`),
-  KEY `contagem_passagem_equipe_fonte_idx` (`equipe_numero`,`fonte_id`,`ts_ms`),
   KEY `contagem_passagem_dispositivo_idx` (`dispositivo_id`),
   CONSTRAINT `contagem_passagem_fonte` FOREIGN KEY (`fonte_id`) REFERENCES `contagem_fonte` (`fonte_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `contagem_passagem_dispositivo` FOREIGN KEY (`dispositivo_id`) REFERENCES `contagem_dispositivo` (`dispositivo_id`) ON DELETE CASCADE ON UPDATE CASCADE
@@ -135,7 +190,6 @@ CREATE TABLE IF NOT EXISTS `contagem_decisao` (
   `prova_id` char(3) CHARACTER SET latin1 NOT NULL,
   `tipo` varchar(16) NOT NULL,
   `passagem_id` bigint DEFAULT NULL,
-  `passagem_alvo_id` bigint DEFAULT NULL,
   `fonte_id` int DEFAULT NULL,
   `equipe_numero` int DEFAULT NULL,
   `ts_ms` bigint DEFAULT NULL,
@@ -174,9 +228,6 @@ CREATE TABLE IF NOT EXISTS `contagem_total` (
   CONSTRAINT `contagem_total_fonte` FOREIGN KEY (`fonte_id`) REFERENCES `contagem_fonte` (`fonte_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Where "Zerar corrida" puts the raw rows before deleting them: one row per
--- deleted row, kept as JSON. No foreign keys on purpose, so that nothing
--- can cascade into it. Nothing reads it; it exists to be queried by hand.
 CREATE TABLE IF NOT EXISTS `contagem_arquivo` (
   `arquivo_id` bigint NOT NULL AUTO_INCREMENT,
   `evento_id` char(4) CHARACTER SET latin1 NOT NULL,
@@ -188,60 +239,44 @@ CREATE TABLE IF NOT EXISTS `contagem_arquivo` (
   PRIMARY KEY (`arquivo_id`),
   KEY `contagem_arquivo_prova_idx` (`evento_id`,`prova_id`,`arquivado_em_ms`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
--- <<< DDL
+EOT;
 
--- Columns added later. A database that already holds the tables (one that
--- ran an event before these existed) gets them here; on a fresh database
--- the CREATE TABLE above already has them and each statement does nothing.
--- One column per statement, each checked on its own, so a second run, or a
--- run that stopped half-way, is harmless.
-SET @add_column = (SELECT IF(COUNT(*) = 0,
-    'ALTER TABLE `contagem_fonte` ADD COLUMN `papel` varchar(12) NOT NULL DEFAULT ''votante''', 'DO 0')
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_fonte' AND COLUMN_NAME = 'papel');
-PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
-SET @add_column = (SELECT IF(COUNT(*) = 0,
-    'ALTER TABLE `contagem_fonte` ADD COLUMN `papel_desde_ms` bigint DEFAULT NULL', 'DO 0')
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_fonte' AND COLUMN_NAME = 'papel_desde_ms');
-PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
-SET @add_column = (SELECT IF(COUNT(*) = 0,
-    'ALTER TABLE `contagem_fonte` ADD COLUMN `periodos_fora` text', 'DO 0')
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_fonte' AND COLUMN_NAME = 'periodos_fora');
-PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
-SET @add_column = (SELECT IF(COUNT(*) = 0,
-    'ALTER TABLE `contagem_fonte` ADD COLUMN `imagem_base_url` varchar(255) DEFAULT NULL', 'DO 0')
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_fonte' AND COLUMN_NAME = 'imagem_base_url');
-PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
-SET @add_column = (SELECT IF(COUNT(*) = 0,
-    'ALTER TABLE `contagem_passagem` ADD COLUMN `imagem_ref` varchar(64) CHARACTER SET ascii DEFAULT NULL', 'DO 0')
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_passagem' AND COLUMN_NAME = 'imagem_ref');
-PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
-SET @add_column = (SELECT IF(COUNT(*) = 0,
-    'ALTER TABLE `contagem_passagem` ADD COLUMN `confianca` decimal(4,3) DEFAULT NULL', 'DO 0')
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_passagem' AND COLUMN_NAME = 'confianca');
-PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
-SET @add_column = (SELECT IF(COUNT(*) = 0,
-    'ALTER TABLE `contagem_decisao` ADD COLUMN `passagem_alvo_id` bigint DEFAULT NULL AFTER `passagem_id`', 'DO 0')
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_decisao' AND COLUMN_NAME = 'passagem_alvo_id');
-PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
--- A pass whose number nobody could read ("??", and every mark of a timing
--- sensor) is stored with no car. The column was NOT NULL before; the change
--- keeps every stored row and the index on (equipe_numero, ts_ms).
-SET @add_column = (SELECT IF(COUNT(*) = 1,
-    'ALTER TABLE `contagem_passagem` MODIFY `equipe_numero` int DEFAULT NULL', 'DO 0')
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_passagem' AND COLUMN_NAME = 'equipe_numero' AND IS_NULLABLE = 'NO');
-PREPARE add_column FROM @add_column; EXECUTE add_column; DEALLOCATE PREPARE add_column;
--- The entries with no car of each source ("??" and a sensor's marks), read
--- by the per-upload recount: without it every entry of the prova is read.
-SET @add_index = (SELECT IF(COUNT(*) = 0,
-    'ALTER TABLE `contagem_passagem` ADD KEY `contagem_passagem_equipe_fonte_idx` (`equipe_numero`,`fonte_id`,`ts_ms`)', 'DO 0')
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'contagem_passagem' AND INDEX_NAME = 'contagem_passagem_equipe_fonte_idx');
-PREPARE add_index FROM @add_index; EXECUTE add_index; DEALLOCATE PREPARE add_index;
+        return [
+            'resultados' => $connection_resultados,
+        ];
+    }
+
+    /**
+     * Get the SQL statements for the Down migration
+     *
+     * DESTROYS DATA. Going down drops every lap counting table, with every
+     * source, entry, decision and counted lap in it, and nothing keeps a
+     * copy (contagem_arquivo goes too). It exists to undo a deploy on a
+     * server that has not counted a race yet. On one that has, dump the
+     * contagem_* tables first.
+     *
+     * Children before parents, so that no foreign key is in the way.
+     *
+     * @return array list of the SQL strings to execute for the Down migration
+     *               the keys being the datasources
+     */
+    public function getDownSQL(): array
+    {
+        $connection_resultados = <<< 'EOT'
+DROP TABLE IF EXISTS `contagem_total`;
+DROP TABLE IF EXISTS `contagem_passagem`;
+DROP TABLE IF EXISTS `contagem_dispositivo`;
+DROP TABLE IF EXISTS `contagem_fonte_usuario`;
+DROP TABLE IF EXISTS `contagem_fonte`;
+DROP TABLE IF EXISTS `contagem_ocorrencia`;
+DROP TABLE IF EXISTS `contagem_decisao`;
+DROP TABLE IF EXISTS `contagem_volta`;
+DROP TABLE IF EXISTS `contagem_arquivo`;
+EOT;
+
+        return [
+            'resultados' => $connection_resultados,
+        ];
+    }
+
+}

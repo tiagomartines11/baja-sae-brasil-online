@@ -1676,17 +1676,62 @@ one: matching some 3 500 marks, train by train, is most of it.
 
 ### Deploy notes
 
-- **Tables.** `baja-infra/mysql/migrations/2026-contagem.sql` creates the
-  tables and changes no existing row. Read its header about character sets.
-- **Columns added later.** A database that already has the contagem_*
-  tables (the dev VPS, after 26SE) gets the newer columns from the same
-  file's "Columns added later" block, safe to run twice:
-  `contagem_decisao.passagem_alvo_id` (the "usar_tempo" decision),
-  `contagem_fonte.papel`, `papel_desde_ms`, `periodos_fora`,
-  `imagem_base_url` and `contagem_passagem.imagem_ref`, `confianca`; and
-  `contagem_passagem.equipe_numero` becomes nullable (a "??" has no car).
-  Every recount reads them, so run the file again before deploying the code
-  that uses them.
+- **Tables: two Propel migrations**, in `baja-php/generated-migrations/`,
+  applied with the others by `vendor/bin/propel migration:migrate` in
+  `baja-php/`, inside the app container, before the new code serves
+  requests: every recount reads the newer columns.
+  - `PropelMigration_1792553081`: the tables exactly as they first shipped
+    (90ead59), each `CREATE TABLE IF NOT EXISTS`.
+  - `PropelMigration_1792553082`: what was added since, as plain `ALTER`s:
+    `contagem_fonte.papel`, `papel_desde_ms`, `periodos_fora`,
+    `imagem_base_url`; `contagem_passagem.imagem_ref`, `confianca`, the
+    index `contagem_passagem_equipe_fonte_idx`, and `equipe_numero` made
+    nullable (a "??" has no car); `contagem_decisao.passagem_alvo_id` (the
+    "usar_tempo" decision). No row is changed.
+
+  They replace the hand-run `baja-infra/mysql/migrations/2026-contagem.sql`,
+  which is gone: nothing else read it (a dev database gets its tables from
+  `init/06-contagem.sql`), and keeping a second copy of the schema invites
+  the two to drift. Its last version is in git history.
+
+  The migrate command needs the database credentials: put them in an
+  untracked `baja-php/propel.yaml` (copy `propel.yaml.dist`), or pass
+  `--connection="resultados=mysql:host=…;dbname=baja_resultados;user=…;password=…"`.
+- **Before migrating, check two things** on the target database:
+  1. `SHOW CREATE TABLE prova`: `evento_id` and `prova_id` must be
+     `latin1`, as in every database descended from the production dump.
+     The lap counting tables declare theirs `latin1` to match, because
+     MySQL refuses a foreign key between columns of different character
+     sets (error 3780). If `prova` is anything else there, change
+     `CHARACTER SET latin1` in `_1792553081` to match before deploying.
+  2. Which state the lap counting tables are in, which decides what
+     migrate does. `SHOW TABLES LIKE 'contagem\_%'`, then:
+
+     ```sql
+     SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'contagem\_%'
+        AND COLUMN_NAME IN ('passagem_alvo_id', 'papel', 'papel_desde_ms',
+            'periodos_fora', 'imagem_base_url', 'imagem_ref', 'confianca');
+     ```
+
+     | Tables / newer columns | Server | What migrate does |
+     |---|---|---|
+     | no tables | production | `_1792553081` creates the tables, `_1792553082` alters them |
+     | nine tables, the query finds nothing (the 90ead59 tables) | staging (the dev VPS, after 26SE) | `_1792553081` does nothing, `_1792553082` adds the columns |
+     | the query finds any column | a database that ran a later copy of the old hand-run `2026-contagem.sql` | do not let migrate run `_1792553082`: an `ADD` of a column that exists fails. Compare `SHOW CREATE TABLE` of each `contagem_*` table with `baja-infra/mysql/init/06-contagem.sql`, add by hand what is missing, then record both as applied: `INSERT INTO propel_migration (execution_datetime, version) VALUES (NOW(), 1792553081), (NOW(), 1792553082);` |
+
+     Afterwards `vendor/bin/propel migration:status` lists both as
+     executed.
+- **Going back.** `migration:down` undoes `_1792553082` (it refuses while
+  any entry has no car: MySQL will not invent a number for it) and then
+  `_1792553081`, which **drops every lap counting table and its data**.
+  Dump the `contagem_*` tables first on a server that has counted a race.
+- **Dev.** A fresh dev database gets the current tables straight from
+  `baja-infra/mysql/init/06-contagem.sql`, which also records both
+  migrations as applied, so `migration:migrate` skips them there. A later
+  schema change is a new migration, folded into that file too (column and
+  index order included, so that a migrated database and a fresh one have
+  the same `SHOW CREATE TABLE`).
 - **Cloudflare.** `s-maxage` does nothing by itself: Cloudflare does not
   cache `.php` responses by default. Add a Cache Rule for the results host:
   *URI Path equals `/contagem_feed.php`* → **Eligible for cache**, Edge TTL
@@ -2053,8 +2098,7 @@ http, where browsers refuse service workers: to try the offline reload,
 start Chrome with
 `--unsafely-treat-insecure-origin-as-secure=http://juiz.baja.local`.
 
-Production gets the tables from
-`baja-infra/mysql/migrations/2026-contagem.sql` (see
+Production and staging get the tables from two Propel migrations (see
 [Deploy notes](#deploy-notes)). After changing `baja-infra/baja-app/` rebuild
 the image: `docker compose build baja-app && docker compose up -d baja-app &&
 docker compose restart nginx`.

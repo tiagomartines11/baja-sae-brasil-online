@@ -1,14 +1,21 @@
 -- Lap counting (contagem de voltas) for the dev database.
 --
 -- Runs once, on the first boot of the mysql container, after
--- 05-seed-baja-resultados.sql. It does two things:
+-- 05-seed-baja-resultados.sql. It does three things:
 --
---   1. creates the contagem_* tables. The block between the two "DDL"
---      marker lines is a verbatim copy of the same block in
---      baja-infra/mysql/migrations/2026-contagem.sql, which is what an
---      existing database gets and where the choices are explained; keep
---      both in step with baja-php/schema.xml;
---   2. turns the Enduro of the 26BR dev event into a lap-counted prova with
+--   1. creates the contagem_* tables as they are today: what the Propel
+--      migrations PropelMigration_1792553081 (the tables as first shipped)
+--      and PropelMigration_1792553082 (everything added since) leave on an
+--      existing database, which is where the choices are explained. The
+--      block between the two "DDL" marker lines must stay equal to the SHOW
+--      CREATE TABLE those migrations produce, column and index order
+--      included, and in step with baja-php/schema.xml. A later schema
+--      change is a new migration, folded in here as well;
+--   2. records those two migrations as applied, the way 05 does for the
+--      ones folded into its dump, so that `propel migration:migrate` on a
+--      fresh dev database does not replay ALTERs whose columns are already
+--      here (they would fail on the first duplicate column);
+--   3. turns the Enduro of the 26BR dev event into a lap-counted prova with
 --      three counters, and gives the seeded forum users what they need to
 --      try it. All of them log in with the password 123456.
 --
@@ -88,8 +95,8 @@ CREATE TABLE IF NOT EXISTS `contagem_passagem` (
   UNIQUE KEY `contagem_passagem_fonte_uuid_UNIQUE` (`fonte_id`,`uuid_cliente`),
   KEY `contagem_passagem_fonte_ts_idx` (`fonte_id`,`ts_ms`),
   KEY `contagem_passagem_equipe_ts_idx` (`equipe_numero`,`ts_ms`),
-  KEY `contagem_passagem_equipe_fonte_idx` (`equipe_numero`,`fonte_id`,`ts_ms`),
   KEY `contagem_passagem_dispositivo_idx` (`dispositivo_id`),
+  KEY `contagem_passagem_equipe_fonte_idx` (`equipe_numero`,`fonte_id`,`ts_ms`),
   CONSTRAINT `contagem_passagem_fonte` FOREIGN KEY (`fonte_id`) REFERENCES `contagem_fonte` (`fonte_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `contagem_passagem_dispositivo` FOREIGN KEY (`dispositivo_id`) REFERENCES `contagem_dispositivo` (`dispositivo_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -175,6 +182,13 @@ CREATE TABLE IF NOT EXISTS `contagem_arquivo` (
   KEY `contagem_arquivo_prova_idx` (`evento_id`,`prova_id`,`arquivado_em_ms`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 -- <<< DDL
+
+-- The DDL above already holds both lap counting migrations. Add a row here
+-- whenever a contagem migration lands and its effect is folded in above.
+INSERT INTO `propel_migration` (`execution_datetime`, `version`) VALUES
+  (NULL, 1792553081),
+  (NULL, 1792553082);
+
 -- ---------------------------------------------------------------------
 -- Dev seed
 -- ---------------------------------------------------------------------
