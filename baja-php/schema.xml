@@ -503,4 +503,350 @@
       <parameter name="Engine" value="InnoDB"/>
     </vendor>
   </table>
+
+  <!-- ===================================================================
+       Contagem de voltas (lap counting). See docs/contagem.md.
+
+       Conventions shared by every contagem_* table:
+       - Times are integer milliseconds since the Unix epoch, UTC (BIGINT).
+         Not TIMESTAMP: the engine does arithmetic on them and a lap is
+         decided by differences of a few seconds.
+       - "tipo"-like columns are short VARCHARs, not Propel ENUMs. Propel
+         stores an ENUM as a number, which would make the raw tables
+         unreadable to whoever has to answer a team's protest with SQL.
+       - Raw data (passagem, ocorrencia, decisao) is append-only. A
+         correction is always a new row.
+       =================================================================== -->
+
+  <!-- One independent stream of count data: a human counter ("Contagem 1"),
+       an automated system, or imported paper totals. -->
+  <table name="contagem_fonte" idMethod="native" phpName="ContagemFonte">
+    <column name="fonte_id" phpName="FonteId" type="INTEGER" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
+    <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" required="true"/>
+    <column name="nome" phpName="Nome" type="VARCHAR" size="45" required="true"/>
+    <!-- manual | automatica | totais -->
+    <column name="tipo" phpName="Tipo" type="VARCHAR" size="12" required="true" default="manual"/>
+    <!-- humana | precisa. A "precisa" source's time is used as the pass time
+         as-is; "humana" times are fused by median. -->
+    <column name="qualidade_tempo" phpName="QualidadeTempo" type="VARCHAR" size="8" required="true" default="humana"/>
+    <column name="ativa" phpName="Ativa" type="BOOLEAN" required="true" default="true"/>
+    <column name="ordem" phpName="Ordem" type="INTEGER" required="true" default="0"/>
+    <!-- When the source was switched off. Its entries from before that
+         moment keep counting; switching a counter off must not erase what
+         it recorded. NULL while active, and for a source never used. -->
+    <column name="desativada_em_ms" phpName="DesativadaEmMs" type="BIGINT"/>
+    <!-- votante | observadora. An observer's entries are stored and compared
+         with the official passes (machine vision on trial) but never take
+         part in the count. Only "automatica" sources start as observers. -->
+    <column name="papel" phpName="Papel" type="VARCHAR" size="12" required="true" default="votante"/>
+    <!-- When the current role began: a promotion to "votante" counts from
+         that moment on, never backwards. NULL = since the source exists. -->
+    <column name="papel_desde_ms" phpName="PapelDesdeMs" type="BIGINT"/>
+    <!-- JSON list of closed periods [from, to] (from NULL = since always)
+         during which the source's entries do not count: the time it was
+         switched off before being switched on again, the time it was an
+         observer before a promotion. NULL when there is none. -->
+    <column name="periodos_fora" phpName="PeriodosFora" type="LONGVARCHAR"/>
+    <!-- Automatic sources only: prefix of the image links of its entries
+         (imagem_ref is appended). NULL = no images; nothing is shown. -->
+    <column name="imagem_base_url" phpName="ImagemBaseUrl" type="VARCHAR" size="255"/>
+    <!-- RESTRICT, here and on ocorrencia and decisao: deleting a prova must
+         not silently erase the raw record of its race. -->
+    <foreign-key foreignTable="prova" name="contagem_fonte_prova" onDelete="RESTRICT" onUpdate="CASCADE">
+      <reference local="evento_id" foreign="evento_id"/>
+      <reference local="prova_id" foreign="prova_id"/>
+    </foreign-key>
+    <index name="contagem_fonte_prova_idx">
+      <index-column name="evento_id"/>
+      <index-column name="prova_id"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- Which users may count on which source. A controller creates these
+       links; the counter never picks their own source. -->
+  <table name="contagem_fonte_usuario" idMethod="native" phpName="ContagemFonteUsuario">
+    <column name="fonte_id" phpName="FonteId" type="INTEGER" primaryKey="true" required="true"/>
+    <column name="usuario" phpName="Usuario" type="VARCHAR" size="45" primaryKey="true" required="true"/>
+    <column name="adicionado_por" phpName="AdicionadoPor" type="VARCHAR" size="45"/>
+    <column name="criado_em_ms" phpName="CriadoEmMs" type="BIGINT" required="true"/>
+    <!-- When a controller last pressed "liberar" for this user on this
+         source. A user whose device was revoked gets no new token until
+         they are linked again or released; this is the release. -->
+    <column name="liberado_em_ms" phpName="LiberadoEmMs" type="BIGINT"/>
+    <foreign-key foreignTable="contagem_fonte" name="contagem_fonte_usuario_fonte" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="fonte_id" foreign="fonte_id"/>
+    </foreign-key>
+    <index name="contagem_fonte_usuario_usuario_idx">
+      <index-column name="usuario"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- One browser (or external client) that has opened a source and holds
+       an upload token. A source has several over a race; all stay valid
+       until revoked so unsent entries are never stranded. -->
+  <table name="contagem_dispositivo" idMethod="native" phpName="ContagemDispositivo">
+    <column name="dispositivo_id" phpName="DispositivoId" type="INTEGER" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="fonte_id" phpName="FonteId" type="INTEGER" required="true"/>
+    <!-- SHA-256 (hex) of a random 32-byte token. The plain token is shown
+         to the client once and never stored. -->
+    <column name="token_hash" phpName="TokenHash" type="CHAR" size="64" required="true"/>
+    <!-- Username that bound the device; NULL for external (API) clients. -->
+    <column name="usuario" phpName="Usuario" type="VARCHAR" size="45"/>
+    <column name="rotulo" phpName="Rotulo" type="VARCHAR" size="255"/>
+    <column name="criado_em_ms" phpName="CriadoEmMs" type="BIGINT" required="true"/>
+    <column name="revogado_em_ms" phpName="RevogadoEmMs" type="BIGINT"/>
+    <!-- Set when the counter pressed "Encerrar meu turno" (or closed the
+         page with nothing left to send): this device is done and nobody
+         waits for it any more. Cleared if it comes back. -->
+    <column name="fechado_em_ms" phpName="FechadoEmMs" type="BIGINT"/>
+    <!-- Last contact of any kind. -->
+    <column name="visto_em_ms" phpName="VistoEmMs" type="BIGINT"/>
+    <!-- "Synced through": the device told us its queue was empty at this
+         (server) time, so everything it recorded before it is here. -->
+    <column name="sincronizado_ate_ms" phpName="SincronizadoAteMs" type="BIGINT"/>
+    <foreign-key foreignTable="contagem_fonte" name="contagem_dispositivo_fonte" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="fonte_id" foreign="fonte_id"/>
+    </foreign-key>
+    <unique name="contagem_dispositivo_token_hash_UNIQUE">
+      <unique-column name="token_hash"/>
+    </unique>
+    <index name="contagem_dispositivo_fonte_idx">
+      <index-column name="fonte_id"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- Raw entries: "source S says car N crossed the line at time T".
+       APPEND-ONLY. No UPDATE or DELETE anywhere in the code except the
+       controller's "Zerar corrida" action. -->
+  <table name="contagem_passagem" idMethod="native" phpName="ContagemPassagem">
+    <column name="passagem_id" phpName="PassagemId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="fonte_id" phpName="FonteId" type="INTEGER" required="true"/>
+    <column name="dispositivo_id" phpName="DispositivoId" type="INTEGER" required="true"/>
+    <!-- Generated by the client. UNIQUE with fonte_id is what makes a
+         re-sent upload a no-op. -->
+    <column name="uuid_cliente" phpName="UuidCliente" type="CHAR" size="36" required="true"/>
+    <!-- The number as typed. Deliberately no FK to equipe: a typo may not
+         match a real car and must still be stored. NULL for a pass whose
+         number nobody could read: a counter's "??", and every mark of a
+         timing sensor ("sensor"), which records the moment only. -->
+    <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER" required="false"/>
+    <!-- THE time of the pass, in server time. The count page works it out
+         itself, from a monotonic clock anchored to the server's time, and
+         uploads it final. It is stored as received and never changed
+         afterwards: a time that could move after a lap was counted is how
+         counts and standings change behind everybody's back. -->
+    <column name="ts_ms" phpName="TsMs" type="BIGINT" required="true"/>
+    <!-- How far ts_ms can be trusted:
+           exato         stamped from a server anchor of that page load
+           estimado      stamped from an anchor saved by an earlier page
+                         load (the phone was reloaded while offline)
+           desconhecido  no anchor at all; ts_ms is the device's own clock
+         The engine flags the last two for a reviewer and never counts a
+         pass of unknown time by itself. -->
+    <column name="qualidade_tempo" phpName="QualidadeTempo" type="VARCHAR" size="12" required="true" default="exato"/>
+    <!-- For audit only; nothing computes with these. The device's own
+         clock at the moment of the entry, and the anchor ts_ms was derived
+         from: the server time it was taken at, the round trip of the
+         request that produced it, and how old it was at the entry. -->
+    <column name="ts_dispositivo_ms" phpName="TsDispositivoMs" type="BIGINT" required="true"/>
+    <column name="ancora_servidor_ms" phpName="AncoraServidorMs" type="BIGINT"/>
+    <column name="ancora_rtt_ms" phpName="AncoraRttMs" type="INTEGER"/>
+    <column name="ancora_idade_ms" phpName="AncoraIdadeMs" type="BIGINT"/>
+    <column name="digitacao_ms" phpName="DigitacaoMs" type="INTEGER"/>
+    <!-- teclado | teclado_tela | blocos | api | simulacao -->
+    <column name="modo_entrada" phpName="ModoEntrada" type="VARCHAR" size="12" required="true"/>
+    <column name="recebido_em_ms" phpName="RecebidoEmMs" type="BIGINT" required="true"/>
+    <!-- Sent by an automatic source ("mode": "api") only, both optional:
+         an opaque id of the picture behind the entry (the source's
+         imagem_base_url + this is the link) and how sure the system was,
+         0 to 1. Shown to reviewers; nothing computes with them. -->
+    <column name="imagem_ref" phpName="ImagemRef" type="VARCHAR" size="64"/>
+    <column name="confianca" phpName="Confianca" type="DECIMAL" size="4" scale="3"/>
+    <foreign-key foreignTable="contagem_fonte" name="contagem_passagem_fonte" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="fonte_id" foreign="fonte_id"/>
+    </foreign-key>
+    <foreign-key foreignTable="contagem_dispositivo" name="contagem_passagem_dispositivo" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="dispositivo_id" foreign="dispositivo_id"/>
+    </foreign-key>
+    <unique name="contagem_passagem_fonte_uuid_UNIQUE">
+      <unique-column name="fonte_id"/>
+      <unique-column name="uuid_cliente"/>
+    </unique>
+    <index name="contagem_passagem_fonte_ts_idx">
+      <index-column name="fonte_id"/>
+      <index-column name="ts_ms"/>
+    </index>
+    <index name="contagem_passagem_equipe_ts_idx">
+      <index-column name="equipe_numero"/>
+      <index-column name="ts_ms"/>
+    </index>
+    <index name="contagem_passagem_dispositivo_idx">
+      <index-column name="dispositivo_id"/>
+    </index>
+    <!-- Last, after dispositivo_idx: added by a later migration, which can
+         only append it, and every database keeps the same order. -->
+    <index name="contagem_passagem_equipe_fonte_idx">
+      <index-column name="equipe_numero"/>
+      <index-column name="fonte_id"/>
+      <index-column name="ts_ms"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- Race control and pit events. Append-only; a correction is a new row
+       pointing at the one it replaces. -->
+  <table name="contagem_ocorrencia" idMethod="native" phpName="ContagemOcorrencia">
+    <column name="ocorrencia_id" phpName="OcorrenciaId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
+    <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" required="true"/>
+    <!-- largada | bandeira_vermelha | relargada | encerramento
+         | box_entrada | box_saida | abastecimento_entrada | abastecimento_saida
+         | cancelamento (removes the row named by substitui_id and is nothing itself) -->
+    <column name="tipo" phpName="Tipo" type="VARCHAR" size="24" required="true"/>
+    <!-- Only for pit events. -->
+    <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER"/>
+    <column name="ts_ms" phpName="TsMs" type="BIGINT" required="true"/>
+    <column name="usuario" phpName="Usuario" type="VARCHAR" size="45"/>
+    <column name="criado_em_ms" phpName="CriadoEmMs" type="BIGINT" required="true"/>
+    <column name="substitui_id" phpName="SubstituiId" type="BIGINT"/>
+    <!-- Pit-log pages upload through the same offline queue as count
+         pages, so they need the same idempotency key. NULL for events
+         created directly by race control. -->
+    <column name="uuid_cliente" phpName="UuidCliente" type="CHAR" size="36"/>
+    <!-- How good ts_ms is, as for entries: exato | estimado | desconhecido.
+         A stop event of unknown time is kept out of the pairing. -->
+    <column name="qualidade_tempo" phpName="QualidadeTempo" type="VARCHAR" size="12" required="true" defaultValue="exato"/>
+    <!-- What the device's own clock said. Audit only. -->
+    <column name="ts_dispositivo_ms" phpName="TsDispositivoMs" type="BIGINT"/>
+    <!-- How it was entered: toque | teclado | simulacao | ... NULL for race control. -->
+    <column name="modo_entrada" phpName="ModoEntrada" type="VARCHAR" size="16"/>
+    <!-- Who it comes from: NULL (race control or a pit-log device), or
+         "revisor" for an exit a reviewer inferred from a pass at the line. -->
+    <column name="origem" phpName="Origem" type="VARCHAR" size="16"/>
+    <foreign-key foreignTable="prova" name="contagem_ocorrencia_prova" onDelete="RESTRICT" onUpdate="CASCADE">
+      <reference local="evento_id" foreign="evento_id"/>
+      <reference local="prova_id" foreign="prova_id"/>
+    </foreign-key>
+    <unique name="contagem_ocorrencia_uuid_UNIQUE">
+      <unique-column name="evento_id"/>
+      <unique-column name="prova_id"/>
+      <unique-column name="uuid_cliente"/>
+    </unique>
+    <index name="contagem_ocorrencia_prova_ts_idx">
+      <index-column name="evento_id"/>
+      <index-column name="prova_id"/>
+      <index-column name="ts_ms"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- Corrections made by people. Append-only; undoing one is a new
+       "desfazer" row. -->
+  <table name="contagem_decisao" idMethod="native" phpName="ContagemDecisao">
+    <column name="decisao_id" phpName="DecisaoId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
+    <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" required="true"/>
+    <!-- anular | reatribuir | confirmar | adicionar | excluir_fonte | desfazer | marcar_saida | usar_tempo -->
+    <column name="tipo" phpName="Tipo" type="VARCHAR" size="16" required="true"/>
+    <column name="passagem_id" phpName="PassagemId" type="BIGINT"/>
+    <!-- usar_tempo only: the other entry, of a crossing typed late, that joins passagem_id's pass -->
+    <column name="passagem_alvo_id" phpName="PassagemAlvoId" type="BIGINT"/>
+    <column name="fonte_id" phpName="FonteId" type="INTEGER"/>
+    <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER"/>
+    <column name="ts_ms" phpName="TsMs" type="BIGINT"/>
+    <column name="ts_fim_ms" phpName="TsFimMs" type="BIGINT"/>
+    <column name="desfaz_decisao_id" phpName="DesfazDecisaoId" type="BIGINT"/>
+    <!-- contador (a counter voiding their own entry) | revisor -->
+    <column name="origem" phpName="Origem" type="VARCHAR" size="10" required="true" default="revisor"/>
+    <column name="usuario" phpName="Usuario" type="VARCHAR" size="45"/>
+    <column name="motivo" phpName="Motivo" type="LONGVARCHAR"/>
+    <column name="criado_em_ms" phpName="CriadoEmMs" type="BIGINT" required="true"/>
+    <foreign-key foreignTable="prova" name="contagem_decisao_prova" onDelete="RESTRICT" onUpdate="CASCADE">
+      <reference local="evento_id" foreign="evento_id"/>
+      <reference local="prova_id" foreign="prova_id"/>
+    </foreign-key>
+    <index name="contagem_decisao_prova_idx">
+      <index-column name="evento_id"/>
+      <index-column name="prova_id"/>
+    </index>
+    <index name="contagem_decisao_passagem_idx">
+      <index-column name="passagem_id"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- Laps derived by the engine. Safe to truncate and rebuild at any
+       time; nothing here is a source of truth. -->
+  <table name="contagem_volta" idMethod="native" phpName="ContagemVolta">
+    <column name="evento_id" phpName="EventoId" type="CHAR" size="4" primaryKey="true" required="true"/>
+    <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" primaryKey="true" required="true"/>
+    <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER" primaryKey="true" required="true"/>
+    <column name="numero_volta" phpName="NumeroVolta" type="INTEGER" primaryKey="true" required="true"/>
+    <column name="ts_ms" phpName="TsMs" type="BIGINT" required="true"/>
+    <column name="dispersao_ms" phpName="DispersaoMs" type="INTEGER" required="true" default="0"/>
+    <column name="fontes" phpName="Fontes" type="INTEGER" required="true" default="0"/>
+    <column name="tempo_volta_ms" phpName="TempoVoltaMs" type="BIGINT"/>
+    <column name="elegivel_melhor_volta" phpName="ElegivelMelhorVolta" type="BOOLEAN" required="true" default="false"/>
+    <!-- contada | pendente -->
+    <column name="estado" phpName="Estado" type="VARCHAR" size="10" required="true" default="contada"/>
+    <foreign-key foreignTable="prova" name="contagem_volta_prova" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="evento_id" foreign="evento_id"/>
+      <reference local="prova_id" foreign="prova_id"/>
+    </foreign-key>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- Where "Zerar corrida" puts the raw rows before deleting them: one row
+       per deleted row, kept as JSON. No foreign keys on purpose, so nothing
+       can cascade into it. Nothing reads it; it exists to be queried by
+       hand if a wiped race turns out to have mattered. -->
+  <table name="contagem_arquivo" idMethod="native" phpName="ContagemArquivo">
+    <column name="arquivo_id" phpName="ArquivoId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
+    <column name="prova_id" phpName="ProvaId" type="CHAR" size="3" required="true"/>
+    <column name="arquivado_em_ms" phpName="ArquivadoEmMs" type="BIGINT" required="true"/>
+    <column name="arquivado_por" phpName="ArquivadoPor" type="VARCHAR" size="45"/>
+    <!-- Name of the table the row came from. -->
+    <column name="tabela" phpName="Tabela" type="VARCHAR" size="32" required="true"/>
+    <column name="dados" phpName="Dados" type="LONGVARCHAR" sqlType="json" required="true"/>
+    <index name="contagem_arquivo_prova_idx">
+      <index-column name="evento_id"/>
+      <index-column name="prova_id"/>
+      <index-column name="arquivado_em_ms"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- Imported totals (paper counts) for a source of tipo "totais". -->
+  <table name="contagem_total" idMethod="native" phpName="ContagemTotal">
+    <column name="fonte_id" phpName="FonteId" type="INTEGER" primaryKey="true" required="true"/>
+    <column name="equipe_numero" phpName="EquipeNumero" type="INTEGER" primaryKey="true" required="true"/>
+    <column name="voltas" phpName="Voltas" type="INTEGER" required="true"/>
+    <foreign-key foreignTable="contagem_fonte" name="contagem_total_fonte" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="fonte_id" foreign="fonte_id"/>
+    </foreign-key>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
 </database>

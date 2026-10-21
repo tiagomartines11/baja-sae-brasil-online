@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Contagem\Access\ContagemAccess;
 use Baja\Model\EventoQuery;
 use Baja\Model\FilaQuery;
 use Baja\Model\ProvaQuery;
@@ -58,7 +59,15 @@ $eventsData = [];
 foreach ($eventos as $ev) {
     $evId = $ev->getEventoId();
     $provas = [];
-    foreach ($provasByEvent[$evId] ?? [] as $p) $provas[] = ['code' => $p->getFullCode(), 'label' => strtoupper($p->getProvaId())];
+    foreach ($provasByEvent[$evId] ?? [] as $p) {
+        $provas[] = ['code' => $p->getFullCode(), 'label' => strtoupper($p->getProvaId())];
+        // A lap counting prova has a code of its own for the pit lane (and
+        // fueling, when the prova logs it), apart from the counters' (which comes with linking
+        // a counter, on the prova's "Usuários" page).
+        if ($p->getType() === ContagemAccess::PROVA_TYPE) {
+            $provas[] = ['code' => $p->getFullCode() . ContagemAccess::PIT_LOG_SUFFIX, 'label' => strtoupper($p->getProvaId()) . ' · ' . ContagemAccess::pitLogLabel($p)];
+        }
+    }
     $filas = [];
     foreach ($filasByEvent[$evId] ?? [] as $f) $filas[] = ['id' => (string)$f->getFilaId(), 'nome' => $f->getNome()];
     $timers = [['code' => $evId.'_TIMER_ADMIN', 'label' => 'TIMER_ADMIN']];

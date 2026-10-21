@@ -169,10 +169,10 @@ fi
 # login rather than as an unprovisioned account. It now renders a page saying
 # so, and that page is what this check asserts.
 #
-# To exercise the dashboard instead, give juiz1 a row:
-#   INSERT INTO baja_resultados.user (username, permissions)
-#        VALUES ('juiz1', '| index |');
-# and swap the expectation below for the logout-link marker.
+# Since the lap counting seed (baja-infra/mysql/init/06-contagem.sql) juiz1 does
+# have a row on a freshly seeded database, so there this check passes through
+# its second branch, the dashboard. The first branch is kept for databases
+# seeded before that file existed.
 body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/index.php")
 if echo "$body" | grep -q 'ainda não tem acesso a este sistema'; then
     green "PASS  authenticated but unprovisioned /juiz/index.php explains itself"
@@ -218,6 +218,83 @@ else
     green "PASS  open-redirect rejected (Location='$location')"
     PASS=$((PASS + 1))
 fi
+
+# --- Lap counting (contagem de voltas) ---------------------------------------
+#
+# These rely on what baja-infra/mysql/init/06-contagem.sql seeds: the Enduro of
+# 26BR (prova END) is a laps prova with sources 1, 2 and 3; juiz1 controls it;
+# equipe1 counts on source 1 and equipe2 on source 2. On a database seeded
+# before that file existed they fail, and `docker compose down -v` followed by
+# `up -d` is the fix.
+#
+# The event is named in the URL (/26BR/...) so the checks do not depend on
+# which event bootstrap.php would pick by default.
+
+# Replace whatever is in the cookie jar with a fresh login for one user, via
+# the same forum endpoint check 9 uses.
+login_as() {
+    : > "$COOKIES"
+    curl -s -o /dev/null -c "$COOKIES" -X POST \
+        --data-urlencode "username=$1" \
+        --data-urlencode "password=123456" \
+        --data-urlencode "redirect=$BASE_JUIZ/index.php" \
+        "$BASE_FORUM/app.php/baja/login"
+}
+
+# check_body NAME BODY MARKER: pass when BODY contains MARKER.
+check_body() {
+    # -F: the marker is plain text, not a pattern.
+    if echo "$2" | grep -qF "$3"; then
+        green "PASS  $1"
+        PASS=$((PASS + 1))
+    else
+        red "FAIL  $1 (did not find '$3' in the response)"
+        FAIL=$((FAIL + 1))
+    fi
+}
+
+# What a page says when the user may not see it (Session::permissionCheck and
+# the contagem pages use the same sentence). These pages answer 200 either
+# way, so the body is what tells a rendered page from a refusal.
+REFUSAL='Você não tem acesso a essa página'
+
+# Markers that only exist in the fully rendered pages.
+COUNT_PAGE_MARKER='id="lista-recentes"'
+REVIEW_PAGE_MARKER='id="fila-abertos"'
+
+COUNT_PAGE="$BASE_JUIZ/26BR/contagem_contar.php?p=END&f=1"
+REVIEW_PAGE="$BASE_JUIZ/26BR/contagem_revisao.php?p=END"
+
+# 13. A counter opens the count page of the source they are linked to.
+login_as equipe1
+body=$(curl -s -b "$COOKIES" "$COUNT_PAGE")
+check_body "count page renders for a counter linked to that source (equipe1, source 1)" "$body" "$COUNT_PAGE_MARKER"
+
+# 14. A counter linked to a different source is refused: counters must not be
+# able to wander into each other's source, or the cross-check between sources
+# means nothing.
+login_as equipe2
+body=$(curl -s -b "$COOKIES" "$COUNT_PAGE")
+check_body "count page refuses a counter of another source (equipe2, source 1)" "$body" "$REFUSAL"
+
+# 15. The controller of the prova opens the review screen.
+login_as juiz1
+body=$(curl -s -b "$COOKIES" "$REVIEW_PAGE")
+check_body "review page renders for the controller (juiz1)" "$body" "$REVIEW_PAGE_MARKER"
+
+# 16. A counter is not a reviewer: seeing the other sources' entries is
+# exactly what a counter must never be able to do.
+login_as equipe1
+body=$(curl -s -b "$COOKIES" "$REVIEW_PAGE")
+check_body "review page refuses a counter (equipe1)" "$body" "$REFUSAL"
+
+# 17. The upload endpoint takes a device token, not a session. Without a token
+# it must answer 401, with or without cookies; sent here with none at all.
+status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+    -H 'Content-Type: application/json' \
+    --data '{"entries": []}' \
+    "$BASE_JUIZ/contagem_sync.php")
+check_in "POST /contagem_sync.php without a token is refused" "$status" 401
 
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"
