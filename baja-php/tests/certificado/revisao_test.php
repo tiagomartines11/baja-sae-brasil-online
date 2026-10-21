@@ -30,8 +30,9 @@ $validador = new Validador();
 $brutas = [
     // OK
     ['evento' => $ev, 'nome' => $prefix . ' Ana Beatriz Testeson', 'funcao' => 'competidor', 'documento' => synthetic_cpf('123123123')],
-    // warning: deprecated funcao
-    ['evento' => $ev, 'nome' => $prefix . ' Bruno Carlos Testeson', 'funcao' => 'fiscal', 'documento' => synthetic_cpf('234234234')],
+    // warning: deprecated funcao (`engenheiro` is the one role still marked
+    // obsoleta in Funcao::ROLES; `fiscal` is active again and raises nothing)
+    ['evento' => $ev, 'nome' => $prefix . ' Bruno Carlos Testeson', 'funcao' => 'engenheiro', 'documento' => synthetic_cpf('234234234')],
     // error: unknown funcao
     ['evento' => $ev, 'nome' => $prefix . ' Carla Duarte Testeson', 'funcao' => 'inventada', 'documento' => synthetic_cpf('345345345')],
     // error: scientific notation
