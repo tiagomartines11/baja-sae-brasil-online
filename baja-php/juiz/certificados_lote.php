@@ -277,14 +277,14 @@ $e = fn(string $v): string => Template::e($v);
         </button>
     </form>
 
-    <table style="margin-top: 20px;">
+    <table class="blocos" style="margin-top: 20px;">
         <thead><tr><th>#</th><th>Nome</th><th>Por que ficou de fora</th></tr></thead>
         <tbody>
             <?php foreach ($pendentes as $linha): ?>
                 <tr>
-                    <td><?= $linha->numero ?></td>
-                    <td><?= $e($linha->nomeBruto) ?></td>
-                    <td class="muted">
+                    <td class="bloco-num"><?= $linha->numero ?></td>
+                    <td class="bloco-nome"><?= $e($linha->nomeBruto) ?></td>
+                    <td class="muted bloco-decisao">
                         <?php foreach ($linha->erros() as $problema): ?>
                             <div style="color: var(--erro);"><?= $e($problema->mensagem) ?></div>
                         <?php endforeach; ?>
@@ -356,6 +356,15 @@ $e = fn(string $v): string => Template::e($v);
         <?= Csrf::campo(FORMULARIO) ?>
         <input type="hidden" name="colado" value="<?= $e($colado) ?>" />
 
+        <?php /*
+            The one table on these pages that stays a table on a phone. It is
+            the pasted spreadsheet as it arrived, and the operator is matching
+            it against what is open in Excel; reshaping it would defeat the
+            purpose. So it scrolls sideways inside .rolagem — and only inside
+            it, never the page — with a shadow at whichever edge still has
+            content behind it. See Template.
+        */ ?>
+        <div class="rolagem">
         <table>
             <thead>
                 <tr>
@@ -383,6 +392,7 @@ $e = fn(string $v): string => Template::e($v);
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <p class="muted">
             Se a planilha tiver colunas separadas de CPF e passaporte, marque cada
             uma como tal — é isso que faz um passaporte só com números não ser
@@ -496,8 +506,11 @@ $e = fn(string $v): string => Template::e($v);
                 . $e($linha->nomeBruto) . '</div>';
         }
 
+        // The classes are for the narrow layout, where the row stops being a
+        // table row and these four run together as one summary line. See
+        // .blocos in Template.
         return sprintf(
-            '<td>%s</td><td>%s</td><td>%s</td><td>%s</td>',
+            '<td>%s</td><td class="bloco-nome">%s</td><td>%s</td><td>%s</td>',
             $e($linha->eventoBruto),
             $nome,
             $e($linha->funcaoBruta),
@@ -552,16 +565,16 @@ $e = fn(string $v): string => Template::e($v);
                 Nada é criado enquanto houver um erro aqui. São valores que o sistema
                 não consegue usar — corrija na planilha e cole de novo.
             </p>
-            <table>
+            <table class="blocos">
                 <thead>
                     <tr><th>#</th><th>Evento</th><th>Nome</th><th>Função</th><th>Documento</th><th>Problema</th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($revisao->erros as $linha): ?>
                         <tr>
-                            <td><?= $linha->numero ?></td>
+                            <td class="bloco-num"><?= $linha->numero ?></td>
                             <?= $celulasDa($linha) ?>
-                            <td style="color: var(--erro);">
+                            <td class="bloco-decisao" style="color: var(--erro);">
                                 <?php foreach ($linha->erros() as $problema): ?>
                                     <div><?= $e($problema->mensagem) ?></div>
                                 <?php endforeach; ?>
@@ -604,16 +617,25 @@ $e = fn(string $v): string => Template::e($v);
                 </div>
             <?php endif; ?>
 
-            <table>
+            <?php /*
+                Radio buttons with a sentence explaining each are a form, not
+                tabular data, and a fifth of the width renders them as a
+                one-word-wide ribbon several screens tall. Below 760px the row
+                becomes a block: the five identity fields run together as one
+                summary line and the decision gets the whole width underneath.
+                The wide table is kept on a desktop, where it works. See
+                .blocos in Template.
+            */ ?>
+            <table class="blocos">
                 <thead>
                     <tr><th>#</th><th>Evento</th><th>Nome</th><th>Função</th><th>Documento</th><th>Decisão</th></tr>
                 </thead>
                 <tbody>
                     <?php foreach ($revisao->avisos as $linha): ?>
                         <tr<?= $linha->estaResolvida() ? '' : ' style="background: #fffaf0;"' ?>>
-                            <td><?= $linha->numero ?></td>
+                            <td class="bloco-num"><?= $linha->numero ?></td>
                             <?= $celulasDa($linha) ?>
-                            <td>
+                            <td class="bloco-decisao">
                                 <?php foreach ($linha->avisos() as $problema): ?>
                                     <div style="margin-bottom: 10px;">
                                         <div style="color: var(--aviso);"><?= $e($problema->mensagem) ?></div>
@@ -644,13 +666,13 @@ $e = fn(string $v): string => Template::e($v);
                     <?= count($revisao->ok) ?> linha<?= count($revisao->ok) === 1 ? '' : 's' ?>
                     sem pendência
                 </summary>
-                <table style="margin-top: 12px;">
+                <table class="blocos" style="margin-top: 12px;">
                     <thead>
                         <tr><th>#</th><th>Evento</th><th>Nome</th><th>Função</th><th>Documento</th></tr>
                     </thead>
                     <tbody>
                         <?php foreach ($revisao->ok as $linha): ?>
-                            <tr><td><?= $linha->numero ?></td><?= $celulasDa($linha) ?></tr>
+                            <tr><td class="bloco-num"><?= $linha->numero ?></td><?= $celulasDa($linha) ?></tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>

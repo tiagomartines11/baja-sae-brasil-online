@@ -664,7 +664,11 @@ final class Validador
                 $eventosAfetados[(string) $row->getEventoId()] = true;
             }
 
-            if ($armazenado === $linha->nome) {
+            // Not ===. Two names that differ only in how the save pipeline
+            // would case them are the same name, and reporting "Fulano de
+            // Tal" against "Fulano De Tal" as something to decide buries the
+            // rows that really do need a decision.
+            if (Texto::mesmoNome($armazenado, $linha->nome)) {
                 $identico = true;
             }
 

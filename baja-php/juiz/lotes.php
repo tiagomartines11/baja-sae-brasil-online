@@ -150,7 +150,14 @@ $querystring = function (array $extra = []) use ($eventosSel, $autorSel, $idBusc
             <p class="muted">Página <?= $pagina ?> de <?= $paginas ?>.</p>
         <?php endif; ?>
 
-        <table>
+        <?php /*
+            One card per batch below 760px — see .cartoes in Template. The
+            heading is when the batch was made, which is the first column here
+            and what an operator looking for their own paste from ten minutes
+            ago scans for. The identifier keeps its label under it rather than
+            leading, because nobody recognises a batch by its token.
+        */ ?>
+        <table class="cartoes">
             <thead>
                 <tr>
                     <th>Quando</th><th>Criado por</th><th>Evento(s)</th>
@@ -160,14 +167,14 @@ $querystring = function (array $extra = []) use ($eventosSel, $autorSel, $idBusc
             <tbody>
                 <?php foreach ($linhas as $linha): ?>
                     <tr>
-                        <td>
+                        <td class="cartao-titulo">
                             <?php if ($linha['criado_em'] !== null): ?>
                                 <?= $e(date('d/m/Y H:i', strtotime($linha['criado_em']))) ?>
                             <?php else: ?>
                                 <span class="muted">—</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td data-rotulo="Criado por">
                             <?php
                             $quem = [];
                             foreach ($linha['autores'] as $id) {
@@ -176,8 +183,8 @@ $querystring = function (array $extra = []) use ($eventosSel, $autorSel, $idBusc
                             ?>
                             <?= $quem === [] ? '<span class="muted">—</span>' : $e(implode(', ', $quem)) ?>
                         </td>
-                        <td><?= $e(implode(', ', $linha['eventos'])) ?></td>
-                        <td>
+                        <td data-rotulo="Evento(s)"><?= $e(implode(', ', $linha['eventos'])) ?></td>
+                        <td data-rotulo="Certificados">
                             <?= $linha['linhas'] ?>
                             <?php if ($linha['anuladas'] > 0): ?>
                                 <div style="font-size: 12px; color: var(--erro);">
@@ -185,7 +192,7 @@ $querystring = function (array $extra = []) use ($eventosSel, $autorSel, $idBusc
                                 </div>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td data-rotulo="Identificador">
                             <a href="lote.php?id=<?= urlencode($linha['id']) ?>"><code><?= $e($linha['id']) ?></code></a>
                         </td>
                     </tr>

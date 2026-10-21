@@ -2,6 +2,7 @@
 
 namespace Baja\Juiz;
 
+use Baja\Certificado\Documento;
 use Baja\Certificado\Funcao;
 use Baja\Certificado\Insercao\Acesso;
 use Baja\Certificado\Insercao\Csrf;
@@ -134,14 +135,19 @@ $e = fn(string $v): string => Template::e($v);
             <?php endif; ?>
         </dl>
 
-        <table style="margin-top: 20px;">
+        <?php /* One card per certificate below 760px, as on the search — see
+                 .cartoes in Template. The two pages list the same shape of
+                 data and should not behave differently on a phone. */ ?>
+        <table class="cartoes" style="margin-top: 20px;">
             <thead>
                 <tr><th>Nome</th><th>Função</th><th>Documento</th><th>Evento</th><th>Certificado</th></tr>
             </thead>
             <tbody>
-                <?php foreach ($linhas as $linha): ?>
+                <?php foreach ($linhas as $linha):
+                    $doc = (string) ($linha->getCpf() ?: $linha->getDocumentoEstrangeiro());
+                ?>
                     <tr<?= $linha->getAnuladoEm() !== null ? ' style="background: #fbf3f3;"' : '' ?>>
-                        <td>
+                        <td class="cartao-titulo">
                             <?= $e((string) $linha->getNome()) ?>
                             <?php if ($linha->getAnuladoEm() !== null): ?>
                                 <div style="font-size: 12px; color: var(--erro);">
@@ -151,10 +157,13 @@ $e = fn(string $v): string => Template::e($v);
                                 </div>
                             <?php endif; ?>
                         </td>
-                        <td><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
-                        <td><?= $e((string) ($linha->getCpf() ?: $linha->getDocumentoEstrangeiro())) ?></td>
-                        <td><?= $e((string) $linha->getEventoId()) ?></td>
-                        <td><code><?= $e((string) $linha->getToken()) ?></code></td>
+                        <td data-rotulo="Função"><?= $e(Funcao::label((string) $linha->getFuncao())) ?></td>
+                        <td data-rotulo="Documento">
+                            <span class="doc-longo"><?= $e($doc) ?></span>
+                            <span class="doc-curto"><?= $e(Documento::mascarar($doc)) ?></span>
+                        </td>
+                        <td data-rotulo="Evento"><?= $e((string) $linha->getEventoId()) ?></td>
+                        <td data-rotulo="Certificado"><code><?= $e((string) $linha->getToken()) ?></code></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -176,8 +185,24 @@ $e = fn(string $v): string => Template::e($v);
         endereço de verificação impresso nele, e não há como recriá-lo com o
         mesmo token.
     </p>
+    <?php
+    // json_encode, not interpolation. The event codes come out of the
+    // database, and $e() escapes an apostrophe to &#039; — which the HTML
+    // parser turns back into ' before JavaScript ever sees the attribute, so
+    // one event code with an apostrophe in it ends the string literal and
+    // takes the confirmation with it. json_encode emits a JS string literal
+    // with the quotes already escaped, and $e() then makes it an attribute.
+    $confirmacao = json_encode(
+        sprintf(
+            'Apagar %d certificado(s) de %s?',
+            count($linhas),
+            implode(', ', array_keys($doLote))
+        ),
+        JSON_UNESCAPED_UNICODE | JSON_HEX_APOS | JSON_HEX_QUOT
+    );
+    ?>
     <form method="post" action="lote.php"
-          onsubmit="return confirm('Apagar <?= count($linhas) ?> certificado(s) de <?= $e(implode(', ', array_keys($doLote))) ?>?');">
+          onsubmit="return confirm(<?= $e((string) $confirmacao) ?>);">
         <?= Csrf::campo(FORMULARIO) ?>
         <input type="hidden" name="id" value="<?= $e($id) ?>" />
         <input type="hidden" name="acao" value="apagar" />
