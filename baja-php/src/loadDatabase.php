@@ -5,6 +5,8 @@ $serviceContainer->initDatabaseMapFromDumps(array (
   array (
     'tablesByName' => 
     array (
+      'certificado_requerimento' => '\\Baja\\Model\\Map\\CertificadoRequerimentoTableMap',
+      'config' => '\\Baja\\Model\\Map\\ConfigTableMap',
       'equipe' => '\\Baja\\Model\\Map\\EquipeTableMap',
       'evento' => '\\Baja\\Model\\Map\\EventoTableMap',
       'fila' => '\\Baja\\Model\\Map\\FilaTableMap',
@@ -21,6 +23,8 @@ $serviceContainer->initDatabaseMapFromDumps(array (
     ),
     'tablesByPhpName' => 
     array (
+      '\\CertificadoRequerimento' => '\\Baja\\Model\\Map\\CertificadoRequerimentoTableMap',
+      '\\Config' => '\\Baja\\Model\\Map\\ConfigTableMap',
       '\\Equipe' => '\\Baja\\Model\\Map\\EquipeTableMap',
       '\\Evento' => '\\Baja\\Model\\Map\\EventoTableMap',
       '\\Fila' => '\\Baja\\Model\\Map\\FilaTableMap',

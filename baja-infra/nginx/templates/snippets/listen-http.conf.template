@@ -1,0 +1,2 @@
+# Plain HTTP. Dev only — see listen-tls.conf.template for the counterpart.
+listen 80;

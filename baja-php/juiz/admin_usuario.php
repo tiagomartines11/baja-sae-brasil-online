@@ -72,7 +72,7 @@ $globalPerms = [];
 $permsByEvent = [];
 $otherPerms = [];
 foreach ($perms as $p) {
-    if ($p === 'admin' || $p === 'index') { $globalPerms[] = $p; continue; }
+    if (in_array($p, ['admin', 'index', 'certificados'], true)) { $globalPerms[] = $p; continue; }
     $matched = false;
     foreach ($eventsData as $evId => $_d) {
         if (strpos($p, $evId.'_') === 0) { $permsByEvent[$evId][] = $p; $matched = true; break; }
@@ -88,6 +88,8 @@ $cb = function ($code, $label, $checked) use ($h) {
 };
 
 Template::printHeader("Permissões de Usuário", false, false);
+
+echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-height: 1.4; }</style>';
 
 ?>
     <div style="max-width: 720px; margin: 0 auto;">
@@ -106,6 +108,11 @@ Template::printHeader("Permissões de Usuário", false, false);
                     <strong>Global</strong><br />
                     <?= $cb('admin', 'admin', in_array('admin', $perms, true)) ?>
                     <?= $cb('index', 'index', in_array('index', $perms, true)) ?>
+                    <?= $cb('certificados', 'certificados', in_array('certificados', $perms, true)) ?>
+                    <div class="muted-note">
+                        <strong>certificados</strong> permite emitir certificados para
+                        qualquer evento. Não é a mesma coisa que ser juiz.
+                    </div>
                 </td></tr>
 
                 <tr><td style="text-align: left;">

@@ -102,19 +102,262 @@
     </vendor>
   </table>
   <table name="participantes" idMethod="native" phpName="Participante">
-    <column name="idparticipantes" phpName="ParticipanteId" type="INTEGER" primaryKey="true" autoIncrement="true" required="true"/>
     <column name="nome" phpName="Nome" type="VARCHAR" size="300"/>
     <column name="funcao" phpName="Funcao" type="VARCHAR" size="45"/>
-    <column name="cpf" phpName="Cpf" type="BIGINT" size="11"/>
-    <column name="evento" phpName="EventoId" type="CHAR" size="4" primaryKey="true"/>
+    <!-- CPF, zero-padded to 11. A string, not a number: a CPF is an
+         identifier, and storing it as BIGINT is what made dechex() the
+         obvious way to build a URL out of one and produced this whole work
+         package. It also destroyed every leading zero on the way in, and
+         made "no document on record" indistinguishable from the value 0.
+         Format is enforced by a CHECK constraint added in the migration —
+         Propel's schema has no element for one — and deliberately not the
+         check digits: historical rows include CPFs mistyped at registration
+         and they must stay valid rows. -->
+    <column name="cpf" phpName="Cpf" type="CHAR" size="11">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+      </vendor>
+    </column>
+    <!-- Passport or other non-CPF document, stored verbatim. Never padded:
+         padding is only reversible when the length is known, which is true
+         of a CPF and false of a passport, so a padded passport number can
+         never be told from one with a real leading zero.
+         Permissive on purpose — Brazilian passports are two letters and six
+         digits, and the digits-only convention this column exists to end is
+         a data-entry habit, not a fact about passports. utf8mb4 so that a
+         future document form needs no further migration, and because it
+         matches the connection charset. -->
+    <column name="documento_estrangeiro" phpName="DocumentoEstrangeiro" type="VARCHAR" size="32">
+      <vendor type="mysql">
+        <parameter name="Charset" value="utf8mb4"/>
+        <parameter name="Collate" value="utf8mb4_unicode_ci"/>
+      </vendor>
+    </column>
+    <column name="evento" phpName="EventoId" type="CHAR" size="4" required="true"/>
+    <!-- Public certificate identifier: 16 random bytes, base64url, unpadded,
+         and the primary key.
+         ascii_bin is load-bearing, not tidiness. base64url is case-sensitive,
+         and the table default is latin1_swedish_ci, under which the key would
+         treat "aB" and "Ab" as the same token and a lookup would resolve to
+         the wrong participant's certificate. -->
+    <column name="token" phpName="Token" type="CHAR" size="22" primaryKey="true" required="true">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
+    <!-- Audit trail. Who asserted this record, when, and as part of which
+         paste. Existing rows carry NULL in all three and are not backfilled:
+         there is nothing to backfill from.
+
+         In the table rather than the access log because the two have
+         different lifetimes. Logs rotate on a deliberately short schedule
+         under the retention principle this system already adopted, while
+         certificate rows are kept indefinitely — and an audit trail that
+         expires before the artifact it describes is not an audit trail. A
+         certificate is a claim SAE makes about a person; when one is
+         disputed the question is who made the claim, and that is a property
+         of the record. LGPD Art. 37. -->
+    <column name="criado_por" phpName="CriadoPor" type="INTEGER"/>
+    <!-- DATETIME, not TIMESTAMP. TIMESTAMP is stored as an offset from the
+         epoch and rendered through the session timezone, so the same row
+         reads as a different instant if the server's timezone is ever
+         changed — and it runs out in 2038, which is inside the period these
+         rows are kept for. Neither is acceptable for a record whose whole
+         purpose is to say when something was asserted. -->
+    <column name="criado_em" phpName="CriadoEm" type="TIMESTAMP" sqlType="DATETIME"/>
+    <!-- Batch identifier, shared by every row of one paste. Same generator as
+         `token`, and so the same collation reasoning: base64url is
+         case-sensitive, and under the table default (latin1_swedish_ci) two
+         batches whose ids differ only in case would be one batch to a
+         WHERE clause — which is how a deletion by lote_id would take rows it
+         was not meant to. -->
+    <column name="lote_id" phpName="LoteId" type="CHAR" size="22">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
+    <!-- Voiding. A certificate issued in error stops being valid without the
+         row being destroyed, because destroying it would take the audit trail
+         with it — and this action reaches certificates issued years ago, which
+         somebody may already hold. Whoever voided it and why are the first two
+         questions anybody asks afterwards, so they are on the record rather
+         than in a log that rotates.
+
+         Distinct from deleting a lote, which really does remove rows: that
+         exists to undo a paste minutes old, where nothing has been issued to
+         anybody yet. These two are different actions with different meanings
+         and the interface names them differently.
+
+         A voided row is excluded from /verificar, from /buscar, and from
+         duplicate detection — so the same certificate can be issued again
+         afterwards, which is usually the point of voiding one. -->
+    <column name="anulado_em" phpName="AnuladoEm" type="TIMESTAMP" sqlType="DATETIME"/>
+    <column name="anulado_por" phpName="AnuladoPor" type="INTEGER"/>
+    <!-- Required by the interface, nullable in the schema: existing rows have
+         no reason because they are not voided. latin1 like every other text
+         column here, so the same character-set check applies to it. -->
+    <column name="anulado_motivo" phpName="AnuladoMotivo" type="VARCHAR" size="255"/>
     <foreign-key foreignTable="evento" name="participantes_evento_id" onDelete="CASCADE" onUpdate="CASCADE">
       <reference local="evento" foreign="evento_id"/>
+    </foreign-key>
+    <!-- SET NULL, never CASCADE. admin_usuario.php deletes the user row when
+         a user is left with no meaningful permissions, so CASCADE here would
+         mean that de-permissioning somebody deletes every certificate they
+         ever issued. Losing the attribution is bad; losing the certificates
+         is unrecoverable. -->
+    <foreign-key foreignTable="user" name="participantes_criado_por" onDelete="SETNULL" onUpdate="CASCADE">
+      <reference local="criado_por" foreign="user_id"/>
+    </foreign-key>
+    <foreign-key foreignTable="user" name="participantes_anulado_por" onDelete="SETNULL" onUpdate="CASCADE">
+      <reference local="anulado_por" foreign="user_id"/>
     </foreign-key>
     <index name="participantes_evento_id_idx">
       <index-column name="evento"/>
     </index>
+    <!-- What makes a bad paste identifiable, and deletable, afterwards. -->
+    <index name="participantes_lote_id_idx">
+      <index-column name="lote_id"/>
+    </index>
+    <index name="participantes_criado_por_idx">
+      <index-column name="criado_por"/>
+    </index>
+    <!-- Declared rather than left to Propel, which needs an index on a foreign
+         key column and otherwise invents one called `fi_ticipantes_anulado_por`
+         — a truncation, and not a name anybody would look for. -->
+    <index name="participantes_anulado_por_idx">
+      <index-column name="anulado_por"/>
+    </index>
+    <!-- No index on anulado_em, deliberately. Every query filtering on it
+         either resolves a single row by primary key first (/verificar) or is
+         already a scan for want of an index on the searchable columns
+         (/buscar, the admin lookup), so one here would earn nothing. -->
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+  <!-- A participant's report that something about their certificates is wrong.
+
+       Submitted from /requerimento, which is public and unauthenticated. It is a
+       queue of claims, not a source of truth: nothing here changes a
+       certificate. A person with the `certificados` permission reads the row,
+       decides, and acts through the insertion pages, which keep their own
+       audit trail in `participantes`.
+
+       Stored rather than only emailed, for three reasons. Email has no
+       retention: a CPF sent to a distribution list sits in mailboxes forever
+       and is forwarded by hand, which is exactly the processing this system
+       spent a work package removing from URLs and access logs. Email has no
+       state, so two people answer the same report or nobody does. And email
+       has no record of who decided what, which is the first question anybody
+       asks about a certificate that was changed or withdrawn. LGPD Art. 37,
+       and the same reasoning that put `criado_por` on `participantes`. -->
+  <table name="certificado_requerimento" idMethod="native" phpName="CertificadoRequerimento">
+    <!-- Same generator and same collation reasoning as `participantes.token`:
+         16 random bytes, base64url, and ascii_bin because base64url is
+         case-sensitive. It is the primary key and it is also what the
+         notification email links to, so it must not be guessable — the staff
+         page is permission-gated regardless, but a sequential id in an email
+         subject line is an invitation. -->
+    <column name="requerimento_id" phpName="RequerimentoId" type="CHAR" size="22" primaryKey="true" required="true">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
+    <!-- Which of the three things the person is reporting. See
+         Baja\Certificado\Requerimento\Caso, which owns the labels and the rule
+         about which cases need a certificate to point at.
+
+         Propel stores an ENUM as a TINYINT holding the index into valueSet,
+         not the label — every other enum in this database is the same, and
+         `evento`.`tipo` is a TINYINT on the live server. So the ORDER here is
+         permanent: appending a value is free, inserting one in the middle
+         silently relabels every existing row. Same for `status` below. -->
+    <column name="caso" phpName="Caso" type="ENUM" valueSet="incorreto,ausente,indevido" required="true"/>
+    <!-- The certificate this is about, for the two cases that start from a
+         /buscar result. Null for `ausente`, which is a report that no such
+         row exists.
+
+         No foreign key, deliberately. A FK would have to cascade or restrict,
+         and both are wrong: deleting a bad lote must not silently destroy the
+         reports that prompted it, and a report must not block the deletion.
+         The staff page resolves the token when it can and says so when it
+         cannot, which is the honest rendering of a row that outlived its
+         subject. -->
+    <column name="token" phpName="Token" type="CHAR" size="22">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
+    <!-- The event, when the person picked one from the list. Null when they
+         picked "not listed", which is not an edge case: this system does not
+         hold every event SAE BRASIL has ever run, and the people most likely
+         to be missing a certificate are exactly the ones whose event predates
+         it. No foreign key, for the reason above. -->
+    <column name="evento" phpName="EventoId" type="CHAR" size="4"/>
+    <!-- What they typed when the event was not on the list. Free text because
+         there is nothing to validate it against. -->
+    <column name="evento_texto" phpName="EventoTexto" type="VARCHAR" size="160"/>
+    <!-- As submitted, in one column. Unlike `participantes`, which splits CPF
+         from passport because it has to store a canonical form for lookup,
+         this is a claim under review by a person: normalizing it here would
+         throw away the spelling that may itself be the thing being reported. -->
+    <column name="documento" phpName="Documento" type="VARCHAR" size="32" required="true"/>
+    <!-- The name the person says is correct, which for a `incorreto` report
+         is the whole point and is not the name on file. -->
+    <column name="nome" phpName="Nome" type="VARCHAR" size="300" required="true"/>
+    <column name="email" phpName="Email" type="VARCHAR" size="254" required="true"/>
+    <column name="telefone" phpName="Telefone" type="VARCHAR" size="40"/>
+    <!-- Their description of the problem. The form asks them not to put
+         anything sensitive here and says why; there is no way to enforce
+         that, so the field is length-capped and the staff page carries the
+         same warning to whoever reads it. -->
+    <column name="descricao" phpName="Descricao" type="VARCHAR" size="2000" required="true"/>
+    <!-- No IP column, deliberately. An address is personal data under LGPD
+         Art. 5 I, nginx already logs it with a rotation policy, and nothing
+         on the staff page would be decided differently for having it. Abuse
+         is handled before the row exists — Turnstile, and the per-address
+         limit in Redis. -->
+    <column name="criado_em" phpName="CriadoEm" type="TIMESTAMP" sqlType="DATETIME" required="true"/>
+    <!-- Whether the notification email actually went out. A report that was
+         saved but never announced is the failure mode worth being able to
+         find: the person has been told it was received, and it was. -->
+    <column name="avisado_em" phpName="AvisadoEm" type="TIMESTAMP" sqlType="DATETIME"/>
+    <column name="status" phpName="Status" type="ENUM" valueSet="aberto,em_analise,resolvido,recusado" required="true" default="aberto"/>
+    <column name="resolvido_por" phpName="ResolvidoPor" type="INTEGER"/>
+    <column name="resolvido_em" phpName="ResolvidoEm" type="TIMESTAMP" sqlType="DATETIME"/>
+    <!-- What was decided and why. Required by the interface when a report
+         leaves `aberto`, nullable in the schema because an open one has no
+         answer yet. -->
+    <column name="resolucao" phpName="Resolucao" type="VARCHAR" size="1000"/>
+    <!-- SET NULL for the same reason as participantes.criado_por:
+         admin_usuario.php deletes the user row when somebody is left with no
+         meaningful permissions, and losing the attribution is better than
+         losing the report. -->
+    <foreign-key foreignTable="user" name="certificado_requerimento_resolvido_por" onDelete="SETNULL" onUpdate="CASCADE">
+      <reference local="resolvido_por" foreign="user_id"/>
+    </foreign-key>
+    <!-- The queue view is "open reports, oldest first", which is the only
+         query this table serves often enough to index for. -->
+    <index name="certificado_requerimento_status_idx">
+      <index-column name="status"/>
+      <index-column name="criado_em"/>
+    </index>
+    <!-- "Is there already a report about this certificate" — asked on every
+         submission to avoid mailing staff four times about one row. -->
+    <index name="certificado_requerimento_token_idx">
+      <index-column name="token"/>
+    </index>
+    <index name="certificado_requerimento_resolvido_por_idx">
+      <index-column name="resolvido_por"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+      <parameter name="Charset" value="utf8mb4"/>
+      <parameter name="Collate" value="utf8mb4_unicode_ci"/>
     </vendor>
   </table>
   <table name="prova" idMethod="native" phpName="Prova">
@@ -242,6 +485,22 @@
     </foreign-key>
     <vendor type="mysql">
       <parameter name="Engine" value="MYISAM"/>
+    </vendor>
+  </table>
+
+  <!-- Application configuration: JSON values keyed by name, editable at
+       runtime rather than through a deploy. Read via Baja\SysConfig. -->
+  <table name="config" idMethod="native" phpName="Config">
+    <column name="config_key" phpName="ConfigKey" type="VARCHAR" size="100" primaryKey="true" required="true"/>
+    <column name="config_value" phpName="ConfigValue" type="LONGVARCHAR" sqlType="json"/>
+    <column name="description" phpName="Description" type="VARCHAR" size="255"/>
+    <column name="updated_at" phpName="UpdatedAt" type="TIMESTAMP"/>
+    <column name="updated_by" phpName="UpdatedBy" type="INTEGER"/>
+    <foreign-key foreignTable="user" name="config_updated_by" onDelete="SET NULL" onUpdate="CASCADE">
+      <reference local="updated_by" foreign="user_id"/>
+    </foreign-key>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
     </vendor>
   </table>
 </database>
