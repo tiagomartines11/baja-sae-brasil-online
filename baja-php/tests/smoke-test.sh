@@ -249,13 +249,38 @@ fi
 
 # Replace whatever is in the cookie jar with a fresh login for one user, via
 # the same forum endpoint check 9 uses.
+#
+# /baja/login wants two proofs that the request came from one of our own login
+# forms (checks 23-26 test them one by one): the Origin header of an allowed
+# site, and the CSRF token sent twice, as the baja_csrf cookie and as the csrf
+# form field. A browser adds all of that by itself; curl adds none of it, so it
+# is passed here by hand, exactly as check 9 does. Without it the forum answers
+# with ?error=csrf and no session cookies, and every page asked for afterwards
+# is seen as an anonymous visitor. That is what happened when these lap
+# counting checks (written before the CSRF protection) met it in a merge: all
+# four failed with "marker not found", which points at the pages when the real
+# problem was that nobody was logged in.
+#
+# The redirect target goes in the query string, where the real forms put it.
 login_as() {
     : > "$COOKIES"
-    curl -s -o /dev/null -c "$COOKIES" -X POST \
+    local location
+    location=$(curl -s -o /dev/null -w "%{redirect_url}" -c "$COOKIES" -X POST \
+        "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
         --data-urlencode "username=$1" \
         --data-urlencode "password=123456" \
-        --data-urlencode "redirect=$BASE_JUIZ/index.php" \
-        "$BASE_FORUM/app.php/baja/login"
+        --data-urlencode "csrf=$CSRF" \
+        "$BASE_FORUM/app.php/baja/login?redirect=$BASE_JUIZ/index.php")
+    # Check the login itself, so that a refusal is reported as a refusal and
+    # not as a page that "did not render". A successful login redirects to the
+    # target with no ?error= and leaves the forum's session cookie in the jar.
+    if [[ "$location" == "$BASE_JUIZ/index.php" ]] && grep -q 'phpbb3_baja_sid' "$COOKIES"; then
+        green "PASS  login_as $1 got a forum session"
+        PASS=$((PASS + 1))
+    else
+        red "FAIL  login_as $1: the forum refused the login (Location='$location')"
+        FAIL=$((FAIL + 1))
+    fi
 }
 
 # check_body NAME BODY MARKER: pass when BODY contains MARKER.

@@ -25,8 +25,12 @@ namespace Baja\Tests\Contagem\Db;
  * "Being logged in" on this site means: the browser holds the forum's
  * cookies, and the forum's database has a session row that matches them.
  * The test obtains real cookies the way a person does, by posting a
- * username and password to the forum's login address. It uses two accounts
- * that every development database has (password 123456):
+ * username and password to the forum's login address, together with the
+ * two things the forum demands as proof that the post came from one of our
+ * own login forms: an Origin header and a CSRF token sent both as a cookie
+ * and as a form field (the details are in HttpBrowser::loginAndGetCookies).
+ * It uses two accounts that every development database has (password
+ * 123456):
  *
  *   juiz1     plays the controller of the test prova
  *   equipe1   plays a counter

@@ -24,6 +24,12 @@ trait HttpBrowser
     protected const CONTROLLER = 'juiz1';
     protected const COUNTER = 'equipe1';
     protected const SEEDED_PASSWORD = '123456';
+    /**
+     * The CSRF token this code sends to the forum's login, as cookie and as
+     * form field. Fixed, because the forum only checks that the two agree;
+     * see loginAndGetCookies().
+     */
+    protected const LOGIN_CSRF_TOKEN = 'contagem-http-tests-csrf-token-00000000000000000000000000000000';
 
     /** @var array<string, string[]> username => permission codes this test added and must remove */
     private array $grantedByThisTest = [];
@@ -49,18 +55,49 @@ trait HttpBrowser
      */
     private function loginAndGetCookies(string $username): array
     {
+        // The forum's login wants two proofs that the request came from one
+        // of this site's own login forms, and otherwise refuses it: it
+        // redirects to "...?error=csrf" and hands out no cookies.
+        //
+        //   1. An "Origin" header naming one of the allowed sites. A browser
+        //      adds it to every cross-site POST by itself; this code must
+        //      add it by hand.
+        //   2. The CSRF token, sent twice: as the "baja_csrf" cookie and as
+        //      the "csrf" form field. The forum keeps no copy of it; it only
+        //      checks that the two halves agree. So any value works here, as
+        //      long as it is the same in both places. (What protects a real
+        //      user is that another site cannot set a cookie on this one.)
+        //
+        // The page to go to after logging in travels in the address, as the
+        // real login forms send it.
         $response = $this->request(
             'POST',
-            '/app.php/baja/login',
-            [],
+            '/app.php/baja/login?redirect=' . rawurlencode('http://' . self::JUIZ_SITE . '/index.php'),
+            ['baja_csrf' => self::LOGIN_CSRF_TOKEN],
             http_build_query([
                 'username' => $username,
                 'password' => self::SEEDED_PASSWORD,
-                'redirect' => 'http://' . self::JUIZ_SITE . '/index.php',
+                'csrf' => self::LOGIN_CSRF_TOKEN,
             ]),
             self::FORUM_SITE,
-            ['Content-Type: application/x-www-form-urlencoded']
+            [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Origin: http://' . self::JUIZ_SITE,
+            ]
         );
+
+        // A refusal is not a missing dev stack: the forum answered, it just
+        // said no. Report it as a failure of this login, naming the reason
+        // the forum gave, instead of letting the skip below hide it. When the
+        // CSRF protection was added to the forum login, every HTTP test here
+        // was skipped for weeks with the message below, which blames the
+        // stack, and nobody noticed that the tests had stopped running.
+        if (str_contains($response['location'], 'error=')) {
+            $this->fail(
+                'O fórum recusou o login de "' . $username . '" (' . $response['location'] . '). '
+                . 'O POST de login deste teste já não corresponde ao que /baja/login exige.'
+            );
+        }
 
         $cookies = $response['cookies'];
         $userCookie = '';
