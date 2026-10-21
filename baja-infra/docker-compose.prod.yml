@@ -8,9 +8,15 @@
 services:
   mysql:
     ports:
-      # Re-publish 3306 on the Tailscale interface so tailnet members reach
-      # it; the base localhost binding stays too. TAILSCALE_IP in .env.
+      # Tailscale binding: tailnet members reach MySQL on TAILSCALE_IP (set
+      # in .env).
+      # Localhost binding: SSH-tunnel access (ssh -L 3306:127.0.0.1:3306
+      # baja@<server>) lands on the host's 127.0.0.1, so MySQL must be
+      # published there. Repeated here on purpose: the base file's
+      # 127.0.0.1:3306 binding was not kept on the production host, so the
+      # overlay states it explicitly.
       - "${TAILSCALE_IP}:3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       # Replaces the named mysql_data volume at the same target. The
       # /docker-entrypoint-initdb.d bind is inherited from base.
