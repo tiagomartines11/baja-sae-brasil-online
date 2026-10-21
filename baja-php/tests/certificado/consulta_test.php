@@ -41,7 +41,7 @@ $gravar = static function (string $nome, ?string $cpf, ?string $est, string $ev,
 $gravar('José Antônio da Silva', synthetic_cpf('529982247'), null, $evA, 'competidor');
 $gravar("Maria D\u{2019}Ávila Souza", null, 'AB-123.456', $evA, 'juiz');
 $gravar('Pedro Silva Lima',      synthetic_cpf('001234567'), null, $evB, 'comite');
-$gravar('Ana Clara Nogueira',    null, 'XY 987 654', $evB, 'fiscal');
+$gravar('Ana Clara Nogueira',    null, 'XY 987 654', $evB, 'engenheiro');
 
 /** @return array<int, string> names found, prefix stripped, sorted */
 $nomes = static function (Consulta $c) use ($prefix): array {
@@ -126,7 +126,7 @@ T::same(0, (new Consulta([$evB], ['juiz'], $prefix))->total(), 'and they narrow 
 // A deprecated role is searchable even though it cannot be chosen for a new
 // record — the certificates carrying it exist and are exactly what somebody
 // would be looking for.
-T::same(['Ana Clara Nogueira'], $nomes(new Consulta([], ['fiscal'], $prefix)), 'a deprecated role is still searchable');
+T::same(['Ana Clara Nogueira'], $nomes(new Consulta([], ['engenheiro'], $prefix)), 'a deprecated role is still searchable');
 
 // --- everything together -----------------------------------------------------------------
 
