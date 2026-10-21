@@ -9,7 +9,9 @@
 --      existing database, which is where the choices are explained. The
 --      block between the two "DDL" marker lines must stay equal to the SHOW
 --      CREATE TABLE those migrations produce, column and index order
---      included, and in step with baja-php/schema.xml. A later schema
+--      included, and in step with baja-php/schema.xml. (SHOW CREATE TABLE
+--      also prints each column's COLLATE and may list the foreign keys in
+--      another order; neither is a difference.) A later schema
 --      change is a new migration, folded in here as well;
 --   2. records those two migrations as applied, the way 05 does for the
 --      ones folded into its dump, so that `propel migration:migrate` on a

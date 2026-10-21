@@ -1677,7 +1677,7 @@ one: matching some 3 500 marks, train by train, is most of it.
 ### Deploy notes
 
 - **Tables: two Propel migrations**, in `baja-php/generated-migrations/`,
-  applied with the others by `vendor/bin/propel migration:migrate` in
+  applied with the others by `./propel migration:migrate` in
   `baja-php/`, inside the app container, before the new code serves
   requests: every recount reads the newer columns.
   - `PropelMigration_1792553081`: the tables exactly as they first shipped
@@ -1720,7 +1720,7 @@ one: matching some 3 500 marks, train by train, is most of it.
      | nine tables, the query finds nothing (the 90ead59 tables) | staging (the dev VPS, after 26SE) | `_1792553081` does nothing, `_1792553082` adds the columns |
      | the query finds any column | a database that ran a later copy of the old hand-run `2026-contagem.sql` | do not let migrate run `_1792553082`: an `ADD` of a column that exists fails. Compare `SHOW CREATE TABLE` of each `contagem_*` table with `baja-infra/mysql/init/06-contagem.sql`, add by hand what is missing, then record both as applied: `INSERT INTO propel_migration (execution_datetime, version) VALUES (NOW(), 1792553081), (NOW(), 1792553082);` |
 
-     Afterwards `vendor/bin/propel migration:status` lists both as
+     Afterwards `./propel migration:status` lists both as
      executed.
 - **Going back.** `migration:down` undoes `_1792553082` (it refuses while
   any entry has no car: MySQL will not invent a number for it) and then
@@ -1731,7 +1731,11 @@ one: matching some 3 500 marks, train by train, is most of it.
   migrations as applied, so `migration:migrate` skips them there. A later
   schema change is a new migration, folded into that file too (column and
   index order included, so that a migrated database and a fresh one have
-  the same `SHOW CREATE TABLE`).
+  the same `SHOW CREATE TABLE`). A dev database created from an earlier
+  copy of `init/06-contagem.sql`, before it recorded the two migrations,
+  already has the newer columns but not those rows: there `migrate` runs
+  `_1792553082` and fails on a duplicate column. Recreate that database,
+  or record both versions with the `INSERT` from the table above.
 - **Cloudflare.** `s-maxage` does nothing by itself: Cloudflare does not
   cache `.php` responses by default. Add a Cache Rule for the results host:
   *URI Path equals `/contagem_feed.php`* → **Eligible for cache**, Edge TTL
