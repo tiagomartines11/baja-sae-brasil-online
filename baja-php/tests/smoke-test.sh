@@ -706,6 +706,27 @@ else
 fi
 rm -f "$REALJAR2"
 
+# 29. juiz1 keeps the grants of BOTH seed files.
+#
+# Two files seed juiz1's row in baja_resultados.user: 05-seed-baja-resultados.sql
+# (score entry on four provas) and 06-contagem.sql (controller of the Enduro,
+# a laps prova). username is unique, and the second file writes its row with
+# ON DUPLICATE KEY UPDATE, which replaces the whole permissions column. So the
+# two rows must list the same complete set, or the file that runs last quietly
+# throws the other's grants away. That is what happened when the branch that
+# added juiz1 to the first file was merged with the one that added the second:
+# juiz1 came out of a fresh database with the Enduro and nothing else.
+#
+# Checked through the dashboard rather than the database, because the
+# dashboard prints one link per prova the user may enter and so shows both
+# kinds of grant at once: the Enduro is a laps prova (contagem.php), and
+# Manobrabilidade a normal one (dashboard.php). Needs a database seeded by both
+# files; on an older one recreate it (docker compose down -v, then up -d).
+login_as juiz1
+body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/26BR/index.php")
+check_body "juiz1 keeps the Enduro grant from 06-contagem.sql" "$body" 'href="contagem.php?p=END"'
+check_body "juiz1 keeps the score-entry grants from 05-seed-baja-resultados.sql" "$body" 'href="dashboard.php?p=MAN"'
+
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"
 [[ $FAIL -eq 0 ]] || exit 1

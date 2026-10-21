@@ -238,9 +238,16 @@ ON DUPLICATE KEY UPDATE `nome` = VALUES(`nome`);
 --   juiz1                controller of the Enduro (review, race control, ...)
 --   the other four       counters: 26BR_END_CONT lets them into the count
 --                        area, and the links below say on which source
+--
+-- juiz1 already exists: 05-seed-baja-resultados.sql creates the row, with
+-- score-entry grants for four other provas, and username is unique. The ON
+-- DUPLICATE KEY UPDATE below then replaces juiz1's WHOLE permissions column
+-- with the value here, so this row must repeat those grants or they are lost
+-- on every fresh database. Keep juiz1's row identical in both files; smoke
+-- check 29 fails when they drift apart.
 INSERT INTO `user` (`username`, `permissions`)
 VALUES
-    ('juiz1',    '| index | 26BR_END |'),
+    ('juiz1',    '| index | 26BR_END | 26BR_MAN | 26BR_ABS | 26BR_VLT | 26BR_PEN |'),
     ('equipe1',  '| index | 26BR_END_CONT |'),
     ('equipe2',  '| index | 26BR_END_CONT |'),
     ('capitao1', '| index | 26BR_END_CONT |'),

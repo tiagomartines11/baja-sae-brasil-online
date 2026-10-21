@@ -490,8 +490,16 @@ INSERT INTO `user` VALUES (1,'superadmin','| index | admin |',NULL);
 -- Deliberately NOT admin, and deliberately overlapping only partially, so the
 -- two accounts exercise the permission filter in juiz/index.php rather than
 -- both seeing everything: juiz1 gets Manobrabilidade/Abastecimento/Voltas,
--- juiz2 gets Enduro/Super Prime/Grid, both share Penalidades.
-INSERT INTO `user` VALUES (2,'juiz1','| index | 26BR_MAN | 26BR_ABS | 26BR_VLT | 26BR_PEN |',NULL);
+-- juiz2 gets Super Prime/Grid, both share Penalidades and the Enduro.
+--
+-- juiz1's row is ALSO written by 06-contagem.sql, which makes juiz1 the
+-- controller of the Enduro (26BR_END, a laps prova) and uses ON DUPLICATE KEY
+-- UPDATE on the unique username. That statement replaces the whole
+-- permissions column, so whichever file runs last decides what juiz1 may do.
+-- Keep the two rows identical: the grants below include 26BR_END, and the row
+-- in 06-contagem.sql includes the four score-entry grants from here.
+-- Smoke check 29 fails when they drift apart.
+INSERT INTO `user` VALUES (2,'juiz1','| index | 26BR_END | 26BR_MAN | 26BR_ABS | 26BR_VLT | 26BR_PEN |',NULL);
 INSERT INTO `user` VALUES (3,'juiz2','| index | 26BR_END | 26BR_SPP | 26BR_GRI | 26BR_PEN |',NULL);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
