@@ -67,31 +67,20 @@ baja-app the option is hidden and everything else works as before.
 
 ## Deploying to an existing database
 
-`master` has no migrations directory, so the table is created by hand:
+The table comes from the Propel migration
+`baja-php/generated-migrations/PropelMigration_1790819962.php`, applied with
+the others by `./propel migration:migrate`.
 
-```sql
-CREATE TABLE `timer` (
-  `evento_id` char(4) NOT NULL,
-  `timer_id` int NOT NULL,
-  `config` json DEFAULT NULL,
-  `config_backup` json DEFAULT NULL,
-  `state` json DEFAULT NULL,
-  `log` json DEFAULT NULL,
-  `access_key` char(6) NOT NULL,
-  `view_key` char(6) NOT NULL,
-  PRIMARY KEY (`evento_id`,`timer_id`),
-  UNIQUE KEY `timer_access_key_UNIQUE` (`access_key`),
-  UNIQUE KEY `timer_view_key_UNIQUE` (`view_key`),
-  CONSTRAINT `timer_evento_id` FOREIGN KEY (`evento_id`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-```
+It creates the table as `latin1`. The charset has to match the `evento`
+table's, or MySQL rejects the foreign key (error 3780), and the databases
+that came from the production dump are `latin1`. On any other database,
+check with `SHOW CREATE TABLE evento` before migrating.
 
-The charset has to match the `evento` table's, or MySQL rejects the foreign
-key (error 3780). The databases that came from the production dump are
-`latin1`; check with `SHOW CREATE TABLE evento` if in doubt.
-
-A database that already has the table from before the read-only key needs
-the column added, and a key for each existing timer:
+The migration is `CREATE TABLE IF NOT EXISTS`, so it leaves an existing
+table alone. That matters for a database that already had the table from
+before the read-only key (staging): it has no `view_key`, and the migration
+will not add it. Only there, add the column and a key for each existing
+timer by hand:
 
 ```sql
 ALTER TABLE `timer` ADD COLUMN `view_key` char(6) NULL AFTER `access_key`;
