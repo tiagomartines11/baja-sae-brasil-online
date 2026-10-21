@@ -1,0 +1,570 @@
+// What the review screen offers on each kind of flag: what A and K do there,
+// what their buttons say, what is asked first, and which other buttons the
+// flag gets. Pure functions, tested with `node --test`.
+//
+// The rule behind all of it: a button that changes a car's lap count says so
+// in its own words, and a decision that ADDS a pass on a suggestion's word
+// is never one keystroke away.
+
+import { duracao, relogio } from './revisao-formato.js';
+import { rotuloDeUsarTempo } from './revisao-frases.js';
+
+// ---- "the count is in doubt" ------------------------------------------------
+
+// The server marks a flag with `contagem_em_duvida` when the car's official
+// count may be wrong RIGHT NOW because of it:
+//   'a_mais'   two counted passes closer together than a lap can be: one of
+//              them may be the same crossing counted twice
+//   'a_menos'  a pass is held back and may be real
+// Returns the sentence shown on the flag, or null when the count is not in doubt.
+//
+// A "??" (numero_ilegivel) puts no count in doubt by itself: it is the
+// first car it may have been that may be a lap short, if it was that car,
+// and the sentence says it that way.
+export function fraseDeDuvida(alerta) {
+  const carro = (alerta?.carros ?? [])[0];
+  if (alerta?.tipo === 'numero_ilegivel' && alerta.contagem_em_duvida === 'a_menos') {
+    return carro === undefined
+      ? 'Se esta passagem foi de algum carro, ele pode estar com uma volta a menos.'
+      : `Se esta passagem foi do carro ${carro}, ele pode estar com uma volta a menos.`;
+  }
+  const quem = carro === undefined ? 'O carro' : `O carro ${carro}`;
+  if (alerta?.contagem_em_duvida === 'a_mais') {
+    return `${quem} pode estar com uma volta a mais.`;
+  }
+  if (alerta?.contagem_em_duvida === 'a_menos') {
+    return `${quem} pode estar com uma volta a menos.`;
+  }
+  return null;
+}
+
+// ---- the K button -----------------------------------------------------------
+//
+// K means "confirmar" on the flag's first entry. What that DOES depends on
+// the flag, and the button has to say it:
+//
+//   - on most flags the pass already counts, and confirming only tells the
+//     engine to stop flagging it;
+//   - on a lone entry, a probable swap, a held pass, an unclassified car and
+//     the like the pass does not count yet, and confirming gives the car ONE
+//     MORE PASS.
+//
+// The server says which kind a flag is ("efeito_de_confirmar"); for a flag
+// from before that existed the type decides.
+
+const TIPOS_QUE_SOMAM_PASSAGEM = [
+  'solitaria', 'troca_provavel', 'carro_nao_classificado', 'antes_da_largada', 'passagem_proxima_demais',
+];
+
+// Flags with no K at all:
+//   repetida             "keep both" would count the car twice; the choices
+//                        are to void the second entry or to say it was
+//                        another car
+//   tempo_desconhecido   K used to count the pass at the phone's own clock
+//                        time, which the screen does not even show. The pass
+//                        is added by hand instead, with a time the reviewer
+//                        types ("Adicionar passagem")
+//   no_box, no_abastecimento
+//                        "está correto" explained nothing: either the car
+//                        left (mark the exit) or the pass did not happen
+//                        (discard it). The pass is HELD meanwhile, and K
+//                        would count it while leaving the car logged inside
+//   saida_presumida      the engine assumed an exit nobody logged and went on
+//                        counting. "Confirmar" there has one meaning, and
+//                        it is the button "Confirmar saída": the exit is
+//                        STORED. A K that only hid the flag would leave the
+//                        log wrong under the same word
+//   registro_tardio      one crossing typed by two counters far apart: K
+//                        would count the first entry and leave the second
+//                        to make a short lap. The choice is whose time is
+//                        right ("Usar o tempo de …"), which counts it once
+const TIPOS_SEM_CONFIRMAR = ['repetida', 'tempo_desconhecido', 'no_box', 'no_abastecimento', 'saida_presumida', 'registro_tardio'];
+
+const ROTULOS_DE_CONTAR = {
+  carro_nao_classificado: 'Contar mesmo assim (+1 volta)',
+  antes_da_largada: 'Contar como passagem inicial (+1 volta)',
+};
+
+// Would a "confirmar" on this flag give the car one more official pass?
+function somaPassagem(alerta) {
+  const efeito = alerta.efeito_de_confirmar
+    ?? (TIPOS_QUE_SOMAM_PASSAGEM.includes(alerta.tipo) ? 'mais_uma_passagem' : 'nenhum');
+  return efeito === 'mais_uma_passagem';
+}
+
+const rotuloDeContar = (alerta) => ROTULOS_DE_CONTAR[alerta.tipo] ?? 'Contar esta passagem (+1 volta)';
+
+// What K does on a flag. Null when the flag has no K (see above, and a flag
+// about no entry). Otherwise {rotulo, maisUmaPassagem}.
+export function acaoDeConfirmar(alerta) {
+  if (!alerta || TIPOS_SEM_CONFIRMAR.includes(alerta.tipo) || (alerta.passagem_ids ?? []).length === 0) {
+    return null;
+  }
+  if (somaPassagem(alerta)) {
+    return { rotulo: rotuloDeContar(alerta), maisUmaPassagem: true };
+  }
+  if (alerta.tipo === 'numero_ilegivel') {
+    // Nothing "is correct" about a pass with no car: K leaves it with none.
+    return { rotulo: 'Deixar sem carro, parar de avisar', maisUmaPassagem: false };
+  }
+  return { rotulo: 'Está correto, parar de avisar', maisUmaPassagem: false };
+}
+
+// The decision K sends, or null when the flag has no K.
+export function decisaoConfirmarAlerta(alerta) {
+  return acaoDeConfirmar(alerta) ? { tipo: 'confirmar', passagem_id: alerta.passagem_ids[0] } : null;
+}
+
+// The same rule as the engine's Settings::isImpossiblyShortLap(): under two
+// matching windows whatever the pace, or under the configured fraction of
+// the lap expected of that car.
+export function voltaImpossivelmenteCurta(voltaMs, configuracoes, voltaEsperadaMs) {
+  if (voltaMs === null || voltaMs === undefined) {
+    return false;
+  }
+  const janelaMs = Number(configuracoes?.janela_ms) || 20000;
+  if (voltaMs < 2 * janelaMs) {
+    return true;
+  }
+  const fracao = Number(configuracoes?.fracao_volta_minima) || 0.5;
+  return voltaEsperadaMs !== null && voltaEsperadaMs !== undefined && voltaMs < fracao * voltaEsperadaMs;
+}
+
+// A lap of `voltaMs` that counting a pass of `carro` would create: that
+// lap again when it is impossibly short for the car, null otherwise. Every
+// "contar" asks with it, on a flag (K, A) as on a chip.
+function voltaCurtaDoCarro(carro, voltaMs, estado) {
+  const linha = (estado?.carros ?? []).find((outra) => outra.carro === carro);
+  return voltaImpossivelmenteCurta(voltaMs ?? null, estado?.configuracoes, linha?.volta_esperada_ms ?? null) ? voltaMs : null;
+}
+
+// When K adds a pass and the lap it creates is impossibly short: that lap
+// in ms (for the question). Null otherwise.
+export function voltaCurtaAoContar(alerta, estado) {
+  if (!acaoDeConfirmar(alerta)?.maisUmaPassagem) {
+    return null;
+  }
+  return voltaCurtaDoCarro((alerta.carros ?? [])[0], alerta.volta_resultante_ms, estado);
+}
+
+function perguntaDePassagemInicial(alerta) {
+  return `Contar esta passagem do carro ${(alerta.carros ?? []).join(', ')} como a PASSAGEM INICIAL dele? `
+    + 'Ela foi registrada ANTES da largada e hoje não conta. Contando, o carro ganha uma passagem oficial: '
+    + 'todas as voltas dele sobem em 1 (+1 volta). Contar?';
+}
+
+function perguntaDeVoltaCurta(voltaMs) {
+  return `Contar esta passagem criaria uma volta de ${duracao(voltaMs)}, curta demais para ser real. `
+    + 'O mais provável é ser a mesma passagem registrada duas vezes. Contar mesmo assim?';
+}
+
+// What must be asked before "confirmar" on one chip of the timeline; null
+// when nothing. `opcao` is one item of acoesDaEntrada(). The short-lap
+// question is the one K asks: the server sends, with a pass that would
+// count, the shortest lap it would make ("volta_resultante_ms"). At a race
+// a reviewer counted three entries on their chips in four seconds, each a
+// lap of about a minute, and was asked nothing about it.
+export function perguntaAoContarNaEntrada(opcao, entrada, estado = null) {
+  if (opcao?.acao !== 'confirmar' || !opcao.maisUmaPassagem) {
+    return null;
+  }
+  if (entrada.grupo?.papel === 'antes_da_largada') {
+    // Measured from no previous crossing: the initial pass question only.
+    return `Este registro é de ANTES da largada. Contá-lo faz dele a passagem inicial do carro ${entrada.carro}: `
+      + 'todas as voltas dele sobem em 1 (+1 volta). Contar?';
+  }
+  const voltaMs = entrada.grupo ? entrada.grupo.volta_resultante_ms : entrada.volta_resultante_ms;
+  const voltaCurtaMs = voltaCurtaDoCarro(entrada.carro, voltaMs, estado);
+  const retida = entrada.grupo?.papel === 'retida';
+  const motivo = retida ? entrada.grupo.motivo_retencao : null;
+  if (motivo === 'no_box' || motivo === 'no_abastecimento') {
+    // Asked first even when the lap is short too: it names the right
+    // action ("Marcar saída"), which the short-lap question does not.
+    const area = motivo === 'no_box' ? 'box' : 'abastecimento';
+    return `Esta passagem está RETIDA porque o carro ${entrada.carro} constava como dentro do ${area}. `
+      + `Contá-la assim dá ao carro MAIS UMA PASSAGEM (+1 volta) e ele CONTINUA constando como dentro do ${area}. `
+      + (voltaCurtaMs !== null ? `Além disso, ela criaria uma volta de ${duracao(voltaCurtaMs)}, curta demais para ser real. ` : '')
+      + `Se o carro saiu, o certo é "Marcar saída do ${area}" no alerta. Contar mesmo assim?`;
+  }
+  if (voltaCurtaMs !== null) {
+    return perguntaDeVoltaCurta(voltaCurtaMs);
+  }
+  if (entrada.anulada_auto) {
+    return 'Este registro foi anulado automaticamente como repetição (toque duplo ou troca de contador). '
+      + `Contá-lo dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta), poucos segundos depois da anterior. Contar mesmo assim?`;
+  }
+  if (retida) {
+    return 'Esta passagem está RETIDA: os contadores concordam, mas ela parece ser a mesma passagem de antes registrada de novo. '
+      + `Contá-la dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta). Contar mesmo assim?`;
+  }
+  const registros = (entrada.grupo?.passagem_ids ?? []).length;
+  return `Contar esta passagem dá ao carro ${entrada.carro} MAIS UMA PASSAGEM (+1 volta)`
+    + `${registros > 1 ? '' : ' com base neste único registro'}. Contar?`;
+}
+
+// What must be asked before K on this flag; null when nothing.
+export function perguntaAoConfirmar(alerta, estado) {
+  const confirmar = acaoDeConfirmar(alerta);
+  if (!confirmar) {
+    return null;
+  }
+  // A pass typed before the start never counts by itself, and making it
+  // the car's initial pass raises every later lap of that car by one: that
+  // is always asked, however plausible the lap.
+  if (confirmar.maisUmaPassagem && alerta.tipo === 'antes_da_largada') {
+    return perguntaDePassagemInicial(alerta);
+  }
+  const voltaCurtaMs = voltaCurtaAoContar(alerta, estado);
+  return voltaCurtaMs === null ? null : perguntaDeVoltaCurta(voltaCurtaMs);
+}
+
+// ---- the A button -----------------------------------------------------------
+
+const NOMES_DE_AREA = { box: 'box', abastecimento: 'abastecimento' };
+
+// The area a "pass while logged inside" flag is about.
+export function areaDoAlerta(alerta) {
+  if (alerta?.tipo === 'no_box') {
+    return 'box';
+  }
+  return alerta?.tipo === 'no_abastecimento' ? 'abastecimento' : null;
+}
+
+// A pass at the line while the car is logged inside an area is HELD when
+// two or more counters agree on it: it does not count until a reviewer
+// either marks the exit (then it counts) or discards it. With one counter
+// only, the entry is a lone entry like any other: marking the exit closes
+// the stay but the pass still needs a second witness.
+//
+// One missed exit holds EVERY later pass of that stay, and one mark
+// releases them all (seen in a rehearsal: 3 laps became 8). The server
+// counts that for each such flag, in "voltas_ao_marcar_saida": how many
+// agreed held passes start counting if the exit is marked just before this
+// flag's pass. That number, and nothing else, is what the button promises.
+//
+// Returns 0 when marking the exit adds no lap, and when the server did not
+// say (one counter only, or a state from before the field existed): a
+// button must not promise laps on a guess.
+export function voltasAoMarcarSaida(alerta) {
+  if (areaDoAlerta(alerta) === null) {
+    return 0;
+  }
+  const voltas = alerta.voltas_ao_marcar_saida;
+  return Number.isInteger(voltas) && voltas > 0 ? voltas : 0;
+}
+
+// "+1 volta", "+5 voltas".
+const maisVoltas = (voltas) => (voltas === 1 ? '+1 volta' : `+${voltas} voltas`);
+
+// "Marcar saída do box (+5 voltas)", "(+1 volta)", or without the
+// parenthesis when marking the exit makes no pass count. Called with an
+// area alone it gives the plain label.
+export function rotuloDeMarcarSaida(area, voltas = 0) {
+  return `Marcar saída do ${NOMES_DE_AREA[area] ?? area}${voltas > 0 ? ` (${maisVoltas(voltas)})` : ''}`;
+}
+
+// What is asked before "marcar saída"; null when it changes no count.
+export function perguntaAoMarcarSaida(alerta) {
+  const area = areaDoAlerta(alerta);
+  const voltas = voltasAoMarcarSaida(alerta);
+  if (voltas === 0) {
+    return null;
+  }
+  const carro = (alerta.carros ?? []).join(', ');
+  const efeito = voltas === 1
+    ? `A passagem, que hoje está retida, passa a CONTAR: o carro ${carro} ganha uma volta (+1 volta). `
+    : `Esta passagem e as seguintes dele retidas pelo mesmo motivo passam a CONTAR, ${voltas} ao todo: `
+      + `o carro ${carro} ganha ${voltas} voltas (${maisVoltas(voltas)}). `;
+  return `Marcar a saída do carro ${carro} do ${NOMES_DE_AREA[area]}? `
+    + 'A saída é registrada um segundo antes desta passagem e a parada é encerrada. '
+    + efeito
+    + 'Se o carro não saiu e a passagem foi um engano dos contadores, use "Descartar esta passagem". Pode ser desfeito pelo histórico.';
+}
+
+// ---- an exit the engine assumed ------------------------------------------------
+//
+// The pit log had the car inside while two counters agreed on two passes of
+// it a lap apart. The engine assumed the exit nobody logged (one second
+// before the first of those passes), counted both, and raised the
+// informational flag "saida_presumida" on that first pass. Nothing is stored.
+//
+// The flag does not carry the area or the time of the exit; the state lists
+// every assumed exit ("saidas_presumidas": area, carro, ts_ms, entrada_ms).
+// The flag's is the latest one of its car at or before the flag's pass.
+// Null when the state has none (the log was put right meanwhile).
+export function saidaPresumidaDoAlerta(alerta, estado) {
+  if (alerta?.tipo !== 'saida_presumida' || alerta.ts_ms === null || alerta.ts_ms === undefined) {
+    return null;
+  }
+  const carro = (alerta.carros ?? [])[0];
+  const doCarro = (estado?.saidas_presumidas ?? [])
+    .filter((saida) => saida.carro === carro && saida.ts_ms <= alerta.ts_ms)
+    .sort((a, b) => b.ts_ms - a.ts_ms);
+  return doCarro[0] ?? null;
+}
+
+// "Confirmar saída": stores the assumed exit as an exit marked by the
+// reviewer, with the same decision "Marcar saída" uses. Null when the flag
+// has no assumed exit in the state.
+export function decisaoConfirmarSaida(alerta, estado) {
+  const saida = saidaPresumidaDoAlerta(alerta, estado);
+  return saida ? { tipo: 'marcar_saida', area: saida.area, equipe_numero: saida.carro, ts_ms: saida.ts_ms } : null;
+}
+
+// What A does on a flag: {rotulo, pergunta}. Null when the flag has no
+// suggestion (the button is then drawn disabled).
+//
+// `pergunta` is asked before the suggestion is stored, and is never null
+// for a suggestion that gives a car a pass or takes one away: A is one key,
+// and one key must not change a count by itself.
+export function acaoDeAceitar(alerta, estado = null) {
+  const sugestao = alerta?.sugestao;
+  // A pass while the car is logged inside an area has NO default: both
+  // ways out change the race (one adds a lap, the other throws a pass
+  // away), and which is right is for a person to see. Whatever an older
+  // server suggests there is not offered on A.
+  if (!sugestao || areaDoAlerta(alerta) !== null) {
+    return null;
+  }
+  const carros = (alerta.carros ?? []).join(', ');
+  switch (sugestao.tipo) {
+    case 'confirmar': {
+      // A is K here. It says so, and asks: always for a pass before the
+      // start, and whenever accepting adds a pass.
+      if (!somaPassagem(alerta)) {
+        return { rotulo: 'Aceitar sugestão', pergunta: null };
+      }
+      return {
+        rotulo: rotuloDeContar(alerta),
+        pergunta: perguntaAoConfirmar(alerta, estado)
+          ?? `Contar esta passagem dá ao carro ${carros} MAIS UMA PASSAGEM (+1 volta). Contar?`,
+      };
+    }
+    case 'anular':
+      return { rotulo: alerta.tipo === 'repetida' ? 'Anular a segunda' : 'Aceitar sugestão', pergunta: null };
+    case 'descartar_passagem':
+      return {
+        rotulo: 'Descartar esta passagem',
+        pergunta: `Descartar esta passagem do carro ${carros}? Todos os registros dela são anulados de uma vez. Pode ser desfeito pelo histórico.`,
+      };
+    case 'reatribuir':
+      if (alerta.tipo === 'numero_ilegivel') {
+        // The closest car another counter read. When that reading is the
+        // only one, the "??" is the second witness the pass needs: it may
+        // start to count, so A asks (see efeitoDeAtribuir).
+        return {
+          rotulo: `Atribuir ao carro ${sugestao.equipe_numero}`,
+          pergunta: alerta.contagem_em_duvida === 'a_menos'
+            ? `Atribuir este "??" ao carro ${sugestao.equipe_numero}? Só uma outra contagem registrou o carro ${sugestao.equipe_numero} aqui; `
+              + 'com este registro são dois, e a passagem pode passar a CONTAR (+1 volta). Pode ser desfeito pelo histórico. Atribuir?'
+            : null,
+        };
+      }
+      return { rotulo: 'Aceitar sugestão', pergunta: null };
+    case 'reatribuir_grupo': {
+      const quantos = (sugestao.passagem_ids ?? []).length;
+      return {
+        rotulo: `Mover os ${quantos} registros para o carro ${sugestao.equipe_numero}`,
+        pergunta: `Mover ${quantos} registros para o carro ${sugestao.equipe_numero}? `
+          + `Isso vale se os contadores digitaram o MESMO número errado: o carro ${sugestao.equipe_numero} ganha esta passagem e o outro carro a perde. `
+          + 'Se eles digitaram certo e o engano foi do registro sozinho, NÃO aceite: troque só aquele registro. Pode ser desfeito pelo histórico.',
+      };
+    }
+    default:
+      return { rotulo: 'Aceitar sugestão', pergunta: null };
+  }
+}
+
+// ---- the other buttons of a flag ----------------------------------------------
+
+// "Marcar saída": the suggestion when there is one of that kind, otherwise
+// worked out from the flag (one second before the pass, as the server does).
+// Null when the flag is not about a car logged inside an area.
+export function decisaoMarcarSaida(alerta) {
+  const area = areaDoAlerta(alerta);
+  if (area === null) {
+    return null;
+  }
+  if (alerta.sugestao?.tipo === 'marcar_saida') {
+    return { ...alerta.sugestao };
+  }
+  const carro = (alerta.carros ?? [])[0];
+  if (carro === undefined || alerta.ts_ms === null || alerta.ts_ms === undefined) {
+    return null;
+  }
+  return { tipo: 'marcar_saida', area, equipe_numero: carro, ts_ms: alerta.ts_ms - 1000 };
+}
+
+// The passes a "volta curta" flag is about, earlier first:
+// [{passagemId, registros, tsMs, qual}]. The flag does not know which of
+// the two is the mistake, so the screen offers both and the reviewer picks.
+// A flag from before the server sent both passes gives one item about all
+// of its entries.
+export function passagensParaDescartar(alerta) {
+  const passagens = (alerta?.passagens ?? []).filter((passagem) => (passagem.passagem_ids ?? []).length > 0);
+  if (passagens.length >= 2) {
+    const nomes = ['primeira', 'segunda'];
+    return passagens.slice(0, 2).map((passagem, indice) => ({
+      passagemId: passagem.passagem_ids[0],
+      registros: passagem.passagem_ids.length,
+      tsMs: passagem.ts_ms ?? null,
+      qual: nomes[indice],
+    }));
+  }
+  const ids = alerta?.passagem_ids ?? [];
+  return ids.length === 0 ? [] : [{ passagemId: ids[0], registros: ids.length, tsMs: alerta.ts_ms ?? null, qual: null }];
+}
+
+// "Descartar a segunda passagem (0:12:31, anula os 2 registros)".
+export function rotuloDeDescartar(passagem, largadaMs) {
+  // A pass a reviewer added is no counter's entry (its id is below zero):
+  // discarding it removes the addition.
+  const adicionada = passagem.registros === 1 && passagem.passagemId < 0;
+  const registros = adicionada ? 'remove a passagem adicionada pelo revisor'
+    : (passagem.registros === 1 ? 'anula 1 registro' : `anula os ${passagem.registros} registros`);
+  if (passagem.qual === null) {
+    return `Descartar esta passagem (${registros})`;
+  }
+  const quando = passagem.tsMs === null || largadaMs === null || largadaMs === undefined ? '' : `${relogio(passagem.tsMs - largadaMs)}, `;
+  return `Descartar a ${passagem.qual} passagem (${quando}${registros})`;
+}
+
+// The buttons a flag gets besides A, K and V, in the order they are drawn:
+//   {acao: 'marcar_saida', rotulo}
+//   {acao: 'descartar_passagem', passagem, rotulo}
+//   {acao: 'adicionar_passagem', rotulo}   opens the form where the time is typed
+//   {acao: 'confirmar_saida', rotulo}      on an exit the engine assumed; needs `estado`
+// An action that is already what A does on this flag is left out.
+//
+// A pass while the car is logged inside an area always gets both of its
+// buttons, in this order: "Marcar saída do … (+N voltas)" (the parenthesis
+// only when it makes passes count) and "Descartar esta passagem".
+export function acoesExtrasDoAlerta(alerta, largadaMs = null, estado = null) {
+  const sugerido = alerta?.sugestao?.tipo ?? null;
+  const acoes = [];
+  const area = areaDoAlerta(alerta);
+
+  if (alerta?.tipo === 'saida_presumida') {
+    // The car left (store the exit) or it did not (the pass did not happen).
+    if (decisaoConfirmarSaida(alerta, estado)) {
+      acoes.push({ acao: 'confirmar_saida', rotulo: 'Confirmar saída' });
+    }
+    for (const passagem of passagensParaDescartar({ ...alerta, passagens: [] })) {
+      acoes.push({ acao: 'descartar_passagem', passagem, rotulo: 'Descartar esta passagem' });
+    }
+  }
+
+  if (area !== null) {
+    if (decisaoMarcarSaida(alerta)) {
+      acoes.push({ acao: 'marcar_saida', rotulo: rotuloDeMarcarSaida(area, voltasAoMarcarSaida(alerta)) });
+    }
+    for (const passagem of passagensParaDescartar({ ...alerta, passagens: [] })) {
+      acoes.push({ acao: 'descartar_passagem', passagem, rotulo: 'Descartar esta passagem' });
+    }
+  }
+  if (alerta?.tipo === 'volta_curta') {
+    for (const passagem of passagensParaDescartar(alerta)) {
+      acoes.push({ acao: 'descartar_passagem', passagem, rotulo: rotuloDeDescartar(passagem, largadaMs) });
+    }
+  }
+  if (alerta?.tipo === 'passagem_proxima_demais' && sugerido !== 'descartar_passagem') {
+    // The held pass is the flag's own; discarding it settles the doubt the other way.
+    for (const passagem of passagensParaDescartar({ ...alerta, passagens: [] })) {
+      acoes.push({ acao: 'descartar_passagem', passagem, rotulo: rotuloDeDescartar(passagem, largadaMs) });
+    }
+  }
+  if (alerta?.tipo === 'tempo_desconhecido') {
+    acoes.push({ acao: 'adicionar_passagem', rotulo: 'Adicionar passagem…' });
+  }
+  return acoes;
+}
+
+// ---- "Usar o tempo de …" -------------------------------------------------------
+//
+// On a crossing typed late ("registro_tardio") and on a held pass whose
+// entries are too far apart ("dispersao_alta" with "tempos_possiveis"),
+// the reviewer says whose time is right. One button per time, numbered:
+// the keys 1, 2, 3 press them. Each is
+//   {decisao, rotulo, tecla, tsMs, fonteId, voltas, voltaResultanteMs}
+// and `decisao` is the "usar_tempo" request: the pass counts once, timed by
+// that entry; the other entry, when it is in another pass, joins it.
+// `voltas` is what that does to the count in force, from the server: +1
+// where none of the entries counts today ("confirmadas"), 0 where one does
+// (the primary source's, in "fonte_principal"), -1 where both of a late
+// pair do ("todas"). `voltaResultanteMs` is the shortest lap the pass
+// would make at that time. Empty for any other flag.
+export function temposParaEscolher(alerta, estado = null) {
+  const tempos = alerta?.tempos_possiveis ?? [];
+  if (!Array.isArray(tempos) || !['registro_tardio', 'dispersao_alta'].includes(alerta.tipo)) {
+    return [];
+  }
+  const nomeDaFonte = (fonteId) => (estado?.fontes ?? []).find((fonte) => fonte.id === fonteId)?.nome ?? null;
+  const largadaMs = estado?.corrida?.largada_ms ?? null;
+  return tempos.map((tempo, indice) => ({
+    decisao: {
+      tipo: 'usar_tempo',
+      passagem_id: tempo.passagem_id,
+      ...(tempo.passagem_alvo_id ? { passagem_alvo_id: tempo.passagem_alvo_id } : {}),
+    },
+    rotulo: rotuloDeUsarTempo(tempo, nomeDaFonte, largadaMs),
+    tecla: String(indice + 1),
+    tsMs: tempo.ts_ms,
+    fonteId: tempo.fonte_id,
+    // A server that predates "voltas" only offered these buttons where they add a pass.
+    voltas: Number.isInteger(tempo.voltas) ? tempo.voltas : 1,
+    voltaResultanteMs: tempo.volta_resultante_ms ?? null,
+  }));
+}
+
+// What a "Usar o tempo de …" button adds to its label: "(+1 volta)",
+// "(−1 volta)", or nothing when the count stays as it is.
+export function efeitoDeUsarTempo(tempo) {
+  if (tempo.voltas > 0) {
+    return '(+1 volta)';
+  }
+  return tempo.voltas < 0 ? '(−1 volta)' : '';
+}
+
+// The key 1, 2 or 3 on the selected flag: the index of the "Usar o tempo
+// de …" button it presses, or null when the flag has no such button (the
+// key then does nothing at all, not even a message).
+export function indiceDeUsarTempo(tecla, alerta, estado = null) {
+  const indice = Number(tecla) - 1;
+  return Number.isInteger(indice) && temposParaEscolher(alerta, estado)[indice] ? indice : null;
+}
+
+// The question before "Usar o tempo de …": it changes a count, or at least
+// a pass time, so it is never one key away without one. When the lap the
+// pass would make AT THAT TIME is impossibly short, the short-lap question
+// is asked instead, as on K.
+export function perguntaAoUsarTempo(alerta, tempo, estado = null) {
+  const carro = (alerta.carros ?? [])[0];
+  const voltaCurtaMs = voltaCurtaDoCarro(carro, tempo.voltaResultanteMs ?? null, estado);
+  if (voltaCurtaMs !== null) {
+    return perguntaDeVoltaCurta(voltaCurtaMs);
+  }
+  const outro = tempo.decisao.passagem_alvo_id
+    ? ' O outro registro fica junto dela, sem definir o horário.'
+    : ' Os outros registros ficam nela, sem definir o horário.';
+  let efeito = ' (+1 volta)';
+  if (tempo.voltas < 0) {
+    efeito = ': hoje os dois registros contam, e o carro perde a volta a mais (−1 volta)';
+  } else if (tempo.voltas === 0) {
+    efeito = ' (o número de voltas não muda)';
+  }
+  return `${tempo.rotulo}? A passagem do carro ${carro} conta UMA vez, nesse horário${efeito}.${outro} `
+    + 'Pode ser desfeito pelo histórico.';
+}
+
+// The question before "Descartar" on a flag.
+export function perguntaAoDescartar(alerta, passagem) {
+  const qual = passagem.qual === null ? 'esta passagem' : `a ${passagem.qual} passagem`;
+  const registros = passagem.registros === 1 ? 'O registro dela é anulado' : `Os ${passagem.registros} registros dela são anulados de uma vez`;
+  // Only a pass that counts today takes a lap with it: one of the two of a
+  // short lap. A HELD pass (too close to the previous one, or typed while
+  // the car is logged in the pit lane) does not count, so nothing is lost.
+  // A pass counted on an assumed exit counts today as well.
+  const contaHoje = alerta.tipo === 'volta_curta' || alerta.tipo === 'saida_presumida' || alerta.contagem_em_duvida === 'a_mais';
+  return `Descartar ${qual} do carro ${(alerta.carros ?? []).join(', ')}? ${registros}`
+    + `${contaHoje ? ' e o carro perde uma volta' : ''}. Pode ser desfeito pelo histórico.`;
+}

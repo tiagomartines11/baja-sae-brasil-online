@@ -16,19 +16,26 @@ T::same('', Funcao::label('inexistente'), 'an unknown code renders nothing rathe
 
 // --- deprecated values -------------------------------------------------------
 
-T::ok('fiscal is deprecated', Funcao::isDeprecated('fiscal'));
 T::ok('engenheiro is deprecated', Funcao::isDeprecated('engenheiro'));
+T::ok('fiscal is not deprecated', !Funcao::isDeprecated('fiscal'));
 T::ok('comissario is not deprecated', !Funcao::isDeprecated('comissario'));
 
 $selecionaveis = array_keys(Funcao::selectable());
-T::ok('fiscal is not offered for new records', !in_array('fiscal', $selecionaveis, true));
+T::ok('fiscal is offered for new records', in_array('fiscal', $selecionaveis, true));
 T::ok('engenheiro is not offered for new records', !in_array('engenheiro', $selecionaveis, true));
-T::same(6, count($selecionaveis), 'six roles remain selectable');
+T::same(7, count($selecionaveis), 'seven roles remain selectable');
 
-// The point of keeping them: certificates already carrying them were validly
-// issued and must keep rendering. `fiscal` used to render nothing at all.
-T::same('Fiscal', Funcao::label('fiscal'), 'a deprecated role still renders its label');
-T::same('Engenheiro', Funcao::label('engenheiro'), 'engenheiro still renders its label');
+// The point of keeping a deprecated role: certificates already carrying it
+// were validly issued and must keep rendering.
+T::same('Engenheiro', Funcao::label('engenheiro'), 'a deprecated role still renders its label');
+T::ok(
+    'an engenheiro certificate has a body sentence',
+    str_contains(Funcao::texto('engenheiro', 'EVENTO'), 'ENGENHEIRO')
+);
+
+// `fiscal` used to render nothing at all, and was once marked deprecated by
+// mistake: it is an active role and must both render and be selectable.
+T::same('Fiscal', Funcao::label('fiscal'), 'fiscal renders its label');
 T::ok(
     'a fiscal certificate has a body sentence',
     str_contains(Funcao::texto('fiscal', 'EVENTO'), 'FISCAL')

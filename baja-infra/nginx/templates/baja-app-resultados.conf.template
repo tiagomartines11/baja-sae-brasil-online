@@ -52,6 +52,18 @@ server {
         fastcgi_param SKIP_AUTH 1;
     }
 
+    # The public lap counting feed (overlays, broadcast graphics). No forum
+    # session is involved, so SKIP_AUTH keeps the session code, and the forum
+    # database behind it, out of the way of the audience.
+    location = /contagem_feed.php {
+        fastcgi_pass baja-app:9000;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /var/www/html/resultados/contagem_feed.php;
+        fastcgi_param PHP_VALUE "auto_prepend_file=/var/www/html/src/bootstrap.php";
+        fastcgi_param REDIRECT_EVENT $event_code;
+        fastcgi_param SKIP_AUTH 1;
+    }
+
     location ~ \.php$ {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         fastcgi_pass baja-app:9000;

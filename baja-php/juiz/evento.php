@@ -188,7 +188,7 @@ Template::printHeader("Detalhes do Evento", false);
                     <td><input style="width:700px;" type="number" name="ano" value="<?= $novo?'':$evento->getAno() ?>" /></td>
                 </tr>
                 <tr>
-                    <td>Menu</td>
+                    <td>Menu<br /><a href="ajuda_menu.php" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
                     <td><textarea style="width:700px;min-height:600px;" name="menu" id="menu" <?= $novo?'':'oninput="resetStyles();"' ?>><?php
                         $menu = $novo ? null : $evento->getMenu();
                         echo $menu === null ? '' : json_encode($menu, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

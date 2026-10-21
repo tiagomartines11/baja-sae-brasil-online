@@ -125,7 +125,10 @@ class Env
      */
     public static function isProduction(): bool
     {
-        return self::get('ENV', 'dev') === 'prod';
+        // A machine that does not say what it is counts as production:
+        // scripts that wipe or fill a race ask this question, and "nobody
+        // set ENV" must never read as permission to run them.
+        return self::get('ENV', 'prod') === 'prod';
     }
 
     /**
@@ -135,6 +138,6 @@ class Env
      */
     public static function isDevelopment(): bool
     {
-        return self::get('ENV', 'dev') === 'dev';
+        return self::get('ENV', 'prod') === 'dev';
     }
 }

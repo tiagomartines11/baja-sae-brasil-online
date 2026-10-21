@@ -73,6 +73,23 @@ check_in "anonymous /juiz/index.php redirects" "$status" 200
 status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/remote.php")
 check_in "anonymous /juiz/remote.php degrades gracefully" "$status" 200 400 403
 
+# 5b. Timers. timer.php is the one juiz page meant to work with no session:
+# it must render the key form rather than redirect to login, a seeded access
+# key must reach the timer, the read-only key must reach it without being able
+# to act, and the sync endpoint must refuse a bad key.
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer.php")
+check_in "anonymous /juiz/timer.php renders key form" "$status" 200
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer_action.php?k=DEVTM2")
+check_in "anonymous /juiz/timer_action.php with seeded key" "$status" 200
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer_action.php?k=DEVVW2")
+check_in "anonymous /juiz/timer_action.php with seeded read-only key" "$status" 200
+status=$(curl -s -o /dev/null -w "%{http_code}" -X POST --data '{"acoes":[{"id":"smoke","acao":"parar","at":0,"state":{"status":"stopped","step":0}}]}' "$BASE_JUIZ/timer_action.php?k=DEVVW2")
+check_in "read-only key cannot post actions" "$status" 403
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer_action.php?k=XXXXXX")
+check_in "anonymous /juiz/timer_action.php with bad key" "$status" 403
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_JUIZ/timer_action.php?id=1")
+check_in "anonymous /juiz/timer_action.php by id" "$status" 403
+
 # 6. Login flow. The form posts to login.php?act=login (NOT bare login.php —
 # the act=login query-string parameter is what triggers the auth branch).
 # All seeded test users share password '123456'.
@@ -167,10 +184,10 @@ fi
 # login rather than as an unprovisioned account. It now renders a page saying
 # so, and that page is what this check asserts.
 #
-# To exercise the dashboard instead, give juiz1 a row:
-#   INSERT INTO baja_resultados.user (username, permissions)
-#        VALUES ('juiz1', '| index |');
-# and swap the expectation below for the logout-link marker.
+# Since the lap counting seed (baja-infra/mysql/init/06-contagem.sql) juiz1 does
+# have a row on a freshly seeded database, so there this check passes through
+# its second branch, the dashboard. The first branch is kept for databases
+# seeded before that file existed.
 body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/index.php")
 if echo "$body" | grep -q 'ainda não tem acesso a este sistema'; then
     green "PASS  authenticated but unprovisioned /juiz/index.php explains itself"
@@ -219,8 +236,210 @@ else
     PASS=$((PASS + 1))
 fi
 
+# --- Lap counting (contagem de voltas) ---------------------------------------
+#
+# These rely on what baja-infra/mysql/init/06-contagem.sql seeds: the Enduro of
+# 26BR (prova END) is a laps prova with sources 1, 2 and 3; juiz1 controls it;
+# equipe1 counts on source 1 and equipe2 on source 2. On a database seeded
+# before that file existed they fail, and `docker compose down -v` followed by
+# `up -d` is the fix.
+#
+# The event is named in the URL (/26BR/...) so the checks do not depend on
+# which event bootstrap.php would pick by default.
+
+# Replace whatever is in the cookie jar with a fresh login for one user, via
+# the same forum endpoint check 9 uses.
+login_as() {
+    : > "$COOKIES"
+    curl -s -o /dev/null -c "$COOKIES" -X POST \
+        --data-urlencode "username=$1" \
+        --data-urlencode "password=123456" \
+        --data-urlencode "redirect=$BASE_JUIZ/index.php" \
+        "$BASE_FORUM/app.php/baja/login"
+}
+
+# check_body NAME BODY MARKER: pass when BODY contains MARKER.
+check_body() {
+    # -F: the marker is plain text, not a pattern.
+    if echo "$2" | grep -qF "$3"; then
+        green "PASS  $1"
+        PASS=$((PASS + 1))
+    else
+        red "FAIL  $1 (did not find '$3' in the response)"
+        FAIL=$((FAIL + 1))
+    fi
+}
+
+# What a page says when the user may not see it (Session::permissionCheck and
+# the contagem pages use the same sentence). These pages answer 200 either
+# way, so the body is what tells a rendered page from a refusal.
+REFUSAL='Você não tem acesso a essa página'
+
+# Markers that only exist in the fully rendered pages.
+COUNT_PAGE_MARKER='id="lista-recentes"'
+REVIEW_PAGE_MARKER='id="fila-abertos"'
+
+COUNT_PAGE="$BASE_JUIZ/26BR/contagem_contar.php?p=END&f=1"
+REVIEW_PAGE="$BASE_JUIZ/26BR/contagem_revisao.php?p=END"
+
+# 13. A counter opens the count page of the source they are linked to.
+login_as equipe1
+body=$(curl -s -b "$COOKIES" "$COUNT_PAGE")
+check_body "count page renders for a counter linked to that source (equipe1, source 1)" "$body" "$COUNT_PAGE_MARKER"
+
+# 14. A counter linked to a different source is refused: counters must not be
+# able to wander into each other's source, or the cross-check between sources
+# means nothing.
+login_as equipe2
+body=$(curl -s -b "$COOKIES" "$COUNT_PAGE")
+check_body "count page refuses a counter of another source (equipe2, source 1)" "$body" "$REFUSAL"
+
+# 15. The controller of the prova opens the review screen.
+login_as juiz1
+body=$(curl -s -b "$COOKIES" "$REVIEW_PAGE")
+check_body "review page renders for the controller (juiz1)" "$body" "$REVIEW_PAGE_MARKER"
+
+# 16. A counter is not a reviewer: seeing the other sources' entries is
+# exactly what a counter must never be able to do.
+login_as equipe1
+body=$(curl -s -b "$COOKIES" "$REVIEW_PAGE")
+check_body "review page refuses a counter (equipe1)" "$body" "$REFUSAL"
+
+# 17. The upload endpoint takes a device token, not a session. Without a token
+# it must answer 401, with or without cookies; sent here with none at all.
+status=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+    -H 'Content-Type: application/json' \
+    --data '{"entries": []}' \
+    "$BASE_JUIZ/contagem_sync.php")
+check_in "POST /contagem_sync.php without a token is refused" "$status" 401
+
+# 18. Security regression test for tournament_entry.php
+#     (hotfix/tournament-permission).
+#
+# What the page does: tournament_entry.php is the judge page for bracket
+# events (for example the SPR tournament). Two of its request parameters
+# CHANGE results in the database:
+#   ?p=<prova>&reset=<match>                  -> clears the winner of a match
+#   ?p=<prova>&match=<match>&setwinner=<team> -> records a winner
+# Both are plain GET links, so simply opening the URL triggers them.
+#
+# The bug: the page used to act on those parameters BEFORE calling
+# Session::permissionCheck(). On judge pages that call is the ONLY thing
+# that notices "nobody is logged in" and redirects to login.php. So an
+# anonymous visitor who typed the URL could rewrite competition results.
+# The fix moved the permission check to the top of the page.
+#
+# What this test simulates: an attacker with no session. The cookie jar is
+# NOT passed to curl, so both requests below are anonymous.
+#
+# What must happen: each request is answered with a redirect to login.php
+# (HTTP 302), and the tournament table is identical before and after. The
+# table must not change because an anonymous visitor has no right to touch
+# results at all. If it does change, the permission check is running too
+# late (or not at all) and the vulnerability is back.
+#
+# To make the test meaningful we first insert one throw-away match row.
+# Without a real row the vulnerable code would crash before writing (it
+# calls ->setWinner() on a null object) and the test would pass for the
+# wrong reason. The row lives under event 23SU / prova SPR, which the dev
+# seed (baja-infra/mysql/init/05-seed-baja-resultados.sql) always has, and
+# uses teams 5 and 18 from that same event. match_id 9999 is far above any
+# real match so it cannot collide with seeded data. It is deleted at the end.
+#
+# The MySQL root password is read from baja-infra/.env (dev default:
+# devrootpass). Export MYSQL_ROOT_PASSWORD=... to override.
+INFRA_ENV="$(dirname "$0")/../../baja-infra/.env"
+if [[ -z "${MYSQL_ROOT_PASSWORD:-}" && -f "$INFRA_ENV" ]]; then
+    MYSQL_ROOT_PASSWORD=$(grep -E '^MYSQL_ROOT_PASSWORD=' "$INFRA_ENV" | tail -n 1 | cut -d= -f2-)
+fi
+MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-devrootpass}"
+
+# Runs one SQL statement against the app database inside the mysql
+# container. -N drops the column-name header and -B prints tab-separated
+# rows, so the output is stable enough to compare as plain text.
+tournament_sql() {
+    docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" baja-mysql \
+        mysql -N -B -uroot baja_resultados -e "$1"
+}
+
+TEST_EVENT="23SU"
+TEST_PROVA="SPR"
+TEST_MATCH=9999
+TEST_TEAM1=5
+TEST_TEAM2=18
+
+# Remove any leftover from an earlier run that was interrupted, then insert
+# the throw-away row with team 18 already recorded as the winner, so that a
+# successful "reset" would visibly null it out.
+tournament_sql "DELETE FROM tournament WHERE evento_id='$TEST_EVENT' AND prova_id='$TEST_PROVA' AND match_id=$TEST_MATCH;"
+if tournament_sql "INSERT INTO tournament (evento_id, prova_id, match_id, round, equipe1_id, equipe2_id, winner, dados) VALUES ('$TEST_EVENT', '$TEST_PROVA', $TEST_MATCH, '0', '$TEST_TEAM1', '$TEST_TEAM2', $TEST_TEAM2, NULL);"; then
+    green "PASS  seeded throw-away tournament row $TEST_EVENT/$TEST_PROVA/$TEST_MATCH"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  could not seed tournament row (is baja-mysql up and the dev DB seeded?)"
+    FAIL=$((FAIL + 1))
+fi
+
+# Snapshot: every row of the table, in a fixed order. An empty snapshot
+# means we could not talk to the database, which is a failure in itself
+# (otherwise "nothing changed" would be trivially true).
+snapshot_sql="SELECT * FROM tournament ORDER BY evento_id, prova_id, match_id;"
+before_snapshot=$(tournament_sql "$snapshot_sql")
+if [[ -z "$before_snapshot" ]]; then
+    red "FAIL  could not read the tournament table before the requests"
+    FAIL=$((FAIL + 1))
+fi
+
+# Anonymous "reset" request. The /23SU/ prefix in the URL pins the event so
+# the page looks at the rows we seeded. curl prints two things: the HTTP
+# status and the Location header it would have followed (the page sends
+# "Location: login.php"; curl resolves that to an absolute URL for us).
+reset_url="$BASE_JUIZ/$TEST_EVENT/tournament_entry.php?p=$TEST_PROVA&reset=$TEST_MATCH"
+read -r status location < <(curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "$reset_url")
+check_in "anonymous tournament_entry.php?reset= is redirected" "$status" 302
+if [[ "$location" == */login.php ]]; then
+    green "PASS  anonymous reset= redirected to login (Location='$location')"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  anonymous reset= did not redirect to login.php (Location='$location')"
+    FAIL=$((FAIL + 1))
+fi
+
+# Anonymous "setwinner" request, trying to declare team 5 the winner.
+setwinner_url="$BASE_JUIZ/$TEST_EVENT/tournament_entry.php?p=$TEST_PROVA&match=$TEST_MATCH&setwinner=$TEST_TEAM1"
+read -r status location < <(curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "$setwinner_url")
+check_in "anonymous tournament_entry.php?setwinner= is redirected" "$status" 302
+if [[ "$location" == */login.php ]]; then
+    green "PASS  anonymous setwinner= redirected to login (Location='$location')"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  anonymous setwinner= did not redirect to login.php (Location='$location')"
+    FAIL=$((FAIL + 1))
+fi
+
+# The decisive check: the table must be identical. A redirect alone proves
+# nothing, because the vulnerable code ALSO redirected, right after writing.
+after_snapshot=$(tournament_sql "$snapshot_sql")
+if [[ -n "$before_snapshot" && "$before_snapshot" == "$after_snapshot" ]]; then
+    green "PASS  tournament table unchanged by anonymous reset=/setwinner= requests"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  tournament table CHANGED after anonymous requests: results can be edited without logging in"
+    FAIL=$((FAIL + 1))
+    tournament_sql "SELECT * FROM tournament WHERE evento_id='$TEST_EVENT' AND prova_id='$TEST_PROVA' AND match_id=$TEST_MATCH;"
+fi
+
+# Clean up the throw-away row so the dev DB looks like it did before.
+tournament_sql "DELETE FROM tournament WHERE evento_id='$TEST_EVENT' AND prova_id='$TEST_PROVA' AND match_id=$TEST_MATCH;"
+
+# --- Login shim security (fix/login-shim-security) -------------------------
+#
+# Checks 19-28 came in with the login-shim hardening and were numbered 13-25
+# on that branch; develop had meanwhile used 13-18 for lap counting and the
+# tournament hotfix, so they were renumbered on merge. Nothing else changed.
+
 # ---------------------------------------------------------------------------
-# 13-14. The return hop used to escape a lockout.
+# 19-20. The return hop used to escape a lockout.
 #
 # /baja/return is a validated no-op redirect. It exists because phpBB's
 # redirect() discards off-board targets, so forumLoginUrl() hands phpBB a
@@ -247,10 +466,10 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 18-19. Security regressions from the login-shim review.
+# 21-22. Security regressions from the login-shim review.
 # ---------------------------------------------------------------------------
 
-# 18. Open redirect via backslash. Browsers treat "\" as "/" in special-scheme
+# 21. Open redirect via backslash. Browsers treat "\" as "/" in special-scheme
 # URLs (WHATWG URL), so "/\evil.com" satisfied validateRedirect's "starts with
 # / but not //" test, was echoed back verbatim, and navigated to
 # http://evil.com/. Control characters are stripped by browsers before parsing
@@ -293,7 +512,7 @@ for payload in '/\evil.com' '/\/evil.com' "/$(printf '	')/evil.com" "/$(printf '
     done
 done
 
-# 19. Anonymous must never match a user row. The shim represents "no session"
+# 22. Anonymous must never match a user row. The shim represents "no session"
 # as username => '', and findOneByUsername('') is a plain WHERE username = ''.
 # A row with an empty username would therefore authenticate every
 # unauthenticated visitor as that row. Create one directly in the DB — bypassing
@@ -319,12 +538,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 20-23. CSRF. A forged login must not authenticate, and a forged logout must
+# 23-26. CSRF. A forged login must not authenticate, and a forged logout must
 # not end a session. Each case below omits exactly one of the two required
 # proofs, so a pass means that proof is genuinely load-bearing.
 # ---------------------------------------------------------------------------
 
-# 20. Right token, wrong Origin — the attacker's page.
+# 23. Right token, wrong Origin — the attacker's page.
 location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
     -H "Origin: https://evil.com" -b "baja_csrf=$CSRF" \
     --data-urlencode "username=juiz1" --data-urlencode "password=123456" \
@@ -338,7 +557,7 @@ else
     FAIL=$((FAIL + 1))
 fi
 
-# 21. Right Origin, no token — a forged form cannot read our cookie, so it
+# 24. Right Origin, no token — a forged form cannot read our cookie, so it
 # cannot produce the pair even if it spoofs everything else.
 location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
     "${ORIGIN_HDR[@]}" \
@@ -352,7 +571,7 @@ else
     FAIL=$((FAIL + 1))
 fi
 
-# 22. Cookie and form field present but different — guards against a
+# 25. Cookie and form field present but different — guards against a
 # comparison that only checks both are non-empty.
 location=$(curl -s -o /dev/null -w "%{redirect_url}" -X POST \
     "${ORIGIN_HDR[@]}" -b "baja_csrf=$CSRF" \
@@ -367,7 +586,7 @@ else
     FAIL=$((FAIL + 1))
 fi
 
-# 23. Forced logout. /baja/logout answers to GET, so <img src> on any page a
+# 26. Forced logout. /baja/logout answers to GET, so <img src> on any page a
 # judge visits would end their session mid-event. Log in, fire a token-less
 # logout, and confirm the session still works. Origin cannot help here — a
 # top-level GET navigation carries none — so the token is the whole defence.
@@ -390,7 +609,7 @@ else
     FAIL=$((FAIL + 1))
 fi
 
-# 24. The token the real page mints must actually work.
+# 27. The token the real page mints must actually work.
 #
 # Every check above supplies both halves of the pair itself, which proves the
 # comparison works but says nothing about whether the login page produces a
@@ -427,7 +646,7 @@ else
 fi
 rm -f "$REALJAR"
 
-# 25. Logout through the link a judge actually clicks.
+# 28. Logout through the link a judge actually clicks.
 #
 # Everything above exercises /app.php/baja/logout directly. Nothing covered
 # juiz/login.php?act=logout, which is the only path in the UI — and that gap

@@ -20,6 +20,8 @@ use Baja\Model\Resultado as ChildResultado;
 use Baja\Model\ResultadoQuery as ChildResultadoQuery;
 use Baja\Model\Senha as ChildSenha;
 use Baja\Model\SenhaQuery as ChildSenhaQuery;
+use Baja\Model\Timer as ChildTimer;
+use Baja\Model\TimerQuery as ChildTimerQuery;
 use Baja\Model\Map\EquipeTableMap;
 use Baja\Model\Map\EventoTableMap;
 use Baja\Model\Map\FilaTableMap;
@@ -28,6 +30,7 @@ use Baja\Model\Map\PremiacaoTableMap;
 use Baja\Model\Map\ProvaTableMap;
 use Baja\Model\Map\ResultadoTableMap;
 use Baja\Model\Map\SenhaTableMap;
+use Baja\Model\Map\TimerTableMap;
 use Propel\Runtime\Propel;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
@@ -244,6 +247,13 @@ abstract class Evento implements ActiveRecordInterface
     protected $collPremiacaosPartial;
 
     /**
+     * @var        ObjectCollection|ChildTimer[] Collection to store aggregation of ChildTimer objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildTimer> Collection to store aggregation of ChildTimer objects.
+     */
+    protected $collTimers;
+    protected $collTimersPartial;
+
+    /**
      * @var        ObjectCollection|ChildSenha[] Collection to store aggregation of ChildSenha objects.
      * @phpstan-var ObjectCollection&\Traversable<ChildSenha> Collection to store aggregation of ChildSenha objects.
      */
@@ -299,6 +309,13 @@ abstract class Evento implements ActiveRecordInterface
      * @phpstan-var ObjectCollection&\Traversable<ChildPremiacao>
      */
     protected $premiacaosScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildTimer[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildTimer>
+     */
+    protected $timersScheduledForDeletion = null;
 
     /**
      * An array of objects scheduled for deletion.
@@ -1319,6 +1336,8 @@ abstract class Evento implements ActiveRecordInterface
 
             $this->collPremiacaos = null;
 
+            $this->collTimers = null;
+
             $this->collSenhas = null;
 
         } // if (deep)
@@ -1531,6 +1550,23 @@ abstract class Evento implements ActiveRecordInterface
 
             if ($this->collPremiacaos !== null) {
                 foreach ($this->collPremiacaos as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->timersScheduledForDeletion !== null) {
+                if (!$this->timersScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\TimerQuery::create()
+                        ->filterByPrimaryKeys($this->timersScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->timersScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collTimers !== null) {
+                foreach ($this->collTimers as $referrerFK) {
                     if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
                         $affectedRows += $referrerFK->save($con);
                     }
@@ -1942,6 +1978,21 @@ abstract class Evento implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collPremiacaos->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collTimers) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'timers';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'timers';
+                        break;
+                    default:
+                        $key = 'Timers';
+                }
+
+                $result[$key] = $this->collTimers->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
             if (null !== $this->collSenhas) {
 
@@ -2357,6 +2408,12 @@ abstract class Evento implements ActiveRecordInterface
                 }
             }
 
+            foreach ($this->getTimers() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addTimer($relObj->copy($deepCopy));
+                }
+            }
+
             foreach ($this->getSenhas() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
                     $copyObj->addSenha($relObj->copy($deepCopy));
@@ -2425,6 +2482,10 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ('Premiacao' === $relationName) {
             $this->initPremiacaos();
+            return;
+        }
+        if ('Timer' === $relationName) {
+            $this->initTimers();
             return;
         }
         if ('Senha' === $relationName) {
@@ -3929,6 +3990,248 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collTimers collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addTimers()
+     */
+    public function clearTimers()
+    {
+        $this->collTimers = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collTimers collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialTimers($v = true): void
+    {
+        $this->collTimersPartial = $v;
+    }
+
+    /**
+     * Initializes the collTimers collection.
+     *
+     * By default this just sets the collTimers collection to an empty array (like clearcollTimers());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initTimers(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collTimers && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = TimerTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collTimers = new $collectionClassName;
+        $this->collTimers->setModel('\Baja\Model\Timer');
+    }
+
+    /**
+     * Gets an array of ChildTimer objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildEvento is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildTimer[] List of ChildTimer objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildTimer> List of ChildTimer objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getTimers(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collTimersPartial && !$this->isNew();
+        if (null === $this->collTimers || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collTimers) {
+                    $this->initTimers();
+                } else {
+                    $collectionClassName = TimerTableMap::getTableMap()->getCollectionClassName();
+
+                    $collTimers = new $collectionClassName;
+                    $collTimers->setModel('\Baja\Model\Timer');
+
+                    return $collTimers;
+                }
+            } else {
+                $collTimers = ChildTimerQuery::create(null, $criteria)
+                    ->filterByEvento($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collTimersPartial && count($collTimers)) {
+                        $this->initTimers(false);
+
+                        foreach ($collTimers as $obj) {
+                            if (false == $this->collTimers->contains($obj)) {
+                                $this->collTimers->append($obj);
+                            }
+                        }
+
+                        $this->collTimersPartial = true;
+                    }
+
+                    return $collTimers;
+                }
+
+                if ($partial && $this->collTimers) {
+                    foreach ($this->collTimers as $obj) {
+                        if ($obj->isNew()) {
+                            $collTimers[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collTimers = $collTimers;
+                $this->collTimersPartial = false;
+            }
+        }
+
+        return $this->collTimers;
+    }
+
+    /**
+     * Sets a collection of ChildTimer objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $timers A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setTimers(Collection $timers, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildTimer[] $timersToDelete */
+        $timersToDelete = $this->getTimers(new Criteria(), $con)->diff($timers);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->timersScheduledForDeletion = clone $timersToDelete;
+
+        foreach ($timersToDelete as $timerRemoved) {
+            $timerRemoved->setEvento(null);
+        }
+
+        $this->collTimers = null;
+        foreach ($timers as $timer) {
+            $this->addTimer($timer);
+        }
+
+        $this->collTimers = $timers;
+        $this->collTimersPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Timer objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related Timer objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countTimers(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collTimersPartial && !$this->isNew();
+        if (null === $this->collTimers || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collTimers) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getTimers());
+            }
+
+            $query = ChildTimerQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByEvento($this)
+                ->count($con);
+        }
+
+        return count($this->collTimers);
+    }
+
+    /**
+     * Method called to associate a ChildTimer object to this object
+     * through the ChildTimer foreign key attribute.
+     *
+     * @param ChildTimer $l ChildTimer
+     * @return $this The current object (for fluent API support)
+     */
+    public function addTimer(ChildTimer $l)
+    {
+        if ($this->collTimers === null) {
+            $this->initTimers();
+            $this->collTimersPartial = true;
+        }
+
+        if (!$this->collTimers->contains($l)) {
+            $this->doAddTimer($l);
+
+            if ($this->timersScheduledForDeletion and $this->timersScheduledForDeletion->contains($l)) {
+                $this->timersScheduledForDeletion->remove($this->timersScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildTimer $timer The ChildTimer object to add.
+     */
+    protected function doAddTimer(ChildTimer $timer): void
+    {
+        $this->collTimers[]= $timer;
+        $timer->setEvento($this);
+    }
+
+    /**
+     * @param ChildTimer $timer The ChildTimer object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeTimer(ChildTimer $timer)
+    {
+        if ($this->getTimers()->contains($timer)) {
+            $pos = $this->collTimers->search($timer);
+            $this->collTimers->remove($pos);
+            if (null === $this->timersScheduledForDeletion) {
+                $this->timersScheduledForDeletion = clone $this->collTimers;
+                $this->timersScheduledForDeletion->clear();
+            }
+            $this->timersScheduledForDeletion[]= clone $timer;
+            $timer->setEvento(null);
+        }
+
+        return $this;
+    }
+
+    /**
      * Clears out the collSenhas collection
      *
      * This does not modify the database; however, it will remove any associated objects, causing
@@ -4273,6 +4576,11 @@ abstract class Evento implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collTimers) {
+                foreach ($this->collTimers as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
             if ($this->collSenhas) {
                 foreach ($this->collSenhas as $o) {
                     $o->clearAllReferences($deep);
@@ -4286,6 +4594,7 @@ abstract class Evento implements ActiveRecordInterface
         $this->collResultados = null;
         $this->collFilas = null;
         $this->collPremiacaos = null;
+        $this->collTimers = null;
         $this->collSenhas = null;
         return $this;
     }

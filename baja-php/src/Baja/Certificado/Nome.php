@@ -20,8 +20,18 @@ final class Nome
      *
      * "João da Silva" and "João Silva" are the same name, and which form got
      * typed at registration is not something the person searching can know.
+     *
+     * Public because the insertion side needs exactly this set for the
+     * opposite reason: these are the words that stay lowercase when a name is
+     * proper-cased for a certificate — "Marques de Britto", never "Marques De
+     * Britto". Dropped here because they carry no identity, kept lowercase
+     * there because they carry no capital, and the two consumers have to
+     * agree on which words those are. Two lists that must agree eventually do
+     * not.
+     *
+     * @var array<int, string>
      */
-    private const CONNECTIVES = ['de', 'da', 'do', 'dos', 'das', 'e'];
+    public const CONNECTIVES = ['de', 'da', 'do', 'dos', 'das', 'e'];
 
     /**
      * Letters with no canonical decomposition, so NFD leaves them intact and

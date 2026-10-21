@@ -11,6 +11,8 @@ docker-compose*.yml text eol=lf
 .env         text eol=lf
 .env.*       text eol=lf
 *.sql        text eol=lf
+*.conf       text eol=lf
+*.ini        text eol=lf
 
 # Binary types — never normalize.
 *.png  binary

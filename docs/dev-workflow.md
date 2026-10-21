@@ -37,8 +37,10 @@ Before requesting review:
 - [ ] Smoke test passes: `baja-php/tests/smoke-test.sh` against a
       running local stack.
 - [ ] If you touched anything under `baja-php/src/Baja/Certificado/`,
-      `baja-php/certificado/`, `baja-php/juiz/certificados*`, or either
-      the certificate or juiz vhost, all three certificate suites pass:
+      `baja-php/certificado/`, `baja-php/juiz/certificados*`,
+      `baja-php/src/Baja/Util/Mailer.php`, `Turnstile.php`,
+      `baja-php/src/Baja/Auth/PhpbbEmails.php`, or either the certificate
+      or juiz vhost, all three certificate suites pass:
 
       ```
       docker compose exec --user "$(id -u):$(id -g)" \

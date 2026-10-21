@@ -37,7 +37,7 @@ final class Funcao
     private const ROLES = [
         'competidor' => ['label' => 'Competidor',          'impresso' => null,                   'frase' => self::PARTICIPOU, 'obsoleta' => false],
         'orientador' => ['label' => 'Professor Orientador', 'impresso' => 'PROFESSOR ORIENTADOR', 'frase' => self::PARTICIPOU, 'obsoleta' => false],
-        'fiscal'     => ['label' => 'Fiscal',              'impresso' => 'FISCAL',               'frase' => self::VOLUNTARIO, 'obsoleta' => true],
+        'fiscal'     => ['label' => 'Fiscal',              'impresso' => 'FISCAL',               'frase' => self::VOLUNTARIO, 'obsoleta' => false],
         'comissario' => ['label' => 'Comissário',          'impresso' => 'COMISSÁRIO',           'frase' => self::VOLUNTARIO, 'obsoleta' => false],
         'juiz'       => ['label' => 'Juiz',                'impresso' => 'JUIZ',                 'frase' => self::VOLUNTARIO, 'obsoleta' => false],
         'comite'     => ['label' => 'Comissão Técnica',    'impresso' => 'COMISSÃO TÉCNICA',     'frase' => self::VOLUNTARIO, 'obsoleta' => false],

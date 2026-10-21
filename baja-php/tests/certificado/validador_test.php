@@ -92,7 +92,7 @@ $inventada = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao
 T::ok('an unrecognised funcao is an error', in_array(Problema::FUNCAO_DESCONHECIDA, $codigos($inventada), true));
 T::same(null, $inventada->funcao, 'and produces no nearest-match guess');
 
-foreach (['fiscal', 'Fiscal', 'engenheiro'] as $obsoleta) {
+foreach (['engenheiro', 'Engenheiro'] as $obsoleta) {
     $linha = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => $obsoleta, 'documento' => $cpfLivre]);
     T::ok("\"$obsoleta\" is accepted", $linha->funcao !== null);
     T::ok("\"$obsoleta\" raises a warning", in_array(Problema::FUNCAO_OBSOLETA, $codigos($linha), true));
@@ -101,6 +101,13 @@ foreach (['fiscal', 'Fiscal', 'engenheiro'] as $obsoleta) {
 
     $linha->resolver(Problema::FUNCAO_OBSOLETA, Problema::CONFIRMAR);
     T::ok("\"$obsoleta\" commits once confirmed", $linha->podeGravar());
+}
+
+// `fiscal` is an active role: accepted outright, no obsolescence warning.
+foreach (['fiscal', 'Fiscal'] as $ativa) {
+    $linha = $uma(['evento' => $evA, 'nome' => 'Fulano de Tal Testeson', 'funcao' => $ativa, 'documento' => $cpfLivre]);
+    T::same('fiscal', $linha->funcao, "\"$ativa\" resolves to fiscal");
+    T::ok("\"$ativa\" raises no obsolescence warning", !in_array(Problema::FUNCAO_OBSOLETA, $codigos($linha), true));
 }
 
 // --- documents -------------------------------------------------------------------
@@ -236,6 +243,64 @@ T::ok('it warns harder', in_array(Problema::NOME_DIVERGENTE, $codigos($outraPess
 $identico = $uma(['evento' => $evB, 'nome' => $prefix . ' João Pedro Bresolin', 'funcao' => 'competidor', 'documento' => $cpfNome]);
 T::ok('an identical name is silent', !in_array(Problema::NOME_DIVERGENTE_LEVE, $codigos($identico), true));
 T::ok('and raises no harder warning either', !in_array(Problema::NOME_DIVERGENTE, $codigos($identico), true));
+
+// A case-only difference is not a difference. The stored spelling and the
+// pasted one both proper-case to the same string, so nothing about this row
+// needs a person: whichever way it is answered, the same name is written.
+// Asking anyway costs a decision on every row of a sheet whose author
+// capitalised the particles, and buries the rows that really do need one.
+$cpfParticula = synthetic_cpf('665544332');
+$gravar('Breno José Marques de Britto', $cpfParticula, null, $evA, 'competidor');
+
+$particula = $uma([
+    'evento'    => $evB,
+    'nome'      => $prefix . ' Breno José Marques De Britto',
+    'funcao'    => 'competidor',
+    'documento' => $cpfParticula,
+]);
+T::ok(
+    'a capitalised particle raises no name warning',
+    !in_array(Problema::NOME_DIVERGENTE_LEVE, $codigos($particula), true)
+        && !in_array(Problema::NOME_DIVERGENTE, $codigos($particula), true)
+);
+
+// The same, one word at a time rather than a whole sheet in capitals: this is
+// the "Fulano de Tal" / "Fulano De Tal" pair the testers reported.
+$mistura = $uma([
+    'evento'    => $evB,
+    'nome'      => mb_strtolower($prefix . ' Breno José Marques de Britto', 'UTF-8'),
+    'funcao'    => 'competidor',
+    'documento' => $cpfParticula,
+]);
+T::ok(
+    'and neither does an all-lowercase spelling of it',
+    !in_array(Problema::NOME_DIVERGENTE_LEVE, $codigos($mistura), true)
+        && !in_array(Problema::NOME_DIVERGENTE, $codigos($mistura), true)
+);
+
+// What the rule must not swallow. A difference the save pipeline would keep is
+// still a difference, and still a question for the operator.
+$semMeio = $uma([
+    'evento'    => $evB,
+    'nome'      => $prefix . ' Breno Marques de Britto',
+    'funcao'    => 'competidor',
+    'documento' => $cpfParticula,
+]);
+T::ok(
+    'a dropped middle name still asks',
+    in_array(Problema::NOME_DIVERGENTE_LEVE, $codigos($semMeio), true)
+);
+
+$outroPrimeiro = $uma([
+    'evento'    => $evB,
+    'nome'      => $prefix . ' Marcos Antonio Ferreira Souza',
+    'funcao'    => 'competidor',
+    'documento' => $cpfParticula,
+]);
+T::ok(
+    'and so does a different first name',
+    in_array(Problema::NOME_DIVERGENTE, $codigos($outroPrimeiro), true)
+);
 
 // All three resolutions are offered, both ways.
 foreach ([$acentos, $outraPessoa] as $conflito) {
