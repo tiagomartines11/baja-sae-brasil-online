@@ -1,0 +1,49 @@
+# Dependabot configuration. Read from the default branch, develop.
+#
+# Both version and security updates open against develop (security updates
+# always target the default branch). Groups keep it to one PR per ecosystem.
+# A critical fix that must reach production now still goes out as a hotfix to
+# master by hand; the Dependabot PR is the alarm.
+version: 2
+updates:
+  # PHP base images, pinned to an exact patch tag. Daily, so a PHP security
+  # release (e.g. 8.3.36, PHP2Shell) shows up within a day.
+  - package-ecosystem: docker
+    directories:
+      - /baja-infra/baja-app
+      - /baja-infra/phpbb-baja
+      - /baja-infra/phpbb-formula
+    target-branch: develop
+    schedule: { interval: daily, time: "06:00", timezone: America/Sao_Paulo }
+    groups:
+      php-images:
+        patterns: ["php"]
+    ignore:
+      # Stay on 8.3.x: moving to 8.4 or 8.5 is a project, not a bump.
+      - dependency-name: php
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: composer
+    directory: /baja-php
+    target-branch: develop
+    schedule: { interval: weekly, day: monday, time: "06:00", timezone: America/Sao_Paulo }
+    groups:
+      composer-security: { applies-to: security-updates, patterns: ["*"] }
+      composer-routine: { applies-to: version-updates, update-types: [minor, patch], patterns: ["*"] }
+
+  - package-ecosystem: npm
+    directory: /baja-js
+    target-branch: develop
+    schedule: { interval: weekly, day: monday, time: "06:00", timezone: America/Sao_Paulo }
+    groups:
+      npm-security: { applies-to: security-updates, patterns: ["*"] }
+      npm-routine: { applies-to: version-updates, update-types: [minor, patch], patterns: ["*"] }
+    ignore:
+      # Next 14 -> 16 (and Node 20 -> 22+) is BAJAAPP-47.
+      - dependency-name: next
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule: { interval: monthly }
