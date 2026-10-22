@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "require": {
     "propel/propel": "^2.0@alpha",
-    "phpmailer/phpmailer": "^6.9",
+    "phpmailer/phpmailer": "^7.1",
     "monolog/monolog": "^3.0",
     "dompdf/dompdf": "^3.0",
     "chillerlan/php-qrcode": "^6.0"
