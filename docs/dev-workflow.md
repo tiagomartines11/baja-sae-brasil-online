@@ -18,6 +18,9 @@ match what's actually happening, the doc is wrong; fix it.
   `master`, PR back to `master`. After merging to `master`, also
   merge `master` → `develop` so the fix isn't undone by the next
   release.
+  `develop` is the repository's default branch, so new PRs and fresh
+  clones start there: for a hotfix, branch from `origin/master` and
+  pick `master` as the PR base by hand (`gh pr create --base master`).
 
 ## Cadence
 
