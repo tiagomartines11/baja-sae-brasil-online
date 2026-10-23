@@ -1,3 +1,14 @@
+# Deliberately no Disallow for /buscar or /verificar/.
+#
+# Those pages carry a participant's name, and they are kept out of search by
+# "X-Robots-Tag: noindex, nofollow" on the response. A Disallow would work
+# against that: a crawler told not to fetch a URL never sees the header telling
+# it not to index, and search engines will happily list a disallowed URL on the
+# strength of links alone. Allowing the fetch is what lets the noindex land.
+#
+# The bot blocks below are unrelated and predate this — they are about crawl
+# load, not indexing.
+
 User-agent: meta-externalagent
 Disallow: /
 

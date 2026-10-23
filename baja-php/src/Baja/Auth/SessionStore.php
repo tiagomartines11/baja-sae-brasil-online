@@ -75,7 +75,6 @@ class SessionStore
             return null;
         }
 
-        error_log('SessionStore::lookupBySessionId sid=' . substr($sid, 0, 8) . ' row=' . var_export($row, true));
         if ($row === false) {
             return null;
         }

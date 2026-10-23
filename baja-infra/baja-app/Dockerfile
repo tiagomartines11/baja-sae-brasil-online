@@ -41,6 +41,10 @@ RUN apk add --no-cache \
 # Install composer from the official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Worker pools: a general one and a separate one for lap counting uploads.
+# The file explains the sizes. "zzz-" makes it load after the image's own.
+COPY php-fpm-pools.conf /usr/local/etc/php-fpm.d/zzz-baja-pools.conf
+
 WORKDIR /var/www/html
 
 # Entrypoint: ensures vendor exists, then starts php-fpm

@@ -1,21 +1,72 @@
 <?php
-if (getenv('SKIP_AUTH')) {
+// Error display is decided twice, and the two decisions must agree: once here,
+// before the autoloader, so that a failure inside vendor/autoload.php or
+// config.php cannot leak a stack trace, and again below once Baja\Util\Env is
+// loadable. Only the second can use Env, hence the raw getenv() here.
+//
+// Deliberately keyed on ENV alone, not on SKIP_AUTH. Those are unrelated
+// questions — SKIP_AUTH says "this endpoint has no phpBB session", not "this
+// endpoint is safe to print filesystem paths to". Tying them together is what
+// left display_errors on in production for every vhost except the one
+// resultados location that happens to set the flag.
+ini_set('log_errors', '1');
+if (getenv('ENV') === 'prod') {
     ini_set('display_errors', 'Off');
-    error_reporting(0);
 }
 
 $_REQUEST = array_merge($_GET, $_POST);
 require_once(__DIR__ . "/../vendor/autoload.php");
 require_once(__DIR__ . "/config.php");
+
+// error_reporting stays at E_ALL in every environment: production still needs
+// notices in the log, it just must not render them into the response. In dev
+// they render, which is the point of dev.
 error_reporting(E_ALL);
-ini_set('display_errors', 'On');
+ini_set('display_errors', \Baja\Util\Env::isProduction() ? 'Off' : 'On');
+
+// Rate-limit API endpoints. Deliberately ahead of phpbb_login.php so a
+// throttled request is rejected before paying for session setup.
+// BAJA_API_VHOST is set by the API vhost (baja-infra/nginx/conf.d*/baja-app-api.conf).
+// It is needed because on that vhost the URI carries no /api/ prefix to detect —
+// api.example/auth/login.php, not example/api/auth/login.php.
+$isApiVhost = !empty($_SERVER['BAJA_API_VHOST']);
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+
+if ($isApiVhost || strpos($requestPath, '/api/') === 0) {
+    // REMOTE_ADDR only, never a request header. Headers like X-Forwarded-For
+    // and X-Real-IP are attacker-controlled: nginx maps whatever the client
+    // sends into HTTP_*, so trusting them lets anyone mint a fresh rate-limit
+    // bucket per request and bypass the limiter entirely.
+    //
+    // Making REMOTE_ADDR truthful is nginx's job, and is where the only
+    // dev/prod difference lives: in prod the API vhost runs realip against
+    // Cloudflare's ranges with CF-Connecting-IP; in dev the peer address is
+    // already the client. See baja-infra/nginx/conf.d*/baja-app-api.conf.
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+    // Canonicalise to a /api/... path before handing it over. RateLimiter
+    // picks the limit by pattern-matching the endpoint (/api/auth/login.php
+    // gets 3/min, /api/auth/ 5/min), so on the API vhost an unprefixed path
+    // would silently fall through to the generic read/write limits and give
+    // the login endpoint 30/min.
+    $endpoint = $isApiVhost ? '/api' . $requestPath : $requestPath;
+
+    // Enforce rate limits (returns 429 and exits if exceeded)
+    \Baja\Api\RateLimiter::enforce(
+        $clientIp,
+        $endpoint,
+        $_SERVER['REQUEST_METHOD'] ?? 'GET'
+    );
+}
+
 if (!getenv('SKIP_AUTH')) {
     require_once(__DIR__ . "/phpbb_login.php");
     $_DEV_MODE = $user->data["username"] == "Tiago" || $user->data["username"] == "jbresolin";
 } else {
+    // No error-reporting changes here on purpose. Whether a request renders
+    // errors is decided at the top of this file, from ENV alone; a SKIP_AUTH
+    // endpoint in dev should behave like every other dev endpoint.
     $_DEV_MODE = false;
-    ini_set('display_errors', 'Off');
-    error_reporting(0);
 }
 date_default_timezone_set('America/Sao_Paulo');
 

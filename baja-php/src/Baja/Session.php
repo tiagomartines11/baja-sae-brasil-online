@@ -1,5 +1,7 @@
 <?php
 namespace Baja;
+use Baja\Auth\LoginCsrf;
+use Baja\Auth\NaoProvisionado;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
 
@@ -10,13 +12,59 @@ class Session
 
     static function initSession() {
         global $user;
-        Session::$_currentUser = UserQuery::create()->findOneByUsername($user->data["username"]);
-        if (!Session::$_currentUser) {
-            if ($_SERVER["SCRIPT_NAME"] != "/login.php") {
-                header("Location: login.php");
-                exit();
-            }
+        $username = (string) ($user->data["username"] ?? '');
+
+        // Never look a user up by the empty string.
+        //
+        // PhpbbSessionShim represents "no session" as username => '', and
+        // findOneByUsername does no empty-value special-casing — it compiles to
+        // a plain WHERE username = ''. So if a row with an empty username ever
+        // existed, every unauthenticated visitor would match it and be silently
+        // logged in as that row, with whatever permissions it carries.
+        //
+        // Such a row is creatable: Fila::addPermissaoFila and juiz's user admin
+        // both do setUsername($input)->save() without checking for empty. Those
+        // are guarded now, but this is the seam every request crosses, so it is
+        // the one place the invariant has to hold no matter what any writer does
+        // later. Anonymous must never match a row.
+        if ($username !== '') {
+            Session::$_currentUser = UserQuery::create()->findOneByUsername($username);
         }
+
+        if (Session::$_currentUser || $_SERVER["SCRIPT_NAME"] == "/login.php") {
+            return;
+        }
+
+        // Two different things end up here and they need different answers.
+        //
+        // No username means no forum session: the login page is the right
+        // place to send them, and it is where they were already going.
+        //
+        // A username with no row here means the forum knows them and this
+        // system does not — every new forum member is in that state. Sending
+        // them to login made the loop that reads as a broken site: the login
+        // succeeds, redirects back, and bounces again, with nothing said at
+        // any point. Say it instead.
+        if ($username !== '') {
+            NaoProvisionado::render($username);
+        }
+
+        // Anonymous, so carry any login error code across this bounce. The
+        // baja/auth controller appends ?error=<code> to the post-login redirect
+        // target — which is index.php, not login.php — so without this the code
+        // died here and every failed login landed on a blank form with no
+        // explanation at all.
+        //
+        // Whitelisted to the controller's own code shape so nothing
+        // attacker-influenced reaches the Location header. is_string first:
+        // ?error[]=x makes this an array, and casting one to string emits an
+        // "Array to string conversion" warning before the regex rejects it.
+        $error  = $_GET['error'] ?? '';
+        $suffix = (is_string($error) && preg_match('/^[a-z_]{1,32}$/', $error) === 1)
+            ? '?error=' . urlencode($error)
+            : '';
+        header("Location: login.php" . $suffix);
+        exit();
     }
 
     /**
@@ -49,7 +97,15 @@ class Session
         $scheme = $_SERVER['REQUEST_SCHEME'] ?? Url::scheme();
         $host   = $_SERVER['HTTP_HOST']      ?? Url::domain();
         $loginUrl = $scheme . '://' . $host . '/login.php';
-        $logoutUrl = Url::forum('/app.php/baja/logout?redirect=' . urlencode($loginUrl));
+        // The csrf token is what distinguishes this from a forged logout —
+        // /baja/logout answers to GET, so without it any <img src> on a page
+        // the judge visits would log them out mid-event. Separate top-level
+        // parameters, so the '&' here is not inside a value phpBB would
+        // html-escape.
+        $logoutUrl = Url::forum(
+            '/app.php/baja/logout?redirect=' . urlencode($loginUrl)
+            . '&csrf=' . urlencode(LoginCsrf::token())
+        );
         header("Location: $logoutUrl");
         exit();
     }
@@ -61,6 +117,21 @@ class Session
     public static function getCurrentUser()
     {
         if (!Session::$_currentUser) Session::initSession();
+        return Session::$_currentUser;
+    }
+
+    /**
+     * Like getCurrentUser(), but an anonymous visitor gets null instead of a
+     * redirect to login. For pages that also work without a session.
+     * @return User|null
+     */
+    public static function getCurrentUserOrNull()
+    {
+        global $user;
+        if (!Session::$_currentUser) {
+            $username = (string) ($user->data["username"] ?? '');
+            if ($username !== '') Session::$_currentUser = UserQuery::create()->findOneByUsername($username);
+        }
         return Session::$_currentUser;
     }
 
@@ -77,11 +148,35 @@ class Session
     }
 
     /**
+     * Permissions that are not scoped to an event.
+     *
+     * Every other code is prefixed with the event below, which is what makes
+     * "judge of prova ve1 at 26BR" expressible. Two codes are not about an
+     * event at all:
+     *
+     * - 'index' grants the juiz landing page and has always been here.
+     * - 'certificados' grants the certificate insertion pages, which are
+     *   cross-event by construction: the operator picks the event on the
+     *   form, and one pasted sheet may carry several. Scoping it would mean
+     *   gating those pages on $_SERVER['REDIRECT_EVENT'], which on a URL with
+     *   no event prefix is whatever bootstrap.php inferred from which event
+     *   is currently em_andamento — so the permission being checked would
+     *   change on its own as events roll over.
+     *
+     * Note this list is not User::SENTINEL_PERMISSIONS, which answers a
+     * different question: that one is about codes granting nothing
+     * meaningful, and 'certificados' grants a great deal.
+     */
+    private const GLOBAL_PERMISSIONS = ['index', 'certificados'];
+
+    /**
      * @param string $permissionCode
      * @return bool
      */
     public static function hasPermission($permissionCode) {
-        if ($permissionCode != "index") $permissionCode = $_SERVER['REDIRECT_EVENT']."_".$permissionCode;
+        if (!in_array($permissionCode, self::GLOBAL_PERMISSIONS, true)) {
+            $permissionCode = $_SERVER['REDIRECT_EVENT']."_".$permissionCode;
+        }
         return self::getCurrentUser()->hasPermission($permissionCode) || self::getCurrentUser()->hasPermission('admin');
     }
 }

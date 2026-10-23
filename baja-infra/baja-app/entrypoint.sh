@@ -10,6 +10,11 @@ for dir in default/cache resultados/cache; do
     mkdir -p "/var/www/html/${dir}" 2>/dev/null || true
 done
 
+# Timer sounds generated from text land here, written by the php-fpm workers
+# (www-data), which do not own the bind-mounted tree.
+mkdir -p /var/www/html/juiz/sons/gerados 2>/dev/null || true
+chmod 0777 /var/www/html/juiz/sons/gerados 2>/dev/null || true
+
 # Install vendor if missing — non-fatal if it fails (dev convenience)
 if [ ! -d /var/www/html/vendor ] || [ ! -f /var/www/html/vendor/autoload.php ]; then
     echo "vendor/ not found, running composer install..."

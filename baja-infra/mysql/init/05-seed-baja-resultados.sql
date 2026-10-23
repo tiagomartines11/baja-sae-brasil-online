@@ -197,15 +197,17 @@ DROP TABLE IF EXISTS `participantes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `participantes` (
-  `idparticipantes` int NOT NULL AUTO_INCREMENT,
   `nome` varchar(300) DEFAULT NULL,
   `funcao` varchar(45) DEFAULT NULL,
-  `cpf` bigint DEFAULT NULL,
+  `cpf` char(11) CHARACTER SET ascii COLLATE ascii_general_ci DEFAULT NULL,
+  `documento_estrangeiro` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `evento` char(4) NOT NULL,
-  PRIMARY KEY (`idparticipantes`,`evento`),
+  `token` char(22) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  PRIMARY KEY (`token`),
   KEY `participantes_evento_id_idx` (`evento`),
-  CONSTRAINT `participantes_evento_id` FOREIGN KEY (`evento`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=41817 DEFAULT CHARSET=latin1;
+  CONSTRAINT `participantes_evento_id` FOREIGN KEY (`evento`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `participantes_cpf_formato` CHECK (((`cpf` is null) or regexp_like(`cpf`,_ascii'^[0-9]{11}$')))
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -214,7 +216,7 @@ CREATE TABLE `participantes` (
 
 LOCK TABLES `participantes` WRITE;
 /*!40000 ALTER TABLE `participantes` DISABLE KEYS */;
-INSERT INTO `participantes` VALUES (1,'Fulano da Silva Testeson','competidor',0,'26BR');
+INSERT INTO `participantes` VALUES ('Fulano da Silva Testeson','competidor','00000000191',NULL,'26BR','SeedFixture00000000001');
 /*!40000 ALTER TABLE `participantes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -257,6 +259,7 @@ DROP TABLE IF EXISTS `propel_migration`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `propel_migration` (
+  `execution_datetime` datetime DEFAULT NULL,
   `version` int DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -267,6 +270,21 @@ CREATE TABLE `propel_migration` (
 
 LOCK TABLES `propel_migration` WRITE;
 /*!40000 ALTER TABLE `propel_migration` DISABLE KEYS */;
+-- The participantes DDL above already includes every migration listed here, so
+-- they are recorded as applied. Without this, `propel migration:migrate` on a
+-- fresh dev database replays migrations whose effects are already in the dump
+-- and fails partway through.
+--
+-- One row per migration, not just the newest: Propel computes what is pending
+-- by subtracting the recorded versions from the files on disk, so a single
+-- highest-version row would leave the earlier ones looking unapplied.
+--
+-- Add a row here whenever a migration lands and its effect is folded into the
+-- DDL above.
+INSERT INTO `propel_migration` (`execution_datetime`, `version`) VALUES
+  (NULL, 1787014964),
+  (NULL, 1787015631),
+  (NULL, 1787017208);
 /*!40000 ALTER TABLE `propel_migration` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -365,6 +383,39 @@ INSERT INTO `senha` VALUES ('23SE',1,20,11,4,1697800047834,1697800047834,NULL),(
 UNLOCK TABLES;
 
 --
+-- Table structure for table `timer`
+--
+
+DROP TABLE IF EXISTS `timer`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `timer` (
+  `evento_id` char(4) NOT NULL,
+  `timer_id` int NOT NULL,
+  `config` json DEFAULT NULL,
+  `config_backup` json DEFAULT NULL,
+  `state` json DEFAULT NULL,
+  `log` json DEFAULT NULL,
+  `access_key` char(6) NOT NULL,
+  `view_key` char(6) NOT NULL,
+  PRIMARY KEY (`evento_id`,`timer_id`),
+  UNIQUE KEY `timer_access_key_UNIQUE` (`access_key`),
+  UNIQUE KEY `timer_view_key_UNIQUE` (`view_key`),
+  CONSTRAINT `timer_evento_id` FOREIGN KEY (`evento_id`) REFERENCES `evento` (`evento_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `timer`
+--
+
+LOCK TABLES `timer` WRITE;
+/*!40000 ALTER TABLE `timer` DISABLE KEYS */;
+INSERT INTO `timer` VALUES ('26BR',1,'{\"nome\": \"Apresentações (2 carros)\", \"loop\": true, \"etapas\": [{\"nome\": \"Apresentação\", \"tempo\": 240, \"som_inicio\": \"Apresentacao.wav\", \"som_fim\": null}, {\"nome\": \"1 Minuto\", \"tempo\": 60, \"som_inicio\": \"01 minuto.wav\", \"som_fim\": null}, {\"nome\": \"Perguntas\", \"tempo\": 300, \"som_inicio\": \"Perguntas.wav\", \"som_fim\": null}, {\"nome\": \"Feedback\", \"tempo\": 180, \"som_inicio\": \"Feedback.wav\", \"som_fim\": null}, {\"nome\": \"Troca carros\", \"tempo\": 180, \"som_inicio\": \"Troca de Carros.wav\", \"som_fim\": null}, {\"nome\": \"Apresentação\", \"tempo\": 240, \"som_inicio\": \"Apresentacao.wav\", \"som_fim\": null}, {\"nome\": \"1 Minuto\", \"tempo\": 60, \"som_inicio\": \"01 minuto.wav\", \"som_fim\": null}, {\"nome\": \"Perguntas\", \"tempo\": 300, \"som_inicio\": \"Perguntas.wav\", \"som_fim\": null}, {\"nome\": \"Feedback\", \"tempo\": 180, \"som_inicio\": \"Feedback.wav\", \"som_fim\": null}, {\"nome\": \"Troca equipe\", \"tempo\": 300, \"som_inicio\": \"Troca de Equipe.wav\", \"som_fim\": null}]}',NULL,NULL,NULL,'DEVTM2','DEVVW2'),('26BR',2,'{\"nome\": \"Apresentações (1 carro)\", \"loop\": true, \"etapas\": [{\"nome\": \"Apresentação\", \"tempo\": 240, \"som_inicio\": \"Apresentacao.wav\", \"som_fim\": null}, {\"nome\": \"1 Minuto\", \"tempo\": 60, \"som_inicio\": \"01 minuto.wav\", \"som_fim\": null}, {\"nome\": \"Feedback\", \"tempo\": 300, \"som_inicio\": \"Feedback.wav\", \"som_fim\": null}, {\"nome\": \"Troca carro\", \"tempo\": 300, \"som_inicio\": \"Troca de Carros.wav\", \"som_fim\": null}]}',NULL,NULL,NULL,'DEVTM3','DEVVW3');
+/*!40000 ALTER TABLE `timer` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `tournament`
 --
 
@@ -421,6 +472,35 @@ CREATE TABLE `user` (
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
 INSERT INTO `user` VALUES (1,'superadmin','| index | admin |',NULL);
+--
+-- Judge fixtures matching the phpBB seed (03-seed-phpbb-baja.sql seeds juiz1
+-- and juiz2 there; without matching rows HERE they authenticate against phpBB
+-- but Session::initSession finds no baja user and bounces them to the login
+-- form, which reads as a broken session rather than missing fixture data.
+--
+-- `permissions` is a Propel ARRAY column: '| a | b |', parsed as
+-- substr($v, 2, -2) then explode(' | ') — see Model/Base/User::getPermissions.
+--
+-- 'index' is the sentinel that lets a user reach juiz/index.php at all
+-- (User::SENTINEL_PERMISSIONS); it grants nothing on its own. Score-entry
+-- grants are '<EVENTO_ID>_<PROVA_ID>', matching how Session::hasPermission
+-- prefixes the prova with $_SERVER['REDIRECT_EVENT'] — so these only resolve
+-- under an event-scoped URL such as /26BR/index.php.
+--
+-- Deliberately NOT admin, and deliberately overlapping only partially, so the
+-- two accounts exercise the permission filter in juiz/index.php rather than
+-- both seeing everything: juiz1 gets Manobrabilidade/Abastecimento/Voltas,
+-- juiz2 gets Super Prime/Grid, both share Penalidades and the Enduro.
+--
+-- juiz1's row is ALSO written by 06-contagem.sql, which makes juiz1 the
+-- controller of the Enduro (26BR_END, a laps prova) and uses ON DUPLICATE KEY
+-- UPDATE on the unique username. That statement replaces the whole
+-- permissions column, so whichever file runs last decides what juiz1 may do.
+-- Keep the two rows identical: the grants below include 26BR_END, and the row
+-- in 06-contagem.sql includes the four score-entry grants from here.
+-- Smoke check 29 fails when they drift apart.
+INSERT INTO `user` VALUES (2,'juiz1','| index | 26BR_END | 26BR_MAN | 26BR_ABS | 26BR_VLT | 26BR_PEN |',NULL);
+INSERT INTO `user` VALUES (3,'juiz2','| index | 26BR_END | 26BR_SPP | 26BR_GRI | 26BR_PEN |',NULL);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

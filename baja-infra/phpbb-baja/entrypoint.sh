@@ -129,5 +129,27 @@ if [ -n "$BAJA_AUTH_DEFAULT_REDIRECT" ]; then
         baja_auth_default_redirect "$BAJA_AUTH_DEFAULT_REDIRECT"
 fi
 
+# Rebuild phpBB's compiled router.
+#
+# phpBB compiles routes into cache/production/url_matcher.php and does not
+# notice that an extension's routing.yml has changed. `extension:enable` above
+# would purge the cache, but it is a no-op once the extension is already
+# enabled — which is the steady state on every restart — so on its own it never
+# rebuilds anything.
+#
+# Production ran for weeks with /baja/login and /baja/logout returning 404 for
+# exactly this reason: the matcher had been compiled before baja/auth was
+# enabled, extension:show reported it as enabled (that reads the database, not
+# the cache), the files on disk were correct, and nothing ever regenerated the
+# compiled table. Users quietly fell back to logging in through the forum's own
+# form, so it went unnoticed.
+#
+# su-exec www-data is load-bearing: php-fpm runs as www-data, and a cache
+# purged as root leaves root-owned files it cannot rewrite — turning a stale
+# cache into a permanently stale one.
+echo "phpbb-baja: purging cache so route changes take effect..."
+su-exec www-data php bin/phpbbcli.php --safe-mode cache:purge || \
+    echo "phpbb-baja: WARNING: cache:purge failed; extension routes may 404"
+
 # ----- 6. Hand off to CMD -----
 exec "$@"

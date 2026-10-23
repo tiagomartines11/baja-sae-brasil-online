@@ -5,6 +5,14 @@ namespace Baja\Model\Base;
 use \DateTime;
 use \Exception;
 use \PDO;
+use Baja\Model\ContagemDecisao as ChildContagemDecisao;
+use Baja\Model\ContagemDecisaoQuery as ChildContagemDecisaoQuery;
+use Baja\Model\ContagemFonte as ChildContagemFonte;
+use Baja\Model\ContagemFonteQuery as ChildContagemFonteQuery;
+use Baja\Model\ContagemOcorrencia as ChildContagemOcorrencia;
+use Baja\Model\ContagemOcorrenciaQuery as ChildContagemOcorrenciaQuery;
+use Baja\Model\ContagemVolta as ChildContagemVolta;
+use Baja\Model\ContagemVoltaQuery as ChildContagemVoltaQuery;
 use Baja\Model\Evento as ChildEvento;
 use Baja\Model\EventoQuery as ChildEventoQuery;
 use Baja\Model\Input as ChildInput;
@@ -13,6 +21,10 @@ use Baja\Model\Prova as ChildProva;
 use Baja\Model\ProvaQuery as ChildProvaQuery;
 use Baja\Model\Tournament as ChildTournament;
 use Baja\Model\TournamentQuery as ChildTournamentQuery;
+use Baja\Model\Map\ContagemDecisaoTableMap;
+use Baja\Model\Map\ContagemFonteTableMap;
+use Baja\Model\Map\ContagemOcorrenciaTableMap;
+use Baja\Model\Map\ContagemVoltaTableMap;
 use Baja\Model\Map\InputTableMap;
 use Baja\Model\Map\ProvaTableMap;
 use Baja\Model\Map\TournamentTableMap;
@@ -158,6 +170,34 @@ abstract class Prova implements ActiveRecordInterface
     protected $collTournamentsPartial;
 
     /**
+     * @var        ObjectCollection|ChildContagemFonte[] Collection to store aggregation of ChildContagemFonte objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildContagemFonte> Collection to store aggregation of ChildContagemFonte objects.
+     */
+    protected $collContagemFontes;
+    protected $collContagemFontesPartial;
+
+    /**
+     * @var        ObjectCollection|ChildContagemOcorrencia[] Collection to store aggregation of ChildContagemOcorrencia objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildContagemOcorrencia> Collection to store aggregation of ChildContagemOcorrencia objects.
+     */
+    protected $collContagemOcorrencias;
+    protected $collContagemOcorrenciasPartial;
+
+    /**
+     * @var        ObjectCollection|ChildContagemDecisao[] Collection to store aggregation of ChildContagemDecisao objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildContagemDecisao> Collection to store aggregation of ChildContagemDecisao objects.
+     */
+    protected $collContagemDecisaos;
+    protected $collContagemDecisaosPartial;
+
+    /**
+     * @var        ObjectCollection|ChildContagemVolta[] Collection to store aggregation of ChildContagemVolta objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildContagemVolta> Collection to store aggregation of ChildContagemVolta objects.
+     */
+    protected $collContagemVoltas;
+    protected $collContagemVoltasPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      *
@@ -178,6 +218,34 @@ abstract class Prova implements ActiveRecordInterface
      * @phpstan-var ObjectCollection&\Traversable<ChildTournament>
      */
     protected $tournamentsScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildContagemFonte[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildContagemFonte>
+     */
+    protected $contagemFontesScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildContagemOcorrencia[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildContagemOcorrencia>
+     */
+    protected $contagemOcorrenciasScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildContagemDecisao[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildContagemDecisao>
+     */
+    protected $contagemDecisaosScheduledForDeletion = null;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildContagemVolta[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildContagemVolta>
+     */
+    protected $contagemVoltasScheduledForDeletion = null;
 
     /**
      * Applies default values to this object.
@@ -865,6 +933,14 @@ abstract class Prova implements ActiveRecordInterface
 
             $this->collTournaments = null;
 
+            $this->collContagemFontes = null;
+
+            $this->collContagemOcorrencias = null;
+
+            $this->collContagemDecisaos = null;
+
+            $this->collContagemVoltas = null;
+
         } // if (deep)
     }
 
@@ -1019,6 +1095,74 @@ abstract class Prova implements ActiveRecordInterface
 
             if ($this->collTournaments !== null) {
                 foreach ($this->collTournaments as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->contagemFontesScheduledForDeletion !== null) {
+                if (!$this->contagemFontesScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\ContagemFonteQuery::create()
+                        ->filterByPrimaryKeys($this->contagemFontesScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->contagemFontesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collContagemFontes !== null) {
+                foreach ($this->collContagemFontes as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->contagemOcorrenciasScheduledForDeletion !== null) {
+                if (!$this->contagemOcorrenciasScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\ContagemOcorrenciaQuery::create()
+                        ->filterByPrimaryKeys($this->contagemOcorrenciasScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->contagemOcorrenciasScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collContagemOcorrencias !== null) {
+                foreach ($this->collContagemOcorrencias as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->contagemDecisaosScheduledForDeletion !== null) {
+                if (!$this->contagemDecisaosScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\ContagemDecisaoQuery::create()
+                        ->filterByPrimaryKeys($this->contagemDecisaosScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->contagemDecisaosScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collContagemDecisaos !== null) {
+                foreach ($this->collContagemDecisaos as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
+            }
+
+            if ($this->contagemVoltasScheduledForDeletion !== null) {
+                if (!$this->contagemVoltasScheduledForDeletion->isEmpty()) {
+                    \Baja\Model\ContagemVoltaQuery::create()
+                        ->filterByPrimaryKeys($this->contagemVoltasScheduledForDeletion->getPrimaryKeys(false))
+                        ->delete($con);
+                    $this->contagemVoltasScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collContagemVoltas !== null) {
+                foreach ($this->collContagemVoltas as $referrerFK) {
                     if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
                         $affectedRows += $referrerFK->save($con);
                     }
@@ -1295,6 +1439,66 @@ abstract class Prova implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->collTournaments->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collContagemFontes) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'contagemFontes';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'contagem_fontes';
+                        break;
+                    default:
+                        $key = 'ContagemFontes';
+                }
+
+                $result[$key] = $this->collContagemFontes->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collContagemOcorrencias) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'contagemOcorrencias';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'contagem_ocorrencias';
+                        break;
+                    default:
+                        $key = 'ContagemOcorrencias';
+                }
+
+                $result[$key] = $this->collContagemOcorrencias->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collContagemDecisaos) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'contagemDecisaos';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'contagem_decisaos';
+                        break;
+                    default:
+                        $key = 'ContagemDecisaos';
+                }
+
+                $result[$key] = $this->collContagemDecisaos->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+            if (null !== $this->collContagemVoltas) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'contagemVoltas';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'contagem_voltas';
+                        break;
+                    default:
+                        $key = 'ContagemVoltas';
+                }
+
+                $result[$key] = $this->collContagemVoltas->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
         }
 
@@ -1616,6 +1820,30 @@ abstract class Prova implements ActiveRecordInterface
                 }
             }
 
+            foreach ($this->getContagemFontes() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addContagemFonte($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getContagemOcorrencias() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addContagemOcorrencia($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getContagemDecisaos() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addContagemDecisao($relObj->copy($deepCopy));
+                }
+            }
+
+            foreach ($this->getContagemVoltas() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addContagemVolta($relObj->copy($deepCopy));
+                }
+            }
+
         } // if ($deepCopy)
 
         if ($makeNew) {
@@ -1713,6 +1941,22 @@ abstract class Prova implements ActiveRecordInterface
         }
         if ('Tournament' === $relationName) {
             $this->initTournaments();
+            return;
+        }
+        if ('ContagemFonte' === $relationName) {
+            $this->initContagemFontes();
+            return;
+        }
+        if ('ContagemOcorrencia' === $relationName) {
+            $this->initContagemOcorrencias();
+            return;
+        }
+        if ('ContagemDecisao' === $relationName) {
+            $this->initContagemDecisaos();
+            return;
+        }
+        if ('ContagemVolta' === $relationName) {
+            $this->initContagemVoltas();
             return;
         }
     }
@@ -2254,6 +2498,965 @@ abstract class Prova implements ActiveRecordInterface
     }
 
     /**
+     * Clears out the collContagemFontes collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addContagemFontes()
+     */
+    public function clearContagemFontes()
+    {
+        $this->collContagemFontes = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collContagemFontes collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialContagemFontes($v = true): void
+    {
+        $this->collContagemFontesPartial = $v;
+    }
+
+    /**
+     * Initializes the collContagemFontes collection.
+     *
+     * By default this just sets the collContagemFontes collection to an empty array (like clearcollContagemFontes());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initContagemFontes(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collContagemFontes && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ContagemFonteTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collContagemFontes = new $collectionClassName;
+        $this->collContagemFontes->setModel('\Baja\Model\ContagemFonte');
+    }
+
+    /**
+     * Gets an array of ChildContagemFonte objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildProva is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildContagemFonte[] List of ChildContagemFonte objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildContagemFonte> List of ChildContagemFonte objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getContagemFontes(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collContagemFontesPartial && !$this->isNew();
+        if (null === $this->collContagemFontes || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collContagemFontes) {
+                    $this->initContagemFontes();
+                } else {
+                    $collectionClassName = ContagemFonteTableMap::getTableMap()->getCollectionClassName();
+
+                    $collContagemFontes = new $collectionClassName;
+                    $collContagemFontes->setModel('\Baja\Model\ContagemFonte');
+
+                    return $collContagemFontes;
+                }
+            } else {
+                $collContagemFontes = ChildContagemFonteQuery::create(null, $criteria)
+                    ->filterByProva($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collContagemFontesPartial && count($collContagemFontes)) {
+                        $this->initContagemFontes(false);
+
+                        foreach ($collContagemFontes as $obj) {
+                            if (false == $this->collContagemFontes->contains($obj)) {
+                                $this->collContagemFontes->append($obj);
+                            }
+                        }
+
+                        $this->collContagemFontesPartial = true;
+                    }
+
+                    return $collContagemFontes;
+                }
+
+                if ($partial && $this->collContagemFontes) {
+                    foreach ($this->collContagemFontes as $obj) {
+                        if ($obj->isNew()) {
+                            $collContagemFontes[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collContagemFontes = $collContagemFontes;
+                $this->collContagemFontesPartial = false;
+            }
+        }
+
+        return $this->collContagemFontes;
+    }
+
+    /**
+     * Sets a collection of ChildContagemFonte objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $contagemFontes A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setContagemFontes(Collection $contagemFontes, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildContagemFonte[] $contagemFontesToDelete */
+        $contagemFontesToDelete = $this->getContagemFontes(new Criteria(), $con)->diff($contagemFontes);
+
+
+        $this->contagemFontesScheduledForDeletion = $contagemFontesToDelete;
+
+        foreach ($contagemFontesToDelete as $contagemFonteRemoved) {
+            $contagemFonteRemoved->setProva(null);
+        }
+
+        $this->collContagemFontes = null;
+        foreach ($contagemFontes as $contagemFonte) {
+            $this->addContagemFonte($contagemFonte);
+        }
+
+        $this->collContagemFontes = $contagemFontes;
+        $this->collContagemFontesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ContagemFonte objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related ContagemFonte objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countContagemFontes(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collContagemFontesPartial && !$this->isNew();
+        if (null === $this->collContagemFontes || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collContagemFontes) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getContagemFontes());
+            }
+
+            $query = ChildContagemFonteQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByProva($this)
+                ->count($con);
+        }
+
+        return count($this->collContagemFontes);
+    }
+
+    /**
+     * Method called to associate a ChildContagemFonte object to this object
+     * through the ChildContagemFonte foreign key attribute.
+     *
+     * @param ChildContagemFonte $l ChildContagemFonte
+     * @return $this The current object (for fluent API support)
+     */
+    public function addContagemFonte(ChildContagemFonte $l)
+    {
+        if ($this->collContagemFontes === null) {
+            $this->initContagemFontes();
+            $this->collContagemFontesPartial = true;
+        }
+
+        if (!$this->collContagemFontes->contains($l)) {
+            $this->doAddContagemFonte($l);
+
+            if ($this->contagemFontesScheduledForDeletion and $this->contagemFontesScheduledForDeletion->contains($l)) {
+                $this->contagemFontesScheduledForDeletion->remove($this->contagemFontesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildContagemFonte $contagemFonte The ChildContagemFonte object to add.
+     */
+    protected function doAddContagemFonte(ChildContagemFonte $contagemFonte): void
+    {
+        $this->collContagemFontes[]= $contagemFonte;
+        $contagemFonte->setProva($this);
+    }
+
+    /**
+     * @param ChildContagemFonte $contagemFonte The ChildContagemFonte object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeContagemFonte(ChildContagemFonte $contagemFonte)
+    {
+        if ($this->getContagemFontes()->contains($contagemFonte)) {
+            $pos = $this->collContagemFontes->search($contagemFonte);
+            $this->collContagemFontes->remove($pos);
+            if (null === $this->contagemFontesScheduledForDeletion) {
+                $this->contagemFontesScheduledForDeletion = clone $this->collContagemFontes;
+                $this->contagemFontesScheduledForDeletion->clear();
+            }
+            $this->contagemFontesScheduledForDeletion[]= clone $contagemFonte;
+            $contagemFonte->setProva(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Clears out the collContagemOcorrencias collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addContagemOcorrencias()
+     */
+    public function clearContagemOcorrencias()
+    {
+        $this->collContagemOcorrencias = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collContagemOcorrencias collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialContagemOcorrencias($v = true): void
+    {
+        $this->collContagemOcorrenciasPartial = $v;
+    }
+
+    /**
+     * Initializes the collContagemOcorrencias collection.
+     *
+     * By default this just sets the collContagemOcorrencias collection to an empty array (like clearcollContagemOcorrencias());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initContagemOcorrencias(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collContagemOcorrencias && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ContagemOcorrenciaTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collContagemOcorrencias = new $collectionClassName;
+        $this->collContagemOcorrencias->setModel('\Baja\Model\ContagemOcorrencia');
+    }
+
+    /**
+     * Gets an array of ChildContagemOcorrencia objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildProva is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildContagemOcorrencia[] List of ChildContagemOcorrencia objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildContagemOcorrencia> List of ChildContagemOcorrencia objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getContagemOcorrencias(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collContagemOcorrenciasPartial && !$this->isNew();
+        if (null === $this->collContagemOcorrencias || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collContagemOcorrencias) {
+                    $this->initContagemOcorrencias();
+                } else {
+                    $collectionClassName = ContagemOcorrenciaTableMap::getTableMap()->getCollectionClassName();
+
+                    $collContagemOcorrencias = new $collectionClassName;
+                    $collContagemOcorrencias->setModel('\Baja\Model\ContagemOcorrencia');
+
+                    return $collContagemOcorrencias;
+                }
+            } else {
+                $collContagemOcorrencias = ChildContagemOcorrenciaQuery::create(null, $criteria)
+                    ->filterByProva($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collContagemOcorrenciasPartial && count($collContagemOcorrencias)) {
+                        $this->initContagemOcorrencias(false);
+
+                        foreach ($collContagemOcorrencias as $obj) {
+                            if (false == $this->collContagemOcorrencias->contains($obj)) {
+                                $this->collContagemOcorrencias->append($obj);
+                            }
+                        }
+
+                        $this->collContagemOcorrenciasPartial = true;
+                    }
+
+                    return $collContagemOcorrencias;
+                }
+
+                if ($partial && $this->collContagemOcorrencias) {
+                    foreach ($this->collContagemOcorrencias as $obj) {
+                        if ($obj->isNew()) {
+                            $collContagemOcorrencias[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collContagemOcorrencias = $collContagemOcorrencias;
+                $this->collContagemOcorrenciasPartial = false;
+            }
+        }
+
+        return $this->collContagemOcorrencias;
+    }
+
+    /**
+     * Sets a collection of ChildContagemOcorrencia objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $contagemOcorrencias A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setContagemOcorrencias(Collection $contagemOcorrencias, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildContagemOcorrencia[] $contagemOcorrenciasToDelete */
+        $contagemOcorrenciasToDelete = $this->getContagemOcorrencias(new Criteria(), $con)->diff($contagemOcorrencias);
+
+
+        $this->contagemOcorrenciasScheduledForDeletion = $contagemOcorrenciasToDelete;
+
+        foreach ($contagemOcorrenciasToDelete as $contagemOcorrenciaRemoved) {
+            $contagemOcorrenciaRemoved->setProva(null);
+        }
+
+        $this->collContagemOcorrencias = null;
+        foreach ($contagemOcorrencias as $contagemOcorrencia) {
+            $this->addContagemOcorrencia($contagemOcorrencia);
+        }
+
+        $this->collContagemOcorrencias = $contagemOcorrencias;
+        $this->collContagemOcorrenciasPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ContagemOcorrencia objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related ContagemOcorrencia objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countContagemOcorrencias(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collContagemOcorrenciasPartial && !$this->isNew();
+        if (null === $this->collContagemOcorrencias || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collContagemOcorrencias) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getContagemOcorrencias());
+            }
+
+            $query = ChildContagemOcorrenciaQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByProva($this)
+                ->count($con);
+        }
+
+        return count($this->collContagemOcorrencias);
+    }
+
+    /**
+     * Method called to associate a ChildContagemOcorrencia object to this object
+     * through the ChildContagemOcorrencia foreign key attribute.
+     *
+     * @param ChildContagemOcorrencia $l ChildContagemOcorrencia
+     * @return $this The current object (for fluent API support)
+     */
+    public function addContagemOcorrencia(ChildContagemOcorrencia $l)
+    {
+        if ($this->collContagemOcorrencias === null) {
+            $this->initContagemOcorrencias();
+            $this->collContagemOcorrenciasPartial = true;
+        }
+
+        if (!$this->collContagemOcorrencias->contains($l)) {
+            $this->doAddContagemOcorrencia($l);
+
+            if ($this->contagemOcorrenciasScheduledForDeletion and $this->contagemOcorrenciasScheduledForDeletion->contains($l)) {
+                $this->contagemOcorrenciasScheduledForDeletion->remove($this->contagemOcorrenciasScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildContagemOcorrencia $contagemOcorrencia The ChildContagemOcorrencia object to add.
+     */
+    protected function doAddContagemOcorrencia(ChildContagemOcorrencia $contagemOcorrencia): void
+    {
+        $this->collContagemOcorrencias[]= $contagemOcorrencia;
+        $contagemOcorrencia->setProva($this);
+    }
+
+    /**
+     * @param ChildContagemOcorrencia $contagemOcorrencia The ChildContagemOcorrencia object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeContagemOcorrencia(ChildContagemOcorrencia $contagemOcorrencia)
+    {
+        if ($this->getContagemOcorrencias()->contains($contagemOcorrencia)) {
+            $pos = $this->collContagemOcorrencias->search($contagemOcorrencia);
+            $this->collContagemOcorrencias->remove($pos);
+            if (null === $this->contagemOcorrenciasScheduledForDeletion) {
+                $this->contagemOcorrenciasScheduledForDeletion = clone $this->collContagemOcorrencias;
+                $this->contagemOcorrenciasScheduledForDeletion->clear();
+            }
+            $this->contagemOcorrenciasScheduledForDeletion[]= clone $contagemOcorrencia;
+            $contagemOcorrencia->setProva(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Clears out the collContagemDecisaos collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addContagemDecisaos()
+     */
+    public function clearContagemDecisaos()
+    {
+        $this->collContagemDecisaos = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collContagemDecisaos collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialContagemDecisaos($v = true): void
+    {
+        $this->collContagemDecisaosPartial = $v;
+    }
+
+    /**
+     * Initializes the collContagemDecisaos collection.
+     *
+     * By default this just sets the collContagemDecisaos collection to an empty array (like clearcollContagemDecisaos());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initContagemDecisaos(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collContagemDecisaos && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ContagemDecisaoTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collContagemDecisaos = new $collectionClassName;
+        $this->collContagemDecisaos->setModel('\Baja\Model\ContagemDecisao');
+    }
+
+    /**
+     * Gets an array of ChildContagemDecisao objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildProva is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildContagemDecisao[] List of ChildContagemDecisao objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildContagemDecisao> List of ChildContagemDecisao objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getContagemDecisaos(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collContagemDecisaosPartial && !$this->isNew();
+        if (null === $this->collContagemDecisaos || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collContagemDecisaos) {
+                    $this->initContagemDecisaos();
+                } else {
+                    $collectionClassName = ContagemDecisaoTableMap::getTableMap()->getCollectionClassName();
+
+                    $collContagemDecisaos = new $collectionClassName;
+                    $collContagemDecisaos->setModel('\Baja\Model\ContagemDecisao');
+
+                    return $collContagemDecisaos;
+                }
+            } else {
+                $collContagemDecisaos = ChildContagemDecisaoQuery::create(null, $criteria)
+                    ->filterByProva($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collContagemDecisaosPartial && count($collContagemDecisaos)) {
+                        $this->initContagemDecisaos(false);
+
+                        foreach ($collContagemDecisaos as $obj) {
+                            if (false == $this->collContagemDecisaos->contains($obj)) {
+                                $this->collContagemDecisaos->append($obj);
+                            }
+                        }
+
+                        $this->collContagemDecisaosPartial = true;
+                    }
+
+                    return $collContagemDecisaos;
+                }
+
+                if ($partial && $this->collContagemDecisaos) {
+                    foreach ($this->collContagemDecisaos as $obj) {
+                        if ($obj->isNew()) {
+                            $collContagemDecisaos[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collContagemDecisaos = $collContagemDecisaos;
+                $this->collContagemDecisaosPartial = false;
+            }
+        }
+
+        return $this->collContagemDecisaos;
+    }
+
+    /**
+     * Sets a collection of ChildContagemDecisao objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $contagemDecisaos A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setContagemDecisaos(Collection $contagemDecisaos, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildContagemDecisao[] $contagemDecisaosToDelete */
+        $contagemDecisaosToDelete = $this->getContagemDecisaos(new Criteria(), $con)->diff($contagemDecisaos);
+
+
+        $this->contagemDecisaosScheduledForDeletion = $contagemDecisaosToDelete;
+
+        foreach ($contagemDecisaosToDelete as $contagemDecisaoRemoved) {
+            $contagemDecisaoRemoved->setProva(null);
+        }
+
+        $this->collContagemDecisaos = null;
+        foreach ($contagemDecisaos as $contagemDecisao) {
+            $this->addContagemDecisao($contagemDecisao);
+        }
+
+        $this->collContagemDecisaos = $contagemDecisaos;
+        $this->collContagemDecisaosPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ContagemDecisao objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related ContagemDecisao objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countContagemDecisaos(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collContagemDecisaosPartial && !$this->isNew();
+        if (null === $this->collContagemDecisaos || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collContagemDecisaos) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getContagemDecisaos());
+            }
+
+            $query = ChildContagemDecisaoQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByProva($this)
+                ->count($con);
+        }
+
+        return count($this->collContagemDecisaos);
+    }
+
+    /**
+     * Method called to associate a ChildContagemDecisao object to this object
+     * through the ChildContagemDecisao foreign key attribute.
+     *
+     * @param ChildContagemDecisao $l ChildContagemDecisao
+     * @return $this The current object (for fluent API support)
+     */
+    public function addContagemDecisao(ChildContagemDecisao $l)
+    {
+        if ($this->collContagemDecisaos === null) {
+            $this->initContagemDecisaos();
+            $this->collContagemDecisaosPartial = true;
+        }
+
+        if (!$this->collContagemDecisaos->contains($l)) {
+            $this->doAddContagemDecisao($l);
+
+            if ($this->contagemDecisaosScheduledForDeletion and $this->contagemDecisaosScheduledForDeletion->contains($l)) {
+                $this->contagemDecisaosScheduledForDeletion->remove($this->contagemDecisaosScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildContagemDecisao $contagemDecisao The ChildContagemDecisao object to add.
+     */
+    protected function doAddContagemDecisao(ChildContagemDecisao $contagemDecisao): void
+    {
+        $this->collContagemDecisaos[]= $contagemDecisao;
+        $contagemDecisao->setProva($this);
+    }
+
+    /**
+     * @param ChildContagemDecisao $contagemDecisao The ChildContagemDecisao object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeContagemDecisao(ChildContagemDecisao $contagemDecisao)
+    {
+        if ($this->getContagemDecisaos()->contains($contagemDecisao)) {
+            $pos = $this->collContagemDecisaos->search($contagemDecisao);
+            $this->collContagemDecisaos->remove($pos);
+            if (null === $this->contagemDecisaosScheduledForDeletion) {
+                $this->contagemDecisaosScheduledForDeletion = clone $this->collContagemDecisaos;
+                $this->contagemDecisaosScheduledForDeletion->clear();
+            }
+            $this->contagemDecisaosScheduledForDeletion[]= clone $contagemDecisao;
+            $contagemDecisao->setProva(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Clears out the collContagemVoltas collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addContagemVoltas()
+     */
+    public function clearContagemVoltas()
+    {
+        $this->collContagemVoltas = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collContagemVoltas collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialContagemVoltas($v = true): void
+    {
+        $this->collContagemVoltasPartial = $v;
+    }
+
+    /**
+     * Initializes the collContagemVoltas collection.
+     *
+     * By default this just sets the collContagemVoltas collection to an empty array (like clearcollContagemVoltas());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initContagemVoltas(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collContagemVoltas && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = ContagemVoltaTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collContagemVoltas = new $collectionClassName;
+        $this->collContagemVoltas->setModel('\Baja\Model\ContagemVolta');
+    }
+
+    /**
+     * Gets an array of ChildContagemVolta objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildProva is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildContagemVolta[] List of ChildContagemVolta objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildContagemVolta> List of ChildContagemVolta objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getContagemVoltas(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collContagemVoltasPartial && !$this->isNew();
+        if (null === $this->collContagemVoltas || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collContagemVoltas) {
+                    $this->initContagemVoltas();
+                } else {
+                    $collectionClassName = ContagemVoltaTableMap::getTableMap()->getCollectionClassName();
+
+                    $collContagemVoltas = new $collectionClassName;
+                    $collContagemVoltas->setModel('\Baja\Model\ContagemVolta');
+
+                    return $collContagemVoltas;
+                }
+            } else {
+                $collContagemVoltas = ChildContagemVoltaQuery::create(null, $criteria)
+                    ->filterByProva($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collContagemVoltasPartial && count($collContagemVoltas)) {
+                        $this->initContagemVoltas(false);
+
+                        foreach ($collContagemVoltas as $obj) {
+                            if (false == $this->collContagemVoltas->contains($obj)) {
+                                $this->collContagemVoltas->append($obj);
+                            }
+                        }
+
+                        $this->collContagemVoltasPartial = true;
+                    }
+
+                    return $collContagemVoltas;
+                }
+
+                if ($partial && $this->collContagemVoltas) {
+                    foreach ($this->collContagemVoltas as $obj) {
+                        if ($obj->isNew()) {
+                            $collContagemVoltas[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collContagemVoltas = $collContagemVoltas;
+                $this->collContagemVoltasPartial = false;
+            }
+        }
+
+        return $this->collContagemVoltas;
+    }
+
+    /**
+     * Sets a collection of ChildContagemVolta objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $contagemVoltas A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setContagemVoltas(Collection $contagemVoltas, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildContagemVolta[] $contagemVoltasToDelete */
+        $contagemVoltasToDelete = $this->getContagemVoltas(new Criteria(), $con)->diff($contagemVoltas);
+
+
+        //since at least one column in the foreign key is at the same time a PK
+        //we can not just set a PK to NULL in the lines below. We have to store
+        //a backup of all values, so we are able to manipulate these items based on the onDelete value later.
+        $this->contagemVoltasScheduledForDeletion = clone $contagemVoltasToDelete;
+
+        foreach ($contagemVoltasToDelete as $contagemVoltaRemoved) {
+            $contagemVoltaRemoved->setProva(null);
+        }
+
+        $this->collContagemVoltas = null;
+        foreach ($contagemVoltas as $contagemVolta) {
+            $this->addContagemVolta($contagemVolta);
+        }
+
+        $this->collContagemVoltas = $contagemVoltas;
+        $this->collContagemVoltasPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related ContagemVolta objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related ContagemVolta objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countContagemVoltas(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collContagemVoltasPartial && !$this->isNew();
+        if (null === $this->collContagemVoltas || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collContagemVoltas) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getContagemVoltas());
+            }
+
+            $query = ChildContagemVoltaQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByProva($this)
+                ->count($con);
+        }
+
+        return count($this->collContagemVoltas);
+    }
+
+    /**
+     * Method called to associate a ChildContagemVolta object to this object
+     * through the ChildContagemVolta foreign key attribute.
+     *
+     * @param ChildContagemVolta $l ChildContagemVolta
+     * @return $this The current object (for fluent API support)
+     */
+    public function addContagemVolta(ChildContagemVolta $l)
+    {
+        if ($this->collContagemVoltas === null) {
+            $this->initContagemVoltas();
+            $this->collContagemVoltasPartial = true;
+        }
+
+        if (!$this->collContagemVoltas->contains($l)) {
+            $this->doAddContagemVolta($l);
+
+            if ($this->contagemVoltasScheduledForDeletion and $this->contagemVoltasScheduledForDeletion->contains($l)) {
+                $this->contagemVoltasScheduledForDeletion->remove($this->contagemVoltasScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildContagemVolta $contagemVolta The ChildContagemVolta object to add.
+     */
+    protected function doAddContagemVolta(ChildContagemVolta $contagemVolta): void
+    {
+        $this->collContagemVoltas[]= $contagemVolta;
+        $contagemVolta->setProva($this);
+    }
+
+    /**
+     * @param ChildContagemVolta $contagemVolta The ChildContagemVolta object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeContagemVolta(ChildContagemVolta $contagemVolta)
+    {
+        if ($this->getContagemVoltas()->contains($contagemVolta)) {
+            $pos = $this->collContagemVoltas->search($contagemVolta);
+            $this->collContagemVoltas->remove($pos);
+            if (null === $this->contagemVoltasScheduledForDeletion) {
+                $this->contagemVoltasScheduledForDeletion = clone $this->collContagemVoltas;
+                $this->contagemVoltasScheduledForDeletion->clear();
+            }
+            $this->contagemVoltasScheduledForDeletion[]= clone $contagemVolta;
+            $contagemVolta->setProva(null);
+        }
+
+        return $this;
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -2306,10 +3509,34 @@ abstract class Prova implements ActiveRecordInterface
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->collContagemFontes) {
+                foreach ($this->collContagemFontes as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collContagemOcorrencias) {
+                foreach ($this->collContagemOcorrencias as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collContagemDecisaos) {
+                foreach ($this->collContagemDecisaos as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
+            if ($this->collContagemVoltas) {
+                foreach ($this->collContagemVoltas as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
         $this->collInputs = null;
         $this->collTournaments = null;
+        $this->collContagemFontes = null;
+        $this->collContagemOcorrencias = null;
+        $this->collContagemDecisaos = null;
+        $this->collContagemVoltas = null;
         $this->aEvento = null;
         return $this;
     }

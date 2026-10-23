@@ -437,6 +437,13 @@ class EventoTableMap extends TableMap
     1 => ':evento_id',
   ),
 ), 'CASCADE', 'CASCADE', 'Premiacaos', false);
+        $this->addRelation('Timer', '\\Baja\\Model\\Timer', RelationMap::ONE_TO_MANY, array (
+  0 =>
+  array (
+    0 => ':evento_id',
+    1 => ':evento_id',
+  ),
+), 'CASCADE', 'CASCADE', 'Timers', false);
         $this->addRelation('Senha', '\\Baja\\Model\\Senha', RelationMap::ONE_TO_MANY, array (
   0 =>
   array (
@@ -459,6 +466,7 @@ class EventoTableMap extends TableMap
         ResultadoTableMap::clearInstancePool();
         FilaTableMap::clearInstancePool();
         PremiacaoTableMap::clearInstancePool();
+        TimerTableMap::clearInstancePool();
         SenhaTableMap::clearInstancePool();
     }
 

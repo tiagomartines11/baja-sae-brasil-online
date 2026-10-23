@@ -1,0 +1,11 @@
+# TLS. Staging and production.
+#
+# The certificate paths are templated, not the mount: /etc/letsencrypt is bound
+# from the host at whatever that host actually holds, and nginx only ever sees
+# ${BAJA_DOMAIN}. That is what stops conf.d-prod's old failure mode, where the
+# config named one environment's certificate and was started in another.
+listen 443 ssl;
+http2 on;
+
+ssl_certificate     /etc/letsencrypt/live/${BAJA_DOMAIN}/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/${BAJA_DOMAIN}/privkey.pem;

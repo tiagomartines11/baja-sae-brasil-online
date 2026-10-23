@@ -1,6 +1,9 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Contagem\Access\ContagemAccess;
+use Baja\Contagem\Review\ManualScoreFields;
+use Baja\Contagem\Service\LockBusy;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\Input;
@@ -27,7 +30,46 @@ $provaInput = [];
 $paramsInputs = $prova->getParamsInputs();
 array_walk($paramsInputs, function($v) use (&$provaInput) { $provaInput[$v->getCode()] = $v; });
 
+// In a laps prova, VOLTAS, LAST and BEST belong to the lap counting engine.
+// They are left out of everything below, so this page can neither change
+// them nor record them as edited; what a person saves here is merged into
+// the row beside them. With publishing switched off ("desligada") the engine
+// writes none of them and the list is empty: all three can be typed here.
+$isLapsProva = $prova->getType() == ContagemAccess::PROVA_TYPE;
+$provaInput = array_diff_key($provaInput, array_flip(ManualScoreFields::engineOwnedFields($prova)));
+
 if (!array_key_exists("submit", $_POST) && !array_key_exists("delete", $_POST)) { header("Location: dashboard.php?p=$_page"); exit; }
+
+$writeLog = function (string $dados) use ($prova, $equipe): void {
+    $log = new Log();
+    $log->setUser(Session::getCurrentUser()->getUsername());
+    $log->setPagina($prova->getEventoId()."_".$prova->getProvaId());
+    $log->setEquipe($equipe->getEquipeId());
+    $log->setDados($dados);
+    $log->save();
+};
+
+// On a laps prova ANY request that carries "delete" takes the path that
+// keeps the row, also one that carries "submit" as well. A browser sends
+// only the button that was clicked, but a request with both used to slip
+// past this check and reach the plain `$nota->delete()` further down, which
+// removed the car's lap count and its classification with no recount.
+$wantsDelete = array_key_exists('delete', $_POST);
+
+if ($isLapsProva && $wantsDelete) {
+    // The row also holds the lap count, which is not this page's to delete:
+    // only the fields people type are emptied, and the row stays.
+    try {
+        // clear() never empties VOLTAS, LAST or BEST, in any publish mode.
+        if (ManualScoreFields::clear($prova, (int) $equipe->getEquipeId(), array_keys($provaInput))) {
+            $writeLog('{"DELETED": "campos manuais"}');
+        }
+    } catch (LockBusy $busy) {
+        die('A contagem de voltas está ocupada com outra operação e nada foi alterado. Volte e tente de novo.');
+    }
+    header("Location: dashboard.php?p=$_page");
+    exit();
+}
 
 $nota = InputQuery::create()->filterByEventoId($currentEventId)->filterByProvaId($prova->getProvaId())->findOneByEquipeId($equipe->getEquipeId());
 if (!$nota) {
@@ -38,13 +80,10 @@ if (!$nota) {
     $nota->setEventoId($currentEventId);
 }
 
-if (($_POST['delete'] ?? '') == 'Deletar Nota') {
-    $log = new Log();
-    $log->setUser(Session::getCurrentUser()->getUsername());
-    $log->setPagina($prova->getEventoId()."_".$prova->getProvaId());
-    $log->setEquipe($equipe->getEquipeId());
-    $log->setDados('{"DELETED": "---"}');
-    $log->save();
+// Never reached for a laps prova (see above); the check is repeated so that
+// stays true whatever is changed up there.
+if (!$isLapsProva && ($_POST['delete'] ?? '') == 'Deletar Nota') {
+    $writeLog('{"DELETED": "---"}');
 
     $nota->delete();
     header("Location: dashboard.php?p=$_page");
@@ -59,10 +98,8 @@ unset($v);
 
 $old_array = (array)$nota->getDados();
 $new_array = [];
-$i = 0;
 foreach ($provaInput as $k=>$v) {
-    $input = $prova->getParamsInputs()[$i++];
-    if ($input->getType() == "number" && ($_POST[$k] ?? null) !== null)
+    if ($v->getType() == "number" && ($_POST[$k] ?? null) !== null)
         $new_array[$k] = doubleval($_POST[$k]);
     else
         $new_array[$k] = $_POST[$k] ?? null;
@@ -71,45 +108,66 @@ unset($v);
 
 $sensitive = false;
 
-$diff = [];
-foreach ($provaInput as $k=>$v) {
-    $hasOld = array_key_exists($k, $new_array);
-    $hasNew = array_key_exists($k, $new_array);
-    $changed = false;
-    if ((!$hasOld && $hasNew) || ($hasOld && $hasNew && $new_array[$k] !== $old_array[$k])) {
-        $diff[$k] = $new_array[$k];
-        $changed = true;
-    } else if (!$hasNew && $hasOld) {
-        $diff[$k] = 'removed';
-        $changed = true;
+if ($isLapsProva) {
+    // The lap counting engine writes VOLTAS, LAST and BEST into this same
+    // row many times a minute. Writing back the row as it was read above
+    // could put an old lap count over a new one, so the save is done under
+    // the count lock, from the row as it is at that moment. The same call
+    // recounts the race when the classification field of this car changed.
+    try {
+        $diff = ManualScoreFields::save($prova, (int) $equipe->getEquipeId(), $new_array);
+    } catch (LockBusy $busy) {
+        die('A contagem de voltas está ocupada com outra operação e nada foi salvo. Volte e tente de novo.');
+    }
+    foreach (array_keys($diff) as $k) {
+        if ($provaInput[$k]->getSensitive()) {
+            $sensitive = true;
+        }
+    }
+    $saved = count($diff) > 0;
+    if ($saved) {
+        // Read again for the notification below: the points were just recalculated.
+        $nota = InputQuery::create()->filterByEventoId($currentEventId)->filterByProvaId($prova->getProvaId())->findOneByEquipeId($equipe->getEquipeId());
+    }
+} else {
+    $diff = [];
+    foreach ($provaInput as $k=>$v) {
+        $hasOld = array_key_exists($k, $new_array);
+        $hasNew = array_key_exists($k, $new_array);
+        $changed = false;
+        if ((!$hasOld && $hasNew) || ($hasOld && $hasNew && $new_array[$k] !== ($old_array[$k] ?? null))) {
+            $diff[$k] = $new_array[$k];
+            $changed = true;
+        } else if (!$hasNew && $hasOld) {
+            $diff[$k] = 'removed';
+            $changed = true;
+        }
+
+        if ($changed) {
+            if ($v->getSensitive()) {
+                $sensitive = true;
+            }
+        }
     }
 
-    if ($changed) {
-        if ($v->getSensitive()) {
-            $sensitive = true;   
-        }
+    $saved = count($diff) > 0;
+    if ($saved) {
+        $nota->setDados($new_array);
+        $nota->save();
+
+        $prova->refreshVarsAndPontos();
     }
 }
 
-if (count($diff) > 0) {
-    $nota->setDados($new_array);
-    $nota->save();
-
-    $prova->refreshVarsAndPontos();
-
-    $log = new Log();
-    $log->setUser(Session::getCurrentUser()->getUsername());
-    $log->setPagina($prova->getEventoId()."_".$prova->getProvaId());
-    $log->setEquipe($equipe->getEquipeId());
-    $log->setDados(json_encode($diff));
-    $log->save();
+if ($saved) {
+    $writeLog(json_encode($diff));
 
     if (!$sensitive) {
         OneSignalClient::sendMessage('Pontuação Publicada', '#' . $equipe->getEquipeId() . ' - ' . $prova->getNome() . (count(array_values((array)$nota->getPontos())) > 0 ? ': '. array_values((array)$nota->getPontos())[0] : ''), 'prova.php?id='.$prova->getProvaId(), $equipe->getEquipeId());
     }
 }
 
-if ($_POST['submit'] == 'Salvar e Avançar')
+if (($_POST['submit'] ?? '') == 'Salvar e Avançar')
     header("Location: entry.php?p=$_page&t=".($_team+1));
 else
     header("Location: dashboard.php?p=$_page");

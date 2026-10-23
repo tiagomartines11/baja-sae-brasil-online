@@ -1,0 +1,55 @@
+# Propel generator config — BUILD TIME ONLY. Contains no credentials.
+#
+# Nothing at runtime reads this file. The app builds its own Propel service
+# container in src/config.php (DSN and credentials from environment variables
+# injected by docker compose) and loads table maps from the generated
+# src/loadDatabase.php. A deployment runs fine without this file present;
+# it exists so `propel` CLI commands are reproducible for everyone.
+#
+# Propel loads `propel.yaml.dist` automatically, and a `propel.yaml` beside it
+# takes precedence. propel.yaml is gitignored — create one only if you need a
+# command that talks to a live database (see "Credentials" below).
+#
+# Usage — regenerate models after editing schema.xml (required by the PR
+# checklist in docs/dev-workflow.md whenever src/ Propel models change):
+#
+#     docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build
+#
+# Keep the --user flag. The container runs as root and the source tree is
+# bind-mounted, so without it every generated file is written to your host as
+# root:root and becomes uneditable without sudo.
+#
+# Credentials: the values below are deliberate placeholders. model:build and
+# sql:build parse schema.xml and never open a connection — both were verified
+# generating byte-identical output with networking disabled entirely. Propel's
+# config schema requires a `user` key to be present, hence the placeholder
+# rather than an omission.
+#
+# The exception is migration:diff, which compares a live database against
+# schema.xml and does connect. If you need it, copy this file to propel.yaml
+# and put real credentials there — that copy stays untracked. Note the repo
+# convention is to modify schema.xml and regenerate, never to hand-write SQL
+# migrations.
+propel:
+  database:
+    connections:
+      resultados:
+        adapter: mysql
+        # Placeholder. Codegen parses schema.xml; it does not connect.
+        dsn: "mysql:host=localhost;dbname=baja_resultados"
+        user: unused-by-codegen
+        password: ""
+  paths:
+    projectDir: .
+    schemaDir: .
+    # Namespace "Baja\Model" from schema.xml puts output under src/Baja/Model.
+    phpDir: src
+    phpConfDir: src
+  generator:
+    defaultConnection: resultados
+    connections:
+      - resultados
+  runtime:
+    defaultConnection: resultados
+    connections:
+      - resultados
