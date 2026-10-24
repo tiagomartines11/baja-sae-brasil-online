@@ -41,6 +41,15 @@ echo '
     </thead>
 ';
 
+// Set by save_entry.php when it refused to save what this form sent.
+if (!empty($entradaRecusada)) {
+    echo '<tr><td colspan="2" style="color: red; font-weight: bold;">Nada foi salvo. Corrija e salve de novo:<ul>';
+    foreach ($entradaRecusada as $erro) {
+        echo '<li>' . htmlspecialchars($erro) . '</li>';
+    }
+    echo '</ul></td></tr>';
+}
+
 $fields = $prova->getParamsInputs();
 // In a laps prova, VOLTAS, LAST and BEST are written by the lap counting
 // engine after every upload. They are shown as plain text: a value typed
@@ -57,6 +66,10 @@ foreach ($fields as $k=>$field) {
     if (in_array($field->getCode(), $engineOwnedFields, true)) {
         echo '<tr><td>'.$field->getName().'</td><td style="width: 80px; font-size: 20px;" title="Calculado pela contagem de voltas">'.($value !== null ? htmlspecialchars((string)$value) : '&ndash;').'</td></tr>';
         continue;
+    }
+    if (!empty($entradaRecusada)) {
+        // Nothing was saved: show what the judge typed, not what is stored.
+        $value = EntryValidator::typedValue($_POST, $field->getCode());
     }
     echo '<tr '.(($field->getPass() >= 0 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == ($field->getPass()+1))) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($value) . '</tr>';
 }

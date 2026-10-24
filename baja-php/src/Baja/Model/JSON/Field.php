@@ -65,6 +65,46 @@ class Field
         return $this->sensitive;
     }
 
+    /**
+     * @return string
+     */
+    public function getXor()
+    {
+        return $this->xor;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getPrecision()
+    {
+        return $this->precision;
+    }
+
+    /**
+     * @return bool|null
+     */
+    public function getNegative()
+    {
+        return $this->negative;
+    }
+
+    /**
+     * @return bool|null
+     */
+    public function getMultiple()
+    {
+        return $this->multiple;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getOptions()
+    {
+        return $this->options;
+    }
+
 
     /**
      * Campo constructor.
@@ -117,7 +157,7 @@ class Field
             default:
             case "number":
                 $ret .= '<td><label for="' . $this->code . '">' . $this->name . '</label></td>';
-                $ret .= '<td style="width: 80px"><input data-group="' . $this->pass . '" data-xor="' . $this->xor . '" style="width: 100%; font: 20px/20px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" type="number" ' . ($this->negative ? 'max="0"' : 'min="0"') . ' step="' . (1 / pow(10, $this->precision)) . '" name="' . $this->code . '" id="' . $this->code . '" ' . ($value !== null ? 'value="' . $value . '" ' . ($canJudge ? '' : 'disabled') : '') . ' /></td>';
+                $ret .= '<td style="width: 80px"><input data-group="' . $this->pass . '" data-xor="' . $this->xor . '" style="width: 100%; font: 20px/20px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" type="number" ' . ($this->negative ? 'max="0"' : 'min="0"') . ' step="' . (1 / pow(10, $this->precision)) . '" name="' . $this->code . '" id="' . $this->code . '" ' . ($value !== null ? 'value="' . htmlspecialchars((string)$value) . '" ' . ($canJudge ? '' : 'disabled') : '') . ' /></td>';
                 break;
             case "enum":
                 $valArray = explode(',', $value ?? '');
@@ -134,7 +174,7 @@ class Field
             case "enum-assoc":
                 $ret .= '<td><label for="' . $this->code . '">' . $this->name . '</label></td>';
                 $ret .= '<td style="width: 120px">
-                        <select value="'.($value?$value:null).'" data-group="' . $this->pass . '" data-xor="' . $this->xor . '" style="width: 100%; font: 12px/12px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" name="' . $this->code . '" id="' . $this->code . '" ' . ($value !== null ? ($canJudge ? '' : 'disabled') : '') . ' />
+                        <select value="'.($value?htmlspecialchars((string)$value):null).'" data-group="' . $this->pass . '" data-xor="' . $this->xor . '" style="width: 100%; font: 12px/12px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" name="' . $this->code . '" id="' . $this->code . '" ' . ($value !== null ? ($canJudge ? '' : 'disabled') : '') . ' />
                             <option value=""></option>';
                 foreach ($this->options as $o) {
                     $ret .= '<option value="' . $o[1] . '" ' . ((!is_null($value) && $o[1]==$value) ? 'selected' : '') . '>' . $o[0] . '</option>';
@@ -144,10 +184,10 @@ class Field
                 break;
             case "time":
                 $ret .= '<td><label for="' . $this->code . '">' . $this->name . '</label></td>';
-                $ret .= '<td style="width: 80px"><input data-group="' . $this->pass . '" data-xor="' . $this->xor . '" style="width: 100%; font: 20px/20px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" name="' . $this->code . '" type="time" id="' . $this->code . '" ' . ($value !== null ? 'value="' . $value . '" ' . ($canJudge ? '' : 'disabled') : '') . ' /></td>';
+                $ret .= '<td style="width: 80px"><input data-group="' . $this->pass . '" data-xor="' . $this->xor . '" style="width: 100%; font: 20px/20px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" name="' . $this->code . '" type="time" id="' . $this->code . '" ' . ($value !== null ? 'value="' . htmlspecialchars((string)$value) . '" ' . ($canJudge ? '' : 'disabled') : '') . ' /></td>';
                 break;
             case "hidden":
-                $ret .= '<input type="hidden" name="' . $this->code . '" id="' . $this->code . '" value="' . $value . '" />';
+                $ret .= '<input type="hidden" name="' . $this->code . '" id="' . $this->code . '" value="' . htmlspecialchars((string)$value) . '" />';
                 break;
         }
 //        if ($this->name && $this->precision >= 0) {

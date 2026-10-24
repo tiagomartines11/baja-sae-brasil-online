@@ -36,7 +36,8 @@ array_walk($paramsInputs, function($v) use (&$provaInput) { $provaInput[$v->getC
 // the row beside them. With publishing switched off ("desligada") the engine
 // writes none of them and the list is empty: all three can be typed here.
 $isLapsProva = $prova->getType() == ContagemAccess::PROVA_TYPE;
-$provaInput = array_diff_key($provaInput, array_flip(ManualScoreFields::engineOwnedFields($prova)));
+$engineOwnedFields = ManualScoreFields::engineOwnedFields($prova);
+$provaInput = array_diff_key($provaInput, array_flip($engineOwnedFields));
 
 if (!array_key_exists("submit", $_POST) && !array_key_exists("delete", $_POST)) { header("Location: dashboard.php?p=$_page"); exit; }
 
@@ -87,6 +88,17 @@ if (!$isLapsProva && ($_POST['delete'] ?? '') == 'Deletar Nota') {
 
     $nota->delete();
     header("Location: dashboard.php?p=$_page");
+    exit();
+}
+
+// The form's own rules (number limits, option lists, pass and xor), checked
+// again here: the browser is not the only thing that can send this request.
+// When one fails nothing is saved, and the form is shown again with the
+// reasons and with what the judge typed.
+$entradaRecusada = EntryValidator::forEntry($paramsInputs, $engineOwnedFields)->errors($_POST);
+if ($entradaRecusada) {
+    http_response_code(422);
+    require __DIR__ . '/entry.php';
     exit();
 }
 
