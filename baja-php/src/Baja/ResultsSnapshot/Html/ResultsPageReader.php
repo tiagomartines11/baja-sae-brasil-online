@@ -8,7 +8,7 @@ namespace Baja\ResultsSnapshot\Html;
  *
  * Two layouts exist:
  *
- *   - prova.php, prova_juiz.php and prova_debug.php print one table of
+ *   - prova.php prints one table of
  *     teams (or none: a page with no data shows a "not yet" picture);
  *   - torneio.php prints a bracket: one heading per round ("Final",
  *     "Semifinais"), and one small table per match under it.

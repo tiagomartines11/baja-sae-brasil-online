@@ -15,7 +15,7 @@ use Baja\Model\ResultadoQuery;
  * For every event with finalizado = 1 (the seed has 17 events, 14 of them
  * finished):
  *
- *   every resultado     prova.php, prova_juiz.php and prova_debug.php
+ *   every resultado     prova.php
  *   tournament ones     also torneio.php
  *   spoiler ones        also prova.php as seen during the event
  *   every premiação     Resolver::resolve()
@@ -44,8 +44,6 @@ final class Catalogue
             foreach (ResultadoQuery::create()->filterByEventoId($eventoId)->orderByResultadoId()->find() as $resultado) {
                 $id = $resultado->getResultadoId();
                 $tasks[] = new PageTask('prova.php', $eventoId, $id);
-                $tasks[] = new PageTask('prova_juiz.php', $eventoId, $id);
-                $tasks[] = new PageTask('prova_debug.php', $eventoId, $id);
                 if (self::isTournament($resultado)) {
                     $tasks[] = new PageTask('torneio.php', $eventoId, $id);
                 }

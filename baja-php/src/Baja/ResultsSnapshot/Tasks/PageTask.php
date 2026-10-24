@@ -19,8 +19,6 @@ final class PageTask extends Task
     /** The page file under resultados/ => what the snapshot file name ends with. */
     private const PAGES = [
         'prova.php' => '',
-        'prova_juiz.php' => '.juiz',
-        'prova_debug.php' => '.debug',
         'torneio.php' => '.torneio',
     ];
 
@@ -58,8 +56,6 @@ final class PageTask extends Task
                 'ENV' => 'prod',
                 'SNAPSHOT_QUERY' => http_build_query(['id' => $this->resultadoId]),
                 'SNAPSHOT_SCRIPT_NAME' => '/' . $this->page,
-                // prova_juiz.php reads $user->data without checking SKIP_AUTH.
-                'SNAPSHOT_GUEST_USER' => $this->page === 'prova_juiz.php' ? '1' : '0',
                 'SNAPSHOT_SPOILERS' => $this->duringEvent ? '1' : '0',
             ],
             // php-fpm runs a script from its own folder; relative includes

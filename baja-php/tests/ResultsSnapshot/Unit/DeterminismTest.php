@@ -72,18 +72,18 @@ final class DeterminismTest extends TestCase
 
     public function testARepeatedWarningIsListedOnceWithoutACount(): void
     {
-        // prova_juiz.php warns about "ts" inside its sort comparison, once
+        // A page that warns inside its sort comparison does so once
         // per comparison. How many comparisons a sort makes depends on the
         // scores, so a count would change whenever any score did, and a
         // result change would drag a meaningless warning change along.
-        $warning = ['type' => 'Warning', 'message' => 'Undefined array key "ts"', 'file' => '/app/resultados/prova_juiz.php', 'line' => 157];
+        $warning = ['type' => 'Warning', 'message' => 'Undefined array key "ts"', 'file' => '/app/resultados/prova.php', 'line' => 157];
         $other = ['line' => 42, 'message' => 'Undefined array key "entries"'] + $warning;
 
         $lines = (new ErrorText('/app'))->warningLines([$warning, $other, $warning, $warning]);
 
         $this->assertSame([
-            'Warning: Undefined array key "ts" in resultados/prova_juiz.php:157',
-            'Warning: Undefined array key "entries" in resultados/prova_juiz.php:42',
+            'Warning: Undefined array key "ts" in resultados/prova.php:157',
+            'Warning: Undefined array key "entries" in resultados/prova.php:42',
         ], $lines, 'Each distinct warning once, in the order they first happened.');
     }
 

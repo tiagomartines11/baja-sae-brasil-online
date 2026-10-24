@@ -30,8 +30,6 @@
  *   SNAPSHOT_RESULT_FILE  where to write the JSON result
  *   SNAPSHOT_QUERY        the query string, e.g. "id=22BR_GER"
  *   SNAPSHOT_SCRIPT_NAME  e.g. "/prova.php", for $_SERVER['SCRIPT_NAME']
- *   SNAPSHOT_GUEST_USER   "1" for pages that read $user (prova_juiz.php):
- *                         gives them a visitor without a forum login
  *   SNAPSHOT_SPOILERS     "1" to show the event as it looks DURING the event:
  *                         spoilers = 1, finalizado = 0, in memory only (see
  *                         Baja\ResultsSnapshot\Capture\DuringEventView)
@@ -63,15 +61,6 @@ $_SERVER['QUERY_STRING'] = $snapshotQuery;
 $_SERVER['SCRIPT_NAME'] = (string)getenv('SNAPSHOT_SCRIPT_NAME');
 $_SERVER['REQUEST_URI'] = $_SERVER['SCRIPT_NAME'] . '?' . $snapshotQuery;
 $_SERVER['REQUEST_METHOD'] = 'GET';
-
-if (getenv('SNAPSHOT_GUEST_USER') === '1') {
-    // What Baja\Auth\PhpbbSessionShim gives a visitor who is not logged in
-    // to the forum. With SKIP_AUTH set, bootstrap.php leaves $user alone.
-    $user = new class {
-        /** @var array{username: string, user_id: int} */
-        public array $data = ['username' => '', 'user_id' => 0];
-    };
-}
 
 // --- Listening -----------------------------------------------------------
 
