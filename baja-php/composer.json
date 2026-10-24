@@ -10,7 +10,7 @@
     "chillerlan/php-qrcode": "^6.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^10.5"
+    "phpunit/phpunit": "^13.4"
   },
   "autoload": {
     "psr-4": {
