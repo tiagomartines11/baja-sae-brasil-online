@@ -76,13 +76,13 @@ echo '
 <tfoot>
 <tr>
     <th style="height: 20px; font-size: 100%;">
-        '.(Session::hasPermission('admin') ? '<a href="admin.php" style="color: white;" />Administração</a>&emsp;&emsp;&middot;&emsp;&emsp;' : '').'
-        <a href="login.php?act=logout" style="color: white;" />Logout</a>
+        '.(Session::hasPermission('admin') ? '<a href="admin.php" style="color: white;">Administração</a>&emsp;&emsp;&middot;&emsp;&emsp;' : '').'
+        <a href="login.php?act=logout" style="color: white;">Logout</a>
     </th>
 </tr>
 <tr>
     <th style="height: 20px; font-size: 100%;">
-        <a href="https://resultados.bajasaebrasil.net/index_juiz.php" style="color: white;" />Resultados</a>
+        <a href="https://resultados.bajasaebrasil.net/index_juiz.php" style="color: white;">Resultados</a>
     </th>
 </tr>
 </tfoot>';
