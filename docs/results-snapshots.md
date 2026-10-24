@@ -34,8 +34,9 @@ For every event with `finalizado = 1` (14 of the 17 events in the seed):
 Not snapshotted: `resultados/prova_juiz.php` and `resultados/prova_debug.php`.
 Run without a forum login, `prova_juiz.php` shows the same rows as
 `prova.php`. Its one difference, the `authorized_users` path that lets
-named judges see past spoilers, needs a logged-in user. That path is left
-to the unit tests of the shared results builder (BAJAAPP-54).
+named judges see past spoilers, needs a logged-in user. That path is
+covered by the unit tests of the shared results builder,
+`baja-php/tests/Unit/Results/ViewerContextTest.php`.
 `prova_debug.php` is being deleted (BAJAAPP-57).
 
 ## How it works

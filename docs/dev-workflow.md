@@ -92,9 +92,12 @@ Before requesting review:
       make each other's counts wrong.
 - [ ] If you touched anything that computes or shows results
       (`baja-php/resultados/prova*.php`, `torneio.php`,
-      `baja-php/src/Baja/Premiacao/`, `Input::solveFormula` and the other
+      `baja-php/src/Baja/Results/`, `baja-php/src/Baja/Premiacao/`,
+      `Input::solveFormula` and the other
       formula code in `src/Baja/Model/Input.php` / `Prova.php`,
-      `src/Baja/Site/Template.php`), the results snapshots still match:
+      `src/Baja/Site/Template.php`), the results builder's unit tests pass
+      (`vendor/bin/phpunit --testsuite unit`, see `tests/Unit/Results/`) and
+      the results snapshots still match:
 
       ```
       docker compose exec --user "$(id -u):$(id -g)" baja-app php scripts/results-snapshot.php --check
