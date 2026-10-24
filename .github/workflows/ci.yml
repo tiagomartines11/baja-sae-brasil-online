@@ -202,9 +202,17 @@ jobs:
         run: vendor/bin/phpunit --testsuite results-snapshot-db
 
       # scripts/check-results-configs.php (docs/results-config-check.md):
-      # writes nothing, and finds the seed's known broken configs.
+      # writes nothing, finds the seed's known broken configs, and survives a
+      # formula that kills PHP. That last test loads a made-up event first
+      # (BAJAAPP-63), so it needs BAJA_TEST_DB=1 and an account that may
+      # write; the tool itself still runs as the SELECT-only "snapshot".
+      # --fail-on-skipped: a test skipped here would be a check nobody ran.
       - name: PHPUnit (resultado config check)
-        run: vendor/bin/phpunit --testsuite results-check-db
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite results-check-db --fail-on-skipped
 
       - name: Results snapshots match
         run: php scripts/results-snapshot.php --check --jobs 4

@@ -14,6 +14,11 @@ read and run.
 
 ## What it checks
 
+Each resultado and each prova is checked in a PHP process of its own
+(`scripts/check-results-configs/child.php`), four at a time (`--jobs <n>` to
+change that), so that a formula that kills PHP ends only its own check. See
+[Fatal errors](#fatal-errors) below.
+
 For every resultado of every event (or of `--events`):
 
 1. **Every formula, for every team**, run by the real results builder:
@@ -38,8 +43,86 @@ It also runs every **prova**'s formulas (`params`: `vars`, `min_max`,
 saving a prova recomputes every stored point (BAJAAPP-56), so a person decides.
 Tournament resultados (`"type": "tournament"`) have no columns and are skipped.
 
-Exit code 0 whenever the report was made, whatever it found; 2 when it could
-not run (bad options, no database).
+Exit code 0 whenever the report was made, whatever it found, fatal errors
+included; 2 when it could not run (bad options, no database).
+
+## Fatal errors
+
+Most broken formulas *raise* an error, which `Input::solveFormula()` catches:
+the cell is left empty, the page carries on, and the check lists it under
+*Formula raises an error*. A **fatal** error is different: PHP stops dead.
+No `try`/`catch` can stop it, and nothing after it runs. In production:
+
+- in a **resultado**, that results page dies outright: visitors get an error
+  instead of the results;
+- in a **prova**, a judge saving an entry for it gets a fatal error, since
+  saving runs the prova's formulas.
+
+The usual cause is a formula PHP 8 refuses to compile. That is what stopped
+the check itself on a copy of production (BAJAAPP-63), in 18SU's APR prova:
+
+```
+($DTA == 1 ?  0 : ($DTA == 2 ?  -30 : $DTA == 3 ?  -45 : -90))
+```
+
+So the check runs each resultado and prova in its own process. When one dies,
+it gets a finding *FATAL ERROR: PHP dies*, and the check carries on with the
+rest. To name the formula, each formula of that resultado or prova is then run
+alone, again in a process of its own; those that die alone are the culprits.
+If none does (the error needs the teams' data, say), the finding is about
+*the resultado as a whole*. A resultado or prova whose check died has no other
+findings: its check stopped before they were made.
+
+Fatal errors are listed first, in a banner at the top of the report, and again,
+with the formula, under their event:
+
+```
+!!! 2 FATAL ERRORS !!!
+PHP stops dead on these: no try/catch can catch it, and nothing after it runs.
+
+  18SU_APR  Apresentação  (resultado: its results page dies outright in production)
+      column "Pontos" val: Unparenthesized `a ? b : c ? d : e` is not supported. Use either `(a ? b : c) ? d : e` or `a ? b : (c ? d : e)`
+  18SU_APR  Apresentação  (prova: a judge saving an entry for it gets a fatal error)
+      pontos.APRPTS: Unparenthesized `a ? b : c ? d : e` is not supported. Use either `(a ? b : c) ? d : e` or `a ? b : (c ? d : e)`
+
+The formulas, and how to read them, are under each event below.
+
+=== 18SU ===
+
+18SU_APR  Apresentação  (PHP died while checking it, so its other checks did not run)
+  FATAL ERROR: PHP dies
+    column "Pontos" val
+      formula: ($DTA == 1 ?  0 : ($DTA == 2 ?  -30 : $DTA == 3 ?  -45 : -90))
+      fatal:   Unparenthesized `a ? b : c ? d : e` is not supported. Use either `(a ? b : c) ? d : e` or `a ? b : (c ? d : e)`
+      A "? :" inside another without brackets: PHP 8 refuses to guess which one comes first.
+      PHP 7 read it as:  ($DTA == 1 ?  0 : (($DTA == 2 ?  -30 : $DTA == 3) ?  -45 : -90))
+      probably meant:    ($DTA == 1 ?  0 : ($DTA == 2 ?  -30 : ($DTA == 3 ?  -45 : -90)))
+      no fix:  a person must pick the reading and add the brackets; the two can give different results.
+```
+
+### Reading the two readings
+
+`a ? b : c` means "if a then b, else c". Two of them side by side with no
+brackets, `a ? b : c ? d : e`, can be read two ways, and the report writes the
+formula out both ways, changing nothing but the brackets:
+
+- **PHP 7 read it as** `(a ? b : c) ? d : e`: the first one is worked out
+  first, and its answer becomes the condition of the second. Points worked out
+  while production ran PHP 7 came from this reading.
+- **probably meant** `a ? b : (c ? d : e)`: "if a then b, else if c then d,
+  else e", as in almost every other language.
+
+Compare them for a value. Above, with `$DTA = 2`: PHP 7's reading first works
+out `$DTA == 2 ?  -30 : …`, which is `-30`; `-30` counts as "true", so it
+answers `-45`. The meant reading answers `-30`. With `$DTA = 1, 3, 4` both
+give the same.
+
+The tool never picks one and writes no `--sql` for it: picking the meant
+reading changes points that were already published, and only someone who
+knows the rules of that prova can say which is right. Fix it in the admin, as
+in step 3 of the runbook, typing the brackets of the reading you chose. For a
+prova, saving recomputes its stored points (BAJAAPP-56), which is the point
+here, but check them afterwards.
 
 ## The report
 
@@ -174,13 +257,26 @@ prova: saving one recomputes its stored points (BAJAAPP-56).
 The code is under `baja-php/src/Baja/ResultsCheck/`. To hear about formula
 errors without changing what the pages do, `Input::solveFormula()` has an
 optional listener (`Input::setFormulaErrorListener`), which only this tool
-sets (`FormulaErrors`).
+sets (`FormulaErrors`). `IsolatedCheck` starts the child processes, with the
+results snapshots' `ChildProcess` and `ProcessPool`, and `NestedTernary`
+writes the two readings.
 
 ```
 docker compose exec baja-app vendor/bin/phpunit tests/Unit/ResultsCheck
-docker compose exec baja-app vendor/bin/phpunit --testsuite results-check-db
+docker compose exec -e BAJA_TEST_DB=1 baja-app vendor/bin/phpunit --testsuite results-check-db
 ```
 
 The first needs no database and is part of the `unit` suite. The second runs
 the tool against the dev seed: it writes nothing and finds the seed's known
-cases; it is skipped where there is no database.
+cases; it is skipped where there is no database. Its `FatalFormulaTest` loads
+a made-up event, `99FX` (`tests/ResultsCheck/Db/fatal-formulas.sql`), with
+the APR formula in a resultado and in a prova, checks that the run gets to the
+end and reports both, and deletes the event again. It writes, so it runs only
+with `BAJA_TEST_DB=1`; never set that against production.
+
+### Run time
+
+One process per resultado and prova costs about 50 ms each. On the dev seed
+(17 events, 387 resultados, 358 provas): 1.6 s in one process before
+BAJAAPP-63, now 8.6 s with the default `--jobs 4`, 4.5 s with `--jobs 8`.
+Production has about five times as many events, so expect under a minute.

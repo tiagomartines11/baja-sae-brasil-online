@@ -38,20 +38,47 @@ final class LiveSource
     }
 
     /**
-     * The event's resultados, each with its columns twice: decoded, to check,
-     * and exactly as stored, for the guard of the SQL fix.
+     * What the command needs to list the event's work, without loading any
+     * team's data: each resultado's columns as stored, each prova's params.
+     * Enough to start a child per resultado and prova (IsolatedCheck), and
+     * to find a formula in them when a child dies.
+     *
+     * @return array{resultados: list<array{resultado: string, nome: string, colunas: ?string}>,
+     *               provas: list<array{prova: string, code: string, nome: string, params: ?string}>}
+     *         code: the prova's id within the event ("APR"), prova: with the event ("18SU_APR")
+     */
+    public function outline(string $event): array
+    {
+        $connection = Propel::getReadConnection('resultados');
+        $statement = $connection->prepare('SELECT resultado_id AS resultado, nome, colunas FROM resultado WHERE evento_id = :evento ORDER BY resultado_id');
+        $statement->execute([':evento' => $event]);
+        $resultados = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        $statement = $connection->prepare("SELECT CONCAT(evento_id, '_', prova_id) AS prova, prova_id AS code, nome, params FROM prova WHERE evento_id = :evento ORDER BY prova_id");
+        $statement->execute([':evento' => $event]);
+        return ['resultados' => $resultados, 'provas' => $statement->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
+    /**
+     * The event's resultados (or only the one with id $only), each with its
+     * columns twice: decoded, to check, and exactly as stored, for the guard
+     * of the SQL fix.
      *
      * @return list<array{resultado: string, nome: string, colunas: ?string, inputs: list<TeamInput>}>
      */
-    public function resultados(string $event): array
+    public function resultados(string $event, ?string $only = null): array
     {
         // Resultado::getColunas() decodes; the stored text is read here.
         $statement = Propel::getReadConnection('resultados')->prepare('SELECT resultado_id, colunas FROM resultado WHERE evento_id = :evento');
         $statement->execute([':evento' => $event]);
         $stored = $statement->fetchAll(PDO::FETCH_KEY_PAIR);
 
+        $query = ResultadoQuery::create()->filterByEventoId($event)->orderByResultadoId();
+        if ($only !== null) {
+            $query->filterByResultadoId($only);
+        }
         $resultados = [];
-        foreach (ResultadoQuery::create()->filterByEventoId($event)->orderByResultadoId()->find() as $resultado) {
+        foreach ($query->find() as $resultado) {
             $id = (string)$resultado->getResultadoId();
             $resultados[] = [
                 'resultado' => $id,
@@ -64,15 +91,20 @@ final class LiveSource
     }
 
     /**
-     * The event's provas, each with its inputs as Prova::refreshVarsAndPontos()
-     * selects them (those that have a team), in team order.
+     * The event's provas (or only the one with id $only, e.g. "APR"), each
+     * with its inputs as Prova::refreshVarsAndPontos() selects them (those
+     * that have a team), in team order.
      *
      * @return list<array{prova: \Baja\Model\Prova, inputs: iterable<\Baja\Model\Input>}>
      */
-    public function provas(string $event): array
+    public function provas(string $event, ?string $only = null): array
     {
+        $query = ProvaQuery::create()->filterByEventoId($event)->orderByProvaId();
+        if ($only !== null) {
+            $query->filterByProvaId($only);
+        }
         $provas = [];
-        foreach (ProvaQuery::create()->filterByEventoId($event)->orderByProvaId()->find() as $prova) {
+        foreach ($query->find() as $prova) {
             $inputs = InputQuery::create()
                 ->filterByEventoId($event)
                 ->joinWithEquipe()
