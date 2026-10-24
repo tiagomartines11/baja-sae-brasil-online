@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  PHPUnit configuration for the lap counting tests.
+  PHPUnit configuration.
 
-  Two suites, because they need different things:
+  Three suites, because they need different things:
 
-    engine   Pure logic. Needs nothing but PHP, so it runs anywhere,
-             including CI.
+    engine   Lap counting engine. Pure logic. Needs nothing but PHP, so it
+             runs anywhere, including CI.
+
+    unit     Small helper functions from the rest of the site (judge pages
+             and so on). Like engine, they need nothing but PHP and run in CI.
 
     db       Exercises the upload endpoint, the score publisher and the
              counter links against a real MySQL. Run it inside the dev
@@ -27,6 +30,9 @@
     <testsuites>
         <testsuite name="engine">
             <directory>tests/Contagem/Engine</directory>
+        </testsuite>
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
         </testsuite>
         <testsuite name="db">
             <directory>tests/Contagem/Db</directory>
