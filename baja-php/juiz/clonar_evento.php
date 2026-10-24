@@ -10,6 +10,9 @@ use Baja\Model\Resultado;
 use Propel\Runtime\Propel;
 use Baja\Session;
 use DateTimeZone;
+// Without this, "Exception" below means Baja\Juiz\Exception, which does not
+// exist: the error paths died with "class not found" instead of their message.
+use Exception;
 use Baja\Model\Map\EventoTableMap;
 
 Session::permissionCheck('admin');
@@ -48,11 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Busca ano no novo evento_id
-            if (preg_match('/^(\d{2})/', $novoEventoId, $m)) {
-                $newAno = (int)('20' . $m[1]);
-            } else {
-                throw new Exception("O novo ID de evento não começa com um código de ano válido (ex: 25BR).");
-            }
+            $newAno = ClonagemEvento::anoDoEvento($novoEventoId);
 
             $novoEvento = new Evento();
             $novoEvento->setEventoId($novoEventoId);
