@@ -274,7 +274,13 @@ if (count($vars) && count($colunas)) {
                 } else if ($prova->getStatus() == "Final") {
                     echo "Prova Finalizada<br />";
                 }
-                echo "Última Atualização: " . $prova->getModificado()->setTimezone(new DateTimeZone("Etc/GMT+3"))->format('Y-m-d H:i:s');
+                // Older provas (05NE to 17SU) were saved before this column was
+                // filled in, so modificado can be NULL: skip the line rather than
+                // calling setTimezone() on null, which is a fatal error.
+                $ultimaAtualizacao = $prova->getModificado();
+                if ($ultimaAtualizacao !== null) {
+                    echo "Última Atualização: " . $ultimaAtualizacao->setTimezone(new DateTimeZone("Etc/GMT+3"))->format('Y-m-d H:i:s');
+                }
                 if (!EventoQuery::getCurrentEvent()->getFinalizado()) echo "<br /><span style='color: yellow'>Sujeito a Alterações sem Prévio Aviso</span>";
             }
             ?>
