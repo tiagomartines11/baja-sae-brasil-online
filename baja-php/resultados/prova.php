@@ -271,8 +271,14 @@ if (count($vars) && count($colunas)) {
         <tfoot>
         <th colspan="<?= count($colunas) ?>" style="line-height: 24px;">
             <?php
-            if (count($resultado->getInputs()) == 1) {
-                $prova = ProvaQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->findOneByProvaId($resultado->getInputs()[0]);
+            // A resultado built from a single prova shows that prova's status.
+            // Its Inputs may name a prova that does not exist in this event
+            // (deleted, or mistyped): then show no status rather than calling
+            // getStatus() on null, which is a fatal error.
+            $prova = count($resultado->getInputs()) == 1
+                ? ProvaQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->findOneByProvaId($resultado->getInputs()[0])
+                : null;
+            if ($prova !== null) {
                 if ($prova->getStatus() == "Parcial") {
                     if ($prova->getTempo())
                         echo "Tempo de Prova: " . (new DateTime())->setTimestamp($prova->getTempo())->diff(new DateTime())->format("%H:%I") . "<br />";
