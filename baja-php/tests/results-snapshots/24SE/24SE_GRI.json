@@ -1,0 +1,74 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SE",
+    "id": "24SE_GRI",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Posição no Grid"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "Poli<br><i class=\"nomeEscola\">Escola Politécnica da USP</i>",
+                    "Posição no Grid": "4"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "FEI Baja<br><i class=\"nomeEscola\">FEI</i>",
+                    "Posição no Grid": "2"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del Rei</i>",
+                    "Posição no Grid": "3"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "TEC Ilha Baja SAE<br><i class=\"nomeEscola\">Unesp - Campus de Ilha Solteira</i>",
+                    "Posição no Grid": "9"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "Baja UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Posição no Grid": "1"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro</i>",
+                    "Posição no Grid": "6"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de São Paulo - campus Sertãozinho</i>",
+                    "Posição no Grid": "10"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Posição no Grid": "8"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "EESC USP TRACTIAN BAJA<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos – USP</i>",
+                    "Posição no Grid": "5"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Posição no Grid": "7"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">Universidade do Estado do Rio de Janeiro</i>",
+                    "Posição no Grid": "11"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

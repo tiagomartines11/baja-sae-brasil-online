@@ -1,0 +1,121 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SE",
+    "id": "23SE_ACE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Aceleração": "<b>4.808</b><br> 4.841",
+                    "Pontos": "36.98"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Aceleração": "4.683<br> <b>4.551</b>",
+                    "Pontos": "44.24",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Aceleração": "4.538<br> <b>4.52</b>",
+                    "Pontos": "45.11",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Aceleração": "5.022<br> <b>4.853</b>",
+                    "Pontos": "35.71"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Aceleração": "<b>5.061</b><br> 5.216",
+                    "Pontos": "29.83"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Aceleração": "<b>4.989</b><br> 5.031",
+                    "Pontos": "31.86"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Aceleração": "<b>4.908</b><br> 4.983",
+                    "Pontos": "34.15"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Aceleração": "4.371<br> <b>4.347</b>",
+                    "Pontos": "50",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Aceleração": "<b>4.962</b><br> 5.144",
+                    "Pontos": "32.63"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Aceleração": "<b>4.928</b><br> 5.116",
+                    "Pontos": "33.59"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Aceleração": "<b>4.98</b><br> 5.027",
+                    "Pontos": "32.12"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Aceleração": "6.387<br> <b>6.117</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Aceleração": "4.785<br> <b>4.752</b>",
+                    "Pontos": "38.56"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

@@ -1,0 +1,335 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23BR",
+    "id": "23BR_SUS",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Team",
+                "Tempo[s]",
+                "Obstáculos",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "2",
+                    "Team": "TEC Ilha Baja<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - ILHA SOLTEIRA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "3<br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "4",
+                    "Team": "Sinuelo<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> <b>5</b>",
+                    "Points": "16.28"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "5",
+                    "Team": "USJT Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE SÃO JUDAS</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "-<br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "6",
+                    "Team": "Equipe Komiketo Baja UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL-REI</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "9",
+                    "Team": "Carpoeira Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA BAHIA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> 4",
+                    "Points": "16.28"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "11",
+                    "Team": "Rampage Baja UFJF<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> -",
+                    "Points": "16.28"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "12",
+                    "Team": "Pato Baja<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - PATO BRANCO</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> <b>5</b>",
+                    "Points": "16.28"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "13",
+                    "Team": "UFSC Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "14",
+                    "Team": "UnBaja<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - FACULDADE DO GAMA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> -",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "15",
+                    "Team": "Vitória Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> <b>5</b>",
+                    "Points": "16.28"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "17",
+                    "Team": "Car-kará Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "19",
+                    "Team": "UNICAMP Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "21",
+                    "Team": "Equipe Parahybaja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE CAMPINA GRANDE</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "23",
+                    "Team": "Procobaja<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CORNÉLIO PROCÓPIO</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "24",
+                    "Team": "Itabaja<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "26",
+                    "Team": "UFVBaja Pererecas<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> -",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "27",
+                    "Team": "UDESC Velociraptor Baja<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DE SANTA CATARINA</i>",
+                    "Tempo[s]": "<b>90.24</b><br> -",
+                    "Obstáculos": "<b>8</b><br> -",
+                    "Points": "27.45"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "28",
+                    "Team": "Poli USP 2<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA POLITÉCNICA</i>",
+                    "Tempo[s]": "<b>87.9</b><br> -",
+                    "Obstáculos": "<b>8</b><br> 5",
+                    "Points": "30.49",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "31",
+                    "Team": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DO RIO DE JANEIRO - INSTITUTO POLITECNICO DO RJ</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> -",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "32",
+                    "Team": "Baja de Galpão<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
+                    "Tempo[s]": "-<br> <b>72.87</b>",
+                    "Obstáculos": "5<br> <b>8</b>",
+                    "Points": "50",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "33",
+                    "Team": "BAJA UFSCar<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "35",
+                    "Team": "Baja UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "37",
+                    "Team": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "3<br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "39",
+                    "Team": "Baja Mud Racing<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> -",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "40",
+                    "Team": "Piratas do Cerrado<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> 3",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "41",
+                    "Team": "FEI Baja 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "42",
+                    "Team": "Tuffão Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE - RIO DE JANEIRO</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "-<br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "46",
+                    "Team": "PAC Baja<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - BAURU</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "47",
+                    "Team": "Caraubaja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "48",
+                    "Team": "Saci Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITAJUBÁ</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "50",
+                    "Team": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO - RECIFE</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "4<br> <b>6</b>",
+                    "Points": "19.54"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "52",
+                    "Team": "Cactus Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> 4",
+                    "Points": "16.28"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "53",
+                    "Team": "FEI Baja 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "4<br> <b>5</b>",
+                    "Points": "16.28"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "55",
+                    "Team": "Poli USP 1<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA POLITÉCNICA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "3<br> <b>4</b>",
+                    "Points": "13.03"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "56",
+                    "Team": "Forja Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE - VOLTA REDONDA</i>",
+                    "Tempo[s]": "-<br> <b>91.32</b>",
+                    "Obstáculos": "5<br> <b>8</b>",
+                    "Points": "26.05"
+                },
+                {
+                    "[img trofeu.png]": "38º",
+                    "#": "57",
+                    "Team": "Baja Guaicurus<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA GRANDE DOURADOS</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "-<br> <b>1</b>",
+                    "Points": "3.26"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "58",
+                    "Team": "Gralha Azul<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - PONTA GROSSA</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> 4",
+                    "Points": "16.28"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "64",
+                    "Team": "UFPBaja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA PARAÍBA</i>",
+                    "Tempo[s]": "-<br> <b>87.17</b>",
+                    "Obstáculos": "5<br> <b>8</b>",
+                    "Points": "31.44",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

@@ -1,0 +1,496 @@
+{
+    "evento": "23SE",
+    "prova": "APR",
+    "nome": "Apresentação de Projeto",
+    "type": "normal",
+    "stored_totals": {
+        "MKT_com": 0,
+        "MKT_max": 72.5,
+        "MKT_min": 17.5,
+        "ELET_com": 0,
+        "ELET_max": 72.5,
+        "ELET_min": 10,
+        "GEST_com": 0,
+        "GEST_max": 90,
+        "GEST_min": 10,
+        "DIN_LONG_com": 0,
+        "DIN_LONG_max": 65,
+        "DIN_LONG_min": 5,
+        "SUSP_ERG_com": 0,
+        "SUSP_ERG_max": 85,
+        "SUSP_ERG_min": 7.5,
+        "CALC_ESTRUT_com": 0,
+        "CALC_ESTRUT_max": 87.5,
+        "CALC_ESTRUT_min": 10
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 35,
+                "ELET_": 45,
+                "GEST_": 50,
+                "DIN_LONG_": 55,
+                "SUSP_ERG_": 75,
+                "CALC_ESTRUT_": 30
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 10.29,
+                "DIN_LONG_TS": 25.38,
+                "ELET_TS": 18.62,
+                "GEST_TS": 16.67,
+                "MKT_TS": 14.48,
+                "SUSP_ERG_TS": 26.47
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 57.5,
+                "ELET_": 70,
+                "GEST_": 80,
+                "DIN_LONG_": 52.5,
+                "SUSP_ERG_": 75,
+                "CALC_ESTRUT_": 50
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 17.14,
+                "DIN_LONG_TS": 24.23,
+                "ELET_TS": 28.97,
+                "GEST_TS": 26.67,
+                "MKT_TS": 23.79,
+                "SUSP_ERG_TS": 26.47
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 72.5,
+                "ELET_": 52.5,
+                "GEST_": 80,
+                "DIN_LONG_": 55,
+                "SUSP_ERG_": 80,
+                "CALC_ESTRUT_": 52.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 18,
+                "DIN_LONG_TS": 25.38,
+                "ELET_TS": 21.72,
+                "GEST_TS": 26.67,
+                "MKT_TS": 30,
+                "SUSP_ERG_TS": 28.24
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 65,
+                "ELET_": 42.5,
+                "GEST_": 90,
+                "DIN_LONG_": 62.5,
+                "SUSP_ERG_": 85,
+                "CALC_ESTRUT_": 40
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 13.71,
+                "DIN_LONG_TS": 28.85,
+                "ELET_TS": 17.59,
+                "GEST_TS": 30,
+                "MKT_TS": 26.9,
+                "SUSP_ERG_TS": 30
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "SPOILER": null,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 27.5,
+                "ELET_": 40,
+                "GEST_": 25,
+                "DIN_LONG_": 0,
+                "SUSP_ERG_": 67.5,
+                "CALC_ESTRUT_": 47.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 0,
+                "DIN_LONG_TS": 0,
+                "ELET_TS": 0,
+                "GEST_TS": 0,
+                "MKT_TS": 0,
+                "SUSP_ERG_TS": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 55,
+                "ELET_": 37.5,
+                "GEST_": 55,
+                "DIN_LONG_": 45,
+                "SUSP_ERG_": 55,
+                "CALC_ESTRUT_": 40
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 13.71,
+                "DIN_LONG_TS": 20.77,
+                "ELET_TS": 15.52,
+                "GEST_TS": 18.33,
+                "MKT_TS": 22.76,
+                "SUSP_ERG_TS": 19.41
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 52.5,
+                "ELET_": 37.5,
+                "GEST_": 30,
+                "DIN_LONG_": 60,
+                "SUSP_ERG_": 72.5,
+                "CALC_ESTRUT_": 50
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 17.14,
+                "DIN_LONG_TS": 27.69,
+                "ELET_TS": 15.52,
+                "GEST_TS": 10,
+                "MKT_TS": 21.72,
+                "SUSP_ERG_TS": 25.59
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 25,
+                "ELET_": 25,
+                "GEST_": 17.5,
+                "DIN_LONG_": 32.5,
+                "SUSP_ERG_": 27.5,
+                "CALC_ESTRUT_": 47.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 16.29,
+                "DIN_LONG_TS": 15,
+                "ELET_TS": 10.34,
+                "GEST_TS": 5.83,
+                "MKT_TS": 10.34,
+                "SUSP_ERG_TS": 9.71
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 0,
+                "ELET_": 20,
+                "GEST_": 40,
+                "DIN_LONG_": 22.5,
+                "SUSP_ERG_": 20,
+                "CALC_ESTRUT_": 0
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 0,
+                "DIN_LONG_TS": 0,
+                "ELET_TS": 0,
+                "GEST_TS": 0,
+                "MKT_TS": 0,
+                "SUSP_ERG_TS": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 62.5,
+                "ELET_": 72.5,
+                "GEST_": 35,
+                "DIN_LONG_": 50,
+                "SUSP_ERG_": 40,
+                "CALC_ESTRUT_": 30
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 10.29,
+                "DIN_LONG_TS": 23.08,
+                "ELET_TS": 30,
+                "GEST_TS": 11.67,
+                "MKT_TS": 25.86,
+                "SUSP_ERG_TS": 14.12
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 25,
+                "ELET_": 35,
+                "GEST_": 37.5,
+                "DIN_LONG_": 30,
+                "SUSP_ERG_": 40,
+                "CALC_ESTRUT_": 20
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 0,
+                "DIN_LONG_TS": 0,
+                "ELET_TS": 0,
+                "GEST_TS": 0,
+                "MKT_TS": 0,
+                "SUSP_ERG_TS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 22.5,
+                "ELET_": 22.5,
+                "GEST_": 35,
+                "DIN_LONG_": 42.5,
+                "SUSP_ERG_": 32.5,
+                "CALC_ESTRUT_": 35
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 12,
+                "DIN_LONG_TS": 19.62,
+                "ELET_TS": 9.31,
+                "GEST_TS": 11.67,
+                "MKT_TS": 9.31,
+                "SUSP_ERG_TS": 11.47
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 37.5,
+                "ELET_": 25,
+                "GEST_": 57.5,
+                "DIN_LONG_": 47.5,
+                "SUSP_ERG_": 47.5,
+                "CALC_ESTRUT_": 32.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 11.14,
+                "DIN_LONG_TS": 21.92,
+                "ELET_TS": 10.34,
+                "GEST_TS": 19.17,
+                "MKT_TS": 15.52,
+                "SUSP_ERG_TS": 16.76
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "SPOILER": null,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 22.5,
+                "ELET_": 10,
+                "GEST_": 22.5,
+                "DIN_LONG_": 0,
+                "SUSP_ERG_": 0,
+                "CALC_ESTRUT_": 0
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 0,
+                "DIN_LONG_TS": 0,
+                "ELET_TS": 0,
+                "GEST_TS": 0,
+                "MKT_TS": 0,
+                "SUSP_ERG_TS": 0
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 62.5,
+                "ELET_": 37.5,
+                "GEST_": 47.5,
+                "DIN_LONG_": 65,
+                "SUSP_ERG_": 57.5,
+                "CALC_ESTRUT_": 45
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 15.43,
+                "DIN_LONG_TS": 30,
+                "ELET_TS": 15.52,
+                "GEST_TS": 15.83,
+                "MKT_TS": 25.86,
+                "SUSP_ERG_TS": 20.29
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 37.5,
+                "ELET_": 35,
+                "GEST_": 27.5,
+                "DIN_LONG_": 35,
+                "SUSP_ERG_": 17.5,
+                "CALC_ESTRUT_": 17.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 6,
+                "DIN_LONG_TS": 16.15,
+                "ELET_TS": 14.48,
+                "GEST_TS": 9.17,
+                "MKT_TS": 15.52,
+                "SUSP_ERG_TS": 6.18
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 35,
+                "ELET_": 0,
+                "GEST_": 20,
+                "DIN_LONG_": 15,
+                "SUSP_ERG_": 17.5,
+                "CALC_ESTRUT_": 17.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 6,
+                "DIN_LONG_TS": 6.92,
+                "ELET_TS": 0,
+                "GEST_TS": 6.67,
+                "MKT_TS": 14.48,
+                "SUSP_ERG_TS": 6.18
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 57.5,
+                "ELET_": 52.5,
+                "GEST_": 47.5,
+                "DIN_LONG_": 57.5,
+                "SUSP_ERG_": 72.5,
+                "CALC_ESTRUT_": 87.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 30,
+                "DIN_LONG_TS": 26.54,
+                "ELET_TS": 21.72,
+                "GEST_TS": 15.83,
+                "MKT_TS": 23.79,
+                "SUSP_ERG_TS": 25.59
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 0,
+                "ELET_": 0,
+                "GEST_": 10,
+                "DIN_LONG_": 5,
+                "SUSP_ERG_": 7.5,
+                "CALC_ESTRUT_": 10
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 0,
+                "DIN_LONG_TS": 0,
+                "ELET_TS": 0,
+                "GEST_TS": 0,
+                "MKT_TS": 0,
+                "SUSP_ERG_TS": 0
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 0,
+                "ELET_": 12.5,
+                "GEST_": 17.5,
+                "DIN_LONG_": 15,
+                "SUSP_ERG_": 17.5,
+                "CALC_ESTRUT_": 0
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 0,
+                "DIN_LONG_TS": 0,
+                "ELET_TS": 0,
+                "GEST_TS": 0,
+                "MKT_TS": 0,
+                "SUSP_ERG_TS": 0
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "MKT_": 17.5,
+                "ELET_": 0,
+                "GEST_": 0,
+                "DIN_LONG_": 20,
+                "SUSP_ERG_": 25,
+                "CALC_ESTRUT_": 17.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 0,
+                "DIN_LONG_TS": 0,
+                "ELET_TS": 0,
+                "GEST_TS": 0,
+                "MKT_TS": 0,
+                "SUSP_ERG_TS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

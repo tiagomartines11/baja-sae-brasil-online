@@ -1,0 +1,228 @@
+{
+    "evento": "23SE",
+    "prova": "DDV",
+    "nome": "Desafio Dinâmica Vertical",
+    "type": "normal",
+    "stored_totals": {
+        "DES_DVT_com": 0,
+        "DES_DVT_max": 76.67,
+        "DES_DVT_min": 19.58
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "DES_DVT_": 76.67
+            },
+            "pontos": {
+                "DES_DVT_POR": 76.67,
+                "DES_DVT_TS": 40,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "DES_DVT_": 57.08
+            },
+            "pontos": {
+                "DES_DVT_POR": 57.08,
+                "DES_DVT_TS": 29.779574801095606,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "DES_DVT_": 57.08
+            },
+            "pontos": {
+                "DES_DVT_POR": 57.08,
+                "DES_DVT_TS": 29.779574801095606,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "DES_DVT_": 55
+            },
+            "pontos": {
+                "DES_DVT_POR": 55,
+                "DES_DVT_TS": 28.694404591104732,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "DES_DVT_": 75.42
+            },
+            "pontos": {
+                "DES_DVT_POR": 75.42,
+                "DES_DVT_TS": 39.34785444111125,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "DES_DVT_": 58.75
+            },
+            "pontos": {
+                "DES_DVT_POR": 58.75,
+                "DES_DVT_TS": 30.650841267770964,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "DES_DVT_": 40.42
+            },
+            "pontos": {
+                "DES_DVT_POR": 40.42,
+                "DES_DVT_TS": 21.087778792226427,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "DES_DVT_": 67.92
+            },
+            "pontos": {
+                "DES_DVT_POR": 67.92,
+                "DES_DVT_TS": 35.434981087778795,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "DES_DVT_": 57.08
+            },
+            "pontos": {
+                "DES_DVT_POR": 57.08,
+                "DES_DVT_TS": 29.779574801095606,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "DES_DVT_": 49.58
+            },
+            "pontos": {
+                "DES_DVT_POR": 49.58,
+                "DES_DVT_TS": 25.866701447763138,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "DES_DVT_": 64.17
+            },
+            "pontos": {
+                "DES_DVT_POR": 64.17,
+                "DES_DVT_TS": 33.47854441111256,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "DES_DVT_": 50.42
+            },
+            "pontos": {
+                "DES_DVT_POR": 50.42,
+                "DES_DVT_TS": 26.304943263336376,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "DES_DVT_": 50.83
+            },
+            "pontos": {
+                "DES_DVT_POR": 50.83,
+                "DES_DVT_TS": 26.518847006651885,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "DES_DVT_": 21.67
+            },
+            "pontos": {
+                "DES_DVT_POR": 21.67,
+                "DES_DVT_TS": 11.305595408895266,
+                "DES_PEN_DVT_TS": 10
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "DES_DVT_": 45
+            },
+            "pontos": {
+                "DES_DVT_POR": 45,
+                "DES_DVT_TS": 23.477240119994782,
+                "DES_PEN_DVT_TS": 10
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "DES_DVT_": 19.58
+            },
+            "pontos": {
+                "DES_DVT_POR": 19.58,
+                "DES_DVT_TS": 10.215208034433285,
+                "DES_PEN_DVT_TS": 10
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "DES_DVT_": 47.5
+            },
+            "pontos": {
+                "DES_DVT_POR": 47.5,
+                "DES_DVT_TS": 24.78153123777227,
+                "DES_PEN_DVT_TS": 0
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "DES_DVT_": 29.58
+            },
+            "pontos": {
+                "DES_DVT_POR": 29.58,
+                "DES_DVT_TS": 15.432372505543237,
+                "DES_PEN_DVT_TS": 10
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "DES_DVT_": 36.67
+            },
+            "pontos": {
+                "DES_DVT_POR": 36.67,
+                "DES_DVT_TS": 19.131342115560194,
+                "DES_PEN_DVT_TS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

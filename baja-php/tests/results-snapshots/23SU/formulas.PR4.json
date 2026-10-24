@@ -1,0 +1,28 @@
+{
+    "evento": "23SU",
+    "prova": "PR4",
+    "nome": "Apresentação de Projeto - 4x4",
+    "type": "normal",
+    "stored_totals": {
+        "APR4X4com": 0,
+        "APR4X4max": 9.5,
+        "APR4X4min": 9.5
+    },
+    "inputs": [
+        {
+            "equipe": 5,
+            "vars": {
+                "APR4X4": 9.5
+            },
+            "pontos": {
+                "APRPTS_4X4": 28.5
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

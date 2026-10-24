@@ -1,0 +1,203 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SU",
+    "id": "23SU_PRO",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Apresentação de Projeto",
+                "Projeto Dinâmico",
+                "Entregável AVF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "1",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Apresentação de Projeto": "152.81",
+                    "Projeto Dinâmico": "14.85",
+                    "Entregável AVF": "18.73",
+                    "Total": "<b>186.39</b>"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "2",
+                    "Equipe Escola": "CTJ BAJA UFSC<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Apresentação de Projeto": "78.75",
+                    "Projeto Dinâmico": "0",
+                    "Entregável AVF": "0",
+                    "Total": "<b>78.75</b>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "3",
+                    "Equipe Escola": "CATARATAS BAJA<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná</i>",
+                    "Apresentação de Projeto": "86.74",
+                    "Projeto Dinâmico": "10.15",
+                    "Entregável AVF": "28.31",
+                    "Total": "<b>125.2</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "5",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Apresentação de Projeto": "180.38",
+                    "Projeto Dinâmico": "17.6",
+                    "Entregável AVF": "28.77",
+                    "Total": "<b>226.75</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "6",
+                    "Equipe Escola": "GRALHA AZUL<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Apresentação de Projeto": "136.43",
+                    "Projeto Dinâmico": "13.5",
+                    "Entregável AVF": "27.33",
+                    "Total": "<b>177.26</b>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "7",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Apresentação de Projeto": "118.13",
+                    "Projeto Dinâmico": "15.65",
+                    "Entregável AVF": "-15",
+                    "Total": "<b>118.78</b>"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "8",
+                    "Equipe Escola": "FURG MOTORSPORT<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande</i>",
+                    "Apresentação de Projeto": "57.19",
+                    "Projeto Dinâmico": "10.2",
+                    "Entregável AVF": "18.76",
+                    "Total": "<b>86.15</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "9",
+                    "Equipe Escola": "PELZNICKEL UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário de Brusque</i>",
+                    "Apresentação de Projeto": "91.43",
+                    "Projeto Dinâmico": "0",
+                    "Entregável AVF": "0",
+                    "Total": "<b>91.43</b>"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "10",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Apresentação de Projeto": "124.69",
+                    "Projeto Dinâmico": "9.4",
+                    "Entregável AVF": "27.97",
+                    "Total": "<b>162.06</b>"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "11",
+                    "Equipe Escola": "BAJA GUAICURUS<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Apresentação de Projeto": "71.74",
+                    "Projeto Dinâmico": "9.65",
+                    "Entregável AVF": "17.75",
+                    "Total": "<b>99.14</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Apresentação de Projeto": "228.98",
+                    "Projeto Dinâmico": "16.8",
+                    "Entregável AVF": "29.55",
+                    "Total": "<b>275.33</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "13",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Apresentação de Projeto": "0",
+                    "Projeto Dinâmico": "16.6",
+                    "Entregável AVF": "28.43",
+                    "Total": "<b>45.03</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "14",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Apresentação de Projeto": "213.45",
+                    "Projeto Dinâmico": "12.65",
+                    "Entregável AVF": "29.53",
+                    "Total": "<b>255.63</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Apresentação de Projeto": "113.44",
+                    "Projeto Dinâmico": "11.6",
+                    "Entregável AVF": "-15",
+                    "Total": "<b>110.04</b>"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "16",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Apresentação de Projeto": "168.3",
+                    "Projeto Dinâmico": "13",
+                    "Entregável AVF": "25.39",
+                    "Total": "<b>206.69</b>"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "17",
+                    "Equipe Escola": "BAJAGUAL<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Apresentação de Projeto": "0",
+                    "Projeto Dinâmico": "10",
+                    "Entregável AVF": "28.87",
+                    "Total": "<b>38.87</b>"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "18",
+                    "Equipe Escola": "UFSC BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Apresentação de Projeto": "143.44",
+                    "Projeto Dinâmico": "13.95",
+                    "Entregável AVF": "16.94",
+                    "Total": "<b>174.33</b>"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "20",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Apresentação de Projeto": "87.19",
+                    "Projeto Dinâmico": "9",
+                    "Entregável AVF": "28.85",
+                    "Total": "<b>125.04</b>"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "21",
+                    "Equipe Escola": "BAJA CRIOULO<br><i class=\"nomeEscola\">Universidade Regional Integrada do Alto do Uruguai e das Missões - Santo Ângelo</i>",
+                    "Apresentação de Projeto": "0",
+                    "Projeto Dinâmico": "0",
+                    "Entregável AVF": "0",
+                    "Total": "<b>0</b>"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null
+}

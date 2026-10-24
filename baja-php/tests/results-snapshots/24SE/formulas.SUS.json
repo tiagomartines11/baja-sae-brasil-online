@@ -1,0 +1,132 @@
+{
+    "evento": "24SE",
+    "prova": "SUS",
+    "nome": "Suspensão",
+    "type": "normal",
+    "stored_totals": {
+        "TCcom": 0,
+        "TCmax": 53.14,
+        "TCmin": 30.14,
+        "OBScom": null,
+        "OBSmax": null,
+        "OBSmin": null
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "TC": 37.81,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 53.32173913043477
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "TC": 36.28,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 58.643478260869564
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC": 36.05,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 59.443478260869576
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "TC": 35.76,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 60.45217391304349
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC": 30.14,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 80
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "TC": 39.04,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 49.04347826086956
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "TC": 47.1,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 21.00869565217391
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "TC": 44.27,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 30.85217391304347
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "TC": 34.59,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 64.52173913043478
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "TC": 39.37,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 47.89565217391306
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "TC": 53.14,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

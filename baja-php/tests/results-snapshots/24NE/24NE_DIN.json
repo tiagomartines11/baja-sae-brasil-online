@@ -1,0 +1,212 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24NE",
+    "id": "24NE_DIN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Tração",
+                "Aceleração",
+                "Velocidade máxima",
+                "Manobrabilidade",
+                "Suspensão",
+                "Super Prime",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Tração": "23.19",
+                    "Aceleração": "35.19",
+                    "Velocidade máxima": "31.24",
+                    "Manobrabilidade": "31.46",
+                    "Suspensão": "50",
+                    "Super Prime": "27.5",
+                    "Total": "<b>198.58</b>"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Tração": "18.82",
+                    "Aceleração": "24.1",
+                    "Velocidade máxima": "28.74",
+                    "Manobrabilidade": "41.24",
+                    "Suspensão": "42.86",
+                    "Super Prime": "12.5",
+                    "Total": "<b>168.26</b>"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
+                    "Tração": "22.98",
+                    "Aceleração": "34.34",
+                    "Velocidade máxima": "33.96",
+                    "Manobrabilidade": "29.97",
+                    "Suspensão": "50",
+                    "Super Prime": "50",
+                    "Total": "<b>221.25</b>"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
+                    "Tração": "27.36",
+                    "Aceleração": "32.63",
+                    "Velocidade máxima": "33.45",
+                    "Manobrabilidade": "31.95",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "35",
+                    "Total": "<b>160.39</b>"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA - Universidade Federal da Bahia</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Velocidade máxima": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Universidade Salvador</i>",
+                    "Tração": "45",
+                    "Aceleração": "26.66",
+                    "Velocidade máxima": "22.53",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "35.71",
+                    "Super Prime": "12.5",
+                    "Total": "<b>142.4</b>"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "Calangotec<br><i class=\"nomeEscola\">SENAI Cimatec</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Velocidade máxima": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "21.33",
+                    "Velocidade máxima": "28.82",
+                    "Manobrabilidade": "39.47",
+                    "Suspensão": "28.57",
+                    "Super Prime": "20",
+                    "Total": "<b>138.19</b>"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Tração": "14.31",
+                    "Aceleração": "38.39",
+                    "Velocidade máxima": "42.38",
+                    "Manobrabilidade": "45",
+                    "Suspensão": "28.57",
+                    "Super Prime": "42.5",
+                    "Total": "<b>211.15</b>"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Velocidade máxima": "11.02",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Total": "<b>11.02</b>"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Velocidade máxima": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "Baja Sun City<br><i class=\"nomeEscola\">IFBA - Jequié</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Velocidade máxima": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Tração": "14.22",
+                    "Aceleração": "21.54",
+                    "Velocidade máxima": "20.72",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "5",
+                    "Total": "<b>61.48</b>"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Tração": "31.91",
+                    "Aceleração": "45",
+                    "Velocidade máxima": "45",
+                    "Manobrabilidade": "33.73",
+                    "Suspensão": "42.86",
+                    "Super Prime": "20",
+                    "Total": "<b>218.5</b>"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "UNBaja<br><i class=\"nomeEscola\">UNB</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Velocidade máxima": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "#": "16",
+                    "Equipe Escola": "Carcau Baja<br><i class=\"nomeEscola\">UESC - Ilheus</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Velocidade máxima": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "Bajagreste<br><i class=\"nomeEscola\">IFPE - Caruaru</i>",
+                    "Tração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Aceleração": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Velocidade máxima": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Manobrabilidade": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Suspensão": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Super Prime": "<span style=\"color:red;font-weight:bold;\">DNF</span>",
+                    "Total": "<b>0</b>"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null
+}

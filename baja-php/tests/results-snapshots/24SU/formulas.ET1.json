@@ -1,0 +1,14 @@
+{
+    "evento": "24SU",
+    "prova": "ET1",
+    "nome": "Entregável AVF",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

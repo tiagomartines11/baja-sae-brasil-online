@@ -1,0 +1,233 @@
+{
+    "evento": "24SU",
+    "prova": "PRF",
+    "nome": "Apresentação de Projeto - Freios",
+    "type": "normal",
+    "stored_totals": {
+        "APRFREcom": 0,
+        "APRFREmax": 7.8,
+        "APRFREmin": 1,
+        "FINFREcom": 0,
+        "FINFREmax": 7.8,
+        "FINFREmin": 6.7,
+        "TOPFREcom": 0,
+        "TOPFREmax": 7.8,
+        "TOPFREmin": 6.7
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 6.2,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 6.2,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 3.4,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 3.4,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 6.7,
+                "APRFRE": 6.7,
+                "FINFRE": 6.7,
+                "TOPFRE": 6.7
+            },
+            "pontos": {
+                "APRPTS_FRE": 6.7,
+                "APRPTS_FRE_FIN": 6.7
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 1.7,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 1.7,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 0,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 0,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 7.5,
+                "APRFRE": 7.5,
+                "FINFRE": 7.8,
+                "TOPFRE": 7.5
+            },
+            "pontos": {
+                "APRPTS_FRE": 7.5,
+                "APRPTS_FRE_FIN": 7.8
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 4.7,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 4.7,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 1,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 1,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 5,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 5,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 2.6,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 2.6,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 6.4,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 6.4,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 5.5,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 5.5,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 4.3,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 4.3,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 7.8,
+                "APRFRE": 7.8,
+                "FINFRE": 7.7,
+                "TOPFRE": 7.8
+            },
+            "pontos": {
+                "APRPTS_FRE": 7.8,
+                "APRPTS_FRE_FIN": 7.7
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 0,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 0,
+                "APRPTS_FRE_FIN": 0
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRFRE": 2.8,
+                "FINFRE": 0,
+                "TOPFRE": 0
+            },
+            "pontos": {
+                "APRPTS_FRE": 2.8,
+                "APRPTS_FRE_FIN": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

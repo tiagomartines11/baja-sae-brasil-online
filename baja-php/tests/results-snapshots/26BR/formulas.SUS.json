@@ -1,0 +1,272 @@
+{
+    "evento": "26BR",
+    "prova": "SUS",
+    "nome": "Suspensão",
+    "type": "normal",
+    "stored_totals": {
+        "TCcom": -0.333333333,
+        "TCmax": 94.13,
+        "TCmin": 54.38,
+        "OBScom": -0.333333333,
+        "OBSmax": 6,
+        "OBSmin": 2
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "TC": 55.46,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 68.6211320754717
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "TC": 56.37,
+                "OBS": 0
+            },
+            "pontos": {
+                "SUSPTS": 67.45930817610063
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC": 58.53,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 64.70157232704403
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "TC": 61.6,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 60.782012578616346
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "TC": 54.38,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 70
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "TC": 57.04,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 66.60389937106919
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "TC": 58.57,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 64.6505031446541
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "TC": 57.29,
+                "OBS": 2
+            },
+            "pontos": {
+                "SUSPTS": 66.28471698113208
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC": null,
+                "OBS": 6
+            },
+            "pontos": {
+                "SUSPTS": 16.5
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "TC": 94.13,
+                "OBS": 0
+            },
+            "pontos": {
+                "SUSPTS": 19.25
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC": null,
+                "OBS": 0
+            },
+            "pontos": {
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "TC": null,
+                "OBS": 6
+            },
+            "pontos": {
+                "SUSPTS": 16.5
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "TC": 74.35,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 44.503710691823905
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "TC": null,
+                "OBS": 4
+            },
+            "pontos": {
+                "SUSPTS": 11
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "TC": null,
+                "OBS": 4
+            },
+            "pontos": {
+                "SUSPTS": 11
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "TC": 72.4,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 46.993333333333325
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "TC": null,
+                "OBS": 4
+            },
+            "pontos": {
+                "SUSPTS": 11
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "TC": 75.87,
+                "OBS": 0
+            },
+            "pontos": {
+                "SUSPTS": 42.56308176100628
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "TC": 79.41,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 38.043459119496866
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "TC": null,
+                "OBS": 4
+            },
+            "pontos": {
+                "SUSPTS": 11
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "TC": 66.48,
+                "OBS": 0
+            },
+            "pontos": {
+                "SUSPTS": 54.55157232704402
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "TC": null,
+                "OBS": 0
+            },
+            "pontos": {
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "TC": null,
+                "OBS": 4
+            },
+            "pontos": {
+                "SUSPTS": 11
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "TC": null,
+                "OBS": 4
+            },
+            "pontos": {
+                "SUSPTS": 11
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": {
+                "TC": 59.26,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 63.76955974842768
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

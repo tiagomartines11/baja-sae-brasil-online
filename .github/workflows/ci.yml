@@ -100,6 +100,11 @@ jobs:
       - name: PHPUnit (unit helpers)
         run: vendor/bin/phpunit --testsuite unit
 
+      # The results snapshot tool itself, on made-up pages. The snapshots
+      # are checked against a real database in the results-snapshots job.
+      - name: PHPUnit (results snapshot tool)
+        run: vendor/bin/phpunit --testsuite results-snapshot
+
       # The browser-side logic of the count pages (offline queue, clock
       # offset, warnings) is plain ES modules tested with Node's built-in
       # runner; there is nothing to install.
@@ -111,6 +116,93 @@ jobs:
       - name: Browser logic tests (node --test)
         working-directory: ${{ github.workspace }}
         run: node --test "baja-php/tests/js/*.test.js"
+
+  # Results regression snapshots (docs/results-snapshots.md): runs every
+  # results page, premiação and prova formula against the dev seed and fails
+  # if anything they compute differs from baja-php/tests/results-snapshots/.
+  #
+  # Only MySQL is needed, not the compose stack: the pages run with
+  # SKIP_AUTH, as nginx serves them, so there is no forum session, no Redis
+  # and no nginx in the path. The tool runs them with the PHP command line,
+  # the same code php-fpm would run.
+  results-snapshots:
+    name: Results snapshots (baja-php)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          # As in docker-compose.yml.
+          TZ: America/Sao_Paulo
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      # The tool connects like the app does (src/config.php), as an account
+      # that may only SELECT, created below. Read-only twice over: the tool
+      # also switches every session it opens to read-only.
+      PHPBB_DB_HOST: 127.0.0.1
+      PHPBB_DB_USER: snapshot
+      PHPBB_DB_PASS: snapshot
+    defaults:
+      run:
+        working-directory: baja-php
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, dom, intl, pdo_mysql
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: baja-php/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('baja-php/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      # What the app's database needs, from the same files the dev MySQL
+      # container loads on first boot:
+      #   01  creates the databases
+      #   02  creates the app's MySQL users (not used by the snapshots, run
+      #       so that the database is the one dev has)
+      #   05  the results data: 17 events, 22BR to 26BR
+      #   06  the lap counting tables; it also edits the 26BR Enduro's
+      #       inputs list, so without it CI would not match a dev database
+      # 03 and 04 are the forum databases, which SKIP_AUTH pages never read.
+      - name: Load the dev seed
+        working-directory: baja-infra/mysql/init
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_RESULTADOS_PASSWORD: unused-in-ci
+          MYSQL_PHPBB_BAJA_PASSWORD: unused-in-ci
+          MYSQL_PHPBB_FORMULA_PASSWORD: unused-in-ci
+        run: |
+          mysql -uroot -proot < 01-create-databases.sql
+          bash 02-create-users.sh
+          mysql -uroot -proot < 05-seed-baja-resultados.sql
+          mysql -uroot -proot < 06-contagem.sql
+          mysql -uroot -proot -e "CREATE USER 'snapshot'@'%' IDENTIFIED BY 'snapshot'; GRANT SELECT ON baja_resultados.* TO 'snapshot'@'%';"
+
+      - name: PHPUnit (the tool writes nothing)
+        run: vendor/bin/phpunit --testsuite results-snapshot-db
+
+      - name: Results snapshots match
+        run: php scripts/results-snapshot.php --check --jobs 4
 
   infra:
     name: Infrastructure (baja-infra)

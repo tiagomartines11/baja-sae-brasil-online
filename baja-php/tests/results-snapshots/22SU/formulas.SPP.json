@@ -1,0 +1,106 @@
+{
+    "evento": "22SU",
+    "prova": "SPP",
+    "nome": "Super Prime",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 5
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 20
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 10
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 15
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 30
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 5
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 5
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 5
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 0
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

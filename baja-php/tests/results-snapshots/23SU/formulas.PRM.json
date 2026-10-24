@@ -1,0 +1,272 @@
+{
+    "evento": "23SU",
+    "prova": "PRM",
+    "nome": "Apresentação de Projeto - Marketing",
+    "type": "normal",
+    "stored_totals": {
+        "APRMKTcom": 0,
+        "APRMKTmax": 9.5,
+        "APRMKTmin": 2.5,
+        "FINMKTcom": 0,
+        "FINMKTmax": 10,
+        "FINMKTmin": 7.5,
+        "TOPMKTcom": -3,
+        "TOPMKTmax": 9.5,
+        "TOPMKTmin": 7.5
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 6.5,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 6.5,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 4,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 4,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 3.5,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 3.5,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 8.2,
+                "APRMKT": 8.2,
+                "FINMKT": 9,
+                "TOPMKT": 8.2
+            },
+            "pontos": {
+                "APRPTS_MKT": 8.2,
+                "APRPTS_MKT_FIN": 8.7
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 5,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 5,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 4.5,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 4.5,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 7,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 7,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 4,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 4,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 9.5,
+                "APRMKT": 9.5,
+                "FINMKT": 10,
+                "TOPMKT": 9.5
+            },
+            "pontos": {
+                "APRPTS_MKT": 9.5,
+                "APRPTS_MKT_FIN": 9.5
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 7.5,
+                "APRMKT": 7.5,
+                "FINMKT": 7.5,
+                "TOPMKT": 7.5
+            },
+            "pontos": {
+                "APRPTS_MKT": 7.5,
+                "APRPTS_MKT_FIN": 7.5
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 5,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 5,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 5,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 5,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 6.5,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 6.5,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 2.5,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 2.5,
+                "APRPTS_MKT_FIN": 0
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": null
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

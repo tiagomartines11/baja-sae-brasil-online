@@ -1,0 +1,249 @@
+{
+    "evento": "25SU",
+    "prova": "PRS",
+    "nome": "Apresentação de Projeto - Suspensão e Direção",
+    "type": "normal",
+    "stored_totals": {
+        "APRSUScom": 0,
+        "APRSUSmax": 7.375,
+        "APRSUSmin": 0.775,
+        "FINSUScom": 0,
+        "FINSUSmax": 10.00001,
+        "FINSUSmin": 1.0e-5,
+        "TOPSUScom": 0,
+        "TOPSUSmax": 7.375,
+        "TOPSUSmin": 5.925
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 4.975,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 4.975,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 4.975
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 5.925,
+                "APRSUS": 5.925,
+                "FINSUS": 6.00001,
+                "TOPSUS": 5.925
+            },
+            "pontos": {
+                "APRPTS_SUS": 5.925,
+                "APRPTS_SUS_FIN": 6.79499855,
+                "NOTA_SUS": 5.925
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 2.675,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 2.675,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 2.675
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 3.15,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 3.15,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 3.15
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 1.5,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 1.5,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 1.5
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 0.775,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 0.775,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 0.775
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 7.375,
+                "APRSUS": 7.375,
+                "FINSUS": 10.00001,
+                "TOPSUS": 7.375
+            },
+            "pontos": {
+                "APRPTS_SUS": 7.375,
+                "APRPTS_SUS_FIN": 7.37499855,
+                "NOTA_SUS": 7.375
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 1.5,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 1.5,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 1.5
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 4.525,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 4.525,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 4.525
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 1.375,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 1.375,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 1.375
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 4.825,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 4.825,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 4.825
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 6.025,
+                "APRSUS": 6.025,
+                "FINSUS": 1.0e-5,
+                "TOPSUS": 6.025
+            },
+            "pontos": {
+                "APRPTS_SUS": 6.025,
+                "APRPTS_SUS_FIN": 5.92499855,
+                "NOTA_SUS": 6.025
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 3.75,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 3.75,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 3.75
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 1.275,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 1.275,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 1.275
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 0.975,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 0.975,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 0.975
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 0,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 0,
+                "APRPTS_SUS_FIN": 0,
+                "NOTA_SUS": 0.4
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

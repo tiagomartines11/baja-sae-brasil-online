@@ -1,0 +1,561 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "26BR",
+    "id": "26BR_SLP",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Solicitação de Proposta",
+                "Penalizações",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais - UFMG</i>",
+                    "Solicitação de Proposta": "<b>53.9%</b><br> 14.37",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "2",
+                    "Equipe Escola": "Equipe FEI Baja<br><i class=\"nomeEscola\">Fundação Educacional Inaciana - FEI</i>",
+                    "Solicitação de Proposta": "<b>65.7%</b><br> 17.52",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei - UFSJ</i>",
+                    "Solicitação de Proposta": "<b>65.5%</b><br> 17.47",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Pato Branco</i>",
+                    "Solicitação de Proposta": "<b>66.8%</b><br> 17.81",
+                    "Penalizações": "2",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Solicitação de Proposta": "<b>68.5%</b><br> 18.27",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Curitiba</i>",
+                    "Solicitação de Proposta": "<b>73.7%</b><br> 19.65",
+                    "Penalizações": "1",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Solicitação de Proposta": "<b>37%</b><br> 9.87",
+                    "Penalizações": "2",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "8",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi-Árido - Ufersa - Campus Mossoró</i>",
+                    "Solicitação de Proposta": "<b>56.6%</b><br> 15.09",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Equipe Escola": "Caraubaja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi-Árido - Ufersa - Campus Caraúbas</i>",
+                    "Solicitação de Proposta": "<b>34.1%</b><br> 9.09",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "11",
+                    "Equipe Escola": "Parahybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande - UFCG</i>",
+                    "Solicitação de Proposta": "<b>75%</b><br> 20",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte - UFRN</i>",
+                    "Solicitação de Proposta": "<b>58.9%</b><br> 15.71",
+                    "Penalizações": "5",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais - CEFET/MG</i>",
+                    "Solicitação de Proposta": "<b>69.4%</b><br> 18.51",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense - UFF - Campus Niterói</i>",
+                    "Solicitação de Proposta": "<b>71.7%</b><br> 19.12",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "15",
+                    "Equipe Escola": "Baja UFSCar<br><i class=\"nomeEscola\">Universidade Federal de São Carlos - UFSCar</i>",
+                    "Solicitação de Proposta": "<b>59.1%</b><br> 15.76",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "16",
+                    "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">Universidade Federal Fluminense - UFF - Campus Volta Redonda</i>",
+                    "Solicitação de Proposta": "<b>57.7%</b><br> 15.39",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "17",
+                    "Equipe Escola": "Rampage Baja UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora - UFJF</i>",
+                    "Solicitação de Proposta": "<b>59.3%</b><br> 15.81",
+                    "Penalizações": "5",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "18",
+                    "Equipe Escola": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro - UFTM</i>",
+                    "Solicitação de Proposta": "<b>43.3%</b><br> 11.55",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "19",
+                    "Equipe Escola": "Kaizen Piratas do Cerrado<br><i class=\"nomeEscola\">Universidade de Brasília - UnB</i>",
+                    "Solicitação de Proposta": "<b>65.3%</b><br> 17.41",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "20",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">Universidade Federal da Paraíba - UFPB</i>",
+                    "Solicitação de Proposta": "<b>54.5%</b><br> 14.53",
+                    "Penalizações": "5",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "21",
+                    "Equipe Escola": "Baja Mud Racing<br><i class=\"nomeEscola\">Facens</i>",
+                    "Solicitação de Proposta": "<b>47.3%</b><br> 12.61",
+                    "Penalizações": "2",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "22",
+                    "Equipe Escola": "Equipe Corisco<br><i class=\"nomeEscola\">Universidade de Pernambuco - UPE</i>",
+                    "Solicitação de Proposta": "<b>58.5%</b><br> 15.6",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "23",
+                    "Equipe Escola": "EESC USP TRACTIAN Baja<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos - Universidade de São Paulo - EESC-USP</i>",
+                    "Solicitação de Proposta": "<b>56.6%</b><br> 15.09",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "24",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná - UFPR</i>",
+                    "Solicitação de Proposta": "<b>61.3%</b><br> 16.35",
+                    "Penalizações": "5",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "25",
+                    "Equipe Escola": "Mud Runner Baja<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica Celso Suckow da Fonseca - CEFET/RJ</i>",
+                    "Solicitação de Proposta": "<b>66%</b><br> 17.6",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "26",
+                    "Equipe Escola": "Saci Baja UNIFEI<br><i class=\"nomeEscola\">Universidade Federal de Itajubá - UNIFEI - Campus Itajubá</i>",
+                    "Solicitação de Proposta": "<b>56.7%</b><br> 15.12",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "28",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia de São Paulo - IFSP - Campus Sertãozinho</i>",
+                    "Solicitação de Proposta": "<b>33%</b><br> 8.8",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "29",
+                    "Equipe Escola": "Buffalo Baja - UFLA<br><i class=\"nomeEscola\">Universidade Federal de Lavras - UFLA</i>",
+                    "Solicitação de Proposta": "<b>40.9%</b><br> 10.91",
+                    "Penalizações": "1",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "30",
+                    "Equipe Escola": "Mangue Baja<br><i class=\"nomeEscola\">Universidade Federal de Pernambuco - UFPE</i>",
+                    "Solicitação de Proposta": "<b>31.3%</b><br> 8.35",
+                    "Penalizações": "2",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "31",
+                    "Equipe Escola": "Equipe UNICAMP Baja SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - Unicamp</i>",
+                    "Solicitação de Proposta": "<b>38.7%</b><br> 10.32",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "32",
+                    "Equipe Escola": "Vitória Baja<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo - UFES</i>",
+                    "Solicitação de Proposta": "<b>74.3%</b><br> 19.81",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "33",
+                    "Equipe Escola": "PAC Baja<br><i class=\"nomeEscola\">Universidade Estadual Paulista - Unesp - Campus Bauru</i>",
+                    "Solicitação de Proposta": "<b>71.5%</b><br> 19.07",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "34",
+                    "Equipe Escola": "ITA Baja<br><i class=\"nomeEscola\">Instituto Tecnológico de Aeronáutica - ITA</i>",
+                    "Solicitação de Proposta": "<b>59.1%</b><br> 15.76",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "35",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">Universidade Federal da Bahia - UFBA</i>",
+                    "Solicitação de Proposta": "<b>44.3%</b><br> 11.81",
+                    "Penalizações": "1",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "36",
+                    "Equipe Escola": "BAJAUEA<br><i class=\"nomeEscola\">Universidade do Estado do Amazonas - UEA</i>",
+                    "Solicitação de Proposta": "<b>65.7%</b><br> 17.52",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "37",
+                    "Equipe Escola": "Equipe Capibaja<br><i class=\"nomeEscola\">Universidade Estadual de Maringá - UEM</i>",
+                    "Solicitação de Proposta": "<b>51.1%</b><br> 13.63",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "38",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul - UFRGS</i>",
+                    "Solicitação de Proposta": "<b>0%</b><br> <b>0</b>",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "41",
+                    "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">Universidade do Estado do Rio de Janeiro - Uerj - Campus Nova Friburgo</i>",
+                    "Solicitação de Proposta": "<b>0%</b><br> <b>0</b>",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "42",
+                    "Equipe Escola": "Garra Baja<br><i class=\"nomeEscola\">Universidade São Judas Tadeu - USJT</i>",
+                    "Solicitação de Proposta": "<b>42.2%</b><br> 11.25",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "43",
+                    "Equipe Escola": "Velociraptor Baja<br><i class=\"nomeEscola\">Universidade do Estado de Santa Catarina - Udesc</i>",
+                    "Solicitação de Proposta": "<b>0%</b><br> <b>0</b>",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "44",
+                    "Equipe Escola": "TEC Ilha<br><i class=\"nomeEscola\">Universidade Estadual Paulista - Unesp - Campus de Ilha Solteira</i>",
+                    "Solicitação de Proposta": "<b>50.3%</b><br> 13.41",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "45",
+                    "Equipe Escola": "SamaBAJA<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo - Ifes - Campus São Mateus</i>",
+                    "Solicitação de Proposta": "<b>0%</b><br> <b>0</b>",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "47",
+                    "Equipe Escola": "Londribaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Londrina</i>",
+                    "Solicitação de Proposta": "<b>17.7%</b><br> 4.72",
+                    "Penalizações": "5",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "48",
+                    "Equipe Escola": "Fox Baja<br><i class=\"nomeEscola\">Instituto de Ensino e Pesquisa - Insper</i>",
+                    "Solicitação de Proposta": "<b>44.7%</b><br> 11.92",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "49",
+                    "Equipe Escola": "FHO Baja<br><i class=\"nomeEscola\">Fundação Hermínio Ometto - FHO</i>",
+                    "Solicitação de Proposta": "<b>0%</b><br> <b>0</b>",
+                    "Penalizações": "2",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "50",
+                    "Equipe Escola": "Baja Quero-Quero UFABC<br><i class=\"nomeEscola\">Universidade Federal do ABC - UFABC</i>",
+                    "Solicitação de Proposta": "<b>46%</b><br> 12.27",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "53",
+                    "Equipe Escola": "ZABUMBAJA TRDAYCA<br><i class=\"nomeEscola\">Universidade Federal Rural de Pernambuco - UFRPE</i>",
+                    "Solicitação de Proposta": "<b>43.7%</b><br> 11.65",
+                    "Penalizações": "2",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "58",
+                    "Equipe Escola": "Maua Racing Baja<br><i class=\"nomeEscola\">Instituto Mauá de Tecnologia - IMT</i>",
+                    "Solicitação de Proposta": "<b>0%</b><br> <b>0</b>",
+                    "Penalizações": "2",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "61",
+                    "Equipe Escola": "Equipe UFVBaja Pererecas<br><i class=\"nomeEscola\">Universidade Federal de Viçosa - UFV</i>",
+                    "Solicitação de Proposta": "<b>62.1%</b><br> 16.56",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "62",
+                    "Equipe Escola": "Baja Tucuruí<br><i class=\"nomeEscola\">Universidade Federal do Pará - UFPA - Campus de Tucuruí</i>",
+                    "Solicitação de Proposta": "<b>48%</b><br> 12.8",
+                    "Penalizações": "0",
+                    "Pontos": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

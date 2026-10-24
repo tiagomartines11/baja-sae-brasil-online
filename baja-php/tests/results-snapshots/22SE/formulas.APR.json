@@ -1,0 +1,733 @@
+{
+    "evento": "22SE",
+    "prova": "APR",
+    "nome": "Apresentação de Projeto",
+    "type": "normal",
+    "stored_totals": {
+        "QXQ_com": 0,
+        "QXQ_max": 7.25,
+        "QXQ_min": 2.13,
+        "ELET_com": 0,
+        "ELET_max": 7.22,
+        "ELET_min": 0.56,
+        "GEST_com": 0,
+        "GEST_max": 8,
+        "GEST_min": 0.5,
+        "PLNG_com": 0,
+        "PLNG_max": 7,
+        "PLNG_min": 0.75,
+        "DIN_LAT_com": 0,
+        "DIN_LAT_max": 6.94,
+        "DIN_LAT_min": 0.28,
+        "DIN_LONG_com": 0,
+        "DIN_LONG_max": 7.22,
+        "DIN_LONG_min": 1.11,
+        "CALC_ESTRUT_com": 0,
+        "CALC_ESTRUT_max": 7.77,
+        "CALC_ESTRUT_min": 0.56
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 1.94,
+                "GEST_": 0.75,
+                "PLNG_": 3,
+                "DIN_LAT_": 0.83,
+                "DIN_LONG_": 1.39,
+                "CALC_ESTRUT_": 1.39
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 4.83011583011583,
+                "DIN_LAT_TS": 3.2291066282420746,
+                "DIN_LONG_TS": 5.198060941828254,
+                "ELET_TS": 7.254847645429362,
+                "GEST_TS": 2.53125,
+                "PLNG_TS": 11.571428571428571,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 4.5,
+                "ELET_": 3.61,
+                "GEST_": 5.5,
+                "PLNG_": 5.75,
+                "DIN_LAT_": 3.89,
+                "DIN_LONG_": 4.16,
+                "CALC_ESTRUT_": 3.05
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 10.5984555984556,
+                "DIN_LAT_TS": 15.134005763688759,
+                "DIN_LONG_TS": 15.556786703601109,
+                "ELET_TS": 13.5,
+                "GEST_TS": 18.5625,
+                "PLNG_TS": 22.178571428571427,
+                "QXQ_TS": 11.172413793103448
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 3.61,
+                "GEST_": 3,
+                "PLNG_": 5,
+                "DIN_LAT_": 3.05,
+                "DIN_LONG_": 4.72,
+                "CALC_ESTRUT_": 2.78
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 9.66023166023166,
+                "DIN_LAT_TS": 11.865994236311238,
+                "DIN_LONG_TS": 17.65096952908587,
+                "ELET_TS": 13.5,
+                "GEST_TS": 10.125,
+                "PLNG_TS": 19.285714285714285,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 3.61,
+                "GEST_": 2.5,
+                "PLNG_": 5.5,
+                "DIN_LAT_": 4.44,
+                "DIN_LONG_": 4.44,
+                "CALC_ESTRUT_": 5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 17.374517374517374,
+                "DIN_LAT_TS": 17.27377521613833,
+                "DIN_LONG_TS": 16.603878116343495,
+                "ELET_TS": 13.5,
+                "GEST_TS": 8.4375,
+                "PLNG_TS": 21.214285714285715,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 2.22,
+                "GEST_": 1.75,
+                "PLNG_": 1.5,
+                "DIN_LAT_": 0.28,
+                "DIN_LONG_": 3.05,
+                "CALC_ESTRUT_": 3.05
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 10.5984555984556,
+                "DIN_LAT_TS": 1.0893371757925072,
+                "DIN_LONG_TS": 11.405817174515235,
+                "ELET_TS": 8.301939058171747,
+                "GEST_TS": 5.90625,
+                "PLNG_TS": 5.785714285714286,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 6.11,
+                "GEST_": 8,
+                "PLNG_": 6.5,
+                "DIN_LAT_": 6.94,
+                "DIN_LONG_": 6.38,
+                "CALC_ESTRUT_": 7.22
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 25.08880308880309,
+                "DIN_LAT_TS": 27,
+                "DIN_LONG_TS": 23.858725761772853,
+                "ELET_TS": 22.84903047091413,
+                "GEST_TS": 27,
+                "PLNG_TS": 25.071428571428573,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 4.25,
+                "ELET_": 2.78,
+                "GEST_": 6.5,
+                "PLNG_": 4.75,
+                "DIN_LAT_": 3.05,
+                "DIN_LONG_": 4.44,
+                "CALC_ESTRUT_": 4.44
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 15.42857142857143,
+                "DIN_LAT_TS": 11.865994236311238,
+                "DIN_LONG_TS": 16.603878116343495,
+                "ELET_TS": 10.396121883656509,
+                "GEST_TS": 21.9375,
+                "PLNG_TS": 18.321428571428573,
+                "QXQ_TS": 10.551724137931034
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 2.13,
+                "ELET_": 1.94,
+                "GEST_": 1.75,
+                "PLNG_": 3,
+                "DIN_LAT_": 1.39,
+                "DIN_LONG_": 3.33,
+                "CALC_ESTRUT_": 2.22
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 7.714285714285715,
+                "DIN_LAT_TS": 5.407780979827089,
+                "DIN_LONG_TS": 12.45290858725762,
+                "ELET_TS": 7.254847645429362,
+                "GEST_TS": 5.90625,
+                "PLNG_TS": 11.571428571428571,
+                "QXQ_TS": 5.288275862068965
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 2.22,
+                "GEST_": 2,
+                "PLNG_": 2.75,
+                "DIN_LAT_": 2.5,
+                "DIN_LONG_": 3.33,
+                "CALC_ESTRUT_": 3.05
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 10.5984555984556,
+                "DIN_LAT_TS": 9.72622478386167,
+                "DIN_LONG_TS": 12.45290858725762,
+                "ELET_TS": 8.301939058171747,
+                "GEST_TS": 6.75,
+                "PLNG_TS": 10.607142857142858,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 3.05,
+                "GEST_": 5.75,
+                "PLNG_": 4.5,
+                "DIN_LAT_": 4.72,
+                "DIN_LONG_": 7.22,
+                "CALC_ESTRUT_": 5.27
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 18.312741312741313,
+                "DIN_LAT_TS": 18.363112391930834,
+                "DIN_LONG_TS": 27,
+                "ELET_TS": 11.405817174515235,
+                "GEST_TS": 19.40625,
+                "PLNG_TS": 17.357142857142858,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 2.5,
+                "GEST_": 2,
+                "PLNG_": 3.25,
+                "DIN_LAT_": 3.61,
+                "DIN_LONG_": 3.61,
+                "CALC_ESTRUT_": 2.5
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 8.687258687258687,
+                "DIN_LAT_TS": 14.04466858789625,
+                "DIN_LONG_TS": 13.5,
+                "ELET_TS": 9.349030470914128,
+                "GEST_TS": 6.75,
+                "PLNG_TS": 12.535714285714286,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 1.39,
+                "GEST_": 0.5,
+                "PLNG_": 0.75,
+                "DIN_LAT_": 0.56,
+                "DIN_LONG_": 1.11,
+                "CALC_ESTRUT_": 0.83
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 2.884169884169884,
+                "DIN_LAT_TS": 2.1786743515850144,
+                "DIN_LONG_TS": 4.150969529085874,
+                "ELET_TS": 5.198060941828254,
+                "GEST_TS": 1.6875,
+                "PLNG_TS": 2.892857142857143,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 6.11,
+                "GEST_": 5,
+                "PLNG_": 4.5,
+                "DIN_LAT_": 5.55,
+                "DIN_LONG_": 5.83,
+                "CALC_ESTRUT_": 6.11
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 21.231660231660232,
+                "DIN_LAT_TS": 21.59221902017291,
+                "DIN_LONG_TS": 21.801939058171747,
+                "ELET_TS": 22.84903047091413,
+                "GEST_TS": 16.875,
+                "PLNG_TS": 17.357142857142858,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 5.83,
+                "GEST_": 5.5,
+                "PLNG_": 5.25,
+                "DIN_LAT_": 6.11,
+                "DIN_LONG_": 6.11,
+                "CALC_ESTRUT_": 6.66
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 23.142857142857146,
+                "DIN_LAT_TS": 23.770893371757925,
+                "DIN_LONG_TS": 22.84903047091413,
+                "ELET_TS": 21.801939058171747,
+                "GEST_TS": 18.5625,
+                "PLNG_TS": 20.25,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 2.38,
+                "ELET_": 4.44,
+                "GEST_": 1.75,
+                "PLNG_": 4.75,
+                "DIN_LAT_": 6.38,
+                "DIN_LONG_": 4.44,
+                "CALC_ESTRUT_": 3.33
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 11.571428571428573,
+                "DIN_LAT_TS": 24.821325648414984,
+                "DIN_LONG_TS": 16.603878116343495,
+                "ELET_TS": 16.603878116343495,
+                "GEST_TS": 5.90625,
+                "PLNG_TS": 18.321428571428573,
+                "QXQ_TS": 5.90896551724138
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 3.61,
+                "GEST_": 3,
+                "PLNG_": 4.5,
+                "DIN_LAT_": 2.5,
+                "DIN_LONG_": 5.83,
+                "CALC_ESTRUT_": 3.05
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 10.5984555984556,
+                "DIN_LAT_TS": 9.72622478386167,
+                "DIN_LONG_TS": 21.801939058171747,
+                "ELET_TS": 13.5,
+                "GEST_TS": 10.125,
+                "PLNG_TS": 17.357142857142858,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 4.88,
+                "ELET_": 7.22,
+                "GEST_": 6.25,
+                "PLNG_": 6.75,
+                "DIN_LAT_": 6.66,
+                "DIN_LONG_": 6.11,
+                "CALC_ESTRUT_": 5.83
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 20.25868725868726,
+                "DIN_LAT_TS": 25.910662824207492,
+                "DIN_LONG_TS": 22.84903047091413,
+                "ELET_TS": 27,
+                "GEST_TS": 21.09375,
+                "PLNG_TS": 26.035714285714285,
+                "QXQ_TS": 12.115862068965518
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 3.89,
+                "GEST_": 7.5,
+                "PLNG_": 7,
+                "DIN_LAT_": 4.44,
+                "DIN_LONG_": 5.27,
+                "CALC_ESTRUT_": 6.94
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 24.11583011583012,
+                "DIN_LAT_TS": 17.27377521613833,
+                "DIN_LONG_TS": 19.70775623268698,
+                "ELET_TS": 14.547091412742384,
+                "GEST_TS": 25.3125,
+                "PLNG_TS": 27,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 2.5,
+                "GEST_": 1.75,
+                "PLNG_": 6.25,
+                "DIN_LAT_": 3.33,
+                "DIN_LONG_": 2.78,
+                "CALC_ESTRUT_": 3.05
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 10.5984555984556,
+                "DIN_LAT_TS": 12.955331412103746,
+                "DIN_LONG_TS": 10.396121883656509,
+                "ELET_TS": 9.349030470914128,
+                "GEST_TS": 5.90625,
+                "PLNG_TS": 24.107142857142858,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 6.38,
+                "GEST_": 6,
+                "PLNG_": 6,
+                "DIN_LAT_": 6.66,
+                "DIN_LONG_": 6.94,
+                "CALC_ESTRUT_": 6.38
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 22.16988416988417,
+                "DIN_LAT_TS": 25.910662824207492,
+                "DIN_LONG_TS": 25.952908587257618,
+                "ELET_TS": 23.858725761772853,
+                "GEST_TS": 20.25,
+                "PLNG_TS": 23.142857142857142,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 3.69,
+                "ELET_": 4.16,
+                "GEST_": 4.75,
+                "PLNG_": 4.75,
+                "DIN_LAT_": 5,
+                "DIN_LONG_": 4.72,
+                "CALC_ESTRUT_": 4.44
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 15.42857142857143,
+                "DIN_LAT_TS": 19.45244956772334,
+                "DIN_LONG_TS": 17.65096952908587,
+                "ELET_TS": 15.556786703601109,
+                "GEST_TS": 16.03125,
+                "PLNG_TS": 18.321428571428573,
+                "QXQ_TS": 9.161379310344827
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 4.56,
+                "ELET_": 5,
+                "GEST_": 4.25,
+                "PLNG_": 4.75,
+                "DIN_LAT_": 6.38,
+                "DIN_LONG_": 6.66,
+                "CALC_ESTRUT_": 5.27
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 18.312741312741313,
+                "DIN_LAT_TS": 24.821325648414984,
+                "DIN_LONG_TS": 24.90581717451524,
+                "ELET_TS": 18.698060941828256,
+                "GEST_TS": 14.34375,
+                "PLNG_TS": 18.321428571428573,
+                "QXQ_TS": 11.321379310344827
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 7.25,
+                "ELET_": 6.94,
+                "GEST_": 5.5,
+                "PLNG_": 6.25,
+                "DIN_LAT_": 5,
+                "DIN_LONG_": 6.11,
+                "CALC_ESTRUT_": 7.77
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 27,
+                "DIN_LAT_TS": 19.45244956772334,
+                "DIN_LONG_TS": 22.84903047091413,
+                "ELET_TS": 25.952908587257618,
+                "GEST_TS": 18.5625,
+                "PLNG_TS": 24.107142857142858,
+                "QXQ_TS": 18
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 1.94,
+                "GEST_": 1,
+                "PLNG_": 2.25,
+                "DIN_LAT_": 2.5,
+                "DIN_LONG_": 2.78,
+                "CALC_ESTRUT_": 0.56
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 1.9459459459459463,
+                "DIN_LAT_TS": 9.72622478386167,
+                "DIN_LONG_TS": 10.396121883656509,
+                "ELET_TS": 7.254847645429362,
+                "GEST_TS": 3.375,
+                "PLNG_TS": 8.678571428571429,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 5,
+                "GEST_": 4.5,
+                "PLNG_": 4.75,
+                "DIN_LAT_": 4.44,
+                "DIN_LONG_": 5.55,
+                "CALC_ESTRUT_": 5.83
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 20.25868725868726,
+                "DIN_LAT_TS": 17.27377521613833,
+                "DIN_LONG_TS": 20.75484764542936,
+                "ELET_TS": 18.698060941828256,
+                "GEST_TS": 15.1875,
+                "PLNG_TS": 18.321428571428573,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 0.56,
+                "GEST_": 0.75,
+                "PLNG_": 0.75,
+                "DIN_LAT_": 0.28,
+                "DIN_LONG_": 2.22,
+                "CALC_ESTRUT_": 1.39
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 4.83011583011583,
+                "DIN_LAT_TS": 1.0893371757925072,
+                "DIN_LONG_TS": 8.301939058171747,
+                "ELET_TS": 2.094182825484765,
+                "GEST_TS": 2.53125,
+                "PLNG_TS": 2.892857142857143,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 1.11,
+                "GEST_": 1.25,
+                "PLNG_": 4.5,
+                "DIN_LAT_": 1.39,
+                "DIN_LONG_": 3.61,
+                "CALC_ESTRUT_": 1.67
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 5.803088803088803,
+                "DIN_LAT_TS": 5.407780979827089,
+                "DIN_LONG_TS": 13.5,
+                "ELET_TS": 4.150969529085874,
+                "GEST_TS": 4.21875,
+                "PLNG_TS": 17.357142857142858,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 1.67,
+                "GEST_": 1.75,
+                "PLNG_": 3.5,
+                "DIN_LAT_": 0.56,
+                "DIN_LONG_": 4.44,
+                "CALC_ESTRUT_": 1.94
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 6.741312741312742,
+                "DIN_LAT_TS": 2.1786743515850144,
+                "DIN_LONG_TS": 16.603878116343495,
+                "ELET_TS": 6.245152354570638,
+                "GEST_TS": 5.90625,
+                "PLNG_TS": 13.5,
+                "QXQ_TS": 0
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "SPOILER": 0,
+                "SPOILER_TEMA": 0,
+                "SPOILER_TEMA_JUIZ": 0,
+                "QXQ_": 0,
+                "ELET_": 2.5,
+                "GEST_": 2.75,
+                "PLNG_": 3.75,
+                "DIN_LAT_": 3.33,
+                "DIN_LONG_": 4.16,
+                "CALC_ESTRUT_": 0
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 0,
+                "DIN_LAT_TS": 12.955331412103746,
+                "DIN_LONG_TS": 15.556786703601109,
+                "ELET_TS": 9.349030470914128,
+                "GEST_TS": 9.28125,
+                "PLNG_TS": 14.464285714285714,
+                "QXQ_TS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

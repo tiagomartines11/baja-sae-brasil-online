@@ -1,0 +1,176 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SU",
+    "id": "23SU_B44",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Apresentação de Projeto",
+                "Dinâmicas",
+                "Enduro",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "1",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>169.07</b>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "3",
+                    "Equipe Escola": "CATARATAS BAJA<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>63.92</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "5",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>200</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "6",
+                    "Equipe Escola": "GRALHA AZUL<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>57.73</b>"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "7",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>160.82</b>"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "8",
+                    "Equipe Escola": "FURG MOTORSPORT<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "10",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>134.02</b>"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "11",
+                    "Equipe Escola": "BAJA GUAICURUS<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>12.37</b>"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "12",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>142.27</b>"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "13",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>57.73</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "14",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>195.88</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>129.9</b>"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "16",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>167.01</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "17",
+                    "Equipe Escola": "BAJAGUAL<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>22.68</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "18",
+                    "Equipe Escola": "UFSC BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>181.44</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "20",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Apresentação de Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "",
+                    "Total": "<b>86.6</b>"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null
+}

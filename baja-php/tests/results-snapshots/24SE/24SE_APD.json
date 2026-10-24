@@ -1,0 +1,100 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SE",
+    "id": "24SE_APD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aproveitamento - APD",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "1",
+                    "Equipe Escola": "Poli<br><i class=\"nomeEscola\">Escola Politécnica da USP</i>",
+                    "Aproveitamento - APD": "53.26%",
+                    "Pontos": "35.51"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "2",
+                    "Equipe Escola": "FEI Baja<br><i class=\"nomeEscola\">FEI</i>",
+                    "Aproveitamento - APD": "75%",
+                    "Pontos": "50",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del Rei</i>",
+                    "Aproveitamento - APD": "54.5%",
+                    "Pontos": "36.33"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "6",
+                    "Equipe Escola": "TEC Ilha Baja SAE<br><i class=\"nomeEscola\">Unesp - Campus de Ilha Solteira</i>",
+                    "Aproveitamento - APD": "54.5%",
+                    "Pontos": "36.33"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro</i>",
+                    "Aproveitamento - APD": "66.26%",
+                    "Pontos": "44.17",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "11",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de São Paulo - campus Sertãozinho</i>",
+                    "Aproveitamento - APD": "51%",
+                    "Pontos": "34"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "12",
+                    "Equipe Escola": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Aproveitamento - APD": "70%",
+                    "Pontos": "46.67",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "15",
+                    "Equipe Escola": "EESC USP TRACTIAN BAJA<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos – USP</i>",
+                    "Aproveitamento - APD": "58.76%",
+                    "Pontos": "39.17"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "17",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Aproveitamento - APD": "37.76%",
+                    "Pontos": "25.17"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "18",
+                    "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">Universidade do Estado do Rio de Janeiro</i>",
+                    "Aproveitamento - APD": "38.26%",
+                    "Pontos": "25.51"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

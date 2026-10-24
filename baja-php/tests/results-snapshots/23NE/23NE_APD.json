@@ -1,0 +1,95 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23NE",
+    "id": "23NE_APD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "1",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Pontos": "18.42"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "4",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Pontos": "19.15"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "5",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Pontos": "22.71",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "6",
+                    "Equipe Escola": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Pontos": "22.25"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "7",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraubas</i>",
+                    "Pontos": "20.88"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "8",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Pontos": "15.5"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Pontos": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "11",
+                    "Equipe Escola": "Siará Baja<br><i class=\"nomeEscola\">UFC</i>",
+                    "Pontos": "15.14"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "12",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Salvador</i>",
+                    "Pontos": "14.77"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Pontos": "28.36",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "14",
+                    "Equipe Escola": "Zabumbaja Tecnoferr<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Pontos": "17.6"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

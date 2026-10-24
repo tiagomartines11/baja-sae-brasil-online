@@ -1,0 +1,375 @@
+{
+    "evento": "25BR",
+    "prova": "PRD",
+    "nome": "Apresentação de Projeto - Design",
+    "type": "normal",
+    "stored_totals": {
+        "APRDEScom": 0,
+        "APRDESmax": 8.75,
+        "APRDESmin": 2.25,
+        "FINDEScom": 0,
+        "FINDESmax": 10,
+        "FINDESmin": 1.0e-5,
+        "TOPDEScom": 0,
+        "TOPDESmax": 8.75,
+        "TOPDESmin": 7.25
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 6,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 6,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 6
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5.75,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 5.75
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 7.5,
+                "APRDES": 7.5,
+                "FINDES": 10,
+                "TOPDES": 7.5
+            },
+            "pontos": {
+                "APRPTS_DES": 7.5,
+                "APRPTS_DES_FIN": 8.75,
+                "NOTA_DES": 7.5
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 8.75,
+                "APRDES": 8.75,
+                "FINDES": 1.0e-5,
+                "TOPDES": 8.75
+            },
+            "pontos": {
+                "APRPTS_DES": 8.75,
+                "APRPTS_DES_FIN": 7.25,
+                "NOTA_DES": 8.75
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5.25,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 5.25
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 4,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 4,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 4
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 6.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 6.25,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 6.25
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.25,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 2.25
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 7,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 7,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 7
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3.75,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 3.75
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 6.5,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 6.5,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 6.5
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 0,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 0,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 4.75
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 4.5,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 4.5,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 4.5
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5.25,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 5.25
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3.75,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 3.75
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3.25,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 3.25
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5.5,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5.5,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 5.5
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5.75,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 5.75
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 4.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 4.75,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 4.75
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 4.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 4.25,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 4.25
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 3
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 4,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 4,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 4
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.5,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.5,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 2.5
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "FIN": 7.25,
+                "APRDES": 7.25,
+                "FINDES": 8,
+                "TOPDES": 7.25
+            },
+            "pontos": {
+                "APRPTS_DES": 7.25,
+                "APRPTS_DES_FIN": 8.449999699999701,
+                "NOTA_DES": 7.25
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 4.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 4.25,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 4.25
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

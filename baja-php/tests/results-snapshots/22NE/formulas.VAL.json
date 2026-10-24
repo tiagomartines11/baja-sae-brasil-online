@@ -1,0 +1,120 @@
+{
+    "evento": "22NE",
+    "prova": "VAL",
+    "nome": "Design Validation",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 59.88
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 69.7
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 24.75
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 64.46
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 78.82
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 42.04
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 53.41
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 35.45
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 70.77
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 61.78
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 66.92
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 37.27
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 39.08
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": [],
+            "pontos": {
+                "VALPTS": 8.1
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

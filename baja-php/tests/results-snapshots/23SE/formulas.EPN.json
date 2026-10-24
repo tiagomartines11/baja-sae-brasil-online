@@ -1,0 +1,14 @@
+{
+    "evento": "23SE",
+    "prova": "EPN",
+    "nome": "Penalizações Enduro",
+    "type": "rolling",
+    "stored_totals": [],
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

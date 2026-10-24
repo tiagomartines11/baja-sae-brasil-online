@@ -1,0 +1,599 @@
+{
+    "evento": "22BR",
+    "prova": "APD",
+    "nome": "Aval. Proj. Dinâmico",
+    "type": "normal",
+    "stored_totals": {
+        "APDMMcom": 0,
+        "APDMMmax": 18.55,
+        "APDMMmin": 4.05
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "APDPTS_PARC": 10.999999999999998,
+                "APDMM": 10.999999999999998
+            },
+            "pontos": {
+                "APDPTS": 11.859838274932613
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "APDPTS_PARC": 13.2,
+                "APDMM": 13.2
+            },
+            "pontos": {
+                "APDPTS": 14.231805929919137
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "APDPTS_PARC": 10.824999999999998,
+                "APDMM": 10.824999999999998
+            },
+            "pontos": {
+                "APDPTS": 11.671159029649592
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "APDPTS_PARC": 8.600000000000001,
+                "APDMM": 8.600000000000001
+            },
+            "pontos": {
+                "APDPTS": 9.2722371967655
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "APDPTS_PARC": 12.074999999999998,
+                "APDMM": 12.074999999999998
+            },
+            "pontos": {
+                "APDPTS": 13.018867924528298
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "APDPTS_PARC": 10.975,
+                "APDMM": 10.975
+            },
+            "pontos": {
+                "APDPTS": 11.83288409703504
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "APDPTS_PARC": 8.399999999999999,
+                "APDMM": 8.399999999999999
+            },
+            "pontos": {
+                "APDPTS": 9.056603773584904
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "APDPTS_PARC": 9.975000000000003,
+                "APDMM": 9.975000000000003
+            },
+            "pontos": {
+                "APDPTS": 10.754716981132079
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "APDPTS_PARC": 14.75,
+                "APDMM": 14.75
+            },
+            "pontos": {
+                "APDPTS": 15.902964959568733
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "APDPTS_PARC": 10.299999999999997,
+                "APDMM": 10.299999999999997
+            },
+            "pontos": {
+                "APDPTS": 11.105121293800536
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "APDPTS_PARC": 13.149999999999999,
+                "APDMM": 13.149999999999999
+            },
+            "pontos": {
+                "APDPTS": 14.177897574123989
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "APDPTS_PARC": 8.9,
+                "APDMM": 8.9
+            },
+            "pontos": {
+                "APDPTS": 9.595687331536388
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "APDPTS_PARC": 8.225000000000001,
+                "APDMM": 8.225000000000001
+            },
+            "pontos": {
+                "APDPTS": 8.867924528301888
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "APDPTS_PARC": 16.2,
+                "APDMM": 16.2
+            },
+            "pontos": {
+                "APDPTS": 17.466307277628033
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "APDPTS_PARC": 10.374999999999998,
+                "APDMM": 10.374999999999998
+            },
+            "pontos": {
+                "APDPTS": 11.18598382749326
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "APDPTS_PARC": 8.95,
+                "APDMM": 8.95
+            },
+            "pontos": {
+                "APDPTS": 9.649595687331535
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "APDPTS_PARC": 11.924999999999999,
+                "APDMM": 11.924999999999999
+            },
+            "pontos": {
+                "APDPTS": 12.857142857142856
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "APDPTS_PARC": 11.7,
+                "APDMM": 11.7
+            },
+            "pontos": {
+                "APDPTS": 12.614555256064689
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "APDPTS_PARC": 9.250000000000002,
+                "APDMM": 9.250000000000002
+            },
+            "pontos": {
+                "APDPTS": 9.973045822102428
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "APDPTS_PARC": 15.249999999999998,
+                "APDMM": 15.249999999999998
+            },
+            "pontos": {
+                "APDPTS": 16.442048517520213
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "APDPTS_PARC": 12.049999999999999,
+                "APDMM": 12.049999999999999
+            },
+            "pontos": {
+                "APDPTS": 12.991913746630726
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "APDPTS_PARC": 4.05,
+                "APDMM": 4.05
+            },
+            "pontos": {
+                "APDPTS": 4.366576819407008
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "APDPTS_PARC": 9.825,
+                "APDMM": 9.825
+            },
+            "pontos": {
+                "APDPTS": 10.59299191374663
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "APDPTS_PARC": 10.775,
+                "APDMM": 10.775
+            },
+            "pontos": {
+                "APDPTS": 11.617250673854446
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "APDPTS_PARC": 11.599999999999998,
+                "APDMM": 11.599999999999998
+            },
+            "pontos": {
+                "APDPTS": 12.50673854447439
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "APDPTS_PARC": 11.749999999999998,
+                "APDMM": 11.749999999999998
+            },
+            "pontos": {
+                "APDPTS": 12.668463611859837
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "APDPTS_PARC": 12.274999999999997,
+                "APDMM": 12.274999999999997
+            },
+            "pontos": {
+                "APDPTS": 13.23450134770889
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "APDPTS_PARC": 9.749999999999998,
+                "APDMM": 9.749999999999998
+            },
+            "pontos": {
+                "APDPTS": 10.512129380053906
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "APDPTS_PARC": 4.8,
+                "APDMM": 4.8
+            },
+            "pontos": {
+                "APDPTS": 5.175202156334231
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "APDPTS_PARC": 10.699999999999998,
+                "APDMM": 10.699999999999998
+            },
+            "pontos": {
+                "APDPTS": 11.536388140161721
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": {
+                "APDPTS_PARC": 9.025000000000002,
+                "APDMM": 9.025000000000002
+            },
+            "pontos": {
+                "APDPTS": 9.73045822102426
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "APDPTS_PARC": 10.2,
+                "APDMM": 10.2
+            },
+            "pontos": {
+                "APDPTS": 10.997304582210242
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "APDPTS_PARC": 11.799999999999999,
+                "APDMM": 11.799999999999999
+            },
+            "pontos": {
+                "APDPTS": 12.722371967654984
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "APDPTS_PARC": 10.874999999999998,
+                "APDMM": 10.874999999999998
+            },
+            "pontos": {
+                "APDPTS": 11.725067385444742
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "APDPTS_PARC": 12.124999999999998,
+                "APDMM": 12.124999999999998
+            },
+            "pontos": {
+                "APDPTS": 13.072776280323447
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "APDPTS_PARC": 13.749999999999998,
+                "APDMM": 13.749999999999998
+            },
+            "pontos": {
+                "APDPTS": 14.824797843665765
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "APDPTS_PARC": 8.375,
+                "APDMM": 8.375
+            },
+            "pontos": {
+                "APDPTS": 9.029649595687331
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": {
+                "APDPTS_PARC": 11.149999999999999,
+                "APDMM": 11.149999999999999
+            },
+            "pontos": {
+                "APDPTS": 12.021563342318057
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "APDPTS_PARC": 9.475,
+                "APDMM": 9.475
+            },
+            "pontos": {
+                "APDPTS": 10.215633423180593
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "APDPTS_PARC": 16.099999999999998,
+                "APDMM": 16.099999999999998
+            },
+            "pontos": {
+                "APDPTS": 17.358490566037734
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "APDPTS_PARC": 18.55,
+                "APDMM": 18.55
+            },
+            "pontos": {
+                "APDPTS": 20
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": {
+                "APDPTS_PARC": 10.499999999999998,
+                "APDMM": 10.499999999999998
+            },
+            "pontos": {
+                "APDPTS": 11.32075471698113
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "APDPTS_PARC": 9.275,
+                "APDMM": 9.275
+            },
+            "pontos": {
+                "APDPTS": 10
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": {
+                "APDPTS_PARC": 11.749999999999996,
+                "APDMM": 11.749999999999996
+            },
+            "pontos": {
+                "APDPTS": 12.668463611859835
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": {
+                "APDPTS_PARC": 13.85,
+                "APDMM": 13.85
+            },
+            "pontos": {
+                "APDPTS": 14.932614555256064
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "APDPTS_PARC": 8.175,
+                "APDMM": 8.175
+            },
+            "pontos": {
+                "APDPTS": 8.814016172506738
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "APDPTS_PARC": 9.250000000000002,
+                "APDMM": 9.250000000000002
+            },
+            "pontos": {
+                "APDPTS": 9.973045822102428
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "APDPTS_PARC": 10.7,
+                "APDMM": 10.7
+            },
+            "pontos": {
+                "APDPTS": 11.536388140161725
+            }
+        },
+        {
+            "equipe": 59,
+            "vars": {
+                "APDPTS_PARC": 9.35,
+                "APDMM": 9.35
+            },
+            "pontos": {
+                "APDPTS": 10.080862533692722
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": {
+                "APDPTS_PARC": 16,
+                "APDMM": 16
+            },
+            "pontos": {
+                "APDPTS": 17.250673854447438
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": {
+                "APDPTS_PARC": 12.874999999999998,
+                "APDMM": 12.874999999999998
+            },
+            "pontos": {
+                "APDPTS": 13.88140161725067
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": {
+                "APDPTS_PARC": 13.825000000000001,
+                "APDMM": 13.825000000000001
+            },
+            "pontos": {
+                "APDPTS": 14.90566037735849
+            }
+        },
+        {
+            "equipe": 63,
+            "vars": {
+                "APDPTS_PARC": 8.65,
+                "APDMM": 8.65
+            },
+            "pontos": {
+                "APDPTS": 9.326145552560646
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": {
+                "APDPTS_PARC": 9.175,
+                "APDMM": 9.175
+            },
+            "pontos": {
+                "APDPTS": 9.892183288409703
+            }
+        },
+        {
+            "equipe": 65,
+            "vars": {
+                "APDPTS_PARC": 4.65,
+                "APDMM": 4.65
+            },
+            "pontos": {
+                "APDPTS": 5.013477088948787
+            }
+        },
+        {
+            "equipe": 66,
+            "vars": {
+                "APDPTS_PARC": 8.024999999999999,
+                "APDMM": 8.024999999999999
+            },
+            "pontos": {
+                "APDPTS": 8.652291105121291
+            }
+        },
+        {
+            "equipe": 68,
+            "vars": {
+                "APDPTS_PARC": 9.375,
+                "APDMM": 9.375
+            },
+            "pontos": {
+                "APDPTS": 10.107816711590296
+            }
+        },
+        {
+            "equipe": 69,
+            "vars": {
+                "APDPTS_PARC": 5.2,
+                "APDMM": 5.2
+            },
+            "pontos": {
+                "APDPTS": 5.606469002695418
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

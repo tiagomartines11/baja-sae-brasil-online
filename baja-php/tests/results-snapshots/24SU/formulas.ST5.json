@@ -1,0 +1,103 @@
+{
+    "evento": "24SU",
+    "prova": "ST5",
+    "nome": "Suspensão 5",
+    "type": "normal",
+    "stored_totals": {
+        "TCSUS5com": 0,
+        "TCSUS5max": 14.74,
+        "TCSUS5min": 5.503333333333333
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "TC5_1": 9.196666666666667,
+                "TC5_2": 5.503333333333333,
+                "PESO_5": 15,
+                "CORR5_1": 1,
+                "CORR5_2": 1,
+                "TCSUS5": 5.503333333333333
+            },
+            "pontos": {
+                "SUS5PTS": 15
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "TC5_1": 14.74,
+                "TC5_2": null,
+                "PESO_5": 15,
+                "CORR5_1": 1,
+                "CORR5_2": null,
+                "TCSUS5": 14.74
+            },
+            "pontos": {
+                "SUS5PTS": 15
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC5_1": 12.126666666666667,
+                "TC5_2": null,
+                "PESO_5": 15,
+                "CORR5_1": 1,
+                "CORR5_2": null,
+                "TCSUS5": 12.126666666666667
+            },
+            "pontos": {
+                "SUS5PTS": 15
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "TC5_1": 10.043333333333335,
+                "TC5_2": 9.299999999999999,
+                "PESO_5": 15,
+                "CORR5_1": 0.8,
+                "CORR5_2": 0.6,
+                "TCSUS5": 9.299999999999999
+            },
+            "pontos": {
+                "SUS5PTS": 12
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC5_1": 11.033333333333333,
+                "TC5_2": 8.486666666666666,
+                "PESO_5": 15,
+                "CORR5_1": 1,
+                "CORR5_2": 1,
+                "TCSUS5": 8.486666666666666
+            },
+            "pontos": {
+                "SUS5PTS": 15
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC5_1": 7.566666666666666,
+                "TC5_2": 7.853333333333333,
+                "PESO_5": 15,
+                "CORR5_1": 1,
+                "CORR5_2": 1,
+                "TCSUS5": 7.566666666666666
+            },
+            "pontos": {
+                "SUS5PTS": 15
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

@@ -1,0 +1,640 @@
+{
+    "evento": "22BR",
+    "prova": "REL",
+    "nome": "Relatório",
+    "type": "normal",
+    "stored_totals": {
+        "NTcom": 0,
+        "NTmax": 8.601136,
+        "NTmin": 0.609091
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "NT": 4.467273
+            },
+            "pontos": {
+                "RELPTS": 62.33
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "NT": 7.531818
+            },
+            "pontos": {
+                "RELPTS": 105.08
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "NT": 4.924091
+            },
+            "pontos": {
+                "RELPTS": 68.7
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "NT": 3.172727
+            },
+            "pontos": {
+                "RELPTS": 44.26
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "NT": 5.844318
+            },
+            "pontos": {
+                "RELPTS": 81.54
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "NT": 5.652273
+            },
+            "pontos": {
+                "RELPTS": 58.86
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "NT": 1.427273
+            },
+            "pontos": {
+                "RELPTS": 19.91
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "NT": 6.640909
+            },
+            "pontos": {
+                "RELPTS": 92.65
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "NT": 3.032364
+            },
+            "pontos": {
+                "RELPTS": 33.85
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "NT": 4.967273
+            },
+            "pontos": {
+                "RELPTS": 69.3
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "NT": 4.727273
+            },
+            "pontos": {
+                "RELPTS": 65.95
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "NT": 6.611591
+            },
+            "pontos": {
+                "RELPTS": 92.24
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "NT": 5.690909
+            },
+            "pontos": {
+                "RELPTS": 79.4
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "NT": 5.535227
+            },
+            "pontos": {
+                "RELPTS": 77.23
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "NT": 2.794318
+            },
+            "pontos": {
+                "RELPTS": 38.99
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "NT": 2.781818
+            },
+            "pontos": {
+                "RELPTS": 38.81
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "NT": 5.55
+            },
+            "pontos": {
+                "RELPTS": 77.43
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "NT": 5.722545
+            },
+            "pontos": {
+                "RELPTS": 79.84
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "NT": 7.051818
+            },
+            "pontos": {
+                "RELPTS": 98.38
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "NT": 1.959091
+            },
+            "pontos": {
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "NT": 5.403409
+            },
+            "pontos": {
+                "RELPTS": 75.39
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "NT": 3.931818
+            },
+            "pontos": {
+                "RELPTS": 33.88
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "NT": 6.295455
+            },
+            "pontos": {
+                "RELPTS": 87.83
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "NT": 8.601136
+            },
+            "pontos": {
+                "RELPTS": 120
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "NT": 3.936364
+            },
+            "pontos": {
+                "RELPTS": 54.92
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "NT": 0
+            },
+            "pontos": {
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "NT": 4.787136
+            },
+            "pontos": {
+                "RELPTS": 66.79
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "NT": 2.172727
+            },
+            "pontos": {
+                "RELPTS": 24.25
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "NT": 4.618182
+            },
+            "pontos": {
+                "RELPTS": 51.54
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "NT": 3.2625
+            },
+            "pontos": {
+                "RELPTS": 45.52
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "NT": 4.422727
+            },
+            "pontos": {
+                "RELPTS": 61.7
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "NT": 0
+            },
+            "pontos": {
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "NT": 3.8625
+            },
+            "pontos": {
+                "RELPTS": 43.89
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "NT": 7.490909
+            },
+            "pontos": {
+                "RELPTS": 104.51
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "NT": 5.318182
+            },
+            "pontos": {
+                "RELPTS": 74.2
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "NT": 2.220455
+            },
+            "pontos": {
+                "RELPTS": 24.78
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "NT": 7.379091
+            },
+            "pontos": {
+                "RELPTS": 102.95
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": {
+                "NT": 5.845455
+            },
+            "pontos": {
+                "RELPTS": 81.55
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "NT": 6.317045
+            },
+            "pontos": {
+                "RELPTS": 88.13
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "NT": 4.279545
+            },
+            "pontos": {
+                "RELPTS": 59.71
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "NT": 6.429545
+            },
+            "pontos": {
+                "RELPTS": 89.7
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "NT": 5.463636
+            },
+            "pontos": {
+                "RELPTS": 76.23
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "NT": 7.586364
+            },
+            "pontos": {
+                "RELPTS": 105.84
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "NT": 5.068182
+            },
+            "pontos": {
+                "RELPTS": 70.71
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": {
+                "NT": 5.421591
+            },
+            "pontos": {
+                "RELPTS": 75.64
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "NT": 4.956364
+            },
+            "pontos": {
+                "RELPTS": 69.15
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "NT": 3.343182
+            },
+            "pontos": {
+                "RELPTS": 46.64
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "NT": 7.604545
+            },
+            "pontos": {
+                "RELPTS": 106.1
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "NT": 7.956818
+            },
+            "pontos": {
+                "RELPTS": 111.01
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": {
+                "NT": 6.045455
+            },
+            "pontos": {
+                "RELPTS": 84.34
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "NT": 4.460227
+            },
+            "pontos": {
+                "RELPTS": 62.23
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": {
+                "NT": 4.109091
+            },
+            "pontos": {
+                "RELPTS": 57.33
+            }
+        },
+        {
+            "equipe": 54,
+            "vars": {
+                "NT": 0.609091
+            },
+            "pontos": {
+                "RELPTS": 6.8
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": {
+                "NT": 8.202136
+            },
+            "pontos": {
+                "RELPTS": 114.43
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "NT": 4.95
+            },
+            "pontos": {
+                "RELPTS": 69.06
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "NT": 5.536364
+            },
+            "pontos": {
+                "RELPTS": 77.24
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "NT": 3.8875
+            },
+            "pontos": {
+                "RELPTS": 54.24
+            }
+        },
+        {
+            "equipe": 59,
+            "vars": {
+                "NT": 5.031818
+            },
+            "pontos": {
+                "RELPTS": 56.16
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": {
+                "NT": 6.943182
+            },
+            "pontos": {
+                "RELPTS": 96.87
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": {
+                "NT": 1.378409
+            },
+            "pontos": {
+                "RELPTS": 15.38
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": {
+                "NT": 6.304545
+            },
+            "pontos": {
+                "RELPTS": 87.96
+            }
+        },
+        {
+            "equipe": 63,
+            "vars": {
+                "NT": 4.931818
+            },
+            "pontos": {
+                "RELPTS": 68.81
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": {
+                "NT": 6.776909
+            },
+            "pontos": {
+                "RELPTS": 94.55
+            }
+        },
+        {
+            "equipe": 65,
+            "vars": {
+                "NT": 2.683636
+            },
+            "pontos": {
+                "RELPTS": 29.95
+            }
+        },
+        {
+            "equipe": 66,
+            "vars": {
+                "NT": 3.445455
+            },
+            "pontos": {
+                "RELPTS": 48.07
+            }
+        },
+        {
+            "equipe": 67,
+            "vars": {
+                "NT": 3.349091
+            },
+            "pontos": {
+                "RELPTS": 46.73
+            }
+        },
+        {
+            "equipe": 68,
+            "vars": {
+                "NT": 4.029545
+            },
+            "pontos": {
+                "RELPTS": 46.22
+            }
+        },
+        {
+            "equipe": 69,
+            "vars": {
+                "NT": 2.818182
+            },
+            "pontos": {
+                "RELPTS": 4.32
+            }
+        },
+        {
+            "equipe": 70,
+            "vars": {
+                "NT": 1.909091
+            },
+            "pontos": {
+                "RELPTS": 21.31
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

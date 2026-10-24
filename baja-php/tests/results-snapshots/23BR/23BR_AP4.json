@@ -1,0 +1,59 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23BR",
+    "id": "23BR_AP4",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Projeto 4x4"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "17",
+                    "Equipe Escola": "Car-kará Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Projeto 4x4": "<b>12.41</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "41",
+                    "Equipe Escola": "FEI Baja 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Projeto 4x4": "<b>20</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "50",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO - RECIFE</i>",
+                    "Projeto 4x4": "<b>8.28</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "55",
+                    "Equipe Escola": "Poli USP 1<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA POLITÉCNICA</i>",
+                    "Projeto 4x4": "<b>12.41</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "60",
+                    "Equipe Escola": "EESC USP Tractian<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA DE ENGENHARIA DE SÃO CARLOS</i>",
+                    "Projeto 4x4": "<b>10.34</b>"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

@@ -1,0 +1,374 @@
+{
+    "evento": "23SU",
+    "prova": "ET1",
+    "nome": "Entregável AVF",
+    "type": "normal",
+    "stored_totals": null,
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "ACE_1": null,
+                "ACE_2": null,
+                "VEL_1": null,
+                "VEL_2": null,
+                "DECEL_1": null,
+                "DECEL_2": 0,
+                "ACE": null,
+                "VEL": null,
+                "DECEL": 0
+            },
+            "pontos": {
+                "ACEPTS": null,
+                "FREPTS": null,
+                "VELPTS": null
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [
+            1,
+            2,
+            3,
+            5,
+            6,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            16,
+            17,
+            18,
+            20,
+            21
+        ],
+        "pontos": [
+            1,
+            2,
+            3,
+            5,
+            6,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            16,
+            17,
+            18,
+            20,
+            21
+        ]
+    },
+    "recompute_error": null,
+    "error": null
+}

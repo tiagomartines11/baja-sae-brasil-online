@@ -24,3 +24,8 @@ docker-compose*.yml text eol=lf
 *.tar  binary
 *.gz   binary
 *.zip  binary
+
+# Results snapshots are compared as JSON, so line endings would not break
+# --check; keeping them LF keeps "--update twice gives no diff" true on
+# every checkout too.
+baja-php/tests/results-snapshots/** text eol=lf

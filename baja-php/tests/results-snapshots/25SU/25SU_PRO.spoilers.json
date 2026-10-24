@@ -1,0 +1,232 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "25SU",
+    "id": "25SU_PRO",
+    "spoilers": true,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Entregável",
+                "Apresentação de Projeto",
+                "Projeto Dinâmico",
+                "Desafio CAD",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "8.95",
+                    "Desafio CAD": "0",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "2",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "10.35",
+                    "Desafio CAD": "13.5",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "6.55",
+                    "Desafio CAD": "9",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "13.75",
+                    "Desafio CAD": "27",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "5",
+                    "Equipe Escola": "Baja Guaicurus<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "0",
+                    "Desafio CAD": "9",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "Pelznickel UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário da Fundação Educacional de Brusque - UNIFEBE</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "8.45",
+                    "Desafio CAD": "0",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "15",
+                    "Desafio CAD": "30",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "8",
+                    "Equipe Escola": "BajaSATC<br><i class=\"nomeEscola\">Associação Beneficente da Indústria Carbonífera de Santa Catarina - SATC</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "11.5",
+                    "Desafio CAD": "22.5",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Equipe Escola": "Londribaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Londrina</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "0",
+                    "Desafio CAD": "0",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Coyote Baja<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Caxias do Sul</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "10.05",
+                    "Desafio CAD": "9",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "11",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "0",
+                    "Desafio CAD": "13.5",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "0",
+                    "Desafio CAD": "18",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "10.75",
+                    "Desafio CAD": "13.5",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "13",
+                    "Desafio CAD": "18",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "15",
+                    "Equipe Escola": "Bajagual<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "0",
+                    "Desafio CAD": "9",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "16",
+                    "Equipe Escola": "CTJ Baja<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina - Joinville</i>",
+                    "Entregável": "0",
+                    "Apresentação de Projeto": "SPOILERS",
+                    "Projeto Dinâmico": "0",
+                    "Desafio CAD": "0",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null
+}

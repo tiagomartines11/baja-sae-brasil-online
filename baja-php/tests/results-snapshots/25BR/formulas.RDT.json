@@ -1,0 +1,667 @@
+{
+    "evento": "25BR",
+    "prova": "RDT",
+    "nome": "Relatório de Desafio Técnico",
+    "type": "normal",
+    "stored_totals": {
+        "NT_Dcom": 0,
+        "NT_Dmax": 95.28,
+        "NT_Dmin": 11.08
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "NT_D": 88.44
+            },
+            "pontos": {
+                "RDTNOR": 46.41057934508816,
+                "RDTPEN": 0,
+                "RDTPOR": 88.44,
+                "RDTPTS": 46.41057934508816
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "NT_D": 88.38
+            },
+            "pontos": {
+                "RDTNOR": 46.379093198992436,
+                "RDTPEN": 0,
+                "RDTPOR": 88.38,
+                "RDTPTS": 46.379093198992436
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "NT_D": 78
+            },
+            "pontos": {
+                "RDTNOR": 40.931989924433246,
+                "RDTPEN": 0,
+                "RDTPOR": 78,
+                "RDTPTS": 40.931989924433246
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "NT_D": 60.17
+            },
+            "pontos": {
+                "RDTNOR": 31.575356842989084,
+                "RDTPEN": 0,
+                "RDTPOR": 60.17,
+                "RDTPTS": 31.575356842989084
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "NT_D": 86.11
+            },
+            "pontos": {
+                "RDTNOR": 45.18786733837112,
+                "RDTPEN": 0,
+                "RDTPOR": 86.11,
+                "RDTPTS": 45.18786733837112
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "NT_D": 88.15
+            },
+            "pontos": {
+                "RDTNOR": 46.258396305625524,
+                "RDTPEN": 0,
+                "RDTPOR": 88.15,
+                "RDTPTS": 46.258396305625524
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "NT_D": 59.99
+            },
+            "pontos": {
+                "RDTNOR": 31.48089840470193,
+                "RDTPEN": 0,
+                "RDTPOR": 59.99,
+                "RDTPTS": 31.48089840470193
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "NT_D": 89.58
+            },
+            "pontos": {
+                "RDTNOR": 47.0088161209068,
+                "RDTPEN": 0,
+                "RDTPOR": 89.58,
+                "RDTPTS": 47.0088161209068
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "NT_D": 63.14
+            },
+            "pontos": {
+                "RDTNOR": 33.13392107472712,
+                "RDTPEN": 0,
+                "RDTPOR": 63.14,
+                "RDTPTS": 33.13392107472712
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "NT_D": 95.28
+            },
+            "pontos": {
+                "RDTNOR": 50,
+                "RDTPEN": 0,
+                "RDTPOR": 95.28,
+                "RDTPTS": 50
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "NT_D": 61.54
+            },
+            "pontos": {
+                "RDTNOR": 32.29429051217465,
+                "RDTPEN": 0,
+                "RDTPOR": 61.54,
+                "RDTPTS": 32.29429051217465
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "NT_D": 63.35
+            },
+            "pontos": {
+                "RDTNOR": 33.24412258606213,
+                "RDTPEN": 0,
+                "RDTPOR": 63.35,
+                "RDTPTS": 33.24412258606213
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "NT_D": 74.08
+            },
+            "pontos": {
+                "RDTNOR": 38.87489504617968,
+                "RDTPEN": 0,
+                "RDTPOR": 74.08,
+                "RDTPTS": 38.87489504617968
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "NT_D": 11.08
+            },
+            "pontos": {
+                "RDTNOR": 5.8144416456759025,
+                "RDTPEN": 0,
+                "RDTPOR": 11.08,
+                "RDTPTS": 5.8144416456759025
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "NT_D": 87.78
+            },
+            "pontos": {
+                "RDTNOR": 46.06423173803527,
+                "RDTPEN": 0,
+                "RDTPOR": 87.78,
+                "RDTPTS": 46.06423173803527
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "NT_D": 77.19
+            },
+            "pontos": {
+                "RDTNOR": 40.50692695214105,
+                "RDTPEN": 0,
+                "RDTPOR": 77.19,
+                "RDTPTS": 40.50692695214105
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "NT_D": 81
+            },
+            "pontos": {
+                "RDTNOR": 42.50629722921914,
+                "RDTPEN": 0,
+                "RDTPOR": 81,
+                "RDTPTS": 42.50629722921914
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "NT_D": 80.03
+            },
+            "pontos": {
+                "RDTNOR": 41.997271200671705,
+                "RDTPEN": 0,
+                "RDTPOR": 80.03,
+                "RDTPTS": 41.997271200671705
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "NT_D": 71.11
+            },
+            "pontos": {
+                "RDTNOR": 37.31633081444164,
+                "RDTPEN": 0,
+                "RDTPOR": 71.11,
+                "RDTPTS": 37.31633081444164
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "NT_D": 92.6
+            },
+            "pontos": {
+                "RDTNOR": 48.593618807724596,
+                "RDTPEN": 0,
+                "RDTPOR": 92.6,
+                "RDTPTS": 48.593618807724596
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "NT_D": 42.43
+            },
+            "pontos": {
+                "RDTNOR": 22.265952980688496,
+                "RDTPEN": 0,
+                "RDTPOR": 42.43,
+                "RDTPTS": 22.265952980688496
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "NT_D": 86.14
+            },
+            "pontos": {
+                "RDTNOR": 45.20361041141898,
+                "RDTPEN": 0,
+                "RDTPOR": 86.14,
+                "RDTPTS": 45.20361041141898
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "NT_D": 74.35
+            },
+            "pontos": {
+                "RDTNOR": 39.01658270361041,
+                "RDTPEN": 0,
+                "RDTPOR": 74.35,
+                "RDTPTS": 39.01658270361041
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "NT_D": 68.67
+            },
+            "pontos": {
+                "RDTNOR": 36.035894206549116,
+                "RDTPEN": 0,
+                "RDTPOR": 68.67,
+                "RDTPTS": 36.035894206549116
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "NT_D": 83.26
+            },
+            "pontos": {
+                "RDTNOR": 43.69227539882452,
+                "RDTPEN": 0,
+                "RDTPOR": 83.26,
+                "RDTPTS": 43.69227539882452
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "NT_D": 41.33
+            },
+            "pontos": {
+                "RDTNOR": 21.68870696893367,
+                "RDTPEN": 0,
+                "RDTPOR": 41.33,
+                "RDTPTS": 21.68870696893367
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "NT_D": 74.24
+            },
+            "pontos": {
+                "RDTNOR": 38.958858102434924,
+                "RDTPEN": 0,
+                "RDTPOR": 74.24,
+                "RDTPTS": 38.958858102434924
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "NT_D": 18.32
+            },
+            "pontos": {
+                "RDTNOR": 9.613769941225861,
+                "RDTPEN": 0,
+                "RDTPOR": 18.32,
+                "RDTPTS": 9.613769941225861
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "NT_D": 0
+            },
+            "pontos": {
+                "RDTNOR": 0,
+                "RDTPEN": 0,
+                "RDTPOR": 0,
+                "RDTPTS": 0
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "NT_D": 75.82
+            },
+            "pontos": {
+                "RDTNOR": 39.7879932829555,
+                "RDTPEN": 0,
+                "RDTPOR": 75.82,
+                "RDTPTS": 39.7879932829555
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "NT_D": 79.38
+            },
+            "pontos": {
+                "RDTNOR": 41.65617128463476,
+                "RDTPEN": 10,
+                "RDTPOR": 79.38,
+                "RDTPTS": 31.65617128463476
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "NT_D": 49.67
+            },
+            "pontos": {
+                "RDTNOR": 26.065281276238455,
+                "RDTPEN": 0,
+                "RDTPOR": 49.67,
+                "RDTPTS": 26.065281276238455
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "NT_D": 66.22
+            },
+            "pontos": {
+                "RDTNOR": 34.75020990764064,
+                "RDTPEN": 0,
+                "RDTPOR": 66.22,
+                "RDTPTS": 34.75020990764064
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "NT_D": 43.4
+            },
+            "pontos": {
+                "RDTNOR": 22.774979009235935,
+                "RDTPEN": 0,
+                "RDTPOR": 43.4,
+                "RDTPTS": 22.774979009235935
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "NT_D": 64.14
+            },
+            "pontos": {
+                "RDTNOR": 33.65869017632242,
+                "RDTPEN": 0,
+                "RDTPOR": 64.14,
+                "RDTPTS": 33.65869017632242
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "NT_D": 39.47
+            },
+            "pontos": {
+                "RDTNOR": 20.712636439966413,
+                "RDTPEN": 0,
+                "RDTPOR": 39.47,
+                "RDTPTS": 20.712636439966413
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "NT_D": 21.51
+            },
+            "pontos": {
+                "RDTNOR": 11.287783375314863,
+                "RDTPEN": 20,
+                "RDTPOR": 21.51,
+                "RDTPTS": 0
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": {
+                "NT_D": 36.26
+            },
+            "pontos": {
+                "RDTNOR": 19.028127623845506,
+                "RDTPEN": 10,
+                "RDTPOR": 36.26,
+                "RDTPTS": 9.028127623845506
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "NT_D": 76.6
+            },
+            "pontos": {
+                "RDTNOR": 40.19731318219983,
+                "RDTPEN": 0,
+                "RDTPOR": 76.6,
+                "RDTPTS": 40.19731318219983
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "NT_D": 54.82
+            },
+            "pontos": {
+                "RDTNOR": 28.767842149454243,
+                "RDTPEN": 0,
+                "RDTPOR": 54.82,
+                "RDTPTS": 28.767842149454243
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "NT_D": 0
+            },
+            "pontos": {
+                "RDTNOR": 0,
+                "RDTPEN": 0,
+                "RDTPOR": 0,
+                "RDTPTS": 0
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "NT_D": 73.71
+            },
+            "pontos": {
+                "RDTNOR": 38.68073047858942,
+                "RDTPEN": 20,
+                "RDTPOR": 73.71,
+                "RDTPTS": 18.680730478589417
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "NT_D": 53.39
+            },
+            "pontos": {
+                "RDTNOR": 28.017422334172963,
+                "RDTPEN": 0,
+                "RDTPOR": 53.39,
+                "RDTPTS": 28.017422334172963
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "NT_D": 61.5
+            },
+            "pontos": {
+                "RDTNOR": 32.27329974811083,
+                "RDTPEN": 0,
+                "RDTPOR": 61.5,
+                "RDTPTS": 32.27329974811083
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "NT_D": 86.79
+            },
+            "pontos": {
+                "RDTNOR": 45.544710327455924,
+                "RDTPEN": 0,
+                "RDTPOR": 86.79,
+                "RDTPTS": 45.544710327455924
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "NT_D": 0
+            },
+            "pontos": {
+                "RDTNOR": 0,
+                "RDTPEN": 0,
+                "RDTPOR": 0,
+                "RDTPTS": 0
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "NT_D": 54.97
+            },
+            "pontos": {
+                "RDTNOR": 28.846557514693533,
+                "RDTPEN": 0,
+                "RDTPOR": 54.97,
+                "RDTPTS": 28.846557514693533
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "NT_D": 70.24
+            },
+            "pontos": {
+                "RDTNOR": 36.85978169605374,
+                "RDTPEN": 0,
+                "RDTPOR": 70.24,
+                "RDTPTS": 36.85978169605374
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": {
+                "NT_D": 66.01
+            },
+            "pontos": {
+                "RDTNOR": 34.640008396305625,
+                "RDTPEN": 0,
+                "RDTPOR": 66.01,
+                "RDTPTS": 34.640008396305625
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "NT_D": 64.15
+            },
+            "pontos": {
+                "RDTNOR": 33.663937867338376,
+                "RDTPEN": 20,
+                "RDTPOR": 64.15,
+                "RDTPTS": 13.663937867338376
+            }
+        },
+        {
+            "equipe": 54,
+            "vars": {
+                "NT_D": 56.71
+            },
+            "pontos": {
+                "RDTNOR": 29.759655751469356,
+                "RDTPEN": 0,
+                "RDTPOR": 56.71,
+                "RDTPTS": 29.759655751469356
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "NT_D": 57.04
+            },
+            "pontos": {
+                "RDTNOR": 29.9328295549958,
+                "RDTPEN": 0,
+                "RDTPOR": 57.04,
+                "RDTPTS": 29.9328295549958
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "NT_D": 0
+            },
+            "pontos": {
+                "RDTNOR": 0,
+                "RDTPEN": 0,
+                "RDTPOR": 0,
+                "RDTPTS": 0
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "NT_D": 65.49
+            },
+            "pontos": {
+                "RDTNOR": 34.367128463476064,
+                "RDTPEN": 10,
+                "RDTPOR": 65.49,
+                "RDTPTS": 24.367128463476064
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

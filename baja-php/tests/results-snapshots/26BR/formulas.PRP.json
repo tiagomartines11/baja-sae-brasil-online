@@ -1,0 +1,361 @@
+{
+    "evento": "26BR",
+    "prova": "PRP",
+    "nome": "Apresentação de Projeto - Powertrain",
+    "type": "normal",
+    "stored_totals": {
+        "APRPWTcom": 0,
+        "APRPWTmax": 8.1125,
+        "APRPWTmin": 2.1,
+        "FINPWTcom": 0,
+        "FINPWTmax": 10,
+        "FINPWTmin": 1.0e-6,
+        "TOPPWTcom": -3.5,
+        "TOPPWTmax": 8.1125,
+        "TOPPWTmin": 7.125
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 6.975,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 6.975,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 6.975
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 6.675,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 6.675,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 6.675
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 7.125,
+                "APRPWT": 7.125,
+                "FINPWT": 1.0e-6,
+                "TOPPWT": 7.125
+            },
+            "pontos": {
+                "APRPTS_PWT": 7.125,
+                "APRPTS_PWT_FIN": 7.125,
+                "NOTA_PWT": 7.125
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 6.0125,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 6.0125,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 6.0125
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 6.3375,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 6.3375,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 6.3375
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 7.375,
+                "APRPWT": 7.375,
+                "FINPWT": 10,
+                "TOPPWT": 7.375
+            },
+            "pontos": {
+                "APRPTS_PWT": 7.375,
+                "APRPTS_PWT_FIN": 8.1125,
+                "NOTA_PWT": 7.375
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 4.675,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 4.675,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 4.675
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 2.675,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 2.675,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 2.675
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 3.2625,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 3.2625,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 3.2625
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 3.9625,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 3.9625,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 3.9625
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 4.3125,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 4.3125,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 4.3125
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 6.8125,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 6.8125,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 6.8125
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 4.3625,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 4.3625,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 4.3625
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "FIN": 8.1125,
+                "APRPWT": 8.1125,
+                "FINPWT": 5,
+                "TOPPWT": 8.1125
+            },
+            "pontos": {
+                "APRPTS_PWT": 8.1125,
+                "APRPTS_PWT_FIN": 7.618749950624995,
+                "NOTA_PWT": 8.1125
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 2.1,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 2.1,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 2.1
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 4.1625,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 4.1625,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 4.1625
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 0,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 0,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 0
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 6.4375,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 6.4375,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 6.4375
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 5.1625,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 5.1625,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 5.1625
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 6.975,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 6.975,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 6.975
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 3.8375,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 3.8375,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 3.8375
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 3.6875,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 3.6875,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 3.6875
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 3.1625,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 3.1625,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 3.1625
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 4.2375,
+                "FINPWT": 0,
+                "TOPPWT": null
+            },
+            "pontos": {
+                "APRPTS_PWT": 4.2375,
+                "APRPTS_PWT_FIN": 0,
+                "NOTA_PWT": 4.2375
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

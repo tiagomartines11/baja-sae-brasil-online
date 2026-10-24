@@ -1,0 +1,88 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "25SU",
+    "id": "25SU_MAN",
+    "spoilers": true,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo",
+                "Tempo Corrigido",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Tempo": "SPOILERS",
+                    "Tempo Corrigido": "SPOILERS",
+                    "Pontos": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "2",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Tempo": "SPOILERS",
+                    "Tempo Corrigido": "SPOILERS",
+                    "Pontos": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
+                    "Tempo": "SPOILERS",
+                    "Tempo Corrigido": "SPOILERS",
+                    "Pontos": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Tempo": "SPOILERS",
+                    "Tempo Corrigido": "SPOILERS",
+                    "Pontos": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Tempo": "SPOILERS",
+                    "Tempo Corrigido": "SPOILERS",
+                    "Pontos": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Tempo": "SPOILERS",
+                    "Tempo Corrigido": "SPOILERS",
+                    "Pontos": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]<br><span style=\"color: yellow\">Sujeito a Alterações sem Prévio Aviso</span>"
+        }
+    ],
+    "error": null
+}

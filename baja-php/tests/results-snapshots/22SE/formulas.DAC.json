@@ -1,0 +1,378 @@
+{
+    "evento": "22SE",
+    "prova": "DAC",
+    "nome": "Desafio Técnico - Acuracidade",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "NOT": 13.930783242258652,
+                "POR": 38.239999999999995
+            },
+            "pontos": {
+                "DAC_NOT": 13.930783242258652,
+                "DAC_POR": 38.239999999999995
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "NOT": 6.429872495446266,
+                "POR": 17.65
+            },
+            "pontos": {
+                "DAC_NOT": 6.429872495446266,
+                "DAC_POR": 17.65
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "NOT": 27.322404371584703,
+                "POR": 75
+            },
+            "pontos": {
+                "DAC_NOT": 27.322404371584703,
+                "DAC_POR": 75
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "NOT": 26.25136612021858,
+                "POR": 72.06
+            },
+            "pontos": {
+                "DAC_NOT": 26.25136612021858,
+                "DAC_POR": 72.06
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "NOT": 1.0710382513661203,
+                "POR": 2.94
+            },
+            "pontos": {
+                "DAC_NOT": 1.0710382513661203,
+                "DAC_POR": 2.94
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "NOT": 27.857923497267763,
+                "POR": 76.47
+            },
+            "pontos": {
+                "DAC_NOT": 27.857923497267763,
+                "DAC_POR": 76.47
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "NOT": 27.857923497267763,
+                "POR": 76.47
+            },
+            "pontos": {
+                "DAC_NOT": 27.857923497267763,
+                "DAC_POR": 76.47
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "NOT": 19.821493624772312,
+                "POR": 54.41
+            },
+            "pontos": {
+                "DAC_NOT": 19.821493624772312,
+                "DAC_POR": 54.41
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "NOT": 24.109289617486343,
+                "POR": 66.18
+            },
+            "pontos": {
+                "DAC_NOT": 24.109289617486343,
+                "DAC_POR": 66.18
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "NOT": 26.78688524590164,
+                "POR": 73.53
+            },
+            "pontos": {
+                "DAC_NOT": 26.78688524590164,
+                "DAC_POR": 73.53
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "NOT": 23.57377049180328,
+                "POR": 64.71000000000001
+            },
+            "pontos": {
+                "DAC_NOT": 23.57377049180328,
+                "DAC_POR": 64.71000000000001
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "NOT": 21.963570127504557,
+                "POR": 60.29
+            },
+            "pontos": {
+                "DAC_NOT": 21.963570127504557,
+                "DAC_POR": 60.29
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "NOT": 27.857923497267763,
+                "POR": 76.47
+            },
+            "pontos": {
+                "DAC_NOT": 27.857923497267763,
+                "DAC_POR": 76.47
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "NOT": 22.499089253187616,
+                "POR": 61.760000000000005
+            },
+            "pontos": {
+                "DAC_NOT": 22.499089253187616,
+                "DAC_POR": 61.760000000000005
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "NOT": 7.500910746812387,
+                "POR": 20.590000000000003
+            },
+            "pontos": {
+                "DAC_NOT": 7.500910746812387,
+                "DAC_POR": 20.590000000000003
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "NOT": 30,
+                "POR": 82.35
+            },
+            "pontos": {
+                "DAC_NOT": 30,
+                "DAC_POR": 82.35
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "NOT": 29.464480874316937,
+                "POR": 80.88
+            },
+            "pontos": {
+                "DAC_NOT": 29.464480874316937,
+                "DAC_POR": 80.88
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "NOT": 27.857923497267763,
+                "POR": 76.47
+            },
+            "pontos": {
+                "DAC_NOT": 27.857923497267763,
+                "DAC_POR": 76.47
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DAC_NOT": 0,
+                "DAC_POR": 0
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DAC_NOT": 0,
+                "DAC_POR": 0
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DAC_NOT": 0,
+                "DAC_POR": 0
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "NOT": 22.499089253187616,
+                "POR": 61.760000000000005
+            },
+            "pontos": {
+                "DAC_NOT": 22.499089253187616,
+                "DAC_POR": 61.760000000000005
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "NOT": 26.78688524590164,
+                "POR": 73.53
+            },
+            "pontos": {
+                "DAC_NOT": 26.78688524590164,
+                "DAC_POR": 73.53
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DAC_NOT": 0,
+                "DAC_POR": 0
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "NOT": 23.03825136612022,
+                "POR": 63.239999999999995
+            },
+            "pontos": {
+                "DAC_NOT": 23.03825136612022,
+                "DAC_POR": 63.239999999999995
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "NOT": 27.857923497267763,
+                "POR": 76.47
+            },
+            "pontos": {
+                "DAC_NOT": 27.857923497267763,
+                "DAC_POR": 76.47
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "NOT": 29.464480874316937,
+                "POR": 80.88
+            },
+            "pontos": {
+                "DAC_NOT": 29.464480874316937,
+                "DAC_POR": 80.88
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "NOT": 22.499089253187616,
+                "POR": 61.760000000000005
+            },
+            "pontos": {
+                "DAC_NOT": 22.499089253187616,
+                "DAC_POR": 61.760000000000005
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "NOT": 28.92896174863388,
+                "POR": 79.41
+            },
+            "pontos": {
+                "DAC_NOT": 28.92896174863388,
+                "DAC_POR": 79.41
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "NOT": 1.6065573770491803,
+                "POR": 4.41
+            },
+            "pontos": {
+                "DAC_NOT": 1.6065573770491803,
+                "DAC_POR": 4.41
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DAC_NOT": 0,
+                "DAC_POR": 0
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DAC_NOT": 0,
+                "DAC_POR": 0
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "NOT": 5.358834244080146,
+                "POR": 14.71
+            },
+            "pontos": {
+                "DAC_NOT": 5.358834244080146,
+                "DAC_POR": 14.71
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

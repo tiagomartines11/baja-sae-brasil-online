@@ -1,0 +1,159 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SU",
+    "id": "23SU_TRA",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Distância",
+                "Tempo",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "1",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Distância": "<b>25.75</b><br> 25.42",
+                    "Tempo": "-<br> -",
+                    "Pontos": "42.55"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "3",
+                    "Equipe Escola": "CATARATAS BAJA<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná</i>",
+                    "Distância": "24.4<br> <b>24.6</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "35.4"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "5",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Distância": "<b>21.66</b><br> 21.1",
+                    "Tempo": "-<br> -",
+                    "Pontos": "17.14"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "6",
+                    "Equipe Escola": "GRALHA AZUL<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Distância": "<b>26.43</b><br> 24.03",
+                    "Tempo": "-<br> -",
+                    "Pontos": "46.77",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "7",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Distância": "<b>22.4</b><br> 22.39",
+                    "Tempo": "-<br> -",
+                    "Pontos": "21.74"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "8",
+                    "Equipe Escola": "FURG MOTORSPORT<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande</i>",
+                    "Distância": "<b>21.28</b><br> -",
+                    "Tempo": "-<br> -",
+                    "Pontos": "14.78"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "10",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Distância": "22.35<br> <b>22.65</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "23.29"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "11",
+                    "Equipe Escola": "BAJA GUAICURUS<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Distância": "<b>21.54</b><br> 20.98",
+                    "Tempo": "-<br> -",
+                    "Pontos": "16.4"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "12",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Distância": "<b>23.28</b><br> 22.31",
+                    "Tempo": "-<br> -",
+                    "Pontos": "27.2"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "13",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Distância": "26.55<br> <b>26.89</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "49.63",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Distância": "22.57<br> <b>26.95</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "50",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Distância": "21.94<br> <b>22.51</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "22.42"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "16",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Distância": "<b>18.9</b><br> 18.48",
+                    "Tempo": "-<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "17",
+                    "Equipe Escola": "BAJAGUAL<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Distância": "<b>18.9</b><br> 18.47",
+                    "Tempo": "-<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "18",
+                    "Equipe Escola": "UFSC BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Distância": "22.77<br> <b>23.57</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "29.01"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "20",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Distância": "21.81<br> <b>21.91</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "18.7"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

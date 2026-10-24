@@ -1,0 +1,160 @@
+{
+    "evento": "23SU",
+    "prova": "ST3",
+    "nome": "Suspensão 3",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 3,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "PESO_3": 20,
+                "CORR3_1": null,
+                "CORR3_2": null
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": [
+            3,
+            5,
+            6,
+            7,
+            10,
+            11,
+            13,
+            14,
+            15,
+            16,
+            17,
+            20
+        ]
+    },
+    "recompute_error": null,
+    "error": null
+}

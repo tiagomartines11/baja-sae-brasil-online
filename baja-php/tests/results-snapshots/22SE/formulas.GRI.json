@@ -1,0 +1,14 @@
+{
+    "evento": "22SE",
+    "prova": "GRI",
+    "nome": "Grid",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

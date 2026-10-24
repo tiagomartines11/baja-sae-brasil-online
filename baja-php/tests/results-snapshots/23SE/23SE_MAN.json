@@ -1,0 +1,127 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SE",
+    "id": "23SE_MAN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo",
+                "Tempo Corrigido",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Tempo": "49.95 (1<img class=\"cone\">)<br> 48.99 (1<img class=\"cone\">)",
+                    "Tempo Corrigido": "54.95<br> <b>53.99</b>",
+                    "Pontos": "58.38",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Tempo": "52.62 (2<img class=\"cone\">)<br> 49",
+                    "Tempo Corrigido": "62.62<br> <b>49</b>",
+                    "Pontos": "65",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Tempo": "70.59 (4<img class=\"cone\">/9<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido": "<b>180.59</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Tempo": "51.78 (1<img class=\"cone\">)<br> 49.58 (2<img class=\"cone\">)",
+                    "Tempo Corrigido": "<b>56.78</b><br> 59.58",
+                    "Pontos": "54.68",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Tempo": "57.78 (3<img class=\"gate\">)<br> 55 (3<img class=\"cone\">)",
+                    "Tempo Corrigido": "87.78<br> <b>70</b>",
+                    "Pontos": "37.14"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Tempo": "55 (3<img class=\"cone\">/6<img class=\"gate\">)<br> 53.97 (7<img class=\"cone\">)",
+                    "Tempo Corrigido": "130<br> <b>88.97</b>",
+                    "Pontos": "11.98"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Tempo": "54.49 (11<img class=\"cone\">/7<img class=\"gate\">)<br> 64.79 (14<img class=\"cone\">/10<img class=\"gate\">)",
+                    "Tempo Corrigido": "<b>179.49</b><br> 234.79",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Tempo": "51.78 (5<img class=\"cone\">/41<img class=\"gate\">)<br> 73.31 (8<img class=\"cone\">/11<img class=\"gate\">)",
+                    "Tempo Corrigido": "486.78<br> <b>223.31</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Tempo": "93.98 (8<img class=\"cone\">/6<img class=\"gate\">)<br> 70 (13<img class=\"cone\">/7<img class=\"gate\">)",
+                    "Tempo Corrigido": "<b>193.98</b><br> 205",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Tempo": "65 (4<img class=\"cone\">)<br> 64.91 (4<img class=\"cone\">)",
+                    "Tempo Corrigido": "85<br> <b>84.91</b>",
+                    "Pontos": "17.36"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Tempo": "84.12 (9<img class=\"cone\">)<br> -",
+                    "Tempo Corrigido": "<b>129.12</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Tempo": "64.59 (4<img class=\"cone\">/8<img class=\"gate\">)<br> 50.52 (2<img class=\"cone\">/8<img class=\"gate\">)",
+                    "Tempo Corrigido": "164.59<br> <b>140.52</b>",
+                    "Pontos": "0"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

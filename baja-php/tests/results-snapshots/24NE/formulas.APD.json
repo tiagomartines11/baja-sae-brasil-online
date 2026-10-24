@@ -1,0 +1,140 @@
+{
+    "evento": "24NE",
+    "prova": "APD",
+    "nome": "Avaliação de Projetos Dinâmicos",
+    "type": "normal",
+    "stored_totals": {
+        "APDcom": 0,
+        "APDmax": 45.63,
+        "APDmin": 11.88
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "APDNOT": 42.5,
+                "APD": 42.5
+            },
+            "pontos": {
+                "APDPTS": 25.5,
+                "APD_POR": 141.67
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "APDNOT": 45.63,
+                "APD": 45.63
+            },
+            "pontos": {
+                "APDPTS": 27.38,
+                "APD_POR": 152.1
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "APDNOT": 36,
+                "APD": 36
+            },
+            "pontos": {
+                "APDPTS": 21.6,
+                "APD_POR": 120
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "APDNOT": 31.13,
+                "APD": 31.13
+            },
+            "pontos": {
+                "APDPTS": 18.68,
+                "APD_POR": 103.77
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "APDNOT": 19.25,
+                "APD": 19.25
+            },
+            "pontos": {
+                "APDPTS": 11.55,
+                "APD_POR": 64.17
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "APDNOT": 29.75,
+                "APD": 29.75
+            },
+            "pontos": {
+                "APDPTS": 17.85,
+                "APD_POR": 99.17
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "APDNOT": 20.25,
+                "APD": 20.25
+            },
+            "pontos": {
+                "APDPTS": 12.15,
+                "APD_POR": 67.5
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "APDNOT": 11.88,
+                "APD": 11.88
+            },
+            "pontos": {
+                "APDPTS": 7.13,
+                "APD_POR": 39.6
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "APDNOT": 14.38,
+                "APD": 14.38
+            },
+            "pontos": {
+                "APDPTS": 8.63,
+                "APD_POR": 47.93
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "APDNOT": 30,
+                "APD": 30
+            },
+            "pontos": {
+                "APDPTS": 18,
+                "APD_POR": 100
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "APDNOT": 15.13,
+                "APD": 15.13
+            },
+            "pontos": {
+                "APDPTS": 9.08,
+                "APD_POR": 50.43
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

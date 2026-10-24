@@ -1,0 +1,92 @@
+{
+    "evento": "24SU",
+    "prova": "APD",
+    "nome": "Avaliação de Projeto Dinâmico",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 16.9
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 15.8
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 16.55
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 12.9
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 15.2
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 5.75
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 16.3
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 7.05
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 14.4
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 14.15
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": [],
+            "pontos": {
+                "APDPTS": 14.95
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

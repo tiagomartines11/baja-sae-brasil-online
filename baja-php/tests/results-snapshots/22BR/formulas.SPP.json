@@ -1,0 +1,309 @@
+{
+    "evento": "22BR",
+    "prova": "SPP",
+    "nome": "Super Prime",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 9
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 12
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 9
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 9
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 15
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 9
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 18
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 9
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 12
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 30
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 24
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 9
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 59,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 12
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 3
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 6
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 12
+            }
+        },
+        {
+            "equipe": 66,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 9
+            }
+        },
+        {
+            "equipe": 68,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 9
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

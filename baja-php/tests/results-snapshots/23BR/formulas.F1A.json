@@ -1,0 +1,20 @@
+{
+    "evento": "23BR",
+    "prova": "F1A",
+    "nome": "Fila Segurança Pendentes",
+    "type": "rolling",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 49,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

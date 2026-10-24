@@ -1,0 +1,99 @@
+{
+    "evento": "25SU",
+    "prova": "TRA",
+    "nome": "Tração",
+    "type": "normal",
+    "stored_totals": {
+        "Dcom": -3,
+        "Dmax": 9.91,
+        "Dmin": 9.91,
+        "Tcom": -0.083333333,
+        "Tmax": 29.15,
+        "Tmin": 15.76
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 26.95
+            },
+            "pontos": {
+                "TRAPTS": 20.467532467532468
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 16.97
+            },
+            "pontos": {
+                "TRAPTS": 32.50441956393636
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 24.91
+            },
+            "pontos": {
+                "TRAPTS": 22.14371738257728
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 15.76
+            },
+            "pontos": {
+                "TRAPTS": 35
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 29.15
+            },
+            "pontos": {
+                "TRAPTS": 18.922813036020585
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 26.55
+            },
+            "pontos": {
+                "TRAPTS": 20.775894538606405
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": 9.91,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 3.75050154373928
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

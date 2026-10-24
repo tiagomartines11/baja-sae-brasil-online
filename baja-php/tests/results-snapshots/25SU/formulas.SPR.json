@@ -1,0 +1,14 @@
+{
+    "evento": "25SU",
+    "prova": "SPR",
+    "nome": "Chaveamento Super Prime",
+    "type": "tournament",
+    "stored_totals": null,
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}
