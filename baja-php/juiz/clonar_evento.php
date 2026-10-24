@@ -73,31 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $novoEvento->setNome($nome);
             $novoEvento->setAno($newAno);
 
-            $menu = $refEvento->getMenu();
-
-            if ($menu) {
-                // JSON menu para texto
-                if (is_string($menu)) {
-                    $menuJson = $menu;
-                } else {
-                    // Propel may return an array if you use a type-casted accessor
-                    $menuJson = json_encode($menu, JSON_UNESCAPED_UNICODE);
-                }
-
-
-                // Altera evento_id no menu
-                $menuJson = str_replace($refEventoId . '_', $novoEventoId . '_', $menuJson);
-
-                // Decodifica texto em JSON e checa antes de salvar
-                $menuDecoded = json_decode($menuJson, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $novoEvento->setMenu($menuDecoded);
-                } else {
-                    $novoEvento->setMenu($refEvento->getMenu());
-                }
-            }
-
-            $novoEvento->setMenu($menu);
+            // Copia o menu trocando o prefixo dos IDs de resultado (25BR_ACE -> 26BR_ACE),
+            // para que o menu do novo evento aponte para os resultados do novo evento.
+            $novoEvento->setMenu(MenuEvento::trocarPrefixoEvento($refEvento->getMenu(), $refEventoId, $novoEventoId));
 
             // Se achou último nacional, copia presidente e mandato de lá
             if ($refEventoPresidente) {

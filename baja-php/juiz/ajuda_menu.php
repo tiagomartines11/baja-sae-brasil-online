@@ -64,7 +64,6 @@ Ajuda::secao('cuidados', 'Cuidados');
             seria tratado como ID de resultado e ficaria quebrado &mdash; coloque esses links no primeiro nível (<code>{"Almanaque": "https://...pdf"}</code>).</li>
         <li>Em um submenu escrito como <strong>lista</strong>, um link aparece com o número da posição como texto (&quot;0&quot;, &quot;1&quot;&hellip;). Para links com texto, use a forma de objeto.</li>
         <li>Os IDs precisam ser de resultados <strong>deste evento</strong>: o site de resultados só abre resultados do evento da URL.</li>
-        <li>Ao <a href="clonar_evento.php">clonar um evento</a>, confira o menu: hoje ele é copiado sem trocar o prefixo dos IDs (ex.: continua <code>25BR_ACE</code> no evento 26BR).</li>
     </ul>
 </td></tr>
 <?php
