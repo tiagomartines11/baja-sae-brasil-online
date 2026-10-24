@@ -10,7 +10,8 @@ use Throwable;
 /**
  * scripts/results-snapshot.php, minus the wiring: reads the options, builds
  * the snapshots and either compares them with a snapshot folder (--check)
- * or writes them into it (--update).
+ * or writes them into it (--update). --warnings adds, or on its own only
+ * prints, the report of PHP warnings, which never affects the exit code.
  *
  * Exit codes: 0 all good, 1 snapshots differ (--check only), 2 could not
  * run (bad options, database trouble).
@@ -22,12 +23,16 @@ final class Command
     public const CANNOT_RUN = 2;
 
     private const USAGE = <<<'TXT'
-        Usage: php scripts/results-snapshot.php --check|--update [--dir <path>] [--events <list>] [--jobs <n>]
+        Usage: php scripts/results-snapshot.php --check|--update [--warnings] [--dir <path>] [--events <list>] [--jobs <n>]
+               php scripts/results-snapshot.php --warnings [--events <list>] [--jobs <n>]
 
           --check           rebuild every snapshot into a temporary folder, compare it with the
                             snapshot folder, print what differs, exit 1 if anything does
           --update          rewrite the snapshot folder with what the code produces now
                             (the "accept" step: commit the result and let review see it)
+          --warnings        list the PHP warnings each page raised, grouped by message. Report
+                            only: never compared, never fails the run. On its own it writes
+                            nothing; with --check or --update it is printed first
           --dir <path>      the snapshot folder (default: tests/results-snapshots)
           --events <list>   only these events, comma separated, e.g. 22BR,23SU
                             (default: every event with finalizado = 1)
@@ -66,7 +71,8 @@ final class Command
         $started = microtime(true);
         try {
             $source = ($this->sourceFactory)($options['jobs']);
-            $fresh = SnapshotFiles::encodeAll($source->build($options['events'], fn(string $line) => $this->say($line . "\n")));
+            $build = $source->build($options['events'], fn(string $line) => $this->say($line . "\n"));
+            $fresh = SnapshotFiles::encodeAll($build->documents);
         } catch (Throwable $e) {
             $this->say('Could not build the snapshots: ' . get_class($e) . ': ' . $e->getMessage() . "\n");
             return self::CANNOT_RUN;
@@ -78,6 +84,15 @@ final class Command
             microtime(true) - $started
         );
 
+        // First, so that the verdict of --check stays the last thing printed.
+        if ($options['warnings']) {
+            $this->say("\n" . WarningReport::render($build->warnings) . "\n");
+        }
+
+        if ($options['mode'] === null) {
+            $this->say('Report only, nothing written or compared. ' . $summary);
+            return self::OK;
+        }
         if ($options['mode'] === 'update') {
             SnapshotFiles::replace($options['dir'], $fresh, $options['events']);
             $this->say('Updated ' . $options['dir'] . ': ' . $summary);
@@ -120,11 +135,12 @@ final class Command
      * Accepts both "--dir path" and "--dir=path" (same for --events, --jobs).
      *
      * @param list<string> $arguments
-     * @return array{mode: string, dir: string, events: list<string>|null, jobs: int}|string the options, or what is wrong with them
+     * @return array{mode: ?string, warnings: bool, dir: string, events: list<string>|null, jobs: int}|string the options, or what is wrong with them
      */
     private static function parse(array $arguments, string $defaultDir): array|string
     {
         $mode = null;
+        $warnings = false;
         $values = ['dir' => null, 'events' => null, 'jobs' => null];
         for ($i = 0; $i < count($arguments); $i++) {
             $argument = $arguments[$i];
@@ -133,6 +149,10 @@ final class Command
                     return 'Choose one of --check and --update.';
                 }
                 $mode = substr($argument, 2);
+                continue;
+            }
+            if ($argument === '--warnings') {
+                $warnings = true;
                 continue;
             }
             if (preg_match('/^--(dir|events|jobs)(?:=(.*))?$/s', $argument, $match) !== 1) {
@@ -144,8 +164,8 @@ final class Command
             }
             $values[$match[1]] = $value;
         }
-        if ($mode === null) {
-            return 'Choose one of --check and --update.';
+        if ($mode === null && !$warnings) {
+            return 'Choose one of --check, --update and --warnings.';
         }
 
         $events = null;
@@ -163,6 +183,7 @@ final class Command
 
         return [
             'mode' => $mode,
+            'warnings' => $warnings,
             'dir' => rtrim($values['dir'] ?? $defaultDir, '/'),
             'events' => $events,
             'jobs' => (int)($values['jobs'] ?? 4),

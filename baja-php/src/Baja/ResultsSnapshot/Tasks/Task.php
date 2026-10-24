@@ -34,35 +34,36 @@ abstract class Task
      * the shutdown function ran) still gives a document, with the reason as
      * its error, so that the run goes on and the snapshot shows it.
      *
-     * @return array<string, mixed>
+     * The PHP warnings come back beside the document, not in it: they are
+     * for the --warnings report and are never compared (see WarningReport).
+     *
+     * @return array{document: array<string, mixed>, warnings: list<string>}
      */
     public function finish(ChildProcess $child, int $exitCode, ErrorText $errors): array
     {
         $raw = is_file($child->resultFile) ? file_get_contents($child->resultFile) : false;
         $answer = $raw === false ? null : json_decode($raw, true);
-        $document = $this->document(is_array($answer) ? $answer : null, $errors);
+        $answer = is_array($answer) ? $answer : null;
+        $document = $this->document($answer, $errors);
 
-        if (!is_array($answer)) {
+        if ($answer === null) {
             $stderr = is_file($child->stderrFile) ? trim((string)file_get_contents($child->stderrFile)) : '';
-            $lastLine = $stderr === '' ? '' : ': ' . $errors->relative((string)array_slice(explode("\n", $stderr), -1)[0]);
+            $lastLine = $stderr === '' ? '' : ': ' . $errors->withoutLocation((string)array_slice(explode("\n", $stderr), -1)[0]);
             $document['error'] = 'The process ended without an answer (exit code ' . $exitCode . ')' . $lastLine;
         }
-        return $document;
+        return ['document' => $document, 'warnings' => $errors->warningLines($answer['warnings'] ?? [])];
     }
 
     /**
-     * The error and warnings of an answer, as the last two keys of every
-     * document.
+     * The fatal error of an answer, as the last key of every document: the
+     * error class and message, or null if the page or job ran to the end.
      *
      * @param array<string, mixed>|null $answer
-     * @return array{error: ?string, warnings: list<string>}
+     * @return array{error: ?string}
      */
     protected static function problems(?array $answer, ErrorText $errors): array
     {
         $fatal = $answer['fatal'] ?? null;
-        return [
-            'error' => is_array($fatal) ? $errors->line($fatal) : null,
-            'warnings' => $errors->warningLines($answer['warnings'] ?? []),
-        ];
+        return ['error' => is_array($fatal) ? $errors->error($fatal) : null];
     }
 }

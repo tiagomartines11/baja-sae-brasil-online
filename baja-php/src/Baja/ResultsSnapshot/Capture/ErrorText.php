@@ -18,13 +18,56 @@ final class ErrorText
     {
     }
 
-    /** @param array{type: string, message: string, file: string, line: int} $error */
+    /**
+     * A warning or error as PHP logs it, with where it happened. Used for
+     * the --warnings report, which is for finding the line to fix.
+     *
+     *   Warning: Undefined array key "overlay" in resultados/torneio.php:23
+     *
+     * @param array{type: string, message: string, file: string, line: int} $error
+     */
     public function line(array $error): string
     {
         // An uncaught exception's message carries its whole stack trace;
         // the first line says what happened and where.
         $message = explode("\nStack trace:", $error['message'])[0];
         return $this->relative($error['type'] . ': ' . trim($message) . ' in ' . $error['file'] . ':' . $error['line']);
+    }
+
+    /**
+     * A fatal error as it goes into a snapshot: what failed, not where.
+     *
+     *   Uncaught Error: Call to a member function getStatus() on null in /x/resultados/prova.php:265
+     *     ->  Error: Call to a member function getStatus() on null
+     *   Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes)
+     *     ->  Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes)
+     *
+     * A page that dies shows no results, so the error IS the page's result
+     * and belongs in the snapshot. The file and line do not: any edit above
+     * that line would move it, and a refactor moves it to another file,
+     * without the page's result changing at all.
+     *
+     * @param array{type: string, message: string, file: string, line: int} $error
+     */
+    public function error(array $error): string
+    {
+        $message = trim(explode("\nStack trace:", $error['message'])[0]);
+        $kind = $error['type'];
+        if (preg_match('/^Uncaught ([\w\\\\]+): (.*)$/s', $message, $match) === 1) {
+            // The exception class (Error, TypeError, PDOException...).
+            [$kind, $message] = [$match[1], $match[2]];
+        }
+        return $kind . ': ' . $this->withoutLocation($message);
+    }
+
+    /**
+     * Removes a trailing " in /path/file.php:123" or " in /path/file.php on
+     * line 123", and makes any other path relative.
+     */
+    public function withoutLocation(string $text): string
+    {
+        $text = (string)preg_replace('/ in \S+(?::\d+| on line \d+)$/', '', trim($text));
+        return $this->relative($text);
     }
 
     /**

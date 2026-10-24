@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Tests\ResultsSnapshot\Unit;
 
+use Baja\ResultsSnapshot\Build;
 use Baja\ResultsSnapshot\Command;
 use Baja\ResultsSnapshot\Files\SnapshotFiles;
 use Baja\ResultsSnapshot\SnapshotSource;
@@ -34,6 +35,9 @@ final class CommandTest extends TestCase
 
     /** @var list<list<string>|null> the events each build was asked for */
     private array $builds = [];
+
+    /** @var list<string> the PHP warnings the fake page raises; a test may change them between runs */
+    private array $warnings = ['Warning: Undefined array key "overlay" in resultados/torneio.php:23'];
 
     protected function setUp(): void
     {
@@ -137,22 +141,67 @@ final class CommandTest extends TestCase
         $this->assertStringContainsString('Usage:', $this->printedText());
     }
 
+    public function testWarningsAloneAreAReportThatWritesNothingAndNeverFails(): void
+    {
+        $exitCode = $this->runCommand('--warnings', '--dir', $this->folder);
+
+        $this->assertSame(Command::OK, $exitCode);
+        $this->assertStringContainsString(
+            "Warning: Undefined array key \"overlay\" in resultados/torneio.php:23   (1 snapshot)\n    22BR/22BR_GER.json\n",
+            $this->printedText(),
+            'Grouped by message, with the snapshots that raised it.'
+        );
+        $this->assertDirectoryDoesNotExist($this->folder, 'A report writes no snapshot.');
+    }
+
+    public function testWarningsAreNotPartOfWhatCheckCompares(): void
+    {
+        // The snapshot is taken while the page raises one warning, at one
+        // line. Then an edit moves the warning to another line and adds a
+        // second one. Nothing the page SHOWS changed, so --check passes.
+        $this->runCommand('--update');
+        $this->warnings = [
+            'Warning: Undefined array key "overlay" in resultados/torneio.php:31',
+            'Deprecated: json_decode(): Passing null to parameter #1 ($json) of type string is deprecated in resultados/torneio.php:80',
+        ];
+
+        $this->assertSame(Command::OK, $this->runCommand('--check'));
+        $this->assertStringNotContainsString('overlay', (string)file_get_contents($this->folder . '/22BR/22BR_GER.json'),
+            'The snapshot file holds no warnings at all.');
+    }
+
+    public function testWarningsWithCheckDoNotChangeItsVerdict(): void
+    {
+        $this->runCommand('--update');
+        $file = $this->folder . '/22BR/22BR_GER.json';
+        file_put_contents($file, str_replace('"377.64"', '"377.65"', (string)file_get_contents($file)));
+
+        $this->assertSame(Command::DIFFERENT, $this->runCommand('--check', '--warnings'), 'A real difference still fails...');
+        $this->assertStringContainsString('PHP warnings (report only, never compared)', $this->printedText(), '...and the report is printed too.');
+    }
+
     /** Runs Command with the fake source and returns its exit code. */
     private function runCommand(string ...$arguments): int
     {
-        $source = new class ($this->builds) implements SnapshotSource {
-            /** @param list<list<string>|null> $builds */
-            public function __construct(private array &$builds)
+        $source = new class ($this->builds, $this->warnings) implements SnapshotSource {
+            /**
+             * @param list<list<string>|null> $builds
+             * @param list<string>            $warnings
+             */
+            public function __construct(private array &$builds, private array $warnings)
             {
             }
 
-            public function build(?array $onlyEvents, callable $progress): array
+            public function build(?array $onlyEvents, callable $progress): Build
             {
                 $this->builds[] = $onlyEvents;
-                return [
-                    '22BR/22BR_GER.json' => ['tables' => [['columns' => ['#', 'Total'], 'rows' => [['#' => '12', 'Total' => '377.64']]]]],
-                    '22BR/formulas.ACE.json' => ['inputs' => [['equipe' => 12, 'vars' => ['T' => 4.51]]]],
-                ];
+                return new Build(
+                    documents: [
+                        '22BR/22BR_GER.json' => ['tables' => [['columns' => ['#', 'Total'], 'rows' => [['#' => '12', 'Total' => '377.64']]]]],
+                        '22BR/formulas.ACE.json' => ['inputs' => [['equipe' => 12, 'vars' => ['T' => 4.51]]]],
+                    ],
+                    warnings: ['22BR/22BR_GER.json' => $this->warnings, '22BR/formulas.ACE.json' => []],
+                );
             }
         };
         $command = new Command(fn(int $parallel) => $source, $this->folder, function (string $text): void {

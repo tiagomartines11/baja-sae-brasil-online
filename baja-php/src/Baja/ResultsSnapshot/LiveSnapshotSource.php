@@ -23,7 +23,7 @@ final class LiveSnapshotSource implements SnapshotSource
     {
     }
 
-    public function build(?array $onlyEvents, callable $progress): array
+    public function build(?array $onlyEvents, callable $progress): Build
     {
         $tasks = Catalogue::tasks($onlyEvents);
         $progress(count($tasks) . ' snapshots to build, ' . $this->parallel . ' at a time');
@@ -45,13 +45,16 @@ final class LiveSnapshotSource implements SnapshotSource
 
             $errors = new ErrorText($this->projectRoot);
             $documents = [];
+            $warnings = [];
             $done = 0;
             (new ProcessPool($this->parallel))->run(
                 $children,
-                function (string $key, int $exitCode) use ($byKey, $children, $errors, &$documents, &$done, $progress, $tasks): void {
+                function (string $key, int $exitCode) use ($byKey, $children, $errors, &$documents, &$warnings, &$done, $progress, $tasks): void {
                     /** @var Task $task */
                     $task = $byKey[$key];
-                    $documents[$task->path()] = $task->finish($children[$key], $exitCode, $errors);
+                    $finished = $task->finish($children[$key], $exitCode, $errors);
+                    $documents[$task->path()] = $finished['document'];
+                    $warnings[$task->path()] = $finished['warnings'];
                     @unlink($children[$key]->resultFile);
                     @unlink($children[$key]->stderrFile);
                     if (++$done % 100 === 0) {
@@ -67,6 +70,6 @@ final class LiveSnapshotSource implements SnapshotSource
         }
 
         ksort($documents, SORT_STRING);
-        return $documents;
+        return new Build($documents, $warnings);
     }
 }

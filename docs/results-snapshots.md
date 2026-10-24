@@ -61,12 +61,26 @@ changed cell, row order, highlight, medal or column is a difference; a
 change to the page around the table is not. `tests/ResultsSnapshot/Unit/
 TableExtractionTest.php` shows both.
 
-**A page that fails is recorded as it is.** `error` holds the fatal error,
-`warnings` every distinct warning, notice and deprecation, in the order they
-first happened. Each is listed once, without a count: some happen once per
-sort comparison, and that number changes with every score. Paths are
-relative to `baja-php/`. When a bug is fixed, its warning or error
-disappears from the snapshot, and the diff shows it.
+**A page that dies is recorded as it is.** A page that dies on a fatal
+error shows the public no results, so the error is part of its result.
+`error` holds it as the error class and message, without file or line:
+
+```
+"error": "Error: Call to a member function getStatus() on null"
+```
+
+The location is left out because any edit above that line would move it,
+and a refactor moves it to another file, without the page's result
+changing. `error` is `null` for a page that ran to the end. When such a bug
+is fixed, the page's tables appear in the snapshot and `error` becomes
+`null`, and the diff shows both.
+
+**PHP warnings are not compared.** Warnings, notices and deprecations are
+not in the snapshot files and never fail a run. They carry a file and line,
+so any edit moves dozens of them. The refactors should also be free to make
+them disappear without a snapshot update. To see them, use `--warnings`
+(below). It lists every distinct warning with its file and line, grouped by
+message, with the snapshots that raise it.
 
 **It never writes to the database.** Every connection the tool opens (its
 own and every page's and job's) is switched to
@@ -142,6 +156,27 @@ Options: `--events 22BR,23SU` limits to some events (and compares only
 those), `--dir <path>` uses another snapshot folder, and `--jobs <n>` sets
 how many pages run at once (default 4).
 
+To list the PHP warnings the pages raise today:
+
+```
+docker compose exec --user "$(id -u):$(id -g)" baja-app php scripts/results-snapshot.php --warnings
+```
+
+```
+PHP warnings (report only, never compared): 21 distinct, in 73 snapshots.
+
+Warning: Undefined property: stdClass::$highlight in resultados/prova.php:78   (55 snapshots)
+    22BR/22BR_ABS.json
+    ...
+Warning: Undefined array key "overlay" in resultados/torneio.php:23   (5 snapshots)
+    23SU/23SU_SPR.torneio.json
+    ...
+```
+
+On its own, `--warnings` builds everything, prints the report and writes
+nothing. Added to `--check` or `--update`, it prints the report first. Either
+way it exits 0 unless the `--check` itself fails.
+
 The tool's own tests:
 
 ```
@@ -163,8 +198,9 @@ review:
    empty stat.
 2. For each changed file, the diff shows exactly which cell of which team
    changed. Ask whether each one is what the PR says it does. A fix for a
-   warning should only remove a line under `warnings`. A fix for a position
-   bug should move positions in that resultado and nothing else.
+   position bug should move positions in that resultado and nothing else. A
+   fix for a warning changes no snapshot at all; compare `--warnings` before
+   and after instead.
 3. Changes in `formulas.*.json` mean computed numbers changed. Unless the PR
    is about a formula, that is a regression, however small.
 4. Re-run `--check` locally on the PR branch; CI does too.
