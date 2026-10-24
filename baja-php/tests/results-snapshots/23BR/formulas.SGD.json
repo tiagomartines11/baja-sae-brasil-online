@@ -1,0 +1,331 @@
+{
+    "evento": "23BR",
+    "prova": "SGD",
+    "nome": "Segurança Dinâmica",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 67,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "APROVADO"
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

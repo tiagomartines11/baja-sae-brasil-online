@@ -1,0 +1,44 @@
+{
+    "evento": "23SU",
+    "prova": "SPP",
+    "nome": "Super Prime",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 30
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 15
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 5
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": [],
+            "pontos": {
+                "SPPPTS": 10
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

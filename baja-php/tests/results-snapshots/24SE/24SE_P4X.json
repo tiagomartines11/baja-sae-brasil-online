@@ -1,0 +1,72 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SE",
+    "id": "24SE_P4X",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Team",
+                "Tempo[s]",
+                "Obstáculos",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "1",
+                    "Team": "Poli<br><i class=\"nomeEscola\">Escola Politécnica da USP</i>",
+                    "Tempo[s]": "-<br> <b>56.88</b>",
+                    "Obstáculos": "4<br> 6",
+                    "Points": "7.6"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Team": "FEI Baja<br><i class=\"nomeEscola\">FEI</i>",
+                    "Tempo[s]": "43.42<br> <b>42.99</b>",
+                    "Obstáculos": "6<br> 6",
+                    "Points": "30.74",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "3",
+                    "Team": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del Rei</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> <b>5</b>",
+                    "Points": "6.33"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Team": "Baja UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Tempo[s]": "45.25<br> <b>37.43</b>",
+                    "Obstáculos": "6<br> 6",
+                    "Points": "40",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "12",
+                    "Team": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Tempo[s]": "-<br> <b>56.33</b>",
+                    "Obstáculos": "4<br> 6",
+                    "Points": "8.52",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,122 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SU",
+    "id": "24SU_GRI",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Posição no Grid",
+                "Larga do:"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Posição no Grid": "1",
+                    "Larga do:": "GRID",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "2",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari - Univates</i>",
+                    "Posição no Grid": "6",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "3",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Posição no Grid": "2",
+                    "Larga do:": "GRID",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "4",
+                    "Equipe Escola": "CATARATAS BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná (UNIOESTE)</i>",
+                    "Posição no Grid": "3",
+                    "Larga do:": "GRID",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "6",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Curitiba</i>",
+                    "Posição no Grid": "7",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "7",
+                    "Equipe Escola": "LONDRIBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Londrina</i>",
+                    "Posição no Grid": "10",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "9",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Posição no Grid": "4",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "10",
+                    "Equipe Escola": "PELZNICKEL UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário de Brusque - UNIFEBE</i>",
+                    "Posição no Grid": "13",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "11",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Cornélio Procópio</i>",
+                    "Posição no Grid": "8",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "13",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Posição no Grid": "5",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "14",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Posição no Grid": "11",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "15",
+                    "Equipe Escola": "UDESC VELOCIRAPTOR BAJA<br><i class=\"nomeEscola\">Universidade do Estado de Santa Catarina</i>",
+                    "Posição no Grid": "12",
+                    "Larga do:": "GRID"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "16",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">SATC</i>",
+                    "Posição no Grid": "9",
+                    "Larga do:": "GRID"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

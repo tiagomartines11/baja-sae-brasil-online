@@ -1,0 +1,423 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "23BR",
+    "id": "23BR_APD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Nota",
+                "Pontos",
+                "Status"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "2",
+                    "Equipe Escola": "TEC Ilha Baja<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - ILHA SOLTEIRA</i>",
+                    "Nota": "74.75%",
+                    "Pontos": "<b>17.18</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "42º",
+                    "#": "3",
+                    "Equipe Escola": "Baja UEA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DO AMAZONAS</i>",
+                    "Nota": "41%",
+                    "Pontos": "<b>9.43</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA</i>",
+                    "Nota": "61.5%",
+                    "Pontos": "<b>14.14</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "33º",
+                    "#": "5",
+                    "Equipe Escola": "USJT Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE SÃO JUDAS</i>",
+                    "Nota": "47.25%",
+                    "Pontos": "<b>10.86</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "6",
+                    "Equipe Escola": "Equipe Komiketo Baja UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL-REI</i>",
+                    "Nota": "64.25%",
+                    "Pontos": "<b>14.77</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "35º",
+                    "#": "9",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA BAHIA</i>",
+                    "Nota": "46.75%",
+                    "Pontos": "<b>10.75</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "27º",
+                    "#": "11",
+                    "Equipe Escola": "Rampage Baja UFJF<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Nota": "54%",
+                    "Pontos": "<b>12.41</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "12",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - PATO BRANCO</i>",
+                    "Nota": "75.5%",
+                    "Pontos": "<b>17.36</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "13",
+                    "Equipe Escola": "UFSC Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
+                    "Nota": "72.75%",
+                    "Pontos": "<b>16.72</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "14",
+                    "Equipe Escola": "UnBaja<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - FACULDADE DO GAMA</i>",
+                    "Nota": "60.75%",
+                    "Pontos": "<b>13.97</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "15",
+                    "Equipe Escola": "Vitória Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO</i>",
+                    "Nota": "69.25%",
+                    "Pontos": "<b>15.92</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "17",
+                    "Equipe Escola": "Car-kará Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Nota": "68.25%",
+                    "Pontos": "<b>15.69</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "19",
+                    "Equipe Escola": "UNICAMP Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Nota": "64.75%",
+                    "Pontos": "<b>14.89</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "40º",
+                    "#": "20",
+                    "Equipe Escola": "Samabaja<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DO ESPÍRITO SANTO - SÃO MATEUS</i>",
+                    "Nota": "43.25%",
+                    "Pontos": "<b>9.94</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "21",
+                    "Equipe Escola": "Equipe Parahybaja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE CAMPINA GRANDE</i>",
+                    "Nota": "80.5%",
+                    "Pontos": "<b>18.51</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "33º",
+                    "#": "23",
+                    "Equipe Escola": "Procobaja<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CORNÉLIO PROCÓPIO</i>",
+                    "Nota": "47.25%",
+                    "Pontos": "<b>10.86</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "24",
+                    "Equipe Escola": "Itabaja<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Nota": "68.25%",
+                    "Pontos": "<b>15.69</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "29º",
+                    "#": "26",
+                    "Equipe Escola": "UFVBaja Pererecas<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Nota": "50.5%",
+                    "Pontos": "<b>11.61</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "22º",
+                    "#": "27",
+                    "Equipe Escola": "UDESC Velociraptor Baja<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DE SANTA CATARINA</i>",
+                    "Nota": "58.75%",
+                    "Pontos": "<b>13.51</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "23º",
+                    "#": "28",
+                    "Equipe Escola": "Poli USP 2<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA POLITÉCNICA</i>",
+                    "Nota": "57.5%",
+                    "Pontos": "<b>13.22</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "44º",
+                    "#": "29",
+                    "Equipe Escola": "Mud Runner Baja<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA</i>",
+                    "Nota": "33.75%",
+                    "Pontos": "<b>7.76</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "25º",
+                    "#": "30",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
+                    "Nota": "55.75%",
+                    "Pontos": "<b>12.82</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "31",
+                    "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DO RIO DE JANEIRO - INSTITUTO POLITECNICO DO RJ</i>",
+                    "Nota": "61%",
+                    "Pontos": "<b>14.02</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "32",
+                    "Equipe Escola": "Baja de Galpão<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
+                    "Nota": "87%",
+                    "Pontos": "<b>20</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "33",
+                    "Equipe Escola": "BAJA UFSCar<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS</i>",
+                    "Nota": "56.75%",
+                    "Pontos": "<b>13.05</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "35",
+                    "Equipe Escola": "Baja UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Nota": "74%",
+                    "Pontos": "<b>17.01</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "26º",
+                    "#": "37",
+                    "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Nota": "54.25%",
+                    "Pontos": "<b>12.47</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "38",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CURITIBA</i>",
+                    "Nota": "46.25%",
+                    "Pontos": "<b>10.63</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "31º",
+                    "#": "39",
+                    "Equipe Escola": "Baja Mud Racing<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Nota": "49.75%",
+                    "Pontos": "<b>11.44</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "40º",
+                    "#": "40",
+                    "Equipe Escola": "Piratas do Cerrado<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA</i>",
+                    "Nota": "43.25%",
+                    "Pontos": "<b>9.94</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "41",
+                    "Equipe Escola": "FEI Baja 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Nota": "68.25%",
+                    "Pontos": "<b>15.69</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "42",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE - RIO DE JANEIRO</i>",
+                    "Nota": "60.5%",
+                    "Pontos": "<b>13.91</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "47º",
+                    "#": "43",
+                    "Equipe Escola": "Zebu Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO</i>",
+                    "Nota": "20.75%",
+                    "Pontos": "<b>4.77</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "46",
+                    "Equipe Escola": "PAC Baja<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - BAURU</i>",
+                    "Nota": "68.75%",
+                    "Pontos": "<b>15.8</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "47",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Nota": "64.5%",
+                    "Pontos": "<b>14.83</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "48",
+                    "Equipe Escola": "Saci Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITAJUBÁ</i>",
+                    "Nota": "61.5%",
+                    "Pontos": "<b>14.14</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "38º",
+                    "#": "50",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO - RECIFE</i>",
+                    "Nota": "45.75%",
+                    "Pontos": "<b>10.52</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "48º",
+                    "#": "51",
+                    "Equipe Escola": "Buffalo Baja UFLA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE LAVRAS</i>",
+                    "Nota": "15.75%",
+                    "Pontos": "<b>3.62</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "52",
+                    "Equipe Escola": "Cactus Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Nota": "73%",
+                    "Pontos": "<b>16.78</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "53",
+                    "Equipe Escola": "FEI Baja 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Nota": "68.75%",
+                    "Pontos": "<b>15.8</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "36º",
+                    "#": "55",
+                    "Equipe Escola": "Poli USP 1<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA POLITÉCNICA</i>",
+                    "Nota": "46.5%",
+                    "Pontos": "<b>10.69</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "39º",
+                    "#": "56",
+                    "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE - VOLTA REDONDA</i>",
+                    "Nota": "45.25%",
+                    "Pontos": "<b>10.4</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "46º",
+                    "#": "57",
+                    "Equipe Escola": "Baja Guaicurus<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA GRANDE DOURADOS</i>",
+                    "Nota": "22.5%",
+                    "Pontos": "<b>5.17</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "32º",
+                    "#": "58",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - PONTA GROSSA</i>",
+                    "Nota": "48.5%",
+                    "Pontos": "<b>11.15</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "45º",
+                    "#": "59",
+                    "Equipe Escola": "Equipe Serbaja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SERGIPE</i>",
+                    "Nota": "27.5%",
+                    "Pontos": "<b>6.32</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "30º",
+                    "#": "60",
+                    "Equipe Escola": "EESC USP Tractian<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA DE ENGENHARIA DE SÃO CARLOS</i>",
+                    "Nota": "50.25%",
+                    "Pontos": "<b>11.55</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "28º",
+                    "#": "64",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA PARAÍBA</i>",
+                    "Nota": "53.5%",
+                    "Pontos": "<b>12.3</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "[img trofeu.png]": "43º",
+                    "#": "67",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Nota": "37.25%",
+                    "Pontos": "<b>8.56</b>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

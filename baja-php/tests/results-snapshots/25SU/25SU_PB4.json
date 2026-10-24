@@ -1,0 +1,58 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "25SU",
+    "id": "25SU_PB4",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo",
+                "Tempo Corrigido",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
+                    "Tempo": "16.32 (1<img class=\"cone\">)<br> 15.79 (1<img class=\"gate\">)<br> 15.66<br> -<br> -<br> -",
+                    "Tempo Corrigido": "21.32<br> 25.79<br> <b>15.66</b><br> -<br> -<br> -",
+                    "Pontos": "3.82",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Tempo": "15.39<br> -<br> -<br> -<br> -<br> -",
+                    "Tempo Corrigido": "<b>15.39</b><br> -<br> -<br> -<br> -<br> -",
+                    "Pontos": "25",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Tempo": "17.77 (1<img class=\"cone\">)<br> 26.39<br> 15.71<br> -<br> -<br> -",
+                    "Tempo Corrigido": "22.77<br> 26.39<br> <b>15.71</b><br> -<br> -<br> -",
+                    "Pontos": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova.php:78"
+    ]
+}

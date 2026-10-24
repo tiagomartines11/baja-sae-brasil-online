@@ -1,0 +1,65 @@
+{
+    "evento": "25SU",
+    "prova": "PB4",
+    "nome": "Prova Bonus 4x4",
+    "type": "normal",
+    "stored_totals": {
+        "TCcom": 0,
+        "TCmax": 15.705,
+        "TCmin": 15.391
+    },
+    "inputs": [
+        {
+            "equipe": 4,
+            "vars": {
+                "TC_1": 21.32,
+                "TC_2": 25.79,
+                "TC_3": 15.657,
+                "TC_4": null,
+                "TC_5": null,
+                "TC_6": null,
+                "TC": 15.657
+            },
+            "pontos": {
+                "PB4PTS": 3.8216560509554167
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "TC_1": 15.391,
+                "TC_2": null,
+                "TC_3": null,
+                "TC_4": null,
+                "TC_5": null,
+                "TC_6": null,
+                "TC": 15.391
+            },
+            "pontos": {
+                "PB4PTS": 25
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC_1": 22.77,
+                "TC_2": 26.392,
+                "TC_3": 15.705,
+                "TC_4": null,
+                "TC_5": null,
+                "TC_6": null,
+                "TC": 15.705
+            },
+            "pontos": {
+                "PB4PTS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

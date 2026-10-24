@@ -1,0 +1,11 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "22BR",
+    "id": "22BR_ABS",
+    "spoilers": false,
+    "tables": [],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19"
+    ]
+}

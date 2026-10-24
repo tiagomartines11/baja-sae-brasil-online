@@ -1,0 +1,189 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SU",
+    "id": "24SU_DIN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração",
+                "Velocidade Final",
+                "Frenagem",
+                "Tração",
+                "Manobrabilidade",
+                "Suspensão",
+                "Total p/ Super Prime",
+                "Prova 4x4",
+                "Super Prime",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Aceleração": "27.14",
+                    "Velocidade Final": "27.3",
+                    "Frenagem": "13.33",
+                    "Tração": "50",
+                    "Manobrabilidade": "50",
+                    "Suspensão": "38",
+                    "Total p/ Super Prime": "205.77",
+                    "Prova 4x4": "50",
+                    "Super Prime": "30",
+                    "Total": "<b>285.77</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "2",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari - Univates</i>",
+                    "Aceleração": "16.17",
+                    "Velocidade Final": "11.38",
+                    "Frenagem": "19.25",
+                    "Tração": "29.32",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "49",
+                    "Total p/ Super Prime": "125.12",
+                    "Prova 4x4": "0",
+                    "Super Prime": "0",
+                    "Total": "<b>125.12</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "3",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Aceleração": "25.07",
+                    "Velocidade Final": "28.06",
+                    "Frenagem": "5.45",
+                    "Tração": "43.21",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "52",
+                    "Total p/ Super Prime": "153.79",
+                    "Prova 4x4": "13.55",
+                    "Super Prime": "5",
+                    "Total": "<b>172.34</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "4",
+                    "Equipe Escola": "CATARATAS BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná (UNIOESTE)</i>",
+                    "Aceleração": "30",
+                    "Velocidade Final": "30",
+                    "Frenagem": "6.85",
+                    "Tração": "45.74",
+                    "Manobrabilidade": "7.82",
+                    "Suspensão": "49",
+                    "Total p/ Super Prime": "169.41",
+                    "Prova 4x4": "0",
+                    "Super Prime": "0",
+                    "Total": "<b>169.41</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "6",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Curitiba</i>",
+                    "Aceleração": "16.65",
+                    "Velocidade Final": "13.18",
+                    "Frenagem": "5.67",
+                    "Tração": "37.88",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "13",
+                    "Total p/ Super Prime": "86.38",
+                    "Prova 4x4": "0",
+                    "Super Prime": "15",
+                    "Total": "<b>101.38</b>"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "7",
+                    "Equipe Escola": "LONDRIBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Londrina</i>",
+                    "Aceleração": "24.93",
+                    "Velocidade Final": "17.44",
+                    "Frenagem": "0",
+                    "Tração": "0",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "0",
+                    "Total p/ Super Prime": "42.37",
+                    "Prova 4x4": "0",
+                    "Super Prime": "0",
+                    "Total": "<b>42.37</b>"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "9",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Aceleração": "23.25",
+                    "Velocidade Final": "11.14",
+                    "Frenagem": "20",
+                    "Tração": "49.34",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "41",
+                    "Total p/ Super Prime": "144.73",
+                    "Prova 4x4": "7.82",
+                    "Super Prime": "10",
+                    "Total": "<b>162.55</b>"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "11",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Cornélio Procópio</i>",
+                    "Aceleração": "16.14",
+                    "Velocidade Final": "11.61",
+                    "Frenagem": "1.62",
+                    "Tração": "29.33",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "0",
+                    "Total p/ Super Prime": "58.7",
+                    "Prova 4x4": "0",
+                    "Super Prime": "0",
+                    "Total": "<b>58.7</b>"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "13",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Aceleração": "23.56",
+                    "Velocidade Final": "27.53",
+                    "Frenagem": "12.29",
+                    "Tração": "41.38",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "28",
+                    "Total p/ Super Prime": "132.76",
+                    "Prova 4x4": "19.59",
+                    "Super Prime": "0",
+                    "Total": "<b>152.35</b>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "16",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">SATC</i>",
+                    "Aceleração": "0",
+                    "Velocidade Final": "0",
+                    "Frenagem": "11.69",
+                    "Tração": "19.18",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "12",
+                    "Total p/ Super Prime": "42.87",
+                    "Prova 4x4": "0",
+                    "Super Prime": "0",
+                    "Total": "<b>42.87</b>"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

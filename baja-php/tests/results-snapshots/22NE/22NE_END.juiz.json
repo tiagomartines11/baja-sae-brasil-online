@@ -1,0 +1,101 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "22NE",
+    "id": "22NE_END",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Team",
+                "Laps",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "3",
+                    "Team": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Laps": "36",
+                    "Points": "166.15"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "5",
+                    "Team": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Laps": "65",
+                    "Points": "300",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "6",
+                    "Team": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Laps": "62",
+                    "Points": "286.15",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "9",
+                    "Team": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Laps": "2",
+                    "Points": "9.23"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "11",
+                    "Team": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Laps": "36",
+                    "Points": "166.15"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "12",
+                    "Team": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraúbas</i>",
+                    "Laps": "59",
+                    "Points": "272.31",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "13",
+                    "Team": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Laps": "46",
+                    "Points": "212.31"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "14",
+                    "Team": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Laps": "4",
+                    "Points": "18.46"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "15",
+                    "Team": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS</i>",
+                    "Laps": "14",
+                    "Points": "64.62"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

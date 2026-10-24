@@ -1,0 +1,108 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23NE",
+    "id": "23NE_ACE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração 30 m [s]",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "1",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Aceleração 30 m [s]": "<b>5.35</b><br> 5.46",
+                    "Pontos": "31.4"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "4",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Aceleração 30 m [s]": "5.94<br> <b>5.74</b>",
+                    "Pontos": "18.78"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "5",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Aceleração 30 m [s]": "5.43<br> <b>5.35</b>",
+                    "Pontos": "31.4"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "6",
+                    "Equipe Escola": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Aceleração 30 m [s]": "<b>5.15</b><br> 5.18",
+                    "Pontos": "37.88",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "7",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraubas</i>",
+                    "Aceleração 30 m [s]": "<b>5.43</b><br> <b>5.43</b>",
+                    "Pontos": "28.81"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "8",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Aceleração 30 m [s]": "<b>6.32</b><br> 6.49",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Aceleração 30 m [s]": "5.28<br> <b>5.14</b>",
+                    "Pontos": "38.2",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "11",
+                    "Equipe Escola": "Siará Baja<br><i class=\"nomeEscola\">UFC</i>",
+                    "Aceleração 30 m [s]": "<b>4.93</b><br> 5.03",
+                    "Pontos": "45",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "12",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Salvador</i>",
+                    "Aceleração 30 m [s]": "<b>5.68</b><br> 5.72",
+                    "Pontos": "20.72"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "13",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Aceleração 30 m [s]": "<b>5.2</b><br> 5.28",
+                    "Pontos": "36.26"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "14",
+                    "Equipe Escola": "Zabumbaja Tecnoferr<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Aceleração 30 m [s]": "5.56<br> <b>5.46</b>",
+                    "Pontos": "27.84"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

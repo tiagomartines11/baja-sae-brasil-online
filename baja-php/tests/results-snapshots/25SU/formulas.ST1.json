@@ -1,0 +1,106 @@
+{
+    "evento": "25SU",
+    "prova": "ST1",
+    "nome": "Suspensão 1",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "PESO_1": 15,
+                "CORR1_1": 0.8,
+                "CORR1_2": null,
+                "CORR1_3": null,
+                "CORR1_4": null,
+                "CORR1_5": null,
+                "CORR1_6": null
+            },
+            "pontos": {
+                "SUS1PTS": 12
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "PESO_1": 15,
+                "CORR1_1": 1,
+                "CORR1_2": null,
+                "CORR1_3": null,
+                "CORR1_4": null,
+                "CORR1_5": null,
+                "CORR1_6": null
+            },
+            "pontos": {
+                "SUS1PTS": 15
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "PESO_1": 15,
+                "CORR1_1": 0.8,
+                "CORR1_2": 1,
+                "CORR1_3": null,
+                "CORR1_4": null,
+                "CORR1_5": null,
+                "CORR1_6": null
+            },
+            "pontos": {
+                "SUS1PTS": 15
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "PESO_1": 15,
+                "CORR1_1": 1,
+                "CORR1_2": null,
+                "CORR1_3": null,
+                "CORR1_4": null,
+                "CORR1_5": null,
+                "CORR1_6": null
+            },
+            "pontos": {
+                "SUS1PTS": 15
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "PESO_1": 15,
+                "CORR1_1": 1,
+                "CORR1_2": null,
+                "CORR1_3": null,
+                "CORR1_4": null,
+                "CORR1_5": null,
+                "CORR1_6": null
+            },
+            "pontos": {
+                "SUS1PTS": 15
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "PESO_1": 15,
+                "CORR1_1": null,
+                "CORR1_2": null,
+                "CORR1_3": 1,
+                "CORR1_4": null,
+                "CORR1_5": null,
+                "CORR1_6": null
+            },
+            "pontos": {
+                "SUS1PTS": 15
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

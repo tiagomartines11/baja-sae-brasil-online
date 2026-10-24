@@ -1,0 +1,41 @@
+{
+    "evento": "24NE",
+    "prova": "FIN",
+    "nome": "Finais de Projetos",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 8,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

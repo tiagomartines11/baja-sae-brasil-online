@@ -1,0 +1,130 @@
+{
+    "evento": "22NE",
+    "prova": "TRA",
+    "nome": "Traction",
+    "type": "normal",
+    "stored_totals": {
+        "Dcom": 0,
+        "Dmax": 7.38,
+        "Dmin": 3.51
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "DIS_1": 4,
+                "DIS_2": 3.69,
+                "D": 4
+            },
+            "pontos": {
+                "TRAPTS": 5.697674418604654
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "DIS_1": 4.27,
+                "DIS_2": 3.38,
+                "D": 4.27
+            },
+            "pontos": {
+                "TRAPTS": 8.837209302325578
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "DIS_1": 4.82,
+                "DIS_2": 4.61,
+                "D": 4.82
+            },
+            "pontos": {
+                "TRAPTS": 15.23255813953489
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "DIS_1": 4.42,
+                "DIS_2": 3.4,
+                "D": 4.42
+            },
+            "pontos": {
+                "TRAPTS": 10.58139534883721
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "DIS_1": 5.25,
+                "DIS_2": 3.51,
+                "D": 5.25
+            },
+            "pontos": {
+                "TRAPTS": 20.232558139534888
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "DIS_1": 5.72,
+                "DIS_2": 3.66,
+                "D": 5.72
+            },
+            "pontos": {
+                "TRAPTS": 25.697674418604652
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "DIS_1": 2.04,
+                "DIS_2": 3.51,
+                "D": 3.51
+            },
+            "pontos": {
+                "TRAPTS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "DIS_1": 5.83,
+                "DIS_2": 3.05,
+                "D": 5.83
+            },
+            "pontos": {
+                "TRAPTS": 26.976744186046513
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "DIS_1": 7.38,
+                "DIS_2": 5.02,
+                "D": 7.38
+            },
+            "pontos": {
+                "TRAPTS": 45
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "DIS_1": 3.69,
+                "DIS_2": 3.17,
+                "D": 3.69
+            },
+            "pontos": {
+                "TRAPTS": 2.093023255813955
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

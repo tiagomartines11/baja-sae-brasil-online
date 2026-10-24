@@ -1,0 +1,15 @@
+{
+    "evento": "25BR",
+    "prova": "F1C",
+    "nome": "Fila Segurança Completa",
+    "type": "rolling",
+    "stored_totals": null,
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

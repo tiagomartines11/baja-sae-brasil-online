@@ -1,0 +1,52 @@
+{
+    "evento": "24NE",
+    "prova": "P4X",
+    "nome": "Prova 4X4",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "P4X_VAR": 80
+            },
+            "pontos": {
+                "P4XPTS": 80
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "P4X_VAR": 80
+            },
+            "pontos": {
+                "P4XPTS": 80
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "P4X_VAR": 130
+            },
+            "pontos": {
+                "P4XPTS": 150
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "P4X_VAR": 80
+            },
+            "pontos": {
+                "P4XPTS": 80
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

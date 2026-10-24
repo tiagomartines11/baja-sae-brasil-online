@@ -1,0 +1,106 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "22NE",
+    "id": "22NE_VEL",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Team",
+                "Speed",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "2",
+                    "Team": "Parahybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Speed": "<b>41.38</b><br> 40.55",
+                    "Points": "31.52"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "3",
+                    "Team": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Speed": "<b>42.35</b><br> <b>42.35</b>",
+                    "Points": "33.5"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "5",
+                    "Team": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Speed": "<b>41.38</b><br> 40.45",
+                    "Points": "31.52"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "6",
+                    "Team": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Speed": "44.44<br> <b>45</b>",
+                    "Points": "38.89"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "9",
+                    "Team": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Speed": "42.86<br> <b>43.37</b>",
+                    "Points": "35.57"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "11",
+                    "Team": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Speed": "46.75<br> <b>48</b>",
+                    "Points": "45",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Team": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraúbas</i>",
+                    "Speed": "47.37<br> <b>48</b>",
+                    "Points": "45",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "13",
+                    "Team": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Speed": "<b>41.38</b><br> 31.03",
+                    "Points": "31.52"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "14",
+                    "Team": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Speed": "<b>25.9</b><br> -",
+                    "Points": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "15",
+                    "Team": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS</i>",
+                    "Speed": "<b>47.37</b><br> 37.89",
+                    "Points": "43.72",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

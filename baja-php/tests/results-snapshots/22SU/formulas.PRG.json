@@ -1,0 +1,247 @@
+{
+    "evento": "22SU",
+    "prova": "PRG",
+    "nome": "Apresentação de Projeto - Gestão",
+    "type": "normal",
+    "stored_totals": {
+        "APRGEScom": 0,
+        "APRGESmax": 9.25,
+        "APRGESmin": 2.25,
+        "FINGEScom": 0,
+        "FINGESmax": 9,
+        "FINGESmin": 8,
+        "TOPGEScom": 0,
+        "TOPGESmax": 9.25,
+        "TOPGESmin": 8.75
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 2.25,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 2.25,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 2.75,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 2.75,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 4.75,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 4.75,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 9,
+                "APRGES": 9,
+                "FINGES": 8.5,
+                "TOPGES": 9
+            },
+            "pontos": {
+                "APRPTS_GES": 9,
+                "APRPTS_GES_FIN": 9
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 0,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 0,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 8,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 8,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 3.75,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 3.75,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 8.75,
+                "APRGES": 8.75,
+                "FINGES": 8,
+                "TOPGES": 8.75
+            },
+            "pontos": {
+                "APRPTS_GES": 8.75,
+                "APRPTS_GES_FIN": 8.75
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 7.75,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 7.75,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 8.75,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 8.75,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 3,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 3,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 2.25,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 2.25,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 3,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 3,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 5,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 5,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 9.25,
+                "APRGES": 9.25,
+                "FINGES": 9,
+                "TOPGES": 9.25
+            },
+            "pontos": {
+                "APRPTS_GES": 9.25,
+                "APRPTS_GES_FIN": 9.25
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 2.75,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 2.75,
+                "APRPTS_GES_FIN": 0
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "FIN": 0,
+                "APRGES": 5,
+                "FINGES": 0,
+                "TOPGES": 0
+            },
+            "pontos": {
+                "APRPTS_GES": 5,
+                "APRPTS_GES_FIN": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

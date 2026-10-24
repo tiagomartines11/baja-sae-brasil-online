@@ -1,0 +1,78 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SU",
+    "id": "23SU_EPN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "Hora Lançada",
+                "#",
+                "Equipe Escola",
+                "Onde",
+                "Penalização"
+            ],
+            "rows": [
+                {
+                    "Hora Lançada": "19:31:58",
+                    "#": "8",
+                    "Equipe Escola": "FURG MOTORSPORT<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande</i>",
+                    "Onde": "PRÉ",
+                    "Penalização": "Ausência em briefing (15 min)"
+                },
+                {
+                    "Hora Lançada": "19:32:06",
+                    "#": "9",
+                    "Equipe Escola": "PELZNICKEL UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário de Brusque</i>",
+                    "Onde": "PRÉ",
+                    "Penalização": "Ausência em briefing (15 min)"
+                },
+                {
+                    "Hora Lançada": "09:22:06",
+                    "#": "2",
+                    "Equipe Escola": "CTJ BAJA UFSC<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Onde": "PRÉ",
+                    "Penalização": "Ausência em briefing (15 min)"
+                },
+                {
+                    "Hora Lançada": "09:22:24",
+                    "#": "21",
+                    "Equipe Escola": "BAJA CRIOULO<br><i class=\"nomeEscola\">Universidade Regional Integrada do Alto do Uruguai e das Missões - Santo Ângelo</i>",
+                    "Onde": "PRÉ",
+                    "Penalização": "Ausência em briefing (15 min)"
+                },
+                {
+                    "Hora Lançada": "21:12:39",
+                    "#": "13",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Onde": "1",
+                    "Penalização": "Troca de objetos fora do local de apoio (10 min)"
+                },
+                {
+                    "Hora Lançada": "21:12:49",
+                    "#": "16",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Onde": "1",
+                    "Penalização": "Troca de objetos fora do local de apoio (10 min)"
+                },
+                {
+                    "Hora Lançada": "21:12:59",
+                    "#": "3",
+                    "Equipe Escola": "CATARATAS BAJA<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná</i>",
+                    "Onde": "1",
+                    "Penalização": "Não respeitar a bandeira azul (2 min)"
+                },
+                {
+                    "Hora Lançada": "21:13:06",
+                    "#": "17",
+                    "Equipe Escola": "BAJAGUAL<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Onde": "1",
+                    "Penalização": "Não respeitar a bandeira azul (2 min)"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

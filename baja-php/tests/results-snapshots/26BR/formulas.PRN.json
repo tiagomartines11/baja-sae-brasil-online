@@ -1,0 +1,362 @@
+{
+    "evento": "26BR",
+    "prova": "PRN",
+    "nome": "Apresentação de Negócios",
+    "type": "normal",
+    "stored_totals": {
+        "APRNEGcom": 0,
+        "APRNEGmax": 8.15,
+        "APRNEGmin": 2.35,
+        "FINNEGcom": 0,
+        "FINNEGmax": 10,
+        "FINNEGmin": 1.0e-6,
+        "TOPNEGcom": -3.5,
+        "TOPNEGmax": 8.15,
+        "TOPNEGmin": 7.16
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 5.79,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 5.79,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 5.79
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 6.21,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 6.21,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 6.21
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 5.79,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 5.79,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 5.79
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 0,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 0,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 7.16,
+                "APRNEG": 7.16,
+                "FINNEG": 10,
+                "TOPNEG": 7.16
+            },
+            "pontos": {
+                "APRPTS_NEG": 7.16,
+                "APRPTS_NEG_FIN": 8.15,
+                "NOTA_NEG": 7.16
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 8.15,
+                "APRNEG": 8.15,
+                "FINNEG": 9,
+                "TOPNEG": 8.15
+            },
+            "pontos": {
+                "APRPTS_NEG": 8.15,
+                "APRPTS_NEG_FIN": 8.0509999901,
+                "NOTA_NEG": 8.15
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 5.28,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 5.28,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 5.28
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 3.15,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 3.15,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 3.15
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 4.37,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 4.37,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 4.37
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 5.45,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 5.45,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 5.45
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 2.35,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 2.35,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 2.35
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 5.17,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 5.17,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 5.17
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 5.35,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 5.35,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 5.35
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 2.77,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 2.77,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 2.77
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 4.88,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 4.88,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 4.88
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "FIN": 7.25,
+                "APRNEG": 7.25,
+                "FINNEG": 1.0e-6,
+                "TOPNEG": 7.25
+            },
+            "pontos": {
+                "APRPTS_NEG": 7.25,
+                "APRPTS_NEG_FIN": 7.16,
+                "NOTA_NEG": 7.25
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 0,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 0,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 0
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 7.44,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 7.44,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 7.44
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 4.47,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 4.47,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 4.47
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 4.1,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 4.1,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 4.1
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 5.89,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 5.89,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 5.89
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 6.175,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 6.175,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 6.175
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 4.61,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 4.61,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 4.61
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "FIN": 0,
+                "APRNEG": 4.25,
+                "FINNEG": 0,
+                "TOPNEG": null
+            },
+            "pontos": {
+                "APRPTS_NEG": 4.25,
+                "APRPTS_NEG_FIN": 0,
+                "NOTA_NEG": 4.25
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

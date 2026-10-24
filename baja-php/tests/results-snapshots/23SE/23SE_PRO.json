@@ -1,0 +1,315 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SE",
+    "id": "23SE_PRO",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Desafios Técnicos",
+                "Apresentação de Projeto",
+                "Aval. Proj. Dinâmico",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Desafios Técnicos": "103.44",
+                    "Apresentação de Projeto": "111.91",
+                    "Aval. Proj. Dinâmico": "14.9",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Desafios Técnicos": "90.93",
+                    "Apresentação de Projeto": "147.27",
+                    "Aval. Proj. Dinâmico": "10.88",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Desafios Técnicos": "98.12",
+                    "Apresentação de Projeto": "150.01",
+                    "Aval. Proj. Dinâmico": "16.39",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Desafios Técnicos": "96.82",
+                    "Apresentação de Projeto": "147.05",
+                    "Aval. Proj. Dinâmico": "14.22",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Desafios Técnicos": "115.25",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "20",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Desafios Técnicos": "88.3",
+                    "Apresentação de Projeto": "110.5",
+                    "Aval. Proj. Dinâmico": "14.97",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Desafios Técnicos": "85.14",
+                    "Apresentação de Projeto": "117.66",
+                    "Aval. Proj. Dinâmico": "15.65",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Desafios Técnicos": "39.9",
+                    "Apresentação de Projeto": "67.51",
+                    "Aval. Proj. Dinâmico": "13.13",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "Desafios Técnicos": "85.45",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "11.7",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Desafios Técnicos": "102.16",
+                    "Apresentação de Projeto": "115.02",
+                    "Aval. Proj. Dinâmico": "13.61",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Desafios Técnicos": "88.62",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "7.69",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Desafios Técnicos": "89.5",
+                    "Apresentação de Projeto": "73.38",
+                    "Aval. Proj. Dinâmico": "6.19",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Desafios Técnicos": "63.93",
+                    "Apresentação de Projeto": "94.85",
+                    "Aval. Proj. Dinâmico": "7.14",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "16",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Desafios Técnicos": "35.36",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "0",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "17",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">Instituto Federal de São Paulo (IFSP) - Campus Sertãozinho</i>",
+                    "Desafios Técnicos": "21.33",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "6.94",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Desafios Técnicos": "92.69",
+                    "Apresentação de Projeto": "122.93",
+                    "Aval. Proj. Dinâmico": "9.12",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "19",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">Insper - Instituto de Ensino e Pesquisa</i>",
+                    "Desafios Técnicos": "25.57",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "0",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Desafios Técnicos": "53.63",
+                    "Apresentação de Projeto": "67.5",
+                    "Aval. Proj. Dinâmico": "9.18",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "21",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">Fatec São Paulo</i>",
+                    "Desafios Técnicos": "19.01",
+                    "Apresentação de Projeto": "40.25",
+                    "Aval. Proj. Dinâmico": "0",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Desafios Técnicos": "89.63",
+                    "Apresentação de Projeto": "143.47",
+                    "Aval. Proj. Dinâmico": "14.08",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "23",
+                    "Equipe Escola": "EQUIPE CORSÁRIOS BAJA<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais</i>",
+                    "Desafios Técnicos": "34.92",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "0",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "24",
+                    "Equipe Escola": "IFSPEED<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de São Paulo – Campus Hortolândia</i>",
+                    "Desafios Técnicos": "0",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "0",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "25",
+                    "Equipe Escola": "UAI BAJA<br><i class=\"nomeEscola\">IFMG - Campus Arcos</i>",
+                    "Desafios Técnicos": "0",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "0",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "26",
+                    "Equipe Escola": "MINERVA BAJA<br><i class=\"nomeEscola\">UFRJ - CENTRO DE TECNOLOGIA</i>",
+                    "Desafios Técnicos": "54.29",
+                    "Apresentação de Projeto": "0",
+                    "Aval. Proj. Dinâmico": "0",
+                    "Total": "",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Deprecated: strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in resultados/prova.php:121",
+        "Deprecated: strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in resultados/prova.php:122"
+    ]
+}

@@ -1,0 +1,157 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "23SE",
+    "id": "23SE_APD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aproveitamento",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Aproveitamento": "54.75%",
+                    "Points": "14.9"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Aproveitamento": "40%",
+                    "Points": "10.88"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Aproveitamento": "60.25%",
+                    "Points": "16.39",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Aproveitamento": "52.25%",
+                    "Points": "14.22"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Aproveitamento": "73.5%",
+                    "Points": "20",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Aproveitamento": "55%",
+                    "Points": "14.97"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Aproveitamento": "57.5%",
+                    "Points": "15.65",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Aproveitamento": "48.25%",
+                    "Points": "13.13"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "Aproveitamento": "43%",
+                    "Points": "11.7"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Aproveitamento": "50%",
+                    "Points": "13.61"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Aproveitamento": "28.25%",
+                    "Points": "7.69"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Aproveitamento": "22.75%",
+                    "Points": "6.19"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Aproveitamento": "26.25%",
+                    "Points": "7.14"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "17",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">Instituto Federal de São Paulo (IFSP) - Campus Sertãozinho</i>",
+                    "Aproveitamento": "25.5%",
+                    "Points": "6.94"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Aproveitamento": "33.5%",
+                    "Points": "9.12"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Aproveitamento": "33.75%",
+                    "Points": "9.18"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Aproveitamento": "51.75%",
+                    "Points": "14.08"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

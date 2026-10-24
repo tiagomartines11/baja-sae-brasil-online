@@ -1,0 +1,51 @@
+{
+    "evento": "25SU",
+    "prova": "B44",
+    "nome": "Bônus 4x4",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": [],
+            "pontos": {
+                "B44PTS": 0
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": {
+                "B44PTS": 40
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "B44PTS": 40
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": {
+                "B44PTS": 40
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "B44PTS": 40
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

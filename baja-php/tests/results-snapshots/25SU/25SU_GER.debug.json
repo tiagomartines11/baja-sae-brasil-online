@@ -1,0 +1,233 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "25SU",
+    "id": "25SU_GER",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Segurança",
+                "Projeto",
+                "Dinâmicas",
+                "Enduro",
+                "Bônus 4x4",
+                "Penalizações",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "1",
+                    "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Segurança": "-15",
+                    "Projeto": "150.48",
+                    "Dinâmicas": "77.51",
+                    "Enduro": "84.71",
+                    "Bônus 4x4": "0",
+                    "Penalizações": "",
+                    "Total": "<b>297.7</b>"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "2",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Segurança": "-10",
+                    "Projeto": "226.95",
+                    "Dinâmicas": "120.06",
+                    "Enduro": "103.53",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>440.54</b>"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "3",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Segurança": "-15",
+                    "Projeto": "115.45",
+                    "Dinâmicas": "9",
+                    "Enduro": "28.24",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>137.69</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
+                    "Segurança": "-15",
+                    "Projeto": "172.53",
+                    "Dinâmicas": "227.23",
+                    "Enduro": "315.29",
+                    "Bônus 4x4": "40",
+                    "Penalizações": "",
+                    "Total": "<b>740.05</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "5",
+                    "Equipe Escola": "Baja Guaicurus<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Segurança": "-15",
+                    "Projeto": "87.23",
+                    "Dinâmicas": "0",
+                    "Enduro": "0",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>72.23</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "6",
+                    "Equipe Escola": "Pelznickel UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário da Fundação Educacional de Brusque - UNIFEBE</i>",
+                    "Segurança": "-15",
+                    "Projeto": "50.98",
+                    "Dinâmicas": "28.23",
+                    "Enduro": "32.94",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>97.15</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Segurança": "0",
+                    "Projeto": "290.55",
+                    "Dinâmicas": "224.59",
+                    "Enduro": "400",
+                    "Bônus 4x4": "40",
+                    "Penalizações": "",
+                    "Total": "<b>955.14</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "8",
+                    "Equipe Escola": "BajaSATC<br><i class=\"nomeEscola\">Associação Beneficente da Indústria Carbonífera de Santa Catarina - SATC</i>",
+                    "Segurança": "0",
+                    "Projeto": "112.75",
+                    "Dinâmicas": "76.65",
+                    "Enduro": "188.24",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>377.64</b>"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "9",
+                    "Equipe Escola": "Londribaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Londrina</i>",
+                    "Segurança": "-40",
+                    "Projeto": "99.08",
+                    "Dinâmicas": "0",
+                    "Enduro": "70.59",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>129.67</b>"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "10",
+                    "Equipe Escola": "Coyote Baja<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Caxias do Sul</i>",
+                    "Segurança": "-40",
+                    "Projeto": "79.01",
+                    "Dinâmicas": "22.73",
+                    "Enduro": "277.65",
+                    "Bônus 4x4": "40",
+                    "Penalizações": "",
+                    "Total": "<b>379.39</b>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "11",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Segurança": "-20",
+                    "Projeto": "151.43",
+                    "Dinâmicas": "0",
+                    "Enduro": "117.65",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>249.08</b>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "12",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Segurança": "-15",
+                    "Projeto": "181.05",
+                    "Dinâmicas": "0",
+                    "Enduro": "94.12",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>260.17</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Segurança": "0",
+                    "Projeto": "173.35",
+                    "Dinâmicas": "201.25",
+                    "Enduro": "272.94",
+                    "Bônus 4x4": "40",
+                    "Penalizações": "",
+                    "Total": "<b>687.54</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "14",
+                    "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Segurança": "0",
+                    "Projeto": "94.15",
+                    "Dinâmicas": "119.01",
+                    "Enduro": "216.47",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>429.63</b>"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "15",
+                    "Equipe Escola": "Bajagual<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Segurança": "-20",
+                    "Projeto": "70.28",
+                    "Dinâmicas": "0",
+                    "Enduro": "207.06",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>257.34</b>"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "16",
+                    "Equipe Escola": "CTJ Baja<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina - Joinville</i>",
+                    "Segurança": "0",
+                    "Projeto": "0",
+                    "Dinâmicas": "0",
+                    "Enduro": "0",
+                    "Bônus 4x4": "",
+                    "Penalizações": "",
+                    "Total": "<b>0</b>"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

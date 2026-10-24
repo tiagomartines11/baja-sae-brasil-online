@@ -1,0 +1,676 @@
+{
+    "evento": "23BR",
+    "prova": "SGE",
+    "nome": "Segurança Estática",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -40,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -35,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -35,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "REPROVADO"
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -40,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -35,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -40,
+                "SGE_STATUS": "REPROVADO"
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 54,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -35,
+                "SGE_STATUS": "REPROVADO"
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 59,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -35,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 63,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": {
+                "SGE_PEN_ICTS": -15
+            },
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "APROVADO"
+            }
+        },
+        {
+            "equipe": 65,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 66,
+            "vars": {
+                "SGE_PEN_ICTS": 0
+            },
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": ""
+            }
+        },
+        {
+            "equipe": 67,
+            "vars": {
+                "SGE_PEN_ICTS": -30
+            },
+            "pontos": {
+                "SGEPTS": -40,
+                "SGE_STATUS": "APROVADO"
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

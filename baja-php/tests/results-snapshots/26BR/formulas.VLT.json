@@ -1,0 +1,15 @@
+{
+    "evento": "26BR",
+    "prova": "VLT",
+    "nome": "Voltas",
+    "type": "normal",
+    "stored_totals": null,
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

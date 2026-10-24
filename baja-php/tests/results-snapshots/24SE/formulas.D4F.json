@@ -1,0 +1,70 @@
+{
+    "evento": "24SE",
+    "prova": "D4F",
+    "nome": "Desafio 4X4 Final",
+    "type": "normal",
+    "stored_totals": {
+        "DES_4XF_com": 0,
+        "DES_4XF_max": 90,
+        "DES_4XF_min": 40
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "DES_4XF_": 40
+            },
+            "pontos": {
+                "DES_4XF_POR": 40,
+                "DES_4XF_TS": 4.444444444444445
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "DES_4XF_": 60
+            },
+            "pontos": {
+                "DES_4XF_POR": 60,
+                "DES_4XF_TS": 6.666666666666666
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "DES_4XF_": 90
+            },
+            "pontos": {
+                "DES_4XF_POR": 90,
+                "DES_4XF_TS": 10
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "DES_4XF_": 80
+            },
+            "pontos": {
+                "DES_4XF_POR": 80,
+                "DES_4XF_TS": 8.88888888888889
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "DES_4XF_": 40
+            },
+            "pontos": {
+                "DES_4XF_POR": 40,
+                "DES_4XF_TS": 4.444444444444445
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,247 @@
+{
+    "evento": "22SU",
+    "prova": "PRS",
+    "nome": "Apresentação de Projeto - Suspensão e Direção",
+    "type": "normal",
+    "stored_totals": {
+        "APRSUScom": 0,
+        "APRSUSmax": 9.75,
+        "APRSUSmin": 1.5,
+        "FINSUScom": 0,
+        "FINSUSmax": 10,
+        "FINSUSmin": 7,
+        "TOPSUScom": 0,
+        "TOPSUSmax": 9.75,
+        "TOPSUSmin": 6.75
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 2.5,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 2.5,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 4.5,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 4.5,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 4.25,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 4.25,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 9.5,
+                "APRSUS": 9.5,
+                "FINSUS": 10,
+                "TOPSUS": 9.5
+            },
+            "pontos": {
+                "APRPTS_SUS": 9.5,
+                "APRPTS_SUS_FIN": 9.75
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 0,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 0,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 5.25,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 5.25,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 2,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 2,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 9.75,
+                "APRSUS": 9.75,
+                "FINSUS": 9,
+                "TOPSUS": 9.75
+            },
+            "pontos": {
+                "APRPTS_SUS": 9.75,
+                "APRPTS_SUS_FIN": 8.75
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 3,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 3,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 3.75,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 3.75,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 2.25,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 2.25,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 1.5,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 1.5,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 4.5,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 4.5,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 2.5,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 2.5,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 6.5,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 6.5,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRSUS": 2,
+                "FINSUS": 0,
+                "TOPSUS": 0
+            },
+            "pontos": {
+                "APRPTS_SUS": 2,
+                "APRPTS_SUS_FIN": 0
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "FIN": 6.75,
+                "APRSUS": 6.75,
+                "FINSUS": 7,
+                "TOPSUS": 6.75
+            },
+            "pontos": {
+                "APRPTS_SUS": 6.75,
+                "APRPTS_SUS_FIN": 6.75
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

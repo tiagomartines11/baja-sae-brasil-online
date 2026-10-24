@@ -1,0 +1,143 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "22SU",
+    "id": "22SU_ACE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "1",
+                    "Equipe Escola": "Londribaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal Do Paraná - Campus Londrina</i>",
+                    "Aceleração": "<b>5.292</b><br> 5.351",
+                    "Pontos": "15.13"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "2",
+                    "Equipe Escola": "Baja SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Aceleração": "<b>4.896</b><br> 4.926",
+                    "Pontos": "20.73"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Cataratas Baja<br><i class=\"nomeEscola\">Universidade Estadual Do Oeste Do Paraná</i>",
+                    "Aceleração": "4.506<br> <b>4.364</b>",
+                    "Pontos": "28.26",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "4",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal Do Paraná</i>",
+                    "Aceleração": "4.406<br> <b>4.405</b>",
+                    "Pontos": "27.68"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "6",
+                    "Equipe Escola": "UDESC Velociraptor Baja<br><i class=\"nomeEscola\">Universidade Do Estado De Santa Catarina</i>",
+                    "Aceleração": "<b>5.49</b><br> 5.738",
+                    "Pontos": "12.33"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "7",
+                    "Equipe Escola": "Sinuelo FAHOR<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Aceleração": "4.652<br> <b>4.589</b>",
+                    "Pontos": "25.08"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "8",
+                    "Equipe Escola": "Baja De Galpão - UNISC<br><i class=\"nomeEscola\">Universidade De Santa Cruz Do Sul</i>",
+                    "Aceleração": "<b>4.241</b><br> 4.298",
+                    "Pontos": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "9",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal Do Paraná</i>",
+                    "Aceleração": "4.813<br> <b>4.728</b>",
+                    "Pontos": "23.11"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "10",
+                    "Equipe Escola": "UFPR Baja Sae<br><i class=\"nomeEscola\">Universidade Federal Do Paraná</i>",
+                    "Aceleração": "4.91<br> <b>4.889</b>",
+                    "Pontos": "20.83"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "11",
+                    "Equipe Escola": "Tobaja<br><i class=\"nomeEscola\">Universidade De Caxias Do Sul</i>",
+                    "Aceleração": "<b>7.65</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "12",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal Do Rio Grande Do Sul</i>",
+                    "Aceleração": "<b>4.361</b><br> 4.421",
+                    "Pontos": "28.3",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja<br><i class=\"nomeEscola\">Universidade Federal De Santa Maria</i>",
+                    "Aceleração": "<b>4.752</b><br> -",
+                    "Pontos": "22.77"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "14",
+                    "Equipe Escola": "Procobaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal Do Paraná - Campus Cornélio Procópio</i>",
+                    "Aceleração": "<b>5.165</b><br> 5.224",
+                    "Pontos": "16.93"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "15",
+                    "Equipe Escola": "Imperador UTFPR<br><i class=\"nomeEscola\">Universidade Tecnologica Federal Do Paraná - Campus Curitiba</i>",
+                    "Aceleração": "4.64<br> <b>4.53</b>",
+                    "Pontos": "25.91"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "17",
+                    "Equipe Escola": "UFSC Baja SAE<br><i class=\"nomeEscola\">Universidade Federal De Santa Catarina</i>",
+                    "Aceleração": "4.518<br> <b>4.502</b>",
+                    "Pontos": "26.31"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

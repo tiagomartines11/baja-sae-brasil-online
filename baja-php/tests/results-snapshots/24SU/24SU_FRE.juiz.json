@@ -1,0 +1,108 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "24SU",
+    "id": "24SU_FRE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Desaceleração",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "1",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Desaceleração": "-<br> <b>9.6</b>",
+                    "Pontos": "13.33",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari - Univates</i>",
+                    "Desaceleração": "-<br> <b>10.36</b>",
+                    "Pontos": "19.25",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "3",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Desaceleração": "-<br> <b>8.58</b>",
+                    "Pontos": "5.45"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "4",
+                    "Equipe Escola": "CATARATAS BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná (UNIOESTE)</i>",
+                    "Desaceleração": "<b>8.76</b><br> -",
+                    "Pontos": "6.85"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "6",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Curitiba</i>",
+                    "Desaceleração": "-<br> <b>8.61</b>",
+                    "Pontos": "5.67"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "7",
+                    "Equipe Escola": "LONDRIBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Londrina</i>",
+                    "Desaceleração": "<b>7.88</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Desaceleração": "-<br> <b>10.46</b>",
+                    "Pontos": "20",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "11",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Cornélio Procópio</i>",
+                    "Desaceleração": "<b>8.09</b><br> -",
+                    "Pontos": "1.62"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "13",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Desaceleração": "<b>9.46</b><br> -",
+                    "Pontos": "12.29"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "16",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">SATC</i>",
+                    "Desaceleração": "-<br> <b>9.38</b>",
+                    "Pontos": "11.69"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

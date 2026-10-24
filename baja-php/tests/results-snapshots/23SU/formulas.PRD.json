@@ -1,0 +1,273 @@
+{
+    "evento": "23SU",
+    "prova": "PRD",
+    "nome": "Apresentação de Projeto - Design",
+    "type": "normal",
+    "stored_totals": {
+        "APRDEScom": 0,
+        "APRDESmax": 8.25,
+        "APRDESmin": 2.75,
+        "FINDEScom": 0,
+        "FINDESmax": 10,
+        "FINDESmin": 2,
+        "TOPDEScom": 0,
+        "TOPDESmax": 8.25,
+        "TOPDESmin": 7
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 6.5,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 6.5,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3.5,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3.5,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5.75,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 7,
+                "APRDES": 7,
+                "FINDES": 0,
+                "TOPDES": 7
+            },
+            "pontos": {
+                "APRPTS_DES": 7,
+                "APRPTS_DES_FIN": 6.6875
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 6,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 6,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.75,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.75,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3.25,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5.25,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3.5,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3.5,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 7,
+                "APRDES": 7,
+                "FINDES": 2,
+                "TOPDES": 7
+            },
+            "pontos": {
+                "APRPTS_DES": 7,
+                "APRPTS_DES_FIN": 7
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 0,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 0,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 8.25,
+                "APRDES": 8.25,
+                "FINDES": 10,
+                "TOPDES": 8.25
+            },
+            "pontos": {
+                "APRPTS_DES": 8.25,
+                "APRPTS_DES_FIN": 8.25
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 6.25,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 6.25,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 0,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 0,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 5.75,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 5.75,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3,
+                "APRPTS_DES_FIN": 0
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 0,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 0,
+                "APRPTS_DES_FIN": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,250 @@
+{
+    "evento": "25SU",
+    "prova": "PRM",
+    "nome": "Apresentação de Projeto - Negócios",
+    "type": "normal",
+    "stored_totals": {
+        "APRMKTcom": 0,
+        "APRMKTmax": 8,
+        "APRMKTmin": 1.9,
+        "FINMKTcom": 0,
+        "FINMKTmax": 10.00001,
+        "FINMKTmin": 1.0e-5,
+        "TOPMKTcom": 0,
+        "TOPMKTmax": 8,
+        "TOPMKTmin": 6.35
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 5,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 5,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 5
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 8,
+                "APRMKT": 8,
+                "FINMKT": 9.90001,
+                "TOPMKT": 8
+            },
+            "pontos": {
+                "APRPTS_MKT": 8,
+                "APRPTS_MKT_FIN": 7.98349835,
+                "NOTA_MKT": 8
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 6.35,
+                "APRMKT": 6.35,
+                "FINMKT": 1.0e-5,
+                "TOPMKT": 6.35
+            },
+            "pontos": {
+                "APRPTS_MKT": 6.35,
+                "APRPTS_MKT_FIN": 6.34999835,
+                "NOTA_MKT": 6.35
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 4.1,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 4.1,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 4.1
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 5.65,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 5.65,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 5.65
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 0
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 6.67,
+                "APRMKT": 6.67,
+                "FINMKT": 10.00001,
+                "TOPMKT": 6.67
+            },
+            "pontos": {
+                "APRPTS_MKT": 6.67,
+                "APRPTS_MKT_FIN": 7.99999835,
+                "NOTA_MKT": 6.67
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 3.2,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 3.2,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 3.2
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 4.3,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 4.3,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 4.3
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 5.5,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 5.5,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 5.5
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 4.2,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 4.2,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 4.2
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 3.5,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 3.5,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 3.5
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 1.9,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 1.9,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 1.9
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRMKT": 0,
+                "FINMKT": 0,
+                "TOPMKT": 0
+            },
+            "pontos": {
+                "APRPTS_MKT": 0,
+                "APRPTS_MKT_FIN": 0,
+                "NOTA_MKT": 3.5
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,240 @@
+{
+    "evento": "23SE",
+    "prova": "D4X",
+    "nome": "Desafio 4X4",
+    "type": "normal",
+    "stored_totals": {
+        "DES_4X4_com": 0,
+        "DES_4X4_max": 79,
+        "DES_4X4_min": 25.75
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "DES_4X4_": 70.31
+            },
+            "pontos": {
+                "DES_4X4_POR": 70.31,
+                "DES_4X4_TS": 35.6,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "DES_4X4_": 58.17
+            },
+            "pontos": {
+                "DES_4X4_POR": 58.17,
+                "DES_4X4_TS": 29.453164556962026,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "DES_4X4_": 64.35
+            },
+            "pontos": {
+                "DES_4X4_POR": 64.35,
+                "DES_4X4_TS": 32.58227848101265,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "DES_4X4_": 68.3
+            },
+            "pontos": {
+                "DES_4X4_POR": 68.3,
+                "DES_4X4_TS": 34.58227848101266,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "DES_4X4_": 72
+            },
+            "pontos": {
+                "DES_4X4_POR": 72,
+                "DES_4X4_TS": 36.45569620253164,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "DES_4X4_": 51.98
+            },
+            "pontos": {
+                "DES_4X4_POR": 51.98,
+                "DES_4X4_TS": 26.31898734177215,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "DES_4X4_": 77
+            },
+            "pontos": {
+                "DES_4X4_POR": 77,
+                "DES_4X4_TS": 38.9873417721519,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "DES_4X4_": 25.75
+            },
+            "pontos": {
+                "DES_4X4_POR": 25.75,
+                "DES_4X4_TS": 13.037974683544304,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "DES_4X4_": 46.83
+            },
+            "pontos": {
+                "DES_4X4_POR": 46.83,
+                "DES_4X4_TS": 23.71139240506329,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "DES_4X4_": 72.33
+            },
+            "pontos": {
+                "DES_4X4_POR": 72.33,
+                "DES_4X4_TS": 36.62278481012658,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "DES_4X4_": 56.23
+            },
+            "pontos": {
+                "DES_4X4_POR": 56.23,
+                "DES_4X4_TS": 28.470886075949366,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "DES_4X4_": 58.95
+            },
+            "pontos": {
+                "DES_4X4_POR": 58.95,
+                "DES_4X4_TS": 29.848101265822788,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "DES_4X4_": 65.67
+            },
+            "pontos": {
+                "DES_4X4_POR": 65.67,
+                "DES_4X4_TS": 33.2506329113924,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "DES_4X4_": 26.88
+            },
+            "pontos": {
+                "DES_4X4_POR": 26.88,
+                "DES_4X4_TS": 13.61012658227848,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "DES_4X4_": 79
+            },
+            "pontos": {
+                "DES_4X4_POR": 79,
+                "DES_4X4_TS": 40,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "DES_4X4_": 29.25
+            },
+            "pontos": {
+                "DES_4X4_POR": 29.25,
+                "DES_4X4_TS": 14.81012658227848,
+                "DES_PEN_4X4_TS": 10
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "DES_4X4_": 33.5
+            },
+            "pontos": {
+                "DES_4X4_POR": 33.5,
+                "DES_4X4_TS": 16.962025316455694,
+                "DES_PEN_4X4_TS": 10
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "DES_4X4_": 0
+            },
+            "pontos": {
+                "DES_4X4_POR": 0,
+                "DES_4X4_TS": 0,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "DES_4X4_": 49.08
+            },
+            "pontos": {
+                "DES_4X4_POR": 49.08,
+                "DES_4X4_TS": 24.850632911392406,
+                "DES_PEN_4X4_TS": 0
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "DES_4X4_": 36.67
+            },
+            "pontos": {
+                "DES_4X4_POR": 36.67,
+                "DES_4X4_TS": 18.567088607594936,
+                "DES_PEN_4X4_TS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

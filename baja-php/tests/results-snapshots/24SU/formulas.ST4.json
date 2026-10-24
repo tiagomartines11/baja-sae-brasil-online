@@ -1,0 +1,126 @@
+{
+    "evento": "24SU",
+    "prova": "ST4",
+    "nome": "Suspensão 4",
+    "type": "normal",
+    "stored_totals": {
+        "TCSUS4com": 0,
+        "TCSUS4max": 0,
+        "TCSUS4min": null
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "TC4_1": 0,
+                "TC4_2": null,
+                "PESO_4": 15,
+                "CORR4_1": null,
+                "CORR4_2": null,
+                "TCSUS4": 0
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "TC4_1": 0,
+                "TC4_2": null,
+                "PESO_4": 15,
+                "CORR4_1": null,
+                "CORR4_2": null,
+                "TCSUS4": 0
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC4_1": 0,
+                "TC4_2": null,
+                "PESO_4": 15,
+                "CORR4_1": null,
+                "CORR4_2": null,
+                "TCSUS4": 0
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "TC4_1": 0,
+                "TC4_2": 0,
+                "PESO_4": 15,
+                "CORR4_1": null,
+                "CORR4_2": null,
+                "TCSUS4": 0
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "TC4_1": 0,
+                "TC4_2": null,
+                "PESO_4": 15,
+                "CORR4_1": null,
+                "CORR4_2": null,
+                "TCSUS4": 0
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC4_1": 0,
+                "TC4_2": 0,
+                "PESO_4": 15,
+                "CORR4_1": null,
+                "CORR4_2": null,
+                "TCSUS4": 0
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC4_1": 0,
+                "TC4_2": 0,
+                "PESO_4": 15,
+                "CORR4_1": null,
+                "CORR4_2": null,
+                "TCSUS4": 0
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": [
+            1,
+            2,
+            3,
+            4,
+            7,
+            9,
+            13
+        ]
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

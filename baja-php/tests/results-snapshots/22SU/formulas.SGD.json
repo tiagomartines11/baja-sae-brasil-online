@@ -1,0 +1,136 @@
+{
+    "evento": "22SU",
+    "prova": "SGD",
+    "nome": "Segurança Dinâmica",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 1
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 1
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 1
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 1
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 1
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": [],
+            "pontos": {
+                "SGDPTS": 0,
+                "SGD_REP": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

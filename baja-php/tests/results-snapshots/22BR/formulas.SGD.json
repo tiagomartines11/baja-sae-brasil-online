@@ -1,0 +1,394 @@
+{
+    "evento": "22BR",
+    "prova": "SGD",
+    "nome": "Segurança Dinâmica",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 59,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 63,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 66,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 68,
+            "vars": [],
+            "pontos": {
+                "SGD_STATUS": "OK"
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

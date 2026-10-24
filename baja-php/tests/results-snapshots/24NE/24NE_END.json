@@ -1,0 +1,150 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24NE",
+    "id": "24NE_END",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Laps",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Laps": "84",
+                    "Pontos": "221.05",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Laps": "65",
+                    "Pontos": "171.05"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
+                    "Laps": "114",
+                    "Pontos": "300",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
+                    "Laps": "83",
+                    "Pontos": "218.42",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "5",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA - Universidade Federal da Bahia</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "6",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Universidade Salvador</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "7",
+                    "Equipe Escola": "Calangotec<br><i class=\"nomeEscola\">SENAI Cimatec</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Laps": "7",
+                    "Pontos": "18.42"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Laps": "26",
+                    "Pontos": "68.42"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "10",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "11",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "12",
+                    "Equipe Escola": "Baja Sun City<br><i class=\"nomeEscola\">IFBA - Jequié</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "13",
+                    "Equipe Escola": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "14",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Laps": "67",
+                    "Pontos": "176.32"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "15",
+                    "Equipe Escola": "UNBaja<br><i class=\"nomeEscola\">UNB</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "16",
+                    "Equipe Escola": "Carcau Baja<br><i class=\"nomeEscola\">UESC - Ilheus</i>",
+                    "Laps": "0",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "17",
+                    "Equipe Escola": "Bajagreste<br><i class=\"nomeEscola\">IFPE - Caruaru</i>",
+                    "Laps": "2",
+                    "Pontos": "5.26"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

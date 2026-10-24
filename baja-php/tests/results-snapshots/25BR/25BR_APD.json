@@ -1,0 +1,304 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "25BR",
+    "id": "25BR_APD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aproveitamento - APD",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "1",
+                    "Equipe Escola": "Equipe FEI Baja<br><i class=\"nomeEscola\">Centro Universitário FEI</i>",
+                    "Aproveitamento - APD": "81.5%",
+                    "Pontos": "18.21"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "2",
+                    "Equipe Escola": "Baja UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Aproveitamento - APD": "72.5%",
+                    "Pontos": "16.2"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Baja de Galpão - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Aproveitamento - APD": "89.5%",
+                    "Pontos": "20",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Aproveitamento - APD": "82.5%",
+                    "Pontos": "18.44"
+                },
+                {
+                    "[img trofeu.png]": "27º",
+                    "#": "6",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Aproveitamento - APD": "60.25%",
+                    "Pontos": "13.46"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "7",
+                    "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro</i>",
+                    "Aproveitamento - APD": "73%",
+                    "Pontos": "16.31"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "8",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "Aproveitamento - APD": "70.75%",
+                    "Pontos": "15.81"
+                },
+                {
+                    "[img trofeu.png]": "32º",
+                    "#": "9",
+                    "Equipe Escola": "CaraubajaSAE<br><i class=\"nomeEscola\">Universidade Federal Rural do Sami-Árido (UFERSA)</i>",
+                    "Aproveitamento - APD": "52.25%",
+                    "Pontos": "11.68"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "10",
+                    "Equipe Escola": "Equipe Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del Rei</i>",
+                    "Aproveitamento - APD": "71.25%",
+                    "Pontos": "15.92"
+                },
+                {
+                    "[img trofeu.png]": "33º",
+                    "#": "11",
+                    "Equipe Escola": "PAC Baja<br><i class=\"nomeEscola\">Universidade Estadual Paulista \"Júlio de Mesquita Filho\" \"UNESP\"</i>",
+                    "Aproveitamento - APD": "50.75%",
+                    "Pontos": "11.34"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "12",
+                    "Equipe Escola": "Kaizen Piratas do Cerrado<br><i class=\"nomeEscola\">Universidade de Brasilia - UnB</i>",
+                    "Aproveitamento - APD": "68%",
+                    "Pontos": "15.2"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "13",
+                    "Equipe Escola": "Equipe Cactus Baja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi - Árido - UFERSA</i>",
+                    "Aproveitamento - APD": "78.25%",
+                    "Pontos": "17.49"
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "16",
+                    "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Aproveitamento - APD": "63.25%",
+                    "Pontos": "14.13"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "17",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA MARIA</i>",
+                    "Aproveitamento - APD": "87.5%",
+                    "Pontos": "19.55",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "18",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte</i>",
+                    "Aproveitamento - APD": "85%",
+                    "Pontos": "18.99"
+                },
+                {
+                    "[img trofeu.png]": "26º",
+                    "#": "19",
+                    "Equipe Escola": "ProcoBaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "Aproveitamento - APD": "61%",
+                    "Pontos": "13.63"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "20",
+                    "Equipe Escola": "Saci baja SAE UNIFEI<br><i class=\"nomeEscola\">Universidade federal de Itajubá</i>",
+                    "Aproveitamento - APD": "73.25%",
+                    "Pontos": "16.37"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "21",
+                    "Equipe Escola": "Equipe Parahybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande - UFCG</i>",
+                    "Aproveitamento - APD": "85.75%",
+                    "Pontos": "19.16",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "22",
+                    "Equipe Escola": "EESC USP TRACTIAN Baja<br><i class=\"nomeEscola\">EESC USP</i>",
+                    "Aproveitamento - APD": "85%",
+                    "Pontos": "18.99"
+                },
+                {
+                    "[img trofeu.png]": "29º",
+                    "#": "23",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro federal de educação tecnológica de Minas Gerais</i>",
+                    "Aproveitamento - APD": "57%",
+                    "Pontos": "12.74"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "24",
+                    "Equipe Escola": "Baja UFSCar<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Aproveitamento - APD": "35.25%",
+                    "Pontos": "7.88"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "27",
+                    "Equipe Escola": "Baja Mud Racing<br><i class=\"nomeEscola\">Facens</i>",
+                    "Aproveitamento - APD": "67.5%",
+                    "Pontos": "15.08"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "28",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Aproveitamento - APD": "70.25%",
+                    "Pontos": "15.7"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "29",
+                    "Equipe Escola": "Equipe UFSC Baja<br><i class=\"nomeEscola\">UFSC</i>",
+                    "Aproveitamento - APD": "75.25%",
+                    "Pontos": "16.82"
+                },
+                {
+                    "[img trofeu.png]": "39º",
+                    "#": "30",
+                    "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">Universidade do Estado do Rio de Janeiro</i><br><small style=\"color:red;\">Desclassificada</small>",
+                    "Aproveitamento - APD": "0%",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "31",
+                    "Equipe Escola": "Sagui Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Aproveitamento - APD": "68%",
+                    "Pontos": "15.2"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "32",
+                    "Equipe Escola": "Corisco Baja<br><i class=\"nomeEscola\">Universidade de Pernambuco</i>",
+                    "Aproveitamento - APD": "70.25%",
+                    "Pontos": "15.7"
+                },
+                {
+                    "[img trofeu.png]": "22º",
+                    "#": "33",
+                    "Equipe Escola": "Corsários Baja<br><i class=\"nomeEscola\">Instituto Federal de Educação Ciência e Tecnologia do Sudeste de MInas Gerais</i>",
+                    "Aproveitamento - APD": "64.75%",
+                    "Pontos": "14.47"
+                },
+                {
+                    "[img trofeu.png]": "28º",
+                    "#": "34",
+                    "Equipe Escola": "Buffalo Baja - UFLA<br><i class=\"nomeEscola\">Universidade Federal de Lavras - UFLA</i>",
+                    "Aproveitamento - APD": "59.5%",
+                    "Pontos": "13.3"
+                },
+                {
+                    "[img trofeu.png]": "36º",
+                    "#": "36",
+                    "Equipe Escola": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Aproveitamento - APD": "47.75%",
+                    "Pontos": "10.67"
+                },
+                {
+                    "[img trofeu.png]": "34º",
+                    "#": "38",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de São Paulo</i>",
+                    "Aproveitamento - APD": "50%",
+                    "Pontos": "11.17"
+                },
+                {
+                    "[img trofeu.png]": "35º",
+                    "#": "39",
+                    "Equipe Escola": "CTJ Baja<br><i class=\"nomeEscola\">UFSC</i>",
+                    "Aproveitamento - APD": "49.75%",
+                    "Pontos": "11.12"
+                },
+                {
+                    "[img trofeu.png]": "23º",
+                    "#": "41",
+                    "Equipe Escola": "BAJAUEA<br><i class=\"nomeEscola\">Universidade Estadual do Amazonas - UEA</i>",
+                    "Aproveitamento - APD": "64.5%",
+                    "Pontos": "14.41"
+                },
+                {
+                    "[img trofeu.png]": "31º",
+                    "#": "44",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">Universidade Federal da Paraíba</i>",
+                    "Aproveitamento - APD": "55%",
+                    "Pontos": "12.29"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "47",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "Aproveitamento - APD": "82%",
+                    "Pontos": "18.32"
+                },
+                {
+                    "[img trofeu.png]": "30º",
+                    "#": "49",
+                    "Equipe Escola": "Baja Guaicurus<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Aproveitamento - APD": "55.75%",
+                    "Pontos": "12.46"
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "50",
+                    "Equipe Escola": "Mud Runner<br><i class=\"nomeEscola\">CEFET/RJ</i>",
+                    "Aproveitamento - APD": "63.25%",
+                    "Pontos": "14.13"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "51",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Aproveitamento - APD": "78%",
+                    "Pontos": "17.43"
+                },
+                {
+                    "[img trofeu.png]": "38º",
+                    "#": "52",
+                    "Equipe Escola": "ITA Baja<br><i class=\"nomeEscola\">Instituto Tecnológico de Aeronáutica</i>",
+                    "Aproveitamento - APD": "28%",
+                    "Pontos": "6.26"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

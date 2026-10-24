@@ -1,0 +1,11 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "25SU",
+    "id": "25SU_EPN",
+    "spoilers": false,
+    "tables": [],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19"
+    ]
+}

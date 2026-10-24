@@ -1,0 +1,120 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22NE",
+    "id": "22NE_VAL",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Team",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "2",
+                    "Team": "Parahybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Points": "59.88"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "3",
+                    "Team": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Points": "69.7",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "4",
+                    "Team": "UnBaja<br><i class=\"nomeEscola\">UNB</i>",
+                    "Points": "24.75"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "5",
+                    "Team": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Points": "64.46"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Team": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Points": "78.82",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "7",
+                    "Team": "Siará Baja<br><i class=\"nomeEscola\">UFC</i>",
+                    "Points": "42.04"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "8",
+                    "Team": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Points": "0"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "9",
+                    "Team": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Points": "53.41"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "10",
+                    "Team": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Points": "35.45"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "11",
+                    "Team": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Points": "70.77",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "12",
+                    "Team": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraúbas</i>",
+                    "Points": "61.78"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "13",
+                    "Team": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Points": "66.92"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "14",
+                    "Team": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Points": "37.27"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "15",
+                    "Team": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS</i>",
+                    "Points": "39.08"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "16",
+                    "Team": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Points": "8.1"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

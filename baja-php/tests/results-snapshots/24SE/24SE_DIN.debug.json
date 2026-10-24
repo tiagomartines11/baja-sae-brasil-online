@@ -1,0 +1,173 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "24SE",
+    "id": "24SE_DIN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração",
+                "Velocidade",
+                "Manobrabilidade",
+                "Suspensão",
+                "Cabo de Guerra",
+                "Prova 4x4",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "1",
+                    "Equipe Escola": "Poli<br><i class=\"nomeEscola\">Escola Politécnica da USP</i>",
+                    "Aceleração": "49.98",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "47.5",
+                    "Suspensão": "53.32",
+                    "Cabo de Guerra": "15",
+                    "Prova 4x4": "7.6",
+                    "Total": "<b>228.4</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "FEI Baja<br><i class=\"nomeEscola\">FEI</i>",
+                    "Aceleração": "49.18",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "59.24",
+                    "Suspensão": "58.64",
+                    "Cabo de Guerra": "9",
+                    "Prova 4x4": "30.74",
+                    "Total": "<b>261.8</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del Rei</i>",
+                    "Aceleração": "51.56",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "60",
+                    "Suspensão": "59.44",
+                    "Cabo de Guerra": "6",
+                    "Prova 4x4": "6.33",
+                    "Total": "<b>238.33</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "6",
+                    "Equipe Escola": "TEC Ilha Baja SAE<br><i class=\"nomeEscola\">Unesp - Campus de Ilha Solteira</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "33.02",
+                    "Suspensão": "60.45",
+                    "Cabo de Guerra": "6",
+                    "Prova 4x4": "0",
+                    "Total": "<b>154.47</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Equipe Escola": "Baja UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Aceleração": "43.63",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "51.92",
+                    "Suspensão": "80",
+                    "Cabo de Guerra": "9",
+                    "Prova 4x4": "40",
+                    "Total": "<b>279.55</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "10",
+                    "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro</i>",
+                    "Aceleração": "51.83",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "54.99",
+                    "Suspensão": "49.04",
+                    "Cabo de Guerra": "9",
+                    "Prova 4x4": "0",
+                    "Total": "<b>219.86</b>"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "11",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de São Paulo - campus Sertãozinho</i>",
+                    "Aceleração": "46.01",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "21.01",
+                    "Cabo de Guerra": "12",
+                    "Prova 4x4": "0",
+                    "Total": "<b>134.02</b>"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "12",
+                    "Equipe Escola": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "40.7",
+                    "Suspensão": "30.85",
+                    "Cabo de Guerra": "30",
+                    "Prova 4x4": "8.52",
+                    "Total": "<b>165.07</b>"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "15",
+                    "Equipe Escola": "EESC USP TRACTIAN BAJA<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos – USP</i>",
+                    "Aceleração": "55",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "41.27",
+                    "Suspensão": "64.52",
+                    "Cabo de Guerra": "9",
+                    "Prova 4x4": "0",
+                    "Total": "<b>224.79</b>"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "17",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Aceleração": "51.56",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "42.68",
+                    "Suspensão": "47.9",
+                    "Cabo de Guerra": "20",
+                    "Prova 4x4": "0",
+                    "Total": "<b>217.14</b>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "18",
+                    "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">Universidade do Estado do Rio de Janeiro</i>",
+                    "Aceleração": "28.82",
+                    "Velocidade": "55",
+                    "Manobrabilidade": "38.26",
+                    "Suspensão": "0",
+                    "Cabo de Guerra": "0",
+                    "Prova 4x4": "0",
+                    "Total": "<b>122.08</b>"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

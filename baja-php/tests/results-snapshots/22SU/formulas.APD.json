@@ -1,0 +1,160 @@
+{
+    "evento": "22SU",
+    "prova": "APD",
+    "nome": "Avaliação de Projeto Dinâmico",
+    "type": "normal",
+    "stored_totals": {
+        "APDMMcom": 0,
+        "APDMMmax": 13.95,
+        "APDMMmin": 3.075
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "APDPTS_PARC": 7.175000000000001,
+                "APDMM": 7.175000000000001
+            },
+            "pontos": {
+                "APDPTS": 10.286738351254481
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "APDPTS_PARC": 11.5,
+                "APDMM": 11.5
+            },
+            "pontos": {
+                "APDPTS": 16.48745519713262
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "APDPTS_PARC": 8.399999999999999,
+                "APDMM": 8.399999999999999
+            },
+            "pontos": {
+                "APDPTS": 12.04301075268817
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "APDPTS_PARC": 7.750000000000001,
+                "APDMM": 7.750000000000001
+            },
+            "pontos": {
+                "APDPTS": 11.111111111111114
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "APDPTS_PARC": 8.9,
+                "APDMM": 8.9
+            },
+            "pontos": {
+                "APDPTS": 12.759856630824373
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "APDPTS_PARC": 13.95,
+                "APDMM": 13.95
+            },
+            "pontos": {
+                "APDPTS": 20
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "APDPTS_PARC": 3.075,
+                "APDMM": 3.075
+            },
+            "pontos": {
+                "APDPTS": 4.408602150537635
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "APDPTS_PARC": 8.774999999999999,
+                "APDMM": 8.774999999999999
+            },
+            "pontos": {
+                "APDPTS": 12.580645161290322
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "APDPTS_PARC": 5.875,
+                "APDMM": 5.875
+            },
+            "pontos": {
+                "APDPTS": 8.422939068100359
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "APDPTS_PARC": 9.8,
+                "APDMM": 9.8
+            },
+            "pontos": {
+                "APDPTS": 14.050179211469535
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "APDPTS_PARC": 10.1,
+                "APDMM": 10.1
+            },
+            "pontos": {
+                "APDPTS": 14.480286738351255
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "APDPTS_PARC": 4.1,
+                "APDMM": 4.1
+            },
+            "pontos": {
+                "APDPTS": 5.878136200716846
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "APDPTS_PARC": 12.299999999999999,
+                "APDMM": 12.299999999999999
+            },
+            "pontos": {
+                "APDPTS": 17.634408602150536
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "APDPTS_PARC": 4.1499999999999995,
+                "APDMM": 4.1499999999999995
+            },
+            "pontos": {
+                "APDPTS": 5.949820788530465
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,134 @@
+{
+    "evento": "24SU",
+    "prova": "ST2",
+    "nome": "Suspensão 2",
+    "type": "normal",
+    "stored_totals": {
+        "TCSUS2com": 0,
+        "TCSUS2max": 23.406666666666663,
+        "TCSUS2min": 16.093333333333334
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "TC2_1": 16.093333333333334,
+                "TC2_2": 16.106666666666666,
+                "PESO_2": 10,
+                "CORR2_1": 0.3999999999999999,
+                "CORR2_2": 0.8,
+                "TCSUS2": 16.093333333333334
+            },
+            "pontos": {
+                "SUS2PTS": 8
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "TC2_1": 23.406666666666666,
+                "TC2_2": null,
+                "PESO_2": 10,
+                "CORR2_1": 1,
+                "CORR2_2": null,
+                "TCSUS2": 23.406666666666666
+            },
+            "pontos": {
+                "SUS2PTS": 10
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC2_1": 22.00666666666667,
+                "TC2_2": null,
+                "PESO_2": 10,
+                "CORR2_1": 1,
+                "CORR2_2": null,
+                "TCSUS2": 22.00666666666667
+            },
+            "pontos": {
+                "SUS2PTS": 10
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "TC2_1": 20.223333333333333,
+                "TC2_2": 19.106666666666666,
+                "PESO_2": 10,
+                "CORR2_1": 1,
+                "CORR2_2": 0.8,
+                "TCSUS2": 19.106666666666666
+            },
+            "pontos": {
+                "SUS2PTS": 10
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "TC2_1": 21.080000000000002,
+                "TC2_2": 19.743333333333332,
+                "PESO_2": 10,
+                "CORR2_1": 1,
+                "CORR2_2": 0.6,
+                "TCSUS2": 19.743333333333332
+            },
+            "pontos": {
+                "SUS2PTS": 10
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC2_1": 18.5,
+                "TC2_2": 21.12666666666667,
+                "PESO_2": 10,
+                "CORR2_1": 0.6,
+                "CORR2_2": 0.8,
+                "TCSUS2": 18.5
+            },
+            "pontos": {
+                "SUS2PTS": 8
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC2_1": 17.996666666666666,
+                "TC2_2": 16.36,
+                "PESO_2": 10,
+                "CORR2_1": 1,
+                "CORR2_2": 1,
+                "TCSUS2": 16.36
+            },
+            "pontos": {
+                "SUS2PTS": 10
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "TC2_1": 0,
+                "TC2_2": null,
+                "PESO_2": 10,
+                "CORR2_1": null,
+                "CORR2_2": null,
+                "TCSUS2": 0
+            },
+            "pontos": {
+                "SUS2PTS": null
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": [
+            16
+        ]
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

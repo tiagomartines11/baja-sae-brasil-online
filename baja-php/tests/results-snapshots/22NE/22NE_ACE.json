@@ -1,0 +1,101 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22NE",
+    "id": "22NE_ACE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Team",
+                "Acceleration 30 m [s]",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "2",
+                    "Team": "Parahybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Acceleration 30 m [s]": "<b>5.383</b><br> 5.668",
+                    "Points": "12.26"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "3",
+                    "Team": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Acceleration 30 m [s]": "<b>4.739</b><br> 4.862",
+                    "Points": "32.61"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "5",
+                    "Team": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Acceleration 30 m [s]": "4.804<br> <b>4.783</b>",
+                    "Points": "31.22"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "6",
+                    "Team": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Acceleration 30 m [s]": "<b>4.671</b><br> 4.85",
+                    "Points": "34.76",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "9",
+                    "Team": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Acceleration 30 m [s]": "<b>4.945</b><br> 4.987",
+                    "Points": "26.1"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "11",
+                    "Team": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Acceleration 30 m [s]": "4.5<br> <b>4.347</b>",
+                    "Points": "45",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "12",
+                    "Team": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraúbas</i>",
+                    "Acceleration 30 m [s]": "<b>4.716</b><br> 4.756",
+                    "Points": "33.34",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "13",
+                    "Team": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Acceleration 30 m [s]": "<b>5.574</b><br> 5.65",
+                    "Points": "6.23"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "14",
+                    "Team": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Acceleration 30 m [s]": "<b>5.771</b><br> -",
+                    "Points": "0"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "15",
+                    "Team": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS</i>",
+                    "Acceleration 30 m [s]": "5.397<br> <b>5.342</b>",
+                    "Points": "13.56"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,89 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "25SU",
+    "id": "25SU_SPP",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "1",
+                    "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "2",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "3",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
+                    "Pontos": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Pontos": "10",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "8",
+                    "Equipe Escola": "BajaSATC<br><i class=\"nomeEscola\">Associação Beneficente da Indústria Carbonífera de Santa Catarina - SATC</i>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "10",
+                    "Equipe Escola": "Coyote Baja<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Caxias do Sul</i>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Pontos": "15",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "14",
+                    "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Pontos": "5"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

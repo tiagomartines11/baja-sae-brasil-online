@@ -1,0 +1,190 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "23SE",
+    "id": "23SE_DDV",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Desafio Dinâmica Vertical",
+                "Penalizacao",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Desafio Dinâmica Vertical": "<b>76.67%</b><br> 40",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "40",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Desafio Dinâmica Vertical": "<b>57.08%</b><br> 29.78",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "29.78"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Desafio Dinâmica Vertical": "<b>57.08%</b><br> 29.78",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "29.78"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Desafio Dinâmica Vertical": "<b>55%</b><br> 28.69",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "28.69"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Desafio Dinâmica Vertical": "<b>75.42%</b><br> 39.35",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "39.35",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Desafio Dinâmica Vertical": "<b>58.75%</b><br> 30.65",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "30.65"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Desafio Dinâmica Vertical": "<b>40.42%</b><br> 21.09",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "21.09"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "Desafio Dinâmica Vertical": "<b>67.92%</b><br> 35.43",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "35.43",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Desafio Dinâmica Vertical": "<b>57.08%</b><br> 29.78",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "29.78"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Desafio Dinâmica Vertical": "<b>49.58%</b><br> 25.87",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "25.87"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Desafio Dinâmica Vertical": "<b>64.17%</b><br> 33.48",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "33.48"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Desafio Dinâmica Vertical": "<b>50.42%</b><br> 26.3",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "26.3"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Desafio Dinâmica Vertical": "<b>50.83%</b><br> 26.52",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "26.52"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "19",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">Insper - Instituto de Ensino e Pesquisa</i>",
+                    "Desafio Dinâmica Vertical": "<b>21.67%</b><br> 11.31",
+                    "Penalizacao": "<b>10</b>",
+                    "Total": "1.31"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Desafio Dinâmica Vertical": "<b>45%</b><br> 23.48",
+                    "Penalizacao": "<b>10</b>",
+                    "Total": "13.48"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "21",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">Fatec São Paulo</i>",
+                    "Desafio Dinâmica Vertical": "<b>19.58%</b><br> 10.22",
+                    "Penalizacao": "<b>10</b>",
+                    "Total": "0.22"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Desafio Dinâmica Vertical": "<b>47.5%</b><br> 24.78",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "24.78"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "23",
+                    "Equipe Escola": "EQUIPE CORSÁRIOS BAJA<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais</i>",
+                    "Desafio Dinâmica Vertical": "<b>29.58%</b><br> 15.43",
+                    "Penalizacao": "<b>10</b>",
+                    "Total": "5.43"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "26",
+                    "Equipe Escola": "MINERVA BAJA<br><i class=\"nomeEscola\">UFRJ - CENTRO DE TECNOLOGIA</i>",
+                    "Desafio Dinâmica Vertical": "<b>36.67%</b><br> 19.13",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "19.13"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova_debug.php:44",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

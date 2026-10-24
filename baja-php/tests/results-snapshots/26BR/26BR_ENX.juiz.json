@@ -1,0 +1,304 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "26BR",
+    "id": "26BR_ENX",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Voltas",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "1",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais - UFMG</i>",
+                    "Voltas": "43",
+                    "Pontos": "249.28"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "2",
+                    "Equipe Escola": "Equipe FEI Baja<br><i class=\"nomeEscola\">Fundação Educacional Inaciana - FEI</i>",
+                    "Voltas": "56",
+                    "Pontos": "324.64"
+                },
+                {
+                    "[img trofeu.png]": "25º",
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei - UFSJ</i>",
+                    "Voltas": "21",
+                    "Pontos": "121.74"
+                },
+                {
+                    "[img trofeu.png]": "31º",
+                    "#": "4",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Pato Branco</i>",
+                    "Voltas": "14",
+                    "Pontos": "81.16"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Voltas": "57",
+                    "Pontos": "330.43"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Curitiba</i>",
+                    "Voltas": "69",
+                    "Pontos": "400",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Voltas": "68",
+                    "Pontos": "394.2",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "8",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi-Árido - Ufersa - Campus Mossoró</i>",
+                    "Voltas": "46",
+                    "Pontos": "266.67"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "9",
+                    "Equipe Escola": "Caraubaja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi-Árido - Ufersa - Campus Caraúbas</i>",
+                    "Voltas": "69",
+                    "Pontos": "400",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "11",
+                    "Equipe Escola": "Parahybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande - UFCG</i>",
+                    "Voltas": "45",
+                    "Pontos": "260.87"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "12",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte - UFRN</i>",
+                    "Voltas": "50",
+                    "Pontos": "289.86"
+                },
+                {
+                    "[img trofeu.png]": "27º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais - CEFET/MG</i>",
+                    "Voltas": "20",
+                    "Pontos": "115.94"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "14",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense - UFF - Campus Niterói</i>",
+                    "Voltas": "39",
+                    "Pontos": "226.09"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "15",
+                    "Equipe Escola": "Baja UFSCar<br><i class=\"nomeEscola\">Universidade Federal de São Carlos - UFSCar</i>",
+                    "Voltas": "33",
+                    "Pontos": "191.3"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "16",
+                    "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">Universidade Federal Fluminense - UFF - Campus Volta Redonda</i>",
+                    "Voltas": "50",
+                    "Pontos": "289.86"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "17",
+                    "Equipe Escola": "Rampage Baja UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora - UFJF</i>",
+                    "Voltas": "38",
+                    "Pontos": "220.29"
+                },
+                {
+                    "[img trofeu.png]": "22º",
+                    "#": "19",
+                    "Equipe Escola": "Kaizen Piratas do Cerrado<br><i class=\"nomeEscola\">Universidade de Brasília - UnB</i>",
+                    "Voltas": "26",
+                    "Pontos": "150.72"
+                },
+                {
+                    "[img trofeu.png]": "29º",
+                    "#": "21",
+                    "Equipe Escola": "Baja Mud Racing<br><i class=\"nomeEscola\">Facens</i>",
+                    "Voltas": "19",
+                    "Pontos": "110.14"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "23",
+                    "Equipe Escola": "EESC USP TRACTIAN Baja<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos - Universidade de São Paulo - EESC-USP</i>",
+                    "Voltas": "67",
+                    "Pontos": "388.41"
+                },
+                {
+                    "[img trofeu.png]": "36º",
+                    "#": "24",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná - UFPR</i>",
+                    "Voltas": "6",
+                    "Pontos": "34.78"
+                },
+                {
+                    "[img trofeu.png]": "28º",
+                    "#": "26",
+                    "Equipe Escola": "Saci Baja UNIFEI<br><i class=\"nomeEscola\">Universidade Federal de Itajubá - UNIFEI - Campus Itajubá</i>",
+                    "Voltas": "20",
+                    "Pontos": "115.94"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "28",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia de São Paulo - IFSP - Campus Sertãozinho</i>",
+                    "Voltas": "37",
+                    "Pontos": "214.49"
+                },
+                {
+                    "[img trofeu.png]": "33º",
+                    "#": "29",
+                    "Equipe Escola": "Buffalo Baja - UFLA<br><i class=\"nomeEscola\">Universidade Federal de Lavras - UFLA</i>",
+                    "Voltas": "13",
+                    "Pontos": "75.36"
+                },
+                {
+                    "[img trofeu.png]": "32º",
+                    "#": "30",
+                    "Equipe Escola": "Mangue Baja<br><i class=\"nomeEscola\">Universidade Federal de Pernambuco - UFPE</i>",
+                    "Voltas": "13",
+                    "Pontos": "75.36"
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "31",
+                    "Equipe Escola": "Equipe UNICAMP Baja SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - Unicamp</i>",
+                    "Voltas": "34",
+                    "Pontos": "197.1"
+                },
+                {
+                    "[img trofeu.png]": "34º",
+                    "#": "32",
+                    "Equipe Escola": "Vitória Baja<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo - UFES</i>",
+                    "Voltas": "10",
+                    "Pontos": "57.97"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "33",
+                    "Equipe Escola": "PAC Baja<br><i class=\"nomeEscola\">Universidade Estadual Paulista - Unesp - Campus Bauru</i>",
+                    "Voltas": "36",
+                    "Pontos": "208.7"
+                },
+                {
+                    "[img trofeu.png]": "26º",
+                    "#": "34",
+                    "Equipe Escola": "ITA Baja<br><i class=\"nomeEscola\">Instituto Tecnológico de Aeronáutica - ITA</i>",
+                    "Voltas": "21",
+                    "Pontos": "121.74"
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "35",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">Universidade Federal da Bahia - UFBA</i>",
+                    "Voltas": "23",
+                    "Pontos": "133.33"
+                },
+                {
+                    "[img trofeu.png]": "35º",
+                    "#": "36",
+                    "Equipe Escola": "BAJAUEA<br><i class=\"nomeEscola\">Universidade do Estado do Amazonas - UEA</i>",
+                    "Voltas": "8",
+                    "Pontos": "46.38"
+                },
+                {
+                    "[img trofeu.png]": "30º",
+                    "#": "38",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul - UFRGS</i>",
+                    "Voltas": "18",
+                    "Pontos": "104.35"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "43",
+                    "Equipe Escola": "Velociraptor Baja<br><i class=\"nomeEscola\">Universidade do Estado de Santa Catarina - Udesc</i>",
+                    "Voltas": "44",
+                    "Pontos": "255.07"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "44",
+                    "Equipe Escola": "TEC Ilha<br><i class=\"nomeEscola\">Universidade Estadual Paulista - Unesp - Campus de Ilha Solteira</i>",
+                    "Voltas": "46",
+                    "Pontos": "266.67"
+                },
+                {
+                    "[img trofeu.png]": "38º",
+                    "#": "47",
+                    "Equipe Escola": "Londribaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Londrina</i>",
+                    "Voltas": "2",
+                    "Pontos": "11.59"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "49",
+                    "Equipe Escola": "FHO Baja<br><i class=\"nomeEscola\">Fundação Hermínio Ometto - FHO</i>",
+                    "Voltas": "44",
+                    "Pontos": "255.07"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "53",
+                    "Equipe Escola": "ZABUMBAJA TRDAYCA<br><i class=\"nomeEscola\">Universidade Federal Rural de Pernambuco - UFRPE</i>",
+                    "Voltas": "49",
+                    "Pontos": "284.06"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "58",
+                    "Equipe Escola": "Maua Racing Baja<br><i class=\"nomeEscola\">Instituto Mauá de Tecnologia - IMT</i>",
+                    "Voltas": "6",
+                    "Pontos": "34.78"
+                },
+                {
+                    "[img trofeu.png]": "23º",
+                    "#": "61",
+                    "Equipe Escola": "Equipe UFVBaja Pererecas<br><i class=\"nomeEscola\">Universidade Federal de Viçosa - UFV</i>",
+                    "Voltas": "24",
+                    "Pontos": "139.13"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

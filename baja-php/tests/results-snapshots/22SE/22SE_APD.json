@@ -1,0 +1,234 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22SE",
+    "id": "22SE_APD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aproveitamento",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "25º",
+                    "#": "1",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">FATEC SÃO PAULO</i>",
+                    "Aproveitamento": "26.5%",
+                    "Points": "7.79"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "2",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Aproveitamento": "40.25%",
+                    "Points": "11.84"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "3",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Aproveitamento": "57.75%",
+                    "Points": "16.99"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "4",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Aproveitamento": "58.75%",
+                    "Points": "17.28"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "5",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Aproveitamento": "42.5%",
+                    "Points": "12.5"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "6",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Aproveitamento": "46.25%",
+                    "Points": "13.6"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "7",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Aproveitamento": "40.75%",
+                    "Points": "11.99"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "8",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Aproveitamento": "49.25%",
+                    "Points": "14.49"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "9",
+                    "Equipe Escola": "EQUIPE TEC-ILHA BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - CAMPUS DE ILHA SOLTEIRA</i>",
+                    "Aproveitamento": "62.75%",
+                    "Points": "18.46",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "26º",
+                    "#": "10",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Aproveitamento": "24.75%",
+                    "Points": "7.28"
+                },
+                {
+                    "[img trofeu.png]": "22º",
+                    "#": "11",
+                    "Equipe Escola": "USJT BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE SÃO JUDAS</i>",
+                    "Aproveitamento": "33.25%",
+                    "Points": "9.78"
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "12",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Aproveitamento": "29.75%",
+                    "Points": "8.75"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Aproveitamento": "43.25%",
+                    "Points": "12.72"
+                },
+                {
+                    "[img trofeu.png]": "23º",
+                    "#": "14",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Aproveitamento": "31.75%",
+                    "Points": "9.34"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "15",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Aproveitamento": "56.25%",
+                    "Points": "16.54"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "16",
+                    "Equipe Escola": "MUD RUNNER<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA - CEFET/RJ</i>",
+                    "Aproveitamento": "38.75%",
+                    "Points": "11.4"
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "17",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Aproveitamento": "34.25%",
+                    "Points": "10.07"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "18",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Aproveitamento": "39.25%",
+                    "Points": "11.54"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "22",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">INSPER - INSTITUTO DE ENSINO E PESQUISA</i>",
+                    "Aproveitamento": "51.75%",
+                    "Points": "15.22"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "23",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Aproveitamento": "68%",
+                    "Points": "20",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "25",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Aproveitamento": "41.5%",
+                    "Points": "12.21"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "26",
+                    "Equipe Escola": "FEI BAJA<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO DA FUNDAÇÃO EDUCACIONAL INACIANA \"PADRE SABÓIA DE MEDEIROS\"</i>",
+                    "Aproveitamento": "66.5%",
+                    "Points": "19.56",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "27",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Aproveitamento": "47.5%",
+                    "Points": "13.97"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "28",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Aproveitamento": "33.75%",
+                    "Points": "9.93"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "29",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Aproveitamento": "62.25%",
+                    "Points": "18.31"
+                },
+                {
+                    "[img trofeu.png]": "28º",
+                    "#": "30",
+                    "Equipe Escola": "CLARENGEX<br><i class=\"nomeEscola\">FACULDADE CLARETIANO</i>",
+                    "Aproveitamento": "21%",
+                    "Points": "6.18"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "31",
+                    "Equipe Escola": "EQUIPE CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE UBERLÂNDIA</i>",
+                    "Aproveitamento": "50%",
+                    "Points": "14.71"
+                },
+                {
+                    "[img trofeu.png]": "29º",
+                    "#": "32",
+                    "Equipe Escola": "FHO-BAJA<br><i class=\"nomeEscola\">FUNDAÇÃO HERMINIO OMETTO</i>",
+                    "Aproveitamento": "19%",
+                    "Points": "5.59"
+                },
+                {
+                    "[img trofeu.png]": "27º",
+                    "#": "33",
+                    "Equipe Escola": "BAJA ESPINHAÇO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DOS VALES DO JEQUITINHONHA E MUCURI - UFVJM</i>",
+                    "Aproveitamento": "21.75%",
+                    "Points": "6.4"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

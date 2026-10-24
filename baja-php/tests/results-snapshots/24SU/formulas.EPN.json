@@ -1,0 +1,26 @@
+{
+    "evento": "24SU",
+    "prova": "EPN",
+    "nome": "Penalizações Enduro",
+    "type": "rolling",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,101 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "25SU",
+    "id": "25SU_VEL",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Velocidade",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "1",
+                    "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Velocidade": "<b>38.05</b><br> -<br> -<br> -<br> -<br> -",
+                    "Pontos": "12.26"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "2",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Velocidade": "<b>40.7</b><br> 39.76<br> 37.88<br> 37.2<br> -<br> -",
+                    "Pontos": "18.36"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "3",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Velocidade": "<b>32.72</b><br> -<br> -<br> -<br> -<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
+                    "Velocidade": "45.93<br> 47.29<br> 47.15<br> <b>47.93</b><br> 47.07<br> -",
+                    "Pontos": "35",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "6",
+                    "Equipe Escola": "Pelznickel UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário da Fundação Educacional de Brusque - UNIFEBE</i>",
+                    "Velocidade": "<b>37.78</b><br> 36.47<br> -<br> -<br> -<br> -",
+                    "Pontos": "11.64"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "7",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Velocidade": "42.3<br> 41.96<br> 42.38<br> <b>42.51</b><br> 42.24<br> -",
+                    "Pontos": "22.53"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "8",
+                    "Equipe Escola": "BajaSATC<br><i class=\"nomeEscola\">Associação Beneficente da Indústria Carbonífera de Santa Catarina - SATC</i>",
+                    "Velocidade": "37.73<br> 41.35<br> <b>42.14</b><br> -<br> -<br> -",
+                    "Pontos": "21.68"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "10",
+                    "Equipe Escola": "Coyote Baja<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Caxias do Sul</i>",
+                    "Velocidade": "<b>36.82</b><br> -<br> -<br> -<br> -<br> -",
+                    "Pontos": "9.43"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Velocidade": "45.28<br> <b>45.86</b><br> -<br> -<br> -<br> -",
+                    "Pontos": "30.24",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "14",
+                    "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Velocidade": "43.99<br> <b>44.03</b><br> -<br> -<br> -<br> -",
+                    "Pontos": "26.03",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

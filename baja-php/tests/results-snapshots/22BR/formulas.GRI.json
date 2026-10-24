@@ -1,0 +1,354 @@
+{
+    "evento": "22BR",
+    "prova": "GRI",
+    "nome": "Grid",
+    "type": "normal",
+    "stored_totals": null,
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 18,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 19,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 20,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 22,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 24,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 25,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 28,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 30,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 31,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 35,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 36,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 37,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 38,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 39,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 40,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 42,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 44,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 45,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 46,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 48,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 49,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 50,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 51,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 52,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 55,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 56,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 57,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 58,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 59,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 60,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 61,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 62,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 64,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 66,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 68,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [
+            2,
+            3,
+            5,
+            6,
+            7,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            25,
+            28,
+            30,
+            31,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            42,
+            44,
+            45,
+            46,
+            48,
+            49,
+            50,
+            51,
+            52,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            64,
+            66,
+            68
+        ],
+        "pontos": [
+            2,
+            3,
+            5,
+            6,
+            7,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            25,
+            28,
+            30,
+            31,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            42,
+            44,
+            45,
+            46,
+            48,
+            49,
+            50,
+            51,
+            52,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            64,
+            66,
+            68
+        ]
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

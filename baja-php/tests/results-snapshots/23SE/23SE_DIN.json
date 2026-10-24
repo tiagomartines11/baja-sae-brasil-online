@@ -1,0 +1,244 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SE",
+    "id": "23SE_DIN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração",
+                "Velocidade",
+                "Manobrabilidade",
+                "Suspensão",
+                "Cabo de Guerra",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Aceleração": "36.98",
+                    "Velocidade": "41.22",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "27.46",
+                    "Cabo de Guerra": "20",
+                    "Total": "<b>125.66</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Aceleração": "44.24",
+                    "Velocidade": "44.53",
+                    "Manobrabilidade": "58.38",
+                    "Suspensão": "48.06",
+                    "Cabo de Guerra": "9",
+                    "Total": "<b>204.21</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Aceleração": "45.11",
+                    "Velocidade": "50",
+                    "Manobrabilidade": "65",
+                    "Suspensão": "48.06",
+                    "Cabo de Guerra": "9",
+                    "Total": "<b>217.17</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Aceleração": "35.71",
+                    "Velocidade": "16.92",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "6.87",
+                    "Cabo de Guerra": "12",
+                    "Total": "<b>71.5</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "0",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "0",
+                    "Cabo de Guerra": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Aceleração": "29.83",
+                    "Velocidade": "23.11",
+                    "Manobrabilidade": "54.68",
+                    "Suspensão": "41.19",
+                    "Cabo de Guerra": "6",
+                    "Total": "<b>154.81</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Aceleração": "31.86",
+                    "Velocidade": "42.08",
+                    "Manobrabilidade": "37.14",
+                    "Suspensão": "85",
+                    "Cabo de Guerra": "6",
+                    "Total": "<b>202.08</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Aceleração": "34.15",
+                    "Velocidade": "21.35",
+                    "Manobrabilidade": "11.98",
+                    "Suspensão": "34.33",
+                    "Cabo de Guerra": "15",
+                    "Total": "<b>116.81</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "0",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "0",
+                    "Cabo de Guerra": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Aceleração": "50",
+                    "Velocidade": "48.81",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "34.33",
+                    "Cabo de Guerra": "9",
+                    "Total": "<b>142.14</b>"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Aceleração": "32.63",
+                    "Velocidade": "28.19",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "27.46",
+                    "Cabo de Guerra": "6",
+                    "Total": "<b>94.28</b>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Aceleração": "33.59",
+                    "Velocidade": "11.56",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "41.19",
+                    "Cabo de Guerra": "9",
+                    "Total": "<b>95.34</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "0",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "0",
+                    "Cabo de Guerra": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "16",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "0",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "0",
+                    "Cabo de Guerra": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "17",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">Instituto Federal de São Paulo (IFSP) - Campus Sertãozinho</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "0",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "0",
+                    "Cabo de Guerra": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Aceleração": "32.12",
+                    "Velocidade": "25.56",
+                    "Manobrabilidade": "17.36",
+                    "Suspensão": "6.87",
+                    "Cabo de Guerra": "6",
+                    "Total": "<b>87.91</b>"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "0",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "27.46",
+                    "Cabo de Guerra": "6",
+                    "Total": "<b>33.46</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "21",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">Fatec São Paulo</i>",
+                    "Aceleração": "0",
+                    "Velocidade": "0",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "0",
+                    "Cabo de Guerra": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Aceleração": "38.56",
+                    "Velocidade": "38.16",
+                    "Manobrabilidade": "0",
+                    "Suspensão": "27.46",
+                    "Cabo de Guerra": "30",
+                    "Total": "<b>134.18</b>"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

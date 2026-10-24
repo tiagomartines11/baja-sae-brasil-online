@@ -1,0 +1,332 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22BR",
+    "id": "22BR_VEL",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Velocidade",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "2",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Velocidade": "37.86<br> <b>38.47</b>",
+                    "Pontos": "18.44"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "3",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Velocidade": "<b>40.16</b><br> 39.32",
+                    "Pontos": "21.88"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "5",
+                    "Equipe Escola": "TUFFÃO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE</i>",
+                    "Velocidade": "<b>27.93</b><br> 27.92",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "6",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Velocidade": "14.7<br> <b>15.43</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "7",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Velocidade": "<b>39.17</b><br> 38.37",
+                    "Pontos": "19.87"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "9",
+                    "Equipe Escola": "RAMPAGE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Velocidade": "<b>42.57</b><br> 39.57",
+                    "Pontos": "26.8"
+                },
+                {
+                    "[img trofeu.png]": "30º",
+                    "#": "11",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Velocidade": "<b>35.03</b><br> 21.24",
+                    "Pontos": "11.43"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "12",
+                    "Equipe Escola": "CARAUBAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Velocidade": "<b>40.23</b><br> 40.12",
+                    "Pontos": "22.03"
+                },
+                {
+                    "[img trofeu.png]": "25º",
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Velocidade": "34.86<br> <b>36.81</b>",
+                    "Pontos": "15.05"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "14",
+                    "Equipe Escola": "CARPOEIRA BAJA<br><i class=\"nomeEscola\">FUNDAÇÃO ESCOLA POLITÉCNICA DA BAHIA</i>",
+                    "Velocidade": "<b>21.92</b><br> 21.69",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "18",
+                    "Equipe Escola": "CAR-KARÁ BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Velocidade": "<b>43.11</b><br> 42.59",
+                    "Pontos": "27.9",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "19",
+                    "Equipe Escola": "UDESC VELOCIRAPTOR BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DE SANTA CATARINA (UDESC - CCT)</i>",
+                    "Velocidade": "<b>40.48</b><br> 38.59",
+                    "Pontos": "22.54"
+                },
+                {
+                    "[img trofeu.png]": "31º",
+                    "#": "20",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Velocidade": "<b>33.99</b><br> 33.12",
+                    "Pontos": "9.3"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "22",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA - FAHOR</i>",
+                    "Velocidade": "<b>39.26</b><br> 39.17",
+                    "Pontos": "20.05"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "23",
+                    "Equipe Escola": "CORISCO<br><i class=\"nomeEscola\">UNIVERSIDADE DE PERNAMBUCO</i>",
+                    "Velocidade": "<b>19.32</b><br> 18.01",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "32º",
+                    "#": "24",
+                    "Equipe Escola": "FORJA BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA INDUSTRIAL E METALÚRGICA DE VOLTA REDONDA - UFF</i>",
+                    "Velocidade": "33.05<br> <b>33.19</b>",
+                    "Pontos": "7.67"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "25",
+                    "Equipe Escola": "FEI BAJA 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Velocidade": "40.73<br> <b>42.9</b>",
+                    "Pontos": "27.47"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "28",
+                    "Equipe Escola": "SAMABAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE EDUCACAO CIENCIA E TECNOLOGIA DO ESPIRITO SANTO - CAMPUS SÃO MATEUS</i>",
+                    "Velocidade": "37.33<br> <b>39.91</b>",
+                    "Pontos": "21.38"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "30",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Velocidade": "<b>40.04</b><br> 38.31",
+                    "Pontos": "21.64"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "31",
+                    "Equipe Escola": "BAJA UNILESTE<br><i class=\"nomeEscola\">UNIÃO BRASILEIRA DE EDUCAÇÃO CATÓLICA</i>",
+                    "Velocidade": "<b>26.08</b><br> 21.89",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "35",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS PATO BRANCO</i>",
+                    "Velocidade": "<b>41.54</b><br> 41.3",
+                    "Pontos": "24.7"
+                },
+                {
+                    "[img trofeu.png]": "23º",
+                    "#": "38",
+                    "Equipe Escola": "MANGUE BAJA TECNOFERR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO (UFPE)</i>",
+                    "Velocidade": "<b>37.02</b><br> 36.85",
+                    "Pontos": "15.48"
+                },
+                {
+                    "[img trofeu.png]": "35º",
+                    "#": "39",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO PARANÁ</i>",
+                    "Velocidade": "<b>31.64</b><br> -",
+                    "Pontos": "4.51"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "40",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Velocidade": "25.47<br> <b>29.3</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "28º",
+                    "#": "42",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Velocidade": "35.61<br> <b>36.21</b>",
+                    "Pontos": "13.83"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "44",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Velocidade": "41.3<br> <b>41.81</b>",
+                    "Pontos": "25.25"
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "45",
+                    "Equipe Escola": "CORSÁRIOS BAJA<br><i class=\"nomeEscola\">INSTITUTO DE EDUCAÇÃO CIÊNCIA E TECNOLOGIA DO SUDESTE DE MINAS GERAIS, CAMPUS JUIZ DE FORA</i>",
+                    "Velocidade": "38.09<br> <b>38.15</b>",
+                    "Pontos": "17.79"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "46",
+                    "Equipe Escola": "UFSC UIRAÇU<br><i class=\"nomeEscola\">UNIVERSIDADE: UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
+                    "Velocidade": "39.7<br> <b>40.75</b>",
+                    "Pontos": "23.09"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "48",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Velocidade": "<b>6.5</b><br> 6.32",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "49",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Velocidade": "39<br> <b>43.97</b>",
+                    "Pontos": "29.65",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "50",
+                    "Equipe Escola": "FEI BAJA 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Velocidade": "40.96<br> <b>44.14</b>",
+                    "Pontos": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "51",
+                    "Equipe Escola": "UNBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Velocidade": "37.53<br> <b>37.88</b>",
+                    "Pontos": "17.24"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "52",
+                    "Equipe Escola": "TCHÊ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
+                    "Velocidade": "39.22<br> <b>40.41</b>",
+                    "Pontos": "22.39"
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "55",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Velocidade": "<b>36.94</b><br> 35.75",
+                    "Pontos": "15.32"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "56",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Velocidade": "<b>40.24</b><br> 38.84",
+                    "Pontos": "22.05"
+                },
+                {
+                    "[img trofeu.png]": "22º",
+                    "#": "57",
+                    "Equipe Escola": "BOMBAJA CASHFAST UFSM<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA MARIA - UFSM</i>",
+                    "Velocidade": "<b>37.56</b><br> 37.11",
+                    "Pontos": "16.58"
+                },
+                {
+                    "[img trofeu.png]": "27º",
+                    "#": "58",
+                    "Equipe Escola": "CALEDÔNIA RACING BAJA SAE<br><i class=\"nomeEscola\">INSTITUTO POLITÉCNICO DO RIO DE JANEIRO</i>",
+                    "Velocidade": "35.89<br> <b>36.33</b>",
+                    "Pontos": "14.08"
+                },
+                {
+                    "[img trofeu.png]": "33º",
+                    "#": "59",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Velocidade": "32.24<br> <b>32.59</b>",
+                    "Pontos": "6.45"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "60",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
+                    "Velocidade": "41.03<br> <b>41.89</b>",
+                    "Pontos": "25.41"
+                },
+                {
+                    "[img trofeu.png]": "26º",
+                    "#": "61",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">ASSOCIACAO BENEFICENTE DA INDUSTRIA CARBONIF</i>",
+                    "Velocidade": "<b>36.62</b><br> 36.21",
+                    "Pontos": "14.67"
+                },
+                {
+                    "[img trofeu.png]": "34º",
+                    "#": "62",
+                    "Equipe Escola": "MOUNTAINBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITABIRA</i>",
+                    "Velocidade": "<b>32.49</b><br> 32.17",
+                    "Pontos": "6.25"
+                },
+                {
+                    "[img trofeu.png]": "36º",
+                    "#": "64",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CURITIBA</i>",
+                    "Velocidade": "29.45<br> <b>30.57</b>",
+                    "Pontos": "2.33"
+                },
+                {
+                    "[img trofeu.png]": "29º",
+                    "#": "68",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Velocidade": "29.17<br> <b>35.13</b>",
+                    "Pontos": "11.63"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,130 @@
+{
+    "evento": "24SE",
+    "prova": "APD",
+    "nome": "Aval. Proj. Dinâmico",
+    "type": "normal",
+    "stored_totals": {
+        "APDcom": 0,
+        "APDmax": 37.5,
+        "APDmin": 18.88
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "APDPTS": 26.63,
+                "APD": 26.63
+            },
+            "pontos": {
+                "APD_NOT": 35.51,
+                "APD_POR": 53.26
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "APDPTS": 37.5,
+                "APD": 37.5
+            },
+            "pontos": {
+                "APD_NOT": 50,
+                "APD_POR": 75
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "APDPTS": 27.25,
+                "APD": 27.25
+            },
+            "pontos": {
+                "APD_NOT": 36.33,
+                "APD_POR": 54.5
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "APDPTS": 27.25,
+                "APD": 27.25
+            },
+            "pontos": {
+                "APD_NOT": 36.33,
+                "APD_POR": 54.5
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "APDPTS": 33.13,
+                "APD": 33.13
+            },
+            "pontos": {
+                "APD_NOT": 44.17,
+                "APD_POR": 66.26
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "APDPTS": 25.5,
+                "APD": 25.5
+            },
+            "pontos": {
+                "APD_NOT": 34,
+                "APD_POR": 51
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "APDPTS": 35,
+                "APD": 35
+            },
+            "pontos": {
+                "APD_NOT": 46.67,
+                "APD_POR": 70
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "APDPTS": 29.38,
+                "APD": 29.38
+            },
+            "pontos": {
+                "APD_NOT": 39.17,
+                "APD_POR": 58.76
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "APDPTS": 18.88,
+                "APD": 18.88
+            },
+            "pontos": {
+                "APD_NOT": 25.17,
+                "APD_POR": 37.76
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "APDPTS": 19.13,
+                "APD": 19.13
+            },
+            "pontos": {
+                "APD_NOT": 25.51,
+                "APD_POR": 38.26
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

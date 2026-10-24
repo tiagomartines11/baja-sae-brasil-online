@@ -1,0 +1,111 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "26BR",
+    "id": "26BR_EPN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "Hora Lançada",
+                "#",
+                "Equipe Escola",
+                "Onde",
+                "Penalização"
+            ],
+            "rows": [
+                {
+                    "Hora Lançada": "07:39:32",
+                    "#": "30",
+                    "Equipe Escola": "Mangue Baja<br><i class=\"nomeEscola\">Universidade Federal de Pernambuco - UFPE</i>",
+                    "Onde": "PRÉ",
+                    "Penalização": "Retirada do veículo do local da competição (15 min)"
+                },
+                {
+                    "Hora Lançada": "07:39:44",
+                    "#": "58",
+                    "Equipe Escola": "Maua Racing Baja<br><i class=\"nomeEscola\">Instituto Mauá de Tecnologia - IMT</i>",
+                    "Onde": "PRÉ",
+                    "Penalização": "Retirada do veículo do local da competição (15 min)"
+                },
+                {
+                    "Hora Lançada": "07:39:50",
+                    "#": "11",
+                    "Equipe Escola": "Parahybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande - UFCG</i>",
+                    "Onde": "PRÉ",
+                    "Penalização": "Retirada do veículo do local da competição (15 min)"
+                },
+                {
+                    "Hora Lançada": "11:00:53",
+                    "#": "7",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Onde": "B",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "12:48:40",
+                    "#": "12",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte - UFRN</i>",
+                    "Onde": "O",
+                    "Penalização": "Reabastecimento com piloto dentro do carro (10 min)"
+                },
+                {
+                    "Hora Lançada": "13:27:58",
+                    "#": "12",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte - UFRN</i>",
+                    "Onde": "M",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "13:28:04",
+                    "#": "12",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte - UFRN</i>",
+                    "Onde": "M",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "13:37:52",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Onde": "A",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "13:37:54",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Onde": "A",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "13:37:55",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Onde": "A",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "13:38:04",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Onde": "A",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "13:38:09",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Onde": "A",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

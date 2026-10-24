@@ -1,0 +1,510 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22BR",
+    "id": "22BR_SGD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Freio",
+                "Rampa",
+                "Curva",
+                "Vala",
+                "Status"
+            ],
+            "rows": [
+                {
+                    "#": "2",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "TUFFÃO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "RAMPAGE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "CARAUBAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "CARPOEIRA BAJA<br><i class=\"nomeEscola\">FUNDAÇÃO ESCOLA POLITÉCNICA DA BAHIA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CORNÉLIO PROCÓPIO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "LONDRIBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS LONDRINA</i>",
+                    "Freio": "NOK",
+                    "Rampa": "NOK",
+                    "Curva": "NOK",
+                    "Vala": "NOK",
+                    "Status": "<span style=\"color:red; font-weight:bold\">NOK</span>"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "CAR-KARÁ BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "19",
+                    "Equipe Escola": "UDESC VELOCIRAPTOR BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DE SANTA CATARINA (UDESC - CCT)</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "20",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "22",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA - FAHOR</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "23",
+                    "Equipe Escola": "CORISCO<br><i class=\"nomeEscola\">UNIVERSIDADE DE PERNAMBUCO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "24",
+                    "Equipe Escola": "FORJA BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA INDUSTRIAL E METALÚRGICA DE VOLTA REDONDA - UFF</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "25",
+                    "Equipe Escola": "FEI BAJA 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "26",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">INSPER - INSTITUTO DE ENSINO E PESQUISA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "NOK",
+                    "Status": "<span style=\"color:red; font-weight:bold\">NOK</span>"
+                },
+                {
+                    "#": "28",
+                    "Equipe Escola": "SAMABAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE EDUCACAO CIENCIA E TECNOLOGIA DO ESPIRITO SANTO - CAMPUS SÃO MATEUS</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "30",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "31",
+                    "Equipe Escola": "BAJA UNILESTE<br><i class=\"nomeEscola\">UNIÃO BRASILEIRA DE EDUCAÇÃO CATÓLICA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "35",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS PATO BRANCO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "36",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "37",
+                    "Equipe Escola": "BUFFALO BAJA UFLA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE LAVRAS</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "38",
+                    "Equipe Escola": "MANGUE BAJA TECNOFERR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO (UFPE)</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "39",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO PARANÁ</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "40",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "41",
+                    "Equipe Escola": "UFSC PUMA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA CATARINA (UFSC) CAMPUS REITOR JOÃO DAVID FERREIRA LIMA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "42",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "43",
+                    "Equipe Escola": "USJT BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE SÃO JUDAS</i>",
+                    "Freio": "NOK",
+                    "Rampa": "NOK",
+                    "Curva": "NOK",
+                    "Vala": "NOK",
+                    "Status": "<span style=\"color:red; font-weight:bold\">NOK</span>"
+                },
+                {
+                    "#": "44",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "45",
+                    "Equipe Escola": "CORSÁRIOS BAJA<br><i class=\"nomeEscola\">INSTITUTO DE EDUCAÇÃO CIÊNCIA E TECNOLOGIA DO SUDESTE DE MINAS GERAIS, CAMPUS JUIZ DE FORA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "46",
+                    "Equipe Escola": "UFSC UIRAÇU<br><i class=\"nomeEscola\">UNIVERSIDADE: UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "48",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "49",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "50",
+                    "Equipe Escola": "FEI BAJA 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "51",
+                    "Equipe Escola": "UNBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "52",
+                    "Equipe Escola": "TCHÊ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "53",
+                    "Equipe Escola": "MUD RUNNER BAJA<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "NOK",
+                    "Status": "<span style=\"color:red; font-weight:bold\">NOK</span>"
+                },
+                {
+                    "#": "55",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "56",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "57",
+                    "Equipe Escola": "BOMBAJA CASHFAST UFSM<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA MARIA - UFSM</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "58",
+                    "Equipe Escola": "CALEDÔNIA RACING BAJA SAE<br><i class=\"nomeEscola\">INSTITUTO POLITÉCNICO DO RIO DE JANEIRO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "59",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "60",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "61",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">ASSOCIACAO BENEFICENTE DA INDUSTRIA CARBONIF</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "62",
+                    "Equipe Escola": "MOUNTAINBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITABIRA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "63",
+                    "Equipe Escola": "BAJA UEA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DO AMAZONAS</i>",
+                    "Freio": "NOK",
+                    "Rampa": "NOK",
+                    "Curva": "NOK",
+                    "Vala": "NOK",
+                    "Status": "<span style=\"color:red; font-weight:bold\">NOK</span>"
+                },
+                {
+                    "#": "64",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CURITIBA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "66",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                },
+                {
+                    "#": "68",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,223 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "22NE",
+    "id": "22NE_GER",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Team",
+                "State",
+                "Penalties",
+                "Inspection",
+                "Static Evaluations",
+                "Dynamic Evaluations",
+                "Endurance",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "2",
+                    "Team": "Parahybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "State": "PB",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "237.18",
+                    "Dynamic Evaluations": "76.97",
+                    "Endurance": "0",
+                    "Total": "314.15"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "3",
+                    "Team": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "State": "RN",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "324.05",
+                    "Dynamic Evaluations": "195.07",
+                    "Endurance": "166.15",
+                    "Total": "685.27",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "4",
+                    "Team": "UnBaja<br><i class=\"nomeEscola\">UNB</i>",
+                    "State": "DF",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "24.75",
+                    "Dynamic Evaluations": "0",
+                    "Endurance": "0",
+                    "Total": "24.75"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "5",
+                    "Team": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "State": "BA",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "271.34",
+                    "Dynamic Evaluations": "172.26",
+                    "Endurance": "300",
+                    "Total": "743.6",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Team": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "State": "PE",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "320.66",
+                    "Dynamic Evaluations": "194.35",
+                    "Endurance": "286.15",
+                    "Total": "801.16",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "7",
+                    "Team": "Siará Baja<br><i class=\"nomeEscola\">UFC</i>",
+                    "State": "CE",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "42.04",
+                    "Dynamic Evaluations": "0",
+                    "Endurance": "0",
+                    "Total": "42.04"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "8",
+                    "Team": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "State": "PE",
+                    "Penalties": "0",
+                    "Inspection": "-30",
+                    "Static Evaluations": "0",
+                    "Dynamic Evaluations": "0",
+                    "Endurance": "0",
+                    "Total": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "9",
+                    "Team": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "State": "MA",
+                    "Penalties": "0",
+                    "Inspection": "-15",
+                    "Static Evaluations": "192.47",
+                    "Dynamic Evaluations": "85.37",
+                    "Endurance": "9.23",
+                    "Total": "272.07"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "10",
+                    "Team": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "State": "PE",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "35.45",
+                    "Dynamic Evaluations": "0",
+                    "Endurance": "0",
+                    "Total": "35.45"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "11",
+                    "Team": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "State": "RN",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "305.9",
+                    "Dynamic Evaluations": "209.86",
+                    "Endurance": "166.15",
+                    "Total": "681.91"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "12",
+                    "Team": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraúbas</i>",
+                    "State": "RN",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "203.74",
+                    "Dynamic Evaluations": "195.65",
+                    "Endurance": "272.31",
+                    "Total": "671.7"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "13",
+                    "Team": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "State": "PB",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "270.89",
+                    "Dynamic Evaluations": "71.99",
+                    "Endurance": "212.31",
+                    "Total": "555.19"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "14",
+                    "Team": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "State": "BA",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "172.65",
+                    "Dynamic Evaluations": "39.48",
+                    "Endurance": "18.46",
+                    "Total": "230.59"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "15",
+                    "Team": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS</i>",
+                    "State": "BA",
+                    "Penalties": "0",
+                    "Inspection": "-15",
+                    "Static Evaluations": "135.86",
+                    "Dynamic Evaluations": "146.93",
+                    "Endurance": "64.62",
+                    "Total": "332.41"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "16",
+                    "Team": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "State": "PB",
+                    "Penalties": "0",
+                    "Inspection": "0",
+                    "Static Evaluations": "8.1",
+                    "Dynamic Evaluations": "2.09",
+                    "Endurance": "0",
+                    "Total": "10.19"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

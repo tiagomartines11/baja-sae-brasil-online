@@ -1,0 +1,25 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SU",
+    "id": "24SU_PEN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Penalização"
+            ],
+            "rows": [
+                {
+                    "#": "14",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Penalização": "-100"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

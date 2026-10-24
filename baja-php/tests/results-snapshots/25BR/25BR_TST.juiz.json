@@ -1,0 +1,722 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "25BR",
+    "id": "25BR_TST",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "SGE",
+                "DIN",
+                "END",
+                "TOT",
+                "TUDO"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Equipe FEI Baja<br><i class=\"nomeEscola\">Centro Universitário FEI</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "2",
+                    "Equipe Escola": "Baja UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Baja de Galpão - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "8",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Equipe Escola": "CaraubajaSAE<br><i class=\"nomeEscola\">Universidade Federal Rural do Sami-Árido (UFERSA)</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Equipe Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del Rei</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "11",
+                    "Equipe Escola": "PAC Baja<br><i class=\"nomeEscola\">Universidade Estadual Paulista \"Júlio de Mesquita Filho\" \"UNESP\"</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "Kaizen Piratas do Cerrado<br><i class=\"nomeEscola\">Universidade de Brasilia - UnB</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Equipe Cactus Baja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi - Árido - UFERSA</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "15",
+                    "Equipe Escola": "Unicamp Baja SAE<br><i class=\"nomeEscola\">Unicamp - Universidade Estadual de Campinas</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "16",
+                    "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "17",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA MARIA</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "18",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "19",
+                    "Equipe Escola": "ProcoBaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "20",
+                    "Equipe Escola": "Saci baja SAE UNIFEI<br><i class=\"nomeEscola\">Universidade federal de Itajubá</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "21",
+                    "Equipe Escola": "Equipe Parahybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande - UFCG</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "22",
+                    "Equipe Escola": "EESC USP TRACTIAN Baja<br><i class=\"nomeEscola\">EESC USP</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "23",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro federal de educação tecnológica de Minas Gerais</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "24",
+                    "Equipe Escola": "Baja UFSCar<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "25",
+                    "Equipe Escola": "Vitória Baja<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo - UFES</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "27",
+                    "Equipe Escola": "Baja Mud Racing<br><i class=\"nomeEscola\">Facens</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "28",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "29",
+                    "Equipe Escola": "Equipe UFSC Baja<br><i class=\"nomeEscola\">UFSC</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "30",
+                    "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">Universidade do Estado do Rio de Janeiro</i><br><small style=\"color:red;\">Desclassificada</small>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "31",
+                    "Equipe Escola": "Sagui Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "32",
+                    "Equipe Escola": "Corisco Baja<br><i class=\"nomeEscola\">Universidade de Pernambuco</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "33",
+                    "Equipe Escola": "Corsários Baja<br><i class=\"nomeEscola\">Instituto Federal de Educação Ciência e Tecnologia do Sudeste de MInas Gerais</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "34",
+                    "Equipe Escola": "Buffalo Baja - UFLA<br><i class=\"nomeEscola\">Universidade Federal de Lavras - UFLA</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "35",
+                    "Equipe Escola": "Piratas do Vale<br><i class=\"nomeEscola\">UNESP - Universidade Estadual Paulista</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "36",
+                    "Equipe Escola": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "37",
+                    "Equipe Escola": "Minerva Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio de Janeiro</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "38",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de São Paulo</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "39",
+                    "Equipe Escola": "CTJ Baja<br><i class=\"nomeEscola\">UFSC</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "40",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "41",
+                    "Equipe Escola": "BAJAUEA<br><i class=\"nomeEscola\">Universidade Estadual do Amazonas - UEA</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "42",
+                    "Equipe Escola": "Garra Baja<br><i class=\"nomeEscola\">Universidade São judas</i><br><small style=\"color:red;\">Desclassificada</small>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "43",
+                    "Equipe Escola": "BAJA Griffon<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia Fluminense</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "44",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">Universidade Federal da Paraíba</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "45",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">Universidade Federal da Bahia</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "47",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "48",
+                    "Equipe Escola": "Baja Unileste<br><i class=\"nomeEscola\">Unileste (Centro Universitário Católica do Leste de Minas Gerais) - UBEC</i><br><small style=\"color:red;\">Desclassificada</small>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "49",
+                    "Equipe Escola": "Baja Guaicurus<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "50",
+                    "Equipe Escola": "Mud Runner<br><i class=\"nomeEscola\">CEFET/RJ</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "51",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "SGE": "30",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "52",
+                    "Equipe Escola": "ITA Baja<br><i class=\"nomeEscola\">Instituto Tecnológico de Aeronáutica</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "54",
+                    "Equipe Escola": "UnBaja<br><i class=\"nomeEscola\">Universidade de Brasilia</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "56",
+                    "Equipe Escola": "Equipe BAJA SAE UEM - Capibaja<br><i class=\"nomeEscola\">Universidade Estadual de Maringá - UEM</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "57",
+                    "Equipe Escola": "Equipistão<br><i class=\"nomeEscola\">UniFAJ</i><br><small style=\"color:red;\">Desclassificada</small>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "58",
+                    "Equipe Escola": "CajaBaja<br><i class=\"nomeEscola\">IFPB</i>",
+                    "SGE": "0",
+                    "DIN": "0",
+                    "END": "0",
+                    "TOT": "0",
+                    "TUDO": "0",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"Pontos\" in resultados/prova_juiz.php:140",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

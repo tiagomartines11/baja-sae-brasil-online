@@ -1,0 +1,74 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23NE",
+    "id": "23NE_MAN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo Bruto [s]",
+                "Tempo Corrigido [s]",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "6",
+                    "Equipe Escola": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Tempo Bruto [s]": "210.98 (8<img class=\"cone\">/7<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido [s]": "<b>210.98</b><br> -",
+                    "Pontos": "21.1"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraubas</i>",
+                    "Tempo Bruto [s]": "207.01 (6<img class=\"cone\">/7<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido [s]": "<b>207.01</b><br> -",
+                    "Pontos": "22.34",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Tempo Bruto [s]": "134.23 (3<img class=\"cone\">/2<img class=\"gate\">)<br> 135.73 (4<img class=\"cone\">/2<img class=\"gate\">)",
+                    "Tempo Corrigido [s]": "<b>134.23</b><br> 135.73",
+                    "Pontos": "45",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Tempo Bruto [s]": "161.81 (8<img class=\"cone\">/3<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido [s]": "<b>161.81</b><br> -",
+                    "Pontos": "36.41",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "14",
+                    "Equipe Escola": "Zabumbaja Tecnoferr<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Tempo Bruto [s]": "278.75 (7<img class=\"cone\">/9<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido [s]": "<b>278.75</b><br> -",
+                    "Pontos": "0"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova.php:78"
+    ]
+}

@@ -1,0 +1,155 @@
+{
+    "evento": "23SU",
+    "prova": "END",
+    "nome": "Enduro",
+    "type": "normal",
+    "stored_totals": {
+        "Vcom": 0,
+        "Vmax": 97,
+        "Vmin": 6
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "V": 82
+            },
+            "pontos": {
+                "ENDPTS": 338.1443298969072
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "V": 31
+            },
+            "pontos": {
+                "ENDPTS": 127.83505154639175
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "V": 97
+            },
+            "pontos": {
+                "ENDPTS": 400
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "V": 28
+            },
+            "pontos": {
+                "ENDPTS": 115.4639175257732
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "V": 78
+            },
+            "pontos": {
+                "ENDPTS": 321.64948453608247
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "V": 65
+            },
+            "pontos": {
+                "ENDPTS": 268.0412371134021
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "V": 6
+            },
+            "pontos": {
+                "ENDPTS": 24.742268041237114
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "V": 69
+            },
+            "pontos": {
+                "ENDPTS": 284.5360824742268
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "V": 28
+            },
+            "pontos": {
+                "ENDPTS": 115.4639175257732
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "V": 95
+            },
+            "pontos": {
+                "ENDPTS": 391.7525773195876
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "V": 63
+            },
+            "pontos": {
+                "ENDPTS": 259.7938144329897
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "V": 81
+            },
+            "pontos": {
+                "ENDPTS": 334.02061855670104
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "V": 11
+            },
+            "pontos": {
+                "ENDPTS": 45.36082474226804
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "V": 88
+            },
+            "pontos": {
+                "ENDPTS": 362.88659793814435
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "V": 42
+            },
+            "pontos": {
+                "ENDPTS": 173.1958762886598
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

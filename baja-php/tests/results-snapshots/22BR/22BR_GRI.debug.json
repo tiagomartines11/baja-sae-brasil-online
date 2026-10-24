@@ -1,0 +1,265 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "22BR",
+    "id": "22BR_GRI",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Posição no Grid"
+            ],
+            "rows": [
+                {
+                    "#": "2",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Posição no Grid": "18"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Posição no Grid": "12"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "TUFFÃO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE</i>",
+                    "Posição no Grid": "39"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Posição no Grid": "43"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Posição no Grid": "21"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "RAMPAGE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Posição no Grid": "15"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO</i>",
+                    "Posição no Grid": "47"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Posição no Grid": "20"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "CARAUBAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Posição no Grid": "14"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Posição no Grid": "17"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "CARPOEIRA BAJA<br><i class=\"nomeEscola\">FUNDAÇÃO ESCOLA POLITÉCNICA DA BAHIA</i>",
+                    "Posição no Grid": "37"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CORNÉLIO PROCÓPIO</i>",
+                    "Posição no Grid": "42"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "CAR-KARÁ BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Posição no Grid": "8"
+                },
+                {
+                    "#": "19",
+                    "Equipe Escola": "UDESC VELOCIRAPTOR BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DE SANTA CATARINA (UDESC - CCT)</i>",
+                    "Posição no Grid": "35"
+                },
+                {
+                    "#": "20",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Posição no Grid": "16"
+                },
+                {
+                    "#": "22",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA - FAHOR</i>",
+                    "Posição no Grid": "19"
+                },
+                {
+                    "#": "23",
+                    "Equipe Escola": "CORISCO<br><i class=\"nomeEscola\">UNIVERSIDADE DE PERNAMBUCO</i>",
+                    "Posição no Grid": "40"
+                },
+                {
+                    "#": "24",
+                    "Equipe Escola": "FORJA BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA INDUSTRIAL E METALÚRGICA DE VOLTA REDONDA - UFF</i>",
+                    "Posição no Grid": "26"
+                },
+                {
+                    "#": "25",
+                    "Equipe Escola": "FEI BAJA 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Posição no Grid": "6"
+                },
+                {
+                    "#": "28",
+                    "Equipe Escola": "SAMABAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE EDUCACAO CIENCIA E TECNOLOGIA DO ESPIRITO SANTO - CAMPUS SÃO MATEUS</i>",
+                    "Posição no Grid": "27"
+                },
+                {
+                    "#": "30",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Posição no Grid": "29"
+                },
+                {
+                    "#": "31",
+                    "Equipe Escola": "BAJA UNILESTE<br><i class=\"nomeEscola\">UNIÃO BRASILEIRA DE EDUCAÇÃO CATÓLICA</i>",
+                    "Posição no Grid": "38"
+                },
+                {
+                    "#": "35",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS PATO BRANCO</i>",
+                    "Posição no Grid": "10"
+                },
+                {
+                    "#": "36",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Posição no Grid": "33"
+                },
+                {
+                    "#": "37",
+                    "Equipe Escola": "BUFFALO BAJA UFLA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE LAVRAS</i>",
+                    "Posição no Grid": "48"
+                },
+                {
+                    "#": "38",
+                    "Equipe Escola": "MANGUE BAJA TECNOFERR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO (UFPE)</i>",
+                    "Posição no Grid": "7"
+                },
+                {
+                    "#": "39",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO PARANÁ</i>",
+                    "Posição no Grid": "45"
+                },
+                {
+                    "#": "40",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Posição no Grid": "41"
+                },
+                {
+                    "#": "42",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Posição no Grid": "23"
+                },
+                {
+                    "#": "44",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Posição no Grid": "4"
+                },
+                {
+                    "#": "45",
+                    "Equipe Escola": "CORSÁRIOS BAJA<br><i class=\"nomeEscola\">INSTITUTO DE EDUCAÇÃO CIÊNCIA E TECNOLOGIA DO SUDESTE DE MINAS GERAIS, CAMPUS JUIZ DE FORA</i>",
+                    "Posição no Grid": "30"
+                },
+                {
+                    "#": "46",
+                    "Equipe Escola": "UFSC UIRAÇU<br><i class=\"nomeEscola\">UNIVERSIDADE: UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
+                    "Posição no Grid": "13"
+                },
+                {
+                    "#": "48",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Posição no Grid": "44"
+                },
+                {
+                    "#": "49",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Posição no Grid": "1"
+                },
+                {
+                    "#": "50",
+                    "Equipe Escola": "FEI BAJA 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Posição no Grid": "2"
+                },
+                {
+                    "#": "51",
+                    "Equipe Escola": "UNBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Posição no Grid": "32"
+                },
+                {
+                    "#": "52",
+                    "Equipe Escola": "TCHÊ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
+                    "Posição no Grid": "9"
+                },
+                {
+                    "#": "55",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Posição no Grid": "24"
+                },
+                {
+                    "#": "56",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Posição no Grid": "11"
+                },
+                {
+                    "#": "57",
+                    "Equipe Escola": "BOMBAJA CASHFAST UFSM<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA MARIA - UFSM</i>",
+                    "Posição no Grid": "25"
+                },
+                {
+                    "#": "58",
+                    "Equipe Escola": "CALEDÔNIA RACING BAJA SAE<br><i class=\"nomeEscola\">INSTITUTO POLITÉCNICO DO RIO DE JANEIRO</i>",
+                    "Posição no Grid": "36"
+                },
+                {
+                    "#": "59",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Posição no Grid": "34"
+                },
+                {
+                    "#": "60",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
+                    "Posição no Grid": "5"
+                },
+                {
+                    "#": "61",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">ASSOCIACAO BENEFICENTE DA INDUSTRIA CARBONIF</i>",
+                    "Posição no Grid": "22"
+                },
+                {
+                    "#": "62",
+                    "Equipe Escola": "MOUNTAINBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITABIRA</i>",
+                    "Posição no Grid": "28"
+                },
+                {
+                    "#": "64",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CURITIBA</i>",
+                    "Posição no Grid": "31"
+                },
+                {
+                    "#": "66",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Posição no Grid": "46"
+                },
+                {
+                    "#": "68",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Posição no Grid": "3"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

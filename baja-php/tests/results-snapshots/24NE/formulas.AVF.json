@@ -1,0 +1,166 @@
+{
+    "evento": "24NE",
+    "prova": "AVF",
+    "nome": "Aceleração e velocidade máxima",
+    "type": "normal",
+    "stored_totals": {
+        "ACEcom": 0,
+        "ACEmax": 7.16,
+        "ACEmin": 4.22,
+        "VELcom": 0,
+        "VELmax": 46.54,
+        "VELmin": 24.21
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "ACE_1": 4.68,
+                "ACE_2": 4.72,
+                "ACE": 4.68,
+                "VEL": 39.71
+            },
+            "pontos": {
+                "ACEPTS": 35.18957345971564,
+                "VELPTS": 31.23600537393641
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "ACE_1": 5.2,
+                "ACE_2": 5.22,
+                "ACE": 5.2,
+                "VEL": 38.47
+            },
+            "pontos": {
+                "ACEPTS": 24.099526066350705,
+                "VELPTS": 28.737124944021495
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "ACE_1": 4.76,
+                "ACE_2": 4.72,
+                "ACE": 4.72,
+                "VEL": 41.06
+            },
+            "pontos": {
+                "ACEPTS": 34.33649289099527,
+                "VELPTS": 33.95656068069862
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "ACE_1": 4.8,
+                "ACE_2": 5.21,
+                "ACE": 4.8,
+                "VEL": 40.81
+            },
+            "pontos": {
+                "ACEPTS": 32.6303317535545,
+                "VELPTS": 33.452754142409326
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "ACE_1": 5.08,
+                "ACE_2": 5.19,
+                "ACE": 5.08,
+                "VEL": 35.39
+            },
+            "pontos": {
+                "ACEPTS": 26.658767772511844,
+                "VELPTS": 22.530228392297357
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "ACE_1": 5.33,
+                "ACE_2": 5.35,
+                "ACE": 5.33,
+                "VEL": 38.51
+            },
+            "pontos": {
+                "ACEPTS": 21.327014218009474,
+                "VELPTS": 28.81773399014778
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "ACE_1": 4.53,
+                "ACE_2": 4.58,
+                "ACE": 4.53,
+                "VEL": 45.24
+            },
+            "pontos": {
+                "ACEPTS": 38.38862559241705,
+                "VELPTS": 42.38020600089566
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "ACE_1": 6.45,
+                "ACE_2": 6.9,
+                "ACE": 6.45,
+                "VEL": 29.68
+            },
+            "pontos": {
+                "ACEPTS": 0,
+                "VELPTS": 11.023287057769815
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "ACE_1": 5.52,
+                "ACE_2": 5.32,
+                "ACE": 5.32,
+                "VEL": 34.49
+            },
+            "pontos": {
+                "ACEPTS": 21.540284360189563,
+                "VELPTS": 20.71652485445589
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "ACE_1": 4.36,
+                "ACE_2": 4.22,
+                "ACE": 4.22,
+                "VEL": 46.54
+            },
+            "pontos": {
+                "ACEPTS": 45,
+                "VELPTS": 45
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "ACE_1": 7.16,
+                "ACE_2": 7.26,
+                "ACE": 7.16,
+                "VEL": 24.21
+            },
+            "pontos": {
+                "ACEPTS": 0,
+                "VELPTS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

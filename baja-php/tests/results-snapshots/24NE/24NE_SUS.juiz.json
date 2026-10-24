@@ -1,0 +1,106 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "24NE",
+    "id": "24NE_SUS",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo[s]",
+                "Obstáculos",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>7</b><br> 6",
+                    "Pontos": "50",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>6</b><br> -",
+                    "Pontos": "42.86",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>7</b><br> -",
+                    "Pontos": "50",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "6",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Universidade Salvador</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>5</b><br> -",
+                    "Pontos": "35.71"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> -",
+                    "Pontos": "28.57"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Pontos": "28.57"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "13",
+                    "Equipe Escola": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "-<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "14",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "-<br> <b>6</b>",
+                    "Pontos": "42.86",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

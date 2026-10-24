@@ -1,0 +1,222 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "23SU",
+    "id": "23SU_SGE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Documentação",
+                "ICTS",
+                "Status",
+                "Dia da primeira saída",
+                "Dia da aprovação",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Documentação": "-5",
+                    "ICTS": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-5"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "CTJ BAJA UFSC<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Documentação": "-10",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sábado",
+                    "Pontos": "-25"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "CATARATAS BAJA<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná</i>",
+                    "Documentação": "-5",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-20"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Documentação": "0",
+                    "ICTS": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "GRALHA AZUL<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Documentação": "-5",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sábado",
+                    "Pontos": "-20"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Documentação": "-5",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sábado",
+                    "Pontos": "-20"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "FURG MOTORSPORT<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande</i>",
+                    "Documentação": "-10",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sábado",
+                    "Pontos": "-25"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "PELZNICKEL UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário de Brusque</i>",
+                    "Documentação": "-5",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sábado",
+                    "Pontos": "-20"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Documentação": "-5",
+                    "ICTS": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-5"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "BAJA GUAICURUS<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Documentação": "5",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-20"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Documentação": "0",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Documentação": "-10",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-25"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Documentação": "0",
+                    "ICTS": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Documentação": "5",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-20"
+                },
+                {
+                    "#": "16",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Documentação": "5",
+                    "ICTS": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-5"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "BAJAGUAL<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Documentação": "0",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "UFSC BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Documentação": "0",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sábado",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "20",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Documentação": "-10",
+                    "ICTS": "15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Dia da primeira saída": "Sexta",
+                    "Dia da aprovação": "Sexta",
+                    "Pontos": "-25"
+                },
+                {
+                    "#": "21",
+                    "Equipe Escola": "BAJA CRIOULO<br><i class=\"nomeEscola\">Universidade Regional Integrada do Alto do Uruguai e das Missões - Santo Ângelo</i>",
+                    "Documentação": "-10",
+                    "ICTS": "",
+                    "Status": "<span style=\"color:green; font-weight:bold\"></span>",
+                    "Dia da primeira saída": "",
+                    "Dia da aprovação": "",
+                    "Pontos": "-10"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

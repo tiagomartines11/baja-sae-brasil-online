@@ -1,0 +1,608 @@
+{
+    "evento": "26BR",
+    "prova": "SLP",
+    "nome": "Solicitação de Proposta",
+    "type": "normal",
+    "stored_totals": {
+        "NT_Scom": 0,
+        "NT_Smax": 75,
+        "NT_Smin": 17.7
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "NT_S": 53.9
+            },
+            "pontos": {
+                "SLPNOR": 14.373333333333333,
+                "SLPPEN": 0,
+                "SLPPOR": 53.9,
+                "SLPPTS": 14.373333333333333
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "NT_S": 65.7
+            },
+            "pontos": {
+                "SLPNOR": 17.52,
+                "SLPPEN": 0,
+                "SLPPOR": 65.7,
+                "SLPPTS": 17.52
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "NT_S": 65.5
+            },
+            "pontos": {
+                "SLPNOR": 17.466666666666665,
+                "SLPPEN": 0,
+                "SLPPOR": 65.5,
+                "SLPPTS": 17.466666666666665
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "NT_S": 66.8
+            },
+            "pontos": {
+                "SLPNOR": 17.813333333333333,
+                "SLPPEN": 2,
+                "SLPPOR": 66.8,
+                "SLPPTS": 15.813333333333333
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "NT_S": 68.5
+            },
+            "pontos": {
+                "SLPNOR": 18.266666666666666,
+                "SLPPEN": 0,
+                "SLPPOR": 68.5,
+                "SLPPTS": 18.266666666666666
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "NT_S": 73.7
+            },
+            "pontos": {
+                "SLPNOR": 19.653333333333332,
+                "SLPPEN": 1,
+                "SLPPOR": 73.7,
+                "SLPPTS": 18.653333333333332
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "NT_S": 37
+            },
+            "pontos": {
+                "SLPNOR": 9.866666666666667,
+                "SLPPEN": 2,
+                "SLPPOR": 37,
+                "SLPPTS": 7.866666666666667
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "NT_S": 56.6
+            },
+            "pontos": {
+                "SLPNOR": 15.093333333333334,
+                "SLPPEN": 0,
+                "SLPPOR": 56.6,
+                "SLPPTS": 15.093333333333334
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "NT_S": 34.1
+            },
+            "pontos": {
+                "SLPNOR": 9.093333333333334,
+                "SLPPEN": 0,
+                "SLPPOR": 34.1,
+                "SLPPTS": 9.093333333333334
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "NT_S": 75
+            },
+            "pontos": {
+                "SLPNOR": 20,
+                "SLPPEN": 0,
+                "SLPPOR": 75,
+                "SLPPTS": 20
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "NT_S": 58.9
+            },
+            "pontos": {
+                "SLPNOR": 15.706666666666667,
+                "SLPPEN": 5,
+                "SLPPOR": 58.9,
+                "SLPPTS": 10.706666666666667
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "NT_S": 69.4
+            },
+            "pontos": {
+                "SLPNOR": 18.506666666666668,
+                "SLPPEN": 0,
+                "SLPPOR": 69.4,
+                "SLPPTS": 18.506666666666668
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "NT_S": 71.7
+            },
+            "pontos": {
+                "SLPNOR": 19.12,
+                "SLPPEN": 0,
+                "SLPPOR": 71.7,
+                "SLPPTS": 19.12
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "NT_S": 59.1
+            },
+            "pontos": {
+                "SLPNOR": 15.760000000000002,
+                "SLPPEN": 0,
+                "SLPPOR": 59.1,
+                "SLPPTS": 15.760000000000002
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "NT_S": 57.7
+            },
+            "pontos": {
+                "SLPNOR": 15.386666666666668,
+                "SLPPEN": 0,
+                "SLPPOR": 57.7,
+                "SLPPTS": 15.386666666666668
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "NT_S": 59.3
+            },
+            "pontos": {
+                "SLPNOR": 15.813333333333333,
+                "SLPPEN": 5,
+                "SLPPOR": 59.3,
+                "SLPPTS": 10.813333333333333
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "NT_S": 43.3
+            },
+            "pontos": {
+                "SLPNOR": 11.546666666666665,
+                "SLPPEN": 0,
+                "SLPPOR": 43.3,
+                "SLPPTS": 11.546666666666665
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "NT_S": 65.3
+            },
+            "pontos": {
+                "SLPNOR": 17.41333333333333,
+                "SLPPEN": 0,
+                "SLPPOR": 65.3,
+                "SLPPTS": 17.41333333333333
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "NT_S": 54.5
+            },
+            "pontos": {
+                "SLPNOR": 14.533333333333333,
+                "SLPPEN": 5,
+                "SLPPOR": 54.5,
+                "SLPPTS": 9.533333333333333
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "NT_S": 47.3
+            },
+            "pontos": {
+                "SLPNOR": 12.613333333333332,
+                "SLPPEN": 2,
+                "SLPPOR": 47.3,
+                "SLPPTS": 10.613333333333332
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "NT_S": 58.5
+            },
+            "pontos": {
+                "SLPNOR": 15.600000000000001,
+                "SLPPEN": 0,
+                "SLPPOR": 58.5,
+                "SLPPTS": 15.600000000000001
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "NT_S": 56.6
+            },
+            "pontos": {
+                "SLPNOR": 15.093333333333334,
+                "SLPPEN": 0,
+                "SLPPOR": 56.6,
+                "SLPPTS": 15.093333333333334
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "NT_S": 61.3
+            },
+            "pontos": {
+                "SLPNOR": 16.346666666666664,
+                "SLPPEN": 5,
+                "SLPPOR": 61.3,
+                "SLPPTS": 11.346666666666664
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "NT_S": 66
+            },
+            "pontos": {
+                "SLPNOR": 17.6,
+                "SLPPEN": 0,
+                "SLPPOR": 66,
+                "SLPPTS": 17.6
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "NT_S": 56.7
+            },
+            "pontos": {
+                "SLPNOR": 15.120000000000001,
+                "SLPPEN": 0,
+                "SLPPOR": 56.7,
+                "SLPPTS": 15.120000000000001
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "NT_S": 33
+            },
+            "pontos": {
+                "SLPNOR": 8.8,
+                "SLPPEN": 0,
+                "SLPPOR": 33,
+                "SLPPTS": 8.8
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "NT_S": 40.9
+            },
+            "pontos": {
+                "SLPNOR": 10.906666666666666,
+                "SLPPEN": 1,
+                "SLPPOR": 40.9,
+                "SLPPTS": 9.906666666666666
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "NT_S": 31.3
+            },
+            "pontos": {
+                "SLPNOR": 8.346666666666668,
+                "SLPPEN": 2,
+                "SLPPOR": 31.3,
+                "SLPPTS": 6.346666666666668
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "NT_S": 38.7
+            },
+            "pontos": {
+                "SLPNOR": 10.32,
+                "SLPPEN": 0,
+                "SLPPOR": 38.7,
+                "SLPPTS": 10.32
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "NT_S": 74.3
+            },
+            "pontos": {
+                "SLPNOR": 19.813333333333333,
+                "SLPPEN": 0,
+                "SLPPOR": 74.3,
+                "SLPPTS": 19.813333333333333
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "NT_S": 71.5
+            },
+            "pontos": {
+                "SLPNOR": 19.066666666666666,
+                "SLPPEN": 0,
+                "SLPPOR": 71.5,
+                "SLPPTS": 19.066666666666666
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "NT_S": 59.1
+            },
+            "pontos": {
+                "SLPNOR": 15.760000000000002,
+                "SLPPEN": 0,
+                "SLPPOR": 59.1,
+                "SLPPTS": 15.760000000000002
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "NT_S": 44.3
+            },
+            "pontos": {
+                "SLPNOR": 11.813333333333333,
+                "SLPPEN": 1,
+                "SLPPOR": 44.3,
+                "SLPPTS": 10.813333333333333
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "NT_S": 65.7
+            },
+            "pontos": {
+                "SLPNOR": 17.52,
+                "SLPPEN": 0,
+                "SLPPOR": 65.7,
+                "SLPPTS": 17.52
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "NT_S": 51.1
+            },
+            "pontos": {
+                "SLPNOR": 13.626666666666667,
+                "SLPPEN": 0,
+                "SLPPOR": 51.1,
+                "SLPPTS": 13.626666666666667
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "NT_S": 0
+            },
+            "pontos": {
+                "SLPNOR": 0,
+                "SLPPEN": 0,
+                "SLPPOR": 0,
+                "SLPPTS": 0
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "NT_S": 0
+            },
+            "pontos": {
+                "SLPNOR": 0,
+                "SLPPEN": 0,
+                "SLPPOR": 0,
+                "SLPPTS": 0
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "NT_S": 42.2
+            },
+            "pontos": {
+                "SLPNOR": 11.253333333333336,
+                "SLPPEN": 0,
+                "SLPPOR": 42.2,
+                "SLPPTS": 11.253333333333336
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "NT_S": 0
+            },
+            "pontos": {
+                "SLPNOR": 0,
+                "SLPPEN": 0,
+                "SLPPOR": 0,
+                "SLPPTS": 0
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "NT_S": 50.3
+            },
+            "pontos": {
+                "SLPNOR": 13.413333333333332,
+                "SLPPEN": 0,
+                "SLPPOR": 50.3,
+                "SLPPTS": 13.413333333333332
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "NT_S": 0
+            },
+            "pontos": {
+                "SLPNOR": 0,
+                "SLPPEN": 0,
+                "SLPPOR": 0,
+                "SLPPTS": 0
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "NT_S": 17.7
+            },
+            "pontos": {
+                "SLPNOR": 4.72,
+                "SLPPEN": 5,
+                "SLPPOR": 17.7,
+                "SLPPTS": 0
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "NT_S": 44.7
+            },
+            "pontos": {
+                "SLPNOR": 11.920000000000002,
+                "SLPPEN": 0,
+                "SLPPOR": 44.7,
+                "SLPPTS": 11.920000000000002
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "NT_S": 0
+            },
+            "pontos": {
+                "SLPNOR": 0,
+                "SLPPEN": 2,
+                "SLPPOR": 0,
+                "SLPPTS": 0
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "NT_S": 46
+            },
+            "pontos": {
+                "SLPNOR": 12.266666666666666,
+                "SLPPEN": 0,
+                "SLPPOR": 46,
+                "SLPPTS": 12.266666666666666
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": {
+                "NT_S": 43.7
+            },
+            "pontos": {
+                "SLPNOR": 11.653333333333332,
+                "SLPPEN": 2,
+                "SLPPOR": 43.7,
+                "SLPPTS": 9.653333333333332
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "NT_S": 0
+            },
+            "pontos": {
+                "SLPNOR": 0,
+                "SLPPEN": 2,
+                "SLPPOR": 0,
+                "SLPPTS": 0
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": {
+                "NT_S": 62.1
+            },
+            "pontos": {
+                "SLPNOR": 16.560000000000002,
+                "SLPPEN": 0,
+                "SLPPOR": 62.1,
+                "SLPPTS": 16.560000000000002
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": {
+                "NT_S": 48
+            },
+            "pontos": {
+                "SLPNOR": 12.8,
+                "SLPPEN": 0,
+                "SLPPOR": 48,
+                "SLPPTS": 12.8
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

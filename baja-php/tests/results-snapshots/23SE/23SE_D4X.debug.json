@@ -1,0 +1,198 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "23SE",
+    "id": "23SE_D4X",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Desafio 4x4",
+                "Penalizacao",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Desafio 4x4": "<b>70.31%</b><br> 35.6",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "35.6"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Desafio 4x4": "<b>58.17%</b><br> 29.45",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "29.45"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Desafio 4x4": "<b>64.35%</b><br> 32.58",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "32.58"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Desafio 4x4": "<b>68.3%</b><br> 34.58",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "34.58"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Desafio 4x4": "<b>72%</b><br> 36.46",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "36.46"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Desafio 4x4": "<b>51.98%</b><br> 26.32",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "26.32"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Desafio 4x4": "<b>77%</b><br> 38.99",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "38.99",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Desafio 4x4": "<b>25.75%</b><br> 13.04",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "13.04"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "Desafio 4x4": "<b>46.83%</b><br> 23.71",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "23.71"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Desafio 4x4": "<b>72.33%</b><br> 36.62",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "36.62",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Desafio 4x4": "<b>56.23%</b><br> 28.47",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "28.47"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Desafio 4x4": "<b>58.95%</b><br> 29.85",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "29.85"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Desafio 4x4": "<b>65.67%</b><br> 33.25",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "33.25"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "16",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Desafio 4x4": "<b>26.88%</b><br> 13.61",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "13.61"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Desafio 4x4": "<b>79%</b><br> 40",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "40",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "19",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">Insper - Instituto de Ensino e Pesquisa</i>",
+                    "Desafio 4x4": "<b>29.25%</b><br> 14.81",
+                    "Penalizacao": "<b>10</b>",
+                    "Total": "4.81"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Desafio 4x4": "<b>33.5%</b><br> 16.96",
+                    "Penalizacao": "<b>10</b>",
+                    "Total": "6.96"
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "21",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">Fatec São Paulo</i>",
+                    "Desafio 4x4": "<b>0%</b><br> <b>0</b>",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "0"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Desafio 4x4": "<b>49.08%</b><br> 24.85",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "24.85"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "26",
+                    "Equipe Escola": "MINERVA BAJA<br><i class=\"nomeEscola\">UFRJ - CENTRO DE TECNOLOGIA</i>",
+                    "Desafio 4x4": "<b>36.67%</b><br> 18.57",
+                    "Penalizacao": "<b>0</b>",
+                    "Total": "18.57"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova_debug.php:44",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

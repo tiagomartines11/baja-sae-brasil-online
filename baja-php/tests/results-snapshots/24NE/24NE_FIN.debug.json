@@ -1,0 +1,50 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "24NE",
+    "id": "24NE_FIN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Categorias Finalistas"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Categorias Finalistas": "Suspensão, Direção e Freio - Cálculo Estrutural e Design - Powertrain e Elétrica -"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Categorias Finalistas": "Suspensão, Direção e Freio - Powertrain e Elétrica - Gestão, Vendas e Marketing"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
+                    "Categorias Finalistas": "Cálculo Estrutural e Design - Powertrain e Elétrica - Gestão, Vendas e Marketing"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Categorias Finalistas": "Suspensão, Direção e Freio - Gestão, Vendas e Marketing"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Categorias Finalistas": "Cálculo Estrutural e Design -"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

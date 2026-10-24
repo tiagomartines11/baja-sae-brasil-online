@@ -1,0 +1,15 @@
+{
+    "evento": "23SE",
+    "prova": "PEN",
+    "nome": "Penalidades Gerais",
+    "type": "normal",
+    "stored_totals": null,
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,220 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "25BR",
+    "id": "25BR_AP2",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Gestão da Equipe",
+                "Núcleo Técnico",
+                "Apresentação de Negócios",
+                "Carro presente?",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "16",
+                    "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Gestão da Equipe": "3.25",
+                    "Núcleo Técnico": "5.25",
+                    "Apresentação de Negócios": "4",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>48.79</b><br> <b></b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "19",
+                    "Equipe Escola": "ProcoBaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "Gestão da Equipe": "2.25",
+                    "Núcleo Técnico": "6.75",
+                    "Apresentação de Negócios": "5.25",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>60.16</b><br> <b></b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "27",
+                    "Equipe Escola": "Baja Mud Racing<br><i class=\"nomeEscola\">Facens</i>",
+                    "Gestão da Equipe": "3.25",
+                    "Núcleo Técnico": "2.75",
+                    "Apresentação de Negócios": "4.15",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>30.49</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "29",
+                    "Equipe Escola": "Equipe UFSC Baja<br><i class=\"nomeEscola\">UFSC</i>",
+                    "Gestão da Equipe": "1.75",
+                    "Núcleo Técnico": "4.25",
+                    "Apresentação de Negócios": "2.25",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>36.93</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "31",
+                    "Equipe Escola": "Sagui Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Gestão da Equipe": "4",
+                    "Núcleo Técnico": "3.25",
+                    "Apresentação de Negócios": "4",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>35.05</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "33",
+                    "Equipe Escola": "Corsários Baja<br><i class=\"nomeEscola\">Instituto Federal de Educação Ciência e Tecnologia do Sudeste de MInas Gerais</i>",
+                    "Gestão da Equipe": "1.75",
+                    "Núcleo Técnico": "3.25",
+                    "Apresentação de Negócios": "2.5",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>29.87</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "34",
+                    "Equipe Escola": "Buffalo Baja - UFLA<br><i class=\"nomeEscola\">Universidade Federal de Lavras - UFLA</i>",
+                    "Gestão da Equipe": "0.5",
+                    "Núcleo Técnico": "2.75",
+                    "Apresentação de Negócios": "3.5",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>25.75</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "35",
+                    "Equipe Escola": "Piratas do Vale<br><i class=\"nomeEscola\">UNESP - Universidade Estadual Paulista</i>",
+                    "Gestão da Equipe": "1.5",
+                    "Núcleo Técnico": "1",
+                    "Apresentação de Negócios": "3.25",
+                    "Carro presente?": "NÃO",
+                    "Pontos": "<b>0</b><br> <s>13.87</s>"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "37",
+                    "Equipe Escola": "Minerva Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio de Janeiro</i>",
+                    "Gestão da Equipe": "1",
+                    "Núcleo Técnico": "3.5",
+                    "Apresentação de Negócios": "1.75",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>29.66</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "39",
+                    "Equipe Escola": "CTJ Baja<br><i class=\"nomeEscola\">UFSC</i>",
+                    "Gestão da Equipe": "3.25",
+                    "Núcleo Técnico": "1.75",
+                    "Apresentação de Negócios": "2.5",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>20.88</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "40",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
+                    "Gestão da Equipe": "3",
+                    "Núcleo Técnico": "2.5",
+                    "Apresentação de Negócios": "2.5",
+                    "Carro presente?": "NÃO",
+                    "Pontos": "<b>0</b><br> <s>26.08</s>"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "41",
+                    "Equipe Escola": "BAJAUEA<br><i class=\"nomeEscola\">Universidade Estadual do Amazonas - UEA</i>",
+                    "Gestão da Equipe": "1.5",
+                    "Núcleo Técnico": "2",
+                    "Apresentação de Negócios": "3.75",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>21.94</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "49",
+                    "Equipe Escola": "Baja Guaicurus<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Gestão da Equipe": "0.5",
+                    "Núcleo Técnico": "2.5",
+                    "Apresentação de Negócios": "2.25",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>22.22</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "50",
+                    "Equipe Escola": "Mud Runner<br><i class=\"nomeEscola\">CEFET/RJ</i>",
+                    "Gestão da Equipe": "3",
+                    "Núcleo Técnico": "4.5",
+                    "Apresentação de Negócios": "3.5",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>42.22</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "51",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Gestão da Equipe": "2.75",
+                    "Núcleo Técnico": "5",
+                    "Apresentação de Negócios": "2.5",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>44.23</b><br> <b></b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "54",
+                    "Equipe Escola": "UnBaja<br><i class=\"nomeEscola\">Universidade de Brasilia</i>",
+                    "Gestão da Equipe": "1",
+                    "Núcleo Técnico": "4.5",
+                    "Apresentação de Negócios": "2.25",
+                    "Carro presente?": "SIM",
+                    "Pontos": "<b>37.73</b><br> <b></b>"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "57",
+                    "Equipe Escola": "Equipistão<br><i class=\"nomeEscola\">UniFAJ</i>",
+                    "Gestão da Equipe": "2",
+                    "Núcleo Técnico": "0.5",
+                    "Apresentação de Negócios": "0",
+                    "Carro presente?": "NÃO",
+                    "Pontos": "<b>0</b><br> <s>6.52</s>"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "58",
+                    "Equipe Escola": "CajaBaja<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Gestão da Equipe": "2",
+                    "Núcleo Técnico": "1.25",
+                    "Apresentação de Negócios": "3.5",
+                    "Carro presente?": "NÃO",
+                    "Pontos": "<b>0</b><br> <s>16.76</s>"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova_debug.php:44",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

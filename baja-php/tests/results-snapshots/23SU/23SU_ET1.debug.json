@@ -1,0 +1,233 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "23SU",
+    "id": "23SU_ET1",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Erro Aceleração",
+                "Bônus Aceleração",
+                "Erro Velocidade",
+                "Bônus Velocidade",
+                "Erro Freio",
+                "Bônus Freio",
+                "Bônus Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "1",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Erro Aceleração": "58.13%",
+                    "Bônus Aceleração": "7.83",
+                    "Erro Velocidade": "17.61%",
+                    "Bônus Velocidade": "9.2",
+                    "Erro Freio": "227.17%",
+                    "Bônus Freio": "1.7",
+                    "Bônus Total": "18.73"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "3",
+                    "Equipe Escola": "CATARATAS BAJA<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná</i>",
+                    "Erro Aceleração": "1.2%",
+                    "Bônus Aceleração": "10",
+                    "Erro Velocidade": "32.9%",
+                    "Bônus Velocidade": "8.46",
+                    "Erro Freio": "5.31%",
+                    "Bônus Freio": "9.85",
+                    "Bônus Total": "28.31"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "5",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Erro Aceleração": "4.44%",
+                    "Bônus Aceleração": "9.88",
+                    "Erro Velocidade": "9.82%",
+                    "Bônus Velocidade": "9.57",
+                    "Erro Freio": "19.52%",
+                    "Bônus Freio": "9.32",
+                    "Bônus Total": "28.77"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "6",
+                    "Equipe Escola": "GRALHA AZUL<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Erro Aceleração": "7.61%",
+                    "Bônus Aceleração": "9.76",
+                    "Erro Velocidade": "3.27%",
+                    "Bônus Velocidade": "9.89",
+                    "Erro Freio": "64.19%",
+                    "Bônus Freio": "7.68",
+                    "Bônus Total": "27.33"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "7",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Erro Aceleração": "-",
+                    "Bônus Aceleração": "0",
+                    "Erro Velocidade": "-",
+                    "Bônus Velocidade": "0",
+                    "Erro Freio": "-",
+                    "Bônus Freio": "0",
+                    "Bônus Total": "-15"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "8",
+                    "Equipe Escola": "FURG MOTORSPORT<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande</i>",
+                    "Erro Aceleração": "263.98%",
+                    "Bônus Aceleração": "0",
+                    "Erro Velocidade": "13.88%",
+                    "Bônus Velocidade": "9.38",
+                    "Erro Freio": "18.11%",
+                    "Bônus Freio": "9.38",
+                    "Bônus Total": "18.76"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "10",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Erro Aceleração": "2.55%",
+                    "Bônus Aceleração": "9.95",
+                    "Erro Velocidade": "0.98%",
+                    "Bônus Velocidade": "10",
+                    "Erro Freio": "55.08%",
+                    "Bônus Freio": "8.02",
+                    "Bônus Total": "27.97"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "11",
+                    "Equipe Escola": "BAJA GUAICURUS<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Erro Aceleração": "14.53%",
+                    "Bônus Aceleração": "9.49",
+                    "Erro Velocidade": "36.93%",
+                    "Bônus Velocidade": "8.26",
+                    "Erro Freio": "273.54%",
+                    "Bônus Freio": "0",
+                    "Bônus Total": "17.75"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Erro Aceleração": "3.02%",
+                    "Bônus Aceleração": "9.93",
+                    "Erro Velocidade": "3.42%",
+                    "Bônus Velocidade": "9.88",
+                    "Erro Freio": "8.23%",
+                    "Bônus Freio": "9.74",
+                    "Bônus Total": "29.55",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "13",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Erro Aceleração": "4.06%",
+                    "Bônus Aceleração": "9.89",
+                    "Erro Velocidade": "10.55%",
+                    "Bônus Velocidade": "9.54",
+                    "Erro Freio": "28.35%",
+                    "Bônus Freio": "9",
+                    "Bônus Total": "28.43"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "14",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Erro Aceleração": "5.45%",
+                    "Bônus Aceleração": "9.84",
+                    "Erro Velocidade": "3.14%",
+                    "Bônus Velocidade": "9.9",
+                    "Erro Freio": "6.86%",
+                    "Bônus Freio": "9.79",
+                    "Bônus Total": "29.53",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Erro Aceleração": "-",
+                    "Bônus Aceleração": "0",
+                    "Erro Velocidade": "-",
+                    "Bônus Velocidade": "0",
+                    "Erro Freio": "-",
+                    "Bônus Freio": "0",
+                    "Bônus Total": "-15"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "16",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Erro Aceleração": "119.95%",
+                    "Bônus Aceleração": "5.48",
+                    "Erro Velocidade": "2.8%",
+                    "Bônus Velocidade": "9.91",
+                    "Erro Freio": "1.13%",
+                    "Bônus Freio": "10",
+                    "Bônus Total": "25.39"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "17",
+                    "Equipe Escola": "BAJAGUAL<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Erro Aceleração": "8.16%",
+                    "Bônus Aceleração": "9.74",
+                    "Erro Velocidade": "6.36%",
+                    "Bônus Velocidade": "9.74",
+                    "Erro Freio": "17.81%",
+                    "Bônus Freio": "9.39",
+                    "Bônus Total": "28.87",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "18",
+                    "Equipe Escola": "UFSC BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Erro Aceleração": "7.66%",
+                    "Bônus Aceleração": "9.75",
+                    "Erro Velocidade": "207.59%",
+                    "Bônus Velocidade": "0",
+                    "Erro Freio": "77.61%",
+                    "Bônus Freio": "7.19",
+                    "Bônus Total": "16.94"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "20",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Erro Aceleração": "5.18%",
+                    "Bônus Aceleração": "9.85",
+                    "Erro Velocidade": "8.07%",
+                    "Bônus Velocidade": "9.66",
+                    "Erro Freio": "18.97%",
+                    "Bônus Freio": "9.34",
+                    "Bônus Total": "28.85"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

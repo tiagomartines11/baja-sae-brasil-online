@@ -1,0 +1,568 @@
+{
+    "evento": "22BR",
+    "prova": "SGE",
+    "nome": "Segurança Estática",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -25,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 54,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 59,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -20,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 63,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": 0,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 65,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 66,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -15,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 67,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -5,
+                "SGE_STATUS": "NOK"
+            }
+        },
+        {
+            "equipe": 68,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 69,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -30,
+                "SGE_STATUS": "OK"
+            }
+        },
+        {
+            "equipe": 70,
+            "vars": [],
+            "pontos": {
+                "SGEPTS": -10,
+                "SGE_STATUS": "NOK"
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

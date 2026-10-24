@@ -1,0 +1,229 @@
+{
+    "evento": "23NE",
+    "prova": "APD",
+    "nome": "Avaliação de Projeto Dinâmico",
+    "type": "normal",
+    "stored_totals": {
+        "APDMMcom": 0,
+        "APDMMmax": 16.450000000000003,
+        "APDMMmin": 8.1
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "APDPTS_PARC_1": 0.2,
+                "APDPTS_PARC_2": 2.25,
+                "APDPTS_PARC_3": 0.4,
+                "APDPTS_PARC_4": 1,
+                "APDPTS_PARC_5": 0.5,
+                "APDPTS_PARC_6": 1.75,
+                "APDPTS_PARC_7": 1.05,
+                "APDPTS_PARC_8": 0.5499999999999999,
+                "APDPTS_PARC_9": 0.9,
+                "APDPTS_PARC_10": 1.5,
+                "APDMM": 10.1
+            },
+            "pontos": {
+                "APDPTS": 18.41945288753799
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "APDPTS_PARC_1": 2.45,
+                "APDPTS_PARC_2": 1.4,
+                "APDPTS_PARC_3": 0.6000000000000001,
+                "APDPTS_PARC_4": 0.25,
+                "APDPTS_PARC_5": 0.75,
+                "APDPTS_PARC_6": 1,
+                "APDPTS_PARC_7": 1.15,
+                "APDPTS_PARC_8": 0.5499999999999999,
+                "APDPTS_PARC_9": 0.6,
+                "APDPTS_PARC_10": 1.75,
+                "APDMM": 10.5
+            },
+            "pontos": {
+                "APDPTS": 19.148936170212764
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "APDPTS_PARC_1": 1.2,
+                "APDPTS_PARC_2": 2.35,
+                "APDPTS_PARC_3": 0.6000000000000001,
+                "APDPTS_PARC_4": 0.5,
+                "APDPTS_PARC_5": 0.75,
+                "APDPTS_PARC_6": 1.5,
+                "APDPTS_PARC_7": 1.8,
+                "APDPTS_PARC_8": 0.5499999999999999,
+                "APDPTS_PARC_9": 1.2,
+                "APDPTS_PARC_10": 2,
+                "APDMM": 12.450000000000001
+            },
+            "pontos": {
+                "APDPTS": 22.705167173252278
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "APDPTS_PARC_1": 2.2,
+                "APDPTS_PARC_2": 1.7999999999999998,
+                "APDPTS_PARC_3": 0.4,
+                "APDPTS_PARC_4": 0.5,
+                "APDPTS_PARC_5": 0.75,
+                "APDPTS_PARC_6": 1.75,
+                "APDPTS_PARC_7": 1.55,
+                "APDPTS_PARC_8": 0.6,
+                "APDPTS_PARC_9": 0.65,
+                "APDPTS_PARC_10": 2,
+                "APDMM": 12.200000000000001
+            },
+            "pontos": {
+                "APDPTS": 22.249240121580545
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "APDPTS_PARC_1": 1.2,
+                "APDPTS_PARC_2": 1.85,
+                "APDPTS_PARC_3": 0.6000000000000001,
+                "APDPTS_PARC_4": 0.75,
+                "APDPTS_PARC_5": 0.75,
+                "APDPTS_PARC_6": 1,
+                "APDPTS_PARC_7": 1.4,
+                "APDPTS_PARC_8": 0.7,
+                "APDPTS_PARC_9": 1.2,
+                "APDPTS_PARC_10": 2,
+                "APDMM": 11.45
+            },
+            "pontos": {
+                "APDPTS": 20.881458966565347
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "APDPTS_PARC_1": 0.2,
+                "APDPTS_PARC_2": 1.5,
+                "APDPTS_PARC_3": 0.4,
+                "APDPTS_PARC_4": 0.5,
+                "APDPTS_PARC_5": 0.5,
+                "APDPTS_PARC_6": 1.25,
+                "APDPTS_PARC_7": 1.4,
+                "APDPTS_PARC_8": 0.5499999999999999,
+                "APDPTS_PARC_9": 0.95,
+                "APDPTS_PARC_10": 1.25,
+                "APDMM": 8.5
+            },
+            "pontos": {
+                "APDPTS": 15.501519756838903
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "APDPTS_PARC_1": 3.5,
+                "APDPTS_PARC_2": 1.95,
+                "APDPTS_PARC_3": 0.6000000000000001,
+                "APDPTS_PARC_4": 0.75,
+                "APDPTS_PARC_5": 1.5,
+                "APDPTS_PARC_6": 3,
+                "APDPTS_PARC_7": 1.8,
+                "APDPTS_PARC_8": 0.7,
+                "APDPTS_PARC_9": 0.65,
+                "APDPTS_PARC_10": 2,
+                "APDMM": 16.450000000000003
+            },
+            "pontos": {
+                "APDPTS": 30
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "APDPTS_PARC_1": 0.2,
+                "APDPTS_PARC_2": 1.8,
+                "APDPTS_PARC_3": 0.4,
+                "APDPTS_PARC_4": 0.75,
+                "APDPTS_PARC_5": 0.5,
+                "APDPTS_PARC_6": 1.25,
+                "APDPTS_PARC_7": 0.75,
+                "APDPTS_PARC_8": 0.5499999999999999,
+                "APDPTS_PARC_9": 0.6,
+                "APDPTS_PARC_10": 1.5,
+                "APDMM": 8.3
+            },
+            "pontos": {
+                "APDPTS": 15.136778115501519
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "APDPTS_PARC_1": 1.2,
+                "APDPTS_PARC_2": 2.1,
+                "APDPTS_PARC_3": 0.4,
+                "APDPTS_PARC_4": 0.25,
+                "APDPTS_PARC_5": 0.25,
+                "APDPTS_PARC_6": 1,
+                "APDPTS_PARC_7": 1.15,
+                "APDPTS_PARC_8": 0.5499999999999999,
+                "APDPTS_PARC_9": 0.45,
+                "APDPTS_PARC_10": 0.75,
+                "APDMM": 8.1
+            },
+            "pontos": {
+                "APDPTS": 14.772036474164132
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "APDPTS_PARC_1": 2.5,
+                "APDPTS_PARC_2": 1.85,
+                "APDPTS_PARC_3": 0.6000000000000001,
+                "APDPTS_PARC_4": 1,
+                "APDPTS_PARC_5": 1.25,
+                "APDPTS_PARC_6": 2.75,
+                "APDPTS_PARC_7": 1.8,
+                "APDPTS_PARC_8": 0.4,
+                "APDPTS_PARC_9": 1.4,
+                "APDPTS_PARC_10": 2,
+                "APDMM": 15.55
+            },
+            "pontos": {
+                "APDPTS": 28.358662613981757
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "APDPTS_PARC_1": 0.85,
+                "APDPTS_PARC_2": 1.3,
+                "APDPTS_PARC_3": 0.4,
+                "APDPTS_PARC_4": 0.75,
+                "APDPTS_PARC_5": 0.75,
+                "APDPTS_PARC_6": 1.25,
+                "APDPTS_PARC_7": 1.15,
+                "APDPTS_PARC_8": 0.6,
+                "APDPTS_PARC_9": 0.6,
+                "APDPTS_PARC_10": 2,
+                "APDMM": 9.649999999999999
+            },
+            "pontos": {
+                "APDPTS": 17.598784194528868
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

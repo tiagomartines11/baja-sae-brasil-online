@@ -1,0 +1,75 @@
+{
+    "evento": "23NE",
+    "prova": "MAN",
+    "nome": "Maneuverability",
+    "type": "normal",
+    "stored_totals": {
+        "TCcom": 0,
+        "TCmax": 278.75,
+        "TCmin": 134.23000000000002
+    },
+    "inputs": [
+        {
+            "equipe": 6,
+            "vars": {
+                "TC_1": 210.98000000000002,
+                "TC_2": null,
+                "TC": 210.98000000000002
+            },
+            "pontos": {
+                "MANPTS": 21.101923609189036
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "TC_1": 207.01,
+                "TC_2": null,
+                "TC": 207.01
+            },
+            "pontos": {
+                "MANPTS": 22.33808469415998
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "TC_1": 134.23000000000002,
+                "TC_2": 135.73000000000002,
+                "TC": 134.23000000000002
+            },
+            "pontos": {
+                "MANPTS": 45
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC_1": 161.81,
+                "TC_2": null,
+                "TC": 161.81
+            },
+            "pontos": {
+                "MANPTS": 36.412261278715754
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "TC_1": 278.75,
+                "TC_2": null,
+                "TC": 278.75
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

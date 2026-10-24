@@ -1,0 +1,262 @@
+{
+    "evento": "23SE",
+    "prova": "DCT",
+    "nome": "Desafio Custos",
+    "type": "normal",
+    "stored_totals": {
+        "DES_CST_com": 0,
+        "DES_CST_max": 90.43,
+        "DES_CST_min": 9.9
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "DES_CST_": 62.93
+            },
+            "pontos": {
+                "DES_CST_POR": 62.93,
+                "DES_CST_TS": 27.835895167532897,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "DES_CST_": 71.67
+            },
+            "pontos": {
+                "DES_CST_POR": 71.67,
+                "DES_CST_TS": 31.701868848833353,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "DES_CST_": 80.83
+            },
+            "pontos": {
+                "DES_CST_POR": 80.83,
+                "DES_CST_TS": 35.75362158575694,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "DES_CST_": 75.83
+            },
+            "pontos": {
+                "DES_CST_POR": 75.83,
+                "DES_CST_TS": 33.54196616167201,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "DES_CST_": 89.17
+            },
+            "pontos": {
+                "DES_CST_POR": 89.17,
+                "DES_CST_TS": 39.4426628331306,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "DES_CST_": 70.83
+            },
+            "pontos": {
+                "DES_CST_POR": 70.83,
+                "DES_CST_TS": 31.33031073758708,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "DES_CST_": 56.67
+            },
+            "pontos": {
+                "DES_CST_POR": 56.67,
+                "DES_CST_TS": 25.066902576578567,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "DES_CST_": 60.73
+            },
+            "pontos": {
+                "DES_CST_POR": 60.73,
+                "DES_CST_TS": 26.862766780935527,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "DES_CST_": 59.47
+            },
+            "pontos": {
+                "DES_CST_POR": 59.47,
+                "DES_CST_TS": 26.305429614066128,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "DES_CST_": 80.83
+            },
+            "pontos": {
+                "DES_CST_POR": 80.83,
+                "DES_CST_TS": 35.75362158575694,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "DES_CST_": 77.5
+            },
+            "pontos": {
+                "DES_CST_POR": 77.5,
+                "DES_CST_TS": 34.28065907331637,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "DES_CST_": 59.17
+            },
+            "pontos": {
+                "DES_CST_POR": 59.17,
+                "DES_CST_TS": 26.172730288621032,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "DES_CST_": 9.9
+            },
+            "pontos": {
+                "DES_CST_POR": 9.9,
+                "DES_CST_TS": 4.379077739688157,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "DES_CST_": 49.17
+            },
+            "pontos": {
+                "DES_CST_POR": 49.17,
+                "DES_CST_TS": 21.749419440451177,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "DES_CST_": 48.23
+            },
+            "pontos": {
+                "DES_CST_POR": 48.23,
+                "DES_CST_TS": 21.33362822072321,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "DES_CST_": 59.17
+            },
+            "pontos": {
+                "DES_CST_POR": 59.17,
+                "DES_CST_TS": 26.172730288621032,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "DES_CST_": 43.97
+            },
+            "pontos": {
+                "DES_CST_POR": 43.97,
+                "DES_CST_TS": 19.449297799402853,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "DES_CST_": 75.03
+            },
+            "pontos": {
+                "DES_CST_POR": 75.03,
+                "DES_CST_TS": 33.18810129381842,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "DES_CST_": 42.5
+            },
+            "pontos": {
+                "DES_CST_POR": 42.5,
+                "DES_CST_TS": 18.799071104721882,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "DES_CST_": 90.43
+            },
+            "pontos": {
+                "DES_CST_POR": 90.43,
+                "DES_CST_TS": 40,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "DES_CST_": 66.67
+            },
+            "pontos": {
+                "DES_CST_POR": 66.67,
+                "DES_CST_TS": 29.490213424748426,
+                "DES_PEN_CST_TS": 0
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "DES_CST_": 37.5
+            },
+            "pontos": {
+                "DES_CST_POR": 37.5,
+                "DES_CST_TS": 16.58741568063696,
+                "DES_PEN_CST_TS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

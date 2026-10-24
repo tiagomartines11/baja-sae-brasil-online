@@ -1,0 +1,23 @@
+{
+    "evento": "24SU",
+    "prova": "PEN",
+    "nome": "Penalidades",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "PENPTS": -100
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

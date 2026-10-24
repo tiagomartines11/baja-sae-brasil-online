@@ -1,0 +1,36 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SU",
+    "id": "24SU_EPN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "Hora Lançada",
+                "#",
+                "Equipe Escola",
+                "Onde",
+                "Penalização"
+            ],
+            "rows": [
+                {
+                    "Hora Lançada": "21:00:00",
+                    "#": "6",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Curitiba</i>",
+                    "Onde": "1",
+                    "Penalização": "Atitude antidesportiva (10 min)"
+                },
+                {
+                    "Hora Lançada": "21:00:00",
+                    "#": "14",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Onde": "1",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

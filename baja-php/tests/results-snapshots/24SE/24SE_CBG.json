@@ -1,0 +1,90 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SE",
+    "id": "24SE_CBG",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Poli<br><i class=\"nomeEscola\">Escola Politécnica da USP</i>",
+                    "Pontos": "15",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "2",
+                    "Equipe Escola": "FEI Baja<br><i class=\"nomeEscola\">FEI</i>",
+                    "Pontos": "9"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del Rei</i>",
+                    "Pontos": "6"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "6",
+                    "Equipe Escola": "TEC Ilha Baja SAE<br><i class=\"nomeEscola\">Unesp - Campus de Ilha Solteira</i>",
+                    "Pontos": "6"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "9",
+                    "Equipe Escola": "Baja UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Pontos": "9"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "10",
+                    "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro</i>",
+                    "Pontos": "9"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "11",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de São Paulo - campus Sertãozinho</i>",
+                    "Pontos": "12"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Pontos": "30",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "15",
+                    "Equipe Escola": "EESC USP TRACTIAN BAJA<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos – USP</i>",
+                    "Pontos": "9"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "17",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Pontos": "20",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

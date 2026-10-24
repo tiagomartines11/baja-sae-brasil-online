@@ -1,0 +1,210 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "25SU",
+    "id": "25SU_DIN",
+    "spoilers": true,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração",
+                "Velocidade Final",
+                "Tração",
+                "Compliance",
+                "Manobrabilidade",
+                "Suspensão",
+                "Prova 4x4",
+                "Super Prime",
+                "Top Split",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "2",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "Pelznickel UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário da Fundação Educacional de Brusque - UNIFEBE</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "8",
+                    "Equipe Escola": "BajaSATC<br><i class=\"nomeEscola\">Associação Beneficente da Indústria Carbonífera de Santa Catarina - SATC</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Coyote Baja<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Caxias do Sul</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Aceleração": "SPOILERS",
+                    "Velocidade Final": "SPOILERS",
+                    "Tração": "SPOILERS",
+                    "Compliance": "SPOILERS",
+                    "Manobrabilidade": "SPOILERS",
+                    "Suspensão": "SPOILERS",
+                    "Prova 4x4": "SPOILERS",
+                    "Super Prime": "SPOILERS",
+                    "Top Split": "SPOILERS",
+                    "Total": "SPOILERS",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

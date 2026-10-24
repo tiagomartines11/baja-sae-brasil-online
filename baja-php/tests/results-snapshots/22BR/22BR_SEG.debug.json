@@ -1,0 +1,510 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "22BR",
+    "id": "22BR_SEG",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Status Segurança Estática",
+                "Status Segurança Dinâmica",
+                "Penalização Total"
+            ],
+            "rows": [
+                {
+                    "#": "2",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-30</b>"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "SERBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SERGIPE</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "TUFFÃO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "CALANGOTEC BAJA<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-10</b>"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "RAMPAGE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "CARAUBAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "CARPOEIRA BAJA<br><i class=\"nomeEscola\">FUNDAÇÃO ESCOLA POLITÉCNICA DA BAHIA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CORNÉLIO PROCÓPIO</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "16",
+                    "Equipe Escola": "URUBAJA<br><i class=\"nomeEscola\">UNISANTA</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-10</b>"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "LONDRIBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS LONDRINA</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "CAR-KARÁ BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "19",
+                    "Equipe Escola": "UDESC VELOCIRAPTOR BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DE SANTA CATARINA (UDESC - CCT)</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "20",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "21",
+                    "Equipe Escola": "JAVALIS BAJA UCDB<br><i class=\"nomeEscola\">UNIVERSIDADE CATÓLICA DOM BOSCO</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "22",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA - FAHOR</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "23",
+                    "Equipe Escola": "CORISCO<br><i class=\"nomeEscola\">UNIVERSIDADE DE PERNAMBUCO</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-30</b>"
+                },
+                {
+                    "#": "24",
+                    "Equipe Escola": "FORJA BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA INDUSTRIAL E METALÚRGICA DE VOLTA REDONDA - UFF</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "25",
+                    "Equipe Escola": "FEI BAJA 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "26",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">INSPER - INSTITUTO DE ENSINO E PESQUISA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Penalização Total": "<b>-25</b>"
+                },
+                {
+                    "#": "27",
+                    "Equipe Escola": "BUMBA MEU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DO MARANHÃO</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-10</b>"
+                },
+                {
+                    "#": "28",
+                    "Equipe Escola": "SAMABAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE EDUCACAO CIENCIA E TECNOLOGIA DO ESPIRITO SANTO - CAMPUS SÃO MATEUS</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "29",
+                    "Equipe Escola": "AEGIR IBAJAÍ<br><i class=\"nomeEscola\">UNIVERSIDADE DO VALE DO ITAJAÍ - UNIVALI</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-10</b>"
+                },
+                {
+                    "#": "30",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "31",
+                    "Equipe Escola": "BAJA UNILESTE<br><i class=\"nomeEscola\">UNIÃO BRASILEIRA DE EDUCAÇÃO CATÓLICA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-25</b>"
+                },
+                {
+                    "#": "32",
+                    "Equipe Escola": "GRALHA AZUL<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ-PONTA GROSSA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "33",
+                    "Equipe Escola": "BAJA TUCURUÍ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO PARÁ</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-10</b>"
+                },
+                {
+                    "#": "34",
+                    "Equipe Escola": "UFPBAJA INDOMINÁVEL<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA PARAÍBA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-25</b>"
+                },
+                {
+                    "#": "35",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS PATO BRANCO</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "36",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-30</b>"
+                },
+                {
+                    "#": "37",
+                    "Equipe Escola": "BUFFALO BAJA UFLA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE LAVRAS</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-25</b>"
+                },
+                {
+                    "#": "38",
+                    "Equipe Escola": "MANGUE BAJA TECNOFERR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO (UFPE)</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "39",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO PARANÁ</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "40",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "41",
+                    "Equipe Escola": "UFSC PUMA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA CATARINA (UFSC) CAMPUS REITOR JOÃO DAVID FERREIRA LIMA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-30</b>"
+                },
+                {
+                    "#": "42",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "43",
+                    "Equipe Escola": "USJT BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE SÃO JUDAS</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "44",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "45",
+                    "Equipe Escola": "CORSÁRIOS BAJA<br><i class=\"nomeEscola\">INSTITUTO DE EDUCAÇÃO CIÊNCIA E TECNOLOGIA DO SUDESTE DE MINAS GERAIS, CAMPUS JUIZ DE FORA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "46",
+                    "Equipe Escola": "UFSC UIRAÇU<br><i class=\"nomeEscola\">UNIVERSIDADE: UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "47",
+                    "Equipe Escola": "CACTUS BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "48",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "49",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "50",
+                    "Equipe Escola": "FEI BAJA 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "51",
+                    "Equipe Escola": "UNBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-30</b>"
+                },
+                {
+                    "#": "52",
+                    "Equipe Escola": "TCHÊ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "53",
+                    "Equipe Escola": "MUD RUNNER BAJA<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "54",
+                    "Equipe Escola": "BAJAMPA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE EDUCAÇÃO, CIÊNCIA E TECNOLOGIA DA PARAÍBA - CAMPUS JOÃO PESSOA</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-10</b>"
+                },
+                {
+                    "#": "55",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "56",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "57",
+                    "Equipe Escola": "BOMBAJA CASHFAST UFSM<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA MARIA - UFSM</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "58",
+                    "Equipe Escola": "CALEDÔNIA RACING BAJA SAE<br><i class=\"nomeEscola\">INSTITUTO POLITÉCNICO DO RIO DE JANEIRO</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "59",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-20</b>"
+                },
+                {
+                    "#": "60",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "61",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">ASSOCIACAO BENEFICENTE DA INDUSTRIA CARBONIF</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-30</b>"
+                },
+                {
+                    "#": "62",
+                    "Equipe Escola": "MOUNTAINBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITABIRA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "63",
+                    "Equipe Escola": "BAJA UEA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DO AMAZONAS</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "64",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CURITIBA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>0</b>"
+                },
+                {
+                    "#": "65",
+                    "Equipe Escola": "CAPIBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE MARINGÁ (UEM)</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-30</b>"
+                },
+                {
+                    "#": "66",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-15</b>"
+                },
+                {
+                    "#": "67",
+                    "Equipe Escola": "FAESA BAJA<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO ESPÍRITO-SANTENSE/FAESA</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-5</b>"
+                },
+                {
+                    "#": "68",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Penalização Total": "<b>-10</b>"
+                },
+                {
+                    "#": "69",
+                    "Equipe Escola": "BAJA PELZNICKEL<br><i class=\"nomeEscola\">UNIFEBE – CENTRO UNIVERSITÁRIO DE BRUSQUE</i>",
+                    "Status Segurança Estática": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-30</b>"
+                },
+                {
+                    "#": "70",
+                    "Equipe Escola": "IFSPEED<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE SÃO PAULO, CÂMPUS HORTOLÂNDIA.</i>",
+                    "Status Segurança Estática": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Status Segurança Dinâmica": "<span style=\"color:red; font-weight:bold\"></span>",
+                    "Penalização Total": "<b>-10</b>"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

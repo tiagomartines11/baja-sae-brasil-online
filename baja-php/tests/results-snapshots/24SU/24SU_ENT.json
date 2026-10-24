@@ -1,0 +1,160 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SU",
+    "id": "24SU_ENT",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Entregável",
+                "Avaliação",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "1",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Entregável": "9.75",
+                    "Avaliação": "0",
+                    "Total": "<b>9.75</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari - Univates</i>",
+                    "Entregável": "16.05",
+                    "Avaliação": "5.7",
+                    "Total": "<b>21.75</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "3",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Entregável": "18.75",
+                    "Avaliação": "0",
+                    "Total": "<b>18.75</b>"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "4",
+                    "Equipe Escola": "CATARATAS BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná (UNIOESTE)</i>",
+                    "Entregável": "7.35",
+                    "Avaliação": "0",
+                    "Total": "<b>7.35</b>"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "5",
+                    "Equipe Escola": "COYOTE BAJA TEAM<br><i class=\"nomeEscola\">Universidade de Caxias do Sul</i>",
+                    "Entregável": "8.85",
+                    "Avaliação": "0",
+                    "Total": "<b>8.85</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Curitiba</i>",
+                    "Entregável": "23.7",
+                    "Avaliação": "8.5",
+                    "Total": "<b>32.2</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "7",
+                    "Equipe Escola": "LONDRIBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Londrina</i>",
+                    "Entregável": "20.55",
+                    "Avaliação": "0",
+                    "Total": "<b>20.55</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "8",
+                    "Equipe Escola": "MAS BAJA TCHÊ<br><i class=\"nomeEscola\">Universidade de Passo Fundo</i>",
+                    "Entregável": "0",
+                    "Avaliação": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "9",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Entregável": "18.45",
+                    "Avaliação": "0",
+                    "Total": "<b>18.45</b>"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "10",
+                    "Equipe Escola": "PELZNICKEL UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário de Brusque - UNIFEBE</i>",
+                    "Entregável": "12.9",
+                    "Avaliação": "0",
+                    "Total": "<b>12.9</b>"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "11",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Cornélio Procópio</i>",
+                    "Entregável": "12.3",
+                    "Avaliação": "0",
+                    "Total": "<b>12.3</b>"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "12",
+                    "Equipe Escola": "SAGUI<br><i class=\"nomeEscola\">UFPR - Universidade Federal do Paraná</i>",
+                    "Entregável": "18.3",
+                    "Avaliação": "0",
+                    "Total": "<b>18.3</b>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "13",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Entregável": "11.7",
+                    "Avaliação": "0",
+                    "Total": "<b>11.7</b>"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "14",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Entregável": "0",
+                    "Avaliação": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "15",
+                    "Equipe Escola": "UDESC VELOCIRAPTOR BAJA<br><i class=\"nomeEscola\">Universidade do Estado de Santa Catarina</i>",
+                    "Entregável": "0",
+                    "Avaliação": "0",
+                    "Total": "<b>0</b>"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "16",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">SATC</i>",
+                    "Entregável": "0",
+                    "Avaliação": "0",
+                    "Total": "<b>0</b>"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

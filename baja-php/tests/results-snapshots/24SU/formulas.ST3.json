@@ -1,0 +1,106 @@
+{
+    "evento": "24SU",
+    "prova": "ST3",
+    "nome": "Suspensão 3",
+    "type": "normal",
+    "stored_totals": {
+        "TCSUS3com": 0,
+        "TCSUS3max": 38.70666666666666,
+        "TCSUS3min": 26.956666666666667
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "TC3_1": 32.1,
+                "TC3_2": 26.956666666666667,
+                "PESO_3": 15,
+                "CORR3_1": 0.19999999999999996,
+                "CORR3_2": 0.6,
+                "TCSUS3": 26.956666666666667
+            },
+            "pontos": {
+                "SUS3PTS": 9
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "TC3_1": 0,
+                "TC3_2": 41.196666666666665,
+                "PESO_3": 15,
+                "CORR3_1": null,
+                "CORR3_2": 0.8,
+                "TCSUS3": 0
+            },
+            "pontos": {
+                "SUS3PTS": 12
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC3_1": 39.666666666666664,
+                "TC3_2": 38.70666666666666,
+                "PESO_3": 15,
+                "CORR3_1": 1,
+                "CORR3_2": 0.8,
+                "TCSUS3": 38.70666666666666
+            },
+            "pontos": {
+                "SUS3PTS": 15
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "TC3_1": 0,
+                "TC3_2": 29.076666666666664,
+                "PESO_3": 15,
+                "CORR3_1": null,
+                "CORR3_2": 1,
+                "TCSUS3": 0
+            },
+            "pontos": {
+                "SUS3PTS": 15
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC3_1": 30.013333333333332,
+                "TC3_2": 27.403333333333332,
+                "PESO_3": 15,
+                "CORR3_1": 0.8,
+                "CORR3_2": 0.6,
+                "TCSUS3": 27.403333333333332
+            },
+            "pontos": {
+                "SUS3PTS": 12
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC3_1": 0,
+                "TC3_2": 0,
+                "PESO_3": 15,
+                "CORR3_1": null,
+                "CORR3_2": null,
+                "TCSUS3": 0
+            },
+            "pontos": {
+                "SUS3PTS": null
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": [
+            13
+        ]
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

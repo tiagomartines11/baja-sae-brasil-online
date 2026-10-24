@@ -1,0 +1,377 @@
+{
+    "evento": "24SE",
+    "prova": "APR",
+    "nome": "Apresentação de Projeto",
+    "type": "normal",
+    "stored_totals": {
+        "MKT_com": 0,
+        "MKT_max": 75,
+        "MKT_min": 2.5,
+        "ELET_com": 0,
+        "ELET_max": 50,
+        "ELET_min": 2.78,
+        "GEST_com": 0,
+        "GEST_max": 85,
+        "GEST_min": 2.5,
+        "DIN_LONG_com": 0,
+        "DIN_LONG_max": 75,
+        "DIN_LONG_min": 11.11,
+        "SUSP_ERG_com": 0,
+        "SUSP_ERG_max": 90,
+        "SUSP_ERG_min": 7.5,
+        "CALC_ESTRUT_com": 0,
+        "CALC_ESTRUT_max": 83.33,
+        "CALC_ESTRUT_min": 2.78
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "MKT_": 32.5,
+                "ELET_": 44.44,
+                "GEST_": 40,
+                "DIN_LONG_": 72.22,
+                "SUSP_ERG_": 82.5,
+                "CALC_ESTRUT_": 38.89
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 14.000960038401537,
+                "DIN_LONG_TS": 28.887999999999998,
+                "ELET_TS": 26.663999999999998,
+                "GEST_TS": 14.117647058823529,
+                "MKT_TS": 13,
+                "SUSP_ERG_TS": 27.5
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "MKT_": 35,
+                "ELET_": 27.78,
+                "GEST_": 40,
+                "DIN_LONG_": 69.44,
+                "SUSP_ERG_": 65,
+                "CALC_ESTRUT_": 58.33
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 20.999639985599423,
+                "DIN_LONG_TS": 27.776,
+                "ELET_TS": 16.668,
+                "GEST_TS": 14.117647058823529,
+                "MKT_TS": 14,
+                "SUSP_ERG_TS": 21.666666666666668
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "MKT_": 75,
+                "ELET_": 41.67,
+                "GEST_": 72.5,
+                "DIN_LONG_": 75,
+                "SUSP_ERG_": 90,
+                "CALC_ESTRUT_": 83.33
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 30,
+                "DIN_LONG_TS": 30,
+                "ELET_TS": 25.002000000000002,
+                "GEST_TS": 25.588235294117645,
+                "MKT_TS": 30,
+                "SUSP_ERG_TS": 30
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "MKT_": 17.5,
+                "ELET_": 16.67,
+                "GEST_": 25,
+                "DIN_LONG_": 22.22,
+                "SUSP_ERG_": 22.5,
+                "CALC_ESTRUT_": 16.67
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 6.001440057602305,
+                "DIN_LONG_TS": 8.888,
+                "ELET_TS": 10.002,
+                "GEST_TS": 8.823529411764707,
+                "MKT_TS": 7,
+                "SUSP_ERG_TS": 7.5
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "MKT_": 5,
+                "ELET_": 11.11,
+                "GEST_": 35,
+                "DIN_LONG_": 25,
+                "SUSP_ERG_": 22.5,
+                "CALC_ESTRUT_": 16.67
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 6.001440057602305,
+                "DIN_LONG_TS": 10,
+                "ELET_TS": 6.6659999999999995,
+                "GEST_TS": 12.352941176470587,
+                "MKT_TS": 2,
+                "SUSP_ERG_TS": 7.5
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "MKT_": 22.5,
+                "ELET_": 36.11,
+                "GEST_": 55,
+                "DIN_LONG_": 50,
+                "SUSP_ERG_": 57.5,
+                "CALC_ESTRUT_": 38.89
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 14.000960038401537,
+                "DIN_LONG_TS": 20,
+                "ELET_TS": 21.665999999999997,
+                "GEST_TS": 19.411764705882355,
+                "MKT_TS": 9,
+                "SUSP_ERG_TS": 19.166666666666664
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "MKT_": 45,
+                "ELET_": 50,
+                "GEST_": 60,
+                "DIN_LONG_": 69.44,
+                "SUSP_ERG_": 77.5,
+                "CALC_ESTRUT_": 61.11
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 22.00048001920077,
+                "DIN_LONG_TS": 27.776,
+                "ELET_TS": 30,
+                "GEST_TS": 21.176470588235297,
+                "MKT_TS": 18,
+                "SUSP_ERG_TS": 25.833333333333336
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "MKT_": 40,
+                "ELET_": 30.56,
+                "GEST_": 75,
+                "DIN_LONG_": 58.33,
+                "SUSP_ERG_": 45,
+                "CALC_ESTRUT_": 36.11
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 13.000120004800193,
+                "DIN_LONG_TS": 23.331999999999997,
+                "ELET_TS": 18.336,
+                "GEST_TS": 26.470588235294116,
+                "MKT_TS": 16,
+                "SUSP_ERG_TS": 15
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "MKT_": 2.5,
+                "ELET_": 11.11,
+                "GEST_": 7.5,
+                "DIN_LONG_": 16.67,
+                "SUSP_ERG_": 7.5,
+                "CALC_ESTRUT_": 2.78
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 1.000840033601344,
+                "DIN_LONG_TS": 6.668000000000001,
+                "ELET_TS": 6.6659999999999995,
+                "GEST_TS": 2.647058823529412,
+                "MKT_TS": 1,
+                "SUSP_ERG_TS": 2.5
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "MKT_": 20,
+                "ELET_": 27.78,
+                "GEST_": 17.5,
+                "DIN_LONG_": 50,
+                "SUSP_ERG_": 40,
+                "CALC_ESTRUT_": 19.44
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 6.998679947197888,
+                "DIN_LONG_TS": 20,
+                "ELET_TS": 16.668,
+                "GEST_TS": 6.1764705882352935,
+                "MKT_TS": 8,
+                "SUSP_ERG_TS": 13.333333333333332
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "MKT_": 32.5,
+                "ELET_": 38.89,
+                "GEST_": 57.5,
+                "DIN_LONG_": 72.22,
+                "SUSP_ERG_": 42.5,
+                "CALC_ESTRUT_": 66.67
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 24.002160086403457,
+                "DIN_LONG_TS": 28.887999999999998,
+                "ELET_TS": 23.334000000000003,
+                "GEST_TS": 20.294117647058826,
+                "MKT_TS": 13,
+                "SUSP_ERG_TS": 14.166666666666666
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "MKT_": 30,
+                "ELET_": 19.44,
+                "GEST_": 85,
+                "DIN_LONG_": 50,
+                "SUSP_ERG_": 37.5,
+                "CALC_ESTRUT_": 41.67
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 15.001800072002883,
+                "DIN_LONG_TS": 20,
+                "ELET_TS": 11.664000000000001,
+                "GEST_TS": 30,
+                "MKT_TS": 12,
+                "SUSP_ERG_TS": 12.5
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "MKT_": 12.5,
+                "ELET_": 27.78,
+                "GEST_": 17.5,
+                "DIN_LONG_": 27.78,
+                "SUSP_ERG_": 25,
+                "CALC_ESTRUT_": 13.89
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 5.000600024000961,
+                "DIN_LONG_TS": 11.112,
+                "ELET_TS": 16.668,
+                "GEST_TS": 6.1764705882352935,
+                "MKT_TS": 5,
+                "SUSP_ERG_TS": 8.333333333333334
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "MKT_": 7.5,
+                "ELET_": 8.33,
+                "GEST_": 15,
+                "DIN_LONG_": 22.22,
+                "SUSP_ERG_": 10,
+                "CALC_ESTRUT_": 19.44
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 6.998679947197888,
+                "DIN_LONG_TS": 8.888,
+                "ELET_TS": 4.998,
+                "GEST_TS": 5.294117647058824,
+                "MKT_TS": 3,
+                "SUSP_ERG_TS": 3.333333333333333
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "MKT_": 2.5,
+                "ELET_": 13.89,
+                "GEST_": 15,
+                "DIN_LONG_": 22.22,
+                "SUSP_ERG_": 12.5,
+                "CALC_ESTRUT_": 22.22
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 7.999519980799231,
+                "DIN_LONG_TS": 8.888,
+                "ELET_TS": 8.334,
+                "GEST_TS": 5.294117647058824,
+                "MKT_TS": 1,
+                "SUSP_ERG_TS": 4.166666666666667
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "MKT_": 5,
+                "ELET_": 13.89,
+                "GEST_": 22.5,
+                "DIN_LONG_": 19.44,
+                "SUSP_ERG_": 15,
+                "CALC_ESTRUT_": 11.11
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 3.9997599903996157,
+                "DIN_LONG_TS": 7.776000000000002,
+                "ELET_TS": 8.334,
+                "GEST_TS": 7.9411764705882355,
+                "MKT_TS": 2,
+                "SUSP_ERG_TS": 5
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "MKT_": 15,
+                "ELET_": 16.67,
+                "GEST_": 2.5,
+                "DIN_LONG_": 36.11,
+                "SUSP_ERG_": 25,
+                "CALC_ESTRUT_": 33.33
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 11.999279971198847,
+                "DIN_LONG_TS": 14.443999999999999,
+                "ELET_TS": 10.002,
+                "GEST_TS": 0.8823529411764706,
+                "MKT_TS": 6,
+                "SUSP_ERG_TS": 8.333333333333334
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "MKT_": 7.5,
+                "ELET_": 2.78,
+                "GEST_": 17.5,
+                "DIN_LONG_": 11.11,
+                "SUSP_ERG_": 15,
+                "CALC_ESTRUT_": 22.22
+            },
+            "pontos": {
+                "CALC_ESTRUT_TS": 7.999519980799231,
+                "DIN_LONG_TS": 4.444,
+                "ELET_TS": 1.668,
+                "GEST_TS": 6.1764705882352935,
+                "MKT_TS": 3,
+                "SUSP_ERG_TS": 5
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

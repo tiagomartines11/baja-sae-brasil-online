@@ -1,0 +1,164 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "23SE",
+    "id": "23SE_SGD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Freio",
+                "Obstáculos",
+                "4x4",
+                "Status"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Freio": "NOK",
+                    "Obstáculos": "NOK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:red; font-weight:bold\">REPROVADO</span>"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "Freio": "NOK",
+                    "Obstáculos": "NOK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:red; font-weight:bold\">REPROVADO</span>"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Freio": "NOK",
+                    "Obstáculos": "NOK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:red; font-weight:bold\">REPROVADO</span>"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">Instituto Federal de São Paulo (IFSP) - Campus Sertãozinho</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Freio": "OK",
+                    "Obstáculos": "OK",
+                    "4x4": "Não aplicável",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

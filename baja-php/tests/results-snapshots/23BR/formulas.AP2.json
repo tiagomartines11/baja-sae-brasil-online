@@ -1,0 +1,196 @@
+{
+    "evento": "23BR",
+    "prova": "AP2",
+    "nome": "Projeto Segundo Pelotão",
+    "type": "normal",
+    "stored_totals": {
+        "AP2MMcom": 0,
+        "AP2MMmax": 10.75,
+        "AP2MMmin": 3.5
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "AP2_PARC": 5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 5
+            },
+            "pontos": {
+                "AP2PTS": 37.34
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "AP2_PARC": 5.5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 5.5
+            },
+            "pontos": {
+                "AP2PTS": 41.074
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "AP2_PARC": 8.75,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 8.75
+            },
+            "pontos": {
+                "AP2PTS": 65.345
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "AP2_PARC": 3.5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 3.5
+            },
+            "pontos": {
+                "AP2PTS": 26.137999999999998
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "AP2_PARC": 8,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 8
+            },
+            "pontos": {
+                "AP2PTS": 59.74400000000001
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "AP2_PARC": 9,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 9
+            },
+            "pontos": {
+                "AP2PTS": 67.21200000000002
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "AP2_PARC": 10.75,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 10.75
+            },
+            "pontos": {
+                "AP2PTS": 80.281
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "AP2_PARC": 6.5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 6.5
+            },
+            "pontos": {
+                "AP2PTS": 48.54200000000001
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "AP2_PARC": 4.25,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 4.25
+            },
+            "pontos": {
+                "AP2PTS": 31.739000000000004
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "AP2_PARC": 10.5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 10.5
+            },
+            "pontos": {
+                "AP2PTS": 78.41400000000002
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": {
+                "AP2_PARC": 7.5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 7.5
+            },
+            "pontos": {
+                "AP2PTS": 56.010000000000005
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "AP2_PARC": 9.5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 9.5
+            },
+            "pontos": {
+                "AP2PTS": 70.946
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "AP2_PARC": 7.5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 7.5
+            },
+            "pontos": {
+                "AP2PTS": 56.010000000000005
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": {
+                "AP2_PARC": 5.75,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 5.75
+            },
+            "pontos": {
+                "AP2PTS": 42.941
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "AP2_PARC": 4.5,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 4.5
+            },
+            "pontos": {
+                "AP2PTS": 33.60600000000001
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "AP2_PARC": 5.75,
+                "NOTA_MAX": 149.36,
+                "AP2MM": 5.75
+            },
+            "pontos": {
+                "AP2PTS": 42.941
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

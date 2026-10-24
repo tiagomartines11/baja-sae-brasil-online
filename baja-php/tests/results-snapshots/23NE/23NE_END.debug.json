@@ -1,0 +1,113 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "23NE",
+    "id": "23NE_END",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Voltas",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "1",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Voltas": "1",
+                    "Pontos": "3.49"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "4",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Voltas": "10",
+                    "Pontos": "34.88"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "5",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Voltas": "73",
+                    "Pontos": "254.65",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "6",
+                    "Equipe Escola": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Voltas": "35",
+                    "Pontos": "122.09"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraubas</i>",
+                    "Voltas": "86",
+                    "Pontos": "300",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "8",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Voltas": "65",
+                    "Pontos": "226.74"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Voltas": "82",
+                    "Pontos": "286.05",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "11",
+                    "Equipe Escola": "Siará Baja<br><i class=\"nomeEscola\">UFC</i>",
+                    "Voltas": "26",
+                    "Pontos": "90.7"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "12",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Salvador</i>",
+                    "Voltas": "58",
+                    "Pontos": "202.33"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "13",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Voltas": "63",
+                    "Pontos": "219.77"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "14",
+                    "Equipe Escola": "Zabumbaja Tecnoferr<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Voltas": "32",
+                    "Pontos": "111.63"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

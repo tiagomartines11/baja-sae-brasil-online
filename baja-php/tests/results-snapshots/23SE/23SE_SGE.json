@@ -1,0 +1,155 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SE",
+    "id": "23SE_SGE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Penalidades Rechecks ICTS",
+                "Aprovado 4x4",
+                "Status"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Penalidades Rechecks ICTS": "0",
+                    "Aprovado 4x4": "<span style=\"color:green; font-weight:bold\">SIM</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Penalidades Rechecks ICTS": "0",
+                    "Aprovado 4x4": "<span style=\"color:green; font-weight:bold\">SIM</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Penalidades Rechecks ICTS": "0",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Penalidades Rechecks ICTS": "-30",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "Penalidades Rechecks ICTS": "0",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Penalidades Rechecks ICTS": "-30",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "16",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:red; font-weight:bold\">REPROVADO</span>"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">Instituto Federal de São Paulo (IFSP) - Campus Sertãozinho</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Penalidades Rechecks ICTS": "0",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "21",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">Fatec São Paulo</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:red; font-weight:bold\">REPROVADO</span>"
+                },
+                {
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Penalidades Rechecks ICTS": "-15",
+                    "Aprovado 4x4": "<span style=\"color:; font-weight:bold\">NÃO APLICÁVEL</span>",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

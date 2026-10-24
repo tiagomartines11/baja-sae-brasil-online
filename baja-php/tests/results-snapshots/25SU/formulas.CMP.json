@@ -1,0 +1,65 @@
+{
+    "evento": "25SU",
+    "prova": "CMP",
+    "nome": "Compliance",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": [],
+            "pontos": {
+                "CMPPTS": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": {
+                "CMPPTS": 0
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": {
+                "CMPPTS": 20
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": {
+                "CMPPTS": 20
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": [],
+            "pontos": {
+                "CMPPTS": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "CMPPTS": 20
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "CMPPTS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

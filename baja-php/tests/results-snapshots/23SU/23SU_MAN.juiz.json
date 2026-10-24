@@ -1,0 +1,152 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "23SU",
+    "id": "23SU_MAN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo",
+                "Tempo Corrigido",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "3",
+                    "Equipe Escola": "CATARATAS BAJA<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná</i>",
+                    "Tempo": "-<br> 41.3 (8<img class=\"cone\">/8<img class=\"gate\">)",
+                    "Tempo Corrigido": "-<br> <b>161.3</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "5",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Tempo": "-<br> 52.6 (5<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "-<br> <b>87.6</b>",
+                    "Pontos": "50",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "6",
+                    "Equipe Escola": "GRALHA AZUL<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Tempo": "-<br> -",
+                    "Tempo Corrigido": "-<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "7",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Tempo": "73.87 (3<img class=\"cone\">/5<img class=\"gate\">)<br> 57.57 (4<img class=\"cone\">/4<img class=\"gate\">)",
+                    "Tempo Corrigido": "138.87<br> <b>117.57</b>",
+                    "Pontos": "29.67"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "8",
+                    "Equipe Escola": "FURG MOTORSPORT<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande</i>",
+                    "Tempo": "-<br> -",
+                    "Tempo Corrigido": "-<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "10",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Tempo": "76.27 (6<img class=\"cone\">/2<img class=\"gate\">)<br> 80.25 (3<img class=\"cone\">/2<img class=\"gate\">)",
+                    "Tempo Corrigido": "126.27<br> <b>115.25</b>",
+                    "Pontos": "31.24"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "11",
+                    "Equipe Escola": "BAJA GUAICURUS<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Tempo": "-<br> -",
+                    "Tempo Corrigido": "-<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "12",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Tempo": "-<br> 72.89 (9<img class=\"cone\">/2<img class=\"gate\">)",
+                    "Tempo Corrigido": "-<br> <b>137.89</b>",
+                    "Pontos": "15.88"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "13",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Tempo": "-<br> -",
+                    "Tempo Corrigido": "-<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "14",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Tempo": "49.05 (6<img class=\"cone\">/2<img class=\"gate\">)<br> 56.45 (5<img class=\"cone\">/4<img class=\"gate\">)",
+                    "Tempo Corrigido": "<b>99.05</b><br> 121.45",
+                    "Pontos": "42.23",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Tempo": "70.77 (10<img class=\"cone\">/4<img class=\"gate\">)<br> 62.05 (8<img class=\"cone\">/3<img class=\"gate\">)",
+                    "Tempo Corrigido": "160.77<br> <b>132.05</b>",
+                    "Pontos": "19.84"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "16",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Tempo": "61.63 (5<img class=\"cone\">/4<img class=\"gate\">)<br> 51.93 (1<img class=\"cone\">/4<img class=\"gate\">)",
+                    "Tempo Corrigido": "126.63<br> <b>96.93</b>",
+                    "Pontos": "43.67",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "17",
+                    "Equipe Escola": "BAJAGUAL<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Tempo": "62.27 (5<img class=\"cone\">/5<img class=\"gate\">)<br> 72.26 (8<img class=\"cone\">/5<img class=\"gate\">)",
+                    "Tempo Corrigido": "<b>137.27</b><br> 162.26",
+                    "Pontos": "16.3"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "20",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Tempo": "78.46 (8<img class=\"cone\">/3<img class=\"gate\">)<br> 74.67 (8<img class=\"cone\">/2<img class=\"gate\">)",
+                    "Tempo Corrigido": "148.46<br> <b>134.67</b>",
+                    "Pontos": "18.06"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova_juiz.php:73",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

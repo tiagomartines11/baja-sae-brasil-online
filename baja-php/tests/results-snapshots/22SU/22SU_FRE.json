@@ -1,0 +1,136 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22SU",
+    "id": "22SU_FRE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Desaceleração",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "1",
+                    "Equipe Escola": "Londribaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal Do Paraná - Campus Londrina</i>",
+                    "Desaceleração": "<b>5.61</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "2",
+                    "Equipe Escola": "Baja SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Desaceleração": "<b>6.29</b><br> -",
+                    "Pontos": "3.46"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "3",
+                    "Equipe Escola": "Cataratas Baja<br><i class=\"nomeEscola\">Universidade Estadual Do Oeste Do Paraná</i>",
+                    "Desaceleração": "<b>7.22</b><br> -",
+                    "Pontos": "8.21"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "4",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal Do Paraná</i>",
+                    "Desaceleração": "-<br> <b>8.4</b>",
+                    "Pontos": "14.25"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "6",
+                    "Equipe Escola": "UDESC Velociraptor Baja<br><i class=\"nomeEscola\">Universidade Do Estado De Santa Catarina</i>",
+                    "Desaceleração": "<b>7.95</b><br> -",
+                    "Pontos": "11.97"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "7",
+                    "Equipe Escola": "Sinuelo FAHOR<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Desaceleração": "<b>8.62</b><br> -",
+                    "Pontos": "15.39",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "8",
+                    "Equipe Escola": "Baja De Galpão - UNISC<br><i class=\"nomeEscola\">Universidade De Santa Cruz Do Sul</i>",
+                    "Desaceleração": "<b>9.52</b><br> -",
+                    "Pontos": "20",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "9",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal Do Paraná</i>",
+                    "Desaceleração": "-<br> <b>7.53</b>",
+                    "Pontos": "9.8"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "10",
+                    "Equipe Escola": "UFPR Baja Sae<br><i class=\"nomeEscola\">Universidade Federal Do Paraná</i>",
+                    "Desaceleração": "-<br> <b>8.03</b>",
+                    "Pontos": "12.36"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "11",
+                    "Equipe Escola": "Tobaja<br><i class=\"nomeEscola\">Universidade De Caxias Do Sul</i>",
+                    "Desaceleração": "<b>8.5</b><br> -",
+                    "Pontos": "14.78"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "12",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal Do Rio Grande Do Sul</i>",
+                    "Desaceleração": "-<br> <b>7.94</b>",
+                    "Pontos": "11.94"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja<br><i class=\"nomeEscola\">Universidade Federal De Santa Maria</i>",
+                    "Desaceleração": "<b>7.1</b><br> -",
+                    "Pontos": "7.62"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "14",
+                    "Equipe Escola": "Procobaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal Do Paraná - Campus Cornélio Procópio</i>",
+                    "Desaceleração": "<b>9.1</b><br> -",
+                    "Pontos": "17.85",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "15",
+                    "Equipe Escola": "Imperador UTFPR<br><i class=\"nomeEscola\">Universidade Tecnologica Federal Do Paraná - Campus Curitiba</i>",
+                    "Desaceleração": "-<br> <b>8.2</b>",
+                    "Pontos": "13.22"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "17",
+                    "Equipe Escola": "UFSC Baja SAE<br><i class=\"nomeEscola\">Universidade Federal De Santa Catarina</i>",
+                    "Desaceleração": "-<br> <b>7.4</b>",
+                    "Pontos": "9.16"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,290 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SE",
+    "id": "23SE_APR",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "DinamicaLong",
+                "SuspensaoDesignErg",
+                "Calc.Estrutural",
+                "Eletronica",
+                "Gestao",
+                "VendasMkt",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "DinamicaLong": "<b>55</b><br> 25.38",
+                    "SuspensaoDesignErg": "<b>75</b><br> 26.47",
+                    "Calc.Estrutural": "<b>30</b><br> 10.29",
+                    "Eletronica": "<b>45</b><br> 18.62",
+                    "Gestao": "<b>50</b><br> 16.67",
+                    "VendasMkt": "<b>35</b><br> 14.48",
+                    "Total": "111.91"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "DinamicaLong": "<b>52.5</b><br> 24.23",
+                    "SuspensaoDesignErg": "<b>75</b><br> 26.47",
+                    "Calc.Estrutural": "<b>50</b><br> 17.14",
+                    "Eletronica": "<b>70</b><br> 28.97",
+                    "Gestao": "<b>80</b><br> 26.67",
+                    "VendasMkt": "<b>57.5</b><br> 23.79",
+                    "Total": "147.27",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "DinamicaLong": "<b>55</b><br> 25.38",
+                    "SuspensaoDesignErg": "<b>80</b><br> 28.24",
+                    "Calc.Estrutural": "<b>52.5</b><br> 18",
+                    "Eletronica": "<b>52.5</b><br> 21.72",
+                    "Gestao": "<b>80</b><br> 26.67",
+                    "VendasMkt": "<b>72.5</b><br> 30",
+                    "Total": "150.01",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "DinamicaLong": "<b>62.5</b><br> 28.85",
+                    "SuspensaoDesignErg": "<b>85</b><br> 30",
+                    "Calc.Estrutural": "<b>40</b><br> 13.71",
+                    "Eletronica": "<b>42.5</b><br> 17.59",
+                    "Gestao": "<b>90</b><br> 30",
+                    "VendasMkt": "<b>65</b><br> 26.9",
+                    "Total": "147.05",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "DinamicaLong": "<b>0</b><br> <b>0</b>",
+                    "SuspensaoDesignErg": "<b>67.5</b><br> <b>0</b>",
+                    "Calc.Estrutural": "<b>47.5</b><br> <b>0</b>",
+                    "Eletronica": "<b>40</b><br> <b>0</b>",
+                    "Gestao": "<b>25</b><br> <b>0</b>",
+                    "VendasMkt": "<b>27.5</b><br> <b>0</b>",
+                    "Total": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "DinamicaLong": "<b>45</b><br> 20.77",
+                    "SuspensaoDesignErg": "<b>55</b><br> 19.41",
+                    "Calc.Estrutural": "<b>40</b><br> 13.71",
+                    "Eletronica": "<b>37.5</b><br> 15.52",
+                    "Gestao": "<b>55</b><br> 18.33",
+                    "VendasMkt": "<b>55</b><br> 22.76",
+                    "Total": "110.5"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "DinamicaLong": "<b>60</b><br> 27.69",
+                    "SuspensaoDesignErg": "<b>72.5</b><br> 25.59",
+                    "Calc.Estrutural": "<b>50</b><br> 17.14",
+                    "Eletronica": "<b>37.5</b><br> 15.52",
+                    "Gestao": "<b>30</b><br> 10",
+                    "VendasMkt": "<b>52.5</b><br> 21.72",
+                    "Total": "117.66"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "DinamicaLong": "<b>32.5</b><br> 15",
+                    "SuspensaoDesignErg": "<b>27.5</b><br> 9.71",
+                    "Calc.Estrutural": "<b>47.5</b><br> 16.29",
+                    "Eletronica": "<b>25</b><br> 10.34",
+                    "Gestao": "<b>17.5</b><br> 5.83",
+                    "VendasMkt": "<b>25</b><br> 10.34",
+                    "Total": "67.51"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "DinamicaLong": "<b>22.5</b><br> <b>0</b>",
+                    "SuspensaoDesignErg": "<b>20</b><br> <b>0</b>",
+                    "Calc.Estrutural": "<b>0</b><br> <b>0</b>",
+                    "Eletronica": "<b>20</b><br> <b>0</b>",
+                    "Gestao": "<b>40</b><br> <b>0</b>",
+                    "VendasMkt": "<b>0</b><br> <b>0</b>",
+                    "Total": "0"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "DinamicaLong": "<b>50</b><br> 23.08",
+                    "SuspensaoDesignErg": "<b>40</b><br> 14.12",
+                    "Calc.Estrutural": "<b>30</b><br> 10.29",
+                    "Eletronica": "<b>72.5</b><br> 30",
+                    "Gestao": "<b>35</b><br> 11.67",
+                    "VendasMkt": "<b>62.5</b><br> 25.86",
+                    "Total": "115.02"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "DinamicaLong": "<b>30</b><br> <b>0</b>",
+                    "SuspensaoDesignErg": "<b>40</b><br> <b>0</b>",
+                    "Calc.Estrutural": "<b>20</b><br> <b>0</b>",
+                    "Eletronica": "<b>35</b><br> <b>0</b>",
+                    "Gestao": "<b>37.5</b><br> <b>0</b>",
+                    "VendasMkt": "<b>25</b><br> <b>0</b>",
+                    "Total": "0"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "DinamicaLong": "<b>42.5</b><br> 19.62",
+                    "SuspensaoDesignErg": "<b>32.5</b><br> 11.47",
+                    "Calc.Estrutural": "<b>35</b><br> 12",
+                    "Eletronica": "<b>22.5</b><br> 9.31",
+                    "Gestao": "<b>35</b><br> 11.67",
+                    "VendasMkt": "<b>22.5</b><br> 9.31",
+                    "Total": "73.38"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "DinamicaLong": "<b>47.5</b><br> 21.92",
+                    "SuspensaoDesignErg": "<b>47.5</b><br> 16.76",
+                    "Calc.Estrutural": "<b>32.5</b><br> 11.14",
+                    "Eletronica": "<b>25</b><br> 10.34",
+                    "Gestao": "<b>57.5</b><br> 19.17",
+                    "VendasMkt": "<b>37.5</b><br> 15.52",
+                    "Total": "94.85"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "16",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "DinamicaLong": "<b>0</b><br> <b>0</b>",
+                    "SuspensaoDesignErg": "<b>0</b><br> <b>0</b>",
+                    "Calc.Estrutural": "<b>0</b><br> <b>0</b>",
+                    "Eletronica": "<b>10</b><br> <b>0</b>",
+                    "Gestao": "<b>22.5</b><br> <b>0</b>",
+                    "VendasMkt": "<b>22.5</b><br> <b>0</b>",
+                    "Total": "0"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "DinamicaLong": "<b>65</b><br> 30",
+                    "SuspensaoDesignErg": "<b>57.5</b><br> 20.29",
+                    "Calc.Estrutural": "<b>45</b><br> 15.43",
+                    "Eletronica": "<b>37.5</b><br> 15.52",
+                    "Gestao": "<b>47.5</b><br> 15.83",
+                    "VendasMkt": "<b>62.5</b><br> 25.86",
+                    "Total": "122.93"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "DinamicaLong": "<b>35</b><br> 16.15",
+                    "SuspensaoDesignErg": "<b>17.5</b><br> 6.18",
+                    "Calc.Estrutural": "<b>17.5</b><br> 6",
+                    "Eletronica": "<b>35</b><br> 14.48",
+                    "Gestao": "<b>27.5</b><br> 9.17",
+                    "VendasMkt": "<b>37.5</b><br> 15.52",
+                    "Total": "67.5"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "21",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">Fatec São Paulo</i>",
+                    "DinamicaLong": "<b>15</b><br> 6.92",
+                    "SuspensaoDesignErg": "<b>17.5</b><br> 6.18",
+                    "Calc.Estrutural": "<b>17.5</b><br> 6",
+                    "Eletronica": "<b>0</b><br> <b>0</b>",
+                    "Gestao": "<b>20</b><br> 6.67",
+                    "VendasMkt": "<b>35</b><br> 14.48",
+                    "Total": "40.25"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "DinamicaLong": "<b>57.5</b><br> 26.54",
+                    "SuspensaoDesignErg": "<b>72.5</b><br> 25.59",
+                    "Calc.Estrutural": "<b>87.5</b><br> 30",
+                    "Eletronica": "<b>52.5</b><br> 21.72",
+                    "Gestao": "<b>47.5</b><br> 15.83",
+                    "VendasMkt": "<b>57.5</b><br> 23.79",
+                    "Total": "143.47"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "24",
+                    "Equipe Escola": "IFSPEED<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de São Paulo – Campus Hortolândia</i>",
+                    "DinamicaLong": "<b>5</b><br> <b>0</b>",
+                    "SuspensaoDesignErg": "<b>7.5</b><br> <b>0</b>",
+                    "Calc.Estrutural": "<b>10</b><br> <b>0</b>",
+                    "Eletronica": "<b>0</b><br> <b>0</b>",
+                    "Gestao": "<b>10</b><br> <b>0</b>",
+                    "VendasMkt": "<b>0</b><br> <b>0</b>",
+                    "Total": "0"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "25",
+                    "Equipe Escola": "UAI BAJA<br><i class=\"nomeEscola\">IFMG - Campus Arcos</i>",
+                    "DinamicaLong": "<b>15</b><br> <b>0</b>",
+                    "SuspensaoDesignErg": "<b>17.5</b><br> <b>0</b>",
+                    "Calc.Estrutural": "<b>0</b><br> <b>0</b>",
+                    "Eletronica": "<b>12.5</b><br> <b>0</b>",
+                    "Gestao": "<b>17.5</b><br> <b>0</b>",
+                    "VendasMkt": "<b>0</b><br> <b>0</b>",
+                    "Total": "0"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "26",
+                    "Equipe Escola": "MINERVA BAJA<br><i class=\"nomeEscola\">UFRJ - CENTRO DE TECNOLOGIA</i>",
+                    "DinamicaLong": "<b>20</b><br> <b>0</b>",
+                    "SuspensaoDesignErg": "<b>25</b><br> <b>0</b>",
+                    "Calc.Estrutural": "<b>17.5</b><br> <b>0</b>",
+                    "Eletronica": "<b>0</b><br> <b>0</b>",
+                    "Gestao": "<b>0</b><br> <b>0</b>",
+                    "VendasMkt": "<b>17.5</b><br> <b>0</b>",
+                    "Total": "0"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova.php:78"
+    ]
+}

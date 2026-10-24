@@ -1,0 +1,124 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "24NE",
+    "id": "24NE_SGE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Documentos",
+                "Inspeção",
+                "Status",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA - Universidade Federal da Bahia</i>",
+                    "Documentos": "-15",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:red; font-weight:bold\">NOK</span>",
+                    "Pontos": "-30"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Universidade Salvador</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Documentos": "-15",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "-30"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "Bajagreste<br><i class=\"nomeEscola\">IFPE - Caruaru</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Pontos": "-15"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

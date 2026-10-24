@@ -1,0 +1,410 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "26BR",
+    "id": "26BR_SGD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Freio",
+                "Rampa",
+                "Curva",
+                "Vala",
+                "4x4",
+                "Status"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais - UFMG</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "Equipe FEI Baja<br><i class=\"nomeEscola\">Fundação Educacional Inaciana - FEI</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei - UFSJ</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Pato Branco</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Curitiba</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi-Árido - Ufersa - Campus Mossoró</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "Caraubaja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi-Árido - Ufersa - Campus Caraúbas</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "Parahybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande - UFCG</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte - UFRN</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais - CEFET/MG</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense - UFF - Campus Niterói</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "Baja UFSCar<br><i class=\"nomeEscola\">Universidade Federal de São Carlos - UFSCar</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "16",
+                    "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">Universidade Federal Fluminense - UFF - Campus Volta Redonda</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "Rampage Baja UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora - UFJF</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "19",
+                    "Equipe Escola": "Kaizen Piratas do Cerrado<br><i class=\"nomeEscola\">Universidade de Brasília - UnB</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "21",
+                    "Equipe Escola": "Baja Mud Racing<br><i class=\"nomeEscola\">Facens</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "23",
+                    "Equipe Escola": "EESC USP TRACTIAN Baja<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos - Universidade de São Paulo - EESC-USP</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "24",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná - UFPR</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "26",
+                    "Equipe Escola": "Saci Baja UNIFEI<br><i class=\"nomeEscola\">Universidade Federal de Itajubá - UNIFEI - Campus Itajubá</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "28",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia de São Paulo - IFSP - Campus Sertãozinho</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "29",
+                    "Equipe Escola": "Buffalo Baja - UFLA<br><i class=\"nomeEscola\">Universidade Federal de Lavras - UFLA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "30",
+                    "Equipe Escola": "Mangue Baja<br><i class=\"nomeEscola\">Universidade Federal de Pernambuco - UFPE</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "31",
+                    "Equipe Escola": "Equipe UNICAMP Baja SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - Unicamp</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "32",
+                    "Equipe Escola": "Vitória Baja<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo - UFES</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "33",
+                    "Equipe Escola": "PAC Baja<br><i class=\"nomeEscola\">Universidade Estadual Paulista - Unesp - Campus Bauru</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "34",
+                    "Equipe Escola": "ITA Baja<br><i class=\"nomeEscola\">Instituto Tecnológico de Aeronáutica - ITA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "35",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">Universidade Federal da Bahia - UFBA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "36",
+                    "Equipe Escola": "BAJAUEA<br><i class=\"nomeEscola\">Universidade do Estado do Amazonas - UEA</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "38",
+                    "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul - UFRGS</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "43",
+                    "Equipe Escola": "Velociraptor Baja<br><i class=\"nomeEscola\">Universidade do Estado de Santa Catarina - Udesc</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "44",
+                    "Equipe Escola": "TEC Ilha<br><i class=\"nomeEscola\">Universidade Estadual Paulista - Unesp - Campus de Ilha Solteira</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "47",
+                    "Equipe Escola": "Londribaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Londrina</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "49",
+                    "Equipe Escola": "FHO Baja<br><i class=\"nomeEscola\">Fundação Hermínio Ometto - FHO</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "53",
+                    "Equipe Escola": "ZABUMBAJA TRDAYCA<br><i class=\"nomeEscola\">Universidade Federal Rural de Pernambuco - UFRPE</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "OK",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "58",
+                    "Equipe Escola": "Maua Racing Baja<br><i class=\"nomeEscola\">Instituto Mauá de Tecnologia - IMT</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                },
+                {
+                    "#": "61",
+                    "Equipe Escola": "Equipe UFVBaja Pererecas<br><i class=\"nomeEscola\">Universidade Federal de Viçosa - UFV</i>",
+                    "Freio": "OK",
+                    "Rampa": "OK",
+                    "Curva": "OK",
+                    "Vala": "OK",
+                    "4x4": "NÃO APLICÁVEL",
+                    "Status": "<span style=\"color:green; font-weight:bold\">APROVADO</span>"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

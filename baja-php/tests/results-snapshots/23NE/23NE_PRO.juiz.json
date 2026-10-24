@@ -1,0 +1,157 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "23NE",
+    "id": "23NE_PRO",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "1ª Etapa",
+                "Apresentação",
+                "Finais",
+                "Avaliação de Projeto Dinâmico",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "1ª Etapa": "22.61",
+                    "Apresentação": "0",
+                    "Finais": "85.19",
+                    "Avaliação de Projeto Dinâmico": "18.42",
+                    "Total": "126.22"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "Baja Sun City<br><i class=\"nomeEscola\">IFBA - Jequié</i>",
+                    "1ª Etapa": "11.25",
+                    "Apresentação": "28.14",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "0",
+                    "Total": "39.39"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "Bajampa<br><i class=\"nomeEscola\">IFPB - João Pessoa</i>",
+                    "1ª Etapa": "7.4",
+                    "Apresentação": "17.14",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "0",
+                    "Total": "24.54"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "1ª Etapa": "16.06",
+                    "Apresentação": "56.19",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "19.15",
+                    "Total": "91.4"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "1ª Etapa": "42.66",
+                    "Apresentação": "0",
+                    "Finais": "123.25",
+                    "Avaliação de Projeto Dinâmico": "22.71",
+                    "Total": "188.62"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "1ª Etapa": "12.53",
+                    "Apresentação": "40.78",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "22.25",
+                    "Total": "75.56"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraubas</i>",
+                    "1ª Etapa": "28.87",
+                    "Apresentação": "69.78",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "20.88",
+                    "Total": "119.53"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "1ª Etapa": "35.81",
+                    "Apresentação": "0",
+                    "Finais": "178.53",
+                    "Avaliação de Projeto Dinâmico": "15.5",
+                    "Total": "229.84"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "Car-Kará Baja SAE Tecnoferr<br><i class=\"nomeEscola\">UFRN</i>",
+                    "1ª Etapa": "46.7",
+                    "Apresentação": "0",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "0",
+                    "Total": "46.7"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "1ª Etapa": "19.57",
+                    "Apresentação": "87.66",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "30",
+                    "Total": "137.23"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "Siará Baja<br><i class=\"nomeEscola\">UFC</i>",
+                    "1ª Etapa": "24.49",
+                    "Apresentação": "56.19",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "15.14",
+                    "Total": "95.82"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Salvador</i>",
+                    "1ª Etapa": "17.27",
+                    "Apresentação": "53.09",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "14.77",
+                    "Total": "85.13"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "1ª Etapa": "42.47",
+                    "Apresentação": "0",
+                    "Finais": "198.47",
+                    "Avaliação de Projeto Dinâmico": "28.36",
+                    "Total": "269.3"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "Zabumbaja Tecnoferr<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "1ª Etapa": "17.18",
+                    "Apresentação": "54.38",
+                    "Finais": "0",
+                    "Avaliação de Projeto Dinâmico": "17.6",
+                    "Total": "89.16"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

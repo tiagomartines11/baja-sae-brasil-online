@@ -1,0 +1,376 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22BR",
+    "id": "22BR_TRA",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Distância",
+                "Tempo",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "30º",
+                    "#": "2",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Distância": "5.99<br> <b>6.17</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "26.42"
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "3",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Distância": "<b>6.66</b><br> 6.65",
+                    "Tempo": "-<br> -",
+                    "Pontos": "29.3"
+                },
+                {
+                    "[img trofeu.png]": "41º",
+                    "#": "5",
+                    "Equipe Escola": "TUFFÃO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE</i>",
+                    "Distância": "<b>4.41</b><br> 4.16",
+                    "Tempo": "-<br> -",
+                    "Pontos": "16.04"
+                },
+                {
+                    "[img trofeu.png]": "34º",
+                    "#": "6",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Distância": "5.26<br> <b>5.97</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "25.24"
+                },
+                {
+                    "[img trofeu.png]": "23º",
+                    "#": "7",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Distância": "<b>6.84</b><br> 6.51",
+                    "Tempo": "-<br> -",
+                    "Pontos": "30.37"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "9",
+                    "Equipe Escola": "RAMPAGE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Distância": "<b>8.34</b><br> 7.87",
+                    "Tempo": "-<br> -",
+                    "Pontos": "39.21"
+                },
+                {
+                    "[img trofeu.png]": "27º",
+                    "#": "11",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Distância": "<b>6.32</b><br> 6.24",
+                    "Tempo": "-<br> -",
+                    "Pontos": "27.3"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "12",
+                    "Equipe Escola": "CARAUBAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Distância": "<b>10.17</b><br> 9.83",
+                    "Tempo": "-<br> -",
+                    "Pontos": "50",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Distância": "6.52<br> <b>7.33</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "33.25"
+                },
+                {
+                    "[img trofeu.png]": "37º",
+                    "#": "14",
+                    "Equipe Escola": "CARPOEIRA BAJA<br><i class=\"nomeEscola\">FUNDAÇÃO ESCOLA POLITÉCNICA DA BAHIA</i>",
+                    "Distância": "4.88<br> <b>5.74</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "23.88"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "15",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CORNÉLIO PROCÓPIO</i>",
+                    "Distância": "8.12<br> <b>8.21</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "38.44"
+                },
+                {
+                    "[img trofeu.png]": "26º",
+                    "#": "18",
+                    "Equipe Escola": "CAR-KARÁ BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Distância": "6.24<br> <b>6.62</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "29.07"
+                },
+                {
+                    "[img trofeu.png]": "42º",
+                    "#": "19",
+                    "Equipe Escola": "UDESC VELOCIRAPTOR BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DE SANTA CATARINA (UDESC - CCT)</i>",
+                    "Distância": "<b>1.78</b><br> 0.94",
+                    "Tempo": "-<br> -",
+                    "Pontos": "0.53"
+                },
+                {
+                    "[img trofeu.png]": "38º",
+                    "#": "20",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Distância": "4.73<br> <b>5.63</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "23.23"
+                },
+                {
+                    "[img trofeu.png]": "32º",
+                    "#": "22",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA - FAHOR</i>",
+                    "Distância": "<b>6.02</b><br> 5.31",
+                    "Tempo": "-<br> -",
+                    "Pontos": "25.53"
+                },
+                {
+                    "[img trofeu.png]": "43º",
+                    "#": "23",
+                    "Equipe Escola": "CORISCO<br><i class=\"nomeEscola\">UNIVERSIDADE DE PERNAMBUCO</i>",
+                    "Distância": "<b>1.69</b><br> -",
+                    "Tempo": "-<br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "24",
+                    "Equipe Escola": "FORJA BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA INDUSTRIAL E METALÚRGICA DE VOLTA REDONDA - UFF</i>",
+                    "Distância": "<b>7.72</b><br> 7.17",
+                    "Tempo": "-<br> -",
+                    "Pontos": "35.55"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "25",
+                    "Equipe Escola": "FEI BAJA 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Distância": "<b>8.36</b><br> 7.64",
+                    "Tempo": "-<br> -",
+                    "Pontos": "39.33"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "28",
+                    "Equipe Escola": "SAMABAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE EDUCACAO CIENCIA E TECNOLOGIA DO ESPIRITO SANTO - CAMPUS SÃO MATEUS</i>",
+                    "Distância": "<b>9.94</b><br> 9.25",
+                    "Tempo": "-<br> -",
+                    "Pontos": "48.64",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "30",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Distância": "8.38<br> <b>8.53</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "40.33"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "31",
+                    "Equipe Escola": "BAJA UNILESTE<br><i class=\"nomeEscola\">UNIÃO BRASILEIRA DE EDUCAÇÃO CATÓLICA</i>",
+                    "Distância": "8.13<br> <b>8.39</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "39.5"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "35",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS PATO BRANCO</i>",
+                    "Distância": "<b>9.13</b><br> 8.68",
+                    "Tempo": "-<br> -",
+                    "Pontos": "43.87"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "36",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Distância": "<b>8.92</b><br> 8.58",
+                    "Tempo": "-<br> -",
+                    "Pontos": "42.63"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "38",
+                    "Equipe Escola": "MANGUE BAJA TECNOFERR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO (UFPE)</i>",
+                    "Distância": "8.08<br> <b>8.35</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "39.27"
+                },
+                {
+                    "[img trofeu.png]": "39º",
+                    "#": "40",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Distância": "<b>5.41</b><br> 5.28",
+                    "Tempo": "-<br> -",
+                    "Pontos": "21.93"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "42",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Distância": "<b>9.03</b><br> 6.61",
+                    "Tempo": "-<br> -",
+                    "Pontos": "43.28"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "44",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Distância": "<b>9.21</b><br> 9.08",
+                    "Tempo": "-<br> -",
+                    "Pontos": "44.34",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "35º",
+                    "#": "45",
+                    "Equipe Escola": "CORSÁRIOS BAJA<br><i class=\"nomeEscola\">INSTITUTO DE EDUCAÇÃO CIÊNCIA E TECNOLOGIA DO SUDESTE DE MINAS GERAIS, CAMPUS JUIZ DE FORA</i>",
+                    "Distância": "5.55<br> <b>5.96</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "25.18"
+                },
+                {
+                    "[img trofeu.png]": "32º",
+                    "#": "46",
+                    "Equipe Escola": "UFSC UIRAÇU<br><i class=\"nomeEscola\">UNIVERSIDADE: UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
+                    "Distância": "5.82<br> <b>6.02</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "25.53"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "49",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Distância": "<b>8.22</b><br> 8.03",
+                    "Tempo": "-<br> -",
+                    "Pontos": "38.5"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "50",
+                    "Equipe Escola": "FEI BAJA 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Distância": "7.29<br> <b>7.81</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "36.08"
+                },
+                {
+                    "[img trofeu.png]": "28º",
+                    "#": "51",
+                    "Equipe Escola": "UNBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Distância": "6.14<br> <b>6.31</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "27.24"
+                },
+                {
+                    "[img trofeu.png]": "29º",
+                    "#": "52",
+                    "Equipe Escola": "TCHÊ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
+                    "Distância": "<b>6.25</b><br> 6.02",
+                    "Tempo": "-<br> -",
+                    "Pontos": "26.89"
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "55",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Distância": "6.43<br> <b>6.66</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "29.3"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "56",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Distância": "<b>8.61</b><br> <b>8.61</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "40.8"
+                },
+                {
+                    "[img trofeu.png]": "40º",
+                    "#": "57",
+                    "Equipe Escola": "BOMBAJA CASHFAST UFSM<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA MARIA - UFSM</i>",
+                    "Distância": "<b>5.4</b><br> 5.18",
+                    "Tempo": "-<br> -",
+                    "Pontos": "21.88"
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "58",
+                    "Equipe Escola": "CALEDÔNIA RACING BAJA SAE<br><i class=\"nomeEscola\">INSTITUTO POLITÉCNICO DO RIO DE JANEIRO</i>",
+                    "Distância": "<b>7.41</b><br> 7.39",
+                    "Tempo": "-<br> -",
+                    "Pontos": "33.73"
+                },
+                {
+                    "[img trofeu.png]": "31º",
+                    "#": "59",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Distância": "5.87<br> <b>6.16</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "26.36"
+                },
+                {
+                    "[img trofeu.png]": "22º",
+                    "#": "60",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
+                    "Distância": "7.26<br> <b>7.29</b>",
+                    "Tempo": "-<br> -",
+                    "Pontos": "33.02"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "61",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">ASSOCIACAO BENEFICENTE DA INDUSTRIA CARBONIF</i>",
+                    "Distância": "<b>8.64</b><br> 8.49",
+                    "Tempo": "-<br> -",
+                    "Pontos": "40.98"
+                },
+                {
+                    "[img trofeu.png]": "36º",
+                    "#": "62",
+                    "Equipe Escola": "MOUNTAINBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITABIRA</i>",
+                    "Distância": "<b>5.89</b><br> 4.18",
+                    "Tempo": "-<br> -",
+                    "Pontos": "24.76"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "64",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS CURITIBA</i>",
+                    "Distância": "<b>7.54</b><br> -",
+                    "Tempo": "-<br> -",
+                    "Pontos": "34.49"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "68",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Distância": "<b>8.52</b><br> 8.46",
+                    "Tempo": "-<br> -",
+                    "Pontos": "40.27"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

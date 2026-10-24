@@ -1,0 +1,164 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "26BR",
+    "id": "26BR_FXY",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Powertrain",
+                "Elétrica",
+                "Freios",
+                "Design",
+                "Susp. e Dir.",
+                "Cálculo",
+                "Gestão",
+                "Negócios"
+            ],
+            "rows": [
+                {
+                    "#": "2",
+                    "Equipe Escola": "Equipe FEI Baja<br><i class=\"nomeEscola\">Fundação Educacional Inaciana - FEI</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "<b>SIM</b>",
+                    "Design": "",
+                    "Susp. e Dir.": "<b>SIM</b>",
+                    "Cálculo": "",
+                    "Gestão": "",
+                    "Negócios": ""
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei - UFSJ</i>",
+                    "Powertrain": "<b>SIM</b>",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Susp. e Dir.": "<b>SIM</b>",
+                    "Cálculo": "<b>SIM</b>",
+                    "Gestão": "",
+                    "Negócios": ""
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo - Poli USP</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Susp. e Dir.": "",
+                    "Cálculo": "",
+                    "Gestão": "<b>SIM</b>",
+                    "Negócios": "<b>SIM</b>"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - UTFPR - Campus Curitiba</i>",
+                    "Powertrain": "<b>SIM</b>",
+                    "Elétrica": "<b>SIM</b>",
+                    "Freios": "<b>SIM</b>",
+                    "Design": "",
+                    "Susp. e Dir.": "",
+                    "Cálculo": "",
+                    "Gestão": "",
+                    "Negócios": "<b>SIM</b>"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">Universidade Federal Rural do Semi-Árido - Ufersa - Campus Mossoró</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "<b>SIM</b>",
+                    "Susp. e Dir.": "",
+                    "Cálculo": "",
+                    "Gestão": "",
+                    "Negócios": ""
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Norte - UFRN</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "<b>SIM</b>",
+                    "Susp. e Dir.": "",
+                    "Cálculo": "",
+                    "Gestão": "",
+                    "Negócios": ""
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "Rampage Baja UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora - UFJF</i>",
+                    "Powertrain": "<b>SIM</b>",
+                    "Elétrica": "<b>SIM</b>",
+                    "Freios": "<b>SIM</b>",
+                    "Design": "",
+                    "Susp. e Dir.": "",
+                    "Cálculo": "<b>SIM</b>",
+                    "Gestão": "<b>SIM</b>",
+                    "Negócios": ""
+                },
+                {
+                    "#": "19",
+                    "Equipe Escola": "Kaizen Piratas do Cerrado<br><i class=\"nomeEscola\">Universidade de Brasília - UnB</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Susp. e Dir.": "<b>SIM</b>",
+                    "Cálculo": "",
+                    "Gestão": "",
+                    "Negócios": "<b>SIM</b>"
+                },
+                {
+                    "#": "23",
+                    "Equipe Escola": "EESC USP TRACTIAN Baja<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos - Universidade de São Paulo - EESC-USP</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Susp. e Dir.": "",
+                    "Cálculo": "<b>SIM</b>",
+                    "Gestão": "",
+                    "Negócios": ""
+                },
+                {
+                    "#": "30",
+                    "Equipe Escola": "Mangue Baja<br><i class=\"nomeEscola\">Universidade Federal de Pernambuco - UFPE</i>",
+                    "Powertrain": "",
+                    "Elétrica": "<b>SIM</b>",
+                    "Freios": "",
+                    "Design": "<b>SIM</b>",
+                    "Susp. e Dir.": "",
+                    "Cálculo": "",
+                    "Gestão": "",
+                    "Negócios": ""
+                },
+                {
+                    "#": "33",
+                    "Equipe Escola": "PAC Baja<br><i class=\"nomeEscola\">Universidade Estadual Paulista - Unesp - Campus Bauru</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Susp. e Dir.": "",
+                    "Cálculo": "",
+                    "Gestão": "<b>SIM</b>",
+                    "Negócios": ""
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

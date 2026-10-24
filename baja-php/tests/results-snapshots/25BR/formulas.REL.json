@@ -1,0 +1,668 @@
+{
+    "evento": "25BR",
+    "prova": "REL",
+    "nome": "Relatório de Projeto",
+    "type": "normal",
+    "stored_totals": {
+        "NT_Rcom": 0,
+        "NT_Rmax": 94.62,
+        "NT_Rmin": 11.75
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "NT_R": 89.1
+            },
+            "pontos": {
+                "RELNOR": 65.9162967660114,
+                "RELPEN": 0,
+                "RELPOR": 89.1,
+                "RELPTS": 65.9162967660114
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "NT_R": 94.62
+            },
+            "pontos": {
+                "RELNOR": 70,
+                "RELPEN": 0,
+                "RELPOR": 94.62,
+                "RELPTS": 70
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "NT_R": 79.6
+            },
+            "pontos": {
+                "RELNOR": 58.88818431621221,
+                "RELPEN": 0,
+                "RELPOR": 79.6,
+                "RELPTS": 58.88818431621221
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "NT_R": 81.92
+            },
+            "pontos": {
+                "RELNOR": 60.60452335658423,
+                "RELPEN": 0,
+                "RELPOR": 81.92,
+                "RELPTS": 60.60452335658423
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "NT_R": 78.62
+            },
+            "pontos": {
+                "RELNOR": 58.163179031917146,
+                "RELPEN": 0,
+                "RELPOR": 78.62,
+                "RELPTS": 58.163179031917146
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "NT_R": 80.13
+            },
+            "pontos": {
+                "RELNOR": 59.28027901077996,
+                "RELPEN": 0,
+                "RELPOR": 80.13,
+                "RELPTS": 59.28027901077996
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "NT_R": 56.97
+            },
+            "pontos": {
+                "RELNOR": 42.14648065948003,
+                "RELPEN": 10,
+                "RELPOR": 56.97,
+                "RELPTS": 32.14648065948003
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "NT_R": 68.08
+            },
+            "pontos": {
+                "RELNOR": 50.36567321919256,
+                "RELPEN": 0,
+                "RELPOR": 68.08,
+                "RELPTS": 50.36567321919256
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "NT_R": 62.44
+            },
+            "pontos": {
+                "RELNOR": 46.19319382794335,
+                "RELPEN": 0,
+                "RELPOR": 62.44,
+                "RELPTS": 46.19319382794335
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "NT_R": 68.72
+            },
+            "pontos": {
+                "RELNOR": 50.839146057915876,
+                "RELPEN": 10,
+                "RELPOR": 68.72,
+                "RELPTS": 40.839146057915876
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "NT_R": 68.33
+            },
+            "pontos": {
+                "RELNOR": 50.550623546818855,
+                "RELPEN": 0,
+                "RELPOR": 68.33,
+                "RELPTS": 50.550623546818855
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "NT_R": 63.33
+            },
+            "pontos": {
+                "RELNOR": 46.851616994292954,
+                "RELPEN": 0,
+                "RELPOR": 63.33,
+                "RELPTS": 46.851616994292954
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "NT_R": 74.23
+            },
+            "pontos": {
+                "RELNOR": 54.91545127879941,
+                "RELPEN": 0,
+                "RELPOR": 74.23,
+                "RELPTS": 54.91545127879941
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "NT_R": 61.03
+            },
+            "pontos": {
+                "RELNOR": 45.15007398013105,
+                "RELPEN": 0,
+                "RELPOR": 61.03,
+                "RELPTS": 45.15007398013105
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "NT_R": 65.12
+            },
+            "pontos": {
+                "RELNOR": 48.175861340097235,
+                "RELPEN": 0,
+                "RELPOR": 65.12,
+                "RELPTS": 48.175861340097235
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "NT_R": 44.74
+            },
+            "pontos": {
+                "RELNOR": 33.09871063200169,
+                "RELPEN": 0,
+                "RELPOR": 44.74,
+                "RELPTS": 33.09871063200169
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "NT_R": 53.05
+            },
+            "pontos": {
+                "RELNOR": 39.24645952229972,
+                "RELPEN": 0,
+                "RELPOR": 53.05,
+                "RELPTS": 39.24645952229972
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "NT_R": 69.74
+            },
+            "pontos": {
+                "RELNOR": 51.593743394631154,
+                "RELPEN": 0,
+                "RELPOR": 69.74,
+                "RELPTS": 51.593743394631154
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "NT_R": 49.1
+            },
+            "pontos": {
+                "RELNOR": 36.324244345804274,
+                "RELPEN": 0,
+                "RELPOR": 49.1,
+                "RELPTS": 36.324244345804274
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "NT_R": 69.36
+            },
+            "pontos": {
+                "RELNOR": 51.31261889663919,
+                "RELPEN": 0,
+                "RELPOR": 69.36,
+                "RELPTS": 51.31261889663919
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "NT_R": 71.92
+            },
+            "pontos": {
+                "RELNOR": 53.20651025153245,
+                "RELPEN": 0,
+                "RELPOR": 71.92,
+                "RELPTS": 53.20651025153245
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "NT_R": 85.28
+            },
+            "pontos": {
+                "RELNOR": 63.09025575988163,
+                "RELPEN": 0,
+                "RELPOR": 85.28,
+                "RELPTS": 63.09025575988163
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "NT_R": 75
+            },
+            "pontos": {
+                "RELNOR": 55.48509828788839,
+                "RELPEN": 0,
+                "RELPOR": 75,
+                "RELPTS": 55.48509828788839
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "NT_R": 51.28
+            },
+            "pontos": {
+                "RELNOR": 37.937011202705555,
+                "RELPEN": 0,
+                "RELPOR": 51.28,
+                "RELPTS": 37.937011202705555
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "NT_R": 64.62
+            },
+            "pontos": {
+                "RELNOR": 47.80596068484464,
+                "RELPEN": 10,
+                "RELPOR": 64.62,
+                "RELPTS": 37.80596068484464
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "NT_R": 33.36
+            },
+            "pontos": {
+                "RELNOR": 24.679771718452756,
+                "RELPEN": 0,
+                "RELPOR": 33.36,
+                "RELPTS": 24.679771718452756
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "NT_R": 59.36
+            },
+            "pontos": {
+                "RELNOR": 43.9146057915874,
+                "RELPEN": 0,
+                "RELPOR": 59.36,
+                "RELPTS": 43.9146057915874
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "NT_R": 35.9
+            },
+            "pontos": {
+                "RELNOR": 26.55886704713591,
+                "RELPEN": 0,
+                "RELPOR": 35.9,
+                "RELPTS": 26.55886704713591
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "NT_R": 0
+            },
+            "pontos": {
+                "RELNOR": 0,
+                "RELPEN": 0,
+                "RELPOR": 0,
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "NT_R": 44.31
+            },
+            "pontos": {
+                "RELNOR": 32.78059606848446,
+                "RELPEN": 0,
+                "RELPOR": 44.31,
+                "RELPTS": 32.78059606848446
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "NT_R": 58.7
+            },
+            "pontos": {
+                "RELNOR": 43.42633692665398,
+                "RELPEN": 20,
+                "RELPOR": 58.7,
+                "RELPTS": 23.42633692665398
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "NT_R": 38.85
+            },
+            "pontos": {
+                "RELNOR": 28.74128091312619,
+                "RELPEN": 0,
+                "RELPOR": 38.85,
+                "RELPTS": 28.74128091312619
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "NT_R": 31.28
+            },
+            "pontos": {
+                "RELNOR": 23.140984992601986,
+                "RELPEN": 0,
+                "RELPOR": 31.28,
+                "RELPTS": 23.140984992601986
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "NT_R": 44.36
+            },
+            "pontos": {
+                "RELNOR": 32.81758613400972,
+                "RELPEN": 0,
+                "RELPOR": 44.36,
+                "RELPTS": 32.81758613400972
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "NT_R": 64.23
+            },
+            "pontos": {
+                "RELNOR": 47.51743817374762,
+                "RELPEN": 0,
+                "RELPOR": 64.23,
+                "RELPTS": 47.51743817374762
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "NT_R": 44.23
+            },
+            "pontos": {
+                "RELNOR": 32.721411963644044,
+                "RELPEN": 0,
+                "RELPOR": 44.23,
+                "RELPTS": 32.721411963644044
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "NT_R": 11.75
+            },
+            "pontos": {
+                "RELNOR": 8.692665398435848,
+                "RELPEN": 20,
+                "RELPOR": 11.75,
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": {
+                "NT_R": 26.13
+            },
+            "pontos": {
+                "RELNOR": 19.331008243500317,
+                "RELPEN": 0,
+                "RELPOR": 26.13,
+                "RELPTS": 19.331008243500317
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "NT_R": 25.77
+            },
+            "pontos": {
+                "RELNOR": 19.06467977171845,
+                "RELPEN": 20,
+                "RELPOR": 25.77,
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "NT_R": 23.74
+            },
+            "pontos": {
+                "RELNOR": 17.56288311139294,
+                "RELPEN": 0,
+                "RELPOR": 23.74,
+                "RELPTS": 17.56288311139294
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "NT_R": 0
+            },
+            "pontos": {
+                "RELNOR": 0,
+                "RELPEN": 0,
+                "RELPOR": 0,
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "NT_R": 22.56
+            },
+            "pontos": {
+                "RELNOR": 16.689917564996826,
+                "RELPEN": 0,
+                "RELPOR": 22.56,
+                "RELPTS": 16.689917564996826
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "NT_R": 51.79
+            },
+            "pontos": {
+                "RELNOR": 38.3143098710632,
+                "RELPEN": 10,
+                "RELPOR": 51.79,
+                "RELPTS": 28.3143098710632
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "NT_R": 53.21
+            },
+            "pontos": {
+                "RELNOR": 39.364827731980554,
+                "RELPEN": 0,
+                "RELPOR": 53.21,
+                "RELPTS": 39.364827731980554
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "NT_R": 72.82
+            },
+            "pontos": {
+                "RELNOR": 53.872331430987096,
+                "RELPEN": 0,
+                "RELPOR": 72.82,
+                "RELPTS": 53.872331430987096
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "NT_R": 0
+            },
+            "pontos": {
+                "RELNOR": 0,
+                "RELPEN": 0,
+                "RELPOR": 0,
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "NT_R": 24.62
+            },
+            "pontos": {
+                "RELNOR": 18.213908264637496,
+                "RELPEN": 0,
+                "RELPOR": 24.62,
+                "RELPTS": 18.213908264637496
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "NT_R": 41.15
+            },
+            "pontos": {
+                "RELNOR": 30.442823927288096,
+                "RELPEN": 0,
+                "RELPOR": 41.15,
+                "RELPTS": 30.442823927288096
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": {
+                "NT_R": 47.97
+            },
+            "pontos": {
+                "RELNOR": 35.48826886493342,
+                "RELPEN": 0,
+                "RELPOR": 47.97,
+                "RELPTS": 35.48826886493342
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "NT_R": 51.54
+            },
+            "pontos": {
+                "RELNOR": 38.1293595434369,
+                "RELPEN": 0,
+                "RELPOR": 51.54,
+                "RELPTS": 38.1293595434369
+            }
+        },
+        {
+            "equipe": 54,
+            "vars": {
+                "NT_R": 45.38
+            },
+            "pontos": {
+                "RELNOR": 33.57218347072501,
+                "RELPEN": 0,
+                "RELPOR": 45.38,
+                "RELPTS": 33.57218347072501
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "NT_R": 32.69
+            },
+            "pontos": {
+                "RELNOR": 24.184104840414285,
+                "RELPEN": 0,
+                "RELPOR": 32.69,
+                "RELPTS": 24.184104840414285
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "NT_R": 0
+            },
+            "pontos": {
+                "RELNOR": 0,
+                "RELPEN": 0,
+                "RELPOR": 0,
+                "RELPTS": 0
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "NT_R": 34.02
+            },
+            "pontos": {
+                "RELNOR": 25.168040583386176,
+                "RELPEN": 10,
+                "RELPOR": 34.02,
+                "RELPTS": 15.168040583386176
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

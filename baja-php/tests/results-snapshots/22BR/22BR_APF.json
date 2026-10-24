@@ -1,0 +1,171 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22BR",
+    "id": "22BR_APF",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Powertrain",
+                "Elétrica",
+                "Freios",
+                "Design",
+                "Suspensão e Direção",
+                "Vendas/Mkt",
+                "Calculo",
+                "Gestão"
+            ],
+            "rows": [
+                {
+                    "#": "9",
+                    "Equipe Escola": "RAMPAGE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "",
+                    "Calculo": "<b>SIM</b>",
+                    "Gestão": ""
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "",
+                    "Calculo": "",
+                    "Gestão": "<b>SIM</b>"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "CAR-KARÁ BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "<b>SIM</b>",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "",
+                    "Calculo": "",
+                    "Gestão": ""
+                },
+                {
+                    "#": "24",
+                    "Equipe Escola": "FORJA BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA INDUSTRIAL E METALÚRGICA DE VOLTA REDONDA - UFF</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "<b>SIM</b>",
+                    "Calculo": "",
+                    "Gestão": ""
+                },
+                {
+                    "#": "25",
+                    "Equipe Escola": "FEI BAJA 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Powertrain": "<b>SIM</b>",
+                    "Elétrica": "<b>SIM</b>",
+                    "Freios": "<b>SIM</b>",
+                    "Design": "",
+                    "Suspensão e Direção": "<b>SIM</b>",
+                    "Vendas/Mkt": "",
+                    "Calculo": "",
+                    "Gestão": ""
+                },
+                {
+                    "#": "35",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS PATO BRANCO</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Suspensão e Direção": "<b>SIM</b>",
+                    "Vendas/Mkt": "",
+                    "Calculo": "<b>SIM</b>",
+                    "Gestão": "<b>SIM</b>"
+                },
+                {
+                    "#": "38",
+                    "Equipe Escola": "MANGUE BAJA TECNOFERR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO (UFPE)</i>",
+                    "Powertrain": "<b>SIM</b>",
+                    "Elétrica": "<b>SIM</b>",
+                    "Freios": "<b>SIM</b>",
+                    "Design": "",
+                    "Suspensão e Direção": "<b>SIM</b>",
+                    "Vendas/Mkt": "",
+                    "Calculo": "",
+                    "Gestão": "<b>SIM</b>"
+                },
+                {
+                    "#": "44",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "<b>SIM</b>",
+                    "Calculo": "",
+                    "Gestão": ""
+                },
+                {
+                    "#": "50",
+                    "Equipe Escola": "FEI BAJA 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "<b>SIM</b>",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "",
+                    "Calculo": "<b>SIM</b>",
+                    "Gestão": ""
+                },
+                {
+                    "#": "55",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Powertrain": "<b>SIM</b>",
+                    "Elétrica": "",
+                    "Freios": "<b>SIM</b>",
+                    "Design": "",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "",
+                    "Calculo": "",
+                    "Gestão": ""
+                },
+                {
+                    "#": "60",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
+                    "Powertrain": "",
+                    "Elétrica": "",
+                    "Freios": "",
+                    "Design": "<b>SIM</b>",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "<b>SIM</b>",
+                    "Calculo": "",
+                    "Gestão": ""
+                },
+                {
+                    "#": "62",
+                    "Equipe Escola": "MOUNTAINBAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITABIRA</i>",
+                    "Powertrain": "",
+                    "Elétrica": "<b>SIM</b>",
+                    "Freios": "",
+                    "Design": "",
+                    "Suspensão e Direção": "",
+                    "Vendas/Mkt": "",
+                    "Calculo": "",
+                    "Gestão": ""
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

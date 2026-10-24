@@ -1,0 +1,482 @@
+{
+    "evento": "23BR",
+    "prova": "MAN",
+    "nome": "Manobrabilidade",
+    "type": "normal",
+    "stored_totals": {
+        "TCcom": -0.3076923075,
+        "TCmax": 256.32,
+        "TCmin": 82.89
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "TC_1": 113.89,
+                "TC_2": 126.8,
+                "TC": 113.89
+            },
+            "pontos": {
+                "MANPTS": 31.30051875980215
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "TC_1": 103.54,
+                "TC_2": 93.68,
+                "TC": 93.68
+            },
+            "pontos": {
+                "MANPTS": 43.49137411026661
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "TC_1": 82.89,
+                "TC_2": 131.26999999999998,
+                "TC": 82.89
+            },
+            "pontos": {
+                "MANPTS": 50
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC_1": 155.74,
+                "TC_2": null,
+                "TC": 155.74
+            },
+            "pontos": {
+                "MANPTS": 6.056219085535042
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "TC_1": 104.37,
+                "TC_2": 138.94,
+                "TC": 104.37
+            },
+            "pontos": {
+                "MANPTS": 37.04306912775968
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 118.51,
+                "TC": 118.51
+            },
+            "pontos": {
+                "MANPTS": 28.5136928459404
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 138.85,
+                "TC": 138.85
+            },
+            "pontos": {
+                "MANPTS": 16.24442031608156
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "TC_1": 233.74,
+                "TC_2": null,
+                "TC": 233.74
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "TC_1": 217.36,
+                "TC_2": null,
+                "TC": 217.36
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 111.55,
+                "TC": 111.55
+            },
+            "pontos": {
+                "MANPTS": 32.71202798890095
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "TC_1": 147.75,
+                "TC_2": 153.01999999999998,
+                "TC": 147.75
+            },
+            "pontos": {
+                "MANPTS": 10.875859572927977
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 165.95,
+                "TC": 165.95
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "TC_1": 84.25,
+                "TC_2": 87.98,
+                "TC": 84.25
+            },
+            "pontos": {
+                "MANPTS": 49.179635661720354
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 220.01999999999998,
+                "TC": 220.01999999999998
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 177.1,
+                "TC": 177.1
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "TC_1": 89.65,
+                "TC_2": 95.64,
+                "TC": 89.65
+            },
+            "pontos": {
+                "MANPTS": 45.922306671492336
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": {
+                "TC_1": 172.76999999999998,
+                "TC_2": 142.34,
+                "TC": 142.34
+            },
+            "pontos": {
+                "MANPTS": 14.139220653878635
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "TC_1": 123.03,
+                "TC_2": 102.19,
+                "TC": 102.19
+            },
+            "pontos": {
+                "MANPTS": 38.358064905296175
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "TC_1": 180.44,
+                "TC_2": 218.26999999999998,
+                "TC": 180.44
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": {
+                "TC_1": 196.5,
+                "TC_2": null,
+                "TC": 196.5
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 256.32,
+                "TC": 256.32
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "TC_1": 135.7,
+                "TC_2": 137.88,
+                "TC": 135.7
+            },
+            "pontos": {
+                "MANPTS": 18.14452889371457
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": {
+                "TC_1": 102.76,
+                "TC_2": 97.67,
+                "TC": 97.67
+            },
+            "pontos": {
+                "MANPTS": 41.084569911931474
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 115.81,
+                "TC": 115.81
+            },
+            "pontos": {
+                "MANPTS": 30.14235734105441
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "TC_1": 195.97,
+                "TC_2": 212.82,
+                "TC": 195.97
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "TC": null
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 141.51999999999998,
+                "TC": 141.51999999999998
+            },
+            "pontos": {
+                "MANPTS": 14.633852093135491
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

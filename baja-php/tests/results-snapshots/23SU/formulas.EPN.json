@@ -1,0 +1,56 @@
+{
+    "evento": "23SU",
+    "prova": "EPN",
+    "nome": "Penalizações Enduro",
+    "type": "rolling",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 8,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 16,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 17,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 21,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,128 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "23NE",
+    "id": "23NE_SGE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Documentos",
+                "Inspeção",
+                "Status",
+                "Hora de Aprovação",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:29",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:31",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:31",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:32",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraubas</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:32",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:33",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Documentos": "0",
+                    "Inspeção": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:33",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "Siará Baja<br><i class=\"nomeEscola\">UFC</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:34",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Salvador</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:34",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "10:35",
+                    "Pontos": "-15"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "Zabumbaja Tecnoferr<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Documentos": "0",
+                    "Inspeção": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Hora de Aprovação": "08:55",
+                    "Pontos": "-15"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

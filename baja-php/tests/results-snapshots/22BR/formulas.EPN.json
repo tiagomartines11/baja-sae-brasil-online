@@ -1,0 +1,86 @@
+{
+    "evento": "22BR",
+    "prova": "EPN",
+    "nome": "Penalizações Enduro",
+    "type": "rolling",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 18,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 22,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 24,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 30,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 35,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 40,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 46,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 49,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 52,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 68,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

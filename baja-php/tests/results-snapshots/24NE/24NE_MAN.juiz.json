@@ -1,0 +1,104 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "24NE",
+    "id": "24NE_MAN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo [s]",
+                "Tempo corrigido [s]",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Tempo [s]": "45.3 (1<img class=\"cone\">/3<img class=\"gate\">)<br> 46.2 (1<img class=\"cone\">/2<img class=\"gate\">)",
+                    "Tempo corrigido [s]": "95.3<br> <b>81.2</b>",
+                    "Pontos": "31.46"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Tempo [s]": "42 (1<img class=\"gate\">)<br> 41.5 (1<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo corrigido [s]": "<b>57</b><br> 61.5",
+                    "Pontos": "41.24",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "3",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
+                    "Tempo [s]": "43.7 (3<img class=\"gate\">)<br> 59.9 (2<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo corrigido [s]": "88.7<br> <b>84.9</b>",
+                    "Pontos": "29.97"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "4",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
+                    "Tempo [s]": "50 (2<img class=\"gate\">)<br> -",
+                    "Tempo corrigido [s]": "<b>80</b><br> -",
+                    "Pontos": "31.95"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "6",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Universidade Salvador</i>",
+                    "Tempo [s]": "-<br> 104.1 (5<img class=\"cone\">/2<img class=\"gate\">)",
+                    "Tempo corrigido [s]": "-<br> <b>159.1</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Tempo [s]": "51.35 (3<img class=\"cone\">/1<img class=\"gate\">)<br> 51.39 (2<img class=\"cone\">)",
+                    "Tempo corrigido [s]": "81.35<br> <b>61.39</b>",
+                    "Pontos": "39.47",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Tempo [s]": "42.8 (2<img class=\"cone\">)<br> 42.69 (1<img class=\"cone\">)",
+                    "Tempo corrigido [s]": "52.8<br> <b>47.69</b>",
+                    "Pontos": "45",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "14",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Tempo [s]": "-<br> 45.6 (3<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo corrigido [s]": "-<br> <b>75.6</b>",
+                    "Pontos": "33.73"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova_juiz.php:73",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

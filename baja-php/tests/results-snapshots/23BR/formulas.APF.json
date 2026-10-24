@@ -1,0 +1,100 @@
+{
+    "evento": "23BR",
+    "prova": "APF",
+    "nome": "Finalistas Projeto",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": [],
+            "pontos": {
+                "NULLO": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

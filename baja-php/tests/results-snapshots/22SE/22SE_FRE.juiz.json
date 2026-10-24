@@ -1,0 +1,199 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "22SE",
+    "id": "22SE_FRE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Desaceleração",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "2",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Desaceleração": "<b>10.86</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "3",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Desaceleração": "<b>16.85</b><br> -",
+                    "Pontos": "8.11"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "4",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Desaceleração": "<b>16.47</b><br> -",
+                    "Pontos": "7.02"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "6",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Desaceleração": "<b>13.06</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "7",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Desaceleração": "<b>19.03</b><br> -",
+                    "Pontos": "14.33"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "8",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Desaceleração": "-<br> <b>18.88</b>",
+                    "Pontos": "13.91"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "9",
+                    "Equipe Escola": "EQUIPE TEC-ILHA BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - CAMPUS DE ILHA SOLTEIRA</i>",
+                    "Desaceleração": "<b>20.52</b><br> -",
+                    "Pontos": "18.61"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "10",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Desaceleração": "-<br> <b>15.02</b>",
+                    "Pontos": "2.89"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "12",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Desaceleração": "<b>20.69</b><br> -",
+                    "Pontos": "19.08"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Desaceleração": "<b>21.28</b><br> -",
+                    "Pontos": "20.76"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "14",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Desaceleração": "-<br> <b>18.8</b>",
+                    "Pontos": "13.68"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "15",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Desaceleração": "<b>19.03</b><br> -",
+                    "Pontos": "14.36"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "16",
+                    "Equipe Escola": "MUD RUNNER<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA - CEFET/RJ</i>",
+                    "Desaceleração": "-<br> <b>16.2</b>",
+                    "Pontos": "6.25"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "17",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Desaceleração": "<b>28.01</b><br> -",
+                    "Pontos": "40",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "18",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Desaceleração": "<b>14.95</b><br> -",
+                    "Pontos": "2.7"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "22",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">INSPER - INSTITUTO DE ENSINO E PESQUISA</i>",
+                    "Desaceleração": "<b>15.49</b><br> -",
+                    "Pontos": "4.24"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "23",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Desaceleração": "-<br> <b>17.19</b>",
+                    "Pontos": "9.08"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "25",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Desaceleração": "<b>26.31</b><br> -",
+                    "Pontos": "35.14",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "26",
+                    "Equipe Escola": "FEI BAJA<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO DA FUNDAÇÃO EDUCACIONAL INACIANA \"PADRE SABÓIA DE MEDEIROS\"</i>",
+                    "Desaceleração": "-<br> <b>17.01</b>",
+                    "Pontos": "8.57"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "27",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Desaceleração": "-<br> <b>9.38</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "28",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Desaceleração": "-<br> <b>15.7</b>",
+                    "Pontos": "4.84"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "29",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Desaceleração": "-<br> <b>23.01</b>",
+                    "Pontos": "25.71",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "30",
+                    "Equipe Escola": "CLARENGEX<br><i class=\"nomeEscola\">FACULDADE CLARETIANO</i>",
+                    "Desaceleração": "-<br> <b>20.66</b>",
+                    "Pontos": "19.01"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

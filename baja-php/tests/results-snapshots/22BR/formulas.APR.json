@@ -1,0 +1,439 @@
+{
+    "evento": "22BR",
+    "prova": "APR",
+    "nome": "Apresentação de Projeto",
+    "type": "normal",
+    "stored_totals": {
+        "APRMMcom": 0,
+        "APRMMmax": 55.125,
+        "APRMMmin": 14.25,
+        "APR_SFMMcom": 0,
+        "APR_SFMMmax": 55.75,
+        "APR_SFMMmin": 14.25
+    },
+    "inputs": [
+        {
+            "equipe": 3,
+            "vars": {
+                "APR_PARC": 44,
+                "APR_PARC_SF": 44,
+                "APRMM": 44,
+                "APR_SFMM": 44
+            },
+            "pontos": {
+                "APRPTS": 99,
+                "APRPTS_SF": 99
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "APR_PARC": 31,
+                "APR_PARC_SF": 31,
+                "APRMM": 31,
+                "APR_SFMM": 31
+            },
+            "pontos": {
+                "APRPTS": 69.75,
+                "APRPTS_SF": 69.75
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "APR_PARC": 39,
+                "APR_PARC_SF": 38.75,
+                "APRMM": 39,
+                "APR_SFMM": 38.75
+            },
+            "pontos": {
+                "APRPTS": 87.75,
+                "APRPTS_SF": 87.1875
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "APR_PARC": 39.5,
+                "APR_PARC_SF": 39.25,
+                "APRMM": 39.5,
+                "APR_SFMM": 39.25
+            },
+            "pontos": {
+                "APRPTS": 88.875,
+                "APRPTS_SF": 88.3125
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "APR_PARC": 34,
+                "APR_PARC_SF": 34,
+                "APRMM": 34,
+                "APR_SFMM": 34
+            },
+            "pontos": {
+                "APRPTS": 76.5,
+                "APRPTS_SF": 76.5
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "APR_PARC": 22,
+                "APR_PARC_SF": 22,
+                "APRMM": 22,
+                "APR_SFMM": 22
+            },
+            "pontos": {
+                "APRPTS": 49.5,
+                "APRPTS_SF": 49.5
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "APR_PARC": 23,
+                "APR_PARC_SF": 23,
+                "APRMM": 23,
+                "APR_SFMM": 23
+            },
+            "pontos": {
+                "APRPTS": 51.75,
+                "APRPTS_SF": 51.75
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "APR_PARC": 37.75,
+                "APR_PARC_SF": 38,
+                "APRMM": 37.75,
+                "APR_SFMM": 38
+            },
+            "pontos": {
+                "APRPTS": 84.9375,
+                "APRPTS_SF": 85.5
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "APR_PARC": 32.25,
+                "APR_PARC_SF": 32.25,
+                "APRMM": 32.25,
+                "APR_SFMM": 32.25
+            },
+            "pontos": {
+                "APRPTS": 72.5625,
+                "APRPTS_SF": 72.5625
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "APR_PARC": 37.5,
+                "APR_PARC_SF": 37.5,
+                "APRMM": 37.5,
+                "APR_SFMM": 37.5
+            },
+            "pontos": {
+                "APRPTS": 84.375,
+                "APRPTS_SF": 84.375
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "APR_PARC": 25.25,
+                "APR_PARC_SF": 25.25,
+                "APRMM": 25.25,
+                "APR_SFMM": 25.25
+            },
+            "pontos": {
+                "APRPTS": 56.8125,
+                "APRPTS_SF": 56.8125
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "APR_PARC": 33.25,
+                "APR_PARC_SF": 33.25,
+                "APRMM": 33.25,
+                "APR_SFMM": 33.25
+            },
+            "pontos": {
+                "APRPTS": 74.8125,
+                "APRPTS_SF": 74.8125
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "APR_PARC": 47.5,
+                "APR_PARC_SF": 48.75,
+                "APRMM": 47.5,
+                "APR_SFMM": 48.75
+            },
+            "pontos": {
+                "APRPTS": 106.875,
+                "APRPTS_SF": 109.6875
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "APR_PARC": 45,
+                "APR_PARC_SF": 44.75,
+                "APRMM": 45,
+                "APR_SFMM": 44.75
+            },
+            "pontos": {
+                "APRPTS": 101.25,
+                "APRPTS_SF": 100.6875
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "APR_PARC": 31.75,
+                "APR_PARC_SF": 31.75,
+                "APRMM": 31.75,
+                "APR_SFMM": 31.75
+            },
+            "pontos": {
+                "APRPTS": 71.4375,
+                "APRPTS_SF": 71.4375
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "APR_PARC": 55.125,
+                "APR_PARC_SF": 55.75,
+                "APRMM": 55.125,
+                "APR_SFMM": 55.75
+            },
+            "pontos": {
+                "APRPTS": 124.03125,
+                "APRPTS_SF": 125.4375
+            }
+        },
+        {
+            "equipe": 39,
+            "vars": {
+                "APR_PARC": 32.75,
+                "APR_PARC_SF": 32.75,
+                "APRMM": 32.75,
+                "APR_SFMM": 32.75
+            },
+            "pontos": {
+                "APRPTS": 73.6875,
+                "APRPTS_SF": 73.6875
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "APR_PARC": 30,
+                "APR_PARC_SF": 30,
+                "APRMM": 30,
+                "APR_SFMM": 30
+            },
+            "pontos": {
+                "APRPTS": 67.5,
+                "APRPTS_SF": 67.5
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "APR_PARC": 33.25,
+                "APR_PARC_SF": 33.25,
+                "APRMM": 33.25,
+                "APR_SFMM": 33.25
+            },
+            "pontos": {
+                "APRPTS": 74.8125,
+                "APRPTS_SF": 74.8125
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "APR_PARC": 14.25,
+                "APR_PARC_SF": 14.25,
+                "APRMM": 14.25,
+                "APR_SFMM": 14.25
+            },
+            "pontos": {
+                "APRPTS": 32.0625,
+                "APRPTS_SF": 32.0625
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "APR_PARC": 35,
+                "APR_PARC_SF": 34.75,
+                "APRMM": 35,
+                "APR_SFMM": 34.75
+            },
+            "pontos": {
+                "APRPTS": 78.75,
+                "APRPTS_SF": 78.1875
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "APR_PARC": 17.5,
+                "APR_PARC_SF": 17.5,
+                "APRMM": 17.5,
+                "APR_SFMM": 17.5
+            },
+            "pontos": {
+                "APRPTS": 39.375,
+                "APRPTS_SF": 39.375
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": {
+                "APR_PARC": 22.25,
+                "APR_PARC_SF": 22.25,
+                "APRMM": 22.25,
+                "APR_SFMM": 22.25
+            },
+            "pontos": {
+                "APRPTS": 50.0625,
+                "APRPTS_SF": 50.0625
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "APR_PARC": 36,
+                "APR_PARC_SF": 36,
+                "APRMM": 36,
+                "APR_SFMM": 36
+            },
+            "pontos": {
+                "APRPTS": 81,
+                "APRPTS_SF": 81
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "APR_PARC": 45.625,
+                "APR_PARC_SF": 47.25,
+                "APRMM": 45.625,
+                "APR_SFMM": 47.25
+            },
+            "pontos": {
+                "APRPTS": 102.65625,
+                "APRPTS_SF": 106.3125
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": {
+                "APR_PARC": 22.75,
+                "APR_PARC_SF": 22.75,
+                "APRMM": 22.75,
+                "APR_SFMM": 22.75
+            },
+            "pontos": {
+                "APRPTS": 51.1875,
+                "APRPTS_SF": 51.1875
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": {
+                "APR_PARC": 43.375,
+                "APR_PARC_SF": 42,
+                "APRMM": 43.375,
+                "APR_SFMM": 42
+            },
+            "pontos": {
+                "APRPTS": 97.59375,
+                "APRPTS_SF": 94.5
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "APR_PARC": 30.75,
+                "APR_PARC_SF": 30.75,
+                "APRMM": 30.75,
+                "APR_SFMM": 30.75
+            },
+            "pontos": {
+                "APRPTS": 69.1875,
+                "APRPTS_SF": 69.1875
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "APR_PARC": 33.25,
+                "APR_PARC_SF": 33.25,
+                "APRMM": 33.25,
+                "APR_SFMM": 33.25
+            },
+            "pontos": {
+                "APRPTS": 74.8125,
+                "APRPTS_SF": 74.8125
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": {
+                "APR_PARC": 52,
+                "APR_PARC_SF": 50,
+                "APRMM": 52,
+                "APR_SFMM": 50
+            },
+            "pontos": {
+                "APRPTS": 117,
+                "APRPTS_SF": 112.5
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": {
+                "APR_PARC": 21.75,
+                "APR_PARC_SF": 21.75,
+                "APRMM": 21.75,
+                "APR_SFMM": 21.75
+            },
+            "pontos": {
+                "APRPTS": 48.9375,
+                "APRPTS_SF": 48.9375
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": {
+                "APR_PARC": 36,
+                "APR_PARC_SF": 36,
+                "APRMM": 36,
+                "APR_SFMM": 36
+            },
+            "pontos": {
+                "APRPTS": 81,
+                "APRPTS_SF": 81
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

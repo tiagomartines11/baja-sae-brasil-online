@@ -1,0 +1,108 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24NE",
+    "id": "24NE_ACE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração 30 m [s]",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Aceleração 30 m [s]": "<b>4.68</b><br> 4.72",
+                    "Pontos": "35.19",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Aceleração 30 m [s]": "<b>5.2</b><br> 5.22",
+                    "Pontos": "24.1"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "3",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
+                    "Aceleração 30 m [s]": "4.76<br> <b>4.72</b>",
+                    "Pontos": "34.34"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "4",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
+                    "Aceleração 30 m [s]": "<b>4.8</b><br> 5.21",
+                    "Pontos": "32.63"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "6",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Universidade Salvador</i>",
+                    "Aceleração 30 m [s]": "<b>5.08</b><br> 5.19",
+                    "Pontos": "26.66"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Aceleração 30 m [s]": "<b>5.33</b><br> 5.35",
+                    "Pontos": "21.33"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Aceleração 30 m [s]": "<b>4.53</b><br> 4.58",
+                    "Pontos": "38.39",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "10",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Aceleração 30 m [s]": "<b>6.45</b><br> 6.9",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "13",
+                    "Equipe Escola": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Aceleração 30 m [s]": "5.52<br> <b>5.32</b>",
+                    "Pontos": "21.54"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Aceleração 30 m [s]": "4.36<br> <b>4.22</b>",
+                    "Pontos": "45",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "17",
+                    "Equipe Escola": "Bajagreste<br><i class=\"nomeEscola\">IFPE - Caruaru</i>",
+                    "Aceleração 30 m [s]": "<b>7.16</b><br> 7.26",
+                    "Pontos": "0"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

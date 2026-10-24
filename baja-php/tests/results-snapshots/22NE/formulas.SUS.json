@@ -1,0 +1,149 @@
+{
+    "evento": "22NE",
+    "prova": "SUS",
+    "nome": "Suspension",
+    "type": "normal",
+    "stored_totals": {
+        "TCcom": -0.0625,
+        "TCmax": 89.67,
+        "TCmin": 59.8,
+        "OBScom": -0.4,
+        "OBSmax": 5,
+        "OBSmin": 1
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "TC_1": 86.41,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": 86.41,
+                "OBS": 2
+            },
+            "pontos": {
+                "SUSPTS": 9.416359830766662
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC_1": 75.98,
+                "TC_2": 65.11,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": 65.11,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 41.90157349497824
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "TC_1": 75.45,
+                "TC_2": 64.83,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": 64.83,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 42.32860916755942
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "TC_1": 66.47,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": 66.47,
+                "OBS": 1
+            },
+            "pontos": {
+                "SUSPTS": 39.827400228155334
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": null,
+                "OBS": 5
+            },
+            "pontos": {
+                "SUSPTS": 3.70370375
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "TC_1": 89.55,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": 89.55,
+                "OBS": 4
+            },
+            "pontos": {
+                "SUSPTS": 4.6274597882490855
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "TC_1": 63.4,
+                "TC_2": 59.8,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": 59.8,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 50
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC_1": 89.67,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": 89.67,
+                "OBS": 4
+            },
+            "pontos": {
+                "SUSPTS": 4.4444444999999995
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "TC_1": 86.99,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "OBSTACULOS": 6,
+                "TC": 86.99,
+                "OBS": null
+            },
+            "pontos": {
+                "SUSPTS": 8.531785937562782
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

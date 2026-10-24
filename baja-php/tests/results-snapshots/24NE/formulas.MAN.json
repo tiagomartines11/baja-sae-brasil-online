@@ -1,0 +1,108 @@
+{
+    "evento": "24NE",
+    "prova": "MAN",
+    "nome": "Manobrabilidade",
+    "type": "normal",
+    "stored_totals": {
+        "TCcom": 0,
+        "TCmax": 159.1,
+        "TCmin": 47.69
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "TC_1": 95.3,
+                "TC_2": 81.2,
+                "TC": 81.2
+            },
+            "pontos": {
+                "MANPTS": 31.464859527870026
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "TC_1": 57,
+                "TC_2": 61.5,
+                "TC": 57
+            },
+            "pontos": {
+                "MANPTS": 41.239565568620414
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC_1": 88.7,
+                "TC_2": 84.9,
+                "TC": 84.9
+            },
+            "pontos": {
+                "MANPTS": 29.97037967866439
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "TC_1": 80,
+                "TC_2": null,
+                "TC": 80
+            },
+            "pontos": {
+                "MANPTS": 31.949555695179964
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 159.1,
+                "TC": 159.1
+            },
+            "pontos": {
+                "MANPTS": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "TC_1": 81.35,
+                "TC_2": 61.39,
+                "TC": 61.39
+            },
+            "pontos": {
+                "MANPTS": 39.46638542321156
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC_1": 52.8,
+                "TC_2": 47.69,
+                "TC": 47.69
+            },
+            "pontos": {
+                "MANPTS": 45
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "TC_1": null,
+                "TC_2": 75.6,
+                "TC": 75.6
+            },
+            "pontos": {
+                "MANPTS": 33.7267749753164
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

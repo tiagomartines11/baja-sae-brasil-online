@@ -1,0 +1,232 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "22SE",
+    "id": "22SE_MAN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo",
+                "Tempo Corrigido",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "2",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Tempo": "34.6 (2<img class=\"cone\">/2<img class=\"gate\">)<br> 31.2 (4<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "64.6<br> <b>61.2</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "3",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Tempo": "40.4 (8<img class=\"cone\">)<br> 39 (6<img class=\"cone\">)",
+                    "Tempo Corrigido": "80.4<br> <b>69</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "4",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Tempo": "34.1<br> 30.8 (1<img class=\"cone\">)",
+                    "Tempo Corrigido": "<b>34.1</b><br> 35.8",
+                    "Pontos": "51.34"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "5",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Tempo": "40.8 (4<img class=\"cone\">/1<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido": "<b>70.8</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "6",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Tempo": "33.4<br> 30.8",
+                    "Tempo Corrigido": "33.4<br> <b>30.8</b>",
+                    "Pontos": "57.99",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "7",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Tempo": "39.8 (6<img class=\"cone\">)<br> 39.4 (9<img class=\"cone\">)",
+                    "Tempo Corrigido": "<b>69.8</b><br> 84.4",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "8",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Tempo": "38.3 (2<img class=\"cone\">)<br> 38.1 (3<img class=\"cone\">)",
+                    "Tempo Corrigido": "<b>48.3</b><br> 53.1",
+                    "Pontos": "22.75"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "9",
+                    "Equipe Escola": "EQUIPE TEC-ILHA BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - CAMPUS DE ILHA SOLTEIRA</i>",
+                    "Tempo": "56.9 (9<img class=\"cone\">/1<img class=\"gate\">)<br> 34.5 (6<img class=\"cone\">)",
+                    "Tempo Corrigido": "111.9<br> <b>64.5</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "10",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Tempo": "43.7 (3<img class=\"cone\">)<br> 35.7 (3<img class=\"cone\">)",
+                    "Tempo Corrigido": "58.7<br> <b>50.7</b>",
+                    "Pontos": "17.92"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "12",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Tempo": "39.3 (9<img class=\"cone\">)<br> 41.3 (8<img class=\"cone\">)",
+                    "Tempo Corrigido": "84.3<br> <b>81.3</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Tempo": "32.1 (1<img class=\"gate\">)<br> 29.8",
+                    "Tempo Corrigido": "42.1<br> <b>29.8</b>",
+                    "Pontos": "60",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "14",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Tempo": "31.6 (1<img class=\"cone\">)<br> 31.9 (1<img class=\"cone\">)",
+                    "Tempo Corrigido": "<b>36.6</b><br> 36.9",
+                    "Pontos": "46.31"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "15",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Tempo": "31.8 (1<img class=\"cone\">)<br> 31.5",
+                    "Tempo Corrigido": "36.8<br> <b>31.5</b>",
+                    "Pontos": "56.58",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "16",
+                    "Equipe Escola": "MUD RUNNER<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA - CEFET/RJ</i>",
+                    "Tempo": "39.5 (2<img class=\"cone\">)<br> 34.8 (4<img class=\"cone\">)",
+                    "Tempo Corrigido": "<b>49.5</b><br> 54.8",
+                    "Pontos": "20.34"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "17",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Tempo": "34.3<br> 33.8 (1<img class=\"cone\">)",
+                    "Tempo Corrigido": "<b>34.3</b><br> 38.8",
+                    "Pontos": "50.94"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "18",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Tempo": "41.5 (7<img class=\"cone\">/1<img class=\"gate\">)<br> 37.8 (5<img class=\"cone\">)",
+                    "Tempo Corrigido": "86.5<br> <b>62.8</b>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "22",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">INSPER - INSTITUTO DE ENSINO E PESQUISA</i>",
+                    "Tempo": "36.3 (3<img class=\"cone\">)<br> 32.8 (3<img class=\"cone\">)",
+                    "Tempo Corrigido": "51.3<br> <b>47.8</b>",
+                    "Pontos": "23.76"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "23",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Tempo": "37.5 (1<img class=\"cone\">)<br> 33.4 (1<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "<b>42.5</b><br> 48.4",
+                    "Pontos": "34.43"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "25",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Tempo": "42.8 (3<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido": "<b>72.8</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "26",
+                    "Equipe Escola": "FEI BAJA<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO DA FUNDAÇÃO EDUCACIONAL INACIANA \"PADRE SABÓIA DE MEDEIROS\"</i>",
+                    "Tempo": "38.7 (1<img class=\"cone\">)<br> 33.3",
+                    "Tempo Corrigido": "43.7<br> <b>33.3</b>",
+                    "Pontos": "52.95"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "27",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Tempo": "32.1<br> -",
+                    "Tempo Corrigido": "<b>32.1</b><br> -",
+                    "Pontos": "55.37"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "28",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Tempo": "43 (10<img class=\"cone\">/3<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido": "<b>123</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "29",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Tempo": "36.7<br> 34.3 (3<img class=\"cone\">)",
+                    "Tempo Corrigido": "<b>36.7</b><br> 49.3",
+                    "Pontos": "46.11"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "30",
+                    "Equipe Escola": "CLARENGEX<br><i class=\"nomeEscola\">FACULDADE CLARETIANO</i>",
+                    "Tempo": "38.2 (1<img class=\"cone\">)<br> -",
+                    "Tempo Corrigido": "<b>43.2</b><br> -",
+                    "Pontos": "33.02"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova_juiz.php:73",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

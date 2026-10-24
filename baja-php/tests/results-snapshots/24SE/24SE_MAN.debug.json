@@ -1,0 +1,126 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "24SE",
+    "id": "24SE_MAN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Tempo",
+                "Tempo Corrigido",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "1",
+                    "Equipe Escola": "Poli<br><i class=\"nomeEscola\">Escola Politécnica da USP</i>",
+                    "Tempo": "---<br> 37.26 (2<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "---<br> <b>57.26</b>",
+                    "Pontos": "47.5"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "FEI Baja<br><i class=\"nomeEscola\">FEI</i>",
+                    "Tempo": "---<br> 32.99 (3<img class=\"cone\">)",
+                    "Tempo Corrigido": "---<br> <b>47.99</b>",
+                    "Pontos": "59.24",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "Komiketo Baja<br><i class=\"nomeEscola\">Universidade Federal de São João del Rei</i>",
+                    "Tempo": "37.38 (4<img class=\"cone\">/1<img class=\"gate\">)<br> 32.39 (1<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "67.38<br> <b>47.39</b>",
+                    "Pontos": "60",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "6",
+                    "Equipe Escola": "TEC Ilha Baja SAE<br><i class=\"nomeEscola\">Unesp - Campus de Ilha Solteira</i>",
+                    "Tempo": "43.7 (3<img class=\"cone\">/1<img class=\"gate\">)<br> 44.76 (4<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "<b>68.7</b><br> 74.76",
+                    "Pontos": "33.02"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "9",
+                    "Equipe Escola": "Baja UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Tempo": "39.99 (1<img class=\"cone\">/1<img class=\"gate\">)<br> 33.77 (2<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "54.99<br> <b>53.77</b>",
+                    "Pontos": "51.92"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "10",
+                    "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro</i>",
+                    "Tempo": "---<br> 36.35 (1<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "---<br> <b>51.35</b>",
+                    "Pontos": "54.99",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "11",
+                    "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">Instituto Federal de São Paulo - campus Sertãozinho</i>",
+                    "Tempo": "84.35 (5<img class=\"cone\">/1<img class=\"gate\">)<br> -",
+                    "Tempo Corrigido": "<b>119.35</b><br> -",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "12",
+                    "Equipe Escola": "Zebu Baja UFTM<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Tempo": "42.63 (2<img class=\"cone\">/1<img class=\"gate\">)<br> ---",
+                    "Tempo Corrigido": "<b>62.63</b><br> ---",
+                    "Pontos": "40.7"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "15",
+                    "Equipe Escola": "EESC USP TRACTIAN BAJA<br><i class=\"nomeEscola\">Escola de Engenharia de São Carlos – USP</i>",
+                    "Tempo": "43.51 (2<img class=\"cone\">/1<img class=\"gate\">)<br> 37.18 (3<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "63.51<br> <b>62.18</b>",
+                    "Pontos": "41.27"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "17",
+                    "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Tempo": "45.27 (3<img class=\"cone\">/1<img class=\"gate\">)<br> 41.07 (4<img class=\"cone\">)",
+                    "Tempo Corrigido": "70.27<br> <b>61.07</b>",
+                    "Pontos": "42.68"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "18",
+                    "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">Universidade do Estado do Rio de Janeiro</i>",
+                    "Tempo": "53.19 (1<img class=\"cone\">/1<img class=\"gate\">)<br> 44.56 (2<img class=\"cone\">/1<img class=\"gate\">)",
+                    "Tempo Corrigido": "68.19<br> <b>64.56</b>",
+                    "Pontos": "38.26"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined property: stdClass::$highlight in resultados/prova_debug.php:44",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

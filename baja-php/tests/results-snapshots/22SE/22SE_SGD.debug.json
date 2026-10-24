@@ -1,0 +1,200 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "22SE",
+    "id": "22SE_SGD",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Status",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">FATEC SÃO PAULO</i>",
+                    "Status": "<spanstyle>NOK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "EQUIPE TEC-ILHA BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - CAMPUS DE ILHA SOLTEIRA</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "PIRATAS DO CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - UNB</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "USJT BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE SÃO JUDAS</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "16",
+                    "Equipe Escola": "MUD RUNNER<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA - CEFET/RJ</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "18",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "22",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">INSPER - INSTITUTO DE ENSINO E PESQUISA</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "23",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "25",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "26",
+                    "Equipe Escola": "FEI BAJA<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO DA FUNDAÇÃO EDUCACIONAL INACIANA \"PADRE SABÓIA DE MEDEIROS\"</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "27",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "28",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "29",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA DE MINAS GERAIS</i>",
+                    "Status": "<spanstyle>OK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "30",
+                    "Equipe Escola": "CLARENGEX<br><i class=\"nomeEscola\">FACULDADE CLARETIANO</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "31",
+                    "Equipe Escola": "EQUIPE CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE UBERLÂNDIA</i>",
+                    "Status": "<spanstyle>REPESCADO</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "32",
+                    "Equipe Escola": "FHO-BAJA<br><i class=\"nomeEscola\">FUNDAÇÃO HERMINIO OMETTO</i>",
+                    "Status": "<spanstyle>NOK</spanstyle>",
+                    "Pontos": "0"
+                },
+                {
+                    "#": "33",
+                    "Equipe Escola": "BAJA ESPINHAÇO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DOS VALES DO JEQUITINHONHA E MUCURI - UFVJM</i>",
+                    "Status": "<spanstyle>NOK</spanstyle>",
+                    "Pontos": "0"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

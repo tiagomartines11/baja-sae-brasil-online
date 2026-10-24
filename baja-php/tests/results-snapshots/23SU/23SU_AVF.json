@@ -1,0 +1,177 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SU",
+    "id": "23SU_AVF",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração",
+                "Velocidade Final",
+                "Frenagem",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "1",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Aceleração": "20.37",
+                    "Velocidade Final": "17.28",
+                    "Frenagem": "0",
+                    "Total": "<b>37.65</b>"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "3",
+                    "Equipe Escola": "CATARATAS BAJA<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná</i>",
+                    "Aceleração": "29.28",
+                    "Velocidade Final": "2.02",
+                    "Frenagem": "20",
+                    "Total": "<b>51.3</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "5",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Aceleração": "27.49",
+                    "Velocidade Final": "19.97",
+                    "Frenagem": "14.94",
+                    "Total": "<b>62.4</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "6",
+                    "Equipe Escola": "GRALHA AZUL<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Aceleração": "9.83",
+                    "Velocidade Final": "11.06",
+                    "Frenagem": "10.61",
+                    "Total": "<b>31.5</b>"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "7",
+                    "Equipe Escola": "TCHÊ BAJA<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
+                    "Aceleração": "30",
+                    "Velocidade Final": "11.85",
+                    "Frenagem": "16.61",
+                    "Total": "<b>58.46</b>"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "8",
+                    "Equipe Escola": "FURG MOTORSPORT<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande</i>",
+                    "Aceleração": "8.53",
+                    "Velocidade Final": "0",
+                    "Frenagem": "9.1",
+                    "Total": "<b>17.63</b>"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "10",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Aceleração": "26.08",
+                    "Velocidade Final": "20.29",
+                    "Frenagem": "13.01",
+                    "Total": "<b>59.38</b>"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "11",
+                    "Equipe Escola": "BAJA GUAICURUS<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
+                    "Aceleração": "15.85",
+                    "Velocidade Final": "5.91",
+                    "Frenagem": "10.48",
+                    "Total": "<b>32.24</b>"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "12",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Aceleração": "24.2",
+                    "Velocidade Final": "20.68",
+                    "Frenagem": "12.75",
+                    "Total": "<b>57.63</b>"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "13",
+                    "Equipe Escola": "UFPR BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Aceleração": "18.56",
+                    "Velocidade Final": "13.04",
+                    "Frenagem": "12.83",
+                    "Total": "<b>44.43</b>"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "14",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Aceleração": "23.19",
+                    "Velocidade Final": "10.57",
+                    "Frenagem": "19.31",
+                    "Total": "<b>53.07</b>"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">Associação Beneficente Da Indústria Carbonífera De Santa Catarina (SATC)</i>",
+                    "Aceleração": "21.13",
+                    "Velocidade Final": "19.18",
+                    "Frenagem": "14",
+                    "Total": "<b>54.31</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "16",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Aceleração": "26.17",
+                    "Velocidade Final": "30",
+                    "Frenagem": "15.31",
+                    "Total": "<b>71.48</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "17",
+                    "Equipe Escola": "BAJAGUAL<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
+                    "Aceleração": "0",
+                    "Velocidade Final": "8.01",
+                    "Frenagem": "7.9",
+                    "Total": "<b>15.91</b>"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "18",
+                    "Equipe Escola": "UFSC BAJA SAE<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina</i>",
+                    "Aceleração": "20.93",
+                    "Velocidade Final": "0",
+                    "Frenagem": "0",
+                    "Total": "<b>20.93</b>"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "20",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Aceleração": "26.33",
+                    "Velocidade Final": "25.09",
+                    "Frenagem": "13.23",
+                    "Total": "<b>64.65</b>",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,200 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "24NE",
+    "id": "24NE_PRO",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Equipe Escola",
+                "Entregáveis",
+                "Apresentação de Projeto",
+                "Final de Projeto",
+                "Avaliação Dinâmica",
+                "Penalidades",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Entregáveis": "61.08",
+                    "Apresentação de Projeto": "173.09",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "25.5",
+                    "Penalidades": "0",
+                    "Total": "259.67"
+                },
+                {
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Entregáveis": "55.26",
+                    "Apresentação de Projeto": "135.94",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "27.38",
+                    "Penalidades": "0",
+                    "Total": "218.58"
+                },
+                {
+                    "#": "3",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
+                    "Entregáveis": "35.45",
+                    "Apresentação de Projeto": "38.52",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "21.6",
+                    "Penalidades": "0",
+                    "Total": "95.57"
+                },
+                {
+                    "#": "4",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
+                    "Entregáveis": "54.47",
+                    "Apresentação de Projeto": "144.09",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "18.68",
+                    "Penalidades": "0",
+                    "Total": "217.24"
+                },
+                {
+                    "#": "5",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA - Universidade Federal da Bahia</i>",
+                    "Entregáveis": "42.72",
+                    "Apresentação de Projeto": "0",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "0",
+                    "Penalidades": "0",
+                    "Total": "42.72"
+                },
+                {
+                    "#": "6",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Universidade Salvador</i>",
+                    "Entregáveis": "41.69",
+                    "Apresentação de Projeto": "59.81",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "11.55",
+                    "Penalidades": "0",
+                    "Total": "113.05"
+                },
+                {
+                    "#": "7",
+                    "Equipe Escola": "Calangotec<br><i class=\"nomeEscola\">SENAI Cimatec</i>",
+                    "Entregáveis": "25.44",
+                    "Apresentação de Projeto": "79.3",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "0",
+                    "Penalidades": "0",
+                    "Total": "104.74"
+                },
+                {
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Entregáveis": "46.56",
+                    "Apresentação de Projeto": "122.34",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "17.85",
+                    "Penalidades": "0",
+                    "Total": "186.75"
+                },
+                {
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Entregáveis": "59.73",
+                    "Apresentação de Projeto": "114.19",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "12.15",
+                    "Penalidades": "0",
+                    "Total": "186.07"
+                },
+                {
+                    "#": "10",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Entregáveis": "25.63",
+                    "Apresentação de Projeto": "40.78",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "7.13",
+                    "Penalidades": "0",
+                    "Total": "73.54"
+                },
+                {
+                    "#": "11",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Entregáveis": "50.04",
+                    "Apresentação de Projeto": "0",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "0",
+                    "Penalidades": "0",
+                    "Total": "50.04"
+                },
+                {
+                    "#": "12",
+                    "Equipe Escola": "Baja Sun City<br><i class=\"nomeEscola\">IFBA - Jequié</i>",
+                    "Entregáveis": "19.28",
+                    "Apresentação de Projeto": "18.88",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "0",
+                    "Penalidades": "0",
+                    "Total": "38.16"
+                },
+                {
+                    "#": "13",
+                    "Equipe Escola": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Entregáveis": "10.19",
+                    "Apresentação de Projeto": "0",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "8.63",
+                    "Penalidades": "0",
+                    "Total": "18.82"
+                },
+                {
+                    "#": "14",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Entregáveis": "56.46",
+                    "Apresentação de Projeto": "0",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "18",
+                    "Penalidades": "0",
+                    "Total": "74.46"
+                },
+                {
+                    "#": "15",
+                    "Equipe Escola": "UNBaja<br><i class=\"nomeEscola\">UNB</i>",
+                    "Entregáveis": "38.17",
+                    "Apresentação de Projeto": "0",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "0",
+                    "Penalidades": "0",
+                    "Total": "38.17"
+                },
+                {
+                    "#": "16",
+                    "Equipe Escola": "Carcau Baja<br><i class=\"nomeEscola\">UESC - Ilheus</i>",
+                    "Entregáveis": "0",
+                    "Apresentação de Projeto": "0",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "0",
+                    "Penalidades": "0",
+                    "Total": "0"
+                },
+                {
+                    "#": "17",
+                    "Equipe Escola": "Bajagreste<br><i class=\"nomeEscola\">IFPE - Caruaru</i>",
+                    "Entregáveis": "20.59",
+                    "Apresentação de Projeto": "37.01",
+                    "Final de Projeto": "0",
+                    "Avaliação Dinâmica": "9.08",
+                    "Penalidades": "0",
+                    "Total": "66.68"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

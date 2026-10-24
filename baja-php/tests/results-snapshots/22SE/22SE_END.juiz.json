@@ -1,0 +1,206 @@
+{
+    "page": "resultados/prova_juiz.php",
+    "evento": "22SE",
+    "id": "22SE_END",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Voltas",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "2",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO (UFTM)</i>",
+                    "Voltas": "20",
+                    "Pontos": "117.65"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "3",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Voltas": "64",
+                    "Pontos": "376.47"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "4",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Voltas": "22",
+                    "Pontos": "129.41"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "5",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Voltas": "6",
+                    "Pontos": "35.29"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL REI</i>",
+                    "Voltas": "68",
+                    "Pontos": "400",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "7",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Voltas": "19",
+                    "Pontos": "111.76"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "8",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
+                    "Voltas": "30",
+                    "Pontos": "176.47"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "9",
+                    "Equipe Escola": "EQUIPE TEC-ILHA BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - CAMPUS DE ILHA SOLTEIRA</i>",
+                    "Voltas": "46",
+                    "Pontos": "270.59"
+                },
+                {
+                    "[img trofeu.png]": "23º",
+                    "#": "11",
+                    "Equipe Escola": "USJT BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE SÃO JUDAS</i>",
+                    "Voltas": "5",
+                    "Pontos": "29.41"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "12",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
+                    "Voltas": "32",
+                    "Pontos": "188.24"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "13",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
+                    "Voltas": "29",
+                    "Pontos": "170.59"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "14",
+                    "Equipe Escola": "EQUIPE POLI DE BAJA<br><i class=\"nomeEscola\">ESCOLA POLITÉCNICA DA UNIVERSIDADE DE SÃO PAULO</i>",
+                    "Voltas": "68",
+                    "Pontos": "400",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "15",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Voltas": "49",
+                    "Pontos": "288.24"
+                },
+                {
+                    "[img trofeu.png]": "24º",
+                    "#": "16",
+                    "Equipe Escola": "MUD RUNNER<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA - CEFET/RJ</i>",
+                    "Voltas": "4",
+                    "Pontos": "23.53"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "17",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA JULIO DE MESQUITA FILHO - FEB - CAMPUS DE BAURU</i>",
+                    "Voltas": "41",
+                    "Pontos": "241.18"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "18",
+                    "Equipe Escola": "REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
+                    "Voltas": "30",
+                    "Pontos": "176.47"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "22",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">INSPER - INSTITUTO DE ENSINO E PESQUISA</i>",
+                    "Voltas": "6",
+                    "Pontos": "35.29"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "23",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
+                    "Voltas": "63",
+                    "Pontos": "370.59"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "25",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS - UFSCAR</i>",
+                    "Voltas": "14",
+                    "Pontos": "82.35"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "26",
+                    "Equipe Escola": "FEI BAJA<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO DA FUNDAÇÃO EDUCACIONAL INACIANA \"PADRE SABÓIA DE MEDEIROS\"</i>",
+                    "Voltas": "68",
+                    "Pontos": "400",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "27",
+                    "Equipe Escola": "EESC USP<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE SÃO CARLOS - USP</i>",
+                    "Voltas": "43",
+                    "Pontos": "252.94"
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "28",
+                    "Equipe Escola": "BAJA MAUÁ<br><i class=\"nomeEscola\">INSTITUTO MAUÁ DE TECNOLOGIA</i>",
+                    "Voltas": "38",
+                    "Pontos": "223.53"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "30",
+                    "Equipe Escola": "CLARENGEX<br><i class=\"nomeEscola\">FACULDADE CLARETIANO</i>",
+                    "Voltas": "30",
+                    "Pontos": "176.47"
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "31",
+                    "Equipe Escola": "EQUIPE CERRADO<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE UBERLÂNDIA</i>",
+                    "Voltas": "10",
+                    "Pontos": "58.82"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$authorized_users in resultados/prova_juiz.php:19",
+        "Warning: Undefined array key \"entries\" in resultados/prova_juiz.php:42",
+        "Warning: Undefined array key \"ts\" in resultados/prova_juiz.php:157",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_juiz.php:215",
+        "Warning: Undefined property: stdClass::$hidden in resultados/prova_juiz.php:215"
+    ]
+}

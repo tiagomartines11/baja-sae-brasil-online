@@ -1,0 +1,540 @@
+{
+    "evento": "22BR",
+    "prova": "TRA",
+    "nome": "Tração",
+    "type": "normal",
+    "stored_totals": {
+        "Dcom": 0,
+        "Dmax": 10.17,
+        "Dmin": 1.69,
+        "Tcom": null,
+        "Tmax": null,
+        "Tmin": null
+    },
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.17,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 26.415094339622645
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.66,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 29.30424528301887
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 4.41,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 16.037735849056602
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 5.97,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 25.23584905660377
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.84,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 30.365566037735846
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.34,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 39.20990566037736
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.32,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 27.299528301886795
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 10.17,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 50
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 7.33,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 33.25471698113208
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 5.74,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 23.879716981132077
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.21,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 38.443396226415096
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.62,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 29.068396226415093
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 1.78,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 0.5306603773584909
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 5.63,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 23.231132075471695
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.02,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 25.53066037735849
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 1.69,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 0
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 7.72,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 35.55424528301886
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.36,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 39.32783018867924
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 9.94,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 48.6438679245283
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.53,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 40.33018867924528
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.39,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 39.50471698113208
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 9.13,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 43.86792452830189
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.92,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 42.62971698113207
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.35,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 39.2688679245283
+            }
+        },
+        {
+            "equipe": 40,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 5.41,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 21.933962264150942
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 9.03,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 43.27830188679245
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 9.21,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 44.339622641509436
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 5.96,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 25.176886792452827
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.02,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 25.53066037735849
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.22,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 38.502358490566046
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 7.81,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 36.08490566037735
+            }
+        },
+        {
+            "equipe": 51,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.31,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 27.240566037735846
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.25,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 26.88679245283019
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.66,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 29.30424528301887
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.61,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 40.80188679245283
+            }
+        },
+        {
+            "equipe": 57,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 5.4,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 21.875000000000004
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 7.41,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 33.72641509433963
+            }
+        },
+        {
+            "equipe": 59,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 6.16,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 26.3561320754717
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 7.29,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 33.0188679245283
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.64,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 40.97877358490567
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 5.89,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 24.76415094339622
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 7.54,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 34.492924528301884
+            }
+        },
+        {
+            "equipe": 68,
+            "vars": {
+                "DISTANCIA_MAX": 30,
+                "D": 8.52,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 40.27122641509434
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [
+            2,
+            3,
+            5,
+            6,
+            7,
+            9,
+            11,
+            12,
+            13,
+            14,
+            15,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            25,
+            28,
+            30,
+            31,
+            35,
+            36,
+            38,
+            40,
+            42,
+            44,
+            45,
+            46,
+            49,
+            50,
+            51,
+            52,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            64,
+            68
+        ],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}

@@ -1,0 +1,11 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "25BR",
+    "id": "25BR_SPR",
+    "spoilers": false,
+    "tables": [],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined property: stdClass::$colunas in resultados/prova_debug.php:11"
+    ]
+}

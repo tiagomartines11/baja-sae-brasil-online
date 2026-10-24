@@ -1,0 +1,137 @@
+{
+    "page": "resultados/prova_debug.php",
+    "evento": "24NE",
+    "id": "24NE_VAL",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "1",
+                    "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
+                    "Pontos": "61.08",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "2",
+                    "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
+                    "Pontos": "55.26"
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "3",
+                    "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
+                    "Pontos": "35.45"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "4",
+                    "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
+                    "Pontos": "54.47"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "5",
+                    "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA - Universidade Federal da Bahia</i>",
+                    "Pontos": "42.72"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "6",
+                    "Equipe Escola": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS - Universidade Salvador</i>",
+                    "Pontos": "41.69"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "7",
+                    "Equipe Escola": "Calangotec<br><i class=\"nomeEscola\">SENAI Cimatec</i>",
+                    "Pontos": "25.44"
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "8",
+                    "Equipe Escola": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Pontos": "46.56"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "9",
+                    "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVASF</i>",
+                    "Pontos": "59.73",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "10",
+                    "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Pontos": "25.63"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "11",
+                    "Equipe Escola": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Pontos": "50.04"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "12",
+                    "Equipe Escola": "Baja Sun City<br><i class=\"nomeEscola\">IFBA - Jequié</i>",
+                    "Pontos": "19.28"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "13",
+                    "Equipe Escola": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Pontos": "10.19"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "14",
+                    "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Pontos": "56.46",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "15",
+                    "Equipe Escola": "UNBaja<br><i class=\"nomeEscola\">UNB</i>",
+                    "Pontos": "38.17"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "16",
+                    "Equipe Escola": "Carcau Baja<br><i class=\"nomeEscola\">UESC - Ilheus</i>",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "17",
+                    "Equipe Escola": "Bajagreste<br><i class=\"nomeEscola\">IFPE - Caruaru</i>",
+                    "Pontos": "20.59"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null,
+    "warnings": [
+        "Warning: Undefined array key \"entries\" in resultados/prova_debug.php:24",
+        "Warning: Undefined array key \"ts\" in resultados/prova_debug.php:86",
+        "Warning: Undefined property: stdClass::$size in resultados/prova_debug.php:144",
+        "Warning: Undefined property: stdClass::$sort in resultados/prova_debug.php:144"
+    ]
+}

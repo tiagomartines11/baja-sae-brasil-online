@@ -1,0 +1,362 @@
+{
+    "evento": "26BR",
+    "prova": "PRC",
+    "nome": "Apresentação de Projeto - Cálculo Estrutural",
+    "type": "normal",
+    "stored_totals": {
+        "APRCALcom": 0,
+        "APRCALmax": 9.675,
+        "APRCALmin": 1.85,
+        "FINCALcom": 0,
+        "FINCALmax": 10,
+        "FINCALmin": 1.0e-6,
+        "TOPCALcom": 0,
+        "TOPCALmax": 9.675,
+        "TOPCALmin": 8.425
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 7.625,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 7.625,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 7.625
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 6.225,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 6.225,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 6.225
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 9.675,
+                "APRCAL": 9.675,
+                "FINCAL": 10,
+                "TOPCAL": 9.675
+            },
+            "pontos": {
+                "APRPTS_CAL": 9.675,
+                "APRPTS_CAL_FIN": 9.675,
+                "NOTA_CAL": 9.675
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 3,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 3,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 3
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 7.65,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 7.65,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 7.65
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 7.3,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 7.3,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 7.3
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 2.3,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 2.3,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 2.3
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 2.4,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 2.4,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 2.4
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 1.85,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 1.85,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 1.85
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 2.725,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 2.725,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 2.725
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 4.225,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 4.225,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 4.225
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 2.625,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 2.625,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 2.625
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 3.375,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 3.375,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 3.375
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "FIN": 8.5,
+                "APRCAL": 8.5,
+                "FINCAL": 3,
+                "TOPCAL": 8.5
+            },
+            "pontos": {
+                "APRPTS_CAL": 8.5,
+                "APRPTS_CAL_FIN": 8.799999912499992,
+                "NOTA_CAL": 8.5
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 1.9,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 1.9,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 1.9
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 7.55,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 7.55,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 7.55
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 0,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 0,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 0
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "FIN": 8.425,
+                "APRCAL": 8.425,
+                "FINCAL": 1.0e-6,
+                "TOPCAL": 8.425
+            },
+            "pontos": {
+                "APRPTS_CAL": 8.425,
+                "APRPTS_CAL_FIN": 8.425,
+                "NOTA_CAL": 8.425
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 5.4,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 5.4,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 5.4
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 4.325,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 4.325,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 4.325
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 6.05,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 6.05,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 6.05
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 7.075,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 7.075,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 7.075
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 3.375,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 3.375,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 3.375
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "FIN": 0,
+                "APRCAL": 1.875,
+                "FINCAL": 0,
+                "TOPCAL": 0
+            },
+            "pontos": {
+                "APRPTS_CAL": 1.875,
+                "APRPTS_CAL_FIN": 0,
+                "NOTA_CAL": 1.875
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null,
+    "warnings": []
+}
