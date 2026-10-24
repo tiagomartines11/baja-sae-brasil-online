@@ -5,8 +5,5 @@
     "spoilers": false,
     "redirect": "HTTP 302",
     "tables": [],
-    "error": null,
-    "warnings": [
-        "Warning: Undefined property: stdClass::$colunas in resultados/prova.php:18"
-    ]
+    "error": null
 }

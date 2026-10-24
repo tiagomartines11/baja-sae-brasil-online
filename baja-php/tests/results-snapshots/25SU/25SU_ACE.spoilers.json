@@ -117,6 +117,5 @@
             "footer": "Prova Finalizada<br>Última Atualização: [timestamp]<br><span style=\"color: yellow\">Sujeito a Alterações sem Prévio Aviso</span>"
         }
     ],
-    "error": null,
-    "warnings": []
+    "error": null
 }

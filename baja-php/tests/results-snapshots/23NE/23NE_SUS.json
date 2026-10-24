@@ -110,6 +110,5 @@
             "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
         }
     ],
-    "error": null,
-    "warnings": []
+    "error": null
 }

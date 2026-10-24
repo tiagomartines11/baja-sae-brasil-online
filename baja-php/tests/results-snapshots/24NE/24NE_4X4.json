@@ -67,8 +67,5 @@
             "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
         }
     ],
-    "error": null,
-    "warnings": [
-        "Warning: Undefined array key \"Total\" in resultados/prova.php:145"
-    ]
+    "error": null
 }

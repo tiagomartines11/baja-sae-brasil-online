@@ -709,8 +709,5 @@
             "footer": null
         }
     ],
-    "error": null,
-    "warnings": [
-        "Warning: Undefined array key \"Pontos\" in resultados/prova.php:145"
-    ]
+    "error": null
 }

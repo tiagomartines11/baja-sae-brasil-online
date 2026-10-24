@@ -406,17 +406,5 @@
             ]
         }
     ],
-    "error": null,
-    "warnings": [
-        "Warning: Undefined property: stdClass::$colunas in resultados/torneio.php:16",
-        "Warning: Undefined array key \"overlay\" in resultados/torneio.php:23",
-        "Deprecated: json_decode(): Passing null to parameter #1 ($json) of type string is deprecated in resultados/torneio.php:71",
-        "Warning: Attempt to read property \"bestof\" on null in resultados/torneio.php:71",
-        "Deprecated: json_decode(): Passing null to parameter #1 ($json) of type string is deprecated in resultados/torneio.php:80",
-        "Warning: Attempt to read property \"bestof\" on null in resultados/torneio.php:80",
-        "Deprecated: json_decode(): Passing null to parameter #1 ($json) of type string is deprecated in resultados/torneio.php:93",
-        "Warning: Attempt to read property \"bestof\" on null in resultados/torneio.php:93",
-        "Deprecated: json_decode(): Passing null to parameter #1 ($json) of type string is deprecated in resultados/torneio.php:105",
-        "Warning: Attempt to read property \"bestof\" on null in resultados/torneio.php:105"
-    ]
+    "error": null
 }

@@ -103,8 +103,5 @@
             "footer": null
         }
     ],
-    "error": null,
-    "warnings": [
-        "Warning: Undefined property: stdClass::$highlight in resultados/prova.php:78"
-    ]
+    "error": null
 }

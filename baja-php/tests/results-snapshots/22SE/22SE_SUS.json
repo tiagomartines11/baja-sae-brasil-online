@@ -162,8 +162,5 @@
             "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
         }
     ],
-    "error": null,
-    "warnings": [
-        "Warning: Undefined array key \"POS\" in resultados/prova.php:252"
-    ]
+    "error": null
 }

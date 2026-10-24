@@ -847,9 +847,5 @@
             "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
         }
     ],
-    "error": null,
-    "warnings": [
-        "Deprecated: strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in resultados/prova.php:121",
-        "Deprecated: strip_tags(): Passing null to parameter #1 ($string) of type string is deprecated in resultados/prova.php:122"
-    ]
+    "error": null
 }

@@ -478,9 +478,5 @@
             ]
         }
     ],
-    "error": null,
-    "warnings": [
-        "Warning: Undefined property: stdClass::$colunas in resultados/torneio.php:16",
-        "Warning: Undefined array key \"overlay\" in resultados/torneio.php:23"
-    ]
+    "error": null
 }
