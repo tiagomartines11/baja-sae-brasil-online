@@ -3,10 +3,15 @@
 namespace Baja\Premiacao;
 
 use Baja\Model\EquipeQuery;
-use Baja\Model\Input;
-use Baja\Model\InputQuery;
 use Baja\Model\Premiacao;
 use Baja\Model\ResultadoQuery;
+use Baja\Results\Behaviour\PremiacaoBehaviour;
+use Baja\Results\Column;
+use Baja\Results\Ranking\ScoreRanking;
+use Baja\Results\ResultRow;
+use Baja\Results\ResultsBuilder;
+use Baja\Results\ResultsConfig;
+use Baja\Results\ViewerContext;
 
 class Resolver
 {
@@ -72,7 +77,7 @@ class Resolver
         $rankingHeader      = isset($dataset['position_metric']) ? $dataset['position_metric'] : null;
         $rankingDirection   = isset($dataset['position_order'])  ? $dataset['position_order']  : 'desc';
         $positionHeader     = isset($dataset['position_header']) ? $dataset['position_header'] : null;
-        $rankingUsesTiebreak = isset($dataset['tiebreak']) && self::hasConfiguredTiebreak($dataset['tiebreak']);
+        $rankingUsesTiebreak = !empty($dataset['uses_tiebreak']);
 
         if ($modo === 'column_top') {
             $sortHeader = isset($categoria['sort_header']) ? $categoria['sort_header'] : null;
@@ -88,8 +93,7 @@ class Resolver
         }
 
         if ($rankingHeader !== null) {
-            $rows = self::sortRowsByHeader($rows, $rankingHeader, $rankingDirection, $rankingUsesTiebreak);
-            $rows = self::applyCompetitionPositions($rows, $rankingHeader, $positionHeader, $rankingUsesTiebreak);
+            $rows = ScoreRanking::rank($rows, is_int($rankingHeader) ? $rankingHeader : (string)$rankingHeader, $rankingDirection, $rankingUsesTiebreak);
         }
 
         $rows = self::applySelection($rows, $categoria);
@@ -97,6 +101,7 @@ class Resolver
         $headers = self::resolveHeaders($dataset['headers'], $categoria);
         $displayRows = array();
         foreach ($rows as $row) {
+            $row = self::legacyRow($row, $positionHeader);
             $displayRow = array();
             foreach ($headers as $header) {
                 $displayRow[$header] = self::resolveDisplayValue($row, $header);
@@ -114,6 +119,11 @@ class Resolver
 
     // ─── Dataset ──────────────────────────────────────────────────────────────
 
+    /**
+     * The resultado's rows, as the premiação has always computed them
+     * (Baja\Results\Behaviour\PremiacaoBehaviour), ranked by its "pos".
+     * Cached per request: several categories usually share one resultado.
+     */
     private static function getResultDataset($eventoId, $resultadoId)
     {
         $cacheKey = $eventoId . ':' . $resultadoId;
@@ -150,205 +160,50 @@ class Resolver
             return self::$datasetCache[$cacheKey];
         }
 
-        $columns        = (array)$config->colunas;
-        $headers        = self::extractHeaders($columns);
-        $positionHeader = self::findPositionHeader($columns);
-        $positionMetric = isset($config->pos)       ? $config->pos                    : null;
-        $positionOrder  = isset($config->pos_order) ? strtolower($config->pos_order)  : 'desc';
-        $filter         = isset($config->filter)    ? $config->filter                  : null;
-        $tiebreak       = isset($config->tiebreak)  ? $config->tiebreak                : null;
-        $useTiebreak    = self::hasConfiguredTiebreak($tiebreak);
-
-        $items = InputQuery::create()
-            ->filterByEventoId($eventoId)
-            ->filterByProvaId($resultado->getInputs())
-            ->leftJoinEquipe()
-            ->withColumn('Equipe.Escola')
-            ->withColumn('Equipe.EquipeId')
-            ->withColumn('Equipe.Equipe')
-            ->withColumn('Equipe.Estado')
-            ->find();
-
-        $vars = array();
-        foreach ($items as $input) {
-            $teamId = $input->getEquipeId();
-            if (!array_key_exists($teamId, $vars)) {
-                $vars[$teamId] = array(
-                    'TEAM_ID' => $teamId,
-                    'NUM'     => $input->getEquipeEquipeId(),
-                    'EQUIPE'  => $input->getEquipeEquipe(),
-                    'ESCOLA'  => $input->getEquipeEscola(),
-                    'ESTADO'  => $input->getEquipeEstado(),
-                );
-            }
-
-            $dados = (array)$input->getDados();
-            if (!@$input->getDados()->entries) {
-                if (!empty($vars[$teamId]['entries'])) {
-                    $current = $vars[$teamId]['entries'][0];
-                    $dados = array('entries' => array(array_merge((array)$current, (array)$input->getDados())));
-                } else {
-                    $dados = array('entries' => array($input->getDados()));
-                }
-            }
-
-            $vars[$teamId] = array_merge(
-                $vars[$teamId],
-                $dados,
-                (array)$input->getVars(),
-                (array)$input->getPontos()
-            );
-
-            if ($filter && (!isset($vars[$teamId][$filter]) || !$vars[$teamId][$filter])) {
-                unset($vars[$teamId]);
-            }
-        }
-
-        $rows = array();
-        foreach ($vars as $varSet) {
-            if (!isset($varSet['entries']) || !is_array($varSet['entries'])) {
-                continue;
-            }
-            foreach ($varSet['entries'] as $entry) {
-                $rowVars = array_merge($varSet, (array)$entry);
-                unset($rowVars['entries']);
-                $rows[] = self::buildDisplayRow($rowVars, $columns, $useTiebreak ? $tiebreak : null);
-            }
-        }
-
-        if ($positionMetric) {
-            $rows = self::sortRowsByHeader($rows, $positionMetric, $positionOrder, $useTiebreak);
-            $rows = self::applyCompetitionPositions($rows, $positionMetric, $positionHeader, $useTiebreak);
-        }
+        $resultsConfig = ResultsConfig::fromColunas($config);
+        $table = ResultsBuilder::forPremiacao()->buildFor($resultado, $resultsConfig, ViewerContext::premiacao());
+        $columns = PremiacaoBehaviour::columns($resultsConfig);
 
         self::$datasetCache[$cacheKey] = array(
-            'headers'          => $headers,
-            'rows'             => $rows,
-            'position_header'  => $positionHeader,
-            'position_metric'  => $positionMetric,
-            'position_order'   => $positionOrder,
-            'tiebreak'         => $useTiebreak ? $tiebreak : null,
+            'headers'          => array_map(function (Column $column) { return $column->header; }, $columns),
+            'rows'             => $table->rows,
+            'position_header'  => self::findPositionHeader($columns),
+            'position_metric'  => $resultsConfig->pos,
+            'position_order'   => PremiacaoBehaviour::direction($resultsConfig),
+            'uses_tiebreak'    => PremiacaoBehaviour::usesTiebreak($resultsConfig),
             'error'            => null,
         );
 
         return self::$datasetCache[$cacheKey];
     }
 
-    private static function buildDisplayRow(array $vars, array $columns, $tiebreak = null)
+    /**
+     * A row as the display code below reads it: the team under "__TEAM_*"
+     * keys, then each column by header. Only the first "Pos" column shows
+     * the position; any other is empty, as it always was here.
+     *
+     * @return array<string|int, mixed>
+     */
+    private static function legacyRow(ResultRow $row, $positionHeader)
     {
-        $row = array(
-            '__TEAM_ID'     => isset($vars['TEAM_ID']) ? $vars['TEAM_ID'] : null,
-            '__TEAM_NUM'    => isset($vars['NUM'])     ? $vars['NUM']     : null,
-            '__TEAM_NAME'   => isset($vars['EQUIPE'])  ? $vars['EQUIPE']  : null,
-            '__TEAM_SCHOOL' => isset($vars['ESCOLA'])  ? $vars['ESCOLA']  : null,
-            '__TEAM_STATE'  => isset($vars['ESTADO'])  ? $vars['ESTADO']  : null,
-            '__TIEBREAK'    => null,
+        $legacy = array(
+            '__TEAM_ID'     => $row->team->teamId,
+            '__TEAM_NUM'    => $row->team->number,
+            '__TEAM_NAME'   => $row->team->name,
+            '__TEAM_SCHOOL' => $row->team->school,
+            '__TEAM_STATE'  => $row->team->state,
+            '__TIEBREAK'    => $row->tiebreak,
         );
-
-        foreach ($columns as $column) {
-            $header = isset($column->header) ? $column->header : null;
-            if ($header === null) {
-                continue;
-            }
-
-            if ($column->val === 'EquipeNum') {
-                $row[$header] = isset($vars['NUM']) ? $vars['NUM'] : null;
-                continue;
-            }
-            if ($column->val === 'Equipe') {
-                $row[$header] = isset($vars['EQUIPE']) ? $vars['EQUIPE'] : null;
-                continue;
-            }
-            if ($column->val === 'Pos') {
-                $row[$header] = null;
-                continue;
-            }
-
-            if (is_array($column->val)) {
-                $highlight = isset($column->highlight) ? Input::solveFormula($vars, $column->highlight) : null;
-                $values = array();
-                foreach ($column->val as $formula) {
-                    $value = Input::solveFormula($vars, $formula);
-                    if ($highlight !== null && $value == $highlight) {
-                        $value = '<b>' . $value . '</b>';
-                    }
-                    $values[] = $value;
-                }
-                $row[$header] = implode('<br /> ', $values);
-                continue;
-            }
-
-            $row[$header] = Input::solveFormula($vars, $column->val);
+        foreach ($row->cells() as $header => $cell) {
+            $legacy[$header] = $cell->kind === Column::KIND_POSITION ? null : $cell->display;
         }
-
-        if (self::hasConfiguredTiebreak($tiebreak)) {
-            $row['__TIEBREAK'] = Input::solveFormula($vars, $tiebreak);
-        }
-
-        return $row;
-    }
-
-    // ─── Ordenação e Posições ─────────────────────────────────────────────────
-
-    private static function sortRowsByHeader(array $rows, $header, $direction, $useTiebreak = false)
-    {
-        usort($rows, function ($left, $right) use ($header, $direction, $useTiebreak) {
-            $leftValue  = self::extractNumericValue(isset($left[$header])  ? $left[$header]  : null);
-            $rightValue = self::extractNumericValue(isset($right[$header]) ? $right[$header] : null);
-
-            if ($leftValue === $rightValue) {
-                if ($useTiebreak) {
-                    $leftTiebreak  = self::extractTiebreakValue($left);
-                    $rightTiebreak = self::extractTiebreakValue($right);
-
-                    if ($leftTiebreak !== $rightTiebreak) {
-                        if ($direction === 'asc') {
-                            return ($leftTiebreak < $rightTiebreak) ? -1 : 1;
-                        }
-
-                        return ($leftTiebreak > $rightTiebreak) ? -1 : 1;
-                    }
-                }
-
-                $leftNum  = isset($left['__TEAM_NUM'])  ? (int)$left['__TEAM_NUM']  : 999999;
-                $rightNum = isset($right['__TEAM_NUM']) ? (int)$right['__TEAM_NUM'] : 999999;
-                return ($leftNum === $rightNum) ? 0 : (($leftNum < $rightNum) ? -1 : 1);
-            }
-
-            if ($direction === 'asc') {
-                return ($leftValue < $rightValue) ? -1 : 1;
-            }
-
-            return ($leftValue > $rightValue) ? -1 : 1;
-        });
-
-        return $rows;
-    }
-
-    private static function applyCompetitionPositions(array $rows, $header, $positionHeader = null, $useTiebreak = false)
-    {
-        $position     = 0;
-        $ordinal      = 0;
-        $lastValue    = null;
-        $lastTiebreak = null;
-
-        foreach ($rows as &$row) {
-            $ordinal++;
-            $currentValue    = self::extractNumericValue(isset($row[$header]) ? $row[$header] : null);
-            $currentTiebreak = $useTiebreak ? self::extractTiebreakValue($row) : null;
-            if ($lastValue === null || $currentValue !== $lastValue || ($useTiebreak && $currentTiebreak !== $lastTiebreak)) {
-                $position = $ordinal;
-            }
-            $row['__POS'] = $position;
+        if ($row->position !== null) {
+            $legacy['__POS'] = $row->position;
             if ($positionHeader !== null) {
-                $row[$positionHeader] = $position;
+                $legacy[$positionHeader] = $row->position;
             }
-            $lastValue    = $currentValue;
-            $lastTiebreak = $currentTiebreak;
         }
-        unset($row);
-
-        return $rows;
+        return $legacy;
     }
 
     // ─── Seleção ──────────────────────────────────────────────────────────────
@@ -373,13 +228,13 @@ class Resolver
         }
 
         $lastSelected   = end($selected);
-        $cutoffPosition = isset($lastSelected['__POS']) ? (int)$lastSelected['__POS'] : null;
+        $cutoffPosition = $lastSelected->position;
         if ($cutoffPosition === null) {
             return $selected;
         }
 
         for ($i = $topN; $i < count($rows); $i++) {
-            $position = isset($rows[$i]['__POS']) ? (int)$rows[$i]['__POS'] : null;
+            $position = $rows[$i]->position;
             if ($position !== $cutoffPosition) {
                 break;
             }
@@ -399,7 +254,7 @@ class Resolver
         $selected = array();
         $taken    = array();
         foreach ($rows as $row) {
-            $position = isset($row['__POS']) ? (int)$row['__POS'] : null;
+            $position = $row->position;
             if ($position === null || !isset($positionMap[$position])) {
                 continue;
             }
@@ -423,8 +278,8 @@ class Resolver
             if (!count($states)) {
                 return array();
             }
-            $rows = array_values(array_filter($rows, function ($row) use ($states) {
-                return in_array(isset($row['__TEAM_STATE']) ? $row['__TEAM_STATE'] : null, $states, true);
+            $rows = array_values(array_filter($rows, function (ResultRow $row) use ($states) {
+                return in_array($row->team->state, $states, true);
             }));
         }
 
@@ -433,8 +288,8 @@ class Resolver
             if (!count($noviceTeamIds)) {
                 return array();
             }
-            $rows = array_values(array_filter($rows, function ($row) use ($noviceTeamIds) {
-                $teamNumber = isset($row['__TEAM_NUM']) ? (int)$row['__TEAM_NUM'] : null;
+            $rows = array_values(array_filter($rows, function (ResultRow $row) use ($noviceTeamIds) {
+                $teamNumber = isset($row->team->number) ? (int)$row->team->number : null;
                 return $teamNumber !== null && in_array($teamNumber, $noviceTeamIds, true);
             }));
         }
@@ -572,21 +427,11 @@ class Resolver
         return '';
     }
 
-    private static function extractHeaders(array $columns)
-    {
-        $headers = array();
-        foreach ($columns as $column) {
-            if (isset($column->header)) {
-                $headers[] = $column->header;
-            }
-        }
-        return $headers;
-    }
-
+    /** @param list<Column> $columns */
     private static function findPositionHeader(array $columns)
     {
         foreach ($columns as $column) {
-            if (isset($column->val) && $column->val === 'Pos' && isset($column->header)) {
+            if ($column->kind() === Column::KIND_POSITION && $column->header !== null) {
                 return $column->header;
             }
         }
@@ -631,34 +476,6 @@ class Resolver
             $result[] = $value;
         }
         return $result;
-    }
-
-    private static function hasConfiguredTiebreak($tiebreak)
-    {
-        return $tiebreak !== null && trim((string)$tiebreak) !== '';
-    }
-
-    private static function extractNumericValue($value)
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-        if (is_numeric($value)) {
-            return (float)$value;
-        }
-        $text = strip_tags((string)$value);
-        $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
-        $text = str_replace(',', '.', $text);
-        if (!preg_match('/-?\d+(?:\.\d+)?/', $text, $matches)) {
-            return null;
-        }
-        return (float)$matches[0];
-    }
-
-    private static function extractTiebreakValue(array $row)
-    {
-        $value = self::extractNumericValue(isset($row['__TIEBREAK']) ? $row['__TIEBREAK'] : null);
-        return ($value === null) ? 0.0 : $value;
     }
 
     private static function buildError(array $categoria, $message)
