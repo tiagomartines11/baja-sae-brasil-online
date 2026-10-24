@@ -31,5 +31,17 @@
         <testsuite name="db">
             <directory>tests/Contagem/Db</directory>
         </testsuite>
+        <!--
+          Results regression snapshots (docs/results-snapshots.md).
+          results-snapshot      the tool itself, on made-up pages; no database.
+          results-snapshot-db   proves the tool writes nothing; needs the app's
+                                database variables, skipped without them.
+        -->
+        <testsuite name="results-snapshot">
+            <directory>tests/ResultsSnapshot/Unit</directory>
+        </testsuite>
+        <testsuite name="results-snapshot-db">
+            <directory>tests/ResultsSnapshot/Db</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
