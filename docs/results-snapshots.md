@@ -13,7 +13,7 @@ runs `--check` on every PR against the dev seed.
 
 | Change coming | What must stay equal | Snapshot files |
 |---|---|---|
-| BAJAAPP-54: one shared results builder replacing `resultados/prova.php`, `prova_juiz.php`, `prova_debug.php` and `Baja\Premiacao\Resolver` | every public results table, every premiação | `<ID>.json`, `<ID>.torneio.json`, `premiacao.<ID>.json` |
+| BAJAAPP-54: one shared results builder replacing `resultados/prova.php`, `prova_juiz.php` and `Baja\Premiacao\Resolver` | every public results table, every premiação | `<ID>.json`, `<ID>.torneio.json`, `premiacao.<ID>.json` |
 | BAJAAPP-35: replacing `eval()` in `Input::solveFormula` | every team's vars and pontos | `formulas.<PROVA>.json` |
 | BAJAAPP-42 and the future API: what the public sees *during* an event | the spoiler view | `<ID>.spoilers.json` |
 
@@ -31,13 +31,11 @@ For every event with `finalizado = 1` (14 of the 17 events in the seed):
 - **`formulas.<PROVA>.json`**: each team's vars and pontos, recomputed by
   `Input::updateVars()` and `Input::updatePontos()`.
 
-Not snapshotted: `resultados/prova_juiz.php` and `resultados/prova_debug.php`.
+Not snapshotted: `resultados/prova_juiz.php`.
 Run without a forum login, `prova_juiz.php` shows the same rows as
 `prova.php`. Its one difference, the `authorized_users` path that lets
-named judges see past spoilers, needs a logged-in user. That path is
-covered by the unit tests of the shared results builder,
-`baja-php/tests/Unit/Results/ViewerContextTest.php`.
-`prova_debug.php` is being deleted (BAJAAPP-57).
+named judges see past spoilers, needs a logged-in user. That path is left
+to the unit tests of the shared results builder (BAJAAPP-54).
 
 ## How it works
 
