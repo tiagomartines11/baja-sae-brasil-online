@@ -35,7 +35,8 @@ Ajuda::secao('visao-geral', 'Visão geral');
     <p><strong>Como a tabela é montada:</strong> uma linha por equipe que tenha dados em pelo menos uma das provas de <em>Inputs</em>
     (provas <code>"rolling"</code> geram uma linha por lançamento). As linhas aparecem em ordem de número do carro; o público pode clicar no cabeçalho para ordenar.
     Se o resultado usa uma única prova, o rodapé mostra o status dela (Parcial/Final, alterado em <a href="admin_provas.php">Administrar provas</a>) e a hora da última atualização.</p>
-    <div class="aviso">Se o JSON estiver inválido, as colunas são salvas como <code>null</code> sem nenhum aviso e a página pública passa a mostrar o aviso de &quot;sem resultados&quot;.
+    <div class="aviso">Se o JSON estiver inválido, nada é salvo: a página mostra o erro e devolve o texto para correção.
+    Já colunas <strong>vazias</strong> (ou <code>null</code>) são salvas e a página pública passa a mostrar o aviso de &quot;sem resultados&quot;.
     A versão anterior fica no backup <strong>-1</strong>.</div>
 </td></tr>
 <?php

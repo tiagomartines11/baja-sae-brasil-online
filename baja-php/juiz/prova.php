@@ -19,6 +19,10 @@ $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
 $nova = false;
 
+// Set when the submitted parameters are not valid JSON: nothing is saved and
+// the form is shown again with the text as typed and this message.
+$erroJson = null;
+
 if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
     $nova = true;
 
@@ -29,14 +33,19 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
             $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_POST['prova_id']);
             if ($prova) { header("Location: prova.php?id=".$_POST['prova_id']); exit; }
 
-            $prova = new Prova();
-            $prova->setEventoId($currentEventId);
-            $prova->setProvaId($_POST['prova_id']);
-            $prova->setNome($_POST['nome']);
-            $prova->setParams(json_decode($_POST['params']));
-            $prova->save();
+            $params = ConfigJson::decodificar($_POST['params']);
+            if (!$params->valido()) {
+                $erroJson = $params->erro;
+            } else {
+                $prova = new Prova();
+                $prova->setEventoId($currentEventId);
+                $prova->setProvaId($_POST['prova_id']);
+                $prova->setNome($_POST['nome']);
+                $prova->setParams($params->valor);
+                $prova->save();
 
-            header("Location: admin_provas.php"); exit;
+                header("Location: admin_provas.php"); exit;
+            }
         }
     }
 
@@ -72,12 +81,17 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
     }
 
     if (@$_REQUEST['act'] == '💾') {
-        if (isset($_POST['params']) && $_POST['params'] != '' && isset($_POST['novoNomeadoNome']) && $_POST['novoNomeadoNome'] != '') {
-            $backups[$_POST['novoNomeadoNome']] = json_decode($_POST['params']);
-            $prova->setParamsBackup(json_encode($backups));
-            $prova->save();
+        $params = ConfigJson::decodificar($_POST['params'] ?? '');
+        if (!$params->valido()) {
+            $erroJson = $params->erro;
+        } else {
+            if (isset($_POST['params']) && $_POST['params'] != '' && isset($_POST['novoNomeadoNome']) && $_POST['novoNomeadoNome'] != '') {
+                $backups[$_POST['novoNomeadoNome']] = $params->valor;
+                $prova->setParamsBackup(json_encode($backups));
+                $prova->save();
+            }
+            header("Location: prova.php?id=".$_page); exit;
         }
-        header("Location: prova.php?id=".$_page); exit;
     }
 
     $bk1 = @$backups['-1'];
@@ -87,23 +101,28 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
     $bk5 = @$backups['-5'];
 
     if (@$_REQUEST['act'] == 'Atualizar') {
-        if ($prova->getParams() != json_decode($_POST['params'])) {
-            $backups['-5'] = $bk4;        
-            $backups['-4'] = $bk3;
-            $backups['-3'] = $bk2;
-            $backups['-2'] = $bk1;
-            $backups['-1'] = $prova->getParams();
-            $prova->setParamsBackup(json_encode($backups));
-        }
-        $prova->setNome($_POST['nome']);
-        $prova->setParams(json_decode($_POST['params']));
-        $prova->save();
+        $params = ConfigJson::decodificar($_POST['params'] ?? '');
+        if (!$params->valido()) {
+            $erroJson = $params->erro;
+        } else {
+            if ($prova->getParams() != $params->valor) {
+                $backups['-5'] = $bk4;
+                $backups['-4'] = $bk3;
+                $backups['-3'] = $bk2;
+                $backups['-2'] = $bk1;
+                $backups['-1'] = $prova->getParams();
+                $prova->setParamsBackup(json_encode($backups));
+            }
+            $prova->setNome($_POST['nome']);
+            $prova->setParams($params->valor);
+            $prova->save();
 
-        if (isset($_POST['refresh']) && $_POST['refresh']=='1') {
-            $prova->refreshVarsAndPontos();
-        }
+            if (isset($_POST['refresh']) && $_POST['refresh']=='1') {
+                $prova->refreshVarsAndPontos();
+            }
 
-        header("Location: prova.php?id=".$_page); exit;
+            header("Location: prova.php?id=".$_page); exit;
+        }
     }
 
     if (@$_REQUEST['act'] == 'Deletar Prova') {
@@ -136,6 +155,11 @@ Template::printHeader("Detalhes de Prova", false);
                 </tr>
             </thead>
             <tbody>
+                <?php if ($erroJson !== null) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Parâmetros não salvos: o JSON é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto abaixo e salve de novo.</td>
+                </tr>
+                <?php } ?>
                 <tr>
                     <td>Evento</td>
                     <td><input style="width:700px;" type="text" name="evento_id" disabled value="<?= $currentEventId ?>"/></td>
@@ -182,8 +206,13 @@ Template::printHeader("Detalhes de Prova", false);
                 </tr>                
                 <tr>
                     <td><textarea style="width:700px;min-height:600px;" name="params" id="params" <?= $nova?'':'oninput="resetStyles();"' ?>><?php
-                        $params = $nova ? null : $prova->getParams();
-                        echo $params === null ? '' : json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                        if ($erroJson !== null) {
+                            // Give back exactly what was typed, so the fix is one edit away
+                            echo htmlspecialchars($_POST['params'] ?? '');
+                        } else {
+                            $params = $nova ? null : $prova->getParams();
+                            echo $params === null ? '' : json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                        }
                     ?></textarea></td>
                 </tr>                
                 <?php if (!$nova) { ?>

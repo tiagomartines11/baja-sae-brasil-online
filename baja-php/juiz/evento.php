@@ -17,6 +17,10 @@ Session::permissionCheck('admin');
 
 $novo = false;
 
+// Set when the submitted menu is not valid JSON: nothing is saved and the
+// form is shown again with the text as typed and this message.
+$erroJson = null;
+
 if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
     $novo = true;
 
@@ -66,13 +70,18 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             $evento->setPresidente($_POST['presidente']);
             $evento->setMandatoPresidente($_POST['mandato']);
 
-            $evento->setMenu(json_decode($_POST['menu'] ?? ''));
+            $menu = ConfigJson::decodificar($_POST['menu'] ?? '');
+            if (!$menu->valido()) {
+                $erroJson = $menu->erro;
+            } else {
+                $evento->setMenu($menu->valor);
 
-            $evento->setEmAndamento(false);            
+                $evento->setEmAndamento(false);
 
-            $evento->save();
+                $evento->save();
 
-            header("Location: admin_eventos.php"); exit;
+                header("Location: admin_eventos.php"); exit;
+            }
         }
     }
 
@@ -126,18 +135,25 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
         $evento->setPresidente($_POST['presidente']);
         $evento->setMandatoPresidente($_POST['mandato']);
 
-        $evento->setMenu(json_decode($_POST['menu'] ?? ''));
+        // On an invalid menu nothing is saved. The fields above stay set on the
+        // unsaved $evento, so the form below shows what was typed in them too.
+        $menu = ConfigJson::decodificar($_POST['menu'] ?? '');
+        if (!$menu->valido()) {
+            $erroJson = $menu->erro;
+        } else {
+            $evento->setMenu($menu->valor);
 
-        $evento->save();
+            $evento->save();
 
-        if (isset($_POST['em_andamento']) && $_POST['em_andamento']=='1') {
-            EventoQuery::create()
-                ->filterByEventoId($_REQUEST['id'], Criteria::NOT_EQUAL)
-                ->update(['EmAndamento' => false]);
+            if (isset($_POST['em_andamento']) && $_POST['em_andamento']=='1') {
+                EventoQuery::create()
+                    ->filterByEventoId($_REQUEST['id'], Criteria::NOT_EQUAL)
+                    ->update(['EmAndamento' => false]);
+            }
+
+
+            header("Location: evento.php?id=".$_page); exit;
         }
-
-
-        header("Location: evento.php?id=".$_page); exit;
     }
 
     if (@$_REQUEST['act'] == 'Deletar Evento') {
@@ -167,6 +183,11 @@ Template::printHeader("Detalhes do Evento", false);
                 </tr>
             </thead>
             <tbody>
+                <?php if ($erroJson !== null) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Evento não salvo: o JSON do menu é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto do menu e salve de novo.</td>
+                </tr>
+                <?php } ?>
                 <tr>
                     <td>ID Evento</td>
                     <td><input style="width:700px;" type="text" name="evento_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':$evento->getEventoId() ?>"/></td>
@@ -190,8 +211,13 @@ Template::printHeader("Detalhes do Evento", false);
                 <tr>
                     <td>Menu<br /><a href="ajuda_menu.php" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
                     <td><textarea style="width:700px;min-height:600px;" name="menu" id="menu" <?= $novo?'':'oninput="resetStyles();"' ?>><?php
-                        $menu = $novo ? null : $evento->getMenu();
-                        echo $menu === null ? '' : json_encode($menu, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                        if ($erroJson !== null) {
+                            // Give back exactly what was typed, so the fix is one edit away
+                            echo htmlspecialchars($_POST['menu'] ?? '');
+                        } else {
+                            $menu = $novo ? null : $evento->getMenu();
+                            echo $menu === null ? '' : json_encode($menu, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                        }
                     ?></textarea></td>
                 </tr>
                 <tr>
