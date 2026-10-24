@@ -72,8 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $novoEvento->setNome($nome);
             $novoEvento->setAno($newAno);
 
-            // Copia o menu trocando o prefixo dos IDs de resultado (25BR_ACE -> 26BR_ACE),
-            // para que o menu do novo evento aponte para os resultados do novo evento.
+            // Copia o menu trocando o prefixo dos IDs de resultado (25BR_ACE -> 26BR_ACE)
+            // e o evento nos links (fila.php?evento=25BR -> ?evento=26BR), para que o
+            // menu do novo evento aponte para o novo evento.
             $novoEvento->setMenu(MenuEvento::trocarPrefixoEvento($refEvento->getMenu(), $refEventoId, $novoEventoId));
 
             // Se achou último nacional, copia presidente e mandato de lá

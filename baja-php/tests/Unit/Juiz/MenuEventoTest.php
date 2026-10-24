@@ -97,13 +97,68 @@ final class MenuEventoTest extends TestCase
         $this->assertNull(MenuEvento::trocarPrefixoEvento(null, '25BR', '26BR'));
     }
 
-    /** The full example menu from the help page goes through intact. */
+    /** The full example menu from the help page: IDs and the queue link both move to 26BR. */
     public function testMenuCompleto(): void
     {
         $antes = '["25BR_GER",{"Dinâmicas":["25BR_ACE","25BR_VEL"]},'
             . '{"Fila":"https://fila.bajasaebrasil.net/fila.php?evento=25BR&fila=2"}]';
         $depois = '["26BR_GER",{"Dinâmicas":["26BR_ACE","26BR_VEL"]},'
-            . '{"Fila":"https://fila.bajasaebrasil.net/fila.php?evento=25BR&fila=2"}]';
+            . '{"Fila":"https://fila.bajasaebrasil.net/fila.php?evento=26BR&fila=2"}]';
         $this->assertEquals($depois, $this->clonar($antes));
+    }
+
+    /*
+     * LINKS WITH A QUERY STRING
+     *
+     * The part of a link after "?" is a list of name=value pairs joined by
+     * "&". A value that is exactly the old event ID ("25BR") is changed; a
+     * value that only contains it is not, by the same rule as for result IDs.
+     */
+
+    /** The queue link names the event in ?evento=: it must follow the clone. */
+    public function testTrocaEventoNaQueryString(): void
+    {
+        $this->assertEquals(
+            '[{"Fila":"https://fila.bajasaebrasil.net/fila.php?evento=26BR&fila=2"}]',
+            $this->clonar('[{"Fila":"https://fila.bajasaebrasil.net/fila.php?evento=25BR&fila=2"}]')
+        );
+    }
+
+    /** The same inside a submenu, and in any position among the parameters. */
+    public function testTrocaEventoEmQualquerPosicaoDaQueryString(): void
+    {
+        $this->assertEquals(
+            '[{"Enduro":{"Mapa":"mapa.php?zoom=2&evento=26BR"}}]',
+            $this->clonar('[{"Enduro":{"Mapa":"mapa.php?zoom=2&evento=25BR"}}]')
+        );
+    }
+
+    /**
+     * Links that merely contain "25BR" somewhere else stay exactly as they
+     * are: in the path, inside a longer value (a file name, "125BR"), as a
+     * parameter NAME, or after "#".
+     */
+    public function testNaoMexeEmLinkQueSoContemOCodigoEmOutroLugar(): void
+    {
+        $links = [
+            'https://exemplo.org/25BR/mapa.php?zoom=2',
+            'https://exemplo.org/baixar.php?arquivo=25BR_regulamento.pdf',
+            'https://exemplo.org/fila.php?evento=125BR',
+            'https://exemplo.org/pagina.php?25BR=1',
+            'https://exemplo.org/pagina.php?x=1#evento=25BR',
+        ];
+        foreach ($links as $link) {
+            $menu = json_encode([['Link' => $link]], JSON_UNESCAPED_SLASHES);
+            $this->assertEquals($menu, $this->clonar($menu), "o link $link não devia mudar");
+        }
+    }
+
+    /** What comes after "#" is kept as it was, even when the query string changes. */
+    public function testMantemOFragmentoAoTrocarAQueryString(): void
+    {
+        $this->assertEquals(
+            '[{"Fila":"fila.php?evento=26BR#topo"}]',
+            $this->clonar('[{"Fila":"fila.php?evento=25BR#topo"}]')
+        );
     }
 }
