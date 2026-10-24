@@ -37,8 +37,9 @@ Ajuda::secao('visao-geral', 'Visão geral');
     </ul>
     <p><strong>Ordem de cálculo</strong> (por equipe, a cada lançamento ou &quot;Refresh Pontos&quot;):</p>
     <?= Ajuda::codigo("lançamento do juiz (inputs)  →  vars  →  min_max  →  Totais (todas as equipes)  →  pontos") ?>
-    <p>A prova só aparece na tela inicial do juiz se tiver pelo menos um item em <code>inputs</code> (ou for um torneio)
-    e se o usuário tiver a permissão com o ID da prova.</p>
+    <p>Na tela inicial do juiz, a prova só aparece se tiver pelo menos um item em <code>inputs</code> (ou for um torneio)
+    e se o usuário tiver a permissão com o ID da prova. A exceção é a prova <a href="#type"><code>"laps"</code></a>, que aparece mesmo sem <code>inputs</code>
+    para quem participa da contagem: o responsável (permissão com o ID da prova), os contadores e o registro de box.</p>
     <div class="aviso">Se o JSON estiver inválido (vírgula sobrando, aspas faltando&hellip;), nada é salvo: a página mostra o erro e devolve o texto para correção.
     Já um campo <strong>vazio</strong> (ou <code>null</code>) é salvo como <code>null</code> e a prova some da tela do juiz; a versão anterior fica no backup <strong>-1</strong> (veja <a href="#backups">Backups</a>).</div>
 </td></tr>
@@ -46,7 +47,7 @@ Ajuda::secao('visao-geral', 'Visão geral');
 Ajuda::fimSecao();
 
 Ajuda::secao('chaves', 'Chaves principais', ['Chave', 'Tipo', 'Descrição']);
-Ajuda::opcao('type', 'texto', 'Tipo de lançamento: omitido (normal), <code>"rolling"</code> ou <code>"tournament"</code>. Veja <a href="#type">type</a>.');
+Ajuda::opcao('type', 'texto', 'Tipo de lançamento: omitido (normal), <code>"rolling"</code>, <code>"tournament"</code> ou <code>"laps"</code>. Veja <a href="#type">type</a>.');
 Ajuda::opcao('inputs', 'lista', 'Campos que o juiz preenche. Veja <a href="#inputs">inputs</a>.');
 Ajuda::opcao('vars', 'objeto', 'Variáveis calculadas por equipe a partir dos inputs. Veja <a href="#vars">vars</a>.');
 Ajuda::opcao('min_max', 'objeto', 'Variáveis por equipe cujo máximo/mínimo entre todas as equipes é calculado. Veja <a href="#min_max">min_max</a>.');
@@ -70,9 +71,20 @@ Ajuda::opcao('"rolling"', 'Formulário único', 'O juiz escolhe a equipe e preen
     Cada entrada recebe <code>ts</code> = hora do lançamento (timestamp Unix). Não há edição nem exclusão pela tela do juiz, e não há notificação push.
     No resultado, cada entrada vira uma linha.');
 Ajuda::opcao('"tournament"', 'Chaveamento', 'Mata-mata. Não usa <code>inputs</code>. Veja <a href="#torneio">Torneio</a>.');
+Ajuda::opcao('"laps"', 'Contagem de voltas', 'Corrida com contagem de voltas (ex.: enduro). O link da prova na tela do juiz abre a central da contagem, e não um formulário:
+    lá ficam as fontes, os usuários e o controle da corrida. Configuração completa em
+    <a href="https://github.com/tiagomartines11/baja-sae-brasil-online/blob/develop/docs/contagem.md#before-the-event" target="_blank">docs/contagem.md, &quot;Before the event&quot;</a>.
+    <br/><strong>Inputs obrigatórios</strong> (<code>number</code>), preenchidos pela contagem em cada carro:
+    <code>VOLTAS</code> (voltas contadas), <code>LAST</code> (segundos do início da corrida até a última passagem oficial)
+    e <code>BEST</code> (melhor volta válida em segundos; 0 se não houver).
+    <br/><strong>Opcional:</strong> um campo de classificação, ex.: <code>APTO</code> (enum <code>SIM</code>/<code>NÃO</code>), escolhido em
+    <em>Fontes e configurações &rarr; campo de classificação</em>; só correm os carros presentes com <code>SIM</code>.
+    <strong>Nunca use <code>DESCLAS</code></strong> (nem outro campo lido pelas fórmulas) para isso: no Enduro, <code>DESCLAS = SIM</code> zera os pontos.');
 ?>
 <tr><td colspan="3">
-    <div class="aviso">Qualquer valor diferente de <code>"normal"</code> e <code>"tournament"</code> (inclusive erros de digitação) é tratado como <code>"rolling"</code>.</div>
+    <div class="aviso">Sem <code>type</code> (ou com ele vazio) a prova é <code>"normal"</code>. O valor é comparado exatamente, maiúsculas incluídas:
+    na tela do juiz, qualquer valor diferente de <code>"normal"</code>, <code>"tournament"</code> e <code>"laps"</code>
+    (inclusive erros de digitação, como <code>"Laps"</code> ou <code>"lap"</code>) abre o formulário de <code>"rolling"</code>.</div>
     <?= Ajuda::exemplo(<<<'JSON'
 {
   "type": "rolling",
@@ -86,6 +98,19 @@ Ajuda::opcao('"tournament"', 'Chaveamento', 'Mata-mata. Não usa <code>inputs</c
   ]
 }
 JSON, 'Exemplo: Penalizações Enduro (baseado em 26BR_EPN, lista de opções encurtada)') ?>
+    <?= Ajuda::exemplo(<<<'JSON'
+{
+  "type": "laps",
+  "inputs": [
+    {"code": "VOLTAS", "name": "Voltas", "type": "number", "precision": 0},
+    {"code": "LAST", "name": "Última passagem (s)", "type": "number", "precision": 0},
+    {"code": "BEST", "name": "Melhor volta (s)", "type": "number", "precision": 0},
+    {"code": "DESCLAS", "name": "Desclassificado", "type": "enum", "options": ["SIM", "NÃO"]}
+  ],
+  "pontos": {"ENDPTS": "$DESCLAS=='SIM'?0:(400 * $VOLTAS / $Vmax)"},
+  "min_max": {"V": "$VOLTAS"}
+}
+JSON, 'Exemplo: Enduro com contagem de voltas. DESCLAS é lido pela fórmula, por isso não serve como campo de classificação') ?>
 </td></tr>
 <?php
 Ajuda::fimSecao();
