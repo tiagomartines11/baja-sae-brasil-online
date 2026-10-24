@@ -39,8 +39,8 @@ Ajuda::secao('visao-geral', 'Visão geral');
     <?= Ajuda::codigo("lançamento do juiz (inputs)  →  vars  →  min_max  →  Totais (todas as equipes)  →  pontos") ?>
     <p>A prova só aparece na tela inicial do juiz se tiver pelo menos um item em <code>inputs</code> (ou for um torneio)
     e se o usuário tiver a permissão com o ID da prova.</p>
-    <div class="aviso">Se o JSON estiver inválido (vírgula sobrando, aspas faltando&hellip;), os parâmetros são salvos como <code>null</code> sem nenhum aviso
-    e a prova some da tela do juiz. Valide o JSON antes de salvar; a versão anterior fica no backup <strong>-1</strong> (veja <a href="#backups">Backups</a>).</div>
+    <div class="aviso">Se o JSON estiver inválido (vírgula sobrando, aspas faltando&hellip;), nada é salvo: a página mostra o erro e devolve o texto para correção.
+    Já um campo <strong>vazio</strong> (ou <code>null</code>) é salvo como <code>null</code> e a prova some da tela do juiz; a versão anterior fica no backup <strong>-1</strong> (veja <a href="#backups">Backups</a>).</div>
 </td></tr>
 <?php
 Ajuda::fimSecao();

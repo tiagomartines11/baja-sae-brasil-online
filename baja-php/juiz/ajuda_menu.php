@@ -19,7 +19,8 @@ Ajuda::secao('visao-geral', 'Visão geral');
     <p>O campo <strong>Menu</strong> do evento define o menu do site de resultados: uma <strong>lista JSON</strong> em que cada elemento vira um item do menu, na ordem em que aparece.</p>
     <p>Os itens apontam para <a href="ajuda_resultado.php">resultados</a> pelo <strong>ID do resultado</strong> (ex.: <code>26BR_ACE</code>); o texto mostrado é o <em>Título</em> do resultado.
     Se o ID não existir, o próprio ID aparece no menu.</p>
-    <div class="aviso">Se o JSON estiver inválido, o menu é salvo como <code>null</code> sem nenhum aviso e o site fica só com os itens automáticos.
+    <div class="aviso">Se o JSON estiver inválido, nada é salvo: a página mostra o erro e devolve o texto para correção.
+    Já um menu <strong>vazio</strong> (ou <code>null</code>) é salvo e o site fica só com os itens automáticos.
     O menu não tem backups: copie o conteúdo antes de fazer mudanças grandes.</div>
 </td></tr>
 <?php
