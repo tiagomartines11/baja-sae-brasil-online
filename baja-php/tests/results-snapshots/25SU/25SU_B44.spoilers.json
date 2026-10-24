@@ -16,64 +16,49 @@
             ],
             "rows": [
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "1",
                     "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
                     "Entrada Dinâmicas": "NÃO",
                     "Saída Dinâmicas": "NÃO",
                     "Prova Bônus": "SPOILERS",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "4",
                     "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
                     "Entrada Dinâmicas": "SIM",
                     "Saída Dinâmicas": "SIM",
                     "Prova Bônus": "SPOILERS",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "7",
                     "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
                     "Entrada Dinâmicas": "SIM",
                     "Saída Dinâmicas": "SIM",
                     "Prova Bônus": "SPOILERS",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "10",
                     "Equipe Escola": "Coyote Baja<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Caxias do Sul</i>",
                     "Entrada Dinâmicas": "SIM",
                     "Saída Dinâmicas": "SIM",
                     "Prova Bônus": "SPOILERS",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "13",
                     "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
                     "Entrada Dinâmicas": "SIM",
                     "Saída Dinâmicas": "SIM",
                     "Prova Bônus": "SPOILERS",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 }
             ],
             "footer": null

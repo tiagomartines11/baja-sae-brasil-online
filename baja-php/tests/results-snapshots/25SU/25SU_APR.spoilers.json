@@ -22,7 +22,7 @@
             ],
             "rows": [
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "1",
                     "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
                     "Eletrônica": "SPOILERS",
@@ -34,13 +34,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "2",
                     "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
                     "Eletrônica": "SPOILERS",
@@ -52,13 +49,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "3",
                     "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
                     "Eletrônica": "SPOILERS",
@@ -70,13 +64,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "4",
                     "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
                     "Eletrônica": "SPOILERS",
@@ -88,13 +79,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "5",
                     "Equipe Escola": "Baja Guaicurus<br><i class=\"nomeEscola\">Universidade Federal da Grande Dourados</i>",
                     "Eletrônica": "SPOILERS",
@@ -106,13 +94,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "6",
                     "Equipe Escola": "Pelznickel UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário da Fundação Educacional de Brusque - UNIFEBE</i>",
                     "Eletrônica": "SPOILERS",
@@ -124,13 +109,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "7",
                     "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
                     "Eletrônica": "SPOILERS",
@@ -142,13 +124,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "8",
                     "Equipe Escola": "BajaSATC<br><i class=\"nomeEscola\">Associação Beneficente da Indústria Carbonífera de Santa Catarina - SATC</i>",
                     "Eletrônica": "SPOILERS",
@@ -160,13 +139,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "9",
                     "Equipe Escola": "Londribaja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Londrina</i>",
                     "Eletrônica": "SPOILERS",
@@ -178,13 +154,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "10",
                     "Equipe Escola": "Coyote Baja<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Caxias do Sul</i>",
                     "Eletrônica": "SPOILERS",
@@ -196,13 +169,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "11",
                     "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">Universidade Federal do Rio Grande do Sul</i>",
                     "Eletrônica": "SPOILERS",
@@ -214,13 +184,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "12",
                     "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
                     "Eletrônica": "SPOILERS",
@@ -232,13 +199,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "13",
                     "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
                     "Eletrônica": "SPOILERS",
@@ -250,13 +214,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "14",
                     "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
                     "Eletrônica": "SPOILERS",
@@ -268,13 +229,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "15",
                     "Equipe Escola": "Bajagual<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Bento Gonçalves</i>",
                     "Eletrônica": "SPOILERS",
@@ -286,13 +244,10 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "SIM",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "16",
                     "Equipe Escola": "CTJ Baja<br><i class=\"nomeEscola\">Universidade Federal de Santa Catarina - Joinville</i>",
                     "Eletrônica": "SPOILERS",
@@ -304,10 +259,7 @@
                     "Gestão": "SPOILERS",
                     "Negócios": "SPOILERS",
                     "Presente?": "NÃO",
-                    "Total": "SPOILERS",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Total": "SPOILERS"
                 }
             ],
             "footer": null

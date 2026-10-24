@@ -16,52 +16,40 @@
             ],
             "rows": [
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "1",
                     "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE - Universidade Federal de Pernambuco</i>",
                     "ICTS": "Sim",
                     "Dinâmicas": "Sim",
                     "Enduro": "Não",
-                    "Pontos": "80",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": "80"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "2",
                     "Equipe Escola": "Paraybaja<br><i class=\"nomeEscola\">Universidade Federal de Campina Grande</i>",
                     "ICTS": "Sim",
                     "Dinâmicas": "Sim",
                     "Enduro": "Não",
-                    "Pontos": "80",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": "80"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "3",
                     "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Caraúbas</i>",
                     "ICTS": "Sim",
                     "Dinâmicas": "Sim",
                     "Enduro": "Sim",
-                    "Pontos": "150",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": "150"
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "4",
                     "Equipe Escola": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Universidade Federal do Semi-Árido - Campus Mossoró</i>",
                     "ICTS": "Sim",
                     "Dinâmicas": "Sim",
                     "Enduro": "Não",
-                    "Pontos": "80",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": "80"
                 }
             ],
             "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"

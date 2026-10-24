@@ -24,7 +24,7 @@
                     "Núcleo Técnico": "5.25",
                     "Apresentação de Negócios": "4",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>48.79</b><br> <b></b>",
+                    "Pontos": "<b>48.79</b><br>",
                     "td.class": {
                         "[img trofeu.png]": "prata"
                     }
@@ -37,7 +37,7 @@
                     "Núcleo Técnico": "6.75",
                     "Apresentação de Negócios": "5.25",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>60.16</b><br> <b></b>",
+                    "Pontos": "<b>60.16</b><br>",
                     "td.class": {
                         "[img trofeu.png]": "ouro"
                     }
@@ -50,7 +50,7 @@
                     "Núcleo Técnico": "2.75",
                     "Apresentação de Negócios": "4.15",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>30.49</b><br> <b></b>"
+                    "Pontos": "<b>30.49</b><br>"
                 },
                 {
                     "[img trofeu.png]": "6º",
@@ -60,7 +60,7 @@
                     "Núcleo Técnico": "4.25",
                     "Apresentação de Negócios": "2.25",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>36.93</b><br> <b></b>"
+                    "Pontos": "<b>36.93</b><br>"
                 },
                 {
                     "[img trofeu.png]": "7º",
@@ -70,7 +70,7 @@
                     "Núcleo Técnico": "3.25",
                     "Apresentação de Negócios": "4",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>35.05</b><br> <b></b>"
+                    "Pontos": "<b>35.05</b><br>"
                 },
                 {
                     "[img trofeu.png]": "9º",
@@ -80,7 +80,7 @@
                     "Núcleo Técnico": "3.25",
                     "Apresentação de Negócios": "2.5",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>29.87</b><br> <b></b>"
+                    "Pontos": "<b>29.87</b><br>"
                 },
                 {
                     "[img trofeu.png]": "11º",
@@ -90,7 +90,7 @@
                     "Núcleo Técnico": "2.75",
                     "Apresentação de Negócios": "3.5",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>25.75</b><br> <b></b>"
+                    "Pontos": "<b>25.75</b><br>"
                 },
                 {
                     "[img trofeu.png]": "15º",
@@ -110,7 +110,7 @@
                     "Núcleo Técnico": "3.5",
                     "Apresentação de Negócios": "1.75",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>29.66</b><br> <b></b>"
+                    "Pontos": "<b>29.66</b><br>"
                 },
                 {
                     "[img trofeu.png]": "14º",
@@ -120,10 +120,10 @@
                     "Núcleo Técnico": "1.75",
                     "Apresentação de Negócios": "2.5",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>20.88</b><br> <b></b>"
+                    "Pontos": "<b>20.88</b><br>"
                 },
                 {
-                    "[img trofeu.png]": "16º",
+                    "[img trofeu.png]": "15º",
                     "#": "40",
                     "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná</i>",
                     "Gestão da Equipe": "3",
@@ -140,7 +140,7 @@
                     "Núcleo Técnico": "2",
                     "Apresentação de Negócios": "3.75",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>21.94</b><br> <b></b>"
+                    "Pontos": "<b>21.94</b><br>"
                 },
                 {
                     "[img trofeu.png]": "12º",
@@ -150,7 +150,7 @@
                     "Núcleo Técnico": "2.5",
                     "Apresentação de Negócios": "2.25",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>22.22</b><br> <b></b>"
+                    "Pontos": "<b>22.22</b><br>"
                 },
                 {
                     "[img trofeu.png]": "4º",
@@ -160,7 +160,7 @@
                     "Núcleo Técnico": "4.5",
                     "Apresentação de Negócios": "3.5",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>42.22</b><br> <b></b>"
+                    "Pontos": "<b>42.22</b><br>"
                 },
                 {
                     "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
@@ -170,7 +170,7 @@
                     "Núcleo Técnico": "5",
                     "Apresentação de Negócios": "2.5",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>44.23</b><br> <b></b>",
+                    "Pontos": "<b>44.23</b><br>",
                     "td.class": {
                         "[img trofeu.png]": "bronze"
                     }
@@ -183,10 +183,10 @@
                     "Núcleo Técnico": "4.5",
                     "Apresentação de Negócios": "2.25",
                     "Carro presente?": "SIM",
-                    "Pontos": "<b>37.73</b><br> <b></b>"
+                    "Pontos": "<b>37.73</b><br>"
                 },
                 {
-                    "[img trofeu.png]": "17º",
+                    "[img trofeu.png]": "15º",
                     "#": "57",
                     "Equipe Escola": "Equipistão<br><i class=\"nomeEscola\">UniFAJ</i><br><small style=\"color:red;\">Desclassificada</small>",
                     "Gestão da Equipe": "2",
@@ -196,7 +196,7 @@
                     "Pontos": "<b>0</b><br> <s>6.52</s>"
                 },
                 {
-                    "[img trofeu.png]": "18º",
+                    "[img trofeu.png]": "15º",
                     "#": "58",
                     "Equipe Escola": "CajaBaja<br><i class=\"nomeEscola\">IFPB</i>",
                     "Gestão da Equipe": "2",

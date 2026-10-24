@@ -19,36 +19,36 @@
                     "[img trofeu.png]": "6º",
                     "#": "1",
                     "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
-                    "Passou Obstáculo 1": "SIM (1 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 3": "NÃO (4 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (2 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 1": "SIM (1 <img class=\"cone\">)<br> <br> <br> <br> <br>",
+                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <br> <br>",
+                    "Passou Obstáculo 3": "NÃO (4 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (2 <img class=\"cone\">)<br> <br> <br>",
                     "Pontos": "21"
                 },
                 {
                     "[img trofeu.png]": "5º",
                     "#": "2",
                     "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
-                    "Passou Obstáculo 1": "SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 1": "SIM (0 <img class=\"cone\">)<br> <br> <br> <br> <br>",
                     "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)",
-                    "Passou Obstáculo 3": "NÃO (2 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 3": "NÃO (2 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)<br> <br> <br> <br>",
                     "Pontos": "30"
                 },
                 {
                     "[img trofeu.png]": "8º",
                     "#": "3",
                     "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
-                    "Passou Obstáculo 1": "<b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 2": "SIM (2 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 3": "<b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 1": "<br> <br> <br> <br> <br>",
+                    "Passou Obstáculo 2": "SIM (2 <img class=\"cone\">)<br> <br> <br> <br> <br>",
+                    "Passou Obstáculo 3": "<br> <br> <br> <br> <br>",
                     "Pontos": "9"
                 },
                 {
                     "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
                     "#": "4",
                     "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
-                    "Passou Obstáculo 1": "SIM (1 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 2": "SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 3": "SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 1": "SIM (1 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)<br> <br> <br> <br>",
+                    "Passou Obstáculo 2": "SIM (0 <img class=\"cone\">)<br> <br> <br> <br> <br>",
+                    "Passou Obstáculo 3": "SIM (0 <img class=\"cone\">)<br> <br> <br> <br> <br>",
                     "Pontos": "45",
                     "td.class": {
                         "[img trofeu.png]": "ouro"
@@ -58,9 +58,9 @@
                     "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
                     "#": "7",
                     "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
-                    "Passou Obstáculo 1": "SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 3": "SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 1": "SIM (0 <img class=\"cone\">)<br> <br> <br> <br> <br>",
+                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)<br> <br> <br> <br>",
+                    "Passou Obstáculo 3": "SIM (0 <img class=\"cone\">)<br> <br> <br> <br> <br>",
                     "Pontos": "45",
                     "td.class": {
                         "[img trofeu.png]": "ouro"
@@ -70,18 +70,18 @@
                     "[img trofeu.png]": "7º",
                     "#": "8",
                     "Equipe Escola": "BajaSATC<br><i class=\"nomeEscola\">Associação Beneficente da Indústria Carbonífera de Santa Catarina - SATC</i>",
-                    "Passou Obstáculo 1": "<b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 3": "NÃO (0 <img class=\"cone\">)<br> NÃO (2 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 1": "<br> <br> <br> <br> <br>",
+                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <br>",
+                    "Passou Obstáculo 3": "NÃO (0 <img class=\"cone\">)<br> NÃO (2 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <br> <br>",
                     "Pontos": "15"
                 },
                 {
                     "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
                     "#": "13",
                     "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
-                    "Passou Obstáculo 1": "SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 3": "SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 1": "SIM (0 <img class=\"cone\">)<br> <br> <br> <br> <br>",
+                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <br> <br>",
+                    "Passou Obstáculo 3": "SIM (0 <img class=\"cone\">)<br> <br> <br> <br> <br>",
                     "Pontos": "45",
                     "td.class": {
                         "[img trofeu.png]": "ouro"
@@ -91,9 +91,9 @@
                     "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
                     "#": "14",
                     "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
-                    "Passou Obstáculo 1": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 2": "NÃO (1 <img class=\"cone\">)<br> NÃO (1 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <b></b><br> <b></b>",
-                    "Passou Obstáculo 3": "NÃO (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)<br> <b></b><br> <b></b><br> <b></b><br> <b></b>",
+                    "Passou Obstáculo 1": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <br> <br>",
+                    "Passou Obstáculo 2": "NÃO (1 <img class=\"cone\">)<br> NÃO (1 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)<br> <br>",
+                    "Passou Obstáculo 3": "NÃO (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)<br> <br> <br> <br>",
                     "Pontos": "45",
                     "td.class": {
                         "[img trofeu.png]": "ouro"
