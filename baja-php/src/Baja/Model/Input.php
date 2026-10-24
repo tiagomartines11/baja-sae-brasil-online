@@ -123,9 +123,23 @@ class Input extends BaseInput
         }
     }
 
-    public static function solveFormula($vars, $formula) {
-        extract((array)$vars);
+    /**
+     * Told about every Throwable a formula raises, just before solveFormula()
+     * turns it into null. Null by default, and the pages never set it, so for
+     * them nothing changes. scripts/check-results-configs.php sets it to list
+     * the broken formulas (see Baja\ResultsCheck\FormulaErrors).
+     *
+     * @var null|callable(Throwable, mixed): void  the error, and the formula as given
+     */
+    private static $formulaErrorListener = null;
 
+    /** Sets (or, with null, removes) the listener above. */
+    public static function setFormulaErrorListener(?callable $listener): void
+    {
+        self::$formulaErrorListener = $listener;
+    }
+
+    public static function solveFormula($vars, $formula) {
         // Rede de segurança: uma fórmula malformada não deve derrubar a página
         // inteira. Em PHP 8 usar "+" para concatenar strings ('<b>'+X) é um
         // TypeError fatal (no PHP 7 a string era coagida a 0 silenciosamente).
@@ -133,10 +147,24 @@ class Input extends BaseInput
         // aqui apenas degradamos para null em vez de derrubar a página — o mesmo
         // que o "@" fazia no PHP 7 para erros não fatais.
         try {
-            @eval("\$formula = $formula;");
-        } catch (\Throwable $e) {
+            return self::evaluateFormula($vars, $formula);
+        } catch (Throwable $e) {
+            if (self::$formulaErrorListener !== null) {
+                (self::$formulaErrorListener)($e, $formula);
+            }
             return null;
         }
+    }
+
+    /**
+     * The formula's value. Its own function so that the formula sees only
+     * $vars, $formula and the extracted variables, exactly as before the
+     * listener existed.
+     */
+    private static function evaluateFormula($vars, $formula) {
+        extract((array)$vars);
+
+        @eval("\$formula = $formula;");
 
         if (is_string($formula)) {
             return $formula;

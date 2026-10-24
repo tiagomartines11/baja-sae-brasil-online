@@ -144,6 +144,8 @@ Relatório de Projeto the "Pontos" formula is broken (it joins text with
 `+`, which PHP rejects; it should be `.`), so every cell is empty. The page
 showed all 49 teams as 1st with a gold medal. It now shows "–" for all of
 them, which makes the broken formula visible.
+[`results-config-check.md`](results-config-check.md) lists every such
+config and writes the fix for this kind.
 
 ### R4. Ties
 

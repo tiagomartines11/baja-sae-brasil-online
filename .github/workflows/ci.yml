@@ -201,6 +201,11 @@ jobs:
       - name: PHPUnit (the tool writes nothing)
         run: vendor/bin/phpunit --testsuite results-snapshot-db
 
+      # scripts/check-results-configs.php (docs/results-config-check.md):
+      # writes nothing, and finds the seed's known broken configs.
+      - name: PHPUnit (resultado config check)
+        run: vendor/bin/phpunit --testsuite results-check-db
+
       - name: Results snapshots match
         run: php scripts/results-snapshot.php --check --jobs 4
 
