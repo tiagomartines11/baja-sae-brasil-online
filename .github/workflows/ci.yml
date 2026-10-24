@@ -95,6 +95,11 @@ jobs:
       - name: PHPUnit (lap counting engine)
         run: vendor/bin/phpunit --testsuite engine
 
+      # Small helpers from the rest of the site, e.g. the judge pages. Also
+      # pure logic with no database.
+      - name: PHPUnit (unit helpers)
+        run: vendor/bin/phpunit --testsuite unit
+
       # The results snapshot tool itself, on made-up pages. The snapshots
       # are checked against a real database in the results-snapshots job.
       - name: PHPUnit (results snapshot tool)
