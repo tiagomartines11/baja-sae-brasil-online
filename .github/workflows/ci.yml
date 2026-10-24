@@ -95,6 +95,11 @@ jobs:
       - name: PHPUnit (lap counting engine)
         run: vendor/bin/phpunit --testsuite engine
 
+      # Small helpers from the rest of the site, e.g. the judge pages. Also
+      # pure logic with no database.
+      - name: PHPUnit (unit helpers)
+        run: vendor/bin/phpunit --testsuite unit
+
       # The browser-side logic of the count pages (offline queue, clock
       # offset, warnings) is plain ES modules tested with Node's built-in
       # runner; there is nothing to install.
