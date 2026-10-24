@@ -22,6 +22,8 @@ Template::printHeader("Admin");
     <thead>
         <tr style="height: 50px;">
             <th colspan="2" class="sorter-false">
+                <!-- Way back to the judge dashboard, same "Voltar" link as admin_provas.php -->
+                <span style="float:left"><a href="index.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
                 <span style="font-size: 28px;">Administração evento (<?= $evento ?>)</span>
             </th>
         </tr>
