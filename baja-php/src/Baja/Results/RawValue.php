@@ -3,16 +3,20 @@ declare(strict_types=1);
 
 namespace Baja\Results;
 
+use Baja\Results\Rules\Numbers;
+
 /**
- * Turns what a cell shows into a value a program can use: the HTML goes,
- * and a number stays a number.
+ * Turns what a cell shows into a value a program can use (docs/
+ * results-rules.md, "Raw values"): struck-through content and HTML go, and
+ * text that is exactly a number becomes that number.
  *
  *     12.5                         -> 12.5
- *     "<b>12.5</b>"                -> 12.5
+ *     "<b>12,5</b>"                -> 12.5
  *     " 7 "                        -> 7
+ *     "<b>0</b> <s>13.87</s>"      -> 0
  *     "53.9%"                      -> "53.9%"   (not a number as a whole)
  *     "DNF<br />&nbsp;"            -> "DNF"
- *     "" or null                   -> null
+ *     "", null or "<s>12</s>"      -> null
  */
 final class RawValue
 {
@@ -21,12 +25,10 @@ final class RawValue
         if ($display === null || is_int($display) || is_float($display) || is_bool($display)) {
             return $display;
         }
-        $text = html_entity_decode(strip_tags((string)$display), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        // &nbsp; decodes to U+00A0, which trim() does not know.
-        $text = trim(preg_replace('/[\s\x{00A0}]+/u', ' ', $text) ?? $text);
+        $text = Numbers::plainText($display);
         if ($text === '') {
             return null;
         }
-        return is_numeric($text) ? $text + 0 : $text;
+        return Numbers::exact($text) ?? $text;
     }
 }

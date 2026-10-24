@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Tests\Unit\Results;
 
-use Baja\Results\ResultsBuilder;
+use Baja\Results\ViewerContext;
 use Baja\Tests\Unit\Results\Support\Fixtures;
 use PHPUnit\Framework\TestCase;
 
@@ -72,21 +72,60 @@ final class ColumnFormulasTest extends TestCase
     }
 
     /**
-     * The premiação has never been able to do that: there "$Pontos" is a
-     * variable of the inputs, and this team has none, so the formula gives
-     * nothing. This difference is kept on purpose (see PremiacaoBehaviour);
-     * fixing it would change awards, so it needs its own change.
+     * The premiação reads earlier columns the same way (R1): the awards use
+     * the very numbers the results page shows.
      */
-    public function testPremiacaoCannotReadAnEarlierColumn(): void
+    public function testPremiacaoCanReadAnEarlierColumnToo(): void
     {
         $config = Fixtures::config('{"colunas": [
             {"header": "Pontos", "val": "$P1 + $P2"},
             {"header": "Total",  "val": "$Pontos + 1"}
         ]}');
-        $table = Fixtures::build($config, [Fixtures::team(1, ['P1' => 3, 'P2' => 4])], null, ResultsBuilder::forPremiacao());
+        $table = Fixtures::build($config, [Fixtures::team(1, ['P1' => 3, 'P2' => 4])], ViewerContext::premiacao());
 
-        $this->assertSame(7, $table->rows[0]->display('Pontos'));
-        $this->assertSame(1, $table->rows[0]->display('Total'), '$Pontos is undefined (null), and null + 1 is 1');
+        $this->assertSame(8, $table->rows[0]->display('Total'));
+    }
+
+    /** Only EARLIER columns: a column cannot read one that comes after it (it is not worked out yet). */
+    public function testColumnCannotReadALaterColumn(): void
+    {
+        $config = Fixtures::config('{"colunas": [
+            {"header": "Antes",  "val": "$Depois"},
+            {"header": "Depois", "val": "5"}
+        ]}');
+        $table = Fixtures::build($config, [Fixtures::team(1, [])]);
+
+        $this->assertNull($table->rows[0]->display('Antes'));
+    }
+
+    /** The tiebreak is worked out after all columns, so it can read any of them (R1). */
+    public function testTiebreakCanReadColumns(): void
+    {
+        $config = Fixtures::config('{"tiebreak": "$Voltas * 10", "colunas": [{"header": "Voltas", "val": "$V"}]}');
+        $table = Fixtures::build($config, [Fixtures::team(1, ['V' => 3])]);
+
+        $this->assertSame(30, $table->rows[0]->tiebreak);
+    }
+
+    /** Formulas can read the team's DESCLASSIFICADO and TEAM_ID, everywhere (R7). */
+    public function testFormulasCanReadTeamVariables(): void
+    {
+        $config = Fixtures::config('{"colunas": [{"header": "X", "val": "($DESCLASSIFICADO ? \"D\" : \"ok\") . $TEAM_ID"}]}');
+        foreach ([null, ViewerContext::premiacao()] as $viewer) {
+            $table = Fixtures::build($config, [Fixtures::team(7, [], [], 'SP', true)], $viewer);
+
+            $this->assertSame('D7', $table->rows[0]->display('X'));
+        }
+    }
+
+    /** A column with no header is kept, everywhere (R9). Its value is stored under "". */
+    public function testColumnWithoutHeaderIsKept(): void
+    {
+        $config = Fixtures::config('{"colunas": [{"val": "$P"}, {"header": "P", "val": "$P"}]}');
+        $table = Fixtures::build($config, [Fixtures::team(1, ['P' => 4])], ViewerContext::premiacao());
+
+        $this->assertSame([null, 'P'], array_map(fn($column) => $column->header, $table->columns));
+        $this->assertSame(4, $table->rows[0]->display(''));
     }
 
     /** "EquipeNum", "Equipe" and "Pos" are not formulas: they show the team and its position. */

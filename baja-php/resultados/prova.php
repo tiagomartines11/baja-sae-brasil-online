@@ -5,6 +5,7 @@ use Baja\Model\EventoQuery;
 use Baja\Model\ResultadoQuery;
 use Baja\Results\EventStatus;
 use Baja\Results\ResultsBuilder;
+use Baja\Results\ResultRow;
 use Baja\Results\ResultsConfig;
 use Baja\Results\ViewerContext;
 
@@ -26,7 +27,7 @@ if ($config->type == "tournament") { header("Location: torneio.php?id=".$_REQUES
 $colunas = $config->columns;
 
 $viewer = $judgeViewer ?? ViewerContext::publicView(EventStatus::of(EventoQuery::getCurrentEvent()));
-$rows = ResultsBuilder::forPages()->buildFor($resultado, $config, $viewer)->rows;
+$rows = ResultsBuilder::buildFor($resultado, $config, $viewer)->pageOrder();
 
 Template::printHeader($resultado->getNome(), true, $judgeMenu ?? false);
 ?>
@@ -113,7 +114,8 @@ if (count($rows) && count($colunas)) {
                     echo '</td>';
                 } else if ($c->val == "Pos") {
                     $pos = $row->position;
-                    if ($pos == 1) echo "<td class='ouro'><p style='color:transparent'>" . $pos . "º</p></td>";
+                    if ($pos === null) echo "<td>" . ResultRow::NO_POSITION . "</td>";
+                    else if ($pos == 1) echo "<td class='ouro'><p style='color:transparent'>" . $pos . "º</p></td>";
                     else if ($pos == 2) echo "<td class='prata'><p style='color:transparent'>" . $pos . "º</p></td>";
                     else if ($pos == 3) echo "<td class='bronze'><p style='color:transparent'>" . $pos . "º</p></td>";
                     else echo "<td>" . $pos . "º</td>";

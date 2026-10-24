@@ -9,10 +9,7 @@ namespace Baja\Results;
  *
  *     {"header": "Pontos", "val": "$PONTOS * 2", "size": 60}
  *
- * Every property is kept exactly as written (null when it is missing), so
- * the two behaviours (Behaviour\PageBehaviour, Behaviour\PremiacaoBehaviour)
- * can test them the way the code they replace did: one asks "is it truthy?",
- * the other "is it set?".
+ * Every property is kept exactly as written (null when it is missing).
  *
  *   header        the column title, and the name its value is stored under
  *   val           a formula, a list of formulas (one line each), or one of
@@ -77,6 +74,12 @@ final class Column
             is_array($this->val) => self::KIND_LIST,
             default => self::KIND_FORMULA,
         };
+    }
+
+    /** The highlight formula, or null when it is missing or "" (R6). "0" is a formula. */
+    public function highlightFormula(): mixed
+    {
+        return ($this->highlight === null || $this->highlight === '') ? null : $this->highlight;
     }
 
     /**

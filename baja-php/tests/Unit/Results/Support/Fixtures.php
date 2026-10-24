@@ -45,7 +45,7 @@ final class Fixtures
      * @param array<string, mixed> $dados
      * @param array<string, mixed> $vars
      */
-    public static function team(int $number, array $dados, array $vars = [], string $state = 'SP', bool $disqualified = false): TeamInput
+    public static function team(int $number, array|object $dados, array $vars = [], string $state = 'SP', bool $disqualified = false): TeamInput
     {
         return new TeamInput(
             $number,
@@ -66,15 +66,14 @@ final class Fixtures
      *
      * @param list<TeamInput> $inputs
      */
-    public static function build(ResultsConfig $config, array $inputs, ?ViewerContext $viewer = null, ?ResultsBuilder $builder = null): ResultTable
+    public static function build(ResultsConfig $config, array $inputs, ?ViewerContext $viewer = null): ResultTable
     {
         $viewer ??= ViewerContext::publicView(new EventStatus(spoilers: false, finished: true));
-        $builder ??= ResultsBuilder::forPages();
-        return $builder->build($config, $inputs, $viewer);
+        return ResultsBuilder::build($config, $inputs, $viewer);
     }
 
     /**
-     * One column of every row, in row order, as "car number => value", so a
+     * One column of every row, in the order given, as "car number => value", so a
      * test can compare a whole table in one line.
      *
      * @param list<ResultRow> $rows
@@ -90,7 +89,7 @@ final class Fixtures
     }
 
     /**
-     * Car numbers in row order.
+     * Car numbers in the order given.
      *
      * @param list<ResultRow> $rows
      * @return list<mixed>
@@ -101,7 +100,7 @@ final class Fixtures
     }
 
     /**
-     * Position of each car, as "car number => position".
+     * Position of each car, in the order given, as "car number => position".
      *
      * @param list<ResultRow> $rows
      * @return array<int|string, ?int>
@@ -116,7 +115,7 @@ final class Fixtures
     }
 
     /** Arrays become objects, as json_decode() makes them from the database. */
-    private static function json(array $value): mixed
+    private static function json(array|object $value): mixed
     {
         return $value === [] ? new \stdClass() : json_decode(json_encode($value));
     }

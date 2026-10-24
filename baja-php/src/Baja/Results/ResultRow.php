@@ -10,13 +10,17 @@ namespace Baja\Results;
  *   team       who it is
  *   cells      one Cell per column header. Two columns with the same
  *              header share one cell, the later one's, as on the page.
- *   position   1 for the best, equal for a tie; null when the resultado
- *              ranks nothing ("pos" not set)
+ *   position   1 for the best, equal for a tie; null when the row has no
+ *              value to rank by, or the resultado ranks nothing ("pos" not
+ *              set). A "Pos" column then shows NO_POSITION.
  *   tiebreak   the value of the "tiebreak" formula, if there is one
  *   variables  the formula variables the row was computed from
  */
 final class ResultRow
 {
+    /** What a "Pos" column shows for a row with no position (R3). */
+    public const NO_POSITION = '–';
+
     /**
      * @param array<string|int, Cell> $cells
      * @param array<string|int, mixed> $variables
@@ -59,7 +63,7 @@ final class ResultRow
         $cells = $this->cells;
         foreach ($cells as $header => $cell) {
             if ($cell->kind === Column::KIND_POSITION) {
-                $cells[$header] = new Cell(Column::KIND_POSITION, $position, $position);
+                $cells[$header] = new Cell(Column::KIND_POSITION, $position ?? self::NO_POSITION, $position);
             }
         }
         return new self($this->team, $cells, $position, $this->tiebreak, $this->variables);
