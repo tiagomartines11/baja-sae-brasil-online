@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Baja\Results\Build;
 
-use Baja\Results\Behaviour\Behaviour;
 use Baja\Results\TeamInput;
 
 /**
@@ -11,11 +10,13 @@ use Baja\Results\TeamInput;
  *
  * A resultado can be made of several provas ("inputs"), so a team has one
  * input row per prova. Those are merged into one set of variables per team,
- * in database order, later ones winning: first the team (Behaviour::
- * teamVariables), then each input's dados, vars and pontos.
+ * in database order, later ones winning: first the team (TEAM_ID, NUM,
+ * EQUIPE, ESCOLA, ESTADO, DESCLASSIFICADO; R7), then each input's dados,
+ * vars and pontos.
  *
  * Runs ("entries"): an input whose dados is {"entries": [...]} has several
- * runs, and each run becomes a row. Any other dados is one run. When a team
+ * runs, and each run becomes a row; a JSON object there counts as a list of
+ * its values (R8). Any other dados is one run. When a team
  * already has runs, a single-run input is merged into its FIRST run only,
  * and the runs after it are dropped.
  *
@@ -32,14 +33,14 @@ final class TeamEntries
      * @param list<TeamInput> $inputs
      * @return list<Entry>
      */
-    public static function of(array $inputs, mixed $filter, Behaviour $behaviour): array
+    public static function of(array $inputs, mixed $filter): array
     {
         $teams = [];
         $firstInputs = [];
         foreach ($inputs as $input) {
             $key = $input->teamId;
             if (!array_key_exists($key, $teams)) {
-                $teams[$key] = $behaviour->teamVariables($input);
+                $teams[$key] = self::teamVariables($input);
                 $firstInputs[$key] = $input;
             }
             $teams[$key] = array_merge(
@@ -55,13 +56,36 @@ final class TeamEntries
 
         $entries = [];
         foreach ($teams as $key => $team) {
-            foreach ($behaviour->runsOf($team) as $run) {
+            foreach (self::runsOf($team) as $run) {
                 $variables = array_merge($team, (array)$run);
                 unset($variables['entries']);
                 $entries[] = new Entry($variables, $key, $firstInputs[$key]);
             }
         }
         return $entries;
+    }
+
+    /** @return array<string, mixed> */
+    private static function teamVariables(TeamInput $input): array
+    {
+        return [
+            'TEAM_ID' => $input->teamId,
+            'NUM' => $input->number,
+            'EQUIPE' => $input->name,
+            'ESCOLA' => $input->school,
+            'ESTADO' => $input->state,
+            'DESCLASSIFICADO' => $input->disqualified,
+        ];
+    }
+
+    /**
+     * @param array<string|int, mixed> $team
+     * @return list<mixed>
+     */
+    private static function runsOf(array $team): array
+    {
+        $runs = $team['entries'] ?? null;
+        return is_array($runs) || is_object($runs) ? array_values((array)$runs) : [];
     }
 
     /**

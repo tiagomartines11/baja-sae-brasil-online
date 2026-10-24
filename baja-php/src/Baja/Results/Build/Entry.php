@@ -10,11 +10,9 @@ use Baja\Results\TeamInput;
  * ResultRow at the end. Internal to Baja\Results.
  *
  *   variables   what the formulas can read: the team's merged inputs plus
- *               this run's own values. On the page, every column's value
- *               is written back in under its header, so a later column can
- *               use an earlier one ($Total).
- *   values      column key => value, for behaviours that keep the column
- *               values apart from the variables (the premiação)
+ *               this run's own values. Every column's value is written back
+ *               in under its header, so a later column can use an earlier
+ *               one ($Total).
  *   lines       column key => one value per line, for list columns, before
  *               the highlight is applied (the raw value is made from these)
  *   apiValues   column key => the value of its "val_api" formula
@@ -23,8 +21,6 @@ use Baja\Results\TeamInput;
  */
 final class Entry
 {
-    /** @var array<string|int, mixed> */
-    public array $values = [];
     /** @var array<string|int, list<mixed>> */
     public array $lines = [];
     /** @var array<string|int, mixed> */

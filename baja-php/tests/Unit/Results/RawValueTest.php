@@ -40,10 +40,25 @@ final class RawValueTest extends TestCase
         $this->assertSame(-3, RawValue::of('<span style="color:red">-3</span>'));
     }
 
+    /** "," is a decimal point here too. */
+    public function testCommaDecimal(): void
+    {
+        $this->assertSame(12.5, RawValue::of('<b>12,5</b>'));
+    }
+
+    /** Struck-through content is dropped, as for the ranking. */
+    public function testStruckThroughIsDropped(): void
+    {
+        $this->assertSame(0, RawValue::of('<b>0</b><br /> <s>13.87</s>'));
+        $this->assertNull(RawValue::of('<s>12</s>'));
+        $this->assertSame('NÃO', RawValue::of('NÃO <del>(2 cones)</del>'));
+    }
+
     /** Text that is not a number as a whole stays text, without its HTML. */
     public function testOtherTextStaysText(): void
     {
         $this->assertSame('53.9%', RawValue::of('<b>53.9%</b>'));
+        $this->assertSame('12,5 pts', RawValue::of('12,5 pts'));
         $this->assertSame('DNF', RawValue::of('DNF<br />&nbsp;'));
         $this->assertSame('Ação', RawValue::of('A&ccedil;&atilde;o'));
     }

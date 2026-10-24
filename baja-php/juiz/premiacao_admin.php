@@ -141,7 +141,7 @@ Template::printHeader("Premiação", false);
                     <td><input type="checkbox" name="status" value="1" <?= (!$nova && $premiacao->getStatus()) ? 'checked' : '' ?>> Ativa</td>
                 </tr>
                 <tr>
-                    <td rowspan="2">Categorias</td>
+                    <td rowspan="2">Categorias<br /><a href="https://github.com/tiagomartines11/baja-sae-brasil-online/blob/develop/docs/results-rules.md#awards" target="_blank" style="font-size: 12px;">❓ Regras de classificação</a></td>
                     <td>
                         <?php if (!$nova) { ?>
                         <button type="button" class="bkBotao bkSelected" id="bkAtual" onclick="restoreAtual()">Código Atual</button><br/><br/>

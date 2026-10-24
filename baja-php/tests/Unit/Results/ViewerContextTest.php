@@ -159,16 +159,19 @@ final class ViewerContextTest extends TestCase
     }
 
     /**
-     * The ranking uses what is shown, so during spoilers it ranks by the
-     * spoiler value. That is the known bug BAJAAPP-42, kept until its fix:
-     * here everybody shows "?", which reads as 0, so all tie at 1st.
+     * The ranking uses what is SHOWN, so during spoilers it ranks by the
+     * spoiler value. That is the known bug BAJAAPP-42, left for its own fix.
+     * Here every team shows "?", which has no number, so nobody is ranked
+     * (R3): every Pos cell shows "–". (Before the shared rules, "?" was read
+     * as 0 and everybody was shown 1st.)
      */
     public function testRankingDuringSpoilersUsesTheSpoilerValue(): void
     {
-        $config = Fixtures::config('{"pos": "Pontos", "colunas": [{"header": "Pontos", "val": "$PONTOS", "val_spoilers": "\"?\""}]}');
+        $config = Fixtures::config('{"pos": "Pontos", "colunas": [{"header": "Pos", "val": "Pos"}, {"header": "Pontos", "val": "$PONTOS", "val_spoilers": "\"?\""}]}');
         $viewer = ViewerContext::publicView(self::duringEventWithSpoilers());
         $table = Fixtures::build($config, [Fixtures::team(1, ['PONTOS' => 10]), Fixtures::team(2, ['PONTOS' => 90])], $viewer);
 
-        $this->assertSame([1 => 1, 2 => 1], Fixtures::positions($table->rows));
+        $this->assertSame([1 => null, 2 => null], Fixtures::positions($table->rows));
+        $this->assertSame('–', $table->rows[0]->display('Pos'));
     }
 }

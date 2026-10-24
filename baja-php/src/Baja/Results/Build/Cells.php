@@ -6,6 +6,7 @@ namespace Baja\Results\Build;
 use Baja\Results\Cell;
 use Baja\Results\Column;
 use Baja\Results\RawValue;
+use Baja\Results\ResultRow;
 use Baja\Results\TeamIdentity;
 
 /**
@@ -13,17 +14,16 @@ use Baja\Results\TeamIdentity;
  * ranked. Internal to Baja\Results.
  *
  * The number, team and position columns show the row's own data; every
- * other column shows what $valueOf gives (each behaviour keeps those values
- * in its own place). See Cell for what "raw" is.
+ * other column shows its value from the entry's variables. See Cell for
+ * what "raw" is.
  */
 final class Cells
 {
     /**
      * @param list<Column> $columns
-     * @param callable(Column): mixed $valueOf
      * @return array<string|int, Cell>
      */
-    public static function of(array $columns, Entry $entry, TeamIdentity $team, callable $valueOf): array
+    public static function of(array $columns, Entry $entry, TeamIdentity $team): array
     {
         $cells = [];
         foreach ($columns as $column) {
@@ -31,8 +31,8 @@ final class Cells
             $display = match ($kind) {
                 Column::KIND_TEAM_NUMBER => $team->number,
                 Column::KIND_TEAM => $team->name,
-                Column::KIND_POSITION => $entry->position,
-                default => $valueOf($column),
+                Column::KIND_POSITION => $entry->position ?? ResultRow::NO_POSITION,
+                default => $entry->variables[$column->key()] ?? null,
             };
             $cells[$column->key()] = new Cell($kind, $display, self::raw($column, $kind, $entry, $display));
         }
@@ -42,6 +42,9 @@ final class Cells
     private static function raw(Column $column, string $kind, Entry $entry, mixed $display): mixed
     {
         $key = $column->key();
+        if ($kind === Column::KIND_POSITION) {
+            return $entry->position;
+        }
         if ($kind !== Column::KIND_FORMULA && $kind !== Column::KIND_LIST) {
             return $display;
         }

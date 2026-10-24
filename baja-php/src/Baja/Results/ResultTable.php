@@ -4,9 +4,10 @@ declare(strict_types=1);
 namespace Baja\Results;
 
 /**
- * What ResultsBuilder::build() returns: the columns to show, and the rows
- * in the order to show them.
+ * What ResultsBuilder::build() returns: the columns to show, and the rows.
  *
+ *   rows            in position order: ranked rows best first, then the
+ *                   rows with no position (the premiação's order)
  *   spoilersHidden  whether columns with a "val_spoilers" show that
  *                   instead of their value, for this viewer
  */
@@ -21,5 +22,29 @@ final class ResultTable
         public readonly array $rows,
         public readonly bool $spoilersHidden,
     ) {
+    }
+
+    /**
+     * The rows in the results page's order (R10): by the run's "ts"
+     * variable, then by car number. The browser sorts the table again.
+     *
+     * Kept exactly as the page always ordered: the comparison never says
+     * two rows are equal, so rows with the same ts and car number (runs of
+     * one team) come out as PHP's sort leaves them.
+     *
+     * @return list<ResultRow>
+     */
+    public function pageOrder(): array
+    {
+        $rows = $this->rows;
+        usort($rows, function (ResultRow $a, ResultRow $b): int {
+            $ta = $a->variables()['ts'] ?? 0;
+            $tb = $b->variables()['ts'] ?? 0;
+            if ($ta != $tb) {
+                return ($ta > $tb) ? 1 : -1;
+            }
+            return (($a->variables()['NUM'] ?? null) > ($b->variables()['NUM'] ?? null)) ? 1 : -1;
+        });
+        return $rows;
     }
 }

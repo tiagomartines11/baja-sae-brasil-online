@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Tests\Unit\Results;
 
+use Baja\Results\ViewerContext;
 use Baja\Tests\Unit\Results\Support\Fixtures;
 use PHPUnit\Framework\TestCase;
 
@@ -55,6 +56,20 @@ final class TeamEntriesTest extends TestCase
 
         $this->assertSame([10, 20], array_map(fn($row) => $row->display('Pontos'), $table->rows));
         $this->assertSame([1, 1], Fixtures::numbers($table->rows), 'both rows are car 1');
+    }
+
+    /**
+     * "entries" written as a JSON object instead of a list ({"1": run,
+     * "2": run}) is read as a list of its runs, everywhere (R8).
+     */
+    public function testEntriesAsAnObjectAreRuns(): void
+    {
+        $dados = (object)['entries' => (object)['1' => ['PONTOS' => 10], '2' => ['PONTOS' => 20]]];
+        foreach ([null, ViewerContext::premiacao()] as $viewer) {
+            $table = Fixtures::build(Fixtures::config(self::POINTS), [Fixtures::team(1, $dados)], $viewer);
+
+            $this->assertSame([10, 20], array_map(fn($row) => $row->display('Pontos'), $table->rows));
+        }
     }
 
     /**
@@ -142,6 +157,6 @@ final class TeamEntriesTest extends TestCase
             Fixtures::team(2, ['PONTOS' => 99], [], 'MG', true),
         ]);
 
-        $this->assertSame([1 => 2, 2 => 1], Fixtures::positions($table->rows));
+        $this->assertSame([2 => 1, 1 => 2], Fixtures::positions($table->rows));
     }
 }

@@ -17,797 +17,614 @@
             ],
             "rows": [
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "2",
                     "Equipe Escola": "TEC Ilha Baja<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - ILHA SOLTEIRA</i>",
                     "Nota Relatório": "5.6",
                     "Nota Desafio": "4.267",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "3",
                     "Equipe Escola": "Baja UEA<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DO AMAZONAS</i>",
                     "Nota Relatório": "5.913",
                     "Nota Desafio": "3.722",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "4",
                     "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA</i>",
                     "Nota Relatório": "6.77",
                     "Nota Desafio": "1.861",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "10",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "5",
                     "Equipe Escola": "USJT Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE SÃO JUDAS</i>",
                     "Nota Relatório": "6.261",
                     "Nota Desafio": "5.011",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "10",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "6",
                     "Equipe Escola": "Equipe Komiketo Baja UFSJ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO JOÃO DEL-REI</i>",
                     "Nota Relatório": "6.913",
                     "Nota Desafio": "4.55",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "7",
                     "Equipe Escola": "Javalis Baja<br><i class=\"nomeEscola\">UNIVERSIDADE CATÓLICA DOM BOSCO</i>",
                     "Nota Relatório": "3.103",
                     "Nota Desafio": "0",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "10",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "8",
                     "Equipe Escola": "SAE da Frente<br><i class=\"nomeEscola\">FACULDADES INTEGRADAS EINSTEIN DE LIMEIRA</i>",
                     "Nota Relatório": "1.562",
                     "Nota Desafio": "2.678",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "9",
                     "Equipe Escola": "Carpoeira Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA BAHIA</i>",
                     "Nota Relatório": "6.036",
                     "Nota Desafio": "5.011",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "10",
                     "Equipe Escola": "Bumba Meu Baja<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DO MARANHÃO</i>",
                     "Nota Relatório": "4.508",
                     "Nota Desafio": "4.422",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "20",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "11",
                     "Equipe Escola": "Rampage Baja UFJF<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
                     "Nota Relatório": "5.532",
                     "Nota Desafio": "8.1",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "12",
                     "Equipe Escola": "Pato Baja<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - PATO BRANCO</i>",
                     "Nota Relatório": "6.581",
                     "Nota Desafio": "7.967",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "13",
                     "Equipe Escola": "UFSC Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
                     "Nota Relatório": "4.052",
                     "Nota Desafio": "7.311",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "14",
                     "Equipe Escola": "UnBaja<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA - FACULDADE DO GAMA</i>",
                     "Nota Relatório": "5.405",
                     "Nota Desafio": "5.683",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "15",
                     "Equipe Escola": "Vitória Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO</i>",
                     "Nota Relatório": "7.877",
                     "Nota Desafio": "6.661",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "17",
                     "Equipe Escola": "Car-kará Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
                     "Nota Relatório": "7.053",
                     "Nota Desafio": "8.356",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "18",
                     "Equipe Escola": "Goyá Baja<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE GOIÁS - GOIÂNIA</i>",
                     "Nota Relatório": "2.623",
                     "Nota Desafio": "2.056",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "10",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "19",
                     "Equipe Escola": "UNICAMP Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL DE CAMPINAS</i>",
                     "Nota Relatório": "7.142",
                     "Nota Desafio": "8.544",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "20",
                     "Equipe Escola": "Samabaja<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DO ESPÍRITO SANTO - SÃO MATEUS</i>",
                     "Nota Relatório": "5.5",
                     "Nota Desafio": "6.4",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "21",
                     "Equipe Escola": "Equipe Parahybaja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE CAMPINA GRANDE</i>",
                     "Nota Relatório": "6.014",
                     "Nota Desafio": "5.5",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "10",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "23",
                     "Equipe Escola": "Procobaja<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CORNÉLIO PROCÓPIO</i>",
                     "Nota Relatório": "4.235",
                     "Nota Desafio": "5.244",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "24",
                     "Equipe Escola": "Itabaja<br><i class=\"nomeEscola\">INSTITUTO TECNOLÓGICO DE AERONÁUTICA</i>",
                     "Nota Relatório": "5.543",
                     "Nota Desafio": "5.322",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "25",
                     "Equipe Escola": "Corisco<br><i class=\"nomeEscola\">UNIVERSIDADE DE PERNAMBUCO</i>",
                     "Nota Relatório": "4.965",
                     "Nota Desafio": "2.622",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "20",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "26",
                     "Equipe Escola": "UFVBaja Pererecas<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
                     "Nota Relatório": "5.89",
                     "Nota Desafio": "5.844",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "27",
                     "Equipe Escola": "UDESC Velociraptor Baja<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DE SANTA CATARINA</i>",
                     "Nota Relatório": "4.974",
                     "Nota Desafio": "6.422",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "28",
                     "Equipe Escola": "Poli USP 2<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA POLITÉCNICA</i>",
                     "Nota Relatório": "7.045",
                     "Nota Desafio": "7.8",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "29",
                     "Equipe Escola": "Mud Runner Baja<br><i class=\"nomeEscola\">CENTRO FEDERAL DE EDUCAÇÃO TECNOLÓGICA CELSO SUCKOW DA FONSECA</i>",
                     "Nota Relatório": "3.904",
                     "Nota Desafio": "4.133",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "30",
                     "Equipe Escola": "Tchê Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
                     "Nota Relatório": "4.931",
                     "Nota Desafio": "4.378",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "31",
                     "Equipe Escola": "Caledônia Racing Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE DO ESTADO DO RIO DE JANEIRO - INSTITUTO POLITECNICO DO RJ</i>",
                     "Nota Relatório": "4.405",
                     "Nota Desafio": "5.344",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "32",
                     "Equipe Escola": "Baja de Galpão<br><i class=\"nomeEscola\">UNIVERSIDADE DE SANTA CRUZ DO SUL</i>",
                     "Nota Relatório": "5.814",
                     "Nota Desafio": "0",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "33",
                     "Equipe Escola": "BAJA UFSCar<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SÃO CARLOS</i>",
                     "Nota Relatório": "5.203",
                     "Nota Desafio": "6.189",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "34",
                     "Equipe Escola": "Equipe FHO-Baja<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO DA FUNDAÇÃO HERMINIO OMETTO</i>",
                     "Nota Relatório": "1.85",
                     "Nota Desafio": "0",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "20",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "35",
                     "Equipe Escola": "Baja UFMG<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE MINAS GERAIS</i>",
                     "Nota Relatório": "7.615",
                     "Nota Desafio": "7.733",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "36",
                     "Equipe Escola": "Baajatinga<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO VALE DO SÃO FRANCISCO</i>",
                     "Nota Relatório": "2.945",
                     "Nota Desafio": "0",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "37",
                     "Equipe Escola": "Reptiles Baja PUC-Rio<br><i class=\"nomeEscola\">PONTIFÍCIA UNIVERSIDADE CATÓLICA DO RIO DE JANEIRO</i>",
                     "Nota Relatório": "6.421",
                     "Nota Desafio": "5.228",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "38",
                     "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CURITIBA</i>",
                     "Nota Relatório": "6.154",
                     "Nota Desafio": "8.939",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "39",
                     "Equipe Escola": "Baja Mud Racing<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
                     "Nota Relatório": "4.473",
                     "Nota Desafio": "2.167",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "40",
                     "Equipe Escola": "Piratas do Cerrado<br><i class=\"nomeEscola\">UNIVERSIDADE DE BRASÍLIA</i>",
                     "Nota Relatório": "6.153",
                     "Nota Desafio": "4.6",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "10",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "41",
                     "Equipe Escola": "FEI Baja 1<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
                     "Nota Relatório": "9.328",
                     "Nota Desafio": "7.6",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "42",
                     "Equipe Escola": "Tuffão Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE - RIO DE JANEIRO</i>",
                     "Nota Relatório": "6.646",
                     "Nota Desafio": "5.25",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "43",
                     "Equipe Escola": "Zebu Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO TRIÂNGULO MINEIRO</i>",
                     "Nota Relatório": "5.725",
                     "Nota Desafio": "4.978",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "44",
                     "Equipe Escola": "Baja Búfalos<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - SOROCABA</i>",
                     "Nota Relatório": "2.179",
                     "Nota Desafio": "0",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "10",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "45",
                     "Equipe Escola": "Piratas do Vale<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - GUARATINGUETÁ</i>",
                     "Nota Relatório": "4.409",
                     "Nota Desafio": "3.617",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "46",
                     "Equipe Escola": "PAC Baja<br><i class=\"nomeEscola\">UNIVERSIDADE ESTADUAL PAULISTA - BAURU</i>",
                     "Nota Relatório": "7.715",
                     "Nota Desafio": "6.161",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "47",
                     "Equipe Escola": "Caraubaja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
                     "Nota Relatório": "5.975",
                     "Nota Desafio": "6.044",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "48",
                     "Equipe Escola": "Saci Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ - CAMPUS ITAJUBÁ</i>",
                     "Nota Relatório": "6.565",
                     "Nota Desafio": "5.972",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "49",
                     "Equipe Escola": "Baja Tucuruí<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO PARÁ</i>",
                     "Nota Relatório": "3.369",
                     "Nota Desafio": "4.406",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "50",
                     "Equipe Escola": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE PERNAMBUCO - RECIFE</i>",
                     "Nota Relatório": "8.313",
                     "Nota Desafio": "4.644",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "10",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "51",
                     "Equipe Escola": "Buffalo Baja UFLA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE LAVRAS</i>",
                     "Nota Relatório": "4.346",
                     "Nota Desafio": "4.844",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "52",
                     "Equipe Escola": "Cactus Baja SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
                     "Nota Relatório": "6.417",
                     "Nota Desafio": "5.433",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "53",
                     "Equipe Escola": "FEI Baja 2<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FEI</i>",
                     "Nota Relatório": "6.875",
                     "Nota Desafio": "7.356",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "54",
                     "Equipe Escola": "TimburiBaja<br><i class=\"nomeEscola\">ASSOCIACAO EDUCACIONAL DOM BOSCO - FACULDADES DE ENGENHARIA DE RESENDE</i>",
                     "Nota Relatório": "3.183",
                     "Nota Desafio": "1.589",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "55",
                     "Equipe Escola": "Poli USP 1<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA POLITÉCNICA</i>",
                     "Nota Relatório": "7.445",
                     "Nota Desafio": "6.844",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "56",
                     "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL FLUMINENSE - VOLTA REDONDA</i>",
                     "Nota Relatório": "6.183",
                     "Nota Desafio": "8.533",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "57",
                     "Equipe Escola": "Baja Guaicurus<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA GRANDE DOURADOS</i>",
                     "Nota Relatório": "4.982",
                     "Nota Desafio": "4.256",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "58",
                     "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - PONTA GROSSA</i>",
                     "Nota Relatório": "5.432",
                     "Nota Desafio": "5.033",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "59",
                     "Equipe Escola": "Equipe Serbaja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE SERGIPE</i>",
                     "Nota Relatório": "4.176",
                     "Nota Desafio": "4.778",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "60",
                     "Equipe Escola": "EESC USP Tractian<br><i class=\"nomeEscola\">UNIVERSIDADE DE SÃO PAULO - ESCOLA DE ENGENHARIA DE SÃO CARLOS</i>",
                     "Nota Relatório": "8.964",
                     "Nota Desafio": "8.25",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "63",
                     "Equipe Escola": "FAESA Baja Guaiamu<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO ESPÍRITO-SANTENSE</i>",
                     "Nota Relatório": "2.444",
                     "Nota Desafio": "0",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "20",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "64",
                     "Equipe Escola": "UFPBaja<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DA PARAÍBA</i>",
                     "Nota Relatório": "7.444",
                     "Nota Desafio": "8.467",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "66",
                     "Equipe Escola": "LondriBaja<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS LONDRINA</i>",
                     "Nota Relatório": "3.455",
                     "Nota Desafio": "0",
                     "Penlização por identificação?": "NÃO",
                     "Penalizações por atraso": "0",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 },
                 {
-                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "[img trofeu.png]": "–",
                     "#": "67",
                     "Equipe Escola": "Tatu Baja<br><i class=\"nomeEscola\">INSTITUTO FEDERAL DE CIÊNCIA E TECNOLOGIA DE SÃO PAULO - CAMPUS SERTÃOZINHO</i>",
                     "Nota Relatório": "0",
                     "Nota Desafio": "1.311",
                     "Penlização por identificação?": "SIM",
                     "Penalizações por atraso": "20",
-                    "Pontos": "",
-                    "td.class": {
-                        "[img trofeu.png]": "ouro"
-                    }
+                    "Pontos": ""
                 }
             ],
             "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
