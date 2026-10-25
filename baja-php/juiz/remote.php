@@ -18,7 +18,20 @@ $input = json_decode($inputJSON, TRUE);
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
-if (!isset($input) || !isset($input['key']) || $input['key'] != $_remoteKey) {
+// The spreadsheet proves itself with REMOTE_KEY (src/config.php). This used
+// to be `$input['key'] != $_remoteKey`, which let anybody in: the body is
+// JSON, so "key" can be true, and PHP 8 takes true == any non-empty string;
+// and with REMOTE_KEY empty or unset, an empty key matched it too. So: both
+// must be non-empty strings, compared with hash_equals() (which also takes
+// the same time whatever the key's first wrong character is). A server
+// without REMOTE_KEY refuses everything.
+$key = $input['key'] ?? null;
+$authorized = is_string($_remoteKey) && $_remoteKey !== ''
+    && is_string($key) && hash_equals($_remoteKey, $key);
+if (!is_string($_remoteKey) || $_remoteKey === '') {
+    error_log('juiz/remote.php: REMOTE_KEY is not configured, so every request is refused');
+}
+if (!$authorized) {
     header('HTTP/1.0 403 Forbidden');
     exit();
 }
