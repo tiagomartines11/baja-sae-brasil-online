@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\ResultsArchive;
 
+use Baja\Logger;
 use Baja\Model\Evento;
 use Baja\Model\Map\EventoTableMap;
 use Propel\Runtime\Connection\ConnectionInterface;
@@ -15,9 +16,10 @@ use Throwable;
  * event's published results in the backups.
  *
  * The web request does the cheap part only. When an admin marks an event
- * finalizado, juiz/evento.php saves it through saveEvento(), which adds one
- * `pendente` row to evento_arquivamento in the same transaction. Taking
- * the mark off cancels that row. Everything slow — running every results
+ * finalizado, juiz/evento.php saves it through saveEvento(), which then
+ * adds one `pendente` row to evento_arquivamento. Taking the mark off
+ * cancels that row. Saving the event never depends on the queue: see
+ * saveEvento(). Everything slow — running every results
  * page of the event, encrypting, uploading — happens at night, in
  * baja-infra/scripts/backup-run.sh, which goes through scripts/
  * results-archive.php: pending() to find the work, then markArchived() or
@@ -54,30 +56,46 @@ final class Queue
     }
 
     /**
-     * Saves the event and records what its finalizado change asks for, in
-     * one transaction: an event marked finalizado without its request (or
-     * a request for an event whose save failed) cannot happen.
+     * Saves the event, then records what its finalizado change asks for.
      *
-     * @param bool        $eraFinalizado finalizado as it was loaded, before the form changed it (false for a new event)
-     * @param string|null $usuario       who saved it, for pedido_por
+     * Two steps, not one transaction, on purpose: editing an event must
+     * never depend on the archive queue. If the queue cannot be written —
+     * the migration that creates evento_arquivamento was missed, or the
+     * insert fails — the event is saved all the same, the error is logged,
+     * and false comes back so the page can tell the admin that the archive
+     * was not queued. A missed migration is also caught at night: the
+     * backup job cannot read the queue, and the archive monitor alerts.
+     *
+     * An error saving the EVENT is not caught: that is the page's failure,
+     * as it always was.
+     *
+     * @param bool          $eraFinalizado finalizado as it was loaded, before the form changed it (false for a new event)
+     * @param string|null   $usuario       who saved it, for pedido_por
+     * @param callable|null $logError      fn(string $message, array $context): void; Baja\Logger::error by default
+     * @return bool true when whatever the change asked for was recorded (or it asked for nothing); false when the queue could not be written
      */
-    public static function saveEvento(Evento $evento, bool $eraFinalizado, ?string $usuario, ?int $agoraMs = null): void
+    public static function saveEvento(Evento $evento, bool $eraFinalizado, ?string $usuario, ?int $agoraMs = null, ?callable $logError = null): bool
     {
-        $con = Propel::getWriteConnection(EventoTableMap::DATABASE_NAME);
-        $con->beginTransaction();
+        $evento->save();
+
         try {
-            $evento->save($con);
-            (new self($con))->finalizadoChanged(
+            self::forApp()->finalizadoChanged(
                 (string) $evento->getEventoId(),
                 $eraFinalizado,
                 (bool) $evento->getFinalizado(),
                 $usuario,
                 $agoraMs ?? self::nowMs()
             );
-            $con->commit();
+            return true;
         } catch (Throwable $e) {
-            $con->rollBack();
-            throw $e;
+            $logError ??= static fn(string $message, array $context) => Logger::error($message, $context);
+            $logError('Event saved, but its results archive request could not be recorded', [
+                'evento_id' => (string) $evento->getEventoId(),
+                'finalizado_antes' => $eraFinalizado,
+                'finalizado_depois' => (bool) $evento->getFinalizado(),
+                'error' => get_class($e) . ': ' . $e->getMessage(),
+            ]);
+            return false;
         }
     }
 

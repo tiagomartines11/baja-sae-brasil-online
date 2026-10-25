@@ -855,9 +855,11 @@
        "Event archives".
 
        One row per request to freeze an event's published results in the
-       backups. juiz/evento.php adds a `pendente` row, in the same
-       transaction as the save, when an admin marks the event finalizado,
-       and cancels it if the mark is taken off before the archive is made.
+       backups. juiz/evento.php adds a `pendente` row right after saving,
+       when an admin marks the event finalizado, and cancels it if the mark
+       is taken off before the archive is made. Saving the event never
+       depends on this table: if it is missing, the event is saved, the
+       error logged and the admin warned (Baja\ResultsArchive\Queue).
        The nightly baja-infra/scripts/backup-run.sh takes the pending rows,
        archives each one and marks it `arquivado` with the Shared Drive
        folder it went to. Re-marking makes a new row, so every archive ever

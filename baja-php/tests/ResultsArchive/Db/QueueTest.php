@@ -41,7 +41,11 @@ use PHPUnit\Framework\TestCase;
  *     archive done, the request is no longer pending (it was "consumed");
  *   - a failed attempt leaves the request pending, to be tried again;
  *   - a request whose event is no longer finished, or was deleted, is
- *     cancelled by the job instead of archived.
+ *     cancelled by the job instead of archived;
+ *   - if the queue's table is missing (the migration was not run), the
+ *     event is STILL saved: the admin is never locked out of editing
+ *     events because of the archive queue. The error is logged and the
+ *     page is told, so it can warn the admin.
  *
  * All on a made-up event, 99AR, that the tests create and delete.
  *
@@ -62,6 +66,9 @@ use PHPUnit\Framework\TestCase;
 final class QueueTest extends TestCase
 {
     private const EVENT = '99AR';
+
+    /** Where the "table missing" test puts the real table while it runs. */
+    private const HIDDEN_TABLE = 'evento_arquivamento_hidden_by_test';
 
     private static ?PDO $database = null;
 
@@ -95,6 +102,9 @@ final class QueueTest extends TestCase
         // setUp, the "deleted" and "unticked elsewhere" cases), so each
         // load must read the database, as the next page request would.
         \Propel\Runtime\Propel::disableInstancePooling();
+        // A run killed during the "table missing" test leaves the table
+        // under its hiding name. Put it back before anything else.
+        self::restoreHiddenTable();
     }
 
     protected function setUp(): void
@@ -130,7 +140,7 @@ final class QueueTest extends TestCase
         $this->assertSame(Queue::PENDENTE, $rows[0]['estado']);
         $this->assertSame('admin-de-teste', $rows[0]['pedido_por']);
         $this->assertSame(1_000, (int) $rows[0]['pedido_em_ms']);
-        // And the event itself was saved as finished, in the same transaction.
+        // And the event itself was saved as finished.
         $this->assertSame(1, (int) self::selectOne('SELECT finalizado FROM evento WHERE evento_id = ?', [self::EVENT]));
     }
 
@@ -187,6 +197,56 @@ final class QueueTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame([Queue::ARQUIVADO, Queue::PENDENTE], array_column($rows, 'estado'));
         $this->assertSame('events/99BR/20990101T040000Z', $rows[0]['pasta']);
+    }
+
+    // --- The archive queue must never block saving an event ----------------
+
+    /**
+     * The deploy went out without its migration, so evento_arquivamento
+     * does not exist. The admin ticks "Finalizado?" and saves.
+     *
+     * The event must be saved anyway (finalizado = 1 in the database).
+     * What failed is only the archive request, and that is reported in
+     * two ways: the error is logged, and saveEvento() returns false, which
+     * is what makes juiz/evento.php show the admin a warning that the
+     * archive was not queued.
+     *
+     * To make the table "missing", the test renames it for the length of
+     * this one test and always renames it back, even if an assertion fails.
+     */
+    public function testTheEventIsStillSavedWhenTheQueueTableIsMissing(): void
+    {
+        $logged = [];
+        $evento = EventoQuery::create()->findOneByEventoId(self::EVENT);
+        $evento->setFinalizado(true);
+
+        self::$database->exec('RENAME TABLE evento_arquivamento TO ' . self::HIDDEN_TABLE);
+        try {
+            $queued = Queue::saveEvento(
+                $evento,
+                false,
+                'admin-de-teste',
+                1_000,
+                // Instead of the real log, collect what would be logged.
+                function (string $message, array $context) use (&$logged): void {
+                    $logged[] = ['message' => $message, 'context' => $context];
+                }
+            );
+        } finally {
+            self::restoreHiddenTable();
+        }
+
+        $this->assertFalse($queued, 'saveEvento() must say the archive was not queued, so the page can warn');
+        $this->assertSame(
+            1,
+            (int) self::selectOne('SELECT finalizado FROM evento WHERE evento_id = ?', [self::EVENT]),
+            'the event itself must be saved even though the queue failed'
+        );
+        $this->assertCount(1, $logged, 'the failure is logged exactly once');
+        $this->assertSame(self::EVENT, $logged[0]['context']['evento_id']);
+        $this->assertStringContainsString('evento_arquivamento', $logged[0]['context']['error']);
+        // And, with the table back, nothing was queued: there was nowhere to put it.
+        $this->assertCount(0, $this->requests());
     }
 
     // --- What the nightly job sees ----------------------------------------
@@ -283,7 +343,10 @@ final class QueueTest extends TestCase
         $evento = EventoQuery::create()->findOneByEventoId(self::EVENT);
         $eraFinalizado = (bool) $evento->getFinalizado();
         $evento->setFinalizado($finalizado);
-        Queue::saveEvento($evento, $eraFinalizado, 'admin-de-teste', $nowMs);
+        $this->assertTrue(
+            Queue::saveEvento($evento, $eraFinalizado, 'admin-de-teste', $nowMs),
+            'with the table present, the queue step must succeed'
+        );
     }
 
     private function queue(): Queue
@@ -299,6 +362,17 @@ final class QueueTest extends TestCase
         );
         $statement->execute([self::EVENT]);
         return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private static function restoreHiddenTable(): void
+    {
+        $statement = self::$database->prepare(
+            'SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?'
+        );
+        $statement->execute([self::HIDDEN_TABLE]);
+        if ((int) $statement->fetchColumn() > 0) {
+            self::$database->exec('RENAME TABLE ' . self::HIDDEN_TABLE . ' TO evento_arquivamento');
+        }
     }
 
     private static function removeFixture(): void

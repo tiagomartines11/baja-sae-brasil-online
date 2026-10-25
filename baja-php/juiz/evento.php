@@ -80,8 +80,12 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
                 $evento->setEmAndamento(false);
 
                 // A new event created already finalizado asks for an
-                // archive like any other (BAJAAPP-67); see Queue.
-                Queue::saveEvento($evento, false, Session::getCurrentUser()->getUsername());
+                // archive like any other (BAJAAPP-67). The event is saved
+                // even when the archive queue cannot be written; then the
+                // event's own page opens, to show why.
+                if (!Queue::saveEvento($evento, false, Session::getCurrentUser()->getUsername())) {
+                    header("Location: evento.php?id=" . urlencode($evento->getEventoId()) . "&arquivo=falhou"); exit;
+                }
 
                 header("Location: admin_eventos.php"); exit;
             }
@@ -150,9 +154,10 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
         } else {
             $evento->setMenu($menu->valor);
 
-            // Saves, and in the same transaction records or cancels the
-            // archive request a finalizado change asks for.
-            Queue::saveEvento($evento, $eraFinalizado, Session::getCurrentUser()->getUsername());
+            // Saves, then records or cancels the archive request a
+            // finalizado change asks for. The event is saved even when that
+            // second step fails; the page then says so (below).
+            $arquivoOk = Queue::saveEvento($evento, $eraFinalizado, Session::getCurrentUser()->getUsername());
 
             if (isset($_POST['em_andamento']) && $_POST['em_andamento']=='1') {
                 EventoQuery::create()
@@ -161,7 +166,7 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             }
 
 
-            header("Location: evento.php?id=".$_page); exit;
+            header("Location: evento.php?id=".$_page . ($arquivoOk ? '' : '&arquivo=falhou')); exit;
         }
     }
 
@@ -192,6 +197,11 @@ Template::printHeader("Detalhes do Evento", false);
                 </tr>
             </thead>
             <tbody>
+                <?php if (@$_GET['arquivo'] === 'falhou') { ?>
+                <tr>
+                    <td colspan="2" style="color: #a60; font-weight: bold;">Evento salvo, mas o arquivamento dos resultados não foi registrado (erro no servidor, já anotado no log). Avise a equipe técnica. Depois que for corrigido, desmarque e marque "Finalizado?" de novo para pedir o arquivamento.</td>
+                </tr>
+                <?php } ?>
                 <?php if ($erroJson !== null) { ?>
                 <tr>
                     <td colspan="2" style="color: red; font-weight: bold;">Evento não salvo: o JSON do menu é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto do menu e salve de novo.</td>
