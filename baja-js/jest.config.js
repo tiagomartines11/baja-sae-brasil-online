@@ -13,7 +13,14 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/.jest/setup.ts'],
   modulePaths: ['<rootDir>/src/'],
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
+    // React 19 warns about the classic JSX runtime, which next/babel picks by
+    // default under test.
+    '^.+\\.(js|jsx|ts|tsx)$': [
+      'babel-jest',
+      {
+        presets: [['next/babel', { 'preset-react': { runtime: 'automatic' } }]]
+      }
+    ]
   },
   // https://github.com/styled-components/styled-components/issues/4081
   // v6 of styled-components doesn't inject styles in test environment

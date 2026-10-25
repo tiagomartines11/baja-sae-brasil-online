@@ -1,10 +1,12 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\TimerQuery;
 use Baja\Model\Timer;
 use Baja\Session;
+use Baja\Site\Html;
 use Baja\Url;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_timers.php"); exit; }
@@ -12,6 +14,11 @@ if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: ad
 $_page = (int)@$_REQUEST['id'];
 
 Session::permissionCheck('TIMER_ADMIN');
+
+// Every act changes something (a new key locks out whoever holds the old
+// one): no act runs without the form's token, which also refuses a GET link
+// carrying one (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $username = Session::getCurrentUser()->getUsername();
@@ -151,8 +158,10 @@ Template::printHeader("Timer", false);
 <div style="max-width: 1000px; margin: 0 auto; height:100vh;">
 <?php if ($nova) { ?>
     <form action="timer_admin.php?nova=true" method="POST">
+        <?= Csrf::field() ?>
 <?php } else { ?>
-    <form action="timer_admin.php?id=<?= $timer->getTimerId() ?>" method="POST">
+    <form action="timer_admin.php?id=<?= Html::e($timer->getTimerId()) ?>" method="POST">
+        <?= Csrf::field() ?>
 <?php } ?>
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
@@ -175,7 +184,7 @@ Template::printHeader("Timer", false);
                 </tr>
                 <tr>
                     <td>ID Timer</td>
-                    <td><input style="width:700px;" type="number" min="1" step="1" name="timer_id" <?= $nova ? '' : 'disabled' ?> value="<?= $nova ? $proximoId : $timer->getTimerId() ?>" /></td>
+                    <td><input style="width:700px;" type="number" min="1" step="1" name="timer_id" <?= $nova ? '' : 'disabled' ?> value="<?= Html::field($nova ? $proximoId : $timer->getTimerId()) ?>" /></td>
                 </tr>
 <?php if (!$nova) { ?>
                 <tr>
@@ -349,11 +358,13 @@ Template::printHeader("Timer", false);
             const dados = new URLSearchParams({ texto: texto, nome: document.getElementById("ttsNome").value, ritmo: document.getElementById("ttsRitmo").value });
             if (substituir) dados.set("substituir", "1");
             msg.className = ""; msg.textContent = "Gerando...";
-            fetch("timer_tts.php", { method: "POST", body: dados, credentials: "same-origin" })
+            // The token from the page's <meta> (Baja\Auth\Csrf): timer_tts.php refuses a post without it.
+            const csrf = document.querySelector('meta[name="csrf-token"]').content;
+            fetch("timer_tts.php", { method: "POST", body: dados, credentials: "same-origin", headers: { "X-CSRF-Token": csrf } })
                 .then((r) => r.json().then((d) => ({ status: r.status, d: d })))
                 .then(({ status, d }) => {
                     if (status == 409 && confirm(d.erro + " Substituir?")) return gerarSom(true);
-                    if (!d.ok) throw d.erro;
+                    if (!d.ok) throw d.mensagem || d.erro;
                     if (SONS.indexOf(d.arquivo) < 0) { SONS.push(d.arquivo); SONS.sort(); }
                     render();
                     msg.textContent = "Criado: " + d.arquivo;

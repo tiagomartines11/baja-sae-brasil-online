@@ -24,6 +24,8 @@ final class Finding
     public const FORMULA_ERROR = 'Formula raises an error';
     public const RANKING = 'Ranking config';
     public const EMPTY_COLUMN = 'Column empty for every team';
+    /** A variable the formula reads that nothing gives it there (UnknownVariables). */
+    public const UNKNOWN_VARIABLE = 'Unknown variables';
 
     public function __construct(
         public readonly string $problem,

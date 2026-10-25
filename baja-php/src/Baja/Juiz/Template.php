@@ -1,7 +1,9 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
+use Baja\Site\Html;
 
 class Template
 {
@@ -14,6 +16,8 @@ class Template
             <meta charset="UTF-8" />
             <meta http-equiv="Content-Language" content="pt-br">
             <meta name="google" content="notranslate">
+            <?php // For scripts that post to the judge area: sent as the X-CSRF-Token header (Baja\Auth\Csrf). ?>
+            <meta name="csrf-token" content="<?= Html::e(Csrf::token()) ?>">
             <script src="js/jquery-latest.min.js"></script>
             <script src="js/jquery.tablesorter.js"></script>
             <script src="js/jquery.tablesorter.widgets.js"></script>
@@ -23,7 +27,7 @@ class Template
             <!--[if IE]>
             <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
             <![endif]-->
-            <title><?= $prefixWithEvent ? EventoQuery::getCurrentEvent()->getTitulo() . ' - ' . $title : $title ?></title>
+            <title><?= Html::e($prefixWithEvent ? EventoQuery::getCurrentEvent()->getTitulo() . ' - ' . $title : $title) ?></title>
         </head>
         <script id="js">
             $(function(){

@@ -1,12 +1,14 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\LogQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Model\Prova;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 use DateTimeZone;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_provas.php"); exit; }
@@ -14,6 +16,11 @@ if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: ad
 $_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
+
+// Every act changes something (even Refresh Pontos rewrites every team's
+// points): no act runs without the form's token, which also refuses a GET
+// link carrying one (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
@@ -141,8 +148,10 @@ Template::printHeader("Detalhes de Prova", false);
 <div style="max-width: 1000px; margin: 0 auto; height:100vh;">
 <?php if ($nova) { ?>
     <form action="prova.php?nova=true" method="POST">
+        <?= Csrf::field() ?>
 <?php } else { ?>
-    <form action="prova.php?id=<?= $prova->getProvaId() ?>" method="POST">
+    <form action="prova.php?id=<?= Html::e(rawurlencode($prova->getProvaId())) ?>" method="POST">
+        <?= Csrf::field() ?>
 <?php } ?>
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
@@ -150,7 +159,7 @@ Template::printHeader("Detalhes de Prova", false);
                     <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                         <span style="float:left"><a href="admin_provas.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
                         <span style="float:right"><a href="ajuda_prova.php" target="_blank" style="color: white; font-size: 12px;">Ajuda&nbsp;</a></span>
-                        <span style="font-size: 28px;"><?= $nova?'Nova Prova':$prova->getNome() ?></span> <br />
+                        <span style="font-size: 28px;"><?= $nova?'Nova Prova':Html::e($prova->getNome()) ?></span> <br />
                     </th>
                 </tr>
             </thead>
@@ -162,15 +171,15 @@ Template::printHeader("Detalhes de Prova", false);
                 <?php } ?>
                 <tr>
                     <td>Evento</td>
-                    <td><input style="width:700px;" type="text" name="evento_id" disabled value="<?= $currentEventId ?>"/></td>
+                    <td><input style="width:700px;" type="text" name="evento_id" disabled value="<?= Html::field($currentEventId) ?>"/></td>
                 </tr>
                 <tr>
                     <td>ID Prova</td>
-                    <td><input style="width:700px;" type="text" name="prova_id" maxlength="3" <?= $nova?'':'disabled' ?> value="<?= $nova?'':$prova->getProvaId() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="prova_id" maxlength="3" <?= $nova?'':'disabled' ?> value="<?= $nova?'':Html::field($prova->getProvaId()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Nome Prova</td>
-                    <td><input style="width:700px;" type="text" name="nome" value="<?= $nova?'':$prova->getNome() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="nome" value="<?= $nova?'':Html::field($prova->getNome()) ?>" /></td>
                 </tr>
                 <tr>
                     <td rowspan="2">Parâmetros<br /><a href="ajuda_prova.php" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
@@ -191,7 +200,7 @@ Template::printHeader("Detalhes de Prova", false);
                             <?php
                                 foreach($bkNomeados as $k=>$bk) {
                             ?>
-                                <option value="<?= $k ?>"><?= $k ?></option>
+                                <option value="<?= Html::field($k) ?>"><?= Html::e($k) ?></option>
                             <?php
                                 }
                             ?>
@@ -211,14 +220,14 @@ Template::printHeader("Detalhes de Prova", false);
                             echo htmlspecialchars($_POST['params'] ?? '');
                         } else {
                             $params = $nova ? null : $prova->getParams();
-                            echo $params === null ? '' : json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                            echo $params === null ? '' : Html::field(json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
                         }
                     ?></textarea></td>
                 </tr>                
                 <?php if (!$nova) { ?>
                 <tr>
                     <td>Totais</td>
-                    <td><textarea style="width:700px;min-height:200px;" disabled><?= json_encode($prova->getTotals(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></textarea></td>
+                    <td><textarea style="width:700px;min-height:200px;" disabled><?= Html::field(json_encode($prova->getTotals(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></textarea></td>
                 </tr>
                 <?php } ?>
             </tbody>
@@ -250,7 +259,7 @@ Template::printHeader("Detalhes de Prova", false);
                 ?>
                 
                 <tr>
-                    <th style="height: 30px;" colspan="2"><a style="color:white;" href="torneio.php?id=<?= $prova->getProvaId() ?>" target="_blank">Administrar Chaveamento</a></th>
+                    <th style="height: 30px;" colspan="2"><a style="color:white;" href="torneio.php?id=<?= Html::e(rawurlencode($prova->getProvaId())) ?>" target="_blank">Administrar Chaveamento</a></th>
                 </tr>
                 <?php } ?>
             </tfoot>
@@ -260,8 +269,10 @@ Template::printHeader("Detalhes de Prova", false);
     
 
     <script type="text/javascript">
-        const atual = <?= $nova?'[]':json_encode($prova->getParams()) ?>;
-        const backs = <?= (!$nova && $prova->getParamsBackup())?$prova->getParamsBackup():'{}' ?>;
+        // Html::js, not plain json_encode: a name or value holding "</script>"
+        // would end this block. The backups were printed as stored, raw.
+        const atual = <?= $nova?'[]':Html::js($prova->getParams()) ?>;
+        const backs = <?= (!$nova && $prova->getParamsBackup())?Html::js(json_decode($prova->getParamsBackup()) ?? new \stdClass()):'{}' ?>;
 
         const paramsEl = document.getElementById("params");
         const selectEl = document.getElementById("nomeado");

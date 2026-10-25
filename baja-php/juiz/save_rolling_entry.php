@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\Input;
@@ -16,6 +17,9 @@ $_page = $_REQUEST['p'];
 $_team = is_string($_REQUEST['team'] ?? null) ? $_REQUEST['team'] : '';
 
 Session::permissionCheck($_page);
+// Before anything is saved: a request without the form's token (another
+// site submitting it with the judge's session) changes nothing.
+Csrf::enforce();
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $equipe = $_team === '' ? null : EquipeQuery::create()->filterByEventoId($currentEventId)->findOneByEquipeId($_team);

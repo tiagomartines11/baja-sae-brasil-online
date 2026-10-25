@@ -1,11 +1,16 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
+
+// Creating a user is a change: refused without the form's token (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 if (@$_REQUEST['act'] == 'create') {
     $username = trim($_POST['username'] ?? '');
@@ -54,14 +59,15 @@ Template::printHeader("Usuários", false, false);
         <tbody>
 <?php foreach ($users as $u) { ?>
             <tr>
-                <td class="username"><?= htmlspecialchars($u->getUsername() ?? '') ?></td>
+                <td class="username"><?= Html::e($u->getUsername()) ?></td>
                 <td style="text-align: center;"><?= count(array_diff($u->getPermissions(), \Baja\Model\User::SENTINEL_PERMISSIONS)) ?></td>
-                <td style="text-align: center;"><a href="admin_usuario.php?id=<?= $u->getUserId() ?>"><span>&nbsp;✏️&nbsp;</span></a></td>
+                <td style="text-align: center;"><a href="admin_usuario.php?id=<?= Html::e($u->getUserId()) ?>"><span>&nbsp;✏️&nbsp;</span></a></td>
             </tr>
 <?php } ?>
         </tbody>
         <tfoot>
             <form action="admin_usuarios.php?act=create" method="POST">
+            <?= Csrf::field() ?>
             <tr>
                 <th colspan="3" style="height: 30px;">
                     Novo usuário:

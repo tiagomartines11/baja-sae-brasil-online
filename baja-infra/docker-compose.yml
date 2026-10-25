@@ -132,9 +132,9 @@ services:
       ENV: ${ENV}
       # Keys the /buscar per-document backoff. See .env.example.
       CERT_BACKOFF_SECRET: ${CERT_BACKOFF_SECRET}
-      # /requerimento, the participant-facing correction form. See
-      # .env.example; the notification recipients are derived from the
-      # `certificados` permission, and this list is added to them.
+      # /requerimento, the participant-facing correction form. Who gets the
+      # notification: this list when it has a valid address, otherwise the
+      # users with the `certificados` or `admin` permission. See .env.example.
       CERT_REPORT_EMAILS: ${CERT_REPORT_EMAILS}
       # Cloudflare Turnstile, the anti-robot check on that form. Unset means
       # the check is skipped and said to be skipped, not that the form breaks.
@@ -186,6 +186,9 @@ services:
       API_CORS_ORIGINS: ${API_CORS_ORIGINS}
       STORAGE_ENCRYPTION_KEY: ${STORAGE_ENCRYPTION_KEY}
       LOG_LEVEL: ${LOG_LEVEL}
+      # Which engine works out prova and resultado formulas: eval (blank, the
+      # default), safe or shadow. See .env.example and docs/formula-engine.md.
+      FORMULA_ENGINE: ${FORMULA_ENGINE:-}
       # Text-to-speech for timer sounds. Unset hides the feature.
       TTS_URL: http://tts:5000
     volumes:

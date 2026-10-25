@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Review\ManualScoreFields;
 use Baja\Model\EquipeQuery;
@@ -8,6 +9,7 @@ use Baja\Model\EventoQuery;
 use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
@@ -26,18 +28,23 @@ $nota = InputQuery::create()->filterByEventoId($currentEventId)->filterByProvaId
 
 Template::printHeader($prova->getNome(), false);
 
+// ?p= and ?t= come from the URL: escaped like the stored names, or a crafted
+// link would run a script in the judge's browser.
+$entryQuery = 'p=' . rawurlencode((string)$_page) . '&t=' . rawurlencode((string)$_team);
+
 echo '
 <table class="tablesorter-blue" style="margin: 0 auto; width: 250px; border: solid 2px black; border-collapse: collapse">
     <thead>
     <tr>
         <th colspan="2" style="border: solid 2px black; padding-bottom: 20px;" class="sorter-false">
-        <span style="font-size: 28px; line-height: 34px;">'.$prova->getNome().'</span> <br />
-        <span style="font-size: 40px; line-height: 56px;">Carro #'.$equipe->getEquipeId().'</span> <br />
-        <span style="font-size: 10px">'.$equipe->getEquipe().'</span> <br />
-        <span style="font-size: 18px">'.$equipe->getEscola().'</span> <br />
+        <span style="font-size: 28px; line-height: 34px;">'.Html::e($prova->getNome()).'</span> <br />
+        <span style="font-size: 40px; line-height: 56px;">Carro #'.Html::e($equipe->getEquipeId()).'</span> <br />
+        <span style="font-size: 10px">'.Html::e($equipe->getEquipe()).'</span> <br />
+        <span style="font-size: 18px">'.Html::e($equipe->getEscola()).'</span> <br />
         </th>
         </tr>
-        <form action="save_entry.php?p='.$_page.'&amp;t='.$_team.'" method="POST">
+        <form action="save_entry.php?'.Html::e($entryQuery).'" method="POST">
+        '.Csrf::field().'
     </thead>
 ';
 
@@ -45,7 +52,7 @@ echo '
 if (!empty($entradaRecusada)) {
     echo '<tr><td colspan="2" style="color: red; font-weight: bold;">Nada foi salvo. Corrija e salve de novo:<ul>';
     foreach ($entradaRecusada as $erro) {
-        echo '<li>' . htmlspecialchars($erro) . '</li>';
+        echo '<li>' . Html::e($erro) . '</li>';
     }
     echo '</ul></td></tr>';
 }
@@ -64,7 +71,7 @@ foreach ($fields as $k=>$field) {
     // A row created by the engine has no value yet for the fields people type.
     $value = $nota ? ($nota->getDados()->{$field->getCode()} ?? null) : null;
     if (in_array($field->getCode(), $engineOwnedFields, true)) {
-        echo '<tr><td>'.$field->getName().'</td><td style="width: 80px; font-size: 20px;" title="Calculado pela contagem de voltas">'.($value !== null ? htmlspecialchars((string)$value) : '&ndash;').'</td></tr>';
+        echo '<tr><td>'.Html::e($field->getName()).'</td><td style="width: 80px; font-size: 20px;" title="Calculado pela contagem de voltas">'.($value !== null ? Html::e($value) : '&ndash;').'</td></tr>';
         continue;
     }
     if (!empty($entradaRecusada)) {
@@ -93,7 +100,7 @@ foreach ($fields as $k=>$field) {
 </tr>
 <tr>
     <th colspan="2">
-        <a href="dashboard.php?p=<?php echo $_page; ?>" style="color: white; font-size: 12px;">&nbsp;Voltar</a></th>
+        <a href="dashboard.php?p=<?= Html::e(rawurlencode((string)$_page)) ?>" style="color: white; font-size: 12px;">&nbsp;Voltar</a></th>
 </tr>
 </tfoot>
 </form>

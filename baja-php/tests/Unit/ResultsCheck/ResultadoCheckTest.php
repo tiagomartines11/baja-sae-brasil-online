@@ -181,6 +181,8 @@ final class ResultadoCheckTest extends TestCase
     /**
      * No error, yet nobody has a value: likely a variable that is spelled
      * differently in the prova. Only HTML with no text counts as empty too.
+     * The variables themselves are listed too, as unknown (see
+     * UnknownVariablesTest).
      */
     public function testAColumnEmptyForEveryTeamIsReported(): void
     {
@@ -195,6 +197,8 @@ final class ResultadoCheckTest extends TestCase
         $this->assertSame([
             'Column empty for every team | column "Nota" val | no error, but the cell is empty for all 2 rows (no team has a value for $NOTA_FINAL, which may be right)',
             'Column empty for every team | column "Status" val | no error, but the cell is empty for all 2 rows',
+            'Unknown variables | column "Nota" val | $NOTA_FINAL is given by nothing here, so it is empty for every team',
+            'Unknown variables | column "Status" val | $STATUS is given by nothing here, so it is empty for every team',
         ], $problems);
     }
 

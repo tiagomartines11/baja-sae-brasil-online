@@ -1,10 +1,12 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\Evento;
 use Baja\ResultsArchive\Queue;
 use Baja\Session;
+use Baja\Site\Html;
 use DateTimeZone;
 use Propel\Runtime\ActiveQuery\Criteria;
 
@@ -13,6 +15,9 @@ if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) { header("Location: ad
 $_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
+
+// Every act saves or deletes: refused without the form's token, before anything else.
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
     $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
@@ -184,15 +189,17 @@ Template::printHeader("Detalhes do Evento", false);
 <div style="max-width: 1000px; margin: 0 auto; height:100vh;">
 <?php if ($novo) { ?>
     <form action="evento.php?novo=true" method="POST">
+        <?= Csrf::field() ?>
 <?php } else { ?>
-    <form action="evento.php?id=<?= $evento->getEventoId() ?>" method="POST">
+    <form action="evento.php?id=<?= Html::e(rawurlencode($evento->getEventoId())) ?>" method="POST">
+        <?= Csrf::field() ?>
 <?php } ?>    
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
                 <tr style="height: 50px">
                     <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                         <span style="float:left"><a href="admin_eventos.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                        <span style="font-size: 28px;"><?= $novo?'Novo Evento':$evento->getNome(); ?></span> <br />
+                        <span style="font-size: 28px;"><?= $novo?'Novo Evento':Html::e($evento->getNome()); ?></span> <br />
                     </th>
                 </tr>
             </thead>
@@ -209,23 +216,23 @@ Template::printHeader("Detalhes do Evento", false);
                 <?php } ?>
                 <tr>
                     <td>ID Evento</td>
-                    <td><input style="width:700px;" type="text" name="evento_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':$evento->getEventoId() ?>"/></td>
+                    <td><input style="width:700px;" type="text" name="evento_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':Html::field($evento->getEventoId()) ?>"/></td>
                 </tr>
                 <tr>
                     <td>Título</td>
-                    <td><input style="width:700px;" type="text" name="titulo" value="<?= $novo?'':$evento->getTitulo() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="titulo" value="<?= $novo?'':Html::field($evento->getTitulo()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Nome</td>
-                    <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':$evento->getNome() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':Html::field($evento->getNome()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Tipo</td>
-                    <td><input style="width:700px;" type="text" name="programa" value="<?= $novo?'':$evento->getTipo() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="programa" value="<?= $novo?'':Html::field($evento->getTipo()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Ano</td>
-                    <td><input style="width:700px;" type="number" name="ano" value="<?= $novo?'':$evento->getAno() ?>" /></td>
+                    <td><input style="width:700px;" type="number" name="ano" value="<?= $novo?'':Html::field($evento->getAno()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Menu<br /><a href="ajuda_menu.php" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
@@ -235,7 +242,7 @@ Template::printHeader("Detalhes do Evento", false);
                             echo htmlspecialchars($_POST['menu'] ?? '');
                         } else {
                             $menu = $novo ? null : $evento->getMenu();
-                            echo $menu === null ? '' : json_encode($menu, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                            echo $menu === null ? '' : Html::field(json_encode($menu, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
                         }
                     ?></textarea></td>
                 </tr>
@@ -286,23 +293,23 @@ Template::printHeader("Detalhes do Evento", false);
                 </tr>
                 <tr>
                     <td>Data Evento</td>
-                    <td><input style="width:700px;" type="text" name="data" value="<?= $novo?'':$evento->getData() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="data" value="<?= $novo?'':Html::field($evento->getData()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Local Evento</td>
-                    <td><input style="width:700px;" type="text" name="local" value="<?= $novo?'':$evento->getLocal() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="local" value="<?= $novo?'':Html::field($evento->getLocal()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Presidente SAE</td>
-                    <td><input style="width:700px;" type="text" name="presidente" value="<?= $novo?'':$evento->getPresidente() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="presidente" value="<?= $novo?'':Html::field($evento->getPresidente()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Mandato Presidente</td>
-                    <td><input style="width:700px;" type="text" name="mandato" value="<?= $novo?'':$evento->getMandatoPresidente() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="mandato" value="<?= $novo?'':Html::field($evento->getMandatoPresidente()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Carga Horária</td>
-                    <td><input style="width:700px;" type="number" name="carga_horaria" value="<?= $novo?'':$evento->getCargaHoraria() ?>" min="1" max="9999"/></td>
+                    <td><input style="width:700px;" type="number" name="carga_horaria" value="<?= $novo?'':Html::field($evento->getCargaHoraria()) ?>" min="1" max="9999"/></td>
                 </tr>                
             </tbody>
             <tfoot>

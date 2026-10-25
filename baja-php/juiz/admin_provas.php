@@ -1,14 +1,21 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
+
+// Both acts below change something: refused without the form's token, before
+// anything else. They used to be plain links, so a link or an <img> on any
+// other page could flip a prova's status or the event's spoilers.
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
 $users = UserQuery::create()->find();
@@ -40,7 +47,7 @@ Template::printHeader("Admin");
             <tr style="height: 50px;">
                 <th colspan="5" class="sorter-false">
                     <span style="float:left;"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span> 
-                    <span style="font-size: 28px;">Provas (<?= $evento ?>)</span>
+                    <span style="font-size: 28px;">Provas (<?= Html::e($evento) ?>)</span>
                 </th>
             </tr>
             <tr> 
@@ -55,11 +62,18 @@ Template::printHeader("Admin");
 
 <?php foreach ($provas as $p) { ?>
             <tr>
-                <td><?= $p->getProvaId() ?></td>
-                <td><?= $p->getNome() ?></td>
-                <td><a href='admin_provas.php?act=chstatus&prova=<?= $p->getProvaId() ?>'><?= $p->getStatus() ?></a></td>
-                <td><a href='prova.php?id=<?= $p->getProvaId() ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
-                <td><a href='prova_log.php?id=<?= $p->getProvaId() ?>'>&nbsp;👁️&nbsp;</a></td>
+                <td><?= Html::e($p->getProvaId()) ?></td>
+                <td><?= Html::e($p->getNome()) ?></td>
+                <td>
+                    <form action="admin_provas.php" method="POST" style="margin: 0;">
+                        <?= Csrf::field() ?>
+                        <input type="hidden" name="act" value="chstatus" />
+                        <input type="hidden" name="prova" value="<?= Html::field($p->getProvaId()) ?>" />
+                        <button type="submit" style="background: none; border: 0; padding: 0; color: #00e; text-decoration: underline; cursor: pointer; font: inherit;"><?= Html::e($p->getStatus()) ?></button>
+                    </form>
+                </td>
+                <td><a href='prova.php?id=<?= Html::e(rawurlencode($p->getProvaId())) ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
+                <td><a href='prova_log.php?id=<?= Html::e(rawurlencode($p->getProvaId())) ?>'>&nbsp;👁️&nbsp;</a></td>
             </tr>
 <?php } ?>
         </tbody>
@@ -75,6 +89,7 @@ Template::printHeader("Admin");
     <br /><br />
 
     <form action="admin_provas.php?act=spoilers" method="POST">
+        <?= Csrf::field() ?>
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
             <tr style="height: 50px">

@@ -7,6 +7,7 @@ use Baja\Model\ResultadoQuery;
 use Baja\Model\InputQuery;
 use Baja\Site\CachePolicy;
 use Baja\Site\CleanUrl;
+use Baja\Site\Html;
 
 $_evento = '19SU';
 $_prova = '19SU_END';
@@ -37,7 +38,7 @@ foreach ($i as $input) {
 
 echo '<table>';
 foreach ($vars as $v) {
-    echo "<tr><td>{$v["NUM"]}</td>";
-    echo "<td>{$v["VOLTAS"]}</td></tr>";
+    echo "<tr><td>" . Html::e($v["NUM"]) . "</td>";
+    echo "<td>" . Html::e($v["VOLTAS"] ?? null) . "</td></tr>";
 }
 echo '</table>';

@@ -1,10 +1,12 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\EquipeQuery;
 use Baja\Model\Equipe;
 use Baja\Session;
+use Baja\Site\Html;
 use DateTimeZone;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_equipes.php"); exit; }
@@ -12,6 +14,9 @@ if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: ad
 $_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
+
+// Every act saves or deletes: refused without the form's token, before anything else.
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
@@ -101,42 +106,44 @@ Template::printHeader("Detalhes do Evento", false);
 <div style="max-width: 1000px; margin: 0 auto; height:100vh;">
 <?php if ($novo) { ?>
     <form action="equipe.php?nova=true" method="POST">
+        <?= Csrf::field() ?>
 <?php } else { ?>
-    <form action="equipe.php?id=<?= $equipe->getEquipeId() ?>" method="POST">
+    <form action="equipe.php?id=<?= Html::e(rawurlencode($equipe->getEquipeId())) ?>" method="POST">
+        <?= Csrf::field() ?>
 <?php } ?>    
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
                 <tr style="height: 50px">
                     <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                         <span style="float:left"><a href="admin_equipes.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                        <span style="font-size: 28px;"><?= $novo?'Nova equipe':('Equipe '.$equipe->getEquipeId()); ?> (<?= $currentEventId ?>)</span> <br />
+                        <span style="font-size: 28px;"><?= $novo?'Nova equipe':('Equipe '.Html::e($equipe->getEquipeId())); ?> (<?= Html::e($currentEventId) ?>)</span> <br />
                     </th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>Carro</td>
-                    <td><input style="width:700px;" type="number" min="1" max="999" name="equipe_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':$equipe->getEquipeId() ?>"/></td>
+                    <td><input style="width:700px;" type="number" min="1" max="999" name="equipe_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':Html::field($equipe->getEquipeId()) ?>"/></td>
                 </tr>
                 <tr>
                     <td>Equipe</td>
-                    <td><input style="width:700px;" type="text" name="equipe" value="<?= $novo?'':$equipe->getEquipe() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="equipe" value="<?= $novo?'':Html::field($equipe->getEquipe()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Equipe Curto<br/><small>(Para overlays de transmissão ao vivo)</small></td>
-                    <td><input style="width:700px;" type="text" name="equipe_curto" value="<?= $novo?'':$equipe->getEquipeCurto() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="equipe_curto" value="<?= $novo?'':Html::field($equipe->getEquipeCurto()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Escola</td>
-                    <td><input style="width:700px;" type="text" name="escola" value="<?= $novo?'':$equipe->getEscola() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="escola" value="<?= $novo?'':Html::field($equipe->getEscola()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Escola Curto<br/><small>(Para overlays de transmissão ao vivo)</small></td>
-                    <td><input style="width:700px;" type="text" name="escola_curto" value="<?= $novo?'':$equipe->getEscolaCurto() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="escola_curto" value="<?= $novo?'':Html::field($equipe->getEscolaCurto()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Cidade</td>
-                    <td><input style="width:700px;" type="text" name="cidade" value="<?= $novo?'':$equipe->getCidade() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="cidade" value="<?= $novo?'':Html::field($equipe->getCidade()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Estado</td>

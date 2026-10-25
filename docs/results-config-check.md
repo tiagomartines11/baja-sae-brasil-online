@@ -37,9 +37,29 @@ For every resultado of every event (or of `--events`):
 3. **Columns empty for every team** although no formula raised an error.
    Often a variable spelled differently from the prova's, sometimes fine (no
    team was given a penalty).
+4. **Unknown variables**: a variable a formula reads that nothing gives it
+   at that place, so it is empty for every team. Almost always a typo. The
+   formula is read by the new formula engine's parser
+   ([`formula-engine.md`](formula-engine.md)), which lists its variables
+   without running it. Known are the team's own (R7), anything the inputs
+   give, anything the resultado's provas name in their config (a penalty
+   prova where nobody was penalised has no row, yet `$PENPTS` is no typo),
+   and the columns to the left (R1). A variable that only exists further
+   right is said to be still empty there. A name that differs only in case
+   from a known one gets a hint:
+
+   ```
+   column "Total" val
+     formula: $ACE_PTS + $Ace_pts
+     $Ace_pts is given by nothing here, so it is empty for every team (there is $ACE_PTS; names care about case)
+   ```
 
 It also runs every **prova**'s formulas (`params`: `vars`, `min_max`,
-`pontos`) for every team, and reports their errors. Those are report-only:
+`pontos`) for every team, and reports their errors and unknown variables. A
+`vars` formula sees only the input fields (and, in a rolling prova, the
+entry's `ts`); `min_max` also the vars; `pontos` also the totals (`$Xmax`,
+`$Xmin`, `$Xcom`, `$Xcount`, `$Xsum`, `$Xavg`) and the `pontos` before it in
+alphabetical order, which is the order they are worked out. Those are report-only:
 saving a prova recomputes every stored point (BAJAAPP-56), so a person decides.
 Tournament resultados (`"type": "tournament"`) have no columns and are skipped.
 

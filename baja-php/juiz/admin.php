@@ -7,6 +7,7 @@ use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
 
@@ -24,7 +25,7 @@ Template::printHeader("Admin");
             <th colspan="2" class="sorter-false">
                 <!-- Way back to the judge dashboard, same "Voltar" link as admin_provas.php -->
                 <span style="float:left"><a href="index.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                <span style="font-size: 28px;">Administração evento (<?= $evento ?>)</span>
+                <span style="font-size: 28px;">Administração evento (<?= Html::e($evento) ?>)</span>
             </th>
         </tr>
     </thead>

@@ -8,7 +8,8 @@ use Baja\Model\Prova;
 
 /**
  * Runs a prova's formulas ("params": vars, min_max, pontos) for every team
- * and lists the errors they raise. Report only: the check never proposes a
+ * and lists the errors they raise, and the variables they read that
+ * nothing gives them (UnknownVariables). Report only: the check never proposes a
  * fix for a prova, because saving a prova recomputes every stored point
  * (BAJAAPP-56).
  *
@@ -57,6 +58,7 @@ final class ProvaCheck
                 }
             }
         }
+        array_push($findings, ...UnknownVariables::ofProva($prova, $inputs));
         return ['teams' => $teams, 'findings' => $findings];
     }
 }

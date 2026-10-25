@@ -1,14 +1,19 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
+
+// Every act changes a user's permissions: refused without the form's token (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
 $provas = ProvaQuery::create()->filterByEventoId($evento)->find();
@@ -58,20 +63,20 @@ Template::printHeader("Admin");
             <tr style="height: 50px;">
                 <th colspan="<?= 1 + count($provas) ?>" class="sorter-false">
                     <span style="float:left;"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                    <span style="font-size: 28px;">Usuários (<?= $evento ?>)</span>
+                    <span style="font-size: 28px;">Usuários (<?= Html::e($evento) ?>)</span>
                 </th>
             </tr>
             <tr>
                 <th class="sorter-false">Username</th>
 <?php foreach ($provas as $p){?>
-                <th class="sorter-false" style="width: 20px; height: 60px;"><div style="height:20px; transform: rotate(-90deg);"><?= strtoupper($p->getProvaId()) ?></div></th>
+                <th class="sorter-false" style="width: 20px; height: 60px;"><div style="height:20px; transform: rotate(-90deg);"><?= Html::e(strtoupper($p->getProvaId())) ?></div></th>
 <?php } ?>
             </tr>
         </thead>
         <tbody>
 <?php foreach ($users as $u) { ?>
             <tr>
-                <td><a href='user.php?id=<?= $u->getUserId() ?>'><?= $u->getUsername() ?></a></td>
+                <td><a href='user.php?id=<?= Html::e($u->getUserId()) ?>'><?= Html::e($u->getUsername()) ?></a></td>
         
 <?php foreach ($provas as $p) { ?>
                 <td><?= array_search($p->getFullCode(), $u->getPermissions()) === false ? "" : "J" ?></td>
@@ -81,6 +86,7 @@ Template::printHeader("Admin");
         </tbody>
         <tfoot>
             <form action="admin_users.php?act=create" method="POST">
+                <?= Csrf::field() ?>
                 <tr>
                     <td style="text-align: left;">
                         Username:<br />
@@ -88,7 +94,7 @@ Template::printHeader("Admin");
                         <input type="hidden" name="c[]" value="index"><input type="hidden" name="j[]" value="index">
                     </td>
 <?php foreach ($provas as $p) { ?>
-                    <td><input type="checkbox" name="j[]" value="<?= $p->getFullCode() ?>"><br /> J <br /></td>
+                    <td><input type="checkbox" name="j[]" value="<?= Html::field($p->getFullCode()) ?>"><br /> J <br /></td>
 <?php } ?>
                 </tr>
                 <tr>

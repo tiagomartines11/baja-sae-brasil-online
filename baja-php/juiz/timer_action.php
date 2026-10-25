@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\Map\TimerTableMap;
 use Propel\Runtime\Propel;
 
@@ -27,6 +28,14 @@ $acoes = (is_array($input) && isset($input['acoes']) && is_array($input['acoes']
 if ($somenteLeitura && count($acoes)) {
     http_response_code(403);
     die(json_encode(['ok' => false]));
+}
+
+// Opened by id, the request is authenticated by the session cookie, which the
+// browser also sends for a page on another site: actions then need the
+// page's token too (Baja\Auth\Csrf). Opened by key, the key is the
+// credential and no other site has it. Polling changes nothing either way.
+if (count($acoes) && !TimerAcesso::porChave()) {
+    Csrf::enforce();
 }
 
 if (count($acoes) && count($timer->getConfig()->etapas ?? [])) {
