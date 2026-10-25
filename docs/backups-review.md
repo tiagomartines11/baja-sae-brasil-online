@@ -114,7 +114,7 @@ Now there is a restore section for each piece, and a nine-step
 fresh-server order: stack, databases (seed dropped first), backup user,
 files from the same run, erasure log from the newest run and its replay,
 migrations and caches, the backup itself. **Unproven until the first human
-drill.** That is checklist item 13, and the only way to find what the doc
+drill.** It is in the checklist below, and it is the only way to find what the doc
 still gets wrong.
 
 ## Maintainer setup checklist
