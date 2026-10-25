@@ -258,6 +258,24 @@ jobs:
       - name: Results snapshots match
         run: php scripts/results-snapshot.php --check --jobs 4
 
+      # The backup MySQL user against this real server: its exact grants,
+      # that it cannot read mysql.user (password hashes) or write, that the
+      # backup's own dump code still dumps all three databases with only
+      # those grants, and that restoring a dump replaces a database instead
+      # of merging into it. Last, because it restores baja_resultados over
+      # itself; the forum seeds (03, 04) are loaded only for this.
+      - name: Backup user and dumps
+        working-directory: baja-infra
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_BACKUP_USER: backup
+          MYSQL_BACKUP_PASSWORD: unused-in-ci
+        run: |
+          mysql -h127.0.0.1 -uroot -proot < mysql/init/03-seed-phpbb-baja.sql
+          mysql -h127.0.0.1 -uroot -proot < mysql/init/04-seed-phpbb-formula.sql
+          tests/backup/dump-with-backup-user.sh
+
   infra:
     name: Infrastructure (baja-infra)
     runs-on: ubuntu-latest

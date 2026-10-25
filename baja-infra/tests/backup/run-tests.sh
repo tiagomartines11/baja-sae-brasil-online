@@ -29,6 +29,9 @@
 #     refuses to contain anything that looks like personal data;
 #   - the manifest is uploaded after everything else, in every tier;
 #   - the erasure log survives a backup and restore with its chain intact;
+#   - the copy of the stack's .env is readable by the escrow key ALONE,
+#     is uploaded again only when the .env changed, and the manifest still
+#     names a valid copy when it did not;
 #   - an event archive records the event, the time, the code version and
 #     the number of snapshots, restores, and passes the verifier.
 #
@@ -221,6 +224,11 @@ make_run_dir() {
     jq -n --arg s "$(backup_encrypt "${base}/erasure-log.jsonl" "${run}/erasure-log.jsonl.age")" \
         '{sha256: $s, artifact_bytes: 1}' > "${run}/artifact.erasure-log.json"
 
+    # What backup_env_stage records about the .env copy (here: unchanged,
+    # pointing at an earlier copy; the .env tests below make real ones).
+    jq -n '{file: "env.age", folder: "secrets/20251201T070000Z", recipients: "escrow only",
+        plaintext_sha256: "aa", sha256: "bb", uploaded_this_run: false}' > "${run}/env.manifest.json"
+
     backup_assemble_manifest "$run" 20260101T040000Z 2026-01-01T04:00:00Z test 8.4.0 v4-2-gabc1234 \
         > "${run}/manifest.json"
     printf '%s' "$run"
@@ -264,7 +272,8 @@ test_manifest_lists_every_artifact() {
     run="$(make_run_dir "$base")"
     m="${run}/manifest.json"
 
-    same "$(jq -r .schema_version "$m")" 3 "schema_version"
+    same "$(jq -r .schema_version "$m")" 4 "schema_version"
+    same "$(jq -r .env.folder "$m")" secrets/20251201T070000Z "the .env copy it names"
     same "$(jq -r .code_version "$m")" v4-2-gabc1234 "code_version"
     same "$(jq -c '.age_recipients | length' "$m")" 2 "number of recipients"
     same "$(jq -r '.age_recipients[0]' "$m")" "$AGE_RECIPIENT_ESCROW" "escrow recipient"
@@ -366,6 +375,98 @@ test_erasure_log_round_trip() {
     verify_erasure_log
     same "${OTHER_RESULT[erasure-log]}" "OK (2 entries, chain intact)" "verifier result"
     [[ ! -e "${run}/erasure-log.jsonl" ]] || fail "the decrypted erasure log was left behind"
+}
+
+# ======================================================================
+# The stack's .env, for recovering every secret from nothing
+# ======================================================================
+
+# A made-up .env. Real ones hold the production passwords; this one holds
+# obviously fake values.
+make_env_file() {
+    printf 'ENV=prod\nMYSQL_ROOT_PASSWORD=%s\nSTORAGE_ENCRYPTION_KEY=%s\n' "$1" "fake-key-for-tests" > "$2"
+}
+
+test_env_copy_is_for_the_escrow_key_only() {
+    # The .env must be readable by the escrow key alone. The verifier key
+    # lives on the server, and the server must never be able to read this.
+    local base="${TMP}/env-escrow"
+    mkdir -p "${base}/run" "${base}/drive"
+    export FAKE_DRIVE="${base}/drive" BACKUP_REMOTE="fake:"
+    make_env_file "not-a-real-password" "${base}/.env"
+    LOG_PREFIX='test'
+    # shellcheck source=backup-lib.sh
+    source "${SCRIPTS}/backup-lib.sh"
+
+    backup_env_stage "${base}/.env" "${base}/run" 20261025T070000Z
+
+    # It is encrypted to exactly ONE recipient, read from the file's header
+    # (no key needed to see how many there are)...
+    same "$(backup_age_x25519_recipients "${base}/run/env.age")" 1 "number of recipients"
+    # ...and that recipient is the escrow key: it decrypts to the .env...
+    age -d -i "${TMP}/keys/escrow.key" "${base}/run/env.age" > "${base}/decrypted"
+    diff "${base}/.env" "${base}/decrypted" || fail "the escrow key does not give back the .env"
+    # ...while the verifier key cannot open it.
+    if age -d -i "${TMP}/keys/verifier.key" "${base}/run/env.age" >/dev/null 2>&1; then
+        fail "the verifier key can decrypt the .env copy"
+    fi
+    # For comparison, every other artifact has two recipients.
+    backup_encrypt "${base}/.env" "${base}/other.age" >/dev/null
+    same "$(backup_age_x25519_recipients "${base}/other.age")" 2 "recipients of an ordinary artifact"
+
+    # Nothing in the clear-text descriptors holds a secret.
+    if grep -q 'not-a-real-password' "${base}/run/env.json" "${base}/run/env.manifest.json"; then
+        fail "a secret from the .env is in a clear-text file"
+    fi
+}
+
+test_unchanged_env_is_not_uploaded_again() {
+    # Night 1 uploads a copy. Night 2, same .env: nothing new is uploaded,
+    # but the manifest still names night 1's copy, and the verifier's
+    # check of it passes. Night 3, changed .env: a new copy.
+    local base="${TMP}/env-unchanged"
+    mkdir -p "${base}/n1" "${base}/n2" "${base}/n3" "${base}/drive"
+    export FAKE_DRIVE="${base}/drive" FAKE_RCLONE_LOG="${base}/rclone.log" BACKUP_REMOTE="fake:"
+    make_env_file "first-password" "${base}/.env"
+    LOG_PREFIX='test'
+    # shellcheck source=backup-lib.sh
+    source "${SCRIPTS}/backup-lib.sh"
+
+    # Night 1.
+    backup_env_stage "${base}/.env" "${base}/n1" 20261024T070000Z
+    backup_env_upload "${base}/n1"
+    same "$(jq -r .uploaded_this_run "${base}/n1/env.manifest.json")" true "night 1 uploads"
+    same "$(grep '^copyto' "${base}/rclone.log" | tail -1 | awk '{print $3}')" \
+         "fake:secrets/20261024T070000Z/env.json" "env.json is the last upload of a copy"
+
+    # A copy that died before its env.json is not "the last uploaded copy".
+    mkdir -p "${FAKE_DRIVE}/secrets/20261024T080000Z"
+    : > "${FAKE_DRIVE}/secrets/20261024T080000Z/env.age"
+
+    # Night 2: the same .env.
+    backup_env_stage "${base}/.env" "${base}/n2" 20261025T070000Z
+    backup_env_upload "${base}/n2"
+    same "$(jq -r .uploaded_this_run "${base}/n2/env.manifest.json")" false "night 2 uploads"
+    same "$(jq -r .folder "${base}/n2/env.manifest.json")" secrets/20261024T070000Z "the copy night 2 names"
+    same "$(jq -r .sha256 "${base}/n2/env.manifest.json")" \
+         "$(jq -r .sha256 "${base}/n1/env.manifest.json")" "the checksum night 2 lists"
+    [[ ! -e "${FAKE_DRIVE}/secrets/20261025T070000Z" ]] || fail "night 2 uploaded a copy of an unchanged .env"
+
+    # The weekly verifier checks the copy night 2's manifest names: on the
+    # Drive, intact, one recipient. It never decrypts it.
+    jq -n --slurpfile e "${base}/n2/env.manifest.json" '{env: $e[0]}' > "${base}/n2/manifest.json"
+    export AGE_IDENTITY_VERIFIER="${TMP}/keys/verifier.key" VERIFY_REMOTE="fake:"
+    # shellcheck source=verify-db.sh
+    source "${SCRIPTS}/verify-db.sh"
+    WORK_DIR="${base}/n2"
+    verify_env_copy
+    same "${OTHER_RESULT[env]}" "OK (secrets/20261024T070000Z, escrow only, not decrypted)" "verifier"
+
+    # Night 3: the .env changed (a password was rotated).
+    make_env_file "rotated-password" "${base}/.env"
+    backup_env_stage "${base}/.env" "${base}/n3" 20261026T070000Z
+    same "$(jq -r .uploaded_this_run "${base}/n3/env.manifest.json")" true "night 3 uploads"
+    same "$(jq -r .folder "${base}/n3/env.manifest.json")" secrets/20261026T070000Z "the copy night 3 names"
 }
 
 # ======================================================================
@@ -475,6 +576,8 @@ run_test "the manifest lists every artifact with its checksum, and no file names
 run_test "the manifest refuses anything that looks like personal data"           test_manifest_refuses_personal_data
 run_test "the manifest is uploaded last, in daily/, monthly/ and yearly/"        test_manifest_is_uploaded_last_in_every_tier
 run_test "the erasure log survives backup and restore with its chain intact"     test_erasure_log_round_trip
+run_test "the .env copy is encrypted to exactly one recipient, the escrow key" test_env_copy_is_for_the_escrow_key_only
+run_test "an unchanged .env is not uploaded again, and its copy still checks"  test_unchanged_env_is_not_uploaded_again
 run_test "an event archive records event, time, code version and snapshot count, and restores" test_event_archive_manifest_and_restore
 run_test "an event archive refuses input that is not one event's snapshots"      test_event_archive_refuses_wrong_input
 echo

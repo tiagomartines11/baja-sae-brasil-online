@@ -436,8 +436,10 @@ backup_file_set_archive() {
 #
 # schema_version history:
 #   2  the three database artifacts only (feature/db-backups, 2026-08)
-#   3  adds file_sets, erasure_log and code_version. The verifier reads
-#      both; a version 2 manifest simply has no file sets to check.
+#   3  adds file_sets, erasure_log and code_version.
+#   4  adds env, the copy of the stack's .env that matches this run.
+#   The verifier reads all of them; an older manifest simply has fewer
+#   things to check.
 backup_assemble_manifest() {
     local run_dir="$1" run_id="$2" created="$3" script_version="$4" mysql_version="$5" code_version="$6"
     local dbs sets erasure name
@@ -458,6 +460,9 @@ backup_assemble_manifest() {
 
     erasure="$(jq -s 'add' "${run_dir}/erasure.json" "${run_dir}/artifact.erasure-log.json")" \
         || die "manifest: the erasure log's facts are missing from ${run_dir}"
+    local env
+    env="$(jq -c . "${run_dir}/env.manifest.json")" \
+        || die "manifest: the .env copy's facts are missing from ${run_dir}"
 
     # The $names are jq variables bound by --arg/--argjson, not shell
     # expansions; the single quotes are what keeps them that way.
@@ -468,8 +473,9 @@ backup_assemble_manifest() {
         --arg code_version "$code_version" \
         --arg escrow "$AGE_RECIPIENT_ESCROW" --arg verifier "$AGE_RECIPIENT_VERIFIER" \
         --argjson dbs "$dbs" --argjson sets "$sets" --argjson erasure "$erasure" \
+        --argjson env "$env" \
         '{
-            schema_version: 3,
+            schema_version: 4,
             run_id: $run_id,
             created_utc: $created,
             script_version: $script_version,
@@ -478,7 +484,8 @@ backup_assemble_manifest() {
             age_recipients: [$escrow, $verifier],
             artifacts: $dbs,
             file_sets: $sets,
-            erasure_log: $erasure
+            erasure_log: $erasure,
+            env: $env
         }'
 }
 
@@ -532,6 +539,94 @@ backup_check_recipients() {
     done
     [[ "$AGE_RECIPIENT_ESCROW" != "$AGE_RECIPIENT_VERIFIER" ]] \
         || die "escrow and verifier age recipients are the same key — the escrow key must never be the one the VPS-side verifier holds"
+}
+
+# ----- The stack's .env (secrets recovery) -----
+#
+# Every run backs up baja-infra/.env, encrypted to the ESCROW recipient
+# ONLY. The verifier key is deliberately not a recipient: the verify
+# stack, and anything else on the server, must never be able to read it,
+# and nothing on the server ever tries. Only an escrow holder, restoring a
+# server from nothing, decrypts it. See "Secrets" in docs/backup-restore.md.
+#
+# It is not stored in the run folder. A copy goes to secrets/<run_id>/
+# only when the .env has changed since the last copy:
+#
+#     secrets/<run_id>/env.age  env.age.sha256  env.json   <- env.json last
+#
+# env.json says what the copy is: the sha256 of the PLAINTEXT .env and of
+# the artifact. Comparing plaintexts is the only way to tell "unchanged",
+# because age output differs on every run. Publishing that hash is safe
+# for this file: it is a digest over dozens of long random secrets, which
+# no one can guess their way to. Every run's manifest names the copy that
+# matches the .env of that night, uploaded or not.
+
+# Number of X25519 recipients an age file is encrypted to, read from its
+# header without any key. age may add a random "grease" stanza; only
+# X25519 ones are recipients.
+backup_age_x25519_recipients() {
+    head -c 65536 "$1" | LC_ALL=C awk '/^---/ { exit } /^-> X25519 / { n++ } END { print n + 0 }'
+}
+
+# The newest COMPLETE copy under secrets/ (one with its env.json), as
+# "<folder>\t<plaintext sha256>\t<artifact sha256>", or nothing.
+backup_env_last_uploaded() {
+    local folders folder desc
+    folders="$(rclone lsf --dirs-only "${BACKUP_REMOTE}secrets/" 2>/dev/null \
+        | sed 's:/*$::' | grep -E '^[0-9]{8}T[0-9]{6}Z$' | sort -r)" || true
+    for folder in $folders; do
+        desc="$(rclone cat "${BACKUP_REMOTE}secrets/${folder}/env.json" 2>/dev/null)" || continue
+        jq -e '.plaintext_sha256 and .sha256' >/dev/null 2>&1 <<< "$desc" || continue
+        printf 'secrets/%s\t%s\t%s\n' "$folder" \
+            "$(jq -r .plaintext_sha256 <<< "$desc")" "$(jq -r .sha256 <<< "$desc")"
+        return 0
+    done
+}
+
+# Decide whether tonight's .env needs a new copy, and stage it if so.
+# Writes <run_dir>/env.manifest.json (for the manifest) and, when a copy
+# is needed, <run_dir>/env.age, env.age.sha256 and env.json.
+backup_env_stage() {
+    local env_file="$1" run_dir="$2" run_id="$3"
+    [[ -f "$env_file" && -r "$env_file" ]] \
+        || die "the stack's .env is not readable at ${env_file} — it is mounted into the backup container by compose"
+
+    local plain last folder sha uploaded
+    plain="$(sha256sum < "$env_file" | cut -d' ' -f1)"
+    last="$(backup_env_last_uploaded)"
+
+    if [[ -n "$last" && "$(cut -f2 <<< "$last")" == "$plain" ]]; then
+        folder="$(cut -f1 <<< "$last")"
+        sha="$(cut -f3 <<< "$last")"
+        uploaded=false
+    else
+        # ESCROW ONLY. Not backup_encrypt, which always adds the verifier.
+        age -r "$AGE_RECIPIENT_ESCROW" -o "${run_dir}/env.age" "$env_file" \
+            || die "age encryption of the .env failed"
+        sha="$(sha256sum "${run_dir}/env.age" | cut -d' ' -f1)"
+        printf '%s  %s\n' "$sha" env.age > "${run_dir}/env.age.sha256"
+        folder="secrets/${run_id}"
+        uploaded=true
+        jq -n --arg run_id "$run_id" --arg plain "$plain" --arg sha "$sha" \
+            '{ run_id: $run_id, file: "env.age", recipients: "escrow only",
+               plaintext_sha256: $plain, sha256: $sha }' > "${run_dir}/env.json"
+    fi
+
+    jq -n --arg folder "$folder" --arg plain "$plain" --arg sha "$sha" --argjson uploaded "$uploaded" \
+        '{ file: "env.age", folder: $folder, recipients: "escrow only",
+           plaintext_sha256: $plain, sha256: $sha, uploaded_this_run: $uploaded }' \
+        > "${run_dir}/env.manifest.json"
+}
+
+# Upload the staged copy, if there is one, env.json last. Before the run's
+# own folders, so a manifest never names a copy that is not there yet.
+backup_env_upload() {
+    local run_dir="$1" folder
+    [[ "$(jq -r .uploaded_this_run "${run_dir}/env.manifest.json")" == "true" ]] || return 0
+    folder="$(jq -r .folder "${run_dir}/env.manifest.json")"
+    rclone_put "${run_dir}/env.age"        "${folder}/env.age"
+    rclone_put "${run_dir}/env.age.sha256" "${folder}/env.age.sha256"
+    rclone_put "${run_dir}/env.json"       "${folder}/env.json"
 }
 
 # ----- Upload -----

@@ -67,7 +67,16 @@ daily/20261025T070000Z/
     baja-app-sons.tar.gz.age          baja-app-sons.tar.gz.age.sha256
     erasure-log.jsonl.age             erasure-log.jsonl.age.sha256
     manifest.json
+
+secrets/20261020T070000Z/            <- only on nights the .env changed
+    env.age   env.age.sha256   env.json
 ```
+
+`secrets/` holds the stack's `.env`, encrypted to the **escrow key
+only**. A new copy is uploaded only when the `.env` changed since the last
+one; every night's manifest names the copy that matches that night's
+`.env` (`env.folder`, `env.sha256`). See
+[Secrets](#secrets-where-they-live-and-how-they-come-back).
 
 | File set | What it holds | Where it lives in production |
 |---|---|---|
@@ -103,12 +112,18 @@ they exist for different reasons.
 | **escrow** | Offline, held by **two maintainers, separately** | The human restore drill, and a real disaster |
 | **verifier** | On the VPS, used by the weekly verify stack | The automated Tuesday check |
 
-Every artifact — dumps, file sets, erasure log, event archives — is
+Every data artifact — dumps, file sets, erasure log, event archives — is
 encrypted to **both**, always, by one function (`backup_encrypt` in
 `scripts/backup-lib.sh`). That is not redundancy for its own sake: the
 escrow private key never touches a server, so if it were not already a
 recipient on every artifact, the day you need it you could not add it
 retroactively.
+
+The one exception is the copy of the `.env` under `secrets/`: it is
+encrypted to the **escrow key alone** (`backup_env_stage`). The verifier
+key lives on the server, and the server must never be able to read a copy
+of its own secrets from the Drive; nothing on the server ever decrypts it,
+and the verify stack checks it without a key (one recipient, checksum).
 
 Only public halves (`age1...`) ever appear in `.env`. The backup refuses
 to start if it finds an `AGE-SECRET-KEY` there, or if the two recipients
@@ -134,32 +149,91 @@ not the same as being unable to *damage* them: see
 
 ---
 
-## Secrets: kept by the maintainers, not by the backups
+## Secrets: where they live, and how they come back
 
-The backups hold data, never the secrets that run the stack. An artifact
-that carried `.env` would carry the database passwords next to the data
-they protect, and the escrow design would no longer matter. So none of
-the following is in any artifact, and every one of them must be kept by
-the maintainers, in the shared password manager entry for the production
-server, **updated in the same sitting as any change on the server**:
+The production `baja-infra/.env` holds every password and key the stack
+runs with. Until this was set up it existed in exactly one place besides
+the server: one maintainer's password manager. That is one lost laptop,
+or one person leaving, away from a server nobody can rebuild. So it now
+lives in three places, chosen so that no single loss, and no single
+compromise, decides:
+
+| Where | What | Who can read it |
+|---|---|---|
+| The Shared Drive, `secrets/<run_id>/env.age` | the whole `.env`, copied whenever it changes | **only the escrow key** — not the server, not the verify stack, not the Drive accounts |
+| Each escrow holder's own password manager | the **escrow private key**, and a current copy of the `.env` | that holder |
+| Offline, kept by each escrow holder (printed, or on a removable drive in a safe place) | the **escrow private key** | whoever holds the paper or drive |
+
+Two people hold the escrow role. Each keeps their own copies; neither
+depends on the other's. The offline copy is the one that survives a lost
+password manager account. **Updating the `.env` on the server needs no
+extra step:** the next nightly run notices the change and uploads a new
+copy. Updating the copies in the holders' password managers is still
+worth doing in the same sitting, because the Drive copy is a night behind.
+
+What is in the `.env` and why each matters:
 
 | Secret | Why it cannot be lost |
 |---|---|
-| the whole production `baja-infra/.env` | every password and key below lives in it; restoring without it means re-creating each one |
-| `STORAGE_ENCRYPTION_KEY` (in `.env`) | `Baja\Util\Encryption` cannot decrypt anything without it, and there is no key versioning. Nothing on `develop` encrypts with it yet, but the first feature that does makes losing it a data loss that no backup can repair |
-| `CERT_BACKOFF_SECRET`, `STAFF_COOKIE_VALUE` (in `.env`) | rotatable, but rotating `STAFF_COOKIE_VALUE` also means editing the Cloudflare cache rule |
-| the two Google service-account JSON keys (`GDRIVE_SA_WRITER_JSON`, `GDRIVE_SA_READER_JSON`) | can be re-issued from the Cloud console by a Shared Drive Manager; keep them so a restore does not wait for that |
-| the verifier age **private** key (`AGE_IDENTITY_VERIFIER`) | without it the weekly verification cannot decrypt; a new pair means only new artifacts are checkable by it |
-| the Cloudflare API token files (`~/.secrets/cloudflare-*.ini`, see `docs/server-migration.md`) | needed to re-issue the TLS certificates |
+| `STORAGE_ENCRYPTION_KEY` | `Baja\Util\Encryption` cannot decrypt anything without it, and there is no key versioning. Nothing on `develop` encrypts with it yet, but the first feature that does makes losing it a data loss no backup can repair. The `.env` copy is what protects it |
+| the MySQL passwords | the restored databases and the forums' `config.php` (rendered at boot) expect them |
+| `CERT_BACKOFF_SECRET`, `STAFF_COOKIE_VALUE`, Turnstile, SMTP, OneSignal, `REMOTE_KEY` | rotatable, but every one of them is a separate chore (`STAFF_COOKIE_VALUE` also lives in the Cloudflare cache rule) |
+| `AGE_RECIPIENT_*`, `GDRIVE_SHARED_DRIVE_ID`, `KUMA_PUSH_URL_*` | public keys and identifiers, needed to make the restored server back itself up again |
 
-The **escrow** private key is not in that entry: it is held offline by
-its two holders, apart from the server's secrets, so that one leaked
-vault does not open every backup.
+Not in the `.env`, and therefore not in the copy:
 
-Things that are deliberately not kept at all, because a fresh server
-makes them again: the Let's Encrypt certificates (`certbot`), the
-Tailscale node key (`tailscale up`), the phpBB `config.php` files
-(rendered from `.env` at boot).
+| Secret | How it comes back |
+|---|---|
+| the Google service-account JSON keys (`GDRIVE_SA_WRITER_JSON`, `GDRIVE_SA_READER_JSON`) | a Shared Drive Manager issues new keys in the Cloud console for the same two accounts; the roles stay |
+| the verifier age **private** key (`AGE_IDENTITY_VERIFIER`) | generate a new pair and put its public half in `.env` as `AGE_RECIPIENT_VERIFIER`. Older artifacts stay readable by the escrow key; the weekly check only ever reads the newest run |
+| the Cloudflare API token files (`~/.secrets/cloudflare-*.ini`, see `docs/server-migration.md`) | issue new tokens in the Cloudflare dashboard |
+| Let's Encrypt certificates, the Tailscale node key, phpBB `config.php` | made again by `certbot`, `tailscale up` and the forum containers' first boot |
+
+The escrow private key is never on a server and never in the repository.
+
+### Restore a server from nothing
+
+For the day there is no server, no `.env` and no maintainer's laptop:
+only **an escrow private key, access to the Shared Drive, and this
+public repository**.
+
+1. **Find the newest complete run** and the `.env` copy it names:
+
+   ```
+   rclone lsd gdrive:daily | tail -3
+   rclone cat gdrive:daily/<newest run>/manifest.json | jq .env
+   ```
+
+   `env.folder` is where the matching `.env` copy is (for example
+   `secrets/20261020T070000Z`).
+2. **Get and decrypt the `.env`**, on your own machine, never on a shared
+   one:
+
+   ```
+   rclone copy gdrive:secrets/20261020T070000Z ./secrets/
+   cd secrets && sha256sum -c env.age.sha256
+   age -d -i /path/to/escrow.key env.age > env
+   ```
+
+   Check that `sha256sum env` equals the manifest's `env.plaintext_sha256`.
+   This file is every production secret in the clear: keep it on an
+   encrypted disk and delete it once it is on the new server.
+3. **Build the server** per `docs/server-migration.md` ("Configuração
+   Sistema", "Deploy do GIT"), cloning this repository, and place the
+   decrypted file as `baja-infra/.env` (mode 0600). Set `TAILSCALE_IP` to
+   the new server's.
+4. **Issue what the `.env` does not hold** (table above): new
+   service-account keys, a new verifier key pair (update
+   `AGE_RECIPIENT_VERIFIER` and `AGE_IDENTITY_VERIFIER`), new Cloudflare
+   tokens, then the TLS certificates.
+5. **Restore the data**: [Restore onto a fresh server](#restore-onto-a-fresh-server)
+   from step 2, with the same escrow key and the same run.
+6. Once the restored server's first nightly run has uploaded, confirm
+   its manifest's `env.folder` is the copy you started from (same `.env`,
+   so nothing new to upload) — or a new one, if step 4 changed it.
+
+The twice-yearly [drill](#human-restore-drill) should, at least once a
+year, start from this section rather than from a running server.
 
 ---
 
@@ -361,9 +435,9 @@ The order matters; each step needs the previous one.
 
 1. **The server and the stack**, per `docs/server-migration.md`
    ("Configuração Sistema" and "Deploy do GIT"), with the production
-   `.env` taken from the maintainers' password manager entry
-   ([Secrets](#secrets-kept-by-the-maintainers-not-by-the-backups)), not
-   from `.env.example`. Do not run its "Migração" part: that pulls from a
+   `.env` from an escrow holder's password manager or from its copy on the
+   Drive ([Restore a server from nothing](#restore-a-server-from-nothing)),
+   not from `.env.example`. Do not run its "Migração" part: that pulls from a
    live production server, and this one is gone.
 2. **Bring the stack up once**, so MySQL initialises its data folder. It
    loads the dev seed and creates the application users with the
@@ -456,9 +530,18 @@ can always be shown later — even after a correction, a code change that
 computes differently, or the event being deleted (BAJAAPP-67).
 
 **How it works.** The page does nothing slow. Saving the event adds one
-row to `evento_arquivamento` (estado `pendente`), in the same transaction
-as the save; unticking the box before the night cancels it. The page shows
-the state next to the checkbox. At night `scripts/backup-run.sh`, after
+row to `evento_arquivamento` (estado `pendente`) right after the save;
+unticking the box before the night cancels it. The page shows the state
+next to the checkbox.
+
+**Saving an event never depends on the queue.** If the row cannot be
+written — most likely because a deploy went out without its migration —
+the event is saved anyway, the error is logged (`docker compose logs
+baja-app`, "results archive request could not be recorded"), and the page
+tells the admin in orange that the archive was not queued. After the fix,
+unticking and ticking **Finalizado?** again queues it. A missing table is
+also caught at night: the job cannot read the queue, and the archive
+monitor alerts. At night `scripts/backup-run.sh`, after
 the backup:
 
 1. runs `php scripts/results-snapshot.php --update --dir <tmp>/snapshots --events <EVT>`
@@ -612,6 +695,7 @@ healthy `baja_resultados`:
 [verify]   phpbb_formula-files: OK (95 files, 21.0 MiB)
 [verify]   baja-app-sons: OK (6 files, 1.2 MiB)
 [verify]   erasure-log: OK (3 entries, chain intact)
+[verify]   env: OK (secrets/20261020T070000Z, escrow only, not decrypted)
 [verify]   events/26BR/20261021T070102Z: OK (58 snapshots, v4-12-gabc1234)
 ```
 
@@ -628,6 +712,8 @@ healthy `baja_resultados`:
 | `FILES DIFFER` / `CONTENT DIFFERS` | The file set does not restore to what was archived. Do not trust it; check the previous run |
 | `ENTRIES DIFFER` / `CHAIN BROKEN` | The erasure log did not survive the round trip. Keep the live one safe |
 | `events/...: CONTENT DIFFERS` | That event's archive is damaged. The next re-mark makes a new one; investigate first |
+| `env: WRONG RECIPIENTS (n)` | The `.env` copy is readable by more than the escrow key. Treat every secret in it as exposed to whoever holds the other key; rotate, and find out how it was written |
+| `env: ARTIFACT MISSING` / `CHECKSUM MISMATCH` | The manifest names a `.env` copy that is not on the Drive intact. Touch the `.env` (any harmless edit) so the next run uploads a fresh copy |
 | `only the databases can be checked` | A manifest from before file sets existed (schema 2). Expected only for old runs |
 
 The certificate lookup is the check that matters. Certificates are
@@ -663,6 +749,7 @@ the whole round trip this way; see [Acceptance tests](#acceptance-tests).
 | `phpbb_baja`, `phpbb_formula` and their `-files` | 35 days | 6 months | not written |
 | `baja-app-sons`, `erasure-log` | 35 days | 24 months | not written |
 | `events/` | — | — | — (kept indefinitely, never pruned) |
+| `secrets/` (the `.env` copies) | — | — | — (kept indefinitely, never pruned) |
 
 Deletion is to **Drive's trash**, never permanent, so "expires at 35 days"
 really means "recoverable for about 65". Look in the Shared Drive's trash
@@ -684,6 +771,12 @@ can no longer verify. A forum's attachments go with its posts.
 does not extend to forum history. The erasure log needs no yearly copy:
 it is append-only, so the newest `daily/` copy always holds everything an
 older one does.
+
+`secrets/` is kept for good too: each copy is the only way back to the
+secrets the backups of its time were made with (an old dump restored
+needs the passwords it was used with only if something else is lost, but
+`STORAGE_ENCRYPTION_KEY` has no versioning at all). A new copy appears
+only when the `.env` changes, so it stays small.
 
 `events/` is kept for good on purpose: it is the record of what was
 published, holds public results only, and grows by a few small archives a
@@ -862,7 +955,7 @@ docker compose --profile tools run --rm erasure-log verify
 
 | State | Why not |
 |---|---|
-| `.env`, service-account keys, age private keys, Cloudflare tokens | Secrets; kept by the maintainers. See [Secrets](#secrets-kept-by-the-maintainers-not-by-the-backups) |
+| Service-account keys, age private keys, Cloudflare tokens | Secrets that can be re-issued. See [Secrets](#secrets-where-they-live-and-how-they-come-back). (The `.env` IS backed up, to the escrow key alone, under `secrets/`) |
 | The raw MySQL data folder (`/srv/baja/mysql`, `mysql_data`) | A copy of live InnoDB files is not consistent; the logical dumps are |
 | Redis (`redis_data`) | Caches, rate-limit counters, phpBB session lookups, lap-count snapshots and notices: all rebuilt or expired by design. The `/buscar` backoff counters are keyed hashes of document numbers and must not outlive their minutes |
 | The rest of the `phpbb_*_html` volumes | Code, `ext/`, language packs come from the image; `cache/` regenerates; `config.php` is rendered from `.env` at boot and holds a database password; `store/` is phpBB's own scratch |
@@ -940,6 +1033,11 @@ revision of a binary file for 30 days, a Manager can restore it, and the
 weekly verifier would flag the newest run — but older tiers are only
 protected by a [secondary copy](#secondary-copies) with its own snapshots.
 
+**The backup container can read the whole `.env`.** It needs it to make the
+copy. It already held a database password that can read every row; now it
+holds every secret. It still cannot decrypt anything it uploaded, and it
+still has no docker socket. Keep it that way.
+
 **Excluded tables achieve no IP minimisation.** phpBB keeps `poster_ip` on
 posts, `author_ip` on private messages and `user_ip` on users, and every
 one of them is in these dumps. The exclusions are ephemeral session state
@@ -977,9 +1075,12 @@ it) covers the file set round trip with both keys, a missing forum folder
 stopping the run, the verifier noticing restored files that differ, the
 manifest's contents and its personal-data guard, the manifest going last in
 every tier (tests 1 and 10 below without a database), the erasure log
-round trip, and the event archives. The pruner's tests are
+round trip, the `.env` copy (encrypted to the escrow key alone; not
+uploaded again while unchanged, with the manifest still naming a copy that
+checks), and the event archives. The pruner's tests are
 `node baja-infra/gas/retention/test/prune.test.js`. The event archive queue
-is `vendor/bin/phpunit --testsuite results-archive-db` (BAJA_TEST_DB=1).
+is `vendor/bin/phpunit --testsuite results-archive-db` (BAJA_TEST_DB=1),
+including "the queue table is missing: the event is still saved".
 
 **Automated, on a running dev or staging stack:**
 `baja-infra/tests/backup/stack-test.sh` runs `backup-run.sh` and

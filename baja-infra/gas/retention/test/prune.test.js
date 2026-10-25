@@ -402,6 +402,18 @@ check('a normal day, one daily run expiring and one monthly run reaching 6 month
 });
 
 // ----- events/ -----
+check('never touches secrets/, the escrow-only copies of the .env', () => {
+  const r = run(root => {
+    healthyDaily(root);
+    const copy = root.createFolder('secrets').createFolder(runIdMonthsAgo(48));
+    copy.createFile('env.age');
+    copy.createFile('env.json');
+  }, LIVE);
+  eq(r.error, null, 'error');
+  const copy = r.root.folders.find(f => f._name === 'secrets').folders[0];
+  eq(copy.trashed || copy.files.some(f => f.trashed), false, 'anything under secrets/ trashed');
+});
+
 check('never touches events/, however old the archives in it', () => {
   // events/<EVT>/<timestamp>/ holds the frozen results of finished events
   // (BAJAAPP-67). They look like run folders on purpose (same timestamp

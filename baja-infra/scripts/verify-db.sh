@@ -38,6 +38,11 @@
 #                     with the manifest's description of the archive.
 #   9. Erasure log    decrypted; its entry count matches the manifest and
 #                     its hash chain is intact.
+#   9b. .env copy    the copy of the stack's .env the manifest names is on
+#                     the Drive, matches its checksum, and is encrypted to
+#                     exactly ONE recipient. It is never decrypted here: it
+#                     is for the escrow key only, and this stack does not
+#                     hold, or need, that key.
 #  10. Event archives every complete folder under events/ (BAJAAPP-67) is
 #                     downloaded, decrypted and extracted, and compared
 #                     with its own manifest. They are few and small, so
@@ -711,6 +716,44 @@ verify_erasure_log() {
     rm -f -- "$plain"
 }
 
+# ----- The .env copy -----
+#
+# Checked without a key and without decrypting: present, intact, and
+# readable by a single recipient, which can only be the escrow key since
+# backup-lib.sh encrypts it to nothing else. A copy that the verifier key
+# could open would be a copy the server could open.
+verify_env_copy() {
+    local manifest="${WORK_DIR}/manifest.json"
+    local folder sha dest actual recipients
+    folder="$(jq -r '.env.folder // empty' "$manifest")"
+    sha="$(jq -r '.env.sha256 // empty' "$manifest")"
+    if [[ ! "$folder" =~ ^secrets/[0-9]{8}T[0-9]{6}Z$ || -z "$sha" ]]; then
+        fail_hard "env: the manifest does not name a valid .env copy"
+        OTHER_RESULT[env]="MISSING FROM MANIFEST"
+        return 0
+    fi
+    dest="${WORK_DIR}/env-check"
+    mkdir -p "$dest"
+    if ! rclone copy --retries 3 "${VERIFY_REMOTE}${folder}" "$dest" 2>/dev/null || [[ ! -f "${dest}/env.age" ]]; then
+        fail_hard "env: ${folder}/env.age is not on the Drive"
+        OTHER_RESULT[env]="ARTIFACT MISSING"
+        rm -rf -- "$dest"
+        return 0
+    fi
+    actual="$(sha256sum "${dest}/env.age" | cut -d' ' -f1)"
+    recipients="$(backup_age_x25519_recipients "${dest}/env.age")"
+    rm -rf -- "$dest"
+    if [[ "$actual" != "$sha" ]]; then
+        fail_hard "env: ${folder}/env.age does not match the manifest's sha256"
+        OTHER_RESULT[env]="CHECKSUM MISMATCH"
+    elif [[ "$recipients" != "1" ]]; then
+        fail_hard "env: ${folder}/env.age is encrypted to ${recipients} recipients; it must be the escrow key alone"
+        OTHER_RESULT[env]="WRONG RECIPIENTS (${recipients})"
+    else
+        OTHER_RESULT[env]="OK (${folder}, escrow only, not decrypted)"
+    fi
+}
+
 # ----- Event archives (BAJAAPP-67) -----
 #
 # Every events/<EVT>/<timestamp>/ folder. A folder without a manifest is
@@ -799,6 +842,9 @@ phase_report() {
             log "  ${set}: ${OTHER_RESULT[$set]:-NOT REACHED}"
         done
     fi
+    if (( MANIFEST_SCHEMA >= 4 )); then
+        log "  env: ${OTHER_RESULT[env]:-NOT REACHED}"
+    fi
     local line
     for line in "${EVENT_RESULTS[@]}"; do
         log "  ${line}"
@@ -859,6 +905,9 @@ main() {
                     verify_file_set "$set"
                 done
                 verify_erasure_log
+            fi
+            if (( MANIFEST_SCHEMA >= 4 )); then
+                verify_env_copy
             fi
         else
             err "skipping per-database verification: without a manifest there is nothing to verify against"

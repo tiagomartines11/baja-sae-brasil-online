@@ -28,6 +28,9 @@
  *                            (BAJAAPP-67). Kept for good: they are what
  *                            proves what was published. Only the three
  *                            tier folders below are ever listed.
+ *   NEVER TOUCH secrets/     The escrow-only copies of the stack's .env.
+ *                            Each one is the only way back to the secrets
+ *                            the backups of its time were made with.
  *   NEVER TRASH A MANIFEST   Except as part of removing its whole folder.
  *                            It is the record of what a run contained.
  *

@@ -71,6 +71,9 @@
 #   BACKUP_STATE_DIR (default: /state) where compose mounts the file sets
 #   ERASURE_LOG_PATH (default: /srv/baja/erasure/erasure-log.jsonl), mounted
 #                   read-only; see erasure-log.sh
+#   ENV_BACKUP_PATH (default: /run/secrets/stack.env) the stack's .env,
+#                   mounted read-only; backed up encrypted to the escrow
+#                   key only (see backup_env_stage in backup-lib.sh)
 #   BACKUP_CODE_VERSION  `git describe --tags` of the deployed checkout,
 #                   passed in by backup-run.sh; recorded in the manifest
 
@@ -96,6 +99,7 @@ BACKUP_REMOTE="${BACKUP_REMOTE:-gdrive:}"
 BACKUP_DUMP_TIMEOUT="${BACKUP_DUMP_TIMEOUT:-3600s}"
 ERASURE_LOG_PATH="${ERASURE_LOG_PATH:-/srv/baja/erasure/erasure-log.jsonl}"
 BACKUP_CODE_VERSION="${BACKUP_CODE_VERSION:-unknown}"
+ENV_BACKUP_PATH="${ENV_BACKUP_PATH:-/run/secrets/stack.env}"
 
 # ----- Run state -----
 RUN_ID=""
@@ -228,6 +232,10 @@ phase_preflight() {
     [[ -d "$(dirname "$ERASURE_LOG_PATH")" ]] \
         || die "erasure log folder $(dirname "$ERASURE_LOG_PATH") is not mounted — check ERASURE_LOG_DIR in .env and the backup service's volumes"
 
+    # The .env copy is the one recovery path for every secret of the stack.
+    [[ -f "$ENV_BACKUP_PATH" && -r "$ENV_BACKUP_PATH" ]] \
+        || die "the stack's .env is not mounted at ${ENV_BACKUP_PATH} — check the backup service's volumes"
+
     # 3x headroom: the plaintext dump, plus its gzip, plus the age
     # artifact all coexist briefly. The dump is written to disk rather
     # than streamed precisely so a partial failure is visible, and that
@@ -334,6 +342,12 @@ dump_one() {
     # --databases <name>    keeps CREATE DATABASE IF NOT EXISTS and USE in
     #                       the artifact, so a restore is one command
     #                       rather than a command plus a remembered step.
+    # --add-drop-database   puts DROP DATABASE IF EXISTS before that, so a
+    #                       restore REPLACES the database and can never merge
+    #                       into one that is there: on a fresh server the
+    #                       first MySQL boot has just loaded the dev seed
+    #                       into all three. Tested by
+    #                       tests/backup/dump-with-backup-user.sh in CI.
     # --default-character-set=utf8mb4  matches the rest of the stack (see
     #                       migrate.sh); several tables are still latin1 and
     #                       the connection charset is what decides whether
@@ -344,6 +358,7 @@ dump_one() {
     local -a opts=(
         --defaults-file="$MYSQL_DEFAULTS_FILE"
         --single-transaction
+        --add-drop-database
         --routines --triggers --events
         --no-tablespaces
         --set-gtid-purged=OFF
@@ -420,6 +435,14 @@ phase_files() {
         '{ file: "erasure-log.jsonl.age", entries: $entries, chain_ok: $chain }' \
         > "${RUN_DIR}/erasure.json"
     log "files: erasure log — ${ERASURE_ENTRIES} entr$( (( ERASURE_ENTRIES == 1 )) && echo y || echo ies)"
+
+    # The .env, escrow only, copied to secrets/ only when it changed.
+    backup_env_stage "$ENV_BACKUP_PATH" "$RUN_DIR" "$RUN_ID"
+    if [[ "$(jq -r .uploaded_this_run "${RUN_DIR}/env.manifest.json")" == "true" ]]; then
+        log "files: .env changed since the last copy — a new one goes to $(jq -r .folder "${RUN_DIR}/env.manifest.json")/"
+    else
+        log "files: .env unchanged — the manifest points at $(jq -r .folder "${RUN_DIR}/env.manifest.json")/"
+    fi
 
     log "files: OK"
 }
@@ -517,6 +540,7 @@ phase_upload() {
     for set in "${BACKUP_FILE_SETS[@]}"; do everything+=("${set}.tar.gz.age"); done
     everything+=(erasure-log.jsonl.age)
 
+    backup_env_upload "$RUN_DIR"
     upload_tier "daily/${RUN_ID}" "${everything[@]}"
 
     # First of the month: a full second copy on the monthly ladder. The

@@ -58,8 +58,9 @@ A review of the unfinished `feature/db-backups` branch (5 commits, last on
 
 ### What must never go into backups, and is not
 
-- `.env`, the Google service-account keys, the age private keys, the
-  Cloudflare tokens. These are secrets, kept as described below.
+- The Google service-account keys, the age private keys, the Cloudflare
+  tokens. These are secrets that can be re-issued (below). The `.env` is
+  the exception and is now backed up, but only to the escrow key.
 - The raw MySQL data folder. It is not consistent while live; the logical
   dumps are.
 - Redis: caches, rate-limit counters, phpBB session lookups, lap-count
@@ -77,18 +78,30 @@ A review of the unfinished `feature/db-backups` branch (5 commits, last on
 
 ### Secrets: how they are kept instead
 
-Nothing in the repository says today where the production `.env` lives
-apart from the server. The runbook now prescribes it, and the maintainers
-need to confirm it is true. The whole production `.env` goes in the
-maintainers' shared password manager entry for the server, updated in the
-same sitting as any change. So do the two service-account JSON keys, the
-verifier's private key, and the Cloudflare token files. The escrow private
-key is held offline by its two holders, separately, outside that entry.
+Production's `baja-infra/.env` existed in one place besides the server:
+one maintainer's password manager. Every night's run now also keeps a
+copy of it on the Shared Drive under `secrets/<run_id>/env.age`. That
+copy is encrypted to the **escrow key alone**, not the verifier, so
+nothing on the server can read it. A new copy is uploaded only when the
+`.env` changed; every manifest names the copy that matches its night.
+The verify stack checks the copy (present, checksum, exactly one
+recipient) without a key and never decrypts it.
+
+So the secrets live in three places, described by role in the runbook:
+- the Drive copy, readable by the escrow key only;
+- each escrow holder's own password manager, holding the escrow private
+  key and a current `.env`;
+- an offline copy of the escrow private key, kept by each holder.
+
+The secrets outside `.env` (service-account keys, the verifier key,
+Cloudflare tokens) are re-issued on a new server rather than copied. The
+runbook's "Restore a server from nothing" section rebuilds a server from
+only an escrow key, Drive access and the repository.
 
 `STORAGE_ENCRYPTION_KEY` is the one whose loss no backup can repair. There
 is no key versioning, so once any feature encrypts with it, losing the key
-loses that data. Nothing encrypts with it on develop yet; keep it from the
-day it is set. The full table is under "Secrets" in the runbook.
+loses that data. Nothing encrypts with it on develop yet; the `.env` copy
+now protects it from the day it is set.
 
 ## Restore: can a person follow it onto a fresh server?
 
@@ -127,14 +140,14 @@ not done in the PR. Order matters roughly top to bottom.
 - [ ] Create the service accounts `baja-backup-writer` and `baja-backup-reader`, and download a JSON key for each.
 - [ ] Add the writer as **Contributor** and the reader as **Viewer** on the Shared Drive.
 - [ ] Create or choose the **role account** (not a person) as **Manager**. It owns the pruner.
-- [ ] Put both JSON keys on the VPS at the paths `GDRIVE_SA_WRITER_JSON` / `GDRIVE_SA_READER_JSON` name (mode 0600), and in the password manager entry.
+- [ ] Put both JSON keys on the VPS at the paths `GDRIVE_SA_WRITER_JSON` / `GDRIVE_SA_READER_JSON` name (mode 0600).
 
 **age keys**
-- [ ] Generate the **escrow** pair offline (`age-keygen`). Two maintainers each keep the private key, separately, with a copy of the runbook. Only the `age1...` public key goes into `.env` as `AGE_RECIPIENT_ESCROW`.
-- [ ] Generate the **verifier** pair. Its private key goes on the VPS at `AGE_IDENTITY_VERIFIER` (0600) and in the password manager entry; its public key goes into `.env` as `AGE_RECIPIENT_VERIFIER`.
+- [ ] Generate the **escrow** pair offline (`age-keygen`). Each of the two escrow holders keeps the private key in their own password manager **and** in an offline copy (printed, or on a removable drive). Only the `age1...` public key goes into `.env` as `AGE_RECIPIENT_ESCROW`. This key alone can read the `.env` copies.
+- [ ] Generate the **verifier** pair. Its private key goes on the VPS at `AGE_IDENTITY_VERIFIER` (0600); its public key goes into `.env` as `AGE_RECIPIENT_VERIFIER`. It cannot read the `.env` copies, by design.
 
 **Production server**
-- [ ] Deploy with the migration: `./propel migration:migrate` creates `evento_arquivamento`. Until it runs, saving an event in `juiz/evento.php` fails, so run it with the deploy, not after.
+- [ ] Deploy with the migration: `./propel migration:migrate` creates `evento_arquivamento`. If it is missed, admins can still edit events. They get an orange "archive not queued" warning, the error is logged, and the nightly archive monitor alerts. No finished event is queued until the migration runs.
 - [ ] Create the MySQL `backup` user with the per-database grants (runbook, "MySQL backup user"). The init script does not run on an existing server. If an earlier version of this branch was ever applied by hand with `ON *.*`, revoke that.
 - [ ] Create `/srv/baja/erasure/erasure-log.jsonl` (0700 folder, 0600 file, `chattr +a`). Set `ERASURE_LOG_DIR=/srv/baja/erasure`.
 - [ ] Fill in the backup block of `.env`: `MYSQL_BACKUP_PASSWORD`, `MYSQL_VERIFY_ROOT_PASSWORD` (different from root's), `GDRIVE_SHARED_DRIVE_ID`, the recipients and paths above, and `VERIFY_MIN_ROWS_USER` (production's `user` count, minus a margin).
@@ -152,8 +165,8 @@ not done in the PR. Order matters roughly top to bottom.
 - [ ] One week in dry run; a person reads `retention-log/`; then `DRY_RUN=false`. The prune monitor stays silent during the dry run (it only pings on live runs). Pause it or expect the alert.
 
 **Secrets and people**
-- [ ] Confirm the password manager entry holds everything in the runbook's "Secrets" table, `STORAGE_ENCRYPTION_KEY` included.
-- [ ] Schedule the first human restore drill, by a maintainer who did not set this up, on a machine that is not the VPS.
+- [ ] After the first nightly run, confirm `secrets/<run_id>/env.json` exists and the run's manifest names it (`env.folder`). An escrow holder decrypts it once, on their own machine, to prove the key works, then deletes the plaintext.
+- [ ] Schedule the first human restore drill, by a maintainer who did not set this up, on a machine that is not the VPS. At least once a year, start it from the runbook's "Restore a server from nothing".
 - [ ] Optional: a [secondary copy](../baja-infra/docs/backup-restore.md#secondary-copies) with its own snapshots, pulled with the reader account.
 
 ## Risks
@@ -173,6 +186,7 @@ not done in the PR. Order matters roughly top to bottom.
   this in the dry-run log.
 - **The verify stack runs beside production** on a 4 GB VPS. It is capped
   at 768 MB, but nobody has measured it there yet.
+- **The backup container now reads the whole `.env`** to make the escrow-only copy. It already held a password that reads every row. It still cannot decrypt what it uploads, and it has no docker socket.
 - **The VPS holds everything at once.** The backup container can read every
   row, and the verifier's private key lives there. That is inherent to
   running both on one machine. The escrow key, kept off it, is what makes
@@ -223,10 +237,13 @@ true. Smaller simplifications:
 - Adds the file sets, the erasure log backup and its writer service, the
   local test destination, verification of all three, and the pruner rule
   for forum attachments.
+- Adds the escrow-only `.env` copy under `secrets/`, uploaded only when the
+  `.env` changes and named in every manifest, with a restore-from-nothing
+  procedure.
 - Adds event archives (BAJAAPP-67): the `evento_arquivamento` table and
   migration, the trigger in `juiz/evento.php`, `Baja\ResultsArchive\Queue`,
   `scripts/results-archive.php`, `archive-event.sh`, and `backup-run.sh`
-  as the new cron entry.
+  as the new cron entry. Saving an event never depends on the queue.
 - Tests, in CI: `baja-infra/tests/backup/run-tests.sh` (file set, erasure
   and event round trips, the manifest, manifest-last), the pruner's
   tests (two new ones), and the `results-archive-db` suite (trigger and

@@ -274,6 +274,11 @@ services:
       - phpbb_baja_html:/state/phpbb-baja:ro
       - phpbb_formula_html:/state/phpbb-formula:ro
       - ${BAJA_APP_PATH}/juiz/sons:/state/baja-app-sons:ro
+      # The stack's own .env, read-only, for the secrets-recovery copy: it
+      # is encrypted to the ESCROW key alone and uploaded to secrets/ when
+      # it changes. Nothing on the server can decrypt that copy. See
+      # "Secrets" in docs/backup-restore.md.
+      - ./.env:/run/secrets/stack.env:ro
       # The erasure log, read-only here. It is written only through the
       # erasure-log service below.
       - ${ERASURE_LOG_DIR}:/srv/baja/erasure:ro

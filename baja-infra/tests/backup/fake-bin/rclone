@@ -13,6 +13,7 @@
 #   rclone lsf --dirs-only fake:<path>   list sub-folders, one "name/" per line
 #   rclone copyto <local file> fake:<path>
 #   rclone copy fake:<folder> <local folder>
+#   rclone cat fake:<file>
 #   rclone version
 set -euo pipefail
 
@@ -61,6 +62,11 @@ case "$cmd" in
         [[ -d "$src" ]] || exit 3
         mkdir -p "${args[2]}"
         cp -R -- "$src"/. "${args[2]}"/
+        ;;
+    cat)
+        src="$(local_path "${args[1]}")"
+        [[ -f "$src" ]] || exit 3
+        cat -- "$src"
         ;;
     *) echo "fake rclone: unsupported command: $cmd" >&2; exit 2 ;;
 esac

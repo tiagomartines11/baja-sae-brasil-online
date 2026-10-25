@@ -142,7 +142,8 @@ say "checking what landed on the fake Drive"
 run_dir="$(find "${WORK}/drive/daily" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)"
 [[ -n "$run_dir" && -f "${run_dir}/manifest.json" ]] || fail "no complete daily/ folder"
 manifest="${run_dir}/manifest.json"
-[[ "$(jq -r .schema_version "$manifest")" == 3 ]] || fail "manifest is not schema 3"
+[[ "$(jq -r .schema_version "$manifest")" == 4 ]] || fail "manifest is not schema 4"
+[[ -f "${WORK}/drive/$(jq -r .env.folder "$manifest")/env.json" ]] || fail "the .env copy the manifest names is not there"
 for name in baja_resultados.sql.gz.age phpbb_baja.sql.gz.age phpbb_formula.sql.gz.age \
             phpbb_baja-files.tar.gz.age phpbb_formula-files.tar.gz.age baja-app-sons.tar.gz.age \
             erasure-log.jsonl.age; do
