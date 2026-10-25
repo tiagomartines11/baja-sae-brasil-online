@@ -12,11 +12,15 @@ can only fail to help; this can actively destroy. Read
 ## Rules
 
 1. `daily/<run_id>/` older than **35 days** → trash the whole folder.
-2. In `monthly/<run_id>/` older than **6 months** → trash the two
-   `phpbb_*` artifacts and their sidecars, leaving `baja_resultados` and
-   the manifest.
+2. In `monthly/<run_id>/` older than **6 months** → trash each forum's
+   dump and its attachments (`phpbb_*.sql.gz.age`,
+   `phpbb_*-files.tar.gz.age`) and their sidecars, leaving
+   `baja_resultados`, the timer sounds, the erasure log and the manifest.
 3. `monthly/<run_id>/` older than **24 months** → trash the whole folder.
 4. `yearly/` → **never touched.** Manual review only.
+
+`events/` (the archives of finished events' results, BAJAAPP-67) is never
+even listed: those are kept for good.
 
 Age comes from the **run id in the folder name**, not from Drive's
 created date: the run id is what the artifact means, and Drive's
@@ -103,17 +107,18 @@ node baja-infra/gas/retention/test/prune.test.js
 
 Covers all four rules, both floors, the cap, dry-run-by-default, the
 "anything but the literal string `false` is a dry run" property, that an
-abort sends no heartbeat, and that folders which are not run ids are left
-strictly alone. Run it after any change to `Code.js`.
+abort sends no heartbeat, that folders which are not run ids are left
+strictly alone, that `events/` is never touched, and that the heaviest
+ordinary day stays under the cap with today's artifact set. Run it after
+any change to `Code.js`, and after adding an artifact to the backup.
 
-## Second copy — TrueNAS
+## Secondary copies
 
 The pruner is not the last line of defence, because a Manager can empty
-the Shared Drive's trash. A cron job on TrueNAS pulls the Shared Drive
-into a ZFS dataset via rclone, with ZFS snapshots: **Drive has no WORM
-primitive, so the ZFS snapshots are the retention floor.** The pull also
-doubles as proof the artifacts are readable from somewhere that is not the
-VPS.
-
-Uptime Kuma runs on TrueNAS and therefore cannot alert that TrueNAS is
-down. Put an **external dead-man's switch** on that one check.
+the Shared Drive's trash. Any operator may keep an independent copy by
+pulling the Shared Drive with the read-only `baja-backup-reader` account
+(for example with rclone). Drive has no undeletable storage, so such a
+copy should keep its own snapshots or versions — those are the real
+retention floor — and be watched by a check that does not run on the same
+machine. The artifacts are encrypted, so the copy needs no key. See
+"Secondary copies" in [`docs/backup-restore.md`](../../docs/backup-restore.md).
