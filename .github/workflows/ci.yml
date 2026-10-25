@@ -205,7 +205,14 @@ jobs:
       # SELECT-only "snapshot" account: every table equals the results
       # builder's public one, spoilers included. --fail-on-skipped: a test
       # skipped here would be a check nobody ran.
+      #
+      # There is no Redis in this job, and the live race endpoint's feed
+      # asks for it. The code falls back without it either way, but the
+      # default host "redis" does not resolve here and PHP warns about the
+      # lookup; nothing listening on localhost fails quietly.
       - name: PHPUnit (public results API)
+        env:
+          REDIS_HOST: 127.0.0.1
         run: vendor/bin/phpunit --testsuite results-api-db --fail-on-skipped
 
       # scripts/check-results-configs.php (docs/results-config-check.md):
