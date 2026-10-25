@@ -333,6 +333,24 @@ jobs:
           # notice it going stale.
           docker compose -f docker-compose.verify.yml config --quiet
 
+      # Every install that predates the backups has an .env without any of
+      # their variables. Merging must not break it: a blank variable in a
+      # volume path is an "invalid spec" and stops `docker compose up` for
+      # the whole stack, not just the backup services. Pinned to develop's
+      # .env.example from before the backups (841d172), since develop's own
+      # copy gains the variables once this lands.
+      - name: Compose config with a pre-backups .env
+        working-directory: baja-infra
+        run: |
+          git fetch --no-tags --depth=1 origin 841d1724d481ae8f48a2ee1d41f34ac820f669b9
+          git show 841d1724d481ae8f48a2ee1d41f34ac820f669b9:baja-infra/.env.example > "$RUNNER_TEMP/old.env"
+          docker compose --env-file "$RUNNER_TEMP/old.env" \
+            -f docker-compose.yml -f docker-compose.prod.yml config --quiet
+          docker compose --env-file "$RUNNER_TEMP/old.env" \
+            -f docker-compose.yml -f docker-compose.prod.yml --profile tools config --quiet
+          docker compose --env-file "$RUNNER_TEMP/old.env" \
+            -f docker-compose.verify.yml config --quiet
+
       - name: Retention pruner tests
         # Apps Script cannot run in CI, so the pruner's logic is exercised
         # against a fake Drive. It is the only code in the backup system

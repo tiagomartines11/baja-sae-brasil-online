@@ -32,6 +32,22 @@ CREATE USER IF NOT EXISTS 'resultados'@'%' IDENTIFIED BY '${MYSQL_RESULTADOS_PAS
 GRANT ALL PRIVILEGES ON baja_resultados.* TO 'resultados'@'%';
 GRANT SELECT ON phpbb_baja.* TO 'resultados'@'%';
 
+FLUSH PRIVILEGES;
+EOF
+
+    # An .env from before the backups has no MYSQL_BACKUP_USER/PASSWORD, and
+    # compose passes them as empty strings, which `set -u` does not catch.
+    # Creating ''@'%' with an empty password would be MySQL's anonymous
+    # account: any username, no password, SELECT on every database. Skip
+    # the backup user instead; backup-db.sh's preflight fails until it is
+    # created (docs/backup-restore.md).
+    if [ -z "${MYSQL_BACKUP_USER:-}" ] || [ -z "${MYSQL_BACKUP_PASSWORD:-}" ]; then
+        echo "MYSQL_BACKUP_USER or MYSQL_BACKUP_PASSWORD is empty: backup user NOT created."
+        echo "Application users created."
+        exit 0
+    fi
+
+    mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" <<EOF
 -- Backup user (baja-infra/scripts/backup-db.sh). Read-only by
 -- construction: no INSERT, UPDATE, DELETE, CREATE or DROP anywhere, so a
 -- compromised backup container cannot alter production.

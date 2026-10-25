@@ -100,8 +100,8 @@ services:
       VERIFY_MIN_ROWS_USER: ${VERIFY_MIN_ROWS_USER:-50}
       VERIFY_REMOTE: ${VERIFY_REMOTE:-}
     volumes:
-      - ${GDRIVE_SA_READER_JSON}:/run/secrets/gdrive-backup-reader.json:ro
-      - ${AGE_IDENTITY_VERIFIER}:/run/secrets/age-verifier.key:ro
+      - ${GDRIVE_SA_READER_JSON:-./secrets/gdrive-backup-reader.json}:/run/secrets/gdrive-backup-reader.json:ro
+      - ${AGE_IDENTITY_VERIFIER:-./secrets/age-verifier.key}:/run/secrets/age-verifier.key:ro
       # Carries the previous run's schema hashes so drift can be reported.
       # The only state this stack keeps between runs, and it holds nothing
       # but hashes.

@@ -192,7 +192,7 @@ services:
       # Text-to-speech for timer sounds. Unset hides the feature.
       TTS_URL: http://tts:5000
     volumes:
-      - ${BAJA_APP_PATH}:/var/www/html
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/html
     depends_on:
       mysql:
         condition: service_healthy
@@ -268,7 +268,7 @@ services:
       BACKUP_REMOTE: ${BACKUP_REMOTE:-}
       BACKUP_RUN_ID: ${BACKUP_RUN_ID:-}
     volumes:
-      - ${GDRIVE_SA_WRITER_JSON}:/run/secrets/gdrive-backup-writer.json:ro
+      - ${GDRIVE_SA_WRITER_JSON:-./secrets/gdrive-backup-writer.json}:/run/secrets/gdrive-backup-writer.json:ro
       # The file sets (scripts/backup-lib.sh, BACKUP_FILE_SETS), all
       # READ-ONLY: the backup reads state, it never writes it. In dev the
       # forum uploads live inside these code volumes; in production
@@ -276,7 +276,7 @@ services:
       # same paths, so the script sees one layout everywhere.
       - phpbb_baja_html:/state/phpbb-baja:ro
       - phpbb_formula_html:/state/phpbb-formula:ro
-      - ${BAJA_APP_PATH}/juiz/sons:/state/baja-app-sons:ro
+      - ${BAJA_APP_PATH:-../baja-php}/juiz/sons:/state/baja-app-sons:ro
       # The stack's own .env, read-only, for the secrets-recovery copy: it
       # is encrypted to the ESCROW key alone and uploaded to secrets/ when
       # it changes. Nothing on the server can decrypt that copy. See
@@ -284,7 +284,7 @@ services:
       - ./.env:/run/secrets/stack.env:ro
       # The erasure log, read-only here. It is written only through the
       # erasure-log service below.
-      - ${ERASURE_LOG_DIR}:/srv/baja/erasure:ro
+      - ${ERASURE_LOG_DIR:-./backup-local/erasure}:/srv/baja/erasure:ro
       # Where BACKUP_REMOTE=:local:/drive/ writes, so a dev or staging test
       # run leaves its "Shared Drive" on the host for the verifier and for
       # you to look at. Unused when BACKUP_REMOTE is empty (production).
@@ -313,7 +313,7 @@ services:
       MYSQL_HOST: mysql
       MYSQL_PORT: "3306"
     volumes:
-      - ${ERASURE_LOG_DIR}:/srv/baja/erasure
+      - ${ERASURE_LOG_DIR:-./backup-local/erasure}:/srv/baja/erasure
     networks:
       - baja
 
@@ -341,7 +341,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: "6379"
     volumes:
-      - ${BAJA_APP_PATH}:/var/www/html:ro
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/html:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -381,7 +381,7 @@ services:
       - ./nginx/templates:/etc/nginx/templates:ro
       - phpbb_baja_html:/var/www/phpbb-baja:ro
       - phpbb_formula_html:/var/www/phpbb-formula:ro
-      - ${BAJA_APP_PATH}:/var/www/baja-app:ro
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/baja-app:ro
     depends_on:
       - phpbb-baja
       - phpbb-formula
