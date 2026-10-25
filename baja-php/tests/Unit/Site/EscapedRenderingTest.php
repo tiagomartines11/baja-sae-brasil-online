@@ -34,7 +34,7 @@ final class EscapedRenderingTest extends TestCase
     private const QUOTE = 'x" autofocus onfocus="alert(2)';
 
     /** Runs $print and returns what it echoed. */
-    private function output(callable $print): string
+    private function renderedHtml(callable $print): string
     {
         ob_start();
         $print();
@@ -124,7 +124,7 @@ final class EscapedRenderingTest extends TestCase
      */
     public function testAHeaderIsPrintedAsTheAdminWroteIt(): void
     {
-        $html = $this->output(fn () => Template::printColumnHeader('Pontos <b>sem</b> Finais'));
+        $html = $this->renderedHtml(fn () => Template::printColumnHeader('Pontos <b>sem</b> Finais'));
 
         $this->assertSame('<th style="" >Pontos <b>sem</b> Finais</th>', trim(preg_replace('/\s+/', ' ', $html)));
     }
@@ -132,7 +132,7 @@ final class EscapedRenderingTest extends TestCase
     /** Entities admins typed in headers keep working: "30&nbsp;m" is not "30&amp;nbsp;m". */
     public function testAHeaderWithAnEntityKeepsIt(): void
     {
-        $html = $this->output(fn () => Template::printColumnHeader('Aceleração 30&nbsp;m [s]'));
+        $html = $this->renderedHtml(fn () => Template::printColumnHeader('Aceleração 30&nbsp;m [s]'));
 
         $this->assertStringContainsString('>Aceleração 30&nbsp;m [s]</th>', $html);
     }
@@ -153,7 +153,7 @@ final class EscapedRenderingTest extends TestCase
             new Column('Pontos', '$PONTOS'),
         ];
 
-        $html = $this->output(fn () => Template::printResultRow($columns, $row));
+        $html = $this->renderedHtml(fn () => Template::printResultRow($columns, $row));
 
         $this->assertEscaped($html);
         $this->assertStringContainsString('<td>7</td>', $html);
@@ -170,7 +170,7 @@ final class EscapedRenderingTest extends TestCase
         $team = new TeamIdentity(1, self::SCRIPT, 'Equipe', 'Escola', 'SP', false);
         $row = new ResultRow($team, [], null, null, []);
 
-        $html = $this->output(fn () => Template::printResultRow([new Column('#', 'EquipeNum')], $row));
+        $html = $this->renderedHtml(fn () => Template::printResultRow([new Column('#', 'EquipeNum')], $row));
 
         $this->assertSame('<tr><td>&lt;script&gt;alert(1)&lt;/script&gt;</td></tr>', $html);
     }
