@@ -276,6 +276,45 @@ final class AgainstSeedTest extends TestCase
         $this->assertSame([6, 1], [$json['rounds'][0]['matches'][0]['slots'][0]['team']['number'], $json['rounds'][0]['matches'][0]['slots'][0]['seed']]);
     }
 
+    /**
+     * The same bracket with 26BR shown as running with spoilers on (in
+     * memory only). Its seeds come from a classification of scores that
+     * spoilers may hide, so no team has one; the matches and winners are
+     * still the stored ones. Once finished (the test above), they are back.
+     */
+    public function testDuringSpoilersTheTournamentHasNoSeeds(): void
+    {
+        $finished = self::client(TorneioEndpoint::handle(['evt' => '26BR', 'id' => '26BR_SPR'])->body);
+        EventoTableMap::clearInstancePool();
+        $during = self::client(TorneioEndpoint::forEvento(DuringEventView::show('26BR'), ['evt' => '26BR', 'id' => '26BR_SPR'])->body);
+
+        $seeds = fn(array $json) => array_merge(...array_map(
+            fn(array $round) => array_merge(...array_map(
+                fn(array $match) => array_column(array_filter($match['slots'], fn($s) => $s['type'] === 'team'), 'seed'),
+                $round['matches']
+            )),
+            $json['rounds']
+        ));
+        $this->assertFalse($finished['spoilers_active']);
+        $this->assertNotEmpty(array_filter($seeds($finished), fn($seed) => $seed !== null), 'Finished: seeds shown.');
+
+        $this->assertTrue($during['spoilers_active']);
+        $this->assertNotEmpty($seeds($during));
+        $this->assertSame([null], array_values(array_unique($seeds($during), SORT_REGULAR)), 'During spoilers: every seed null.');
+
+        // Only the seeds differ.
+        $withoutSeeds = function (array $json): array {
+            unset($json['spoilers_active']);
+            array_walk_recursive($json, function (&$value, $key) {
+                if ($key === 'seed') {
+                    $value = null;
+                }
+            });
+            return $json;
+        };
+        $this->assertSame($withoutSeeds($finished), $withoutSeeds($during));
+    }
+
     // --- Live race -------------------------------------------------------
 
     /**

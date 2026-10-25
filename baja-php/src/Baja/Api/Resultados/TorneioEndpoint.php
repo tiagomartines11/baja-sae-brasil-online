@@ -38,6 +38,13 @@ use Baja\Results\ResultsConfig;
  * Seeding: when the bracket was made, the prova's params kept the order of
  * the qualified cars in status.classification (1st = seed 1). That is the
  * "seed" of each team, null when the prova has no such list.
+ *
+ * Seeds are also null for every team while spoilers apply to the event
+ * (spoilers on, not finished): the classification is usually built from
+ * scores that spoilers hide (dynamic points, say), and the seed order
+ * would give them away. "Spoilers apply" is the builder's public rule,
+ * the same that evento.php reports as spoilers_active. The bracket itself
+ * stays public, as on the page.
  */
 final class TorneioEndpoint
 {
@@ -55,7 +62,17 @@ final class TorneioEndpoint
     /** @param array<string, string> $params */
     public static function handle(array $params): Response
     {
-        $evento = Lookup::evento($params['evt']);
+        return self::forEvento(Lookup::evento($params['evt']), $params);
+    }
+
+    /**
+     * handle() for an event already loaded. The spoiler test passes one
+     * whose flags it changed in memory, as the snapshot tool does.
+     *
+     * @param array<string, string> $params
+     */
+    public static function forEvento(Evento $evento, array $params): Response
+    {
         $resultado = Lookup::resultado($evento, $params['id']);
         if (ResultsConfig::fromColunas($resultado->getColunas())->type != 'tournament') {
             throw new ApiError(404, ApiError::WRONG_TYPE, 'Este resultado não é um torneio: use resultado.php.');
@@ -88,9 +105,12 @@ final class TorneioEndpoint
         foreach ($equipes as $equipe) {
             $teams[(int)$equipe->getEquipeId()] = $equipe;
         }
+        $spoilersActive = ResultadoEndpoint::publicViewer($evento)->hidesSpoilers([]);
         $seeds = [];
-        foreach ($provas as $prova) {
-            $seeds[$prova->getProvaId()] = self::seeds($prova);
+        if (!$spoilersActive) {
+            foreach ($provas as $prova) {
+                $seeds[$prova->getProvaId()] = self::seeds($prova);
+            }
         }
 
         $rounds = [];
@@ -105,6 +125,8 @@ final class TorneioEndpoint
             'resultado_id' => $resultado->getResultadoId(),
             'name' => $resultado->getNome(),
             'provas' => array_values((array)$resultado->getInputs()),
+            // While true, every seed is null (see the class comment).
+            'spoilers_active' => $spoilersActive,
             // In the order the page draws them: first round first, the final
             // and the match for third place last.
             'rounds' => array_values($rounds),

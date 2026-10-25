@@ -38,6 +38,12 @@ use PHPUnit\Framework\TestCase;
  * (by their dynamic scores, say) and that order is frozen in the prova's
  * params, status.classification. The first car is seed 1. The bracket is
  * built so that seeds 1 and 2 can only meet in the final.
+ *
+ * Because that order usually comes from scores, it can give away what
+ * spoilers hide (see ViewerContextTest for spoilers). So while spoilers
+ * apply to the event, every seed is null; the bracket itself is shown.
+ * The bracket below belongs to an event that is over unless a test says
+ * otherwise.
  */
 final class TorneioShapeTest extends TestCase
 {
@@ -69,8 +75,12 @@ final class TorneioShapeTest extends TestCase
      *
      * @param list<Tournament>|null $matches
      */
-    private static function shape(?array $matches = null, ?array $status = ['frozen' => true, 'classification' => [6, 5, 7, 8]]): array
-    {
+    private static function shape(
+        ?array $matches = null,
+        ?array $status = ['frozen' => true, 'classification' => [6, 5, 7, 8]],
+        bool $finished = true,
+        bool $spoilers = false,
+    ): array {
         $matches ??= [
             self::match(1, 1, '6', '8', winner: 6),
             self::match(2, 1, '5', '7', dados: ['bestof' => 3, 'win1' => 1, 'win2' => 1]),
@@ -78,7 +88,7 @@ final class TorneioShapeTest extends TestCase
             self::match(4, -1, '8', 'los2', dados: ['old1' => 'los1']),
         ];
         return TorneioEndpoint::shape(
-            (new Evento())->setEventoId('26BR'),
+            (new Evento())->setEventoId('26BR')->setFinalizado($finished)->setSpoilers($spoilers),
             (new Resultado())->setResultadoId('26BR_SPR')->setNome('Super Prime')->setInputs(['SPR']),
             $matches,
             [self::prova($status)],
@@ -173,5 +183,59 @@ final class TorneioShapeTest extends TestCase
             $slots = self::shape(status: $status)['rounds'][0]['matches'][0]['slots'];
             $this->assertSame([null, null], array_column($slots, 'seed'));
         }
+    }
+
+    /** Every seed of the bracket, as "car number => seed", from every team slot. */
+    private static function seedsShown(array $json): array
+    {
+        $seeds = [];
+        foreach ($json['rounds'] as $round) {
+            foreach ($round['matches'] as $match) {
+                foreach ($match['slots'] as $slot) {
+                    if ($slot['type'] === 'team') {
+                        $seeds[$slot['team']['number']] = $slot['seed'];
+                    }
+                }
+            }
+        }
+        ksort($seeds);
+        return $seeds;
+    }
+
+    /**
+     * SITUATION: the event is running with spoilers on, and the bracket's
+     * classification is frozen (seeds 6, 5, 7, 8).
+     *
+     * EXPECTED: no team has a seed, and spoilers_active says why. The rest
+     * of the bracket (teams, winners, wins) is shown as usual.
+     */
+    public function testDuringSpoilersNoTeamHasASeed(): void
+    {
+        $json = self::shape(finished: false, spoilers: true);
+
+        $this->assertTrue($json['spoilers_active']);
+        $this->assertSame([5 => null, 6 => null, 7 => null, 8 => null], self::seedsShown($json));
+        $this->assertSame(6, $json['rounds'][0]['matches'][0]['winner']);
+        $this->assertSame([1, 1], array_column($json['rounds'][0]['matches'][1]['slots'], 'wins'));
+    }
+
+    /**
+     * SITUATION: the same frozen classification, (a) during the event with
+     * spoilers off, (b) after the event with spoilers still switched on.
+     *
+     * EXPECTED: the seeds are shown in both, because spoilers do not apply
+     * in either (they only apply while on AND the event is not finished).
+     */
+    public function testSeedsAreShownWhenSpoilersDoNotApply(): void
+    {
+        $seeds = [5 => 2, 6 => 1, 7 => 3, 8 => 4];
+
+        $running = self::shape(finished: false, spoilers: false);
+        $this->assertFalse($running['spoilers_active']);
+        $this->assertSame($seeds, self::seedsShown($running));
+
+        $over = self::shape(finished: true, spoilers: true);
+        $this->assertFalse($over['spoilers_active']);
+        $this->assertSame($seeds, self::seedsShown($over));
     }
 }

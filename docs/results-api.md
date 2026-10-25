@@ -343,6 +343,7 @@ read the way the public bracket page reads it.
   "resultado_id": "26BR_SPR",
   "name": "Chaveamento Super Prime",
   "provas": ["SPR"],
+  "spoilers_active": false,
   "rounds": [
     {
       "round": 5,
@@ -388,15 +389,21 @@ read the way the public bracket page reads it.
 
 | Field | Meaning |
 |---|---|
+| `spoilers_active` | spoilers apply to the event right now (as in `evento.php`). While true, every `seed` is null |
 | `rounds` | first round first, as the page draws them. `round`: 6 for the round of 128, 5 for 64 … 2 quarterfinals, 1 semifinals, 0 final, -1 the match for third place. `name` is the page's (Portuguese) |
 | `slots` | the two sides of a match. `type`: `team`; `bye` (nobody: the other team goes through without racing); `pending` (not decided yet: `from_match` and `takes`, `winner` or `loser` of that match); `unknown` (anything the table holds that is none of these) |
-| `slots[].seed` | the team's place in the classification the bracket was made from (1 is the top seed; seeds 1 and 2 can only meet in the final). Null when the prova kept no such list |
+| `slots[].seed` | the team's place in the classification the bracket was made from (1 is the top seed; seeds 1 and 2 can only meet in the final). Null when the prova kept no such list, **and null for every team while `spoilers_active` is true** |
 | `best_of` | 3 for a "best of 3" match, null for a single race. `slots[].wins` then counts the races each side has won |
 | `winner` | the winner's car number once decided, else null |
 
 Brackets are public as soon as the organisers publish them, during the
 event too: the page has never hidden them during spoilers, and neither
-does the API.
+does the API. The seeds are the exception. The classification behind them
+is usually built from scores (the dynamic events' points, say) that
+spoilers may be hiding, and the seed order would give that ranking away.
+So while spoilers apply (spoilers on and the event not finished) every
+`seed` is null; they appear once spoilers are switched off or the event is
+finished. Teams, pairings, winners and wins are shown throughout.
 
 ## Spoilers
 
@@ -440,15 +447,19 @@ What a consumer sees:
   (25SU is over; this is its table shown as running, flags changed in
   memory, as the snapshot tool and the tests do.)
 
-Exactly what is hidden is decided by the results builder alone
+- `torneio.php`: `spoilers_active` is true and every `seed` is null; the
+  bracket itself is shown (see [torneio](#get-resultadostorneiophp)).
+
+The live race has no spoilers.
+
+What a table hides is decided by the results builder alone
 (`ViewerContext::publicView()`). Today that includes rule R12 of
 [`results-rules.md`](results-rules.md): while spoilers apply, a table with
 spoiler columns ranks nobody, so every `position` is null. The API follows
 whatever the builder decides; a consumer should rely on
 `spoilers_active` and on `position` being null, not on which columns show
-what.
-
-The live race and the brackets have no spoilers.
+what. Whether spoilers apply at all is the builder's rule too, and the
+seeds of a bracket follow it.
 
 ## Caching
 
