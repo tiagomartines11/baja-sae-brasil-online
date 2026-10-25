@@ -76,6 +76,15 @@ final class Column
         };
     }
 
+    /**
+     * Whether spoilers hide this column: it has a "val_spoilers". Missing,
+     * "" or an empty list mean it is always shown, as the pages always read it.
+     */
+    public function hasSpoilerValue(): bool
+    {
+        return (bool)$this->valSpoilers;
+    }
+
     /** The highlight formula, or null when it is missing or "" (R6). "0" is a formula. */
     public function highlightFormula(): mixed
     {
