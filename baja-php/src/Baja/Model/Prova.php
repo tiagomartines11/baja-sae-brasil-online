@@ -112,14 +112,37 @@ class Prova extends BaseProva
         return $this->getEventoId().'_'.$this->getProvaId();
     }
 
+    /**
+     * Works out the prova's totals and saves them. The "pontos" formulas of
+     * every team can then use them. For each variable X in "min_max", over
+     * the event's teams that are not disqualified:
+     *
+     *   $Xmax    the highest X, leaving out null and 9999
+     *   $Xmin    the lowest X, leaving out null and 0
+     *   $Xcom    0.5 * (1 - (teams whose X is not 9999) / (teams whose X is not null))
+     *   $Xcount  how many teams have a value
+     *   $Xsum    the sum of the values (0 when no team has one)
+     *   $Xavg    the average of the values (null when no team has one)
+     *
+     * For the last three (BAJAAPP-65), "a value" is any X that is not null
+     * and not the 9999 "no valid result" marker, the same ones $Xmax looks
+     * at; 0 is a value. A min_max formula that gives null for the teams that
+     * don't qualify makes them conditional: with "FIN": "$T < 9999 ? 1 : null",
+     * $FINcount is the number of finishers and $FINsum a SUMIF.
+     */
     public function updateTotals()
     {
         $varsQuery = [];
         foreach ((array)$this->getParamsMinMax() as $var => $formula) {
+            // The team's X, or NULL when it has no value (null, or 9999).
+            $value = "IF(vars->>'$.$var'='null' OR vars->>'$.$var'='9999', NULL, vars->'$.$var')";
             $varsQuery[] = "
-            '{$var}max', MAX(IF(vars->>'$.$var'='null' OR vars->>'$.$var'='9999', NULL, vars->'$.$var')), 
+            '{$var}max', MAX($value),
             '{$var}min', MIN(IF(vars->>'$.$var'='null' OR vars->>'$.$var'='0', NULL, vars->'$.$var')),
-            '{$var}com', (0.5 * (1 - SUM(IF(vars->>'$.$var'='9999', NULL, 1))/SUM(IF(vars->>'$.$var'='null', NULL, 1))))
+            '{$var}com', (0.5 * (1 - SUM(IF(vars->>'$.$var'='9999', NULL, 1))/SUM(IF(vars->>'$.$var'='null', NULL, 1)))),
+            '{$var}count', COUNT($value),
+            '{$var}sum', COALESCE(SUM($value), 0),
+            '{$var}avg', AVG($value)
             ";
         }
 

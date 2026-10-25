@@ -214,6 +214,16 @@ jobs:
           BAJA_TEST_DB_PASS: root
         run: vendor/bin/phpunit --testsuite results-check-db --fail-on-skipped
 
+      # Prova totals ($Xmax, $Xcount, $Xsum...): saves a made-up event's prova
+      # and reads its totals back (BAJAAPP-65), then deletes the event. It
+      # writes, so it needs BAJA_TEST_DB=1 and the account that may write.
+      - name: PHPUnit (prova totals)
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite prova-db --fail-on-skipped
+
       - name: Results snapshots match
         run: php scripts/results-snapshot.php --check --jobs 4
 
