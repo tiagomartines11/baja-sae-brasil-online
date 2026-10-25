@@ -201,6 +201,13 @@ jobs:
       - name: PHPUnit (the tool writes nothing)
         run: vendor/bin/phpunit --testsuite results-snapshot-db
 
+      # The public results API (docs/results-api.md) on the seed, as the
+      # SELECT-only "snapshot" account: every table equals the results
+      # builder's public one, spoilers included. --fail-on-skipped: a test
+      # skipped here would be a check nobody ran.
+      - name: PHPUnit (public results API)
+        run: vendor/bin/phpunit --testsuite results-api-db --fail-on-skipped
+
       # scripts/check-results-configs.php (docs/results-config-check.md):
       # writes nothing, finds the seed's known broken configs, and survives a
       # formula that kills PHP. That last test loads a made-up event first
