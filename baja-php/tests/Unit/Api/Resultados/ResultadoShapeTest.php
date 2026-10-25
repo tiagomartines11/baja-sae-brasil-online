@@ -220,9 +220,9 @@ final class ResultadoShapeTest extends TestCase
      * why the values and positions are missing, instead of thinking the
      * table is broken.
      *
-     * Exactly what spoilers hide is the builder's business (BAJAAPP-42 is
-     * changing it); this test only checks that the API says what the
-     * builder says.
+     * Exactly what spoilers hide is the builder's business (rules R11 and
+     * R12 of docs/results-rules.md); this test only checks that the API
+     * says what the builder says.
      */
     public function testDuringSpoilersTheApiSaysSoAndShowsWhatTheBuilderShows(): void
     {

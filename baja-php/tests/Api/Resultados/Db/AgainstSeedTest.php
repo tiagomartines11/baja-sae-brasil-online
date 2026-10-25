@@ -49,7 +49,7 @@ use Propel\Runtime\Propel;
  * main tests do not say what a table should contain. They build every
  * resultado of an event a second time, straight with the builder, and
  * check that the API's JSON says the same thing, position by position and
- * cell by cell. When the builder's rules change (BAJAAPP-42 is changing
+ * cell by cell. When the builder's rules change (as BAJAAPP-42 changed
  * what spoilers hide), these tests keep passing, because the API follows.
  *
  * The events used:

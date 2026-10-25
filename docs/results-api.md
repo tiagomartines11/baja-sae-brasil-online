@@ -441,9 +441,10 @@ What a consumer sees:
   memory, as the snapshot tool and the tests do.)
 
 Exactly what is hidden is decided by the results builder alone
-(`ViewerContext::publicView()`), and BAJAAPP-42 is changing it (no ranking
-at all for a table with spoiler columns while spoilers apply). The API
-follows whatever the builder decides; a consumer should rely on
+(`ViewerContext::publicView()`). Today that includes rule R12 of
+[`results-rules.md`](results-rules.md): while spoilers apply, a table with
+spoiler columns ranks nobody, so every `position` is null. The API follows
+whatever the builder decides; a consumer should rely on
 `spoilers_active` and on `position` being null, not on which columns show
 what.
 
