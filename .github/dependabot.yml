@@ -42,6 +42,10 @@ updates:
       # A Next major is a project, not a bump (14 -> 16 was BAJAAPP-47).
       - dependency-name: next
         update-types: ["version-update:semver-major"]
+      # The types follow the Node major we run (baja-infra/baja-js/Dockerfile
+      # and the Frontend CI job), not the newest Node; move them together.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
