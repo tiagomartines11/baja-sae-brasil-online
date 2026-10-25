@@ -163,6 +163,9 @@ $r = $executar('', []);
 
 T::same([], $r['enderecos'], 'blank and no derived addresses: nobody is notified');
 T::ok('blank and no derived addresses: "nobody to notify" is logged', $logContem($r['log'], 'nobody to notify'));
+// The message says WHY nobody was found, so the reader knows what to fix:
+// here, that the variable is blank (not that it is wrong).
+T::ok('blank and no derived addresses: the log says the variable is blank', $logContem($r['log'], 'CERT_REPORT_EMAILS is blank'));
 
 // Same, but the variable was set to garbage: both errors appear, the
 // misconfiguration first, then "nobody to notify".
@@ -171,6 +174,9 @@ $r = $executar('nao-e-um-email', []);
 T::same([], $r['enderecos'], 'invalid variable and no derived addresses: nobody is notified');
 T::ok('invalid variable and no derived addresses: the misconfiguration is logged', $logContem($r['log'], 'CERT_REPORT_EMAILS is set but none of its'));
 T::ok('invalid variable and no derived addresses: "nobody to notify" is logged', $logContem($r['log'], 'nobody to notify'));
+// Here the variable WAS set, so the log must not claim it is blank.
+T::ok('invalid variable and no derived addresses: the log says the variable has no valid address', $logContem($r['log'], 'CERT_REPORT_EMAILS has no valid address'));
+T::ok('invalid variable and no derived addresses: the log does not call the variable blank', !$logContem($r['log'], 'CERT_REPORT_EMAILS is blank'));
 
 // The derived list is validated and deduplicated the same way. A forum
 // profile with a broken address is skipped, and an address that appears

@@ -84,9 +84,11 @@ final class Destinatarios
 
         if ($unicos === []) {
             error_log(
-                'Certificado\Requerimento\Destinatarios: nobody to notify — no user holds the "'
-                . Acesso::PERMISSAO . '" permission with a forum email, and ' . self::ENV_EXTRA
-                . ' is unset. Reports are still being saved.'
+                'Certificado\Requerimento\Destinatarios: nobody to notify — ' . self::ENV_EXTRA
+                . (trim($configurado) === '' ? ' is blank' : ' has no valid address')
+                . ', and no user holding the "' . Acesso::PERMISSAO
+                . '" or "admin" permission has a valid email in their forum profile.'
+                . ' Reports are still being saved.'
             );
         }
 

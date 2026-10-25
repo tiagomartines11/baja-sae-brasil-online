@@ -126,9 +126,9 @@ services:
       ENV: ${ENV}
       # Keys the /buscar per-document backoff. See .env.example.
       CERT_BACKOFF_SECRET: ${CERT_BACKOFF_SECRET}
-      # /requerimento, the participant-facing correction form. See
-      # .env.example; the notification recipients are derived from the
-      # `certificados` permission, and this list is added to them.
+      # /requerimento, the participant-facing correction form. Who gets the
+      # notification: this list when it has a valid address, otherwise the
+      # users with the `certificados` or `admin` permission. See .env.example.
       CERT_REPORT_EMAILS: ${CERT_REPORT_EMAILS}
       # Cloudflare Turnstile, the anti-robot check on that form. Unset means
       # the check is skipped and said to be skipped, not that the form breaks.
