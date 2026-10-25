@@ -34,8 +34,8 @@ final class Command
                             only: never compared, never fails the run. On its own it writes
                             nothing; with --check or --update it is printed first
           --dir <path>      the snapshot folder (default: tests/results-snapshots)
-          --events <list>   only these events, comma separated, e.g. 22BR,23SU
-                            (default: every event with finalizado = 1)
+          --events <list>   only these events, comma separated, e.g. 22BR,23SU, finished or
+                            not (default: every event with finalizado = 1)
           --jobs <n>        how many PHP processes to run at once (default: 4)
 
         Read-only: it never writes to the database. See docs/results-snapshots.md.

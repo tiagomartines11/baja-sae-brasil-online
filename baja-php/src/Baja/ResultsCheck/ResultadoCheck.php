@@ -26,6 +26,7 @@ use Baja\Results\ViewerContext;
  *      without a position.
  *   3. Formula columns that are empty for every team, although no formula
  *      raised an error: likely broken too.
+ *   4. Variables a formula reads that nothing gives it (UnknownVariables).
  *
  * The builder is run one team at a time, so that each error can be put
  * down to the team it came from. A team's row depends only on that team's
@@ -35,10 +36,11 @@ use Baja\Results\ViewerContext;
 final class ResultadoCheck
 {
     /**
-     * @param list<TeamInput> $inputs
+     * @param list<TeamInput>     $inputs
+     * @param array<string, true> $declared the names its provas' configs declare (UnknownVariables)
      * @return array{teams: int, findings: list<Finding>}
      */
-    public static function run(object $colunas, array $inputs): array
+    public static function run(object $colunas, array $inputs, array $declared = []): array
     {
         $config = ResultsConfig::fromColunas($colunas);
         $slots = FormulaSlot::ofResultado($colunas);
@@ -70,6 +72,7 @@ final class ResultadoCheck
             array_push($findings, ...self::emptyColumns($config, $colunas, $rows, $findings));
         }
         array_push($findings, ...self::ranking($config, $rows));
+        array_push($findings, ...UnknownVariables::ofResultado($colunas, $inputs, $declared));
         return ['teams' => $teams, 'findings' => $findings];
     }
 

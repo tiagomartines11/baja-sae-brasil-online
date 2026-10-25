@@ -2,6 +2,8 @@
 
 namespace Baja\Model;
 
+use Baja\Formula\FormulaEngine;
+use Baja\Formula\FormulaEngines;
 use Baja\Model\Base\Input as BaseInput;
 use Propel\Runtime\Exception\PropelException;
 use Throwable;
@@ -139,6 +141,21 @@ class Input extends BaseInput
         self::$formulaErrorListener = $listener;
     }
 
+    /**
+     * The engine that works the formulas out (Baja\Formula\FormulaEngines,
+     * from the FORMULA_ENGINE setting), made on first use.
+     */
+    private static ?FormulaEngine $formulaEngine = null;
+
+    /**
+     * Sets the engine (or, with null, goes back to the configured one).
+     * For the corpus comparison and the tests; the pages never call it.
+     */
+    public static function setFormulaEngine(?FormulaEngine $engine): void
+    {
+        self::$formulaEngine = $engine;
+    }
+
     public static function solveFormula($vars, $formula) {
         // Rede de segurança: uma fórmula malformada não deve derrubar a página
         // inteira. Em PHP 8 usar "+" para concatenar strings ('<b>'+X) é um
@@ -147,32 +164,13 @@ class Input extends BaseInput
         // aqui apenas degradamos para null em vez de derrubar a página — o mesmo
         // que o "@" fazia no PHP 7 para erros não fatais.
         try {
-            return self::evaluateFormula($vars, $formula);
+            self::$formulaEngine ??= FormulaEngines::configured();
+            return self::$formulaEngine->evaluate($vars, $formula);
         } catch (Throwable $e) {
             if (self::$formulaErrorListener !== null) {
                 (self::$formulaErrorListener)($e, $formula);
             }
             return null;
         }
-    }
-
-    /**
-     * The formula's value. Its own function so that the formula sees only
-     * $vars, $formula and the extracted variables, exactly as before the
-     * listener existed.
-     */
-    private static function evaluateFormula($vars, $formula) {
-        extract((array)$vars);
-
-        @eval("\$formula = $formula;");
-
-        if (is_string($formula)) {
-            return $formula;
-        }
-        // is_nan()/is_infinite() só aceitam float; chamar com null gera deprecation.
-        if (!is_int($formula) && !is_float($formula)) {
-            return null;
-        }
-        return (is_nan($formula) || is_infinite($formula)) ? null : $formula;
     }
 }

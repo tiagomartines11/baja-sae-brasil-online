@@ -238,7 +238,28 @@ jobs:
           BAJA_TEST_DB_PASS: root
         run: vendor/bin/phpunit --testsuite prova-db --fail-on-skipped
 
+      # scripts/formula-engine-compare.php (docs/formula-engine.md): on the
+      # seed, eval() and the new formula engine give the same value for every
+      # formula and team, and the tool writes nothing. CompareFixtureTest loads
+      # a made-up event first (formulas that differ, formulas that kill PHP),
+      # so it needs BAJA_TEST_DB=1 and an account that may write; the tool
+      # itself still runs as the SELECT-only "snapshot".
+      - name: PHPUnit (formula engine comparison)
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite formula-compare-db --fail-on-skipped
+
       - name: Results snapshots match
+        run: php scripts/results-snapshot.php --check --jobs 4
+
+      # The same snapshots, every formula worked out by the engine that will
+      # replace eval() (BAJAAPP-35). The site still runs eval() (the default);
+      # this proves the new engine publishes exactly the same results.
+      - name: Results snapshots match with FORMULA_ENGINE=safe
+        env:
+          FORMULA_ENGINE: safe
         run: php scripts/results-snapshot.php --check --jobs 4
 
   infra:
