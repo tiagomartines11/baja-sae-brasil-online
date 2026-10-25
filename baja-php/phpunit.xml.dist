@@ -60,6 +60,17 @@
             <directory>tests/ResultsCheck/Db</directory>
         </testsuite>
         <!--
+          The formula engine comparison (docs/formula-engine.md) on the dev
+          seed: no formula differs, nothing is written. Needs the app's
+          database variables, skipped without them. CompareFixtureTest also
+          needs BAJA_TEST_DB set to 1, because it loads a made-up event first.
+          The engines' own tests are in tests/Unit/Formula, part of the unit
+          suite.
+        -->
+        <testsuite name="formula-compare-db">
+            <directory>tests/FormulaCompare/Db</directory>
+        </testsuite>
+        <!--
           Prova totals ($Xmax, $Xcount...) worked out by a real save, on a
           made-up event that the test inserts and deletes. Needs the app's
           database variables and BAJA_TEST_DB set to 1; skipped without them.

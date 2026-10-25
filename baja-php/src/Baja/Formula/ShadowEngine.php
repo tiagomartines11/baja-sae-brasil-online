@@ -118,18 +118,24 @@ final class ShadowEngine implements FormulaEngine
     }
 
     /**
-     * Only the variables the formula names (a team has dozens), or all of
-     * them when the formula cannot be read.
+     * Only the variables the formula names (a team has dozens). When
+     * SafeEngine cannot read the formula, PHP's own tokenizer still finds
+     * the $NAMES in it.
      *
      * @return array<string, mixed>
      */
-    private static function variablesRead(mixed $vars, mixed $formula): array
+    public static function variablesRead(mixed $vars, mixed $formula): array
     {
         $all = (array)$vars;
         try {
             $names = SafeEngine::read($formula)->variables;
         } catch (Throwable) {
-            return $all;
+            $names = [];
+            foreach (is_string($formula) ? token_get_all('<?php ' . $formula . ';') : [] as $token) {
+                if (is_array($token) && $token[0] === T_VARIABLE) {
+                    $names[substr($token[1], 1)] = substr($token[1], 1);
+                }
+            }
         }
         $read = [];
         foreach ($names as $name) {
