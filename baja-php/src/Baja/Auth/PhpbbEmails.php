@@ -56,8 +56,9 @@ final class PhpbbEmails
      * report has been written down, and an exception at that point would turn
      * a saved report into a 500 — the person retries, and the queue fills
      * with duplicates of a report that was already safe. The report is the
-     * thing that matters; the notification is best-effort, and the env
-     * fallback list in Destinatarios exists for exactly this.
+     * thing that matters; the notification is best-effort, and a deployment
+     * that cannot rely on this read sets CERT_REPORT_EMAILS, which
+     * Destinatarios then uses without asking the forum at all.
      */
     public function __construct(?array $config = null)
     {
