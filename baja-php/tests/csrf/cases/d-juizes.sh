@@ -19,7 +19,7 @@ php_in_app '
     $p->setEventoId("28SU");
     $p->setProvaId("ZZR");
     $p->setNome("Prova rolante de teste");
-    $p->setStatus(1);
+    $p->setStatus("Parcial");
     $p->setParams(json_decode("{\"inputs\": [{\"code\": \"T\", \"name\": \"Tempo\", \"type\": \"number\", \"precision\": 1}], \"vars\": {}, \"pontos\": {}}"));
     $p->setTotals(json_decode("{}"));
     $p->save();
