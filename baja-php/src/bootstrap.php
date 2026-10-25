@@ -62,6 +62,15 @@ if ($isApiVhost || strpos($requestPath, '/api/') === 0) {
 if (!getenv('SKIP_AUTH')) {
     require_once(__DIR__ . "/phpbb_login.php");
     $_DEV_MODE = $user->data["username"] == "Tiago" || $user->data["username"] == "jbresolin";
+
+    // The cookie that lets a judge skip the results cache (docs/results-caching.md):
+    // set for users with judge permissions, cleared for everybody else. Every
+    // page with a session does it, so a judge gets it on the page the login
+    // lands on, and a new value from .env on their next page. Not on the API
+    // vhost, which serves programs, not judges' browsers.
+    if (!$isApiVhost) {
+        \Baja\Auth\StaffCookie::sync(\Baja\Session::getCurrentUserOrNull());
+    }
 } else {
     // No error-reporting changes here on purpose. Whether a request renders
     // errors is decided at the top of this file, from ENV alone; a SKIP_AUTH
