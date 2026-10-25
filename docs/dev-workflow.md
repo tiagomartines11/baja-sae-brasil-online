@@ -120,6 +120,14 @@ Before requesting review:
       same cacheable page and no cookie, and that only a judge's session sees
       past spoilers, never cached. See
       [`results-caching.md`](results-caching.md), "Tests".
+- [ ] If you touched the public results API (`baja-php/api/resultados/`,
+      `baja-php/src/Baja/Api/`) or anything the results-builder bullet
+      above lists, the
+      API's suites pass: `vendor/bin/phpunit --testsuite unit` and
+      `--testsuite results-api-db` (CI runs both), and, if you touched the
+      API vhost, `baja-php/tests/Api/results-http-test.sh`. Its contract is
+      [`results-api.md`](results-api.md): add fields, never rename or
+      remove one.
 - [ ] If you edited `baja-php/schema.xml`, the generated `Base*` classes,
       table maps and `src/loadDatabase.php` were regenerated and committed:
       `docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build`.

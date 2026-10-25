@@ -87,6 +87,47 @@ class Cors
     }
 
     /**
+     * handle() for public, read-only data that any site may read, such as
+     * the results API (api/resultados/): stream overlays and other pages on
+     * hosts we do not know call it. Same as resultados/contagem_feed.php.
+     *
+     * Differences from handle():
+     * - Access-Control-Allow-Origin is "*", for every request. The response
+     *   is then the same whatever the Origin, so there is no Vary: Origin,
+     *   and Cloudflare keeps one copy per URL instead of one per site.
+     * - No Access-Control-Allow-Credentials: these endpoints read no cookie,
+     *   and browsers refuse "*" together with credentials anyway.
+     * - A refused method is answered with Cache-Control: no-store, like
+     *   every error of the results API.
+     *
+     * @param string|array $methods Allowed HTTP methods, as for handle()
+     * @return void This method exits on OPTIONS preflight or invalid method
+     */
+    public static function handlePublic(string|array $methods = 'GET'): void
+    {
+        $methodsArray = \is_string($methods) ? array_map('trim', explode(',', $methods)) : $methods;
+        $methodsString = implode(', ', array_merge($methodsArray, ['OPTIONS']));
+
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: ' . $methodsString);
+        // X-Request-ID: see handle().
+        header('Access-Control-Allow-Headers: Content-Type, X-Request-ID');
+        header('Content-Type: application/json; charset=UTF-8');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            header('Access-Control-Max-Age: 7200');
+            header('Allow: ' . $methodsString);
+            http_response_code(200);
+            exit;
+        }
+
+        if (!\in_array($_SERVER['REQUEST_METHOD'], $methodsArray, true)) {
+            header('Cache-Control: no-store');
+            self::error(405, 'Método não permitido');
+        }
+    }
+
+    /**
      * Check if an origin is allowed based on the explicit whitelist.
      *
      * @param string $origin The origin to check (e.g., 'https://bajasaebrasil.net')

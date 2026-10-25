@@ -91,6 +91,11 @@ class ApiDocsConfig
                 'description' => 'Gerenciamento de atividades de eventos.',
                 'order' => 10,
             ],
+            'resultados' => [
+                'name' => 'Resultados',
+                'description' => 'Dados publicos da competicao, somente leitura e sem login: evento, equipes, resultados, corrida ao vivo e torneios. Qualquer origem; respostas com cache publico. Contrato em docs/results-api.md.',
+                'order' => 11,
+            ],
             'admin' => [
                 'name' => 'Administracao',
                 'description' => 'Endpoints administrativos (requer permissao admin).',

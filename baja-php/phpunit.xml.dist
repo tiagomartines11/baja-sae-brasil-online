@@ -67,5 +67,16 @@
         <testsuite name="prova-db">
             <directory>tests/Prova/Db</directory>
         </testsuite>
+        <!--
+          The public results API (docs/results-api.md) on the dev seed: every
+          table equals the results builder's public one, spoilers included;
+          the tournament and the lap-counted prova are well formed; unknown
+          ids give 404. Read-only. Needs the app's database variables,
+          skipped without them. Its unit tests are in tests/Unit/Api, part
+          of the unit suite.
+        -->
+        <testsuite name="results-api-db">
+            <directory>tests/Api/Resultados/Db</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
