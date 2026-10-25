@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Model\EventoQuery;
 use Baja\Model\FilaQuery;
@@ -10,6 +11,9 @@ use Baja\Model\UserQuery;
 use Baja\Session;
 
 Session::permissionCheck("admin");
+
+// Saving rewrites (or deletes) the user: refused without the form's token (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 if (!isset($_REQUEST['id'])) { header("Location: admin_usuarios.php"); exit(); }
 
@@ -102,7 +106,8 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
 
 ?>
     <div style="max-width: 720px; margin: 0 auto;">
-        <form action="admin_usuario.php?id=<?= $user->getUserId() ?>&amp;act=save" method="POST">
+        <form action="admin_usuario.php?id=<?= $h($user->getUserId()) ?>&amp;act=save" method="POST">
+            <?= Csrf::field() ?>
             <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
                 <thead>
                 <tr style="height: 50px">

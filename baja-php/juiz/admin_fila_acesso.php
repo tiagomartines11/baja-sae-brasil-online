@@ -1,13 +1,18 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Fila\Fila;
 use Baja\Model\EventoQuery;
 use Baja\Model\FilaQuery;
 use Baja\Model\UserQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
+
+// grant and revoke change every listed user's permissions: refused without the form's token (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $eventos = EventoQuery::create()->orderByEventoId('desc')->find();
 
@@ -109,6 +114,7 @@ Template::printHeader("Acesso em massa às filas", false, false);
 ?>
     <div style="max-width: 720px; margin: 0 auto;">
         <form action="admin_fila_acesso.php?act=grant" method="POST">
+            <?= Csrf::field() ?>
             <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
                 <thead>
                 <tr style="height: 50px">
@@ -170,6 +176,7 @@ Template::printHeader("Acesso em massa às filas", false, false);
         <br /><br />
 
         <form action="admin_fila_acesso.php?act=revoke" method="POST" onsubmit="return confirm('Remover TODAS as permissões de acesso à(s) fila(s) selecionada(s) de TODOS os usuários? Esta ação não pode ser desfeita.');">
+            <?= Csrf::field() ?>
             <table id="myTable3" class="tablesorter" style="margin-bottom: 0;">
                 <thead>
                 <tr style="height: 50px">
@@ -243,11 +250,11 @@ Template::printHeader("Acesso em massa às filas", false, false);
         refresh();
     }
 
-    <?php if (!empty($_POST['evento'])) { ?>$('#evento').val(<?= json_encode($_POST['evento']) ?>);<?php } ?>
-    wireFilas('#evento', '#fila', <?= json_encode($_POST['fila'] ?? null) ?>);
+    <?php if (!empty($_POST['evento'])) { ?>$('#evento').val(<?= Html::js($_POST['evento']) ?>);<?php } ?>
+    wireFilas('#evento', '#fila', <?= Html::js($_POST['fila'] ?? null) ?>);
 
-    <?php if (!empty($_POST['rm_evento'])) { ?>$('#rm_evento').val(<?= json_encode($_POST['rm_evento']) ?>);<?php } ?>
-    wireFilas('#rm_evento', '#rm_fila', <?= json_encode($_POST['rm_fila'] ?? null) ?>);
+    <?php if (!empty($_POST['rm_evento'])) { ?>$('#rm_evento').val(<?= Html::js($_POST['rm_evento']) ?>);<?php } ?>
+    wireFilas('#rm_evento', '#rm_fila', <?= Html::js($_POST['rm_fila'] ?? null) ?>);
 </script>
 
 <?php

@@ -4,6 +4,7 @@ namespace Baja\Juiz;
 use Baja\Auth\LoginCsrf;
 use Baja\Model\EventoQuery;
 use Baja\Session;
+use Baja\Site\Html;
 use Baja\Url;
 
 // Logout is handled FIRST, before the already-logged-in redirect below.
@@ -83,7 +84,7 @@ echo '
                 </th>
             </tr>	
             <tr class="tablesorter-ignoreRow" style="height: 40px">
-                <th class="sorter-false" style="line-height: 22px;">'.EventoQuery::getCurrentEvent()->getNome().'<br />Entrada de Dados</th>
+                <th class="sorter-false" style="line-height: 22px;">'.Html::e(EventoQuery::getCurrentEvent()->getNome()).'<br />Entrada de Dados</th>
             </tr>
         </thead>
 <tr>

@@ -8,6 +8,7 @@ use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
 
@@ -30,7 +31,7 @@ Template::printHeader("Admin");
             <tr style="height: 50px;">
                 <th colspan="5" class="sorter-false">
                     <span style="float:left;"><a href="admin_provas.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span> 
-                    <span style="font-size: 28px;">Logs prova <?= $_page ?> (<?= $currentEventId ?>)</span>
+                    <span style="font-size: 28px;">Logs prova <?= Html::e($_page) ?> (<?= Html::e($currentEventId) ?>)</span>
                 </th>
             </tr>
             <tr> 
@@ -45,11 +46,11 @@ Template::printHeader("Admin");
 
 <?php foreach ($logs as $log) { ?>
             <tr>
-                <td><?= $log->getId() ?></td>
-                <td><?= $log->getUser() ?></td>
+                <td><?= Html::e($log->getId()) ?></td>
+                <td><?= Html::e($log->getUser()) ?></td>
                 <td><?= $log->getData()->format('Y-m-d H:i:s') ?></td>
-                <td><?= $log->getEquipe() ?></td>
-                <td ><?= json_encode(json_decode($log->getDados() ?? ''), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></td>                
+                <td><?= Html::e($log->getEquipe()) ?></td>
+                <td ><?= Html::e(json_encode(json_decode($log->getDados() ?? ''), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></td>                
             </tr>
 <?php } ?>
         </tbody>        

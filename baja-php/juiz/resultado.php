@@ -1,12 +1,14 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\LogQuery;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\Resultado;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 use DateTimeZone;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) { header("Location: admin_resultados.php"); exit; }
@@ -14,6 +16,10 @@ if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) { header("Location: ad
 $_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
+
+// Every act changes something: no act runs without the form's token, which
+// also refuses a GET link carrying one (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
@@ -132,8 +138,10 @@ Template::printHeader("Detalhes de Resultado", false);
 <div style="max-width: 1000px; margin: 0 auto; height:100vh;">
 <?php if ($novo) { ?>
     <form action="resultado.php?novo=true" method="POST">
+        <?= Csrf::field() ?>
 <?php } else { ?>
-    <form action="resultado.php?id=<?= $resultado->getResultadoId() ?>" method="POST">
+    <form action="resultado.php?id=<?= Html::e(rawurlencode($resultado->getResultadoId())) ?>" method="POST">
+        <?= Csrf::field() ?>
 <?php } ?>    
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
@@ -141,7 +149,7 @@ Template::printHeader("Detalhes de Resultado", false);
                     <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                         <span style="float:left"><a href="admin_resultados.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
                         <span style="float:right"><a href="ajuda_resultado.php" target="_blank" style="color: white; font-size: 12px;">Ajuda&nbsp;</a></span>
-                        <span style="font-size: 28px;"><?= $novo?'Novo Resultado':$resultado->getNome(); ?></span> <br />
+                        <span style="font-size: 28px;"><?= $novo?'Novo Resultado':Html::e($resultado->getNome()); ?></span> <br />
                     </th>
                 </tr>
             </thead>
@@ -153,19 +161,19 @@ Template::printHeader("Detalhes de Resultado", false);
                 <?php } ?>
                 <tr>
                     <td>Evento</td>
-                    <td><input style="width:700px;" type="text" name="evento_id" disabled value="<?= $currentEventId ?>"/></td>
+                    <td><input style="width:700px;" type="text" name="evento_id" disabled value="<?= Html::field($currentEventId) ?>"/></td>
                 </tr>
                 <tr>
                     <td>ID Resultado</td>
-                    <td><input style="width:700px;" type="text" name="resultado_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':$resultado->getResultadoId() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="resultado_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':Html::field($resultado->getResultadoId()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Título Resultado</td>
-                    <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':$resultado->getNome() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':Html::field($resultado->getNome()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Inputs<br /><a href="ajuda_resultado.php#inputs" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
-                    <td><input style="width:700px;" type="text" name="inputs" value="<?= $novo?'':implode(", ",$resultado->getInputs()) ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="inputs" value="<?= $novo?'':Html::field(implode(", ",$resultado->getInputs())) ?>" /></td>
                 </tr>
                 <tr>
                     <td rowspan="2">Colunas<br /><a href="ajuda_resultado.php#colunas" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
@@ -186,7 +194,7 @@ Template::printHeader("Detalhes de Resultado", false);
                             <?php
                                 foreach($bkNomeados as $k=>$bk) {
                             ?>
-                                <option value="<?= $k ?>"><?= $k ?></option>
+                                <option value="<?= Html::field($k) ?>"><?= Html::e($k) ?></option>
                             <?php
                                 }
                             ?>
@@ -206,7 +214,7 @@ Template::printHeader("Detalhes de Resultado", false);
                         echo htmlspecialchars($_POST['colunas'] ?? '');
                     } else {
                         $colunas = $novo ? null : $resultado->getColunas();
-                        echo $colunas === null ? '' : json_encode($colunas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                        echo $colunas === null ? '' : Html::field(json_encode($colunas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
                     }
                 ?></textarea></td>
                 </tr>
@@ -235,8 +243,10 @@ Template::printHeader("Detalhes de Resultado", false);
     </form>
 
     <script type="text/javascript">
-        const atual = <?= $novo?'[]':json_encode($resultado->getColunas()) ?>;
-        const backs = <?= (!$novo && $resultado->getColunasBackup())?$resultado->getColunasBackup():'{}' ?>;
+        // Html::js, not plain json_encode: a header or name holding "</script>"
+        // would end this block. The backups were printed as stored, raw.
+        const atual = <?= $novo?'[]':Html::js($resultado->getColunas()) ?>;
+        const backs = <?= (!$novo && $resultado->getColunasBackup())?Html::js(json_decode($resultado->getColunasBackup()) ?? new \stdClass()):'{}' ?>;
 
         const colunasEl = document.getElementById("colunas");
         const selectEl = document.getElementById("nomeado");

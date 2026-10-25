@@ -1,17 +1,24 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Model\TournamentQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
 Session::permissionCheck($_page);
+
+// Both change the bracket. They used to be plain links, so an <img src> on
+// any page a judge opened could pick a winner: now they are POST forms with
+// the token, and a request without it changes nothing (Baja\Auth\Csrf).
+if (isset($_REQUEST['reset']) || isset($_REQUEST['setwinner'])) Csrf::enforce();
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
 function checkBlocked($match, $currentEventId, $_page) {
@@ -191,6 +198,9 @@ if (isset($_REQUEST['round'])) {
 
 $matches = TournamentQuery::create()->filterByEventoId($currentEventId)->filterByProvaId($_page)->filterByRound($current_round)->find();
 
+// Where the reset and winner forms post: back to this round.
+$acao = Html::e('tournament_entry.php?p=' . rawurlencode($_page) . '&round=' . $current_round);
+
 
 
 ?>
@@ -199,13 +209,13 @@ $matches = TournamentQuery::create()->filterByEventoId($currentEventId)->filterB
     <thead>
         <tr>
             <th colspan="4" style="border: solid 2px black; padding-bottom: 20px;" class="sorter-false">
-                <span style="font-size: 28px; line-height: 34px;"><?= $prova->getNome() ?></span> <br />
+                <span style="font-size: 28px; line-height: 34px;"><?= Html::e($prova->getNome()) ?></span> <br />
             </th>
         </tr>
         <tr>
-            <th class="sorter-false"><?php if ($current_round+1<=$max_round){ ?><span style="font-size: 40px;"><a href="tournament_entry.php?p=<?= $_page ?>&round=<?= $current_round+1 ?>">⬅️</a></span><?php } ?></th>
+            <th class="sorter-false"><?php if ($current_round+1<=$max_round){ ?><span style="font-size: 40px;"><a href="tournament_entry.php?p=<?= Html::e(rawurlencode($_page)) ?>&amp;round=<?= $current_round+1 ?>">⬅️</a></span><?php } ?></th>
             <th colspan="2" class="sorter-false"><?= $rounds[$current_round] ?></th>
-            <th class="sorter-false"><?php if ($current_round-1>=$min_round){ ?><span style="font-size: 40px;"><a href="tournament_entry.php?p=<?= $_page ?>&round=<?= $current_round-1 ?>">➡️</a></span><?php } ?></th>
+            <th class="sorter-false"><?php if ($current_round-1>=$min_round){ ?><span style="font-size: 40px;"><a href="tournament_entry.php?p=<?= Html::e(rawurlencode($_page)) ?>&amp;round=<?= $current_round-1 ?>">➡️</a></span><?php } ?></th>
         </tr>
     </thead>
     <tbody>
@@ -215,10 +225,10 @@ $matches = TournamentQuery::create()->filterByEventoId($currentEventId)->filterB
 foreach($matches as $m) {
 
 ?>
-    <tr><td colspan="4"><b>Embate: <?= $m->getMatchId() ?></b></td></tr>
+    <tr><td colspan="4"><b>Embate: <?= Html::e($m->getMatchId()) ?></b></td></tr>
     <tr>
-        <td colspan="2"><span style="font-size:40px;<?= $m->getWinner()===(int)$m->getEquipe1Id()?'font-weight:bold;color:green;':'' ?>"><?= $m->getEquipe1Id() ?></span><br/><span style="font-size:15px;"><?= (int)$m->getEquipe1Id()>0?(EquipeQuery::create()->filterByEventoId($currentEventId)->filterByEquipeId((int)$m->getEquipe1Id())->findOne()->getEquipeCurto()):'-' ?></span></td>
-        <td colspan="2"><span style="font-size:40px;<?= $m->getWinner()===(int)$m->getEquipe2Id()?'font-weight:bold;color:green;':'' ?>"><?= $m->getEquipe2Id() ?></span><br/><span style="font-size:15px;<?= $m->getWinner()==(int)$m->getEquipe2Id()?'text-weight:bold;color:green;':'' ?>"><?= (int)$m->getEquipe2Id()>0?(EquipeQuery::create()->filterByEventoId($currentEventId)->filterByEquipeId((int)$m->getEquipe2Id())->findOne()->getEquipeCurto()):'-' ?></span></td>
+        <td colspan="2"><span style="font-size:40px;<?= $m->getWinner()===(int)$m->getEquipe1Id()?'font-weight:bold;color:green;':'' ?>"><?= Html::e($m->getEquipe1Id()) ?></span><br/><span style="font-size:15px;"><?= (int)$m->getEquipe1Id()>0?Html::e(EquipeQuery::create()->filterByEventoId($currentEventId)->filterByEquipeId((int)$m->getEquipe1Id())->findOne()->getEquipeCurto()):'-' ?></span></td>
+        <td colspan="2"><span style="font-size:40px;<?= $m->getWinner()===(int)$m->getEquipe2Id()?'font-weight:bold;color:green;':'' ?>"><?= Html::e($m->getEquipe2Id()) ?></span><br/><span style="font-size:15px;<?= $m->getWinner()==(int)$m->getEquipe2Id()?'text-weight:bold;color:green;':'' ?>"><?= (int)$m->getEquipe2Id()>0?Html::e(EquipeQuery::create()->filterByEventoId($currentEventId)->filterByEquipeId((int)$m->getEquipe2Id())->findOne()->getEquipeCurto()):'-' ?></span></td>
     </tr>    
 <?php
     if ((int)$m->getEquipe1Id()>0 && (int)$m->getEquipe2Id()>0) { 
@@ -226,7 +236,7 @@ foreach($matches as $m) {
         if ($m->getWinner()>0) {
             if(checkBlocked($m->getMatchId(), $currentEventId, $_page)===false) {
 ?>
-            <tr><td colspan="4"><a href="tournament_entry.php?p=<?= $_page ?>&round=<?= $current_round ?>&reset=<?= $m->getMatchId() ?>">Cancelar Resultado</a></td></tr>
+            <tr><td colspan="4"><form method="POST" action="<?= $acao ?>" style="margin: 0"><?= Csrf::field() ?><input type="hidden" name="reset" value="<?= Html::field($m->getMatchId()) ?>"><button type="submit" style="background: none; border: 0; padding: 0; color: blue; text-decoration: underline; cursor: pointer; font: inherit;">Cancelar Resultado</button></form></td></tr>
             
 <?php        
             }
@@ -238,15 +248,16 @@ foreach($matches as $m) {
             }
             if ($qtd>1){
 ?>
-                <tr><td colspan="4">Melhor de <b><?= $qtd ?></b><br/>
-                <span style="font-size:35px;"><?= $dados->win1 ?>&nbsp;&nbsp;&nbsp;&nbsp;X&nbsp;&nbsp;&nbsp;&nbsp;<?= $dados->win2 ?></td></tr>
+                <tr><td colspan="4">Melhor de <b><?= Html::e($qtd) ?></b><br/>
+                <span style="font-size:35px;"><?= Html::e($dados->win1) ?>&nbsp;&nbsp;&nbsp;&nbsp;X&nbsp;&nbsp;&nbsp;&nbsp;<?= Html::e($dados->win2) ?></td></tr>
 <?php
 
             }            
 ?>        
                 <tr>
-                    <td colspan="2"><a href="tournament_entry.php?p=<?= $_page ?>&round=<?= $current_round ?>&match=<?= $m->getMatchId() ?>&setwinner=<?= $m->getEquipe1Id() ?>"><span style="font-size:50px;">✅</span></a></td>
-                    <td colspan="2"><a href="tournament_entry.php?p=<?= $_page ?>&round=<?= $current_round ?>&match=<?= $m->getMatchId() ?>&setwinner=<?= $m->getEquipe2Id() ?>"><span style="font-size:50px;">✅</span></a></td>
+                    <?php foreach ([$m->getEquipe1Id(), $m->getEquipe2Id()] as $vencedor) { ?>
+                    <td colspan="2"><form method="POST" action="<?= $acao ?>" style="margin: 0"><?= Csrf::field() ?><input type="hidden" name="match" value="<?= Html::field($m->getMatchId()) ?>"><input type="hidden" name="setwinner" value="<?= Html::field($vencedor) ?>"><button type="submit" style="background: none; border: 0; padding: 0; cursor: pointer; font-size:50px;">✅</button></form></td>
+                    <?php } ?>
                 </tr>
 <?php
             

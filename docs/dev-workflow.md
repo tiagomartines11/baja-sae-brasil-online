@@ -128,6 +128,24 @@ Before requesting review:
       API vhost, `baja-php/tests/Api/results-http-test.sh`. Its contract is
       [`results-api.md`](results-api.md): add fields, never rename or
       remove one.
+- [ ] If you touched a page in `baja-php/juiz/` or anything that prints
+      stored text, it escapes what it prints and its forms carry a CSRF
+      token (BAJAAPP-41):
+      - print names, labels, options and anything typed through
+        `Baja\Site\Html::e()`, in text and in quoted attributes, and data
+        inside `<script>` through `Html::js()`. Results cells (formula
+        output) are the one exception: they are meant to hold HTML;
+      - a form that changes something has `<?= Csrf::field() ?>`, and the
+        page calls `Csrf::enforce()` before changing anything
+        (`src/Baja/Auth/Csrf.php`). A script sends the token from
+        `<meta name="csrf-token">` as the `X-CSRF-Token` header. Never
+        change anything on a GET;
+      - `vendor/bin/phpunit --testsuite unit` passes: `CsrfCoverageTest`
+        fails for a judge page that writes without a check, or shows a POST
+        form without a token;
+      - add the form to `baja-php/tests/csrf/cases/` and run, against a
+        running stack,
+        `baja-php/tests/csrf/http-test.sh http://juiz.baja.local`.
 - [ ] If you edited `baja-php/schema.xml`, the generated `Base*` classes,
       table maps and `src/loadDatabase.php` were regenerated and committed:
       `docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build`.

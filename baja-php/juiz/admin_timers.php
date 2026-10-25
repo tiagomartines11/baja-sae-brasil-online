@@ -4,6 +4,7 @@ namespace Baja\Juiz;
 use Baja\Model\EventoQuery;
 use Baja\Model\TimerQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("TIMER_ADMIN");
 
@@ -21,8 +22,8 @@ Template::printHeader("Admin");
         <thead>
             <tr style="height: 50px;">
                 <th colspan="7" class="sorter-false">
-                    <span style="float:left;"><a href="<?= $voltar ?>" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                    <span style="font-size: 28px;">Timers (<?= $evento ?>)</span>
+                    <span style="float:left;"><a href="<?= Html::e($voltar) ?>" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
+                    <span style="font-size: 28px;">Timers (<?= Html::e($evento) ?>)</span>
                 </th>
             </tr>
             <tr>
@@ -39,13 +40,13 @@ Template::printHeader("Admin");
 
 <?php foreach ($timers as $t) { ?>
             <tr>
-                <td><?= $t->getTimerId() ?></td>
+                <td><?= Html::e($t->getTimerId()) ?></td>
                 <td><?= htmlspecialchars($t->getNome()) ?></td>
                 <td><?= count($t->getConfig()->etapas ?? []) ?></td>
                 <td><code><?= htmlspecialchars($t->getAccessKey()) ?></code></td>
                 <td><code><?= htmlspecialchars($t->getViewKey()) ?></code></td>
-                <td><a href='timer_admin.php?id=<?= $t->getTimerId() ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
-                <td><a href="timer.php?id=<?= $t->getTimerId() ?>">Abrir</a></td>
+                <td><a href='timer_admin.php?id=<?= Html::e($t->getTimerId()) ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
+                <td><a href="timer.php?id=<?= Html::e($t->getTimerId()) ?>">Abrir</a></td>
             </tr>
 <?php } ?>
 
