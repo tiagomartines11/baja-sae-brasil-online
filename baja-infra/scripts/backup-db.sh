@@ -562,6 +562,16 @@ phase_report() {
     log "report: OK"
 }
 
+# BACKUP_RUN_ID becomes part of every remote path, and the pruner only
+# recognises folders named exactly like this. Anything else — a typo, a
+# "../" — must stop the run before it uploads somewhere unexpected.
+check_run_id() {
+    [[ "$RUN_ID" =~ ^[0-9]{8}T[0-9]{6}Z$ ]] \
+        || die "run id '${RUN_ID}' is not of the form YYYYMMDDTHHMMSSZ (check BACKUP_RUN_ID)"
+    date -u -d "${RUN_ID:0:4}-${RUN_ID:4:2}-${RUN_ID:6:2}" +%F >/dev/null 2>&1 \
+        || die "run id '${RUN_ID}' is not a real date"
+}
+
 # ----- Dispatch -----
 usage() {
     sed -n '2,/^set -euo pipefail$/p' "${BASH_SOURCE[0]}" \
@@ -578,11 +588,13 @@ main() {
         preflight)
             START_EPOCH="$(date +%s)"
             RUN_ID="${BACKUP_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}"
+            check_run_id
             phase_preflight
             ;;
         run)
             START_EPOCH="$(date +%s)"
             RUN_ID="${BACKUP_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}"
+            check_run_id
             phase_preflight
             phase_dump
             phase_encrypt

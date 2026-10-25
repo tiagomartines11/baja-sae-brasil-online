@@ -49,11 +49,22 @@ GRANT SELECT ON phpbb_baja.* TO 'resultados'@'%';
 -- dumping triggers, so it stays, and is called out here rather than being
 -- quietly widened to root the first time --triggers errors out.
 --
--- ON *.* rather than per-database: the dump reads information_schema
--- across all three schemas, and a per-schema grant list silently rots
--- every time a database is added.
+-- Per database, not ON *.*. SELECT ON *.* would also cover the mysql
+-- schema, whose user table holds every account's password hash, and
+-- the backup container has no reason to read those. information_schema
+-- shows each account the objects it has privileges on, so preflight and
+-- the dump see exactly these three databases. A database added later is
+-- added here and to BACKUP_DATABASES in scripts/backup-lib.sh together;
+-- preflight fails with "not visible to 'backup'" until both are done.
+--
+-- SHOW_ROUTINE is the one global grant, and it is read-only: since MySQL
+-- 8.0.20 it is what lets --routines read the body of a procedure another
+-- account defined. It exists only as a global privilege.
 CREATE USER IF NOT EXISTS '${MYSQL_BACKUP_USER}'@'%' IDENTIFIED BY '${MYSQL_BACKUP_PASSWORD}';
-GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON *.* TO '${MYSQL_BACKUP_USER}'@'%';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON baja_resultados.* TO '${MYSQL_BACKUP_USER}'@'%';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON phpbb_baja.* TO '${MYSQL_BACKUP_USER}'@'%';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON phpbb_formula.* TO '${MYSQL_BACKUP_USER}'@'%';
+GRANT SHOW_ROUTINE ON *.* TO '${MYSQL_BACKUP_USER}'@'%';
 
 FLUSH PRIVILEGES;
 EOF

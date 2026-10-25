@@ -436,9 +436,16 @@ check_floors() {
 # the application's real lookup (see baja-php/certificado/certificado.php)
 # and asserts every field the PDF needs comes back non-empty.
 #
-# The subject is chosen by a deterministic rule — the oldest participant
-# row belonging to an event that issues certificates — and NEVER by a
-# hardcoded CPF. This repository is public.
+# The subject is chosen by a deterministic rule — the first certificate,
+# by token, that is not annulled and belongs to an event that issues
+# certificates — and NEVER by a hardcoded CPF. This repository is public.
+#
+# By token because that is participantes' primary key since the
+# certificates release; the integer `idparticipantes` this used to order
+# by no longer exists, and under `set -e` the failed query ended the
+# whole run before it could report anything. Annulled rows are skipped
+# because Baja\Certificado\Certificado::fromToken() skips them: a voided
+# certificate produces no PDF, so it proves nothing about one.
 check_certificate_lookup() {
     local db="$1"
 
@@ -452,7 +459,9 @@ check_certificate_lookup() {
     # field is present and a comma-separated list of failures otherwise.
     # `local` needs backticks: it is a MySQL keyword.
     local row missing found
-    row="$(db_query "$db" "
+    # A query error is a finding about this database, not a reason to stop
+    # verifying the others: `if !` keeps set -e from ending the run here.
+    if ! row="$(db_query "$db" "
         SELECT
           CONCAT_WS(',',
             IF(p.nome               IS NULL OR p.nome = '',               'participante.nome',        NULL),
@@ -467,8 +476,12 @@ check_certificate_lookup() {
         FROM participantes p
         JOIN evento e ON e.evento_id = p.evento
         WHERE e.tem_certificado = 1
-        ORDER BY p.idparticipantes ASC
-        LIMIT 1")"
+          AND p.anulado_em IS NULL
+        ORDER BY p.token ASC
+        LIMIT 1")"; then
+        fail_hard "${db}: the certificate lookup query failed — the schema no longer matches what certificado.php reads"
+        return 0
+    fi
 
     if [[ -z "$row" ]]; then
         fail_hard "${db}: the certificate lookup returned no rows — no participant is attached to any certificate-issuing event"
