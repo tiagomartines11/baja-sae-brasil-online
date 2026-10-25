@@ -30,6 +30,11 @@ updates:
     groups:
       composer-security: { applies-to: security-updates, patterns: ["*"] }
       composer-routine: { applies-to: version-updates, update-types: [minor, patch], patterns: ["*"] }
+      composer-major: { applies-to: version-updates, update-types: [major], patterns: ["*"] }
+    ignore:
+      # Propel 2.0.0-beta4 -> 2.0.1 is an ORM upgrade, done by hand (BAJAAPP-60).
+      # Left in the routine group it blocked dompdf, monolog and symfony/yaml.
+      - dependency-name: propel/propel
 
   - package-ecosystem: npm
     directory: /baja-js
@@ -38,6 +43,7 @@ updates:
     groups:
       npm-security: { applies-to: security-updates, patterns: ["*"] }
       npm-routine: { applies-to: version-updates, update-types: [minor, patch], patterns: ["*"] }
+      npm-major: { applies-to: version-updates, update-types: [major], patterns: ["*"] }
     ignore:
       # A Next major is a project, not a bump (14 -> 16 was BAJAAPP-47).
       - dependency-name: next
