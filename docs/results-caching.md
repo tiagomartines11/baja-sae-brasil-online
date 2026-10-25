@@ -17,8 +17,8 @@ Every public page sends a `Cache-Control` header from one class,
 
 | The page's event | `Cache-Control` | A change shows after at most |
 |---|---|---|
-| in progress (`em_andamento`), or not finished (`finalizado` = 0) | `public, max-age=10, s-maxage=15` | about 25 s |
-| finished, and not in progress | `public, max-age=300, s-maxage=3600` | about 1 h 5 min, unless purged |
+| not finished (`finalizado` = 0) | `public, max-age=10, s-maxage=15` | about 25 s |
+| finished (`finalizado` = 1) | `public, max-age=300, s-maxage=3600` | about 1 h 5 min, unless purged |
 | any page, built with a forum session (judges, below) | `private, no-store` | never cached |
 
 The race-data pages, `overlaydata.php` and `enduro_dump.php`, feed the
@@ -27,11 +27,14 @@ broadcast overlays, which poll every second or two. They are a named case,
 
 | The page's event | `Cache-Control` | A change shows after at most |
 |---|---|---|
-| in progress, or not finished | `public, max-age=1, s-maxage=2` | about 3 s |
-| finished, and not in progress | `public, max-age=300, s-maxage=3600` (as above) | about 1 h 5 min, unless purged |
+| not finished | `public, max-age=1, s-maxage=2` | about 3 s |
+| finished | `public, max-age=300, s-maxage=3600` (as above) | about 1 h 5 min, unless purged |
 
-Both flags on at once (the dev seed's 26BR is like that) counts as in
-progress. The numbers are constants at the top of `CachePolicy`, to be
+Only `finalizado` decides. The event's `em_andamento` flag does not mean
+"running": it marks the site's default event, the one opened when the URL
+names no event, and the judge area keeps it on one event at a time. So it
+has no effect on the cache: the dev seed's 26BR has both flags on and gets
+the long cache, because it is finished. The numbers are constants at the top of `CachePolicy`, to be
 tuned by watching an event. If you change them, change this table and
 `CachePolicyTest::testTheStartingNumbers`.
 

@@ -9,8 +9,8 @@ use Baja\Site\CachePolicy;
 use Baja\Site\CleanUrl;
 
 // The data behind overlay.php and the broadcast graphics, as JSON. Race
-// data: public, and cached by Cloudflare for seconds while the event runs
-// when asked for with GET (docs/results-caching.md);
+// data: public, and cached by Cloudflare for seconds until the event is
+// finished, when asked for with GET (docs/results-caching.md);
 // overlay.js itself POSTs, which no cache stores. Only these parameters are
 // read; a GET with any other is redirected without it.
 CleanUrl::enforce(['evt', 'mode', 'order', 'time']);

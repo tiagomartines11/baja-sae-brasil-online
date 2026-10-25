@@ -292,9 +292,15 @@ same "22BR is finished: the long cache" "$FINISHED" "$(header_value Cache-Contro
 resp=$(fetch "" "$RESULTS/24SU/torneio.php?id=24SU_SPR")
 same "torneio.php goes by its resultado's event (24SU, finished)" "$FINISHED" "$(header_value Cache-Control "$resp")"
 resp=$(fetch "" "$RESULTS/overlaydata.php?evt=29NE&mode=json")
-same "race data while the event runs: seconds" "public, max-age=1, s-maxage=2" "$(header_value Cache-Control "$resp")"
+same "race data of an event not finished: seconds" "public, max-age=1, s-maxage=2" "$(header_value Cache-Control "$resp")"
 resp=$(fetch "" "$RESULTS/overlaydata.php?evt=22BR&mode=json")
 same "race data of a finished event: the long cache" "$FINISHED" "$(header_value Cache-Control "$resp")"
+# em_andamento only marks the default event (the one a URL with no event
+# opens); it is not "running". The seed's 26BR has it and is finished.
+resp=$(fetch "" "$RESULTS/26BR/prova.php?id=26BR_GER")
+same "the default event, finished: the long cache" "$FINISHED" "$(header_value Cache-Control "$resp")"
+resp=$(fetch "" "$RESULTS/")
+same "and so for a URL with no event, which opens it" "$FINISHED" "$(header_value Cache-Control "$resp")"
 
 echo
 echo "--- clean URLs: tracking tags and junk are redirected away ---"

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Tests\Unit\Site;
 
+use Baja\Model\Evento;
 use Baja\Site\CachePolicy;
 use PHPUnit\Framework\TestCase;
 
@@ -16,9 +17,15 @@ use PHPUnit\Framework\TestCase;
  *   max-age=N    the visitor's browser may reuse it for N seconds;
  *   s-maxage=N   Cloudflare may serve it to every visitor for N seconds.
  *
- * The header depends on the event's two flags in the database:
- * em_andamento ("in progress") and finalizado ("finished"). Each test below
- * reads as: "for an event with these flags, the header is this".
+ * The header depends on one flag of the event: finalizado ("finished").
+ * Not finished: a short cache, because results can still change. Finished:
+ * a long one. Each test below reads as: "for such an event, the header is
+ * this".
+ *
+ * The event's other flag, em_andamento, is NOT "the event is running": it
+ * marks the site's default event (the one opened when the URL names no
+ * event), and only one event has it at a time. So it must not change the
+ * cache, and the tests at the end check that it does not.
  *
  * The exact numbers are constants in CachePolicy, so the tests use the
  * constants and will not need changing when someone tunes them. One test
@@ -32,62 +39,40 @@ final class CachePolicyTest extends TestCase
     private const FINISHED = 'public, max-age=' . CachePolicy::FINISHED_BROWSER_SECONDS
         . ', s-maxage=' . CachePolicy::FINISHED_EDGE_SECONDS;
 
-    /** During the event results change every few minutes: short cache. */
-    public function testAnEventInProgressIsCachedBriefly(): void
-    {
-        $this->assertSame(self::LIVE, CachePolicy::publicHeader(inProgress: true, finished: false));
-    }
-
     /**
-     * Not in progress but not finished either: before the event, or between
-     * its days, or waiting for the final results. Results can still change,
-     * so still the short cache.
+     * Not finished: during the event, between its days, or waiting for the
+     * final results. Results can still change: short cache.
      */
     public function testAnEventThatIsNotFinishedIsCachedBriefly(): void
     {
-        $this->assertSame(self::LIVE, CachePolicy::publicHeader(inProgress: false, finished: false));
+        $this->assertSame(self::LIVE, CachePolicy::publicHeader(finished: false));
     }
 
     /** A finished event only changes when someone corrects it: long cache. */
     public function testAFinishedEventIsCachedLonger(): void
     {
-        $this->assertSame(self::FINISHED, CachePolicy::publicHeader(inProgress: false, finished: true));
-    }
-
-    /**
-     * Both flags on is a mistake in the event's settings. When unsure, the
-     * short cache: a result shown late is worse than a few more requests.
-     */
-    public function testInProgressWinsOverFinished(): void
-    {
-        $this->assertSame(self::LIVE, CachePolicy::publicHeader(inProgress: true, finished: true));
+        $this->assertSame(self::FINISHED, CachePolicy::publicHeader(finished: true));
     }
 
     // --- Race data: overlaydata.php and enduro_dump.php ------------------------
     //
-    // The broadcast overlays read lap counts every second or two, so while
-    // the event runs these get seconds, not the results pages' 10 + 15.
-    // Once it is over they are as static as any result: the long cache.
+    // The broadcast overlays read lap counts every second or two, so until
+    // the event is finished these get seconds, not the results pages'
+    // 10 + 15. Once it is finished they are as static as any result: the
+    // long cache.
 
     private const RACE_DATA = 'public, max-age=' . CachePolicy::RACE_DATA_BROWSER_SECONDS
         . ', s-maxage=' . CachePolicy::RACE_DATA_EDGE_SECONDS;
 
-    public function testRaceDataIsCachedForSecondsWhileTheEventRuns(): void
+    public function testRaceDataIsCachedForSecondsUntilTheEventIsFinished(): void
     {
-        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeader(inProgress: true, finished: false));
-        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeader(inProgress: false, finished: false));
-    }
-
-    /** Same rule as the other pages: both flags on counts as running. */
-    public function testRaceDataWithBothFlagsOnCountsAsRunning(): void
-    {
-        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeader(inProgress: true, finished: true));
+        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeader(finished: false));
         $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeaderFor(null));
     }
 
     public function testRaceDataOfAFinishedEventGetsTheFinishedCache(): void
     {
-        $this->assertSame(self::FINISHED, CachePolicy::raceDataHeader(inProgress: false, finished: true));
+        $this->assertSame(self::FINISHED, CachePolicy::raceDataHeader(finished: true));
     }
 
     /** No event found (an unknown event code in the URL): short cache. */
@@ -108,9 +93,45 @@ final class CachePolicyTest extends TestCase
      */
     public function testTheStartingNumbers(): void
     {
-        $this->assertSame('public, max-age=10, s-maxage=15', CachePolicy::publicHeader(true, false));
-        $this->assertSame('public, max-age=300, s-maxage=3600', CachePolicy::publicHeader(false, true));
-        $this->assertSame('public, max-age=1, s-maxage=2', CachePolicy::raceDataHeader(true, false));
+        $this->assertSame('public, max-age=10, s-maxage=15', CachePolicy::publicHeader(false));
+        $this->assertSame('public, max-age=300, s-maxage=3600', CachePolicy::publicHeader(true));
+        $this->assertSame('public, max-age=1, s-maxage=2', CachePolicy::raceDataHeader(false));
+    }
+
+    // --- em_andamento does not count -----------------------------------------
+    //
+    // These go through the event itself, as the pages do. The Evento objects
+    // are never saved: no database involved.
+
+    /** The default event, finished (the dev seed's 26BR is like this): long cache. */
+    public function testTheDefaultEventIsCachedLongerOnceFinished(): void
+    {
+        $evento = self::evento(emAndamento: true, finalizado: true);
+        $this->assertSame(self::FINISHED, CachePolicy::publicHeaderFor($evento));
+        $this->assertSame(self::FINISHED, CachePolicy::raceDataHeaderFor($evento));
+    }
+
+    /** Not the default event, and not finished: still the short cache. */
+    public function testAnEventThatIsNotTheDefaultIsCachedBrieflyUntilFinished(): void
+    {
+        $evento = self::evento(emAndamento: false, finalizado: false);
+        $this->assertSame(self::LIVE, CachePolicy::publicHeaderFor($evento));
+        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeaderFor($evento));
+    }
+
+    public function testTheDefaultEventIsCachedBrieflyUntilFinished(): void
+    {
+        $this->assertSame(self::LIVE, CachePolicy::publicHeaderFor(self::evento(emAndamento: true, finalizado: false)));
+    }
+
+    public function testAFinishedEventThatIsNotTheDefaultIsCachedLonger(): void
+    {
+        $this->assertSame(self::FINISHED, CachePolicy::publicHeaderFor(self::evento(emAndamento: false, finalizado: true)));
+    }
+
+    private static function evento(bool $emAndamento, bool $finalizado): Evento
+    {
+        return (new Evento())->setEmAndamento($emAndamento)->setFinalizado($finalizado);
     }
 
     /**

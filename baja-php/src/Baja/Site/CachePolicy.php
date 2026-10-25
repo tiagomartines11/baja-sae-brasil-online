@@ -26,8 +26,8 @@ use Baja\Model\Evento;
 final class CachePolicy
 {
     /**
-     * While an event is on (or not finished), results change every few
-     * minutes and people refresh to see them. A visitor sees a result at
+     * Until an event is finished (finalizado), its results can change every
+     * few minutes and people refresh to see them. A visitor sees a result at
      * most BROWSER + EDGE seconds late; at event peaks that is still one
      * request to the server per page every EDGE seconds, whatever the
      * number of visitors.
@@ -56,47 +56,42 @@ final class CachePolicy
     /** For every response that was produced with a forum session. */
     public const PRIVATE = 'private, no-store';
 
-    /**
-     * The header for the public path.
-     *
-     * Only an event that is finished and not in progress gets the long
-     * cache. Anything else, including both flags on at once (a mistake in
-     * the event's settings), gets the short one: showing a result late is
-     * worse than serving a few more requests.
+    /*
+     * Only "finalizado" decides. The event's other flag, "em_andamento",
+     * does not mean "running": it marks the site's default event, the one
+     * src/bootstrap.php opens when the URL names none, and juiz/evento.php
+     * keeps it on one event at a time. An event can be under way, or still
+     * being corrected, without it.
      */
-    public static function publicHeader(bool $inProgress, bool $finished): string
+
+    /** The header for the public path: short until the event is finished, long after. */
+    public static function publicHeader(bool $finished): string
     {
-        if (self::isOver($inProgress, $finished)) {
+        if ($finished) {
             return self::header(self::FINISHED_BROWSER_SECONDS, self::FINISHED_EDGE_SECONDS);
         }
         return self::header(self::LIVE_BROWSER_SECONDS, self::LIVE_EDGE_SECONDS);
     }
 
-    /** Like publicHeader(), for race data: the race-data cache until the event is over. */
-    public static function raceDataHeader(bool $inProgress, bool $finished): string
+    /** Like publicHeader(), for race data: the race-data cache until the event is finished. */
+    public static function raceDataHeader(bool $finished): string
     {
-        if (self::isOver($inProgress, $finished)) {
+        if ($finished) {
             return self::header(self::FINISHED_BROWSER_SECONDS, self::FINISHED_EDGE_SECONDS);
         }
         return self::header(self::RACE_DATA_BROWSER_SECONDS, self::RACE_DATA_EDGE_SECONDS);
     }
 
-    /** The public header for this event; no event (unknown id) is treated as live. */
+    /** The public header for this event; no event (unknown id) counts as not finished. */
     public static function publicHeaderFor(?Evento $evento): string
     {
-        if ($evento === null) {
-            return self::publicHeader(true, false);
-        }
-        return self::publicHeader((bool)$evento->getEmAndamento(), (bool)$evento->getFinalizado());
+        return self::publicHeader(self::isFinished($evento));
     }
 
-    /** The race-data header for this event; no event is treated as live. */
+    /** The race-data header for this event; no event counts as not finished. */
     public static function raceDataHeaderFor(?Evento $evento): string
     {
-        if ($evento === null) {
-            return self::raceDataHeader(true, false);
-        }
-        return self::raceDataHeader((bool)$evento->getEmAndamento(), (bool)$evento->getFinalizado());
+        return self::raceDataHeader(self::isFinished($evento));
     }
 
     /**
@@ -105,7 +100,7 @@ final class CachePolicy
      */
     public static function redirectHeader(): string
     {
-        return self::publicHeader(false, true);
+        return self::publicHeader(true);
     }
 
     /**
@@ -154,13 +149,9 @@ final class CachePolicy
         header('Cache-Control: ' . (self::hasSession() ? self::PRIVATE : $public));
     }
 
-    /**
-     * Only an event that is finished and not in progress counts as over;
-     * both flags on (a mistake in the event's settings) counts as live.
-     */
-    private static function isOver(bool $inProgress, bool $finished): bool
+    private static function isFinished(?Evento $evento): bool
     {
-        return $finished && !$inProgress;
+        return $evento !== null && (bool)$evento->getFinalizado();
     }
 
     private static function header(int $browserSeconds, int $edgeSeconds): string
