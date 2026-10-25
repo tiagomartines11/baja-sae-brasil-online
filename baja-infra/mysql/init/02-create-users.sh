@@ -32,6 +32,29 @@ CREATE USER IF NOT EXISTS 'resultados'@'%' IDENTIFIED BY '${MYSQL_RESULTADOS_PAS
 GRANT ALL PRIVILEGES ON baja_resultados.* TO 'resultados'@'%';
 GRANT SELECT ON phpbb_baja.* TO 'resultados'@'%';
 
+-- Backup user (baja-infra/scripts/backup-db.sh). Read-only by
+-- construction: no INSERT, UPDATE, DELETE, CREATE or DROP anywhere, so a
+-- compromised backup container cannot alter production.
+--
+-- Each grant earns its place against a mysqldump flag:
+--   SELECT       read the rows
+--   LOCK TABLES  historically required; harmless alongside
+--                --single-transaction, which does not take table locks
+--   SHOW VIEW    dump view definitions
+--   TRIGGER      --triggers (SHOW TRIGGERS is gated on it)
+--   EVENT        --events
+--
+-- TRIGGER is the one that is not purely read-only: it also permits
+-- CREATE/DROP TRIGGER. It is nonetheless the minimum MySQL offers for
+-- dumping triggers, so it stays, and is called out here rather than being
+-- quietly widened to root the first time --triggers errors out.
+--
+-- ON *.* rather than per-database: the dump reads information_schema
+-- across all three schemas, and a per-schema grant list silently rots
+-- every time a database is added.
+CREATE USER IF NOT EXISTS '${MYSQL_BACKUP_USER}'@'%' IDENTIFIED BY '${MYSQL_BACKUP_PASSWORD}';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON *.* TO '${MYSQL_BACKUP_USER}'@'%';
+
 FLUSH PRIVILEGES;
 EOF
 

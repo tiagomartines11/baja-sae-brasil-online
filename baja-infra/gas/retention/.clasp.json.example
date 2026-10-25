@@ -1,0 +1,16 @@
+{
+  "_comment": [
+    "Copy to .clasp.json and fill in scriptId. .clasp.json is gitignored:",
+    "the script id is not a secret, but it is per-deployment, and pinning",
+    "one in the repo makes it far too easy to `clasp push` over the wrong",
+    "project.",
+    "",
+    "Get the id from the Apps Script editor URL:",
+    "  script.google.com/home/projects/<scriptId>/edit",
+    "",
+    "You must be logged in as the DEDICATED ROLE ACCOUNT, not as yourself.",
+    "See README.md."
+  ],
+  "scriptId": "PUT-THE-SCRIPT-ID-HERE",
+  "rootDir": "."
+}

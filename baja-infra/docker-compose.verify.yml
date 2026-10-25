@@ -1,0 +1,131 @@
+# Weekly restore-verification stack.
+#
+# Runs Tuesdays 04:00 America/Sao_Paulo, driven by scripts/verify-run.sh
+# from host cron. Deliberately a SEPARATE COMPOSE PROJECT with its own
+# network and its own volume:
+#
+#     docker compose -p baja-verify -f docker-compose.verify.yml ...
+#
+# It shares a box with production. A verification job that takes prod down
+# at 4am is strictly worse than no verification, so read the guardrails
+# below before changing anything here.
+#
+#   1. HARD MEMORY CAP. The VPS is 4 GB and already running production.
+#      A default-configured MySQL alongside it invites the OOM killer,
+#      which does not pick the process you would have picked.
+#      mem_limit + innodb-buffer-pool-size + performance-schema=OFF are
+#      all load-bearing, not tuning.
+#
+#   2. NO ROUTE TO PRODUCTION. Own bridge network, no `baja` network, no
+#      published ports. The scratch server is unreachable from the
+#      production stack and vice versa.
+#
+#   3. A DIFFERENT ROOT PASSWORD, specifically so that a misconfigured
+#      `mysql < dump.sql` cannot reach production. verify-db.sh refuses to
+#      run if this matches the production one.
+#
+#   4. EPHEMERAL BY CONSTRUCTION. The scratch volume is created and
+#      destroyed every run; verify-run.sh checks for leftovers from a
+#      crashed previous run before starting, and asserts the volume is
+#      really gone afterwards.
+#
+#   5. READ-ONLY DRIVE CREDENTIAL. baja-backup-reader (Viewer), plus
+#      rclone's drive.readonly scope. The verifier has no reason to write
+#      anything to the Shared Drive.
+name: baja-verify
+
+services:
+  # Scratch server. Restored into, inspected, and destroyed.
+  verify-mysql:
+    image: mysql:8.4
+    # Fixed hostname so verify-db.sh can assert it is talking to the
+    # scratch instance and not, somehow, to production. Restoring into the
+    # wrong instance is plausible and unrecoverable.
+    hostname: baja-verify-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_VERIFY_ROOT_PASSWORD}
+      TZ: America/Sao_Paulo
+    command:
+      # 256M buffer pool: enough to import our dumps at a sane speed,
+      # small enough to coexist with production.
+      - --innodb-buffer-pool-size=256M
+      # performance_schema costs roughly 200 MB of the cap for
+      # instrumentation nobody reads during a verification run.
+      - --performance-schema=OFF
+      - --skip-log-bin
+      # The import is a restore, not a transaction we ever need to replay.
+      # Flushing on every commit would triple the restore time, which is
+      # the number this job reports as our RTO.
+      - --innodb-flush-log-at-trx-commit=2
+    mem_limit: 768m
+    memswap_limit: 768m
+    volumes:
+      - verify_scratch:/var/lib/mysql
+    healthcheck:
+      # An authenticated query, not `mysqladmin ping`. Ping answers "alive"
+      # while the server is still running its first-boot initialisation and
+      # has not yet created the root account, so a ping-based check reports
+      # healthy and the verifier then fails to connect. Same shape as the
+      # production stack's check, for the same reason.
+      test: ["CMD-SHELL", "mysql -uroot -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 60s
+    networks:
+      - verify
+
+  # The checker. Same image as the backup job on purpose: verify-db.sh and
+  # backup-db.sh share backup-lib.sh, which is where the definitions both
+  # sides depend on live (which tables are excluded, how a row count is
+  # taken, how the charset canary is built). Two images would let those
+  # drift, and a drifted verifier either passes a broken backup or fails a
+  # healthy one.
+  verifier:
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    image: baja-backup:latest
+    entrypoint: ["/usr/local/bin/verify-db.sh"]
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_HOST: verify-mysql
+      MYSQL_PORT: "3306"
+      MYSQL_VERIFY_ROOT_PASSWORD: ${MYSQL_VERIFY_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      GDRIVE_SA_READER_JSON: /run/secrets/gdrive-backup-reader.json
+      GDRIVE_SHARED_DRIVE_ID: ${GDRIVE_SHARED_DRIVE_ID}
+      AGE_IDENTITY_VERIFIER: /run/secrets/age-verifier.key
+      KUMA_PUSH_URL_VERIFY: ${KUMA_PUSH_URL_VERIFY}
+      VERIFY_MIN_ROWS_USER: ${VERIFY_MIN_ROWS_USER:-50}
+      VERIFY_REMOTE: ${VERIFY_REMOTE:-}
+    volumes:
+      - ${GDRIVE_SA_READER_JSON}:/run/secrets/gdrive-backup-reader.json:ro
+      - ${AGE_IDENTITY_VERIFIER}:/run/secrets/age-verifier.key:ro
+      # Carries the previous run's schema hashes so drift can be reported.
+      # The only state this stack keeps between runs, and it holds nothing
+      # but hashes.
+      - ${VERIFY_STATE_DIR:-/var/lib/baja-verify}:/var/lib/baja-verify
+      # Test hook. When VERIFY_REMOTE points at `:local:/drive/` instead
+      # of Drive, this is where the fake Shared Drive is mounted, so the
+      # whole verification path can be exercised without Google
+      # credentials. The default is the state directory — which always
+      # exists, contains no daily/ folder, and is therefore inert in
+      # production.
+      - ${VERIFY_LOCAL_DRIVE:-/var/lib/baja-verify}:/drive:ro
+    depends_on:
+      verify-mysql:
+        condition: service_healthy
+    networks:
+      - verify
+
+volumes:
+  # Holds DECRYPTED production data — every competitor CPF, every forum
+  # private message — for the duration of a run. Destroying it is a
+  # compliance step, not tidiness. See the teardown phase of
+  # scripts/verify-run.sh.
+  verify_scratch:
+
+networks:
+  verify:
+    driver: bridge
