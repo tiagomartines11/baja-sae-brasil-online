@@ -209,9 +209,11 @@ class Template
         <?php
     }
 
-    // A header is text typed by an admin: escaped (Baja\Site\Html). So a
-    // header written with markup, like "Pontos <b>sem</b> Finais", now shows
-    // the tags as text; the header itself should be fixed.
+    // A header is part of the resultado's configuration, written by the admin
+    // team like the formulas, and may hold markup on purpose ("Pontos
+    // <b>sem</b> Finais"): printed as it is, like the results cells. Their
+    // sanitiser, BAJAAPP-35, covers both. Team names and the rest of what
+    // comes from outside the admin team are escaped (printResultRow).
     public static function printColumnHeader($header, $size = null, $sort = null, $hidden = false)
     {
         if ($header == "Pos") {
@@ -219,7 +221,7 @@ class Template
         } else if ($header == "Equipe") {
             echo '<th '.($hidden?'class="hidden-column"':'').'">Equipe<br /><p class="nomeEscola">Escola</p></th>';
         } else {
-            echo '<th style="'.($size ? 'width: '.Html::e($size).'px;' : '').'" '.($hidden?'class="hidden-column"':'').' '.($sort ? 'class="sorter-'.Html::e($sort).'"' : '').'>'. Html::e($header) . '</th>';
+            echo '<th style="'.($size ? 'width: '.$size.'px;' : '').'" '.($hidden?'class="hidden-column"':'').' '.($sort ? 'class="sorter-'.$sort.'"' : '').'>'. $header . '</th>';
         }
     }
 

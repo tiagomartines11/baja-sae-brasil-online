@@ -23,8 +23,10 @@ use PHPUnit\Framework\TestCase;
  *   - no quote that ends an attribute early: a value like
  *     x" autofocus onfocus="alert(1) must stay inside its value="...".
  *
- * And one thing must NOT be escaped: a results cell is formula output, which
- * is meant to contain HTML such as <b>bold</b>, so it must still be bold.
+ * And two things must NOT be escaped: a results cell (formula output) and a
+ * column header. Both are written by the admin team as part of a resultado's
+ * configuration and are meant to contain HTML such as <b>bold</b>, so they
+ * must still be bold. Their sanitiser is BAJAAPP-35.
  */
 final class EscapedRenderingTest extends TestCase
 {
@@ -113,23 +115,18 @@ final class EscapedRenderingTest extends TestCase
 
     // --- The public results table (Site\Template) ---------------------------------
 
-    /** A column header typed by an admin is escaped. */
-    public function testAColumnHeaderIsEscaped(): void
-    {
-        $html = $this->output(fn () => Template::printColumnHeader(self::SCRIPT . self::QUOTE));
-
-        $this->assertEscaped($html);
-    }
-
     /**
-     * The known case from the dev seed: a header written with <b> now shows
-     * the tags as text. Headers are text; bold belongs in the cells.
+     * A column header is NOT escaped. It is part of the resultado's
+     * configuration, written by the admin team like the formulas, and may
+     * hold markup on purpose: the dev seed has "Pontos <b>sem</b> Finais",
+     * which must stay bold. Headers and cells get their sanitiser together
+     * in BAJAAPP-35.
      */
-    public function testAHeaderWithMarkupShowsItAsText(): void
+    public function testAHeaderIsPrintedAsTheAdminWroteIt(): void
     {
         $html = $this->output(fn () => Template::printColumnHeader('Pontos <b>sem</b> Finais'));
 
-        $this->assertSame('<th style="" >Pontos &lt;b&gt;sem&lt;/b&gt; Finais</th>', trim(preg_replace('/\s+/', ' ', $html)));
+        $this->assertSame('<th style="" >Pontos <b>sem</b> Finais</th>', trim(preg_replace('/\s+/', ' ', $html)));
     }
 
     /** Entities admins typed in headers keep working: "30&nbsp;m" is not "30&amp;nbsp;m". */
