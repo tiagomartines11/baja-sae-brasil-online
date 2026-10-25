@@ -182,6 +182,7 @@ jobs:
       #   05  the results data: 17 events, 22BR to 26BR
       #   06  the lap counting tables; it also edits the 26BR Enduro's
       #       inputs list, so without it CI would not match a dev database
+      #   07  the event archive queue (BAJAAPP-67)
       # 03 and 04 are the forum databases, which SKIP_AUTH pages never read.
       - name: Load the dev seed
         working-directory: baja-infra/mysql/init
@@ -199,6 +200,7 @@ jobs:
           bash 02-create-users.sh
           mysql -uroot -proot < 05-seed-baja-resultados.sql
           mysql -uroot -proot < 06-contagem.sql
+          mysql -uroot -proot < 07-evento-arquivamento.sql
           mysql -uroot -proot -e "CREATE USER 'snapshot'@'%' IDENTIFIED BY 'snapshot'; GRANT SELECT ON baja_resultados.* TO 'snapshot'@'%';"
 
       - name: PHPUnit (the tool writes nothing)
@@ -241,6 +243,18 @@ jobs:
           BAJA_TEST_DB_PASS: root
         run: vendor/bin/phpunit --testsuite prova-db --fail-on-skipped
 
+      # The event archive queue (BAJAAPP-67): marking an event finalizado
+      # records exactly one pending archive, and the nightly job consumes
+      # it. Writes a made-up event, so BAJA_TEST_DB=1 and the account that
+      # may write. --fail-on-skipped: a test skipped here would be a check
+      # nobody ran.
+      - name: PHPUnit (event archive queue)
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite results-archive-db --fail-on-skipped
+
       - name: Results snapshots match
         run: php scripts/results-snapshot.php --check --jobs 4
 
@@ -263,8 +277,9 @@ jobs:
           # variable whitelist and removing them would break the config
           # templating. Worth silencing there one day, but not from a
           # backups change.
-          find baja-infra/scripts baja-infra/mysql/init -name '*.sh' -print0 \
+          find baja-infra/scripts baja-infra/mysql/init baja-infra/tests -name '*.sh' -print0 \
             | xargs -0 shellcheck -x
+          shellcheck baja-infra/tests/backup/fake-bin/rclone
 
       - name: Validate docker-compose syntax
         working-directory: baja-infra
@@ -284,3 +299,12 @@ jobs:
         # against a fake Drive. It is the only code in the backup system
         # that can actively destroy data.
         run: node baja-infra/gas/retention/test/prune.test.js
+
+      # The backup scripts on made-up files with a fake Shared Drive: file
+      # set and erasure log round trips, the manifest, manifest-last, the
+      # event archives. Needs age; nothing else beyond the runner's tools.
+      - name: Backup script tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age
+          baja-infra/tests/backup/run-tests.sh
