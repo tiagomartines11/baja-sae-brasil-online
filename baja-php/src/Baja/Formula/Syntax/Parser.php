@@ -88,6 +88,9 @@ final class Parser
 
     private int $at = 0;
 
+    /** The index of the END token, the last one. */
+    private readonly int $last;
+
     /** @var array<string, true> */
     private array $variables = [];
 
@@ -97,6 +100,7 @@ final class Parser
     /** @param list<Token> $tokens */
     private function __construct(private readonly string $source, private readonly array $tokens)
     {
+        $this->last = count($tokens) - 1;
     }
 
     /** @throws FormulaSyntaxError */
@@ -132,12 +136,12 @@ final class Parser
 
         while (true) {
             $token = $this->peek();
-            if ($token->is('?') && self::TERNARY > $loosest) {
+            if ($token->type === '?' && self::TERNARY > $loosest) {
                 $left = $this->ternary($left, $token, $lastTernary);
                 $lastTernary = $left->children[1] === null ? '?:' : '? :';
                 continue;
             }
-            if ($token->is('=')) {
+            if ($token->type === '=') {
                 $this->fail('assignments ("=") are not allowed in a formula: to compare, write "=="', $token);
             }
             $operator = self::BINARY[$token->type] ?? null;
@@ -242,7 +246,7 @@ final class Parser
     {
         while (true) {
             $token = $this->peek();
-            if ($token->is('[')) {
+            if ($token->type === '[') {
                 $this->at++;
                 if ($this->peek()->is(']')) {
                     $this->fail('"[]" adds to an array and is not allowed in a formula', $this->peek());
@@ -250,9 +254,9 @@ final class Parser
                 $key = $this->expression(0);
                 $this->expect(']');
                 $node = new Node(Node::INDEX, null, [$node, $key], $node->offset);
-            } elseif ($token->is('->')) {
+            } elseif ($token->type === '->') {
                 $this->fail('objects ("->") are not allowed in a formula', $token);
-            } elseif ($token->is('(')) {
+            } elseif ($token->type === '(') {
                 $this->fail('only the functions ' . self::functionList() . ' can be called in a formula', $token);
             } else {
                 return $node;
@@ -334,7 +338,7 @@ final class Parser
     {
         $this->expect('(');
         $arguments = [];
-        while (!$this->peek()->is(')')) {
+        while ($this->peek()->type !== ')') {
             $arguments[] = $this->expression(0);
             $this->commaOr(')');
         }
@@ -469,7 +473,7 @@ final class Parser
 
     private function peek(int $ahead = 0): Token
     {
-        return $this->tokens[min($this->at + $ahead, count($this->tokens) - 1)];
+        return $this->tokens[$this->at + $ahead] ?? $this->tokens[$this->last];
     }
 
     private function next(): Token
@@ -484,7 +488,7 @@ final class Parser
     private function expect(string $type): Token
     {
         $token = $this->peek();
-        if (!$token->is($type)) {
+        if ($token->type !== $type) {
             $this->fail('expected "' . $type . '" but found ' . $token->describe(), $token);
         }
         $this->at++;
@@ -495,9 +499,9 @@ final class Parser
     private function commaOr(string $close): void
     {
         $token = $this->peek();
-        if ($token->is(',')) {
+        if ($token->type === ',') {
             $this->at++;
-        } elseif (!$token->is($close)) {
+        } elseif ($token->type !== $close) {
             $this->fail('expected "," or "' . $close . '" but found ' . $token->describe(), $token);
         }
     }

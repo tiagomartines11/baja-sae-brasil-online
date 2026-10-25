@@ -23,15 +23,20 @@ namespace Baja\Formula\Syntax;
  * character PHP itself would not accept here. "{$...}" and "$X[...]",
  * "$X->..." inside "..." are refused too: only plain "$NAME" is read
  * there.
+ *
+ * HOW
+ *
+ * One regular expression (PIECES) knows every kind of piece, each marked
+ * with its kind by (*MARK:...). preg_match_all() cuts the whole formula
+ * with it in one go, in C, which is several times faster than reading it
+ * character by character in PHP. Where two kinds could start at the same
+ * place, the one listed first wins, and they are listed so that this is
+ * PHP's choice too ("1.5e3" is one number, "**=" is not "**" then "=").
+ * The last kind, BAD, takes any single character, so every byte of the
+ * formula belongs to some piece and nothing is skipped silently.
  */
 final class Lexer
 {
-    /** Longest first, so that "===" is not read as "==" and "=". */
-    private const OPERATORS = [
-        '===', '!==', '**', '==', '!=', '<>', '<=', '>=', '&&', '||', '??', '->', '=>',
-        '<', '>', '!', '+', '-', '*', '/', '%', '.', '?', ':', '(', ')', '[', ']', ',', ';',
-    ];
-
     /** Read by PHP as something that changes or runs things: never in a formula. */
     private const REFUSED = [
         '`' => 'backticks (`...`) run a shell command and are not allowed in a formula',
@@ -53,7 +58,10 @@ final class Lexer
     /** Digits, with PHP's optional "_" between them. */
     private const LNUM = '[0-9]+(?:_[0-9]+)*';
 
-    private int $at = 0;
+    /** A name's first character, then the others (PHP's rule: any byte from 0x80 is a letter). */
+    private const NAME = '[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*+';
+
+    private static ?string $pieces = null;
 
     /** @var list<Token> */
     private array $tokens = [];
@@ -79,127 +87,117 @@ final class Lexer
         return mb_strlen(substr($source, 0, $offset), 'UTF-8') + 1;
     }
 
+    /** The regular expression of every piece, in the order they are tried. */
+    private static function pieces(): string
+    {
+        $lnum = self::LNUM;
+        $dnum = "(?:(?:$lnum)?\\.$lnum|$lnum\\.(?:$lnum)?)";
+        $name = self::NAME;
+        $refused = implode('|', array_map(fn($text) => preg_quote($text, '/'), array_keys(self::REFUSED)));
+        $kinds = [
+            'SPACE' => '[ \t\n\r]++',
+            'COMMENT' => '\/\*.*?\*\/',
+            'OPEN_COMMENT' => '\/\*',
+            'ATTRIBUTE' => '\#\[',
+            'LINE_COMMENT' => '(?:\/\/|\#)[^\r\n]*+',
+            'SINGLE' => "'(?:[^'\\\\]++|\\\\.)*+'",
+            'OPEN_SINGLE' => "'",
+            'DOUBLE' => '"(?:[^"\\\\]++|\\\\.)*+"',
+            'OPEN_DOUBLE' => '"',
+            'REFUSED' => $refused,
+            'VARIABLE' => '\$' . $name,
+            'DOLLAR' => '\$',
+            'FLOAT' => "(?:$dnum|$lnum)[eE][+-]?$lnum|$dnum",
+            'HEX' => '0[xX][0-9a-fA-F]+(?:_[0-9a-fA-F]+)*',
+            'BINARY' => '0[bB][01]+(?:_[01]+)*',
+            'OCTAL' => '0[oO][0-7]+(?:_[0-7]+)*',
+            'DECIMAL' => $lnum,
+            'NAME' => '\\\\?' . $name . '(?:\\\\' . $name . ')*+',
+            'OPERATOR' => '===|!==|\*\*|==|!=|<>|<=|>=|&&|\|\||\?\?|->|=>|[<>!+\-*\/%.?:()\[\],;]',
+            'BAD' => '.',
+        ];
+        $alternatives = [];
+        foreach ($kinds as $kind => $pattern) {
+            $alternatives[] = '(?:' . $pattern . ')(*MARK:' . $kind . ')';
+        }
+        return '/' . implode('|', $alternatives) . '/s';
+    }
+
     private function run(): void
     {
+        self::$pieces ??= self::pieces();
+        preg_match_all(self::$pieces, $this->source, $pieces, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
         $length = strlen($this->source);
-        while (true) {
-            $this->skipSpaceAndComments();
-            if ($this->at >= $length) {
-                $this->tokens[] = new Token(Token::END, '', null, $length);
-                return;
-            }
-            $char = $this->source[$this->at];
-            $this->tokens[] = match (true) {
-                $char === '$' => $this->variable(),
-                $char === "'" => $this->singleQuoted(),
-                $char === '"' => $this->doubleQuoted(),
-                ctype_digit($char) || ($char === '.' && ctype_digit($this->source[$this->at + 1] ?? '')) => $this->number(),
-                $char === '\\' || self::startsName($char) => $this->name(),
-                default => $this->operator(),
+        foreach ($pieces as $piece) {
+            [$text, $offset] = $piece[0];
+            $token = match ($piece['MARK']) {
+                'SPACE', 'COMMENT' => null,
+                'LINE_COMMENT' => $this->lineComment($text, $offset, $length),
+                'SINGLE' => new Token(Token::STRING, $text, strtr(substr($text, 1, -1), ['\\\\' => '\\', "\\'" => "'"]), $offset),
+                'DOUBLE' => strpbrk($text, '\\$') === false
+                    ? new Token(Token::STRING, $text, substr($text, 1, -1), $offset)
+                    : $this->doubleQuoted($offset),
+                'VARIABLE' => new Token(Token::VARIABLE, $text, substr($text, 1), $offset),
+                'FLOAT' => new Token(Token::NUMBER, $text, (float)str_replace('_', '', $text), $offset),
+                // These give a float when the number is too big for an int, as PHP's reader does.
+                'HEX' => new Token(Token::NUMBER, $text, hexdec(substr(str_replace('_', '', $text), 2)), $offset),
+                'BINARY' => new Token(Token::NUMBER, $text, bindec(substr(str_replace('_', '', $text), 2)), $offset),
+                'OCTAL' => new Token(Token::NUMBER, $text, octdec(substr(str_replace('_', '', $text), 2)), $offset),
+                'DECIMAL' => new Token(Token::NUMBER, $text, $this->decimal(str_replace('_', '', $text), $offset), $offset),
+                'NAME' => $this->name($text, $offset),
+                'OPERATOR' => new Token($text, $text, null, $offset),
+                default => $this->refuse($piece['MARK'], $text, $offset),
             };
-        }
-    }
-
-    private function skipSpaceAndComments(): void
-    {
-        $length = strlen($this->source);
-        while ($this->at < $length) {
-            $rest = substr($this->source, $this->at, 2);
-            if (strspn($this->source, " \t\n\r", $this->at, 1) === 1) {
-                $this->at++;
-            } elseif ($rest === '/*') {
-                $end = strpos($this->source, '*/', $this->at + 2);
-                if ($end === false) {
-                    $this->fail('a comment "/*" is never closed', $this->at);
-                }
-                $this->at = $end + 2;
-            } elseif ($rest === '#[') {
-                $this->fail('"#[" is not allowed in a formula', $this->at);
-            } elseif ($rest === '//' || $rest[0] === '#') {
-                // eval() adds ";" after the formula. A comment that runs to
-                // the end swallows it, and PHP then refuses the formula.
-                $end = strcspn($this->source, "\n\r", $this->at);
-                if ($this->at + $end >= $length) {
-                    $this->fail('a comment runs to the end of the formula', $this->at);
-                }
-                if (str_contains(substr($this->source, $this->at, $end), '?>')) {
-                    $this->fail(self::REFUSED['?>'], $this->at);
-                }
-                $this->at += $end;
-            } else {
-                return;
+            if ($token !== null) {
+                $this->tokens[] = $token;
             }
         }
+        $this->tokens[] = new Token(Token::END, '', null, $length);
     }
 
-    private function variable(): Token
+    /** What is wrong with a piece that is not allowed. */
+    private function refuse(string $kind, string $text, int $offset): never
     {
-        $start = $this->at;
-        $next = $this->source[$start + 1] ?? '';
-        if ($next === '$' || $next === '{') {
-            $this->fail(self::REFUSED['$' . $next], $start);
-        }
-        if (preg_match('/\G[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*/', $this->source, $match, 0, $start + 1) !== 1) {
-            $this->fail('"$" must be followed by a variable name (a letter or "_" first, not a digit)', $start);
-        }
-        $this->at = $start + 1 + strlen($match[0]);
-        return new Token(Token::VARIABLE, '$' . $match[0], $match[0], $start);
-    }
-
-    private function name(): Token
-    {
-        $start = $this->at;
-        if (preg_match('/\G\\\\?[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*(\\\\[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)*/', $this->source, $match, 0, $start) !== 1) {
-            $this->fail('unexpected "\\"', $start);
-        }
-        $this->at = $start + strlen($match[0]);
-        $name = ltrim($match[0], '\\');
-        if (str_contains($name, '\\')) {
-            $this->fail('namespaced names (' . $match[0] . ') are not allowed in a formula', $start);
-        }
-        return new Token(Token::NAME, $match[0], $name, $start);
-    }
-
-    private static function startsName(string $char): bool
-    {
-        return ctype_alpha($char) || $char === '_' || ord($char) >= 0x80;
+        $this->fail(match ($kind) {
+            'OPEN_COMMENT' => 'a comment "/*" is never closed',
+            'ATTRIBUTE' => '"#[" is not allowed in a formula',
+            'OPEN_SINGLE' => "a text started with ' is never closed",
+            'OPEN_DOUBLE' => 'a text started with " is never closed',
+            'REFUSED' => self::REFUSED[$text],
+            'DOLLAR' => '"$" must be followed by a variable name (a letter or "_" first, not a digit)',
+            default => match ($text) {
+                '=' => 'assignments ("=") are not allowed in a formula: to compare, write "=="',
+                '&', '|', '^', '~' => 'the bitwise operator "' . $text . '" is not allowed in a formula: did you mean "' . $text . $text . '"?',
+                '@' => '"@" is not allowed in a formula',
+                '\\' => 'unexpected "\\"',
+                default => 'unexpected "' . $text . '"',
+            },
+        }, $offset);
     }
 
     /**
-     * A number, by PHP's own rules (zend_language_scanner.l): the longest of
-     * a float with "." and/or an exponent, a hexadecimal, binary or octal
-     * whole number, or a decimal one.
+     * eval() adds ";" after the formula. A // or # comment that runs to the
+     * end swallows it, and PHP then refuses the formula. A "?>" in it would
+     * leave PHP.
      */
-    private function number(): Token
+    private function lineComment(string $text, int $offset, int $length): ?Token
     {
-        $start = $this->at;
-        $lnum = self::LNUM;
-        $dnum = "(?:(?:$lnum)?\\.$lnum|$lnum\\.(?:$lnum)?)";
-        $patterns = [
-            'float' => "/\\G(?:(?:$dnum|$lnum)[eE][+-]?$lnum|$dnum)/",
-            'hex' => '/\G0[xX][0-9a-fA-F]+(?:_[0-9a-fA-F]+)*/',
-            'binary' => '/\G0[bB][01]+(?:_[01]+)*/',
-            'octal' => '/\G0[oO][0-7]+(?:_[0-7]+)*/',
-            'decimal' => "/\\G$lnum/",
-        ];
-        $best = null;
-        foreach ($patterns as $kind => $pattern) {
-            if (preg_match($pattern, $this->source, $match, 0, $start) === 1 && ($best === null || strlen($match[0]) > strlen($best[1]))) {
-                $best = [$kind, $match[0]];
-            }
+        if ($offset + strlen($text) >= $length) {
+            $this->fail('a comment runs to the end of the formula', $offset);
         }
-        [$kind, $text] = $best;
-        $this->at = $start + strlen($text);
-        $digits = str_replace('_', '', $text);
-        $value = match ($kind) {
-            'float' => (float)$digits,
-            // These give a float when the number is too big for an int, as PHP's reader does.
-            'hex' => hexdec(substr($digits, 2)),
-            'binary' => bindec(substr($digits, 2)),
-            'octal' => octdec(substr($digits, 2)),
-            'decimal' => $this->decimal($digits, $start),
-        };
-        return new Token(Token::NUMBER, $text, $value, $start);
+        if (str_contains($text, '?>')) {
+            $this->fail(self::REFUSED['?>'], $offset);
+        }
+        return null;
+    }
+
+    private function name(string $text, int $offset): Token
+    {
+        $name = ltrim($text, '\\');
+        if (str_contains($name, '\\')) {
+            $this->fail('namespaced names (' . $text . ') are not allowed in a formula', $offset);
+        }
+        return new Token(Token::NAME, $text, $name, $offset);
     }
 
     /** 123, or 0123 (octal: a leading 0 means base 8, and then 8 and 9 are invalid). */
@@ -216,36 +214,12 @@ final class Lexer
         return $int !== false ? $int : (float)$digits;
     }
 
-    private function singleQuoted(): Token
-    {
-        $start = $this->at;
-        $value = '';
-        $i = $start + 1;
-        $length = strlen($this->source);
-        while ($i < $length) {
-            $char = $this->source[$i];
-            if ($char === "'") {
-                $this->at = $i + 1;
-                return new Token(Token::STRING, substr($this->source, $start, $this->at - $start), $value, $start);
-            }
-            if ($char === '\\' && in_array($this->source[$i + 1] ?? '', ['\\', "'"], true)) {
-                $value .= $this->source[$i + 1];
-                $i += 2;
-                continue;
-            }
-            $value .= $char;
-            $i++;
-        }
-        $this->fail("a text started with ' is never closed", $start);
-    }
-
     /**
      * "..." with PHP's escapes, and plain $NAME read as the variable. A
      * TEMPLATE token when it has a variable, else a STRING.
      */
-    private function doubleQuoted(): Token
+    private function doubleQuoted(int $start): Token
     {
-        $start = $this->at;
         $parts = [];
         $text = '';
         $i = $start + 1;
@@ -253,8 +227,7 @@ final class Lexer
         while ($i < $length) {
             $char = $this->source[$i];
             if ($char === '"') {
-                $this->at = $i + 1;
-                $written = substr($this->source, $start, $this->at - $start);
+                $written = substr($this->source, $start, $i + 1 - $start);
                 if ($parts === []) {
                     return new Token(Token::STRING, $written, $text, $start);
                 }
@@ -277,7 +250,7 @@ final class Lexer
                 if ($next === '{') {
                     $this->fail(self::REFUSED['${'], $i);
                 }
-                if (preg_match('/\G[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*/', $this->source, $match, 0, $i + 1) === 1) {
+                if (preg_match('/\G' . self::NAME . '/', $this->source, $match, 0, $i + 1) === 1) {
                     $after = $i + 1 + strlen($match[0]);
                     if (($this->source[$after] ?? '') === '[' || substr($this->source, $after, 2) === '->') {
                         $this->fail('only a plain $NAME can be inside "...": write $' . $match[0] . '[...] or ->... outside the quotes', $i);
@@ -339,31 +312,6 @@ final class Lexer
             $codepoint < 0x10000 => chr(0xE0 | $codepoint >> 12) . chr(0x80 | $codepoint >> 6 & 0x3F) . chr(0x80 | $codepoint & 0x3F),
             default => chr(0xF0 | $codepoint >> 18) . chr(0x80 | $codepoint >> 12 & 0x3F) . chr(0x80 | $codepoint >> 6 & 0x3F) . chr(0x80 | $codepoint & 0x3F),
         };
-    }
-
-    private function operator(): Token
-    {
-        $start = $this->at;
-        foreach ([3, 2] as $size) {
-            $text = substr($this->source, $start, $size);
-            if (isset(self::REFUSED[$text])) {
-                $this->fail(self::REFUSED[$text], $start);
-            }
-        }
-        foreach (self::OPERATORS as $operator) {
-            if (substr_compare($this->source, $operator, $start, strlen($operator)) === 0) {
-                $this->at = $start + strlen($operator);
-                return new Token($operator, $operator, null, $start);
-            }
-        }
-        $char = $this->source[$start];
-        $this->fail(match ($char) {
-            '`' => self::REFUSED['`'],
-            '=' => 'assignments ("=") are not allowed in a formula: to compare, write "=="',
-            '&', '|', '^', '~' => 'the bitwise operator "' . $char . '" is not allowed in a formula: did you mean "' . $char . $char . '"?',
-            '@' => '"@" is not allowed in a formula',
-            default => 'unexpected "' . $char . '"',
-        }, $start);
     }
 
     private function fail(string $problem, int $offset): never
