@@ -134,6 +134,11 @@ final class SecurityTest extends TestCase
             '$_ENV' => ["\$_ENV['PHPBB_DB_PASS']"],
             '$GLOBALS' => ["\$GLOBALS['_remoteKey']"],
             '$_COOKIE' => ['$_COOKIE'],
+            'a superglobal inside "..."' => ['"x$_SERVER"'],
+            '$GLOBALS inside "..."' => ['"$GLOBALS"'],
+            '?-> inside "..."' => ['"$X?->b"'],
+            '\\isset, a function of that name' => ['\\isset($X) ?: 5'],
+            '\\array, a function of that name' => ['\\array(1, 2)[1]'],
 
             // More than one statement.
             'a second statement' => ["1; file_put_contents('CANARY', 'x')"],

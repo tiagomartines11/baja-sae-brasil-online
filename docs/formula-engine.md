@@ -125,10 +125,28 @@ exceptions, on purpose:
    keywords `and`/`or`/`xor`, casts, bitwise operators, `@`, `empty()`,
    `match`, closures, `{$…}` and `$X[…]` inside `"…"`, more than one statement,
    and `?>` (with which `eval()` would print the rest of the formula into the
-   page). That is the point of the engine. None of it appears in the design
+   page), magic constants (`__LINE__`, `__DIR__`, which would give the
+   server's path), `<=>`, `<<`, heredoc and named arguments; also `"$A->"`
+   and `"\{$A}"` inside `"…"`, which PHP reads as plain text but which look
+   too much like what is refused, and variants of the DateTime pattern
+   (`->format(…)[0]`, `null` as its time zone, `setTimestamp()` twice). That is
+   the point of the engine. None of it appears in the design
    survey of production; if the staging run finds a formula that uses one of
    them, it shows as a DIFFERENT VALUE and must be decided: allowed (added to
    `Allowlist`, if harmless) or kept refused (added here, and the config fixed).
+
+3. **Limits, so that one formula costs one empty cell at worst.** Under
+   `eval()`, `str_pad('', 2000000000)` in a column ran out of memory, a fatal
+   error: the whole page died. Now these give null:
+   - `str_pad()` to more than 10,000 characters (`Interpreter::MOST_PADDING`;
+     the configs pad lap numbers to 2 or 5);
+   - a formula longer than 10,000 bytes (`Lexer::MOST_BYTES`; the longest in
+     the seed is 2.1 KB; reading one takes about 2.5 KB of memory per byte);
+   - more than 200 levels of brackets, signs in front or `? :`
+     (`Parser::MOST_DEPTH`; real formulas stay under 10).
+
+   Read formulas are kept for the request up to 200 KB of formula text, then
+   the store starts again.
 
 Not a difference in results, but in wording: a formula that is not valid PHP
 gets SafeEngine's message (`expected "," or ")" but found end of the formula,
@@ -274,8 +292,8 @@ docker compose exec --user "$(id -u):$(id -g)" -e FORMULA_ENGINE=safe baja-app p
 - `tests/Unit/Formula/` (part of the `unit` suite): `GrammarTest` (each piece
   of syntax), `FunctionsTest` (each allowed function, the DateTime pattern,
   the clock), `LegacyFormulasTest` (production's broken formulas still give
-  null; what `extract()` did; the fatal ones), `SecurityTest` (54 attacks,
-  each refused before anything runs), `ShadowEngineTest`,
+  null; what `extract()` did; the fatal ones), `SecurityTest` (59 attacks,
+  each refused before anything runs), `LimitsTest`, `ShadowEngineTest`,
   `EngineSettingTest`, `ParserTest`. All but the last three compare with
   `eval()` on the same input.
 - `formula-compare-db`: the comparison on the seed finds nothing and writes

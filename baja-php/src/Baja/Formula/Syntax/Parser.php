@@ -84,9 +84,18 @@ final class Parser
     ];
 
     /** PHP's superglobals: they would let a formula read the server's settings and the visitor's request. */
-    private const SUPERGLOBALS = ['GLOBALS', '_SERVER', '_GET', '_POST', '_COOKIE', '_FILES', '_ENV', '_REQUEST', '_SESSION'];
+    public const SUPERGLOBALS = ['GLOBALS', '_SERVER', '_GET', '_POST', '_COOKIE', '_FILES', '_ENV', '_REQUEST', '_SESSION'];
+
+    /**
+     * How deep brackets, operators in front and "? :" may nest. Real
+     * formulas stay under 10; the parser calls itself once per level, so
+     * thousands of levels would use up the page's memory.
+     */
+    public const MOST_DEPTH = 200;
 
     private int $at = 0;
+
+    private int $depth = 0;
 
     /** The index of the END token, the last one. */
     private readonly int $last;
@@ -126,6 +135,18 @@ final class Parser
      * next operator binds tightly enough, read its right side and combine.
      */
     private function expression(int $loosest): Node
+    {
+        if (++$this->depth > self::MOST_DEPTH) {
+            $this->fail('the formula nests too deep (at most ' . self::MOST_DEPTH . ' levels of brackets and operators)', $this->peek());
+        }
+        try {
+            return $this->climb($loosest);
+        } finally {
+            $this->depth--;
+        }
+    }
+
+    private function climb(int $loosest): Node
     {
         $left = $this->prefix();
         // Set when the last operator of this level was "==" or "<" and so
@@ -236,7 +257,9 @@ final class Parser
                 $inner->parenthesized = true;
                 return $this->postfix($inner);
             case Token::NAME:
-                return $this->postfix($this->name($token));
+                $node = $this->name($token);
+                // isset(...)[0] is not PHP.
+                return $node->kind === Node::ISSET ? $node : $this->postfix($node);
         }
         $this->fail('unexpected ' . $token->describe(), $token);
     }
@@ -295,6 +318,11 @@ final class Parser
         $lower = strtolower($token->value);
         if (in_array($lower, self::KEYWORDS, true)) {
             $this->fail('"' . $token->value . '" is not allowed in a formula', $token);
+        }
+        // \isset(...) and \array(...) would be calls to functions of those
+        // names, which PHP does not have.
+        if (in_array($lower, ['isset', 'array', 'new'], true) && str_starts_with($token->text, '\\')) {
+            $this->fail('"' . $token->text . '" is not allowed in a formula', $token);
         }
         if ($lower === 'new') {
             $this->fail('"new" is not allowed in a formula, except in (new \DateTime(...))->setTimestamp(...)->format(...)', $token);

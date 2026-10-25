@@ -58,6 +58,12 @@ final class GrammarTest extends TestCase
         $this->assertGives(1000, '1_000', [], '"_" between digits is allowed');
         $this->assertGives(31, '0x1F', [], 'hexadecimal');
         $this->assertGives(3, '0b11', [], 'binary');
+        $this->assertGives(1.844674407370955E+19, '0b' . str_repeat('1', 64), [], 'a binary number too big for an int is rounded as PHP\'s reader rounds it (not as bindec() does)');
+        $this->assertSameAsEval('0b1' . str_repeat('0', 62) . '1');
+        $this->assertSameAsEval('0b' . str_repeat('10', 50));
+        foreach (['0x' . str_repeat('F', 16), '0x8000000000000000', '0x' . str_repeat('aB', 20), '0' . str_repeat('7', 30), '0o' . str_repeat('7', 30)] as $big) {
+            $this->assertSameAsEval($big, [], 'too big for an int: PHP\'s own rounding');
+        }
         $this->assertGives(8, '010', [], 'a leading 0 means octal: 010 is 8');
         $this->assertGives(8.5, '08.5', [], 'but not in a decimal number');
         $this->assertGives(9.2233720368547758E+18, '9223372036854775808', [], 'too big for a whole number: PHP makes it a decimal one');
@@ -154,6 +160,8 @@ final class GrammarTest extends TestCase
         $this->assertGives(1, "isset(\$A['x']) ? 1 : 0", ['A' => ['x' => 1]]);
         $this->assertGives(0, "isset(\$A['x']['y']) ? 1 : 0", ['A' => ['x' => 5]]);
         $this->assertGives(0, "isset(\$A['x']) ? 1 : 0", ['A' => 'text'], 'no error for a text read with a word');
+        $this->assertGives(0, 'isset($this) ? 1 : 0', [], 'isset($this) is false, with no error');
+        $this->assertFails('ParseError', 'isset($A)[0] ?? 5', [], 'nothing may follow isset()');
     }
 
     // ---- Arithmetic ----
@@ -284,6 +292,7 @@ final class GrammarTest extends TestCase
         $this->assertGives(2, '$A ?? $B ?? 0', ['B' => 2], 'right to left');
         $this->assertGives(1, "\$A['x'] ?? 1", ['A' => 'text'], 'no error for a text read with a word');
         $this->assertGives('n', 'null ?? 0 ? "y" : "n"', [], '?? comes before ? :');
+        $this->assertFails('Error: Using $this when not in object context', '$this ?? 1', [], 'but $this is an error even here');
     }
 
     // ---- If-then-else ----

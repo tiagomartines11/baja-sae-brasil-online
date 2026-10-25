@@ -41,6 +41,13 @@ use Error;
  */
 final class Interpreter
 {
+    /**
+     * The longest text str_pad() may make. Without a limit, str_pad('', 2e9)
+     * is a fatal "memory exhausted": the whole page dies, not one cell. The
+     * configs pad lap numbers to 2 or 5 characters.
+     */
+    public const MOST_PADDING = 10_000;
+
     /** @return Closure(Scope): mixed */
     public static function compile(Node $node): Closure
     {
@@ -79,9 +86,8 @@ final class Interpreter
     private static function variable(string $name, bool $quiet): Closure
     {
         return match ($name) {
-            'this' => $quiet
-                ? static fn() => null
-                : static fn() => throw new Error('Using $this when not in object context'),
+            // Even $this ?? 1 fails in PHP; only isset($this) does not (see isset()).
+            'this' => static fn() => throw new Error('Using $this when not in object context'),
             'vars' => static fn(Scope $scope) => array_key_exists('vars', $scope->vars) ? $scope->vars['vars'] : $scope->given,
             'formula' => static fn(Scope $scope) => array_key_exists('formula', $scope->vars) ? $scope->vars['formula'] : $scope->formula,
             default => static fn(Scope $scope) => $scope->vars[$name] ?? null,
@@ -150,6 +156,9 @@ final class Interpreter
     private static function isset(array $arguments): Closure
     {
         $checks = array_map(static function (Node $argument): Closure {
+            if ($argument->kind === Node::VARIABLE && $argument->value === 'this') {
+                return static fn() => false;
+            }
             if ($argument->kind === Node::VARIABLE) {
                 $read = self::node($argument, true);
                 return static fn(Scope $scope) => $read($scope) !== null;
@@ -187,6 +196,15 @@ final class Interpreter
         }
         if ($name === 'date') {
             return static fn(Scope $scope) => PinnedClock::date($scope->now, self::values($arguments, $scope));
+        }
+        if ($name === 'str_pad') {
+            return static function (Scope $scope) use ($arguments) {
+                $values = self::values($arguments, $scope);
+                if (is_numeric($values[1] ?? null) && $values[1] > self::MOST_PADDING) {
+                    throw new \ValueError('str_pad(): Argument #2 ($length) must be at most ' . self::MOST_PADDING . ' in a formula');
+                }
+                return str_pad(...$values);
+            };
         }
         // The usual cases spelled out: round() alone is in 5,000 formulas.
         return match (count($arguments)) {

@@ -33,8 +33,16 @@ use Error;
  */
 final class SafeEngine implements FormulaEngine
 {
-    /** Formulas kept at most; then the store starts again (a whole event has fewer). */
+    /**
+     * Formulas kept at most, and their total length; then the store starts
+     * again. A read formula takes about 1,000 times its length in memory, so
+     * the length counts more than the number. A results page has a few
+     * dozen formulas of a few hundred bytes.
+     */
     private const KEEP = 10_000;
+    private const KEEP_BYTES = 200_000;
+
+    private static int $keptBytes = 0;
 
     /** @var array<string, Closure|FormulaSyntaxError> by the formula's text */
     private static array $compiled = [];
@@ -84,9 +92,11 @@ final class SafeEngine implements FormulaEngine
     private static function compiled(string $source): Closure
     {
         if (!isset(self::$compiled[$source])) {
-            if (count(self::$compiled) >= self::KEEP) {
+            if (count(self::$compiled) >= self::KEEP || self::$keptBytes + strlen($source) > self::KEEP_BYTES) {
                 self::$compiled = [];
+                self::$keptBytes = 0;
             }
+            self::$keptBytes += strlen($source);
             try {
                 self::$compiled[$source] = Interpreter::compile(Parser::parse($source)->root);
             } catch (FormulaSyntaxError $error) {

@@ -61,6 +61,13 @@ final class Lexer
     /** A name's first character, then the others (PHP's rule: any byte from 0x80 is a letter). */
     private const NAME = '[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*+';
 
+    /**
+     * The longest formula read, in bytes. The longest in the dev seed is
+     * 2.1 KB; reading one costs about 2.5 KB of memory per byte, so without
+     * a limit a huge formula could use up a page's memory.
+     */
+    public const MOST_BYTES = 10_000;
+
     private static ?string $pieces = null;
 
     /** @var list<Token> */
@@ -125,9 +132,17 @@ final class Lexer
 
     private function run(): void
     {
-        self::$pieces ??= self::pieces();
-        preg_match_all(self::$pieces, $this->source, $pieces, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
         $length = strlen($this->source);
+        if ($length > self::MOST_BYTES) {
+            $this->fail('the formula is too long (' . $length . ' bytes; at most ' . self::MOST_BYTES . ')', 0);
+        }
+        self::$pieces ??= self::pieces();
+        // A regular expression can give up (PCRE's backtrack limit); then
+        // the pieces found so far are not the whole formula, and reading
+        // only those would silently work out a shorter formula.
+        if (preg_match_all(self::$pieces, $this->source, $pieces, PREG_SET_ORDER | PREG_OFFSET_CAPTURE) === false) {
+            $this->fail('the formula could not be read (' . preg_last_error_msg() . ')', 0);
+        }
         foreach ($pieces as $piece) {
             [$text, $offset] = $piece[0];
             $token = match ($piece['MARK']) {
@@ -139,10 +154,10 @@ final class Lexer
                     : $this->doubleQuoted($offset),
                 'VARIABLE' => new Token(Token::VARIABLE, $text, substr($text, 1), $offset),
                 'FLOAT' => new Token(Token::NUMBER, $text, (float)str_replace('_', '', $text), $offset),
-                // These give a float when the number is too big for an int, as PHP's reader does.
-                'HEX' => new Token(Token::NUMBER, $text, hexdec(substr(str_replace('_', '', $text), 2)), $offset),
-                'BINARY' => new Token(Token::NUMBER, $text, bindec(substr(str_replace('_', '', $text), 2)), $offset),
-                'OCTAL' => new Token(Token::NUMBER, $text, octdec(substr(str_replace('_', '', $text), 2)), $offset),
+                // A float when too big for an int, rounded as PHP's reader rounds it (based()).
+                'HEX' => new Token(Token::NUMBER, $text, self::based(substr(str_replace('_', '', $text), 2), 16), $offset),
+                'BINARY' => new Token(Token::NUMBER, $text, self::based(substr(str_replace('_', '', $text), 2), 2), $offset),
+                'OCTAL' => new Token(Token::NUMBER, $text, self::based(substr(str_replace('_', '', $text), 2), 8), $offset),
                 'DECIMAL' => new Token(Token::NUMBER, $text, $this->decimal(str_replace('_', '', $text), $offset), $offset),
                 'NAME' => $this->name($text, $offset),
                 'OPERATOR' => new Token($text, $text, null, $offset),
@@ -200,6 +215,34 @@ final class Lexer
         return new Token(Token::NAME, $text, $name, $offset);
     }
 
+    /**
+     * A hexadecimal, binary or octal number; a float when too big for an
+     * int. hexdec() and octdec() round such a float as PHP's own reader
+     * does. For binary, PHP's reader (zend_bin_strtod, in C) builds the
+     * number as "value * 2 + c - '0'", c being the digit's character code:
+     * so (value * 2 + c) - '0', rounded twice at each step once past 2^53.
+     * bindec() rounds otherwise, so that is done here as PHP does it.
+     * (Measured against eval() in GrammarTest::testNumbers.)
+     */
+    private static function based(string $digits, int $base): int|float
+    {
+        if ($base === 16) {
+            return hexdec($digits);
+        }
+        if ($base === 8) {
+            return octdec($digits);
+        }
+        $exact = bindec($digits);
+        if (is_int($exact)) {
+            return $exact;
+        }
+        $value = 0.0;
+        foreach (str_split($digits) as $digit) {
+            $value = ($value * 2 + ord($digit)) - ord('0');
+        }
+        return $value;
+    }
+
     /** 123, or 0123 (octal: a leading 0 means base 8, and then 8 and 9 are invalid). */
     private function decimal(string $digits, int $start): int|float
     {
@@ -207,7 +250,7 @@ final class Lexer
             if (strspn($digits, '01234567') !== strlen($digits)) {
                 $this->fail('invalid number ' . $digits . ' (a leading 0 means octal, which has no 8 or 9)', $start);
             }
-            return octdec($digits);
+            return self::based($digits, 8);
         }
         // Too big for an int: PHP reads it as a float.
         $int = filter_var($digits, FILTER_VALIDATE_INT);
@@ -252,8 +295,11 @@ final class Lexer
                 }
                 if (preg_match('/\G' . self::NAME . '/', $this->source, $match, 0, $i + 1) === 1) {
                     $after = $i + 1 + strlen($match[0]);
-                    if (($this->source[$after] ?? '') === '[' || substr($this->source, $after, 2) === '->') {
+                    if (($this->source[$after] ?? '') === '[' || substr($this->source, $after, 2) === '->' || substr($this->source, $after, 3) === '?->') {
                         $this->fail('only a plain $NAME can be inside "...": write $' . $match[0] . '[...] or ->... outside the quotes', $i);
+                    }
+                    if (in_array($match[0], Parser::SUPERGLOBALS, true)) {
+                        $this->fail('$' . $match[0] . ' is not allowed in a formula', $i);
                     }
                     if ($text !== '') {
                         $parts[] = $text;
