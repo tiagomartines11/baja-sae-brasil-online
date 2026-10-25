@@ -27,11 +27,15 @@
 #
 # It refuses to run against production (BAJA_DOMAIN=bajasaebrasil.net).
 #
-# BEFORE THE FIRST RUN on an existing dev database (a fresh one has both):
+# BEFORE THE FIRST RUN:
 #   - the read-only backup MySQL user: created by mysql/init/02 on first
-#     boot only; see "MySQL backup user" in docs/backup-restore.md;
-#   - the evento_arquivamento table: `./propel migration:migrate` in the
-#     baja-app container (docs/dev-workflow.md shows the full command).
+#     boot only (a fresh database has it); on an existing one see "MySQL
+#     backup user" in docs/backup-restore.md;
+#   - every Propel migration, fresh database included: the seed leaves
+#     the certificate ones out, and the verifier's certificate lookup
+#     fails without them ("Unknown column 'p.anulado_em'"). Run
+#     `./propel migration:migrate` in the baja-app container
+#     (docs/dev-workflow.md shows the full command).
 #
 # HOW TO RUN, from baja-infra/, with the stack up:
 #
