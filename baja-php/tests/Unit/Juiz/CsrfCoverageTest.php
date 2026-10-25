@@ -54,10 +54,6 @@ final class CsrfCoverageTest extends TestCase
         'contagem_dispositivo.php' => 'issues a device token the caller alone can read; lap counting flow, left alone',
         // The spreadsheet's uploads: a shared key in the JSON body.
         'remote.php' => 'key in the JSON body ($_remoteKey)',
-        'remote_refresh.php' => 'key in the JSON body ($_remoteKey)',
-        // No authentication at all (anyone may trigger a recount of END);
-        // a token would protect nothing. Reported separately.
-        'enduro_sync.php' => 'no authentication at all; a token would protect nothing',
     ];
 
     /** @return array<string, array{string}> */
