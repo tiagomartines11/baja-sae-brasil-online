@@ -11,11 +11,16 @@ namespace Baja\ResultsCheck;
  *   where    which part of the config: 'column "Pontos" val', 'pos'
  *   detail   what is wrong: the error message, or an explanation
  *   formula  the formula, when the problem is in one
- *   teams    how many teams it hits, out of ofTeams (formula problems only)
+ *   teams    how many teams it hits, out of ofTeams (formula errors only)
  *   slot     where the formula is, so that a fix can be put back
  */
 final class Finding
 {
+    /**
+     * PHP itself died while checking it (see IsolatedCheck): in production
+     * the same formula kills the results page, or the judge's save.
+     */
+    public const FATAL = 'FATAL ERROR: PHP dies';
     public const FORMULA_ERROR = 'Formula raises an error';
     public const RANKING = 'Ranking config';
     public const EMPTY_COLUMN = 'Column empty for every team';

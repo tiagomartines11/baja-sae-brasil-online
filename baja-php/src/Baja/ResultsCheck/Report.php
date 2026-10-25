@@ -4,8 +4,9 @@ declare(strict_types=1);
 namespace Baja\ResultsCheck;
 
 /**
- * The text the check prints: event, then resultado (or prova), then each
- * kind of problem, then the problems themselves.
+ * The text the check prints: first the fatal errors, if any, one line
+ * each; then event, then resultado (or prova), then each kind of problem,
+ * then the problems themselves.
  *
  *     === 26BR ===
  *
@@ -18,16 +19,22 @@ namespace Baja\ResultsCheck;
  */
 final class Report
 {
+    /** The kinds of problem, in the order they are shown: the worst first. */
+    private const KINDS = [Finding::FATAL, Finding::FORMULA_ERROR, Finding::RANKING, Finding::EMPTY_COLUMN];
+
     /**
      * @param list<array{event: string, resultados: list<array>, provas: list<array>}> $events
      *        resultados: {resultado, nome, teams, findings, fix: ?FixProposal, skipped: ?string}
      *        provas:     {prova, nome, teams, findings}
+     *        teams is null when the check of it died (Finding::FATAL) before counting them
+     * @param float|null $seconds how long the check took, for the summary
      */
-    public static function render(array $events, ?string $sqlFile): string
+    public static function render(array $events, ?string $sqlFile, ?float $seconds = null): string
     {
         $out = [];
         $count = ['resultados' => 0, 'skipped' => 0, 'noTeams' => 0, 'provas' => 0, 'withProblems' => 0, 'provasWithProblems' => 0, 'fixes' => 0];
         $kinds = [];
+        $fatal = ['resultado' => [], 'prova' => []];
         foreach ($events as $event) {
             $blocks = [];
             foreach ($event['resultados'] as $resultado) {
@@ -46,6 +53,9 @@ final class Report
                 $count['fixes'] += ($resultado['fix'] !== null && $resultado['fix']->changes !== []) ? 1 : 0;
                 foreach ($resultado['findings'] as $finding) {
                     $kinds[$finding->problem] = ($kinds[$finding->problem] ?? 0) + 1;
+                    if ($finding->problem === Finding::FATAL) {
+                        $fatal['resultado'][] = [$resultado['resultado'], $resultado['nome'], $finding];
+                    }
                 }
                 $blocks[] = self::block($resultado['resultado'], $resultado['nome'], $resultado['teams'], $resultado['findings'], $resultado['fix']);
             }
@@ -54,6 +64,11 @@ final class Report
                 $count['provas']++;
                 if ($prova['findings'] !== []) {
                     $count['provasWithProblems']++;
+                    foreach ($prova['findings'] as $finding) {
+                        if ($finding->problem === Finding::FATAL) {
+                            $fatal['prova'][] = [$prova['prova'], $prova['nome'], $finding];
+                        }
+                    }
                     $provaBlocks[] = self::block($prova['prova'], $prova['nome'], $prova['teams'], $prova['findings'], null);
                 }
             }
@@ -75,28 +90,72 @@ final class Report
             ),
             sprintf('%d resultados and %d provas have problems.', $count['withProblems'], $count['provasWithProblems']),
         ];
-        foreach ([Finding::FORMULA_ERROR, Finding::RANKING, Finding::EMPTY_COLUMN] as $kind) {
+        if ($fatal['resultado'] !== [] || $fatal['prova'] !== []) {
+            $summary[] = sprintf(
+                '%d resultados and %d provas have a FATAL ERROR, listed at the top.',
+                count(array_unique(array_column($fatal['resultado'], 0))),
+                count(array_unique(array_column($fatal['prova'], 0))),
+            );
+        }
+        foreach (self::KINDS as $kind) {
             $summary[] = sprintf('  %-28s %d in resultados', $kind . ':', $kinds[$kind] ?? 0);
         }
         $summary[] = $sqlFile === null
             ? sprintf('%d resultados have a mechanical fix; --sql <file> writes it.', $count['fixes'])
             : sprintf('%d resultados have a mechanical fix, written to %s.', $count['fixes'], $sqlFile);
         $summary[] = 'Everything without a "fix:" line needs a person. Nothing was written to the database.';
+        if ($seconds !== null) {
+            $summary[] = sprintf('Took %.1f s.', $seconds);
+        }
 
-        return implode("\n", $out) . "\n\n" . implode("\n", $summary) . "\n";
+        return self::fatalBanner($fatal) . implode("\n", $out) . "\n\n" . implode("\n", $summary) . "\n";
+    }
+
+    /**
+     * The fatal errors, before everything else, so nobody can miss them.
+     * One line each; the formula and what to do are under its event.
+     *
+     * @param array{resultado: list<array{string, string, Finding}>, prova: list<array{string, string, Finding}>} $fatal
+     */
+    private static function fatalBanner(array $fatal): string
+    {
+        $total = count($fatal['resultado']) + count($fatal['prova']);
+        if ($total === 0) {
+            return '';
+        }
+        $lines = [
+            '!!! ' . $total . ' FATAL ERROR' . ($total === 1 ? '' : 'S') . ' !!!',
+            'PHP stops dead on these: no try/catch can catch it, and nothing after it runs.',
+            '',
+        ];
+        $what = [
+            'resultado' => 'resultado: its results page dies outright in production',
+            'prova' => 'prova: a judge saving an entry for it gets a fatal error',
+        ];
+        foreach ($what as $kind => $consequence) {
+            foreach ($fatal[$kind] as [$id, $nome, $finding]) {
+                $lines[] = '  ' . $id . '  ' . $nome . '  (' . $consequence . ')';
+                $lines[] = '      ' . $finding->where . ': ' . self::oneLine($finding->detail);
+            }
+        }
+        $lines[] = '';
+        $lines[] = 'The formulas, and how to read them, are under each event below.';
+        return implode("\n", $lines) . "\n\n";
     }
 
     /**
      * @param list<Finding> $findings
      */
-    private static function block(string $id, string $nome, int $teams, array $findings, ?FixProposal $fix): string
+    private static function block(string $id, string $nome, ?int $teams, array $findings, ?FixProposal $fix): string
     {
-        $lines = [$id . '  ' . $nome . '  (' . $teams . ' team' . ($teams === 1 ? '' : 's') . ')'];
+        $lines = [$id . '  ' . $nome . '  (' . ($teams === null
+            ? 'PHP died while checking it, so its other checks did not run'
+            : $teams . ' team' . ($teams === 1 ? '' : 's')) . ')'];
         $byKind = [];
         foreach ($findings as $finding) {
             $byKind[$finding->problem][] = $finding;
         }
-        foreach ([Finding::FORMULA_ERROR, Finding::RANKING, Finding::EMPTY_COLUMN] as $kind) {
+        foreach (self::KINDS as $kind) {
             if (!isset($byKind[$kind])) {
                 continue;
             }
@@ -124,6 +183,9 @@ final class Report
         if ($first->problem === Finding::RANKING) {
             return array_map(fn(Finding $finding) => '    ' . $finding->detail, $findings);
         }
+        if ($first->problem === Finding::FATAL) {
+            return self::fatal($first);
+        }
         $lines = ['    ' . $first->where, '      formula: ' . self::formula($first->formula)];
         foreach ($findings as $finding) {
             $lines[] = $finding->problem === Finding::FORMULA_ERROR
@@ -140,6 +202,32 @@ final class Report
                 $lines[] = '      no fix:  replacing "+" next to text gives ' . self::oneLine($change['new']);
                 $lines[] = '               which still fails: ' . self::oneLine($change['error']);
             }
+        }
+        return $lines;
+    }
+
+    /**
+     * A formula that kills PHP. Never fixed by the tool: when it is a nested
+     * ternary, both readings are shown, and a person picks one.
+     *
+     * @return list<string>
+     */
+    private static function fatal(Finding $finding): array
+    {
+        $lines = ['    ' . $finding->where];
+        if ($finding->formula !== null) {
+            $lines[] = '      formula: ' . self::formula($finding->formula);
+        }
+        $lines[] = '      fatal:   ' . self::oneLine($finding->detail);
+        $readings = is_string($finding->formula) ? NestedTernary::readings(self::oneLine($finding->formula)) : null;
+        if ($readings !== null) {
+            array_push(
+                $lines,
+                '      A "? :" inside another without brackets: PHP 8 refuses to guess which one comes first.',
+                '      PHP 7 read it as:  ' . $readings['php7'],
+                '      probably meant:    ' . $readings['meant'],
+                '      no fix:  a person must pick the reading and add the brackets; the two can give different results.',
+            );
         }
         return $lines;
     }

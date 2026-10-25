@@ -52,8 +52,9 @@
         <!--
           The resultado config check (docs/results-config-check.md), run on the
           dev seed: writes nothing, finds the known broken configs. Needs the
-          app's database variables, skipped without them. Its unit tests are in
-          tests/Unit/ResultsCheck, part of the unit suite.
+          app's database variables, skipped without them. FatalFormulaTest also
+          needs BAJA_TEST_DB set to 1, because it loads a made-up event first.
+          Its unit tests are in tests/Unit/ResultsCheck, part of the unit suite.
         -->
         <testsuite name="results-check-db">
             <directory>tests/ResultsCheck/Db</directory>

@@ -3,12 +3,14 @@ declare(strict_types=1);
 
 namespace Baja\ResultsCheck;
 
+use RuntimeException;
 use Throwable;
 
 /**
  * scripts/check-results-configs.php, minus the wiring: reads the options,
- * checks every resultado and prova of the events, prints the report and,
- * with --sql, writes the mechanical fixes to a file.
+ * checks every resultado and prova of the events, each in its own PHP
+ * process (IsolatedCheck), prints the report and, with --sql, writes the
+ * mechanical fixes to a file.
  *
  * Exit codes: 0 whenever the report could be made, whatever it found (it
  * is a report, not a test); 2 when it could not run (bad options, no
@@ -20,11 +22,12 @@ final class Command
     public const CANNOT_RUN = 2;
 
     private const USAGE = <<<'TXT'
-        Usage: php scripts/check-results-configs.php [--events <list>] [--sql <file>]
+        Usage: php scripts/check-results-configs.php [--events <list>] [--sql <file>] [--jobs <n>]
 
           --events <list>   only these events, comma separated, e.g. 22BR,23SE (default: all events)
           --sql <file>      also write the mechanical fixes ("+" used to join text) to this file, as
                             UPDATEs to read and then run by hand
+          --jobs <n>        how many PHP processes to run at once (default: 4)
 
         Read-only: it never writes to the database. See docs/results-config-check.md.
 
@@ -39,8 +42,9 @@ final class Command
     /**
      * @param callable(): LiveSource  $sourceFactory connects to the database
      * @param callable(string): void  $out           where to print
+     * @param string                  $projectRoot   the baja-php folder, where the child script is
      */
-    public function __construct(callable $sourceFactory, callable $out)
+    public function __construct(callable $sourceFactory, callable $out, private string $projectRoot)
     {
         $this->sourceFactory = $sourceFactory;
         $this->out = $out;
@@ -55,6 +59,7 @@ final class Command
             return self::CANNOT_RUN;
         }
 
+        $started = microtime(true);
         try {
             $source = ($this->sourceFactory)();
             $events = $source->events($options['events']);
@@ -63,11 +68,11 @@ final class Command
                 ($this->out)('No such event: ' . implode(', ', $missing) . "\n");
                 return self::CANNOT_RUN;
             }
-            $checked = [];
-            $fixes = [];
+            $outlines = [];
             foreach ($events as $event) {
-                $checked[] = self::checkEvent($source, $event, $fixes);
+                $outlines[$event] = $source->outline($event);
             }
+            ['events' => $checked, 'fixes' => $fixes] = (new IsolatedCheck($this->projectRoot, $options['jobs']))->run($outlines);
         } catch (Throwable $e) {
             ($this->out)('Could not check: ' . get_class($e) . ': ' . $e->getMessage() . "\n");
             return self::CANNOT_RUN;
@@ -82,57 +87,75 @@ final class Command
                 return self::CANNOT_RUN;
             }
         }
-        ($this->out)(Report::render($checked, $options['sql']));
+        ($this->out)(Report::render($checked, $options['sql'], microtime(true) - $started));
         return self::OK;
     }
 
     /**
-     * @param list<array> $fixes the fixes found so far, for SqlFix::script()
-     * @return array{event: string, resultados: list<array>, provas: list<array>}
+     * Checks one resultado. Called by scripts/check-results-configs/child.php,
+     * in a process of its own (see IsolatedCheck).
+     *
+     * @return array{entry: array, fix: ?array}
+     *         entry: {resultado, nome, teams, findings, fix, skipped}, as Report::render() wants it
+     *         fix:   for SqlFix::script(), or null when there is no mechanical fix
      */
-    private static function checkEvent(LiveSource $source, string $event, array &$fixes): array
+    public static function checkResultado(LiveSource $source, string $event, string $id): array
     {
-        $resultados = [];
-        foreach ($source->resultados($event) as $resultado) {
-            $colunas = json_decode($resultado['colunas'] ?? '');
-            $entry = ['resultado' => $resultado['resultado'], 'nome' => $resultado['nome'], 'teams' => 0, 'findings' => [], 'fix' => null, 'skipped' => null];
-            if (!is_object($colunas) || ($colunas->type ?? null) === 'tournament') {
-                // A tournament is shown by torneio.php from its own tables; no columns to check.
-                $resultados[] = ['skipped' => 'tournament or no columns'] + $entry;
-                continue;
-            }
-            $check = ResultadoCheck::run($colunas, $resultado['inputs']);
-            $fix = FixProposal::for($colunas, $resultado['inputs'], $check['findings']);
-            if ($fix !== null && $fix->changes !== []) {
-                $fixes[] = ['evento' => $event, 'resultado' => $resultado['resultado'], 'nome' => $resultado['nome'], 'colunas' => $resultado['colunas'], 'fix' => $fix];
-            }
-            $resultados[] = ['teams' => $check['teams'], 'findings' => $check['findings'], 'fix' => $fix] + $entry;
+        $resultado = $source->resultados($event, $id)[0] ?? null;
+        if ($resultado === null) {
+            throw new RuntimeException('No resultado ' . $id . ' in ' . $event);
         }
+        $colunas = json_decode($resultado['colunas'] ?? '');
+        $entry = ['resultado' => $resultado['resultado'], 'nome' => $resultado['nome'], 'teams' => 0, 'findings' => [], 'fix' => null, 'skipped' => null];
+        if (!is_object($colunas) || ($colunas->type ?? null) === 'tournament') {
+            // A tournament is shown by torneio.php from its own tables; no columns to check.
+            return ['entry' => ['skipped' => 'tournament or no columns'] + $entry, 'fix' => null];
+        }
+        $check = ResultadoCheck::run($colunas, $resultado['inputs']);
+        $fix = FixProposal::for($colunas, $resultado['inputs'], $check['findings']);
+        return [
+            'entry' => ['teams' => $check['teams'], 'findings' => $check['findings'], 'fix' => $fix] + $entry,
+            'fix' => $fix !== null && $fix->changes !== []
+                ? ['evento' => $event, 'resultado' => $resultado['resultado'], 'nome' => $resultado['nome'], 'colunas' => $resultado['colunas'], 'fix' => $fix]
+                : null,
+        ];
+    }
 
-        $provas = [];
-        foreach ($source->provas($event) as $prova) {
-            $check = ProvaCheck::run($prova['prova'], $prova['inputs']);
-            $provas[] = [
+    /**
+     * Checks one prova ("APR", without the event). Called like checkResultado().
+     *
+     * @return array{entry: array{prova: string, nome: string, teams: int, findings: list<Finding>}, fix: null}
+     */
+    public static function checkProva(LiveSource $source, string $event, string $id): array
+    {
+        $prova = $source->provas($event, $id)[0] ?? null;
+        if ($prova === null) {
+            throw new RuntimeException('No prova ' . $id . ' in ' . $event);
+        }
+        $check = ProvaCheck::run($prova['prova'], $prova['inputs']);
+        return [
+            'entry' => [
                 'prova' => $prova['prova']->getFullCode(),
                 'nome' => (string)$prova['prova']->getNome(),
                 'teams' => $check['teams'],
                 'findings' => $check['findings'],
-            ];
-        }
-        return ['event' => $event, 'resultados' => $resultados, 'provas' => $provas];
+            ],
+            // Never a fix for a prova: saving one recomputes its stored points (BAJAAPP-56).
+            'fix' => null,
+        ];
     }
 
     /**
-     * Accepts both "--events list" and "--events=list" (same for --sql).
+     * Accepts both "--events list" and "--events=list" (same for --sql, --jobs).
      *
      * @param list<string> $arguments
-     * @return array{events: list<string>|null, sql: string|null}|string the options, or what is wrong with them
+     * @return array{events: list<string>|null, sql: string|null, jobs: int}|string the options, or what is wrong with them
      */
     private static function parse(array $arguments): array|string
     {
-        $values = ['events' => null, 'sql' => null];
+        $values = ['events' => null, 'sql' => null, 'jobs' => null];
         for ($i = 0; $i < count($arguments); $i++) {
-            if (preg_match('/^--(events|sql)(?:=(.*))?$/s', $arguments[$i], $match) !== 1) {
+            if (preg_match('/^--(events|sql|jobs)(?:=(.*))?$/s', $arguments[$i], $match) !== 1) {
                 return 'Unknown option: ' . $arguments[$i];
             }
             $value = $match[2] ?? $arguments[++$i] ?? null;
@@ -151,6 +174,9 @@ final class Command
                 }
             }
         }
-        return ['events' => $events, 'sql' => $values['sql']];
+        if ($values['jobs'] !== null && preg_match('/^[1-9]\d*$/', $values['jobs']) !== 1) {
+            return '--jobs must be a whole number of 1 or more.';
+        }
+        return ['events' => $events, 'sql' => $values['sql'], 'jobs' => (int)($values['jobs'] ?? 4)];
     }
 }
