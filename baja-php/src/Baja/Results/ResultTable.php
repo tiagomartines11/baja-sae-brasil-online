@@ -7,9 +7,12 @@ namespace Baja\Results;
  * What ResultsBuilder::build() returns: the columns to show, and the rows.
  *
  *   rows            in position order: ranked rows best first, then the
- *                   rows with no position (the premiação's order)
+ *                   rows with no position (the premiação's order). When
+ *                   nobody is ranked, in the order the inputs were read.
  *   spoilersHidden  whether columns with a "val_spoilers" show that
  *                   instead of their value, for this viewer
+ *   rankingHidden   whether the ranking is hidden with them: no row has a
+ *                   position or a tiebreak value (ViewerContext::hidesRanking)
  */
 final class ResultTable
 {
@@ -21,6 +24,7 @@ final class ResultTable
         public readonly array $columns,
         public readonly array $rows,
         public readonly bool $spoilersHidden,
+        public readonly bool $rankingHidden,
     ) {
     }
 

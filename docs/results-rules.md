@@ -190,14 +190,36 @@ During an event, the organisers can turn spoilers on: columns with a
 finished.
 
 - The public results page and the API: spoilers apply to everybody.
-- The judges' copy: users in the resultado's `authorized_users`, and
-  developers, see the real values.
+  `authorized_users` has no effect here, on purpose: the public page is the
+  same for everyone (it is cached publicly), so letting one person past the
+  spoilers would show them to all.
+- The judges' copy: users logged in to the forum whose user name is in the
+  resultado's `authorized_users`, and developers, see the real values. This
+  is the only way past spoilers.
 - The premiação never hides spoilers. It is only for the organisers.
 
-The ranking uses what is shown, so during spoilers it ranks by the spoiler
-value (known issue BAJAAPP-42). With a spoiler value such as `"SPOILERS"`
-or `"?"`, which has no number, every team now shows "–" in the `Pos`
-column (R3). Before, every team was shown 1st with a gold medal.
+### R12. No ranking for the public during spoilers
+
+On the public page and the API, while spoilers apply, a resultado with at
+least one `val_spoilers` column ranks nobody:
+
+- every `Pos` cell shows "–", with no medal;
+- no row has a position or a tiebreak value (the API sends none);
+- the rows keep the page's usual order (R10).
+
+Otherwise the positions could give away what the spoilers hide. A `pos`
+naming a formula variable (R5) is never hidden, so the public saw "?" for
+the points and, next to them, the real positions with medals.
+
+A resultado with no `val_spoilers` column hides nothing and ranks as usual,
+even while spoilers are on. The judges' copy ranks as it always did (for a
+judge not in `authorized_users`, by `pos` as computed for them), and so
+does the premiação.
+
+*Before (BAJAAPP-42):* the public page ranked by what it showed. With `pos`
+naming a hidden column, the spoiler value (`"SPOILERS"`, `"?"`) has no
+number, so every team showed "–" (R3); with `pos` naming a formula
+variable, the real ranking showed.
 
 ## Raw values (for the API)
 
