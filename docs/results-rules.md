@@ -2,7 +2,7 @@
 
 How a resultado's table is worked out: what each column shows, how teams
 are ranked, and which teams can win an award. The public results page
-(`prova.php`), the judges' copy (`prova_juiz.php`), the premiação screens
+(`prova.php`, for the public and for judges), the premiação screens
 and the results API all follow these same rules. Before BAJAAPP-61 the
 results pages and the premiação each had their own, slightly different,
 rules; the "Before" lines say what changed.
@@ -189,9 +189,15 @@ During an event, the organisers can turn spoilers on: columns with a
 `val_spoilers` show that instead of their value, until the event is
 finished.
 
-- The public results page and the API: spoilers apply to everybody.
-- The judges' copy: users in the resultado's `authorized_users`, and
-  developers, see the real values.
+- The results page, as the public gets it (from the Cloudflare cache), and
+  the API: spoilers apply to everybody.
+- The results page with a judge's staff cookie and forum session (same URL,
+  never cached; see [`results-caching.md`](results-caching.md)): users in
+  the resultado's `authorized_users`, and developers, see the real values;
+  anybody else sees the spoilers.
+
+*Before:* judges used a separate URL, `prova_juiz.php`, which now
+redirects to `prova.php`.
 - The premiação never hides spoilers. It is only for the organisers.
 
 The ranking uses what is shown, so during spoilers it ranks by the spoiler
