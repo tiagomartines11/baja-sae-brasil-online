@@ -5,6 +5,7 @@ use Baja\Model\EventoQuery;
 use Baja\Site\Template;
 use Baja\Site\CachePolicy;
 use Baja\Site\CleanUrl;
+use Baja\Site\Html;
 
 // A public page, cached by Cloudflare (docs/results-caching.md). It reads
 // no query parameter, so any is dropped by a redirect.
@@ -18,7 +19,7 @@ Template::printHeader("Notificações");
 
         var pushStatus = -2;
         var pushTags = {};
-        var tagPrefix = '<?= EventoQuery::getCurrentEvent()->getEventoId() ?>_';
+        var tagPrefix = <?= Html::js(EventoQuery::getCurrentEvent()->getEventoId() . '_') ?>;
 
         // Use the same OneSignalDeferred pattern as Template.php
         window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -138,15 +139,15 @@ Template::printHeader("Notificações");
 
 	<?php foreach (EquipeQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->filterByPresente(1)->orderByEquipeId()->find() as $equipe) {
 		if($ehCelular == 1){
-			echo"<td>#".$equipe->getEquipeId()." - ".$equipe->getEquipe()."<br>";
-			echo"<p class = 'nomeEscola'><i>".$equipe->getEscola()." </i></p></td>\n";	
+			echo"<td>#".Html::e($equipe->getEquipeId())." - ".Html::e($equipe->getEquipe())."<br>";
+			echo"<p class = 'nomeEscola'><i>".Html::e($equipe->getEscola())." </i></p></td>\n";	
 		}else{
-			echo"	<td style='text-align: left'>#".$equipe->getEquipeId()." - ".$equipe->getEquipe()."&nbsp;&nbsp;&nbsp;";
-			echo"<i class = 'nomeEscola'>".$equipe->getEscola()." </i></td>\n";	
+			echo"	<td style='text-align: left'>#".Html::e($equipe->getEquipeId())." - ".Html::e($equipe->getEquipe())."&nbsp;&nbsp;&nbsp;";
+			echo"<i class = 'nomeEscola'>".Html::e($equipe->getEscola())." </i></td>\n";	
 		}
 		echo"
 			<td  style='text-align:center'>
-			<label class='switch'><input type='checkbox' class='tagInput' data-num='".$equipe->getEquipeId()."' disabled onchange='registerForCar(".$equipe->getEquipeId().")'><div class='slider round'></div></label>
+			<label class='switch'><input type='checkbox' class='tagInput' data-num='".Html::e($equipe->getEquipeId())."' disabled onchange='registerForCar(".(int)$equipe->getEquipeId().")'><div class='slider round'></div></label>
 			</td></tr>";
 	}?>
 	<tr><td colspan="2" style="font-size: 10px" id="userId"></td> </tr>

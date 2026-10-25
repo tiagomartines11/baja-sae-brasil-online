@@ -1,5 +1,10 @@
 var psTimeout;
 
+// Team names and places come from the database: text, not HTML (BAJAAPP-41).
+function esc(s) {
+  return $('<div>').text(s == null ? '' : String(s)).html();
+}
+
 window.onload = function() {
  //getStatus();
 
@@ -31,7 +36,7 @@ function positionScroll() {
           html += i;
           html += "º</span></div>";
           html += "<div class='scrollEquipe'><span>";
-          html += e['equipe_id'] + ' - ' + e['equipe'];
+          html += esc(e['equipe_id'] + ' - ' + e['equipe']);
           html += "</span></div>";
           i ++;
         }
@@ -122,14 +127,14 @@ function enduroTotals() {
           html += "<div class='etLine'><div class='etPos'><span>";
           html += pos;
           html += "º</span></div><div class='etNum'><span>";
-          html += e['equipe_id'];
+          html += esc(e['equipe_id']);
           html += "</span></div><div class='etMiddle'><span class='etEq'>";
-          html += (e['equipe'] + " - " + e['escola']);
+          html += esc(e['equipe'] + " - " + e['escola']);
           html += "</span><br><span class='etCid'>";
-          html += (e['cidade'] + " - " + e['estado'] + "&nbsp;");
-          html += ("<img class='etFlag'><img src='img/" + e['estado'].toLowerCase() + ".png'>");
+          html += (esc(e['cidade'] + " - " + e['estado']) + "&nbsp;");
+          html += ("<img class='etFlag'><img src='img/" + esc(String(e['estado']).toLowerCase()) + ".png'>");
           html += "</span></div><div class='etVts'><span>";
-          html += e['lap_count'];
+          html += esc(e['lap_count']);
           html += "</span></div><hr></div>";
           pos++;
         }
