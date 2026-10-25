@@ -31,11 +31,14 @@ For every event with `finalizado = 1` (14 of the 17 events in the seed):
 - **`formulas.<PROVA>.json`**: each team's vars and pontos, recomputed by
   `Input::updateVars()` and `Input::updatePontos()`.
 
-Not snapshotted: `resultados/prova_juiz.php`.
-Run without a forum login, `prova_juiz.php` shows the same rows as
-`prova.php`. Its one difference, the `authorized_users` path that lets
-named judges see past spoilers, needs a logged-in user. That path is left
-to the unit tests of the shared results builder (BAJAAPP-54).
+Not snapshotted: `prova.php` as a judge sees it. The snapshots run the
+public path (no forum session, as nginx serves the page to everybody
+without the staff cookie). The session path, which lets users in
+`authorized_users` see past spoilers on the same URL, needs a logged-in
+user; it is covered by the unit tests of the shared results builder
+(BAJAAPP-54) and by `baja-php/tests/results-caching/http-test.sh`
+([`results-caching.md`](results-caching.md)). `prova_juiz.php` only
+redirects to `prova.php` now.
 
 ## How it works
 

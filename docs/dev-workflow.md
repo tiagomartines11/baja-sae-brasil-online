@@ -106,6 +106,20 @@ Before requesting review:
       If they differ on purpose, accept with `--update` and say in the PR
       which results change and why. CI runs `--check` too. See
       [`results-snapshots.md`](results-snapshots.md).
+- [ ] If you touched the public results pages (`baja-php/resultados/`),
+      `Template.php`, `src/Baja/Site/CachePolicy.php` / `CleanUrl.php`,
+      `src/Baja/Auth/StaffCookie.php`, the session code in
+      `src/bootstrap.php` / `src/Baja/Session.php`, or the resultados vhost,
+      the results cache tests pass against a running stack:
+
+      ```
+      baja-php/tests/results-caching/http-test.sh http://resultados.baja.local http://juiz.baja.local
+      ```
+
+      They check that a visitor without the staff cookie always gets the
+      same cacheable page and no cookie, and that only a judge's session sees
+      past spoilers, never cached. See
+      [`results-caching.md`](results-caching.md), "Tests".
 - [ ] If you edited `baja-php/schema.xml`, the generated `Base*` classes,
       table maps and `src/loadDatabase.php` were regenerated and committed:
       `docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build`.

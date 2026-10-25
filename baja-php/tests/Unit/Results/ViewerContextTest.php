@@ -18,9 +18,10 @@ use PHPUnit\Framework\TestCase;
  *
  * Who is looking matters (ViewerContext):
  *
- *   public      resultados/prova.php and the API. Spoilers apply to
- *               everybody, with no exceptions.
- *   authorized  the judges' copy, prova_juiz.php. Users listed in the
+ *   public      resultados/prova.php as the public gets it, and the API.
+ *               Spoilers apply to everybody, with no exceptions.
+ *   authorized  resultados/prova.php with a judge's staff cookie and forum
+ *               session (docs/results-caching.md). Users listed in the
  *               resultado's "authorized_users", and developers, see the
  *               real values.
  *   premiacao   the awards screens, which never applied spoilers.

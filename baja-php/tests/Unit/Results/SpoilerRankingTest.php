@@ -34,8 +34,8 @@ use PHPUnit\Framework\TestCase;
  *   - the rows stay in the page's usual order (by "ts", then car number).
  *
  * Everything else ranks as before: a resultado with no "val_spoilers"
- * column (it hides nothing), an event without spoilers or finished, the
- * judges' copy and the premiação.
+ * column (it hides nothing), an event without spoilers or finished,
+ * authorized() and the premiação.
  *
  * (How to read these tests: see the comment at the top of
  * ColumnFormulasTest.)
@@ -222,9 +222,14 @@ final class SpoilerRankingTest extends TestCase
     }
 
     /**
-     * A judge NOT in the list sees "?" for the points, but the judges' copy
+     * A judge NOT in the list sees "?" for the points, but authorized()
      * ranks as it always did: by "pos", here the PONTOS variable. Only the
-     * public page hides the ranking.
+     * public view hides the ranking.
+     *
+     * Since BAJAAPP-23 the results page does not use authorized() for such a
+     * judge: it gives everybody who is not past the spoilers publicView(),
+     * ranking hidden included (resultados/prova.php,
+     * docs/results-caching.md). This pins the class itself.
      */
     public function testJudgeNotInTheListKeepsTheOldRanking(): void
     {

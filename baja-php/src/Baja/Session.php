@@ -2,6 +2,7 @@
 namespace Baja;
 use Baja\Auth\LoginCsrf;
 use Baja\Auth\NaoProvisionado;
+use Baja\Auth\StaffCookie;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
 
@@ -94,6 +95,10 @@ class Session
         // redirects the browser back to our login page, which lands
         // anonymous on the next request.
         Session::$_currentUser = null;
+        // Without a session the cookie would only make the judge's browser
+        // skip the results cache for nothing. Cleared here, on our own host,
+        // because it is ours and not phpBB's; the parent domain covers it.
+        StaffCookie::clear();
         $scheme = $_SERVER['REQUEST_SCHEME'] ?? Url::scheme();
         $host   = $_SERVER['HTTP_HOST']      ?? Url::domain();
         $loginUrl = $scheme . '://' . $host . '/login.php';

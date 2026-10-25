@@ -3,6 +3,13 @@
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Site\Template;
+use Baja\Site\CachePolicy;
+use Baja\Site\CleanUrl;
+
+// A public page, cached by Cloudflare (docs/results-caching.md). It reads
+// no query parameter, so any is dropped by a redirect.
+CleanUrl::enforce([]);
+CachePolicy::send(EventoQuery::getCurrentEvent());
 
 Template::printHeader("Notificações");
 ?>

@@ -2,7 +2,7 @@
 
 How a resultado's table is worked out: what each column shows, how teams
 are ranked, and which teams can win an award. The public results page
-(`prova.php`), the judges' copy (`prova_juiz.php`), the premiação screens
+(`prova.php`, for the public and for judges), the premiação screens
 and the results API all follow these same rules. Before BAJAAPP-61 the
 results pages and the premiação each had their own, slightly different,
 rules; the "Before" lines say what changed.
@@ -189,13 +189,16 @@ During an event, the organisers can turn spoilers on: columns with a
 `val_spoilers` show that instead of their value, until the event is
 finished.
 
-- The public results page and the API: spoilers apply to everybody.
-  `authorized_users` has no effect here, on purpose: the public page is the
-  same for everyone (it is cached publicly), so letting one person past the
-  spoilers would show them to all.
-- The judges' copy: users logged in to the forum whose user name is in the
-  resultado's `authorized_users`, and developers, see the real values. This
-  is the only way past spoilers.
+- The results page as the public gets it (from the Cloudflare cache), and
+  the API: spoilers apply to everybody. `authorized_users` has no effect
+  here, on purpose: the public page is the same for everyone (it is cached
+  publicly), so letting one person past the spoilers would show them to all.
+- The results page with a judge's staff cookie and forum session (same URL,
+  never cached; see [`results-caching.md`](results-caching.md)): users
+  logged in to the forum whose user name is in the resultado's
+  `authorized_users`, and developers, see the real values. This is the only
+  way past spoilers. Anybody else with a session gets exactly the public
+  page.
 - The premiação never hides spoilers. It is only for the organisers.
 
 ### R12. No ranking for the public during spoilers
@@ -212,14 +215,16 @@ naming a formula variable (R5) is never hidden, so the public saw "?" for
 the points and, next to them, the real positions with medals.
 
 A resultado with no `val_spoilers` column hides nothing and ranks as usual,
-even while spoilers are on. The judges' copy ranks as it always did (for a
-judge not in `authorized_users`, by `pos` as computed for them), and so
-does the premiação.
+even while spoilers are on. A user past the spoilers (R11) sees the ranking
+as usual, and so does the premiação. A judge not in `authorized_users` gets
+the public page, so no ranking either.
 
 *Before (BAJAAPP-42):* the public page ranked by what it showed. With `pos`
 naming a hidden column, the spoiler value (`"SPOILERS"`, `"?"`) has no
 number, so every team showed "–" (R3); with `pos` naming a formula
-variable, the real ranking showed.
+variable, the real ranking showed. Until BAJAAPP-23, judges used a
+separate URL, `prova_juiz.php` (now a redirect to `prova.php`), where a
+judge not in `authorized_users` was ranked by `pos` as computed for them.
 
 ## Raw values (for the API)
 

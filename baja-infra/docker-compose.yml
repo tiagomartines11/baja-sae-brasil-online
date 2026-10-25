@@ -153,6 +153,10 @@ services:
       # from, so a link can never name a host or scheme nginx is not serving.
       BAJA_DOMAIN: ${BAJA_DOMAIN}
       LISTEN_MODE: ${LISTEN_MODE}
+      # The baja_staff cookie given to judges so they skip the results cache;
+      # the same value as nginx's below. See .env.example and
+      # docs/results-caching.md.
+      STAFF_COOKIE_VALUE: ${STAFF_COOKIE_VALUE:?set STAFF_COOKIE_VALUE in .env, see .env.example}
       # phpBB session shim — see baja-php/src/Baja/Auth/SessionStore.php.
       # The shim connects as the `resultados` MySQL user (full grants on
       # baja_resultados, SELECT on phpbb_baja). One MySQL account, two
@@ -222,13 +226,18 @@ services:
       BAJA_DOMAIN: ${BAJA_DOMAIN}
       FORMULA_DOMAIN: ${FORMULA_DOMAIN}
       LISTEN_MODE: ${LISTEN_MODE}
+      # The results vhost loads the forum session only for a baja_staff
+      # cookie of exactly this value. Required: an empty one would make the
+      # map in baja-app-resultados.conf.template match visitors with no
+      # cookie at all.
+      STAFF_COOKIE_VALUE: ${STAFF_COOKIE_VALUE:?set STAFF_COOKIE_VALUE in .env, see .env.example}
       # The image's 20-envsubst-on-templates.sh substitutes EVERY $VAR it
       # finds unless filtered — which would blank $host, $remote_addr,
       # $request_uri and the rest of nginx's own runtime variables, silently
       # breaking the Cloudflare real-IP restoration and every proxy header
-      # while still starting cleanly. Restrict it to exactly our three.
+      # while still starting cleanly. Restrict it to exactly ours.
       # The $$ is Compose escaping for a literal $.
-      NGINX_ENVSUBST_FILTER: "^(BAJA_DOMAIN|FORMULA_DOMAIN|LISTEN_MODE)$$"
+      NGINX_ENVSUBST_FILTER: "^(BAJA_DOMAIN|FORMULA_DOMAIN|LISTEN_MODE|STAFF_COOKIE_VALUE)$$"
     ports:
       - "80:80"
     volumes:
