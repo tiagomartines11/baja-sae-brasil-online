@@ -18,9 +18,7 @@ module.exports = {
     '^.+\\.(js|jsx|ts|tsx)$': [
       'babel-jest',
       {
-        presets: [
-          ['next/babel', { 'preset-react': { runtime: 'automatic' } }]
-        ]
+        presets: [['next/babel', { 'preset-react': { runtime: 'automatic' } }]]
       }
     ]
   },
