@@ -221,15 +221,17 @@ services:
     networks:
       - baja
 
-  # Nightly encrypted logical backup of all three databases to the
-  # SAE BRASIL `baja-backups` Google Shared Drive.
+  # Nightly encrypted backup of the three databases, the files kept
+  # outside them, and the erasure log, to the SAE BRASIL `baja-backups`
+  # Google Shared Drive. See baja-infra/docs/backup-restore.md.
   #
   # profiles: ["tools"] keeps it out of `docker compose up` — this is a
-  # run-to-completion job, not a service. Host cron invokes:
+  # run-to-completion job, not a service. Host cron invokes
+  # scripts/backup-run.sh, which runs
   #
   #     docker compose --profile tools run --rm backup
   #
-  # which also means ad-hoc runs come free. That matters: the documented
+  # and then the event archives. Ad-hoc runs come free. That matters: the documented
   # pre-event ritual is to run this manually before and after each scoring
   # session, because a 24-hour RPO is the wrong answer on results day.
   #
@@ -264,6 +266,74 @@ services:
       BACKUP_RUN_ID: ${BACKUP_RUN_ID:-}
     volumes:
       - ${GDRIVE_SA_WRITER_JSON}:/run/secrets/gdrive-backup-writer.json:ro
+      # The file sets (scripts/backup-lib.sh, BACKUP_FILE_SETS), all
+      # READ-ONLY: the backup reads state, it never writes it. In dev the
+      # forum uploads live inside these code volumes; in production
+      # docker-compose.prod.yml mounts the /srv/baja bind folders over the
+      # same paths, so the script sees one layout everywhere.
+      - phpbb_baja_html:/state/phpbb-baja:ro
+      - phpbb_formula_html:/state/phpbb-formula:ro
+      - ${BAJA_APP_PATH}/juiz/sons:/state/baja-app-sons:ro
+      # The erasure log, read-only here. It is written only through the
+      # erasure-log service below.
+      - ${ERASURE_LOG_DIR}:/srv/baja/erasure:ro
+      # Where BACKUP_REMOTE=:local:/drive/ writes, so a dev or staging test
+      # run leaves its "Shared Drive" on the host for the verifier and for
+      # you to look at. Unused when BACKUP_REMOTE is empty (production).
+      - ${BACKUP_LOCAL_DRIVE:-./backup-local/drive}:/drive
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - baja
+
+  # The erasure log's only writer: `record` appends to it, `replay` deletes
+  # from a RESTORED database. Same image as the backup (it needs mysql and
+  # jq), separate service so that the nightly backup keeps a read-only view
+  # of the log. See the "Erasure log" section of docs/backup-restore.md.
+  #
+  #     docker compose --profile tools run --rm erasure-log list
+  erasure-log:
+    profiles: ["tools"]
+    image: baja-backup:latest
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    entrypoint: ["/usr/local/bin/erasure-log.sh"]
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+    volumes:
+      - ${ERASURE_LOG_DIR}:/srv/baja/erasure
+    networks:
+      - baja
+
+  # Event archives (BAJAAPP-67): the PHP half, on the baja-app image. It
+  # reads and updates the evento_arquivamento queue as the app's own
+  # MySQL user, and runs results-snapshot.php for one event as the
+  # read-only backup user. scripts/backup-run.sh drives it; nothing else
+  # should. The code is mounted read-only and the image's entrypoint
+  # (which writes into the tree and may run composer) is bypassed.
+  results-archive:
+    profiles: ["tools"]
+    image: baja-app:latest
+    working_dir: /var/www/html
+    entrypoint: ["php", "scripts/results-archive.php"]
+    environment:
+      TZ: America/Sao_Paulo
+      ENV: ${ENV}
+      PHPBB_DB_HOST: mysql
+      PHPBB_DB_PORT: "3306"
+      PHPBB_DB_NAME: phpbb_baja
+      PHPBB_DB_USER: resultados
+      PHPBB_DB_PASS: ${MYSQL_RESULTADOS_PASSWORD}
+      ARCHIVE_DB_USER: ${MYSQL_BACKUP_USER}
+      ARCHIVE_DB_PASS: ${MYSQL_BACKUP_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    volumes:
+      - ${BAJA_APP_PATH}:/var/www/html:ro
     depends_on:
       mysql:
         condition: service_healthy

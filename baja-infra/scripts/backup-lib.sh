@@ -265,6 +265,305 @@ backup_estimated_bytes() {
                      AND TABLE_NAME NOT IN (${not_in})"
 }
 
+# ----- File sets -----
+#
+# The state that lives in files rather than in MySQL. Each set becomes one
+# tar.gz.age artifact per run, beside the database dumps. Compose mounts
+# every root below READ-ONLY into the backup container (see the `backup`
+# service in docker-compose.yml and its additions in
+# docker-compose.prod.yml), so the paths are the same in dev, where the
+# phpBB uploads live inside the phpbb_*_html volumes, and in production,
+# where they are bind mounts under /srv/baja.
+#
+#   phpbb_*-files   forum attachments (files/) and uploaded avatars
+#                   (images/avatars/upload/). Nothing else in the forum
+#                   volume: code, ext/, cache/ and store/ come from the
+#                   image or are regenerated, and config.php holds a
+#                   database password that must not ride along.
+#   baja-app-sons   timer sounds generated on the server by text to
+#                   speech (baja-php/juiz/sons/gerados/). The other sounds
+#                   in that folder are committed to git.
+#
+# Named after the database they belong to on purpose: the retention pruner
+# drops phpbb_* forum history from monthly/ after six months, and a forum's
+# attachments go with its posts.
+# shellcheck disable=SC2034  # consumed by the scripts that source this file
+BACKUP_FILE_SETS=(phpbb_baja-files phpbb_formula-files baja-app-sons)
+
+BACKUP_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+backup_file_set_root() {
+    local state="${BACKUP_STATE_DIR:-/state}"
+    case "$1" in
+        phpbb_baja-files)    printf '%s' "${state}/phpbb-baja" ;;
+        phpbb_formula-files) printf '%s' "${state}/phpbb-formula" ;;
+        baja-app-sons)       printf '%s' "${state}/baja-app-sons" ;;
+        *) return 1 ;;
+    esac
+}
+
+# Folders inside the root that the set holds.
+backup_file_set_members() {
+    case "$1" in
+        phpbb_baja-files|phpbb_formula-files)
+            printf '%s\n' files images/avatars/upload ;;
+        baja-app-sons)
+            printf '%s\n' gerados ;;
+        *) return 1 ;;
+    esac
+}
+
+# A required set whose folders are missing means a mount is wrong, and the
+# run must fail rather than upload an empty archive that looks fine. The
+# generated sounds folder only exists once someone has generated a sound.
+backup_file_set_required() {
+    case "$1" in
+        baja-app-sons) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+# ----- Describing a tree of files -----
+#
+# The manifest records, for each file set, a digest over one line per
+# regular file:
+#
+#     <sha256 of the content> <size in bytes> <path inside the set>
+#
+# sorted bytewise and hashed. The backup computes it from the ARCHIVE it
+# just wrote (so files changing on disk while tar read them cannot make the
+# manifest disagree with the artifact); the verifier computes it from the
+# files it actually extracted. A match means every file came back, with the
+# same content, under the same name. Only the digest, the count and the
+# total size are stored; no file name goes into the manifest.
+#
+# These two functions, and only these, produce the lines. They must stay
+# byte-for-byte identical in format.
+
+# Lines for the files under a directory.
+backup_tree_lines_from_dir() {
+    local dir="$1" f
+    ( cd "$dir" && find . -type f -print0 ) | while IFS= read -r -d '' f; do
+        f="${f#./}"
+        printf '%s %s %s\n' \
+            "$(sha256sum < "${dir}/${f}" | cut -d' ' -f1)" \
+            "$(stat -c %s "${dir}/${f}")" \
+            "$f"
+    done
+}
+
+# Lines for the regular files inside a .tar.gz, read without writing any of
+# them to disk: GNU tar pipes each member to tar-entry-sha256.sh. It runs
+# in an empty scratch directory because tar still creates the DIRECTORY
+# members of the archive where it stands.
+backup_tree_lines_from_tar() {
+    local archive scratch
+    # Absolute, because the extraction below runs from another directory.
+    archive="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+    scratch="$(mktemp -d)"
+    ( cd "$scratch" && tar -xzf "$archive" --to-command="'${BACKUP_LIB_DIR}/tar-entry-sha256.sh'" )
+    rm -rf -- "$scratch"
+}
+
+# "<count>\t<total bytes>\t<digest>" from the lines on stdin.
+backup_tree_summary() {
+    local lines
+    lines="$(LC_ALL=C sort)"
+    if [[ -z "$lines" ]]; then
+        printf '0\t0\t%s\n' "$(printf '' | sha256sum | cut -d' ' -f1)"
+        return 0
+    fi
+    printf '%s\t%s\t%s\n' \
+        "$(printf '%s\n' "$lines" | wc -l)" \
+        "$(printf '%s\n' "$lines" | awk '{ s += $2 } END { printf "%d", s }')" \
+        "$(printf '%s\n' "$lines" | sha256sum | cut -d' ' -f1)"
+}
+
+# Archive one file set as <out_dir>/<name>.tar.gz and describe it in
+# <out_dir>/fileset.<name>.json. Dies on anything that would make the
+# artifact not a faithful copy.
+backup_file_set_archive() {
+    local name="$1" out_dir="$2"
+    local root tarball="${out_dir}/${name}.tar.gz" meta="${out_dir}/fileset.${name}.json"
+    root="$(backup_file_set_root "$name")" || die "unknown file set ${name}"
+
+    local -a present=() absent=()
+    local m
+    while IFS= read -r m; do
+        if [[ -d "${root}/${m}" ]]; then present+=("$m"); else absent+=("$m"); fi
+    done < <(backup_file_set_members "$name")
+
+    if (( ${#absent[@]} > 0 )) && backup_file_set_required "$name"; then
+        die "${name}: ${root}/${absent[0]} does not exist — the folder is not mounted into the backup container (check the backup service's volumes)"
+    fi
+
+    # --numeric-owner keeps phpBB's www-data uid (82) as a number, so the
+    # restored files belong to the right user in the forum container
+    # whatever the restoring host calls that uid. tar exits 1 when a file
+    # changed while it was read; that is not an error here, because the
+    # manifest describes what the archive holds, computed from the archive.
+    local rc=0
+    if (( ${#present[@]} > 0 )); then
+        tar --create --gzip --file "$tarball" --directory "$root" \
+            --numeric-owner --warning=no-file-changed -- "${present[@]}" || rc=$?
+    else
+        tar --create --gzip --file "$tarball" --files-from /dev/null || rc=$?
+    fi
+    (( rc == 0 || rc == 1 )) || die "${name}: tar failed (exit ${rc})"
+    gzip -t "$tarball" || die "${name}: the archive failed its own gzip test"
+
+    local count bytes digest
+    IFS=$'\t' read -r count bytes digest < <(backup_tree_lines_from_tar "$tarball" | backup_tree_summary)
+
+    jq -n \
+        --arg file "${name}.tar.gz.age" \
+        --argjson members "$(printf '%s\n' "${present[@]}" | jq -Rn '[inputs | select(length > 0)]')" \
+        --argjson count "$count" \
+        --argjson bytes "$bytes" \
+        --arg digest "$digest" \
+        '{ file: $file, members: $members, file_count: $count,
+           total_bytes: $bytes, tree_sha256: $digest }' > "$meta"
+}
+
+# ----- Manifest -----
+#
+# Assembled from the facts each phase of backup-db.sh left in the run
+# directory, so that it can be built (and tested) without a database:
+#
+#   dbmeta.<db>.json    + artifact.<db>.json      per database
+#   fileset.<set>.json  + artifact.<set>.json     per file set
+#   erasure.json        + artifact.erasure-log.json
+#
+# schema_version history:
+#   2  the three database artifacts only (feature/db-backups, 2026-08)
+#   3  adds file_sets, erasure_log and code_version. The verifier reads
+#      both; a version 2 manifest simply has no file sets to check.
+backup_assemble_manifest() {
+    local run_dir="$1" run_id="$2" created="$3" script_version="$4" mysql_version="$5" code_version="$6"
+    local dbs sets erasure name
+
+    dbs="$(for name in "${BACKUP_DATABASES[@]}"; do
+        jq -n --arg k "$name" \
+              --slurpfile m "${run_dir}/dbmeta.${name}.json" \
+              --slurpfile a "${run_dir}/artifact.${name}.json" \
+              '{ ($k): ($m[0] + $a[0]) }'
+    done | jq -s 'add')" || die "manifest: a database's facts are missing from ${run_dir}"
+
+    sets="$(for name in "${BACKUP_FILE_SETS[@]}"; do
+        jq -n --arg k "$name" \
+              --slurpfile m "${run_dir}/fileset.${name}.json" \
+              --slurpfile a "${run_dir}/artifact.${name}.json" \
+              '{ ($k): ($m[0] + $a[0]) }'
+    done | jq -s 'add')" || die "manifest: a file set's facts are missing from ${run_dir}"
+
+    erasure="$(jq -s 'add' "${run_dir}/erasure.json" "${run_dir}/artifact.erasure-log.json")" \
+        || die "manifest: the erasure log's facts are missing from ${run_dir}"
+
+    # The $names are jq variables bound by --arg/--argjson, not shell
+    # expansions; the single quotes are what keeps them that way.
+    # shellcheck disable=SC2016
+    jq -n \
+        --arg run_id "$run_id" --arg created "$created" \
+        --arg script_version "$script_version" --arg mysql_version "$mysql_version" \
+        --arg code_version "$code_version" \
+        --arg escrow "$AGE_RECIPIENT_ESCROW" --arg verifier "$AGE_RECIPIENT_VERIFIER" \
+        --argjson dbs "$dbs" --argjson sets "$sets" --argjson erasure "$erasure" \
+        '{
+            schema_version: 3,
+            run_id: $run_id,
+            created_utc: $created,
+            script_version: $script_version,
+            code_version: $code_version,
+            mysql_version: $mysql_version,
+            age_recipients: [$escrow, $verifier],
+            artifacts: $dbs,
+            file_sets: $sets,
+            erasure_log: $erasure
+        }'
+}
+
+# Last line of defence on the no-personal-data rule: a manifest is the one
+# thing that goes to Drive in the clear, so refuse one carrying a field
+# named like personal data with a text value, or anything shaped like an
+# email address.
+backup_manifest_check_clean() {
+    local manifest="$1"
+    jq empty "$manifest" 2>/dev/null || die "assembled manifest is not valid JSON"
+    if grep -Eq '"[^"]*(cpf|email|nome|username)[^"]*"[[:space:]]*:[[:space:]]*"' "$manifest"; then
+        die "manifest appears to contain a personal-data field — refusing to upload it unencrypted"
+    fi
+    if grep -Eq '"[^" @]+@[^" @]+\.[A-Za-z]{2,}"' "$manifest"; then
+        die "manifest appears to contain an email address — refusing to upload it unencrypted"
+    fi
+}
+
+# ----- Encryption -----
+#
+# Every artifact is encrypted to BOTH recipients, always, through this one
+# function. The escrow key is exercised only by the human drill and its
+# private half never lands on a server — which is exactly why it must be a
+# recipient on every artifact: the day it is needed, nobody will be able to
+# add it retroactively.
+#
+# Writes <artifact> and <artifact>.sha256 (in `sha256sum -c` format, so a
+# restore on a machine with nothing but coreutils can check a download),
+# and prints the artifact's sha256.
+backup_encrypt() {
+    local src="$1" artifact="$2" sha
+    age -r "$AGE_RECIPIENT_ESCROW" -r "$AGE_RECIPIENT_VERIFIER" -o "$artifact" "$src" \
+        || die "age encryption of $(basename "$src") failed"
+    sha="$(sha256sum "$artifact" | cut -d' ' -f1)"
+    printf '%s  %s\n' "$sha" "$(basename "$artifact")" > "${artifact}.sha256"
+    printf '%s' "$sha"
+}
+
+# Catch a private key pasted where a public one belongs. A private key on
+# the VPS defeats the entire escrow design, and age itself would happily
+# accept the string as a file path and fail later with something
+# unhelpful.
+backup_check_recipients() {
+    local recipient
+    for recipient in "$AGE_RECIPIENT_ESCROW" "$AGE_RECIPIENT_VERIFIER"; do
+        case "$recipient" in
+            AGE-SECRET-KEY-*) die "an age SECRET key is configured as a recipient — only public keys (age1...) belong on this host" ;;
+            age1*) : ;;
+            *) die "not an age public key: '${recipient:0:12}...' (expected it to start with age1)" ;;
+        esac
+    done
+    [[ "$AGE_RECIPIENT_ESCROW" != "$AGE_RECIPIENT_VERIFIER" ]] \
+        || die "escrow and verifier age recipients are the same key — the escrow key must never be the one the VPS-side verifier holds"
+}
+
+# ----- Upload -----
+#
+# rclone is configured entirely through the environment, so no rclone.conf
+# is written and the service-account path is the only thing on disk.
+# RCLONE_CONFIG=/dev/null makes "no config file" explicit rather than
+# accidental — otherwise a stray ~/.config/rclone/rclone.conf would
+# silently take part.
+#
+# Callers set BACKUP_REMOTE ("gdrive:" in production) before calling.
+backup_configure_rclone_writer() {
+    export RCLONE_CONFIG=/dev/null
+    if [[ "$BACKUP_REMOTE" == "gdrive:" ]]; then
+        # -f, not -r: when the host file is missing, docker bind-mounts an
+        # empty DIRECTORY in its place, which is readable and would only
+        # fail later inside rclone with a confusing JSON error.
+        [[ -f "$GDRIVE_SA_WRITER_JSON" && -r "$GDRIVE_SA_WRITER_JSON" ]] \
+            || die "service-account key not readable at ${GDRIVE_SA_WRITER_JSON} (is it bind-mounted into the container, and does the host file exist?)"
+        export RCLONE_CONFIG_GDRIVE_TYPE=drive
+        export RCLONE_CONFIG_GDRIVE_SCOPE=drive
+        export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="$GDRIVE_SA_WRITER_JSON"
+        export RCLONE_CONFIG_GDRIVE_TEAM_DRIVE="$GDRIVE_SHARED_DRIVE_ID"
+    fi
+}
+
+rclone_put() {
+    local src="$1" dest="$2"
+    rclone copyto --retries 3 --low-level-retries 10 --checksum "$src" "${BACKUP_REMOTE}${dest}" \
+        || die "upload of ${dest} failed — the folder is incomplete and MUST NOT be treated as a backup"
+}
+
 # ----- Uptime Kuma -----
 #
 # Push monitors alert on SILENCE. Nothing here ever reports a failure —

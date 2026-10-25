@@ -195,3 +195,6 @@ age-key*.txt
 # clasp's per-deployment script id. Not a secret, but pinning one in the
 # repo makes it far too easy to `clasp push` over the wrong project.
 baja-infra/gas/**/.clasp.json
+
+# Dev-only backup scratch: the fake Shared Drive and the dev erasure log.
+baja-infra/backup-local/

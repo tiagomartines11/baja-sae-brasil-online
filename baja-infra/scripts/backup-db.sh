@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# backup-db.sh — nightly encrypted logical backup of the three production
-# databases to the SAE BRASIL `baja-backups` Google Shared Drive.
+# backup-db.sh — nightly encrypted backup of the three production
+# databases, the files the stack keeps outside them, and the erasure log,
+# to the SAE BRASIL `baja-backups` Google Shared Drive.
 #
-# Produces THREE SEPARATE ARTIFACTS per run — one per database — plus one
-# manifest covering all three. Separate because retention differs per
+# Produces, per run, one artifact per database, one per file set (forum
+# attachments and avatars of each forum, generated timer sounds — see
+# BACKUP_FILE_SETS in backup-lib.sh), one for the erasure log, and ONE
+# manifest covering all of them. Databases are separate because retention differs per
 # database (baja_resultados is the certificate archive and is kept far
 # longer than forum history), because the realistic incident is one
 # mangled forum rather than total loss, because one corrupt artifact then
@@ -29,7 +32,7 @@
 # Invoked from the host as:
 #   docker compose --profile tools run --rm backup
 #
-# Phases: preflight -> dump -> encrypt -> manifest -> upload -> report
+# Phases: preflight -> dump -> files -> encrypt -> manifest -> upload -> report
 #
 #   The work package sketches this as `... -> manifest -> encrypt -> ...`.
 #   It is implemented the other way around for one unavoidable reason: the
@@ -53,7 +56,7 @@
 #                           key INSIDE this container (bind-mounted ro)
 #   GDRIVE_SHARED_DRIVE_ID  ID of the `baja-backups` Shared Drive
 #   AGE_RECIPIENT_ESCROW    age public key, escrow half (offline private
-#                           key held by Joao AND Tiago)
+#                           key held by two maintainers, separately)
 #   AGE_RECIPIENT_VERIFIER  age public key used by the weekly verify stack
 #   KUMA_PUSH_URL_BACKUP    Uptime Kuma push URL for this job
 #
@@ -65,10 +68,15 @@
 #   BACKUP_REMOTE   (default: gdrive:)  see the DEV-MODE note in preflight
 #   BACKUP_RUN_ID   override the run id; the only way to exercise the
 #                   first-of-month / first-of-year branches without waiting
+#   BACKUP_STATE_DIR (default: /state) where compose mounts the file sets
+#   ERASURE_LOG_PATH (default: /srv/baja/erasure/erasure-log.jsonl), mounted
+#                   read-only; see erasure-log.sh
+#   BACKUP_CODE_VERSION  `git describe --tags` of the deployed checkout,
+#                   passed in by backup-run.sh; recorded in the manifest
 
 set -euo pipefail
 
-SCRIPT_VERSION="1.0.0"
+SCRIPT_VERSION="2.0.0"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_PREFIX="backup"
@@ -86,6 +94,8 @@ BACKUP_REMOTE="${BACKUP_REMOTE:-gdrive:}"
 # so an hour means something is wrong, and hanging is the failure this
 # prevents. Raise it if the databases ever grow into it.
 BACKUP_DUMP_TIMEOUT="${BACKUP_DUMP_TIMEOUT:-3600s}"
+ERASURE_LOG_PATH="${ERASURE_LOG_PATH:-/srv/baja/erasure/erasure-log.jsonl}"
+BACKUP_CODE_VERSION="${BACKUP_CODE_VERSION:-unknown}"
 
 # ----- Run state -----
 RUN_ID=""
@@ -96,6 +106,12 @@ MYSQL_VERSION=""
 declare -A DUMP_BYTES=()
 declare -A ARTIFACT_BYTES=()
 declare -A ARTIFACT_SHA=()
+declare -A FILESET_BYTES=()
+declare -A FILESET_SHA=()
+ERASURE_ENTRIES=0
+ERASURE_CHAIN_OK=false
+ERASURE_BYTES=0
+ERASURE_SHA=""
 
 # ----- Cleanup -----
 #
@@ -127,7 +143,7 @@ phase_preflight() {
     log "preflight: checking tools, configuration and connectivity"
 
     local tool
-    for tool in mysql mysqldump age rclone curl jq gzip sha256sum; do
+    for tool in mysql mysqldump age rclone curl jq gzip sha256sum tar; do
         command -v "$tool" >/dev/null 2>&1 || die "$tool not found in PATH (image built wrong?)"
     done
 
@@ -153,20 +169,7 @@ phase_preflight() {
 
     (( ${#missing[@]} == 0 )) || die "required environment variables unset: ${missing[*]}"
 
-    # age recipients: catch a private key pasted where a public one
-    # belongs. A private key on the VPS defeats the entire escrow design,
-    # and age itself would happily accept the string as a file path and
-    # fail later with something unhelpful.
-    local recipient
-    for recipient in "$AGE_RECIPIENT_ESCROW" "$AGE_RECIPIENT_VERIFIER"; do
-        case "$recipient" in
-            AGE-SECRET-KEY-*) die "an age SECRET key is configured as a recipient — only public keys (age1...) belong on this host" ;;
-            age1*) : ;;
-            *) die "not an age public key: '${recipient:0:12}...' (expected it to start with age1)" ;;
-        esac
-    done
-    [[ "$AGE_RECIPIENT_ESCROW" != "$AGE_RECIPIENT_VERIFIER" ]] \
-        || die "escrow and verifier age recipients are the same key — the escrow key must never be the one the VPS-side verifier holds"
+    backup_check_recipients
 
     # Work directory, 0700, on a filesystem we then measure.
     RUN_DIR="${BACKUP_WORK_DIR}/run.$$"
@@ -200,15 +203,40 @@ phase_preflight() {
     done
     log "preflight: total across all three — $(human_bytes "$total_estimate")"
 
+    # File sets: their folders must be mounted (a required set that is not
+    # is a compose mistake, and fails here rather than as an empty archive),
+    # and they count towards the space the run needs.
+    local files_estimate=0 set root m bytes
+    for set in "${BACKUP_FILE_SETS[@]}"; do
+        root="$(backup_file_set_root "$set")"
+        bytes=0
+        while IFS= read -r m; do
+            if [[ -d "${root}/${m}" ]]; then
+                bytes=$(( bytes + $(du -sb "${root}/${m}" | cut -f1) ))
+            elif backup_file_set_required "$set"; then
+                die "${set}: ${root}/${m} is not mounted into the backup container — check the backup service's volumes"
+            fi
+        done < <(backup_file_set_members "$set")
+        files_estimate=$(( files_estimate + bytes ))
+        log "preflight:   ${set} — $(human_bytes "$bytes") of files"
+    done
+
+    # The erasure log's folder is mounted read-only from the host. The file
+    # itself may not exist yet (no erasure recorded so far); the folder not
+    # existing means the mount is missing, and a backup that silently
+    # leaves the erasure log behind is how erased people come back.
+    [[ -d "$(dirname "$ERASURE_LOG_PATH")" ]] \
+        || die "erasure log folder $(dirname "$ERASURE_LOG_PATH") is not mounted — check ERASURE_LOG_DIR in .env and the backup service's volumes"
+
     # 3x headroom: the plaintext dump, plus its gzip, plus the age
     # artifact all coexist briefly. The dump is written to disk rather
     # than streamed precisely so a partial failure is visible, and that
-    # costs space.
-    local need=$(( total_estimate * 3 )) avail_kb avail
+    # costs space. File sets need 2x: the tarball and its age artifact.
+    local need=$(( total_estimate * 3 + files_estimate * 2 )) avail_kb avail
     avail_kb="$(df -Pk "$RUN_DIR" | awk 'NR==2 {print $4}')"
     avail=$(( avail_kb * 1024 ))
     log "preflight: $(human_bytes "$avail") free on the work filesystem, need $(human_bytes "$need")"
-    (( avail >= need )) || die "insufficient free disk: have $(human_bytes "$avail"), need 3x the estimated dump size ($(human_bytes "$need"))"
+    (( avail >= need )) || die "insufficient free disk: have $(human_bytes "$avail"), need 3x the estimated dump size plus 2x the files ($(human_bytes "$need"))"
 
     # Charset canary sanity: a canary over pure-ASCII rows cannot detect
     # the encoding fault it exists to detect. Soft, because an empty dev
@@ -221,29 +249,12 @@ phase_preflight() {
         fi
     done
 
-    configure_rclone
+    backup_configure_rclone_writer
     log "preflight: checking the Shared Drive is reachable and writable"
     rclone lsd "$BACKUP_REMOTE" >/dev/null \
         || die "cannot list ${BACKUP_REMOTE} — check GDRIVE_SA_WRITER_JSON, GDRIVE_SHARED_DRIVE_ID, and that baja-backup-writer is a Contributor on the Shared Drive"
 
     log "preflight: OK"
-}
-
-# rclone is configured entirely through the environment, so no rclone.conf
-# is written and the service-account path is the only thing on disk.
-# RCLONE_CONFIG=/dev/null makes "no config file" explicit rather than
-# accidental — otherwise a stray ~/.config/rclone/rclone.conf would
-# silently take part.
-configure_rclone() {
-    export RCLONE_CONFIG=/dev/null
-    if [[ "$BACKUP_REMOTE" == "gdrive:" ]]; then
-        [[ -r "$GDRIVE_SA_WRITER_JSON" ]] \
-            || die "service-account key not readable at ${GDRIVE_SA_WRITER_JSON} (is it bind-mounted into the container?)"
-        export RCLONE_CONFIG_GDRIVE_TYPE=drive
-        export RCLONE_CONFIG_GDRIVE_SCOPE=drive
-        export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="$GDRIVE_SA_WRITER_JSON"
-        export RCLONE_CONFIG_GDRIVE_TEAM_DRIVE="$GDRIVE_SHARED_DRIVE_ID"
-    fi
 }
 
 # ----- Phase: dump -----
@@ -267,7 +278,7 @@ phase_dump() {
         dump_one "$db"
     done
 
-    log "dump: OK — three artifacts staged"
+    log "dump: OK — three dumps staged"
 }
 
 dump_one() {
@@ -368,17 +379,58 @@ dump_one() {
     log "dump: ${db} — $(human_bytes "${DUMP_BYTES[$db]}") of SQL"
 }
 
+# ----- Phase: files -----
+#
+# The file sets (backup-lib.sh, BACKUP_FILE_SETS) and the erasure log,
+# staged into the run directory beside the dumps.
+#
+# After the dumps, not before: on results day the databases are what
+# changes by the minute, so they get the earlier, tighter snapshot. Files
+# are attachments and avatars, which are written once and rarely change.
+phase_files() {
+    local set
+    for set in "${BACKUP_FILE_SETS[@]}"; do
+        log "files: ${set} — archiving"
+        backup_file_set_archive "$set" "$RUN_DIR"
+        log "files: ${set} — $(jq -r '.file_count' "${RUN_DIR}/fileset.${set}.json") file(s), $(human_bytes "$(jq -r '.total_bytes' "${RUN_DIR}/fileset.${set}.json")")"
+    done
+
+    # The erasure log is copied first, so the entries counted, the chain
+    # checked and the bytes encrypted are all the same bytes even if
+    # someone records an erasure while this runs.
+    local copy="${RUN_DIR}/erasure-log.jsonl"
+    if [[ -f "$ERASURE_LOG_PATH" ]]; then
+        cp -- "$ERASURE_LOG_PATH" "$copy"
+    else
+        warn "files: no erasure log at ${ERASURE_LOG_PATH} yet — backing up an empty one"
+        : > "$copy"
+    fi
+    ERASURE_ENTRIES="$(wc -l < "$copy" | tr -d ' ')"
+
+    # A broken chain is evidence that the log was edited, and a reason to
+    # look — not a reason to stop backing it up. Recorded in the manifest;
+    # the verifier reports it.
+    if ERASURE_LOG_PATH="$copy" "${SCRIPT_DIR}/erasure-log.sh" verify >/dev/null 2>&1; then
+        ERASURE_CHAIN_OK=true
+    else
+        ERASURE_CHAIN_OK=false
+        warn "files: the erasure log's hash chain is BROKEN — a line was edited or removed. Run erasure-log.sh verify on the host."
+    fi
+    jq -n --argjson entries "$ERASURE_ENTRIES" --argjson chain "$ERASURE_CHAIN_OK" \
+        '{ file: "erasure-log.jsonl.age", entries: $entries, chain_ok: $chain }' \
+        > "${RUN_DIR}/erasure.json"
+    log "files: erasure log — ${ERASURE_ENTRIES} entr$( (( ERASURE_ENTRIES == 1 )) && echo y || echo ies)"
+
+    log "files: OK"
+}
+
 # ----- Phase: encrypt -----
 #
-# gzip -9, then age to BOTH recipients, always.
-#
-# The verifier key is what the weekly check uses. The escrow key is
-# exercised only during the twice-yearly human drill and its private half
-# never lands on a server — which is exactly why it must be a recipient on
-# every artifact: the day it is needed, nobody will be able to add it
-# retroactively.
+# gzip -9 for the dumps (the file sets are already gzipped tarballs), then
+# age to BOTH recipients through backup_encrypt, always. Each artifact's
+# facts go into artifact.<name>.json for the manifest.
 phase_encrypt() {
-    log "encrypt: gzip -9 then age (escrow + verifier)"
+    log "encrypt: age (escrow + verifier)"
 
     local db
     for db in "${BACKUP_DATABASES[@]}"; do
@@ -389,34 +441,47 @@ phase_encrypt() {
         gzip -9 "$sql"
         gzip -t "$gz" || die "gzip of ${db} failed its own integrity test"
 
-        age -r "$AGE_RECIPIENT_ESCROW" -r "$AGE_RECIPIENT_VERIFIER" -o "$artifact" "$gz" \
-            || die "age encryption of ${db} failed"
+        ARTIFACT_SHA["$db"]="$(backup_encrypt "$gz" "$artifact")"
         rm -f -- "$gz"
-
         ARTIFACT_BYTES["$db"]="$(stat -c %s "$artifact")"
-        ARTIFACT_SHA["$db"]="$(sha256sum "$artifact" | cut -d' ' -f1)"
-
-        # Sidecar in `sha256sum -c` format, so a restore on a machine with
-        # nothing but coreutils can check the download.
-        printf '%s  %s\n' "${ARTIFACT_SHA[$db]}" "${db}.sql.gz.age" > "${artifact}.sha256"
+        jq -n --arg sha "${ARTIFACT_SHA[$db]}" \
+              --argjson dump "${DUMP_BYTES[$db]}" --argjson bytes "${ARTIFACT_BYTES[$db]}" \
+              '{ sha256: $sha, dump_bytes: $dump, artifact_bytes: $bytes }' \
+              > "${RUN_DIR}/artifact.${db}.json"
 
         log "encrypt: ${db} — $(human_bytes "${ARTIFACT_BYTES[$db]}") encrypted"
     done
+
+    local set
+    for set in "${BACKUP_FILE_SETS[@]}"; do
+        local tarball="${RUN_DIR}/${set}.tar.gz"
+        FILESET_SHA["$set"]="$(backup_encrypt "$tarball" "${tarball}.age")"
+        rm -f -- "$tarball"
+        FILESET_BYTES["$set"]="$(stat -c %s "${tarball}.age")"
+        jq -n --arg sha "${FILESET_SHA[$set]}" --argjson bytes "${FILESET_BYTES[$set]}" \
+              '{ sha256: $sha, artifact_bytes: $bytes }' > "${RUN_DIR}/artifact.${set}.json"
+        log "encrypt: ${set} — $(human_bytes "${FILESET_BYTES[$set]}") encrypted"
+    done
+
+    ERASURE_SHA="$(backup_encrypt "${RUN_DIR}/erasure-log.jsonl" "${RUN_DIR}/erasure-log.jsonl.age")"
+    rm -f -- "${RUN_DIR}/erasure-log.jsonl"
+    ERASURE_BYTES="$(stat -c %s "${RUN_DIR}/erasure-log.jsonl.age")"
+    jq -n --arg sha "$ERASURE_SHA" --argjson bytes "$ERASURE_BYTES" \
+          '{ sha256: $sha, artifact_bytes: $bytes }' > "${RUN_DIR}/artifact.erasure-log.json"
 
     log "encrypt: OK"
 }
 
 # ----- Phase: manifest -----
 #
-# ONE manifest per run, covering all three artifacts. It is both the
-# contract the verifier checks against and the atomicity anchor: three
-# separate artifacts must not become three independently-missing
-# artifacts.
+# ONE manifest per run, covering every artifact. It is both the contract
+# the verifier checks against and the atomicity anchor: separate artifacts
+# must not become independently-missing artifacts.
 #
 # Uploaded UNENCRYPTED so the verifier can check freshness and integrity
 # without decrypting anything. It therefore carries counts and hashes
-# ONLY — never a name, a CPF, or an email address. Anything added here in
-# future must clear that bar.
+# ONLY — never a name, a CPF, an email address, or a file name from a file
+# set. Anything added here in future must clear that bar.
 #
 # It describes the run AS CREATED. Pruning removes files from older tiers
 # by design, so a manifest in monthly/ may reference artifacts that no
@@ -424,50 +489,9 @@ phase_encrypt() {
 # completeness.
 phase_manifest() {
     log "manifest: assembling"
-
-    local -a jq_args=()
-    # The $names below are jq variables bound by --arg/--argjson, not
-    # shell expansions; the single quotes are what keeps them that way.
-    # shellcheck disable=SC2016
-    local jq_expr='{
-        schema_version: 2,
-        run_id: $run_id,
-        created_utc: $created,
-        script_version: $script_version,
-        mysql_version: $mysql_version,
-        age_recipients: [$escrow, $verifier],
-        artifacts: {}
-    }'
-
-    jq_args+=(--arg run_id "$RUN_ID")
-    jq_args+=(--arg created "$(date -u +%Y-%m-%dT%H:%M:%SZ)")
-    jq_args+=(--arg script_version "$SCRIPT_VERSION")
-    jq_args+=(--arg mysql_version "$MYSQL_VERSION")
-    jq_args+=(--arg escrow "$AGE_RECIPIENT_ESCROW")
-    jq_args+=(--arg verifier "$AGE_RECIPIENT_VERIFIER")
-
-    local db
-    for db in "${BACKUP_DATABASES[@]}"; do
-        jq_args+=(--slurpfile "meta_${db}" "${RUN_DIR}/dbmeta.${db}.json")
-        jq_args+=(--arg "sha_${db}" "${ARTIFACT_SHA[$db]}")
-        jq_args+=(--argjson "dump_bytes_${db}" "${DUMP_BYTES[$db]}")
-        jq_args+=(--argjson "artifact_bytes_${db}" "${ARTIFACT_BYTES[$db]}")
-        jq_expr+=" | .artifacts[\"${db}\"] = (\$meta_${db}[0]
-            + { sha256: \$sha_${db},
-                dump_bytes: \$dump_bytes_${db},
-                artifact_bytes: \$artifact_bytes_${db} })"
-    done
-
-    jq -n "${jq_args[@]}" "$jq_expr" > "${RUN_DIR}/manifest.json"
-
-    # Last line of defence on the no-personal-data rule: the manifest is
-    # the one thing here that goes to Drive in the clear, so refuse to
-    # upload one carrying anything that looks like a CPF.
-    if grep -Eq '"[^"]*(cpf|email|nome|username)[^"]*"[[:space:]]*:[[:space:]]*"' "${RUN_DIR}/manifest.json"; then
-        die "manifest appears to contain a personal-data field — refusing to upload it unencrypted"
-    fi
-
-    jq empty "${RUN_DIR}/manifest.json" || die "assembled manifest is not valid JSON"
+    backup_assemble_manifest "$RUN_DIR" "$RUN_ID" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+        "$SCRIPT_VERSION" "$MYSQL_VERSION" "$BACKUP_CODE_VERSION" > "${RUN_DIR}/manifest.json"
+    backup_manifest_check_clean "${RUN_DIR}/manifest.json"
     log "manifest: OK ($(human_bytes "$(stat -c %s "${RUN_DIR}/manifest.json")"))"
 }
 
@@ -478,7 +502,7 @@ phase_manifest() {
 # run and fails verification loudly, instead of looking like a healthy
 # backup with one database quietly missing.
 phase_upload() {
-    configure_rclone
+    backup_configure_rclone_writer
 
     # Both tiers are derived from RUN_ID rather than from `date` a second
     # time, so the folder a run lands in always agrees with its own id —
@@ -487,12 +511,19 @@ phase_upload() {
     local day_of_year
     day_of_year="$(date -u -d "${RUN_ID:0:4}-${RUN_ID:4:2}-${RUN_ID:6:2}" +%j)"
 
-    upload_tier "daily/${RUN_ID}" "${BACKUP_DATABASES[@]}"
+    local -a everything=()
+    local db set
+    for db in "${BACKUP_DATABASES[@]}"; do everything+=("${db}.sql.gz.age"); done
+    for set in "${BACKUP_FILE_SETS[@]}"; do everything+=("${set}.tar.gz.age"); done
+    everything+=(erasure-log.jsonl.age)
 
-    # First of the month: a full second copy on the monthly ladder.
+    upload_tier "daily/${RUN_ID}" "${everything[@]}"
+
+    # First of the month: a full second copy on the monthly ladder. The
+    # pruner later thins the phpbb_* dumps and file sets out of it.
     if [[ "$day_of_month" == "01" ]]; then
         log "upload: ${RUN_ID} is the first of the month — also writing monthly/"
-        upload_tier "monthly/${RUN_ID}" "${BACKUP_DATABASES[@]}"
+        upload_tier "monthly/${RUN_ID}" "${everything[@]}"
     fi
 
     # First of the year: baja_resultados ALONE. The certificate-archive
@@ -501,7 +532,7 @@ phase_upload() {
     # data past its purpose rather than prudence.
     if [[ "$day_of_year" == "001" ]]; then
         log "upload: ${RUN_ID} is the first of the year — also writing yearly/ (baja_resultados only)"
-        upload_tier "yearly/${RUN_ID}" baja_resultados
+        upload_tier "yearly/${RUN_ID}" baja_resultados.sql.gz.age
     fi
 
     log "upload: OK"
@@ -509,13 +540,12 @@ phase_upload() {
 
 upload_tier() {
     local dest="$1"; shift
-    local -a dbs=("$@")
-    local db
+    local name
 
     log "upload: -> ${BACKUP_REMOTE}${dest}/"
-    for db in "${dbs[@]}"; do
-        rclone_put "${RUN_DIR}/${db}.sql.gz.age"        "${dest}/${db}.sql.gz.age"
-        rclone_put "${RUN_DIR}/${db}.sql.gz.age.sha256" "${dest}/${db}.sql.gz.age.sha256"
+    for name in "$@"; do
+        rclone_put "${RUN_DIR}/${name}"        "${dest}/${name}"
+        rclone_put "${RUN_DIR}/${name}.sha256" "${dest}/${name}.sha256"
     done
 
     # The manifest is uploaded to every tier, including yearly/ where it
@@ -523,12 +553,6 @@ upload_tier() {
     # the run contained; a folder without it cannot be interpreted, and the
     # pruner is forbidden from removing one except with its whole folder.
     rclone_put "${RUN_DIR}/manifest.json" "${dest}/manifest.json"
-}
-
-rclone_put() {
-    local src="$1" dest="$2"
-    rclone copyto --retries 3 --low-level-retries 10 --checksum "$src" "${BACKUP_REMOTE}${dest}" \
-        || die "upload of ${dest} failed — the run folder is incomplete and MUST NOT be treated as a backup"
 }
 
 # ----- Phase: report -----
@@ -541,16 +565,19 @@ phase_report() {
     # negative one is worse than a slightly wrong one.
     if (( duration < 0 )); then duration=0; fi
 
-    local total=0 db
+    local total=$ERASURE_BYTES db set
     for db in "${BACKUP_DATABASES[@]}"; do
         total=$(( total + ${ARTIFACT_BYTES[$db]} ))
+    done
+    for set in "${BACKUP_FILE_SETS[@]}"; do
+        total=$(( total + ${FILESET_BYTES[$set]} ))
     done
 
     # Declared and assigned separately so a failure inside human_bytes is
     # not masked by `local`'s own exit status.
     local size_text msg
     size_text="$(human_bytes "$total")"
-    msg="run=${RUN_ID} dbs=${#BACKUP_DATABASES[@]} size=${size_text} duration=${duration}s"
+    msg="run=${RUN_ID} dbs=${#BACKUP_DATABASES[@]} file_sets=${#BACKUP_FILE_SETS[@]} size=${size_text} duration=${duration}s"
     log "report: ${msg}"
 
     if [[ "$BACKUP_REMOTE" != "gdrive:" ]]; then
@@ -597,6 +624,7 @@ main() {
             check_run_id
             phase_preflight
             phase_dump
+            phase_files
             phase_encrypt
             phase_manifest
             phase_upload
@@ -611,4 +639,8 @@ main() {
     esac
 }
 
-main "$@"
+# Sourced by baja-infra/tests/backup/run-tests.sh, which calls single
+# phases against fakes; run as a command otherwise.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi

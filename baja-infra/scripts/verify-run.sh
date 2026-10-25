@@ -40,7 +40,11 @@ PEAK_SAMPLER_PID=""
 PEAK_FILE=""
 
 load_config() {
-    local env_file="$INFRA_DIR/.env"
+    # BAJA_ENV_FILE lets a test (tests/backup/stack-test.sh) hand over a
+    # copy of .env with its own destination and keys. Everything this
+    # sources is exported, and docker compose prefers exported variables
+    # to its .env, so the copy wins everywhere.
+    local env_file="${BAJA_ENV_FILE:-${INFRA_DIR}/.env}"
     [[ -f "$env_file" ]] || die "stack env not found: $env_file"
     set -a
     # shellcheck disable=SC1090

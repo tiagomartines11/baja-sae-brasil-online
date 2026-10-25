@@ -24,6 +24,10 @@
  *                            against it. Deleting as you walk means a
  *                            floor breach is discovered after the damage.
  *   NEVER TOUCH yearly/      Manual review only.
+ *   NEVER TOUCH events/      The archives of finished events' results
+ *                            (BAJAAPP-67). Kept for good: they are what
+ *                            proves what was published. Only the three
+ *                            tier folders below are ever listed.
  *   NEVER TRASH A MANIFEST   Except as part of removing its whole folder.
  *                            It is the record of what a run contained.
  *
@@ -37,6 +41,9 @@
  *                        daily/     monthly/    yearly/
  *   baja_resultados      35 days    24 months   indefinite
  *   phpbb_baja/_formula  35 days     6 months   not written
+ *     and their -files   35 days     6 months   not written
+ *   baja-app-sons,       35 days    24 months   not written
+ *     erasure-log
  *
  * baja_resultados keeps the long tail because certificates are generated
  * on demand — the database IS the certificate archive — and a scoring
@@ -207,9 +214,11 @@ function noteYearly(root, ctx) {
 }
 
 /**
- * Returns the artifacts and sidecars belonging to the phpBB databases.
+ * Returns the artifacts and sidecars belonging to the phpBB forums: each
+ * forum's database dump and its file set (attachments and avatars). A
+ * forum's attachments go when its posts go.
  *
- * Matched by explicit prefix, never by "everything that is not
+ * Matched by exact name, never by "everything that is not
  * baja_resultados". A file this function does not recognise is left
  * alone, which is the correct bias for code that deletes.
  */
@@ -222,7 +231,8 @@ function phpbbArtifactsIn(folder) {
     if (name === MANIFEST_NAME) { continue; }   // never, except with its folder
     for (var i = 0; i < PHPBB_DATABASES.length; i++) {
       var db = PHPBB_DATABASES[i];
-      if (name === db + '.sql.gz.age' || name === db + '.sql.gz.age.sha256') {
+      if (name === db + '.sql.gz.age' || name === db + '.sql.gz.age.sha256' ||
+          name === db + '-files.tar.gz.age' || name === db + '-files.tar.gz.age.sha256') {
         out.push(file);
         break;
       }

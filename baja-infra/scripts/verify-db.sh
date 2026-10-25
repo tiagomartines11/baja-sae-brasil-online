@@ -32,8 +32,18 @@
 #                     manifest — see the comment on check_floors.
 #   7. Functional     the real certificate-lookup query returns a row with
 #                     every field a PDF needs.
+#   8. File sets      each one (forum attachments and avatars, generated
+#                     timer sounds) is decrypted and EXTRACTED, and the
+#                     files that came out are compared, content and all,
+#                     with the manifest's description of the archive.
+#   9. Erasure log    decrypted; its entry count matches the manifest and
+#                     its hash chain is intact.
+#  10. Event archives every complete folder under events/ (BAJAAPP-67) is
+#                     downloaded, decrypted and extracted, and compared
+#                     with its own manifest. They are few and small, so
+#                     all of them are checked every week, not the newest.
 #
-# Everything from step 4 on runs PER DATABASE and reports per database. A
+# Everything from step 4 on runs PER ARTIFACT and reports per artifact. A
 # corrupt phpbb_formula must not mask a healthy baja_resultados, and you
 # should be able to see which one failed without reading logs.
 #
@@ -80,10 +90,15 @@ MYSQL_DEFAULTS_FILE=""
 # to verify AGAINST — the per-database pass is skipped rather than run
 # blind. See phase_precheck.
 MANIFEST_OK=no
+MANIFEST_SCHEMA=0
 HARD_FAILURES=()
 SOFT_NOTES=()
 declare -A DB_RESULT=()
 declare -A DB_RESTORE_SECONDS=()
+# File sets and the erasure log, keyed by name, in BACKUP_FILE_SETS order
+# then "erasure-log". Event archives are reported as "events/<EVT>/<ts>".
+declare -A OTHER_RESULT=()
+EVENT_RESULTS=()
 
 fail_hard() { HARD_FAILURES+=("$1"); err "$1"; }
 note_soft() { SOFT_NOTES+=("$1"); warn "SOFT: $1"; }
@@ -108,7 +123,7 @@ phase_preflight() {
     log "preflight: guardrails"
 
     local tool
-    for tool in mysql mysqldump age rclone curl jq gzip sha256sum; do
+    for tool in mysql mysqldump age rclone curl jq gzip sha256sum tar; do
         command -v "$tool" >/dev/null 2>&1 || die "$tool not found in PATH"
     done
 
@@ -171,7 +186,7 @@ phase_preflight() {
 configure_rclone() {
     export RCLONE_CONFIG=/dev/null
     if [[ "$VERIFY_REMOTE" == "gdrive:" ]]; then
-        [[ -r "$GDRIVE_SA_READER_JSON" ]] \
+        [[ -f "$GDRIVE_SA_READER_JSON" && -r "$GDRIVE_SA_READER_JSON" ]] \
             || die "reader service-account key not readable at ${GDRIVE_SA_READER_JSON}"
         export RCLONE_CONFIG_GDRIVE_TYPE=drive
         export RCLONE_CONFIG_GDRIVE_SCOPE=drive.readonly
@@ -227,6 +242,7 @@ phase_precheck() {
         return 0
     fi
     MANIFEST_OK=yes
+    MANIFEST_SCHEMA="$(jq -r '.schema_version // 0' "$manifest")"
 
     # 1. Freshness. Catches a dead cron, which is likelier than a corrupt
     #    dump and is invisible to every other check here — a week-old
@@ -281,6 +297,48 @@ phase_precheck() {
 
         log "precheck: ${db} — present, sha256 matches manifest and sidecar"
     done
+
+    # File sets and the erasure log arrived with schema 3. An older
+    # manifest has none, and that is what it says rather than a failure.
+    if (( MANIFEST_SCHEMA < 3 )); then
+        warn "precheck: manifest schema ${MANIFEST_SCHEMA} predates file sets and the erasure log — only the databases can be checked"
+        return 0
+    fi
+    local set status
+    for set in "${BACKUP_FILE_SETS[@]}"; do
+        status="$(precheck_artifact "$set" "$(jq -r --arg s "$set" '.file_sets[$s].file // empty' "$manifest")" \
+                                           "$(jq -r --arg s "$set" '.file_sets[$s].sha256 // empty' "$manifest")")"
+        if [[ -n "$status" ]]; then OTHER_RESULT["$set"]="$status"; fi
+    done
+    status="$(precheck_artifact erasure-log "$(jq -r '.erasure_log.file // empty' "$manifest")" \
+                                            "$(jq -r '.erasure_log.sha256 // empty' "$manifest")")"
+    if [[ -n "$status" ]]; then OTHER_RESULT[erasure-log]="$status"; fi
+}
+
+# Presence and integrity of one non-database artifact in the run folder.
+# Prints nothing when it is fine, or the result to report when it is not.
+# Runs in a subshell (command substitution), so it reports failures by
+# printing them, and the caller records them with fail_hard.
+precheck_artifact() {
+    local label="$1" file="$2" expected="$3" actual sidecar
+    if [[ -z "$file" || -z "$expected" ]]; then
+        printf 'MISSING FROM MANIFEST'; return 0
+    fi
+    if [[ ! -f "${WORK_DIR}/${file}" ]]; then
+        printf 'ARTIFACT MISSING'; return 0
+    fi
+    actual="$(sha256sum "${WORK_DIR}/${file}" | cut -d' ' -f1)"
+    if [[ "$actual" != "$expected" ]]; then
+        printf 'CHECKSUM MISMATCH'; return 0
+    fi
+    if [[ ! -f "${WORK_DIR}/${file}.sha256" ]]; then
+        printf 'SIDECAR MISSING'; return 0
+    fi
+    sidecar="$(cut -d' ' -f1 < "${WORK_DIR}/${file}.sha256")"
+    if [[ "$sidecar" != "$actual" ]]; then
+        printf 'SIDECAR MISMATCH'; return 0
+    fi
+    log "precheck: ${label} — present, sha256 matches manifest and sidecar" >&2
 }
 
 # ----- Per-database verification -----
@@ -558,12 +616,192 @@ persist_state() {
     fi
 }
 
+# ----- File sets -----
+#
+# A real restore, into the work directory: decrypt, extract as tar would
+# onto a fresh server, then describe what came out with the same function
+# the backup used on the archive. Never `die` in here either.
+verify_file_set() {
+    local set="$1" manifest="${WORK_DIR}/manifest.json"
+    if [[ -n "${OTHER_RESULT[$set]:-}" ]]; then
+        fail_hard "${set}: ${OTHER_RESULT[$set]}"
+        return 0
+    fi
+
+    local artifact="${WORK_DIR}/${set}.tar.gz.age"
+    local tarball="${WORK_DIR}/${set}.tar.gz"
+    local dest="${WORK_DIR}/restore.${set}"
+
+    if ! age -d -i "$AGE_IDENTITY_VERIFIER" -o "$tarball" "$artifact" 2>"${WORK_DIR}/${set}.age.err"; then
+        fail_hard "${set}: age decryption failed ($(tail -1 "${WORK_DIR}/${set}.age.err"))"
+        OTHER_RESULT["$set"]="DECRYPT FAILED"
+        return 0
+    fi
+    if ! gzip -t "$tarball" 2>/dev/null; then
+        fail_hard "${set}: gzip integrity test failed"
+        OTHER_RESULT["$set"]="GUNZIP FAILED"
+        return 0
+    fi
+    mkdir -p "$dest"
+    if ! tar -xzf "$tarball" -C "$dest" --numeric-owner 2>"${WORK_DIR}/${set}.tar.err"; then
+        fail_hard "${set}: extraction failed — $(tail -1 "${WORK_DIR}/${set}.tar.err")"
+        OTHER_RESULT["$set"]="EXTRACT FAILED"
+        return 0
+    fi
+    rm -f -- "$tarball"
+
+    local count bytes digest want_count want_bytes want_digest
+    IFS=$'\t' read -r count bytes digest < <(backup_tree_lines_from_dir "$dest" | backup_tree_summary)
+    want_count="$(jq -r --arg s "$set" '.file_sets[$s].file_count' "$manifest")"
+    want_bytes="$(jq -r --arg s "$set" '.file_sets[$s].total_bytes' "$manifest")"
+    want_digest="$(jq -r --arg s "$set" '.file_sets[$s].tree_sha256' "$manifest")"
+    rm -rf -- "$dest"
+
+    if [[ "$count" != "$want_count" || "$bytes" != "$want_bytes" ]]; then
+        fail_hard "${set}: restored ${count} file(s), ${bytes} bytes; the manifest says ${want_count}, ${want_bytes}"
+        OTHER_RESULT["$set"]="FILES DIFFER"
+        return 0
+    fi
+    if [[ "$digest" != "$want_digest" ]]; then
+        fail_hard "${set}: the restored files' content differs from what the backup archived"
+        OTHER_RESULT["$set"]="CONTENT DIFFERS"
+        return 0
+    fi
+    log "${set}: ${count} file(s) restored, content identical"
+    OTHER_RESULT["$set"]="OK (${count} files, $(human_bytes "$bytes"))"
+}
+
+# ----- Erasure log -----
+#
+# Decrypted and checked with erasure-log.sh itself, so the chain rule is
+# the one the tool enforces. A chain that was already broken when the
+# backup took it is reported, not failed: the backup faithfully kept what
+# was there, and the manifest says so.
+verify_erasure_log() {
+    local manifest="${WORK_DIR}/manifest.json"
+    if [[ -n "${OTHER_RESULT[erasure-log]:-}" ]]; then
+        fail_hard "erasure-log: ${OTHER_RESULT[erasure-log]}"
+        return 0
+    fi
+    local plain="${WORK_DIR}/erasure-log.jsonl"
+    if ! age -d -i "$AGE_IDENTITY_VERIFIER" -o "$plain" "${WORK_DIR}/erasure-log.jsonl.age" 2>"${WORK_DIR}/erasure.age.err"; then
+        fail_hard "erasure-log: age decryption failed ($(tail -1 "${WORK_DIR}/erasure.age.err"))"
+        OTHER_RESULT[erasure-log]="DECRYPT FAILED"
+        return 0
+    fi
+    local entries want chain_ok
+    entries="$(wc -l < "$plain" | tr -d ' ')"
+    want="$(jq -r '.erasure_log.entries' "$manifest")"
+    chain_ok="$(jq -r '.erasure_log.chain_ok' "$manifest")"
+    if [[ "$entries" != "$want" ]]; then
+        fail_hard "erasure-log: ${entries} entries restored, the manifest says ${want}"
+        OTHER_RESULT[erasure-log]="ENTRIES DIFFER"
+        rm -f -- "$plain"
+        return 0
+    fi
+    if ERASURE_LOG_PATH="$plain" "${SCRIPT_DIR}/erasure-log.sh" verify >/dev/null 2>&1; then
+        OTHER_RESULT[erasure-log]="OK (${entries} entries, chain intact)"
+    elif [[ "$chain_ok" == "false" ]]; then
+        note_soft "erasure-log: the hash chain was already broken when it was backed up — someone edited the live log; run erasure-log.sh verify on the host"
+        OTHER_RESULT[erasure-log]="OK (${entries} entries, chain broken at the source)"
+    else
+        fail_hard "erasure-log: the chain was intact when backed up and is broken after restore"
+        OTHER_RESULT[erasure-log]="CHAIN BROKEN"
+    fi
+    rm -f -- "$plain"
+}
+
+# ----- Event archives (BAJAAPP-67) -----
+#
+# Every events/<EVT>/<timestamp>/ folder. A folder without a manifest is
+# an upload that died before its last step; backup-run.sh retries the
+# request into a NEW folder, so the empty one is only noted. Everything
+# else is a full restore against the folder's own manifest.
+verify_event_archives() {
+    local events
+    if ! events="$(rclone lsf --dirs-only "${VERIFY_REMOTE}events/" 2>/dev/null | sed 's:/*$::' | sort)"; then
+        log "events: no events/ folder yet — no event has been archived"
+        return 0
+    fi
+    local event stamp folder dest manifest result
+    for event in $events; do
+        [[ "$event" =~ ^[0-9]{2}(BR|SE|SU|NE)$ ]] || { note_soft "events/${event}: not an event code, skipped"; continue; }
+        for stamp in $(rclone lsf --dirs-only "${VERIFY_REMOTE}events/${event}/" 2>/dev/null | sed 's:/*$::' | sort); do
+            folder="events/${event}/${stamp}"
+            dest="${WORK_DIR}/${folder}"
+            mkdir -p "$dest"
+            if ! rclone copy --retries 3 "${VERIFY_REMOTE}${folder}" "$dest"; then
+                fail_hard "${folder}: could not download"
+                EVENT_RESULTS+=("${folder}: DOWNLOAD FAILED")
+                continue
+            fi
+            manifest="${dest}/manifest.json"
+            if [[ ! -f "$manifest" ]]; then
+                note_soft "${folder}: no manifest — an upload that did not finish, not an archive"
+                EVENT_RESULTS+=("${folder}: INCOMPLETE (ignored)")
+                rm -rf -- "$dest"
+                continue
+            fi
+            result="$(verify_event_folder "$event" "$dest")"
+            if [[ "$result" != OK* ]]; then
+                fail_hard "${folder}: ${result}"
+            fi
+            EVENT_RESULTS+=("${folder}: ${result}")
+            rm -rf -- "$dest"
+        done
+    done
+}
+
+# Prints the result for one downloaded event folder. Runs in a command
+# substitution, so it only PRINTS; the caller turns anything that is not
+# "OK ..." into a hard failure.
+verify_event_folder() {
+    local event="$1" dest="$2" manifest="${2}/manifest.json"
+    if ! jq empty "$manifest" 2>/dev/null; then
+        printf 'BAD MANIFEST'; return 0
+    fi
+    if [[ "$(jq -r '.event' "$manifest")" != "$event" ]]; then
+        printf 'WRONG EVENT (%s)' "$(jq -r '.event' "$manifest")"; return 0
+    fi
+    local file sha
+    file="$(jq -r '.artifact.file' "$manifest")"
+    sha="$(jq -r '.artifact.sha256' "$manifest")"
+    if [[ ! -f "${dest}/${file}" ]] || [[ "$(sha256sum "${dest}/${file}" | cut -d' ' -f1)" != "$sha" ]]; then
+        printf 'CHECKSUM MISMATCH'; return 0
+    fi
+    if ! age -d -i "$AGE_IDENTITY_VERIFIER" -o "${dest}/results.tar.gz" "${dest}/${file}" 2>/dev/null; then
+        printf 'DECRYPT FAILED'; return 0
+    fi
+    mkdir -p "${dest}/restore"
+    if ! tar -xzf "${dest}/results.tar.gz" -C "${dest}/restore" 2>/dev/null; then
+        printf 'EXTRACT FAILED'; return 0
+    fi
+    local count bytes digest snapshots
+    IFS=$'\t' read -r count bytes digest < <(backup_tree_lines_from_dir "${dest}/restore" | backup_tree_summary)
+    snapshots="$(find "${dest}/restore" -type f -name '*.json' | wc -l | tr -d ' ')"
+    if [[ "$digest" != "$(jq -r '.artifact.tree_sha256' "$manifest")" \
+       || "$snapshots" != "$(jq -r '.snapshot_count' "$manifest")" ]]; then
+        printf 'CONTENT DIFFERS'; return 0
+    fi
+    printf 'OK (%s snapshots, %s)' "$snapshots" "$(jq -r '.code_version' "$manifest")"
+}
+
 # ----- Phase: report -----
 phase_report() {
     local db
     log "----- results -----"
     for db in "${BACKUP_DATABASES[@]}"; do
         log "  ${db}: ${DB_RESULT[$db]:-NOT REACHED}"
+    done
+    if (( MANIFEST_SCHEMA >= 3 )); then
+        local set
+        for set in "${BACKUP_FILE_SETS[@]}" erasure-log; do
+            log "  ${set}: ${OTHER_RESULT[$set]:-NOT REACHED}"
+        done
+    fi
+    local line
+    for line in "${EVENT_RESULTS[@]}"; do
+        log "  ${line}"
     done
 
     if (( ${#SOFT_NOTES[@]} > 0 )); then
@@ -589,7 +827,7 @@ phase_report() {
     # success while a scratch database of decrypted competitor data was
     # still sitting on the production host. verify-run.sh pings only once
     # verification AND teardown have both succeeded.
-    log "run=${RUN_ID} — all three databases restored and verified"
+    log "run=${RUN_ID} — every artifact restored and verified"
     return 0
 }
 
@@ -615,11 +853,25 @@ main() {
                 verify_one "$db"
             done
             persist_state
+            if (( MANIFEST_SCHEMA >= 3 )); then
+                local set
+                for set in "${BACKUP_FILE_SETS[@]}"; do
+                    verify_file_set "$set"
+                done
+                verify_erasure_log
+            fi
         else
             err "skipping per-database verification: without a manifest there is nothing to verify against"
         fi
     fi
+    # Independent of the nightly run: an event archive is checked even
+    # when the newest daily/ folder is broken.
+    verify_event_archives
     phase_report
 }
 
-main "$@"
+# Sourced by baja-infra/tests/backup/run-tests.sh, which calls single
+# phases against fakes; run as a command otherwise.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi

@@ -62,14 +62,27 @@ function iter(items) {
   return { hasNext: () => i < items.length, next: () => items[i++] };
 }
 
-/** A run folder holding the standard artifact set. */
+/**
+ * A run folder holding the artifact set backup-db.sh writes today: three
+ * dumps, three file sets, the erasure log, a sidecar for each, and the
+ * manifest — 17 files. `databases` limits it to those dumps and nothing
+ * else, as in yearly/.
+ */
 function runFolder(runId, opts) {
   opts = opts || {};
   const folder = makeFolder(runId);
   const dbs = opts.databases || ['baja_resultados', 'phpbb_baja', 'phpbb_formula'];
+  const others = opts.databases ? [] : [
+    'phpbb_baja-files.tar.gz.age', 'phpbb_formula-files.tar.gz.age',
+    'baja-app-sons.tar.gz.age', 'erasure-log.jsonl.age'
+  ];
   dbs.forEach(db => {
     folder.createFile(db + '.sql.gz.age');
     folder.createFile(db + '.sql.gz.age.sha256');
+  });
+  others.forEach(name => {
+    folder.createFile(name);
+    folder.createFile(name + '.sha256');
   });
   if (opts.manifest !== false) { folder.createFile('manifest.json'); }
   return folder;
@@ -216,7 +229,7 @@ check('R1 leaves a daily run at exactly 35 days alone', () => {
 });
 
 // ----- Rule 2 -----
-check('R2 trashes phpbb artifacts from a 7-month-old monthly run, keeping baja_resultados and the manifest', () => {
+check('R2 trashes the forums\' dumps and attachments from a 7-month-old monthly run, keeping the rest', () => {
   const runId = runIdMonthsAgo(7);
   const r = run(root => {
     healthyDaily(root);
@@ -226,8 +239,12 @@ check('R2 trashes phpbb artifacts from a 7-month-old monthly run, keeping baja_r
   }, LIVE);
   eq(r.error, null, 'error');
   eq(trashed(r.root), [
+    `monthly/${runId}/phpbb_baja-files.tar.gz.age`,
+    `monthly/${runId}/phpbb_baja-files.tar.gz.age.sha256`,
     `monthly/${runId}/phpbb_baja.sql.gz.age`,
     `monthly/${runId}/phpbb_baja.sql.gz.age.sha256`,
+    `monthly/${runId}/phpbb_formula-files.tar.gz.age`,
+    `monthly/${runId}/phpbb_formula-files.tar.gz.age.sha256`,
     `monthly/${runId}/phpbb_formula.sql.gz.age`,
     `monthly/${runId}/phpbb_formula.sql.gz.age.sha256`
   ], 'trashed');
@@ -244,7 +261,12 @@ check('R2 never trashes the manifest', () => {
   const kept = r.root.folders.find(f => f._name === 'monthly')
                 .folders.find(f => f._name === runId)
                 .files.filter(f => !f.trashed).map(f => f._name).sort();
-  eq(kept, ['baja_resultados.sql.gz.age', 'baja_resultados.sql.gz.age.sha256', 'manifest.json'], 'kept files');
+  eq(kept, [
+    'baja-app-sons.tar.gz.age', 'baja-app-sons.tar.gz.age.sha256',
+    'baja_resultados.sql.gz.age', 'baja_resultados.sql.gz.age.sha256',
+    'erasure-log.jsonl.age', 'erasure-log.jsonl.age.sha256',
+    'manifest.json'
+  ], 'kept files');
 });
 
 // ----- Rule 3 -----
@@ -299,7 +321,7 @@ check('aborts when the plan exceeds the per-run file cap', () => {
   const r = run(root => {
     const daily = root.createFolder('daily');
     for (let i = 0; i < 10; i++) { daily.folders.push(runFolder(runIdDaysAgo(i))); }
-    // 8 old runs x 7 files = 56, well past the cap of 30.
+    // 8 old runs x 17 files = 136, well past the cap of 30.
     for (let i = 0; i < 8; i++) { daily.folders.push(runFolder(runIdDaysAgo(40 + i))); }
   }, LIVE);
   if (!r.error) { throw new Error('expected an abort'); }
@@ -362,6 +384,40 @@ check('writes the run log into the Shared Drive', () => {
   const logFolder = r.root.folders.find(f => f._name === 'retention-log');
   if (!logFolder) { throw new Error('no retention-log folder was created'); }
   eq(logFolder.files.map(f => f._name), ['retention-2026-08.log'], 'log files');
+});
+
+// ----- What a normal day looks like -----
+check('a normal day, one daily run expiring and one monthly run reaching 6 months, stays under the cap', () => {
+  // The heaviest ordinary day: a full daily folder (17 files) plus the
+  // eight forum files R2 takes from a monthly folder. If the artifact set
+  // grows past the cap, this fails here instead of aborting in production.
+  const r = run(root => {
+    healthyDaily(root, [runFolder(runIdDaysAgo(36))]);
+    const monthly = root.createFolder('monthly');
+    for (let i = 0; i < 6; i++) { monthly.folders.push(runFolder(runIdMonthsAgo(i))); }
+    monthly.folders.push(runFolder(runIdMonthsAgo(6)));
+  }, LIVE);
+  eq(r.error, null, 'error');
+  eq(trashed(r.root).length, 1 + 8, 'actions');
+});
+
+// ----- events/ -----
+check('never touches events/, however old the archives in it', () => {
+  // events/<EVT>/<timestamp>/ holds the frozen results of finished events
+  // (BAJAAPP-67). They look like run folders on purpose (same timestamp
+  // format) and are exactly what must survive.
+  const r = run(root => {
+    healthyDaily(root);
+    const events = root.createFolder('events');
+    const evt = events.createFolder('22BR');
+    const old = evt.createFolder(runIdMonthsAgo(48));
+    old.createFile('results.tar.gz.age');
+    old.createFile('manifest.json');
+  }, LIVE);
+  eq(r.error, null, 'error');
+  const archive = r.root.folders.find(f => f._name === 'events').folders[0].folders[0];
+  eq(archive.trashed, false, 'archive folder trashed');
+  eq(archive.files.filter(f => f.trashed).length, 0, 'archive files trashed');
 });
 
 console.log('');

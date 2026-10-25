@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# A stand-in for rclone, for baja-infra/tests/backup/run-tests.sh.
+#
+# The real scripts talk to Google Drive through rclone. The tests have no
+# Google account, so they put this file first on PATH instead. It behaves
+# like rclone for the handful of commands the scripts use, with the
+# "remote" `fake:` being the folder in $FAKE_DRIVE on this machine, and it
+# writes one line per call to $FAKE_RCLONE_LOG, so a test can check the
+# ORDER in which files were uploaded (the manifest must always be last).
+#
+# Supported, with the options the scripts pass simply ignored:
+#   rclone lsd fake:                     list folders
+#   rclone lsf --dirs-only fake:<path>   list sub-folders, one "name/" per line
+#   rclone copyto <local file> fake:<path>
+#   rclone copy fake:<folder> <local folder>
+#   rclone version
+set -euo pipefail
+
+: "${FAKE_DRIVE:?FAKE_DRIVE must point at the folder that plays the Shared Drive}"
+log="${FAKE_RCLONE_LOG:-/dev/null}"
+
+# Drop the options (--retries 3 and the like) and keep the arguments.
+args=()
+while (( $# > 0 )); do
+    case "$1" in
+        --retries|--low-level-retries) shift 2 ;;
+        --*) shift ;;
+        *) args+=("$1"); shift ;;
+    esac
+done
+
+# "fake:daily/x" -> "$FAKE_DRIVE/daily/x"
+local_path() {
+    local p="$1"
+    [[ "$p" == fake:* ]] || { echo "fake rclone: not a fake: path: $p" >&2; exit 2; }
+    printf '%s/%s' "$FAKE_DRIVE" "${p#fake:}"
+}
+
+cmd="${args[0]:-}"
+printf '%s %s\n' "$cmd" "${args[*]:1}" >> "$log"
+
+case "$cmd" in
+    version) echo "rclone v0.0.0-fake" ;;
+    lsd)
+        dir="$(local_path "${args[1]}")"
+        [[ -d "$dir" ]] || exit 3
+        find "$dir" -mindepth 1 -maxdepth 1 -type d -printf '          -1 2000-01-01 00:00:00        -1 %f\n'
+        ;;
+    lsf)
+        dir="$(local_path "${args[1]}")"
+        [[ -d "$dir" ]] || exit 3
+        find "$dir" -mindepth 1 -maxdepth 1 -type d -printf '%f/\n'
+        ;;
+    copyto)
+        dest="$(local_path "${args[2]}")"
+        mkdir -p "$(dirname "$dest")"
+        cp -- "${args[1]}" "$dest"
+        ;;
+    copy)
+        src="$(local_path "${args[1]}")"
+        [[ -d "$src" ]] || exit 3
+        mkdir -p "${args[2]}"
+        cp -R -- "$src"/. "${args[2]}"/
+        ;;
+    *) echo "fake rclone: unsupported command: $cmd" >&2; exit 2 ;;
+esac

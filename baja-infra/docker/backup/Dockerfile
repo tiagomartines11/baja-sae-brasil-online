@@ -10,9 +10,10 @@
 # with an error that points at credentials rather than at the plugin,
 # which costs an afternoon every time someone hits it.
 #
-# Everything else the backup needs — curl, gzip, sha256sum, tar, openssl —
-# is already in the Oracle Linux 9 base. Only jq, unzip, age and rclone
-# have to be added.
+# Everything else the backup needs — curl, gzip, sha256sum, openssl —
+# is already in the Oracle Linux 9 base. jq, unzip, age and rclone have to
+# be added, and so does tar: the file sets and event archives need GNU tar
+# (--to-command), and the minimal base does not promise to ship it.
 FROM mysql:8.4
 
 # Pinned upstream releases. Bump deliberately: change the version AND the
@@ -37,7 +38,7 @@ ARG BACKUP_AGE_SHA256=bdc69c09cbdd6cf8b1f333d372a1f58247b3a33146406333e30c0f26e8
 ARG BACKUP_RCLONE_VERSION=v1.75.0
 ARG BACKUP_RCLONE_SHA256=aa2804e08f48250e71009c727124b6341cd0288465804a9a09d14663cabafbaa
 
-RUN microdnf -y install jq unzip \
+RUN microdnf -y install jq unzip tar findutils \
     && microdnf clean all \
     && rm -rf /var/cache/yum
 
@@ -81,8 +82,14 @@ COPY scripts/verify-db.sh    /usr/local/bin/verify-db.sh
 # Rides along because it needs exactly the same two tools (mysql, jq) and
 # is run through this image with --entrypoint. See docs/backup-restore.md.
 COPY scripts/erasure-log.sh  /usr/local/bin/erasure-log.sh
+# The event-archive packager (BAJAAPP-67), run by backup-run.sh with
+# --entrypoint, and the helper backup-lib.sh hands to tar --to-command to
+# describe an archive's files. backup-lib.sh finds it beside itself.
+COPY scripts/archive-event.sh    /usr/local/bin/archive-event.sh
+COPY scripts/tar-entry-sha256.sh /usr/local/bin/tar-entry-sha256.sh
 RUN chmod 0755 /usr/local/bin/backup-db.sh /usr/local/bin/verify-db.sh \
-                /usr/local/bin/erasure-log.sh \
+                /usr/local/bin/erasure-log.sh /usr/local/bin/archive-event.sh \
+                /usr/local/bin/tar-entry-sha256.sh \
     && chmod 0644 /usr/local/bin/backup-lib.sh
 
 # Scratch space for plaintext dumps. Declared here so the intent is
