@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\EquipeQuery;
 use Baja\Model\LogQuery;
@@ -9,6 +10,7 @@ use Baja\Model\TournamentQuery;
 use Baja\Model\Tournament;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 use DateTimeZone;
 use Baja\Model\Input;
 use Baja\Model\ResultadoQuery;
@@ -19,6 +21,12 @@ if (!isset($_REQUEST['id'])) { header("Location: index.php"); exit; }
 $_page = $_REQUEST['id'];
 
 Session::permissionCheck('admin');
+
+// Each of these buttons changes the bracket: none runs without the form's
+// token, which also refuses a GET link carrying one (Baja\Auth\Csrf).
+if (isset($_REQUEST['freeze']) || isset($_REQUEST['unfreeze']) || isset($_REQUEST['destroybracket']) || isset($_REQUEST['createbracket'])) {
+    Csrf::enforce();
+}
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
@@ -162,13 +170,14 @@ Template::printHeader("Detalhes de Prova", false);
 ?>
     
     <div style="max-width: 600px; margin: 0 auto;">
-        <form id="tournamentform" action="torneio.php?id=<?= $prova->getProvaId(); ?>" method="POST">
+        <form id="tournamentform" action="torneio.php?id=<?= Html::e(rawurlencode($prova->getProvaId())); ?>" method="POST">
+        <?= Csrf::field() ?>
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
             <tr style="height: 50px">
                 <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                     <span style="float:left"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                    <span style="font-size: 28px;"><?php echo $prova->getNome(); ?></span> <br />
+                    <span style="font-size: 28px;"><?php echo Html::e($prova->getNome()); ?></span> <br />
                 </th>
             </thead>
             <tbody>
@@ -216,8 +225,8 @@ if ($params->status->frozen) {
             foreach ($params->status->classification as $k => $eq) {
 ?>
                 <tr>
-                    <td><?= $eq ?></td>
-                    <td><?= EquipeQuery::create()->filterByEventoId($currentEventId)->findOneByEquipeId($eq)->getEquipe(); ?></td>
+                    <td><?= Html::e($eq) ?></td>
+                    <td><?= Html::e(EquipeQuery::create()->filterByEventoId($currentEventId)->findOneByEquipeId($eq)->getEquipe()); ?></td>
                     <td><?= $k+1 ?></td>
                 </tr>
 <?php
@@ -298,23 +307,26 @@ foreach ($able_cars as $ac) {
                     <?php
                         foreach ($params->seeding->classification as $class) {
                     ?>
-                            <th><?= $class->title ?></th>
+                            <th><?= Html::e($class->title) ?></th>
                     <?php
                         }
                     ?>
                     <th>Classificação</th>
                 </tr>
             </thead>
-            <input type="hidden" name="classification" value="<?= implode(",",$current_classification) ?>" form="tournamentform"/>
+            <input type="hidden" name="classification" value="<?= Html::field(implode(",",$current_classification)) ?>" form="tournamentform"/>
             <tbody>
                 <?php
                     foreach($able_cars as $i => $ac) { if (is_array($ac)) {
                 ?>
                         <tr>
                 <?php
-                         foreach($ac as $car) {
+                         // The car's number and team name are escaped; the
+                         // rest are formula results, printed as they are
+                         // like every results cell (BAJAAPP-35).
+                         foreach($ac as $col => $car) {
                 ?>
-                            <td><?= $car ?></td>
+                            <td><?= $col < 2 ? Html::e($car) : $car ?></td>
                 <?php
                         }
                 ?>

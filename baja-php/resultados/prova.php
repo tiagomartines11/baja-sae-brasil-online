@@ -7,7 +7,6 @@ use Baja\Model\EventoQuery;
 use Baja\Model\ResultadoQuery;
 use Baja\Results\EventStatus;
 use Baja\Results\ResultsBuilder;
-use Baja\Results\ResultRow;
 use Baja\Results\ResultsConfig;
 use Baja\Results\ViewerContext;
 
@@ -112,39 +111,7 @@ if (count($rows) && count($colunas)) {
 
         <?php
         foreach ($rows as $row) {
-            echo "<tr>";
-            foreach ($colunas as $c) {
-                #if ((
-                #    (($c->header == "Pontos" || $c->header == "Voltas" || $c->val == "Pos" || $c->header == "Points" || $c->header == "Laps") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_END') ||
-                #    (($c->header == "Enduro" || $c->header == "Total" || $c->val == "Pos" || $c->header == "Endurance") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_GER') ||
-                #    (($c->header == "Pontos" || $c->header == "Núcleo Técnico" || $c->header == "Total" || $c->val == "Pos") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_PRO') ||
-                #    (($c->val != "EquipeNum" || $c->val == "Equipe") && $resultado->getResultadoId() == EventoQuery::getCurrentEvent()->getEventoId().'_PRT')
-                #    ) && EventoQuery::getCurrentEvent()->getSpoilers() && !EventoQuery::getCurrentEvent()->getFinalizado() && !$_DEV_MODE) {
-                #    echo "<td>SPOILERS</td>";
-                #} else if ($c->val == "EquipeNum") {
-                if ($c->val == "EquipeNum") {
-                    echo '<td>' . $row->team->number . '</td>';
-                } else if ($c->val == "Equipe") {
-                    echo '<td style="text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">' . $row->team->name . '<br />';
-                    #echo '<i class="nomeEscola">' . $v["ESCOLA"] . '</i></td>';
-                    #Ajuste para desclassificadas
-                    echo '<i class="nomeEscola">' . $row->team->school . '</i>';
-                    if ($row->team->isDisqualified()){
-                        echo '<br/><small style="color:red;">Desclassificada</small>';
-                    }
-                    echo '</td>';
-                } else if ($c->val == "Pos") {
-                    $pos = $row->position;
-                    if ($pos === null) echo "<td>" . ResultRow::NO_POSITION . "</td>";
-                    else if ($pos == 1) echo "<td class='ouro'><p style='color:transparent'>" . $pos . "º</p></td>";
-                    else if ($pos == 2) echo "<td class='prata'><p style='color:transparent'>" . $pos . "º</p></td>";
-                    else if ($pos == 3) echo "<td class='bronze'><p style='color:transparent'>" . $pos . "º</p></td>";
-                    else echo "<td>" . $pos . "º</td>";
-                } else {
-                    echo '<td>' . $row->display($c->key()) . "</td>";
-                }
-            }
-            echo "</tr>";
+            Template::printResultRow($colunas, $row);
         }
         //}else{
         //	echo "</tr>\n</thead><tbody>";

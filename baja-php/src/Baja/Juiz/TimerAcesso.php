@@ -28,6 +28,19 @@ class TimerAcesso
     }
 
     /**
+     * Whether the request names its timer by key (?k=) rather than by id with
+     * a session. resolver() tries the key first, and so must anything that
+     * treats the two paths differently: a key request is authenticated by
+     * the key itself, which another site cannot know, so only the session
+     * path needs a CSRF token (timer_action.php).
+     *
+     * @return bool
+     */
+    static function porChave() {
+        return isset($_REQUEST['k']) && $_REQUEST['k'] !== '';
+    }
+
+    /**
      * Finds the timer a usage request refers to: ?k=<key> works for anyone
      * holding the access key (full control) or the view key (read only),
      * ?id=<timer_id> needs a session with permission.
@@ -37,7 +50,7 @@ class TimerAcesso
     static function resolver() {
         $user = Session::getCurrentUserOrNull();
 
-        if (isset($_REQUEST['k']) && $_REQUEST['k'] !== '') {
+        if (self::porChave()) {
             $k = strtoupper(trim($_REQUEST['k']));
             $quem = $user ? $user->getUsername() : 'chave';
             if ($timer = TimerQuery::create()->findOneByAccessKey($k)) return [$timer, $quem, false];

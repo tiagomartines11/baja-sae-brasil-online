@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Review\ManualScoreFields;
 use Baja\Contagem\Service\LockBusy;
@@ -19,6 +20,9 @@ $_page = $_REQUEST['p'];
 $_team = $_REQUEST['t'];
 
 Session::permissionCheck($_page);
+// Before anything is read for saving: a request without the form's token
+// (another site submitting it with the judge's session) changes nothing.
+Csrf::enforce();
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $equipe = EquipeQuery::create()->filterByEventoId($currentEventId)->findOneByEquipeId($_team);

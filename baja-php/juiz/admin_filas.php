@@ -5,6 +5,7 @@ use Baja\Model\EventoQuery;
 use Baja\Model\FilaQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
 
@@ -23,7 +24,7 @@ Template::printHeader("Admin");
             <tr style="height: 50px;">
                 <th colspan="4" class="sorter-false">
                     <span style="float:left;"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span> 
-                    <span style="font-size: 28px;">Filas (<?= $evento ?>)</span>
+                    <span style="font-size: 28px;">Filas (<?= Html::e($evento) ?>)</span>
                 </th>
             </tr>
             <tr> 
@@ -37,10 +38,10 @@ Template::printHeader("Admin");
 
 <?php foreach ($filas as $f) { ?>
             <tr>
-                <td><?= $f->getFilaId() ?></td>
-                <td><?= $f->getNome() ?></td>
-                <td><?= $f->getStatus() ?></td>
-                <td><a href='fila.php?evento=<?= $evento ?>&id=<?= $f->getFilaId() ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
+                <td><?= Html::e($f->getFilaId()) ?></td>
+                <td><?= Html::e($f->getNome()) ?></td>
+                <td><?= Html::e($f->getStatus()) ?></td>
+                <td><a href='fila.php?evento=<?= Html::e($evento) ?>&amp;id=<?= Html::e($f->getFilaId()) ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
             </tr>
 <?php } ?>
         </tbody>

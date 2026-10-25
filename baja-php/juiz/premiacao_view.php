@@ -35,7 +35,8 @@ $categorias = PremiacaoResolver::resolve($premiacao);
 $modificado = $premiacao->getModificado();
 $modStr = $modificado ? $modificado->format('d/m/Y H:i') : '';
 
-Template::printHeader(htmlspecialchars($premiacao->getNome()), false);
+// The template escapes the title itself.
+Template::printHeader($premiacao->getNome(), false);
 ?>
 <div style="max-width: 1100px; margin: 0 auto;">
     <table class="tablesorter" style="margin-bottom: 18px;">

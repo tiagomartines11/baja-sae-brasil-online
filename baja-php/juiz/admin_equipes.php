@@ -6,6 +6,7 @@ use Baja\Model\EquipeQuery;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
 
@@ -23,7 +24,7 @@ Template::printHeader("Admin");
             <tr style="height: 50px;">
                 <th colspan="5" class="sorter-false">
                     <span style="float:left;"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span> 
-                    <span style="font-size: 28px;">Equipes (<?= $evento ?>)</span>
+                    <span style="font-size: 28px;">Equipes (<?= Html::e($evento) ?>)</span>
                 </th>
             </tr>
             <tr> 
@@ -37,10 +38,10 @@ Template::printHeader("Admin");
 
 <?php foreach ($equipes as $eq) { ?>
             <tr>
-                <td><?= $eq->getEquipeId() ?></td>
-                <td><?= $eq->getEquipe() ?></td>
-                <td><?= $eq->getEscola() ?></td>
-                <td><a href='equipe.php?id=<?= $eq->getEquipeId() ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
+                <td><?= Html::e($eq->getEquipeId()) ?></td>
+                <td><?= Html::e($eq->getEquipe()) ?></td>
+                <td><?= Html::e($eq->getEscola()) ?></td>
+                <td><a href='equipe.php?id=<?= Html::e($eq->getEquipeId()) ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
             </tr>
 <?php } ?>
         </tbody>

@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\Timer;
 use Baja\Session;
 
@@ -8,6 +9,10 @@ use Baja\Session;
 // text-to-speech service (baja-infra/tts). Called from timer_admin.php.
 
 Session::permissionCheck('TIMER_ADMIN');
+
+// Writes a file into the sounds folder: only with the page's token, sent by
+// timer_admin.php as the X-CSRF-Token header (Baja\Auth\Csrf).
+Csrf::enforce();
 
 header('Content-Type: application/json');
 
