@@ -25,6 +25,10 @@ use Baja\Model\Evento;
  *   event finished   300: nothing changes any more, except a late
  *                    correction, which then shows within five minutes
  *
+ * "Finished" is evento.finalizado and nothing else; every event that does
+ * not have it counts as running. (evento.em_andamento only marks the site's
+ * default event, see bootstrap.php, and has no say here.)
+ *
  * Errors are never cached (forError()). A cached 400 or 404 could be served
  * for a URL that works: Cloudflare's cache key leaves out unknown parameters
  * (see the cache rule in docs/results-api.md), so "?evt=26BR&junk=1" and

@@ -111,7 +111,7 @@ The examples below are real answers from the dev seed, with long lists cut
     "dates": "25 a 29 de Março de 2026",
     "listed": true
   },
-  "status": {"in_progress": true, "finished": true, "spoilers_active": false},
+  "status": {"default_event": true, "finished": true, "spoilers_active": false},
   "resultados": [
     {"id": "26BR_SGE", "name": "Segurança Estática", "group": "Segurança", "type": "table",
      "provas": ["SGE"], "url": "/resultados/resultado.php?evt=26BR&id=26BR_SGE"},
@@ -136,8 +136,8 @@ The examples below are real answers from the dev seed, with long lists cut
 |---|---|
 | `event.type` | `Nacional`, `Sudeste`, `Nordeste` or `Sul` |
 | `event.listed` | shown in the results site's archive menu. An event that is not is still public at its own address, here as on the site |
-| `status.in_progress` | the organisers marked the event as the one running now |
-| `status.finished` | the event is over and its results are official |
+| `status.default_event` | the event the results site opens when no event is named in its address; one event at a time has it. It says **nothing about whether the event is running**: a finished event can be the default (26BR above), a running one may not be. Use `finished` for that |
+| `status.finished` | the event is over and its results are official. **The only "live or finished" flag**: everything else that depends on it (spoilers, cache times) follows it. An event without it counts as running |
 | `status.spoilers_active` | spoilers hide some values right now; see [Spoilers](#spoilers) |
 | `resultados` | the event's menu, in menu order. `group` is the submenu it is under (null at the top level). `type`: `table` (fetch `url`, which is `resultado.php`) or `tournament` (`url` is `torneio.php`). `provas`: the provas it is made of |
 | `provas` | each prova of those resultados, once. `type`: `normal`, `rolling`, `tournament` or `laps`. `status`: `partial` while judges are still entering it, `final` once closed. `lap_counted` provas have a live race at `live_url` |
@@ -462,6 +462,9 @@ watching. The numbers are in `Baja\Api\Resultados\CachePolicy`:
 | `corrida.php` while the event is not finished | 2 |
 | everything else while the event is not finished | 5 |
 | everything once the event is finished | 300 |
+
+"Finished" is `status.finished` of `evento.php` (the event's `finalizado`
+flag) and nothing else; `default_event` plays no part.
 
 So polling faster than N gains nothing. The live race can be up to about
 4 s old: the feed keeps its own answer 2 s in Redis, then the edge 2 s;

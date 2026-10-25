@@ -146,15 +146,21 @@ final class EndpointTest extends TestCase
      * During an event results change whenever a judge saves, so they are
      * kept a few seconds; the live race even less. A finished event no
      * longer changes, so its answers are kept five minutes.
+     *
+     * "Finished" is the event's finalizado flag, and only that. Its
+     * em_andamento flag looks like "running" but only marks the site's
+     * default event (bootstrap.php), so it must change nothing here.
      */
     public function testCacheTimesFollowTheEvent(): void
     {
-        $running = (new Evento())->setFinalizado(false);
-        $finished = (new Evento())->setFinalizado(true);
+        foreach ([false, true] as $default) {
+            $running = (new Evento())->setFinalizado(false)->setEmAndamento($default);
+            $finished = (new Evento())->setFinalizado(true)->setEmAndamento($default);
 
-        $this->assertSame(5, CachePolicy::forEvent($running));
-        $this->assertSame(2, CachePolicy::forRace($running));
-        $this->assertSame(300, CachePolicy::forEvent($finished));
-        $this->assertSame(300, CachePolicy::forRace($finished));
+            $this->assertSame(5, CachePolicy::forEvent($running));
+            $this->assertSame(2, CachePolicy::forRace($running));
+            $this->assertSame(300, CachePolicy::forEvent($finished));
+            $this->assertSame(300, CachePolicy::forRace($finished));
+        }
     }
 }

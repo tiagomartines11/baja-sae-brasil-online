@@ -27,19 +27,29 @@ use PHPUnit\Framework\TestCase;
  * race counted by the lap counting, which has a live endpoint) are the two
  * a broadcast overlay cares about.
  *
+ * Two flags of an event are easy to confuse:
+ *
+ *   finalizado     the event is over and its results are official. This is
+ *                  the only flag that says "live or finished": spoilers and
+ *                  cache times follow it. The API calls it "finished".
+ *   em_andamento   despite its name ("in progress"), only the event the
+ *                  results site opens when no event is named (bootstrap.php);
+ *                  one event has it. The API calls it "default_event". A
+ *                  finished event can have it, a running one can lack it.
+ *
  * Everything here is built in memory: Propel objects can be created and
  * filled without a database.
  */
 final class EventoShapeTest extends TestCase
 {
-    private static function evento(bool $finished = true, bool $spoilers = false): Evento
+    private static function evento(bool $finished = true, bool $spoilers = false, bool $default = false): Evento
     {
         return (new Evento())
             ->setEventoId('26BR')
             ->setNome('31ª Competição Baja SAE BRASIL')
             ->setAno(2026)
             ->setAtivo(true)
-            ->setEmAndamento(!$finished)
+            ->setEmAndamento($default)
             ->setFinalizado($finished)
             ->setSpoilers($spoilers)
             ->setMenu([
@@ -160,7 +170,7 @@ final class EventoShapeTest extends TestCase
         $json = self::shape(self::evento(finished: true, spoilers: true));
 
         // Spoilers stay switched on after the event, but no longer apply.
-        $this->assertSame(['in_progress' => false, 'finished' => true, 'spoilers_active' => false], $json['status']);
+        $this->assertSame(['default_event' => false, 'finished' => true, 'spoilers_active' => false], $json['status']);
         $this->assertSame('26BR', $json['event']['id']);
         $this->assertSame(2026, $json['event']['year']);
         $this->assertTrue($json['event']['listed']);
@@ -172,11 +182,29 @@ final class EventoShapeTest extends TestCase
     {
         $json = self::shape(self::evento(finished: false, spoilers: true));
 
-        $this->assertSame(['in_progress' => true, 'finished' => false, 'spoilers_active' => true], $json['status']);
+        $this->assertSame(['default_event' => false, 'finished' => false, 'spoilers_active' => true], $json['status']);
     }
 
     public function testARunningEventWithoutSpoilers(): void
     {
         $this->assertFalse(self::shape(self::evento(finished: false, spoilers: false))['status']['spoilers_active']);
+    }
+
+    /**
+     * em_andamento is only "the site's default event". It is reported as
+     * such and changes nothing else: a finished default event is still
+     * finished, with no spoilers; a running event that is not the default
+     * still has them.
+     */
+    public function testTheDefaultEventFlagSaysOnlyThat(): void
+    {
+        $this->assertSame(
+            ['default_event' => true, 'finished' => true, 'spoilers_active' => false],
+            self::shape(self::evento(finished: true, spoilers: true, default: true))['status']
+        );
+        $this->assertSame(
+            ['default_event' => false, 'finished' => false, 'spoilers_active' => true],
+            self::shape(self::evento(finished: false, spoilers: true, default: false))['status']
+        );
     }
 }

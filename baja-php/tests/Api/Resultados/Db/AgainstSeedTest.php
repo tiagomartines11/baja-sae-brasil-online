@@ -348,8 +348,9 @@ final class AgainstSeedTest extends TestCase
     {
         $status = self::client(EventoEndpoint::handle(['evt' => '26BR'])->body)['status'];
 
-        // The seed's 26BR is marked both in progress and finished.
-        $this->assertSame(['in_progress' => true, 'finished' => true, 'spoilers_active' => false], $status);
+        // The seed's 26BR is the site's default event (em_andamento) and
+        // finished: the two flags are unrelated.
+        $this->assertSame(['default_event' => true, 'finished' => true, 'spoilers_active' => false], $status);
     }
 
     /** Teams, and only what the documentation lists: nothing about people. */

@@ -15,7 +15,8 @@ use Baja\Results\ResultsConfig;
  *
  * An event's public information, and what else can be fetched about it:
  *
- *   - its status: in progress, finished, spoilers active;
+ *   - its status: whether it is the site's default event, finished,
+ *     spoilers active;
  *   - the resultados of its menu, in menu order, with the menu group each
  *     is under, whether it is a table or a tournament, and its URL here;
  *   - the provas those resultados are made of, with their type, so a
@@ -112,7 +113,10 @@ final class EventoEndpoint
                 'listed' => (bool)$evento->getAtivo(),
             ],
             'status' => [
-                'in_progress' => (bool)$evento->getEmAndamento(),
+                // evento.em_andamento: the event the results site opens when
+                // no event is named (bootstrap.php). It says nothing about
+                // whether the event is running; "finished" does.
+                'default_event' => (bool)$evento->getEmAndamento(),
                 'finished' => (bool)$evento->getFinalizado(),
                 // The builder's own rule, asked for a resultado that names no
                 // authorized users: the public view never has any.
