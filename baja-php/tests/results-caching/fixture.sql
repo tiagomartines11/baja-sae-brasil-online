@@ -9,7 +9,10 @@
 --   em_andamento = 0, ativo = 0    so it never becomes the site's default
 --                                  event or shows in the archive menu
 --   resultado 29NE_SPL             authorized_users: ZZStaffAutorizado only,
---                                  the one user who sees 87.5
+--                                  the one user who sees 87.5. Ranked by the
+--                                  PONTOS variable, so that user also sees the
+--                                  team 1st (a gold medal, class 'ouro'); the
+--                                  public page hides the ranking (R12)
 --
 -- 29NE because a results URL's event prefix must look like an event code
 -- (two digits then BR, SE, SU or NE): /29NE/prova.php?id=29NE_SPL.
@@ -28,7 +31,8 @@ INSERT INTO input (evento_id, prova_id, equipe_id, dados, vars, pontos) VALUES
 
 INSERT INTO resultado (resultado_id, evento_id, nome, inputs, colunas) VALUES
     ('29NE_SPL', '29NE', 'Resultado com spoilers', '| SPL |',
-     '{"authorized_users": ["ZZStaffAutorizado"], "colunas": [
+     '{"authorized_users": ["ZZStaffAutorizado"], "pos": "PONTOS", "colunas": [
+         {"header": "Pos", "val": "Pos"},
          {"header": "#", "val": "EquipeNum"},
          {"header": "Pontos", "val": "$PONTOS", "val_spoilers": "\\"ZZOCULTO\\""}
      ]}');

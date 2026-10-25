@@ -185,11 +185,11 @@ Ajuda::secao('spoilers', 'Spoilers: val_spoilers e authorized_users');
             a coluna <code>Pos</code> mostra &ldquo;–&rdquo; para todas as equipes, sem medalhas, e as linhas ficam na ordem de sempre (não na ordem da classificação).
             Assim a posição não revela o que está escondido, mesmo quando <code>pos</code> é uma variável e não uma coluna.
             Um resultado sem nenhuma coluna com <code>val_spoilers</code> não esconde nada e classifica normalmente.</li>
-        <li><code>authorized_users</code> só vale na <strong>visão de juiz</strong> dos resultados (link &quot;Resultados&quot; da tela do juiz),
-            para quem está logado no fórum com um nome de usuário da lista: essas pessoas veem os valores reais.</li>
+        <li><code>authorized_users</code> só vale na <strong>visão de juiz</strong> dos resultados: a mesma página dos resultados (link &quot;Resultados&quot; da tela do juiz),
+            aberta no navegador em que se fez login na área de juiz. Para quem está logado no fórum com um nome de usuário da lista, ela mostra os valores reais e a classificação.</li>
         <li><code>authorized_users</code> <strong>não tem efeito na página pública</strong>, e isso é intencional: a página pública é a mesma para todo mundo
             (fica em cache), então lá a proteção vale para todos, inclusive para quem está na lista.</li>
-        <li>A visão de juiz e as premiações mostram a classificação normalmente. As premiações nunca escondem spoilers.</li>
+        <li>Um juiz que <strong>não</strong> está na lista vê a página pública, sem a classificação. As premiações nunca escondem spoilers e classificam normalmente.</li>
     </ul>
     <?= Ajuda::exemplo(<<<'JSON'
 {

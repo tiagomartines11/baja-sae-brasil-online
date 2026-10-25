@@ -59,6 +59,12 @@ same() { # name expected actual
     if [[ "$2" == "$3" ]]; then ok "$1"; else bad "$1 (expected \"$2\", got \"$3\")"; fi
 }
 
+same_body() { # name expected-body actual-body; on a difference, shows only the first differing line
+    if [[ "$2" == "$3" ]]; then ok "$1"; return; fi
+    bad "$1 (bodies differ; first difference below)"
+    diff <(printf '%s\n' "$2") <(printf '%s\n' "$3") | grep -m2 '^[<>]' | cut -c1-160
+}
+
 contains() { # name needle haystack
     if grep -qiF -- "$2" <<< "$3"; then ok "$1"; else bad "$1 (did not find \"$2\")"; fi
 }
@@ -185,6 +191,8 @@ PRIVATE="private, no-store"
 # The two things a body can show for car 1's Pontos.
 SPOILER_TEXT="ZZOCULTO"
 REAL_VALUE="87.5"
+# Car 1's position, shown only past the spoilers: 1st, a gold medal.
+MEDAL="class='ouro'"
 
 echo
 echo "--- no staff cookie: the public page, the same for everybody ---"
@@ -194,23 +202,24 @@ same "cacheable while the event is not finished" "$LIVE" "$(header_value Cache-C
 lacks "no cookie is set" "Set-Cookie" "$(headers_of "$anon")"
 contains "the spoiler is shown" "$SPOILER_TEXT" "$(body_of "$anon")"
 lacks "the real value is not" "$REAL_VALUE" "$(body_of "$anon")"
+lacks "nor the ranking (no medal)" "$MEDAL" "$(body_of "$anon")"
 
 guest=$(fetch "$(guest_cookies)" "$PAGE")
-same "a forum guest's cookies change nothing in the body" "$(body_of "$anon")" "$(body_of "$guest")"
+same_body "a forum guest's cookies change nothing in the body" "$(body_of "$anon")" "$(body_of "$guest")"
 same "nor in the header" "$LIVE" "$(header_value Cache-Control "$guest")"
 lacks "and set no cookie" "Set-Cookie" "$(headers_of "$guest")"
 
 # The session is not even read without the staff cookie: an authorized judge
 # who lost the cookie gets the public page too.
 judge_no_staff=$(fetch "$(session_cookies "$SID_AUT")" "$PAGE")
-same "an authorized judge's session without the staff cookie: same body" "$(body_of "$anon")" "$(body_of "$judge_no_staff")"
+same_body "an authorized judge's session without the staff cookie: same body" "$(body_of "$anon")" "$(body_of "$judge_no_staff")"
 same "and public header" "$LIVE" "$(header_value Cache-Control "$judge_no_staff")"
 
 echo
 echo "--- a wrong staff cookie: exactly as no cookie ---"
 for wrong in "wrong" "${STAFF}x" "${STAFF:0:20}"; do
     resp=$(fetch "baja_staff=$wrong; $(session_cookies "$SID_AUT")" "$PAGE")
-    same "baja_staff=${wrong:0:12}...: same body as no cookie" "$(body_of "$anon")" "$(body_of "$resp")"
+    same_body "baja_staff=${wrong:0:12}...: same body as no cookie" "$(body_of "$anon")" "$(body_of "$resp")"
     same "baja_staff=${wrong:0:12}...: public header" "$LIVE" "$(header_value Cache-Control "$resp")"
     lacks "baja_staff=${wrong:0:12}...: no cookie set" "Set-Cookie" "$(headers_of "$resp")"
 done
@@ -231,6 +240,7 @@ resp=$(fetch "baja_staff=$STAFF; $(session_cookies "$SID_AUT")" "$PAGE")
 same "no-store" "$PRIVATE" "$(header_value Cache-Control "$resp")"
 contains "the real value is shown" "$REAL_VALUE" "$(body_of "$resp")"
 lacks "the spoiler is not" "$SPOILER_TEXT" "$(body_of "$resp")"
+contains "and the ranking (a gold medal)" "$MEDAL" "$(body_of "$resp")"
 
 echo
 echo "--- the right staff cookie and a session NOT in authorized_users: public view ---"
@@ -239,6 +249,9 @@ for sid in "$SID_JUI" "$SID_EQU" "$SID_SEM"; do
     same "${sid:0:10}: no-store" "$PRIVATE" "$(header_value Cache-Control "$resp")"
     contains "${sid:0:10}: the spoiler is shown" "$SPOILER_TEXT" "$(body_of "$resp")"
     lacks "${sid:0:10}: the real value is not" "$REAL_VALUE" "$(body_of "$resp")"
+    # Exactly the public page, not a judge's page with the values hidden: a
+    # judge's page would still rank, and the ranking gives away the points.
+    same_body "${sid:0:10}: the very same body as the public page" "$(body_of "$anon")" "$(body_of "$resp")"
 done
 
 echo

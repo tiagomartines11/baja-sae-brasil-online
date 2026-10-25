@@ -34,11 +34,20 @@ if ($config->type == "tournament") { header("Location: torneio.php?id=".rawurlen
 $colunas = $config->columns;
 
 $eventStatus = EventStatus::of(EventoQuery::getCurrentEvent());
-// $user and $_DEV_MODE come from src/bootstrap.php, which sets $user only
-// when it loaded the session.
-$viewer = CachePolicy::hasSession()
-    ? ViewerContext::authorized($eventStatus, $user->data['username'] ?? null, $_DEV_MODE)
-    : ViewerContext::publicView($eventStatus);
+$viewer = ViewerContext::publicView($eventStatus);
+if (CachePolicy::hasSession()) {
+    // $user and $_DEV_MODE come from src/bootstrap.php, which sets $user
+    // only when it loaded the session.
+    $authorized = ViewerContext::authorized($eventStatus, $user->data['username'] ?? null, $_DEV_MODE);
+    // Only a user it lets past the spoilers (in authorized_users, or a
+    // developer) gets the authorized view. Anybody else gets exactly the
+    // public page: the authorized view would still rank them while the
+    // public one hides the ranking (R12), and the ranking can give away
+    // what the spoilers hide.
+    if (!$authorized->hidesSpoilers($config->authorizedUsers)) {
+        $viewer = $authorized;
+    }
+}
 $rows = ResultsBuilder::buildFor($resultado, $config, $viewer)->pageOrder();
 
 Template::printHeader($resultado->getNome());
