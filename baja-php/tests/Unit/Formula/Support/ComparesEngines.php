@@ -75,12 +75,16 @@ trait ComparesEngines
      * process dies. SafeEngine, on the other hand, must raise a normal
      * error: one empty cell, and the page goes on.
      *
+     * The process gets the site's memory limit, PHP's default of 128 MB
+     * (baja-infra sets none), whatever this machine's PHP says: CI's has no
+     * limit at all, and there str_pad('', 2000000000) simply succeeds.
+     *
      * @return string the fatal error PHP printed
      */
     protected function assertEvalDiesButSafeEngineFails(string $formula): string
     {
         $code = '@eval(' . var_export('$formula = ' . $formula . ';', true) . '); echo "still alive";';
-        $output = (string)shell_exec(escapeshellarg(PHP_BINARY) . ' -d display_errors=stdout -r ' . escapeshellarg($code) . ' 2>&1');
+        $output = (string)shell_exec(escapeshellarg(PHP_BINARY) . ' -d display_errors=stdout -d memory_limit=128M -r ' . escapeshellarg($code) . ' 2>&1');
         $this->assertStringNotContainsString('still alive', $output, 'eval() of ' . $formula . ' should kill PHP.');
         $this->assertStringContainsString('Fatal error', $output);
 
