@@ -300,6 +300,18 @@ jobs:
   infra:
     name: Infrastructure (baja-infra)
     runs-on: ubuntu-latest
+    # Throwaway, for the restore and floor tests in run-tests.sh: they make
+    # and drop their own fake baja_resultados.
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -360,7 +372,15 @@ jobs:
       # The backup scripts on made-up files with a fake Shared Drive: file
       # set and erasure log round trips, the manifest, manifest-last, the
       # event archives. Needs age; nothing else beyond the runner's tools.
+      # With the MySQL service above: restore-db.sh (BAJAAPP-4) and the
+      # verifier's participantes floor. TEST_MYSQL_REQUIRED=1 makes a
+      # skipped MySQL test a failure.
       - name: Backup script tests
+        env:
+          TEST_MYSQL_HOST: 127.0.0.1
+          TEST_MYSQL_PORT: '3306'
+          TEST_MYSQL_ROOT_PASSWORD: root
+          TEST_MYSQL_REQUIRED: '1'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq age
