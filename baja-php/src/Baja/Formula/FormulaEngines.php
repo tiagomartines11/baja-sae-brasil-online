@@ -12,6 +12,8 @@ use Baja\Util\Env;
  *
  *   eval    (the default, also when unset) EvalEngine, as the site always ran
  *   safe    SafeEngine: no eval(); only what formulas need is allowed
+ *   shadow  ShadowEngine: both; pages get eval's answer, and every formula
+ *           where SafeEngine would differ is logged
  *
  * Anything else is a mistake in .env: it is logged, and eval is used.
  */
@@ -19,6 +21,7 @@ final class FormulaEngines
 {
     public const EVAL = 'eval';
     public const SAFE = 'safe';
+    public const SHADOW = 'shadow';
     public const SETTING = 'FORMULA_ENGINE';
 
     /** The engine the setting asks for, in this environment. */
@@ -39,13 +42,14 @@ final class FormulaEngines
         return match ($name) {
             '', self::EVAL => new EvalEngine(),
             self::SAFE => new SafeEngine(),
+            self::SHADOW => new ShadowEngine(new EvalEngine(), new SafeEngine(), ShadowEngine::logToApp()),
             default => self::unknown($name, $warn ?? Logger::warning(...)),
         };
     }
 
     private static function unknown(string $name, callable $warn): FormulaEngine
     {
-        $warn('Unknown ' . self::SETTING . ', using eval', ['value' => $name, 'expected' => [self::EVAL, self::SAFE]]);
+        $warn('Unknown ' . self::SETTING . ', using eval', ['value' => $name, 'expected' => [self::EVAL, self::SAFE, self::SHADOW]]);
         return new EvalEngine();
     }
 }

@@ -6,7 +6,10 @@ namespace Baja\Tests\Unit\Formula;
 use Baja\Formula\EvalEngine;
 use Baja\Formula\FormulaEngine;
 use Baja\Formula\FormulaEngines;
+use Baja\Formula\SafeEngine;
+use Baja\Formula\ShadowEngine;
 use Baja\Model\Input;
+use Baja\ResultsCheck\FormulaErrors;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -46,6 +49,47 @@ final class EngineSettingTest extends TestCase
         $this->assertInstanceOf(EvalEngine::class, FormulaEngines::named(null));
         $this->assertInstanceOf(EvalEngine::class, FormulaEngines::named(''));
         $this->assertInstanceOf(EvalEngine::class, FormulaEngines::named(' EVAL '));
+    }
+
+    /** "safe" and "shadow" pick the other two engines. */
+    public function testSafeAndShadow(): void
+    {
+        $this->assertInstanceOf(SafeEngine::class, FormulaEngines::named('safe'));
+        $this->assertInstanceOf(ShadowEngine::class, FormulaEngines::named('Shadow'));
+    }
+
+    /**
+     * The config check (scripts/check-results-configs.php) listens to the
+     * errors formulas raise (ResultsCheck\FormulaErrors). That works with
+     * every engine: each says what went wrong in its own words, and in
+     * shadow mode the check hears eval()'s, as the page gets eval()'s
+     * answer.
+     */
+    public function testTheConfigCheckHearsErrorsWithEveryEngine(): void
+    {
+        $heard = [];
+        foreach (['eval', 'safe', 'shadow'] as $setting) {
+            Input::setFormulaEngine(FormulaEngines::named($setting));
+            [$value, $errors] = FormulaErrors::during(fn() => [
+                Input::solveFormula(['X' => 1.5], "'<b>' + \$X"),
+                Input::solveFormula([], 'max([])'),
+                Input::solveFormula([], 'ROUND('),
+            ]);
+            $this->assertSame([null, null, null], $value, $setting);
+            $heard[$setting] = array_map(fn($error) => $error->message, $errors);
+        }
+
+        $this->assertSame([
+            'TypeError: Unsupported operand types: string + float',
+            'ValueError: max(): Argument #1 ($value) must contain at least one element',
+            'ParseError: syntax error, unexpected token ";"',
+        ], $heard['eval']);
+        $this->assertSame([
+            'TypeError: Unsupported operand types: string + float',
+            'ValueError: max(): Argument #1 ($value) must contain at least one element',
+            'Baja\Formula\Syntax\FormulaSyntaxError: unexpected end of the formula, at character 7',
+        ], $heard['safe']);
+        $this->assertSame($heard['eval'], $heard['shadow']);
     }
 
     /** A typo in .env is reported, and the site keeps the default rather than breaking. */

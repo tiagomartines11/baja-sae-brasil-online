@@ -180,6 +180,9 @@ services:
       API_CORS_ORIGINS: ${API_CORS_ORIGINS}
       STORAGE_ENCRYPTION_KEY: ${STORAGE_ENCRYPTION_KEY}
       LOG_LEVEL: ${LOG_LEVEL}
+      # Which engine works out prova and resultado formulas: eval (blank, the
+      # default), safe or shadow. See .env.example and docs/formula-engine.md.
+      FORMULA_ENGINE: ${FORMULA_ENGINE:-}
       # Text-to-speech for timer sounds. Unset hides the feature.
       TTS_URL: http://tts:5000
     volumes:
