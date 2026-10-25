@@ -11,10 +11,11 @@ use Baja\Site\CleanUrl;
 $_evento = '19SU';
 $_prova = '19SU_END';
 
-// A public page, cached by Cloudflare (docs/results-caching.md). It reads no
-// query parameter, so any is dropped by a redirect.
+// Race data, cached by Cloudflare for seconds while the event runs
+// (docs/results-caching.md). It reads no query parameter, so any is dropped
+// by a redirect.
 CleanUrl::enforce([]);
-CachePolicy::send(EventoQuery::create()->findOneByEventoId($_evento));
+CachePolicy::sendRaceData(EventoQuery::create()->findOneByEventoId($_evento));
 
 $resultado = ResultadoQuery::create()->filterByEventoId($_evento)->findPk($_prova);
 if (!$resultado) { header("Location: index.php"); exit; }

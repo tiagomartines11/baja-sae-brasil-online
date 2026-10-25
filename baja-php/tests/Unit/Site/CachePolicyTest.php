@@ -63,6 +63,33 @@ final class CachePolicyTest extends TestCase
         $this->assertSame(self::LIVE, CachePolicy::publicHeader(inProgress: true, finished: true));
     }
 
+    // --- Race data: overlaydata.php and enduro_dump.php ------------------------
+    //
+    // The broadcast overlays read lap counts every second or two, so while
+    // the event runs these get seconds, not the results pages' 10 + 15.
+    // Once it is over they are as static as any result: the long cache.
+
+    private const RACE_DATA = 'public, max-age=' . CachePolicy::RACE_DATA_BROWSER_SECONDS
+        . ', s-maxage=' . CachePolicy::RACE_DATA_EDGE_SECONDS;
+
+    public function testRaceDataIsCachedForSecondsWhileTheEventRuns(): void
+    {
+        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeader(inProgress: true, finished: false));
+        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeader(inProgress: false, finished: false));
+    }
+
+    /** Same rule as the other pages: both flags on counts as running. */
+    public function testRaceDataWithBothFlagsOnCountsAsRunning(): void
+    {
+        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeader(inProgress: true, finished: true));
+        $this->assertSame(self::RACE_DATA, CachePolicy::raceDataHeaderFor(null));
+    }
+
+    public function testRaceDataOfAFinishedEventGetsTheFinishedCache(): void
+    {
+        $this->assertSame(self::FINISHED, CachePolicy::raceDataHeader(inProgress: false, finished: true));
+    }
+
     /** No event found (an unknown event code in the URL): short cache. */
     public function testNoEventIsCachedBriefly(): void
     {
@@ -83,6 +110,7 @@ final class CachePolicyTest extends TestCase
     {
         $this->assertSame('public, max-age=10, s-maxage=15', CachePolicy::publicHeader(true, false));
         $this->assertSame('public, max-age=300, s-maxage=3600', CachePolicy::publicHeader(false, true));
+        $this->assertSame('public, max-age=1, s-maxage=2', CachePolicy::raceDataHeader(true, false));
     }
 
     /**

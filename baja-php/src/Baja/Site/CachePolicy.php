@@ -43,6 +43,16 @@ final class CachePolicy
     public const FINISHED_BROWSER_SECONDS = 300;
     public const FINISHED_EDGE_SECONDS = 3600;
 
+    /**
+     * Race data (overlaydata.php, enduro_dump.php): lap counts read by the
+     * broadcast overlays every second or two while a race runs, so a delay
+     * of a results page's 25 s would show on screen. Like contagem_feed.php,
+     * every viewer in the same two seconds shares one stored answer. Once
+     * the event is finished, the same long cache as the other pages.
+     */
+    public const RACE_DATA_BROWSER_SECONDS = 1;
+    public const RACE_DATA_EDGE_SECONDS = 2;
+
     /** For every response that was produced with a forum session. */
     public const PRIVATE = 'private, no-store';
 
@@ -56,10 +66,19 @@ final class CachePolicy
      */
     public static function publicHeader(bool $inProgress, bool $finished): string
     {
-        if ($finished && !$inProgress) {
+        if (self::isOver($inProgress, $finished)) {
             return self::header(self::FINISHED_BROWSER_SECONDS, self::FINISHED_EDGE_SECONDS);
         }
         return self::header(self::LIVE_BROWSER_SECONDS, self::LIVE_EDGE_SECONDS);
+    }
+
+    /** Like publicHeader(), for race data: the race-data cache until the event is over. */
+    public static function raceDataHeader(bool $inProgress, bool $finished): string
+    {
+        if (self::isOver($inProgress, $finished)) {
+            return self::header(self::FINISHED_BROWSER_SECONDS, self::FINISHED_EDGE_SECONDS);
+        }
+        return self::header(self::RACE_DATA_BROWSER_SECONDS, self::RACE_DATA_EDGE_SECONDS);
     }
 
     /** The public header for this event; no event (unknown id) is treated as live. */
@@ -69,6 +88,15 @@ final class CachePolicy
             return self::publicHeader(true, false);
         }
         return self::publicHeader((bool)$evento->getEmAndamento(), (bool)$evento->getFinalizado());
+    }
+
+    /** The race-data header for this event; no event is treated as live. */
+    public static function raceDataHeaderFor(?Evento $evento): string
+    {
+        if ($evento === null) {
+            return self::raceDataHeader(true, false);
+        }
+        return self::raceDataHeader((bool)$evento->getEmAndamento(), (bool)$evento->getFinalizado());
     }
 
     /**
@@ -103,6 +131,12 @@ final class CachePolicy
         self::sendPublicUnlessSession(self::publicHeaderFor($evento));
     }
 
+    /** Like send(), for the race-data pages (overlaydata.php, enduro_dump.php). */
+    public static function sendRaceData(?Evento $evento): void
+    {
+        self::sendPublicUnlessSession(self::raceDataHeaderFor($evento));
+    }
+
     /** Like send(), for a redirect to a clean URL. */
     public static function sendForRedirect(): void
     {
@@ -118,6 +152,15 @@ final class CachePolicy
     private static function sendPublicUnlessSession(string $public): void
     {
         header('Cache-Control: ' . (self::hasSession() ? self::PRIVATE : $public));
+    }
+
+    /**
+     * Only an event that is finished and not in progress counts as over;
+     * both flags on (a mistake in the event's settings) counts as live.
+     */
+    private static function isOver(bool $inProgress, bool $finished): bool
+    {
+        return $finished && !$inProgress;
     }
 
     private static function header(int $browserSeconds, int $edgeSeconds): string

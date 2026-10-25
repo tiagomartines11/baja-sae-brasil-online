@@ -278,6 +278,10 @@ resp=$(fetch "" "$RESULTS/22BR/prova.php?id=22BR_GER")
 same "22BR is finished: the long cache" "$FINISHED" "$(header_value Cache-Control "$resp")"
 resp=$(fetch "" "$RESULTS/24SU/torneio.php?id=24SU_SPR")
 same "torneio.php goes by its resultado's event (24SU, finished)" "$FINISHED" "$(header_value Cache-Control "$resp")"
+resp=$(fetch "" "$RESULTS/overlaydata.php?evt=29NE&mode=json")
+same "race data while the event runs: seconds" "public, max-age=1, s-maxage=2" "$(header_value Cache-Control "$resp")"
+resp=$(fetch "" "$RESULTS/overlaydata.php?evt=22BR&mode=json")
+same "race data of a finished event: the long cache" "$FINISHED" "$(header_value Cache-Control "$resp")"
 
 echo
 echo "--- clean URLs: tracking tags and junk are redirected away ---"
