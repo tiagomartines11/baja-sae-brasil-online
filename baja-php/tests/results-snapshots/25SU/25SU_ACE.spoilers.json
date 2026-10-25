@@ -1,0 +1,91 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "25SU",
+    "id": "25SU_ACE",
+    "spoilers": true,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Aceleração",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "1",
+                    "Equipe Escola": "Procobaja <br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Cornélio Procópio</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "2",
+                    "Equipe Escola": "SAGUI Baja<br><i class=\"nomeEscola\">Universidade Federal do Paraná</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "3",
+                    "Equipe Escola": "Gralha Azul<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Ponta Grossa</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "4",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">FAHOR Faculdade Horizontina </i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "6",
+                    "Equipe Escola": "Pelznickel UNIFEBE<br><i class=\"nomeEscola\">Centro Universitário da Fundação Educacional de Brusque - UNIFEBE</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "7",
+                    "Equipe Escola": "Imperador<br><i class=\"nomeEscola\">Universidade Tecnológica Federal do Paraná - Curitiba</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "8",
+                    "Equipe Escola": "BajaSATC<br><i class=\"nomeEscola\">Associação Beneficente da Indústria Carbonífera de Santa Catarina - SATC</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "10",
+                    "Equipe Escola": "Coyote Baja<br><i class=\"nomeEscola\">Universidade de Caxias do Sul - Caxias do Sul</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "13",
+                    "Equipe Escola": "Bombaja UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                },
+                {
+                    "[img trofeu.png]": "–",
+                    "#": "14",
+                    "Equipe Escola": "Baja Univates Team<br><i class=\"nomeEscola\">Universidade do Vale do Taquari</i>",
+                    "Aceleração": "SPOILERS",
+                    "Pontos": "SPOILERS"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]<br><span style=\"color: yellow\">Sujeito a Alterações sem Prévio Aviso</span>"
+        }
+    ],
+    "error": null
+}

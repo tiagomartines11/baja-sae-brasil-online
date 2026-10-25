@@ -1,0 +1,482 @@
+{
+    "page": "resultados/torneio.php",
+    "evento": "24SU",
+    "id": "24SU_SPR",
+    "spoilers": false,
+    "rounds": [
+        {
+            "round": "Oitavas de Final",
+            "matches": [
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">1 - Baja de Galpão</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">11 - Procobaja</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">16 - Baja SATC</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Pato Baja</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">2 - Baja Univates</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">4 - Cataratas</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">6 - Imperador</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">7 - Londribaja</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">3 - UFSM</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">13 - Sinuelo</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">14 - Tchê</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Quartas de final",
+            "matches": [
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">1 - Baja de Galpão</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">16 - Baja SATC</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">1</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Pato Baja</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">2 - Baja Univates</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">4 - Cataratas</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">6 - Imperador</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">3 - UFSM</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">14 - Tchê</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Semifinais",
+            "matches": [
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">1 - Baja de Galpão</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Pato Baja</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">1</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">6 - Imperador</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">3 - UFSM</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Final",
+            "matches": [
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">1 - Baja de Galpão</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">6 - Imperador</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">1</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Disputa 3° lugar",
+            "matches": [
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Pato Baja</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">3 - UFSM</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        }
+    ],
+    "error": null
+}

@@ -19,6 +19,10 @@ $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
 $novo = false;
 
+// Set when the submitted columns are not valid JSON: nothing is saved and
+// the form is shown again with the text as typed and this message.
+$erroJson = null;
+
 if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
     $novo = true;
 
@@ -29,15 +33,20 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             $resultado = ResultadoQuery::create()->filterByEventoId($currentEventId)->findOneByResultadoId($_POST['resultado_id']);
             if ($resultado) { header("Location: resultado.php?id=".$_POST['resultado_id']); exit; }
 
-            $resultado = new Resultado();
-            $resultado->setEventoId($currentEventId);
-            $resultado->setResultadoId($_POST['resultado_id']);
-            $resultado->setNome($_POST['nome']);
-            $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'] ?? '')));
-            $resultado->setColunas(json_decode($_POST['colunas'] ?? ''));
-            $resultado->save();
+            $colunas = ConfigJson::decodificar($_POST['colunas']);
+            if (!$colunas->valido()) {
+                $erroJson = $colunas->erro;
+            } else {
+                $resultado = new Resultado();
+                $resultado->setEventoId($currentEventId);
+                $resultado->setResultadoId($_POST['resultado_id']);
+                $resultado->setNome($_POST['nome']);
+                $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'] ?? '')));
+                $resultado->setColunas($colunas->valor);
+                $resultado->save();
 
-            header("Location: admin_resultados.php"); exit;
+                header("Location: admin_resultados.php"); exit;
+            }
         }
     }
 
@@ -68,12 +77,17 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
     }
 
     if (@$_REQUEST['act'] == '💾') {
-        if (isset($_POST['colunas']) && $_POST['colunas'] != '' && isset($_POST['novoNomeadoNome']) && $_POST['novoNomeadoNome'] != '') {
-            $backups[$_POST['novoNomeadoNome']] = json_decode($_POST['colunas']);
-            $resultado->setColunasBackup(json_encode($backups));
-            $resultado->save();
+        $colunas = ConfigJson::decodificar($_POST['colunas'] ?? '');
+        if (!$colunas->valido()) {
+            $erroJson = $colunas->erro;
+        } else {
+            if (isset($_POST['colunas']) && $_POST['colunas'] != '' && isset($_POST['novoNomeadoNome']) && $_POST['novoNomeadoNome'] != '') {
+                $backups[$_POST['novoNomeadoNome']] = $colunas->valor;
+                $resultado->setColunasBackup(json_encode($backups));
+                $resultado->save();
+            }
+            header("Location: resultado.php?id=".$_page); exit;
         }
-        header("Location: resultado.php?id=".$_page); exit;
     }
 
     $bk1 = @$backups['-1'];
@@ -83,20 +97,25 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
     $bk5 = @$backups['-5'];
 
     if (@$_REQUEST['act'] == 'Atualizar') {
-        if ($resultado->getColunas() != json_decode($_POST['colunas'])) {
-            $backups['-5'] = $bk4;        
-            $backups['-4'] = $bk3;
-            $backups['-3'] = $bk2;
-            $backups['-2'] = $bk1;
-            $backups['-1'] = $resultado->getColunas();
-            $resultado->setColunasBackup(json_encode($backups));
-        }
-        $resultado->setNome($_POST['nome']);
-        $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'] ?? '')));
-        $resultado->setColunas(json_decode($_POST['colunas'] ?? ''));
-        $resultado->save();
+        $colunas = ConfigJson::decodificar($_POST['colunas'] ?? '');
+        if (!$colunas->valido()) {
+            $erroJson = $colunas->erro;
+        } else {
+            if ($resultado->getColunas() != $colunas->valor) {
+                $backups['-5'] = $bk4;
+                $backups['-4'] = $bk3;
+                $backups['-3'] = $bk2;
+                $backups['-2'] = $bk1;
+                $backups['-1'] = $resultado->getColunas();
+                $resultado->setColunasBackup(json_encode($backups));
+            }
+            $resultado->setNome($_POST['nome']);
+            $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'] ?? '')));
+            $resultado->setColunas($colunas->valor);
+            $resultado->save();
 
-        header("Location: resultado.php?id=".$_page); exit;
+            header("Location: resultado.php?id=".$_page); exit;
+        }
     }
 
     if (@$_REQUEST['act'] == 'Deletar Resultado') {
@@ -127,6 +146,11 @@ Template::printHeader("Detalhes de Resultado", false);
                 </tr>
             </thead>
             <tbody>
+                <?php if ($erroJson !== null) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Colunas não salvas: o JSON é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto abaixo e salve de novo.</td>
+                </tr>
+                <?php } ?>
                 <tr>
                     <td>Evento</td>
                     <td><input style="width:700px;" type="text" name="evento_id" disabled value="<?= $currentEventId ?>"/></td>
@@ -177,8 +201,13 @@ Template::printHeader("Detalhes de Resultado", false);
                 </tr>
                 <tr>
                 <td><textarea style="width:700px;min-height:600px;" name="colunas" id="colunas" <?= $novo?'':'oninput="resetStyles();"' ?>><?php
-                    $colunas = $novo ? null : $resultado->getColunas();
-                    echo $colunas === null ? '' : json_encode($colunas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    if ($erroJson !== null) {
+                        // Give back exactly what was typed, so the fix is one edit away
+                        echo htmlspecialchars($_POST['colunas'] ?? '');
+                    } else {
+                        $colunas = $novo ? null : $resultado->getColunas();
+                        echo $colunas === null ? '' : json_encode($colunas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    }
                 ?></textarea></td>
                 </tr>
             </tbody>

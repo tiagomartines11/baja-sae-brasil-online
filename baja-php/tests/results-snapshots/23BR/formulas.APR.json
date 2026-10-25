@@ -1,0 +1,418 @@
+{
+    "evento": "23BR",
+    "prova": "APR",
+    "nome": "Apresentação de Projeto",
+    "type": "normal",
+    "stored_totals": {
+        "APRMMcom": 0,
+        "APRMMmax": 53.025,
+        "APRMMmin": 14.25,
+        "APR_SFMMcom": 0,
+        "APR_SFMMmax": 52.75,
+        "APR_SFMMmin": 14.25
+    },
+    "inputs": [
+        {
+            "equipe": 6,
+            "vars": {
+                "APR_PARC": 45.25,
+                "APR_PARC_SF": 45.25,
+                "APRMM": 45.25,
+                "APR_SFMM": 45.25
+            },
+            "pontos": {
+                "APRPTS": 136.53936822253655,
+                "APRPTS_SF": 136.53936822253655
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "APR_PARC": 28.75,
+                "APR_PARC_SF": 28.75,
+                "APRMM": 28.75,
+                "APR_SFMM": 28.75
+            },
+            "pontos": {
+                "APRPTS": 86.75153229608675,
+                "APRPTS_SF": 86.75153229608675
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "APR_PARC": 40.2,
+                "APR_PARC_SF": 40,
+                "APRMM": 40.2,
+                "APR_SFMM": 40
+            },
+            "pontos": {
+                "APRPTS": 121.30127298444131,
+                "APRPTS_SF": 120.6977840641207
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "APR_PARC": 44.8,
+                "APR_PARC_SF": 44.5,
+                "APRMM": 44.8,
+                "APR_SFMM": 44.5
+            },
+            "pontos": {
+                "APRPTS": 135.1815181518152,
+                "APRPTS_SF": 134.27628477133428
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "APR_PARC": 28.5,
+                "APR_PARC_SF": 28.5,
+                "APRMM": 28.5,
+                "APR_SFMM": 28.5
+            },
+            "pontos": {
+                "APRPTS": 85.997171145686,
+                "APRPTS_SF": 85.997171145686
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "APR_PARC": 23.65,
+                "APR_PARC_SF": 22.75,
+                "APRMM": 23.65,
+                "APR_SFMM": 22.75
+            },
+            "pontos": {
+                "APRPTS": 71.36256482791137,
+                "APRPTS_SF": 68.64686468646865
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "APR_PARC": 37.75,
+                "APR_PARC_SF": 37.75,
+                "APRMM": 37.75,
+                "APR_SFMM": 37.75
+            },
+            "pontos": {
+                "APRPTS": 113.90853371051391,
+                "APRPTS_SF": 113.90853371051391
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "APR_PARC": 35,
+                "APR_PARC_SF": 35,
+                "APRMM": 35,
+                "APR_SFMM": 35
+            },
+            "pontos": {
+                "APRPTS": 105.61056105610561,
+                "APRPTS_SF": 105.61056105610561
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "APR_PARC": 43.8,
+                "APR_PARC_SF": 42.75,
+                "APRMM": 43.8,
+                "APR_SFMM": 42.75
+            },
+            "pontos": {
+                "APRPTS": 132.16407355021218,
+                "APRPTS_SF": 128.995756718529
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "APR_PARC": 14.25,
+                "APR_PARC_SF": 14.25,
+                "APRMM": 14.25,
+                "APR_SFMM": 14.25
+            },
+            "pontos": {
+                "APRPTS": 42.998585572843,
+                "APRPTS_SF": 42.998585572843
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "APR_PARC": 20,
+                "APR_PARC_SF": 20,
+                "APRMM": 20,
+                "APR_SFMM": 20
+            },
+            "pontos": {
+                "APRPTS": 60.34889203206035,
+                "APRPTS_SF": 60.34889203206035
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "APR_PARC": 40.25,
+                "APR_PARC_SF": 40.25,
+                "APRMM": 40.25,
+                "APR_SFMM": 40.25
+            },
+            "pontos": {
+                "APRPTS": 121.45214521452145,
+                "APRPTS_SF": 121.45214521452147
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "APR_PARC": 32.5,
+                "APR_PARC_SF": 32.5,
+                "APRMM": 32.5,
+                "APR_SFMM": 32.5
+            },
+            "pontos": {
+                "APRPTS": 98.06694955209807,
+                "APRPTS_SF": 98.06694955209807
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "APR_PARC": 40.19,
+                "APR_PARC_SF": 39.25,
+                "APRMM": 40.19,
+                "APR_SFMM": 39.25
+            },
+            "pontos": {
+                "APRPTS": 121.27109853842526,
+                "APRPTS_SF": 118.43470061291843
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "APR_PARC": 29.5,
+                "APR_PARC_SF": 29.5,
+                "APRMM": 29.5,
+                "APR_SFMM": 29.5
+            },
+            "pontos": {
+                "APRPTS": 89.01461574728901,
+                "APRPTS_SF": 89.01461574728901
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "APR_PARC": 53.025,
+                "APR_PARC_SF": 52.75,
+                "APRMM": 53.025,
+                "APR_SFMM": 52.75
+            },
+            "pontos": {
+                "APRPTS": 160,
+                "APRPTS_SF": 159.17020273455918
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "APR_PARC": 37,
+                "APR_PARC_SF": 37,
+                "APRMM": 37,
+                "APR_SFMM": 37
+            },
+            "pontos": {
+                "APRPTS": 111.64545025931164,
+                "APRPTS_SF": 111.64545025931164
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "APR_PARC": 44,
+                "APR_PARC_SF": 44,
+                "APRMM": 44,
+                "APR_SFMM": 44
+            },
+            "pontos": {
+                "APRPTS": 132.76756247053277,
+                "APRPTS_SF": 132.76756247053277
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "APR_PARC": 41.75,
+                "APR_PARC_SF": 41.75,
+                "APRMM": 41.75,
+                "APR_SFMM": 41.75
+            },
+            "pontos": {
+                "APRPTS": 125.97831211692598,
+                "APRPTS_SF": 125.97831211692598
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "APR_PARC": 19.75,
+                "APR_PARC_SF": 19.75,
+                "APRMM": 19.75,
+                "APR_SFMM": 19.75
+            },
+            "pontos": {
+                "APRPTS": 59.594530881659594,
+                "APRPTS_SF": 59.594530881659594
+            }
+        },
+        {
+            "equipe": 46,
+            "vars": {
+                "APR_PARC": 40.75,
+                "APR_PARC_SF": 41,
+                "APRMM": 40.75,
+                "APR_SFMM": 41
+            },
+            "pontos": {
+                "APRPTS": 122.96086751532296,
+                "APRPTS_SF": 123.7152286657237
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "APR_PARC": 23,
+                "APR_PARC_SF": 23,
+                "APRMM": 23,
+                "APR_SFMM": 23
+            },
+            "pontos": {
+                "APRPTS": 69.4012258368694,
+                "APRPTS_SF": 69.4012258368694
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "APR_PARC": 28,
+                "APR_PARC_SF": 28,
+                "APRMM": 28,
+                "APR_SFMM": 28
+            },
+            "pontos": {
+                "APRPTS": 84.48844884488449,
+                "APRPTS_SF": 84.48844884488449
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "APR_PARC": 51.25,
+                "APR_PARC_SF": 52.25,
+                "APRMM": 51.25,
+                "APR_SFMM": 52.25
+            },
+            "pontos": {
+                "APRPTS": 154.64403583215466,
+                "APRPTS_SF": 157.66148043375765
+            }
+        },
+        {
+            "equipe": 52,
+            "vars": {
+                "APR_PARC": 33.25,
+                "APR_PARC_SF": 33.25,
+                "APRMM": 33.25,
+                "APR_SFMM": 33.25
+            },
+            "pontos": {
+                "APRPTS": 100.33003300330033,
+                "APRPTS_SF": 100.33003300330033
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": {
+                "APR_PARC": 48.4,
+                "APR_PARC_SF": 48.75,
+                "APRMM": 48.4,
+                "APR_SFMM": 48.75
+            },
+            "pontos": {
+                "APRPTS": 146.04431871758604,
+                "APRPTS_SF": 147.10042432814708
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": {
+                "APR_PARC": 34.25,
+                "APR_PARC_SF": 34.25,
+                "APRMM": 34.25,
+                "APR_SFMM": 34.25
+            },
+            "pontos": {
+                "APRPTS": 103.34747760490335,
+                "APRPTS_SF": 103.34747760490335
+            }
+        },
+        {
+            "equipe": 56,
+            "vars": {
+                "APR_PARC": 34,
+                "APR_PARC_SF": 34,
+                "APRMM": 34,
+                "APR_SFMM": 34
+            },
+            "pontos": {
+                "APRPTS": 102.59311645450259,
+                "APRPTS_SF": 102.59311645450259
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": {
+                "APR_PARC": 48.25,
+                "APR_PARC_SF": 48.5,
+                "APRMM": 48.25,
+                "APR_SFMM": 48.5
+            },
+            "pontos": {
+                "APRPTS": 145.5917020273456,
+                "APRPTS_SF": 146.34606317774634
+            }
+        },
+        {
+            "equipe": 64,
+            "vars": {
+                "APR_PARC": 29.75,
+                "APR_PARC_SF": 29.75,
+                "APRMM": 29.75,
+                "APR_SFMM": 29.75
+            },
+            "pontos": {
+                "APRPTS": 89.76897689768977,
+                "APRPTS_SF": 89.76897689768977
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [
+            14,
+            15
+        ],
+        "pontos": [
+            14,
+            15
+        ]
+    },
+    "recompute_error": null,
+    "error": null
+}

@@ -1,0 +1,152 @@
+{
+    "evento": "24NE",
+    "prova": "SUS",
+    "nome": "Suspensão",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "TotalOBS": 7,
+                "Ncompletaram": 0,
+                "Nparticiparam": 8
+            },
+            "pontos": {
+                "OBS": 7,
+                "Pconclusao": null,
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "TotalOBS": 7,
+                "Ncompletaram": 0,
+                "Nparticiparam": 8
+            },
+            "pontos": {
+                "OBS": 6,
+                "Pconclusao": null,
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "TotalOBS": 7,
+                "Ncompletaram": 0,
+                "Nparticiparam": 8
+            },
+            "pontos": {
+                "OBS": 7,
+                "Pconclusao": null,
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "TotalOBS": 7,
+                "Ncompletaram": 0,
+                "Nparticiparam": 8
+            },
+            "pontos": {
+                "OBS": 5,
+                "Pconclusao": null,
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "TotalOBS": 7,
+                "Ncompletaram": 0,
+                "Nparticiparam": 8
+            },
+            "pontos": {
+                "OBS": 4,
+                "Pconclusao": null,
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "TotalOBS": 7,
+                "Ncompletaram": 0,
+                "Nparticiparam": 8
+            },
+            "pontos": {
+                "OBS": 4,
+                "Pconclusao": null,
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "TotalOBS": 7,
+                "Ncompletaram": 0,
+                "Nparticiparam": 8
+            },
+            "pontos": {
+                "OBS": 0,
+                "Pconclusao": null,
+                "SUSPTS": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "ARROBA": 0.8,
+                "TotalOBS": 7,
+                "Ncompletaram": 0,
+                "Nparticiparam": 8
+            },
+            "pontos": {
+                "OBS": 6,
+                "Pconclusao": null,
+                "SUSPTS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": [
+            1,
+            2,
+            3,
+            6,
+            8,
+            9,
+            13,
+            14
+        ]
+    },
+    "recompute_error": null,
+    "error": null
+}

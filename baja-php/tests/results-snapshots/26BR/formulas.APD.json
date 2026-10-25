@@ -1,0 +1,459 @@
+{
+    "evento": "26BR",
+    "prova": "APD",
+    "nome": "Aval. Proj. Dinâmico",
+    "type": "normal",
+    "stored_totals": {
+        "APDcom": 0,
+        "APDmax": 17.6,
+        "APDmin": 4
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "APDPTSV": 12.35,
+                "APD": 12.35
+            },
+            "pontos": {
+                "APDPOR": 61.75,
+                "APDPTS": 14.03
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "APDPTSV": 12.6,
+                "APD": 12.6
+            },
+            "pontos": {
+                "APDPOR": 63,
+                "APDPTS": 14.32
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "APDPTSV": 10.8,
+                "APD": 10.8
+            },
+            "pontos": {
+                "APDPOR": 54,
+                "APDPTS": 12.27
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "APDPTSV": 15.25,
+                "APD": 15.25
+            },
+            "pontos": {
+                "APDPOR": 76.25,
+                "APDPTS": 17.33
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "APDPTSV": 15.6,
+                "APD": 15.6
+            },
+            "pontos": {
+                "APDPOR": 78,
+                "APDPTS": 17.73
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "APDPTSV": 15.65,
+                "APD": 15.65
+            },
+            "pontos": {
+                "APDPOR": 78.25,
+                "APDPTS": 17.78
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "APDPTSV": 11.2,
+                "APD": 11.2
+            },
+            "pontos": {
+                "APDPOR": 56,
+                "APDPTS": 12.73
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "APDPTSV": 10.8,
+                "APD": 10.8
+            },
+            "pontos": {
+                "APDPOR": 54,
+                "APDPTS": 12.27
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "APDPTSV": 17.6,
+                "APD": 17.6
+            },
+            "pontos": {
+                "APDPOR": 88,
+                "APDPTS": 20
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "APDPTSV": 15.25,
+                "APD": 15.25
+            },
+            "pontos": {
+                "APDPOR": 76.25,
+                "APDPTS": 17.33
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "APDPTSV": 16.2,
+                "APD": 16.2
+            },
+            "pontos": {
+                "APDPOR": 81,
+                "APDPTS": 18.41
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "APDPTSV": 16.35,
+                "APD": 16.35
+            },
+            "pontos": {
+                "APDPOR": 81.75,
+                "APDPTS": 18.58
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "APDPTSV": 15.3,
+                "APD": 15.3
+            },
+            "pontos": {
+                "APDPOR": 76.5,
+                "APDPTS": 17.39
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "APDPTSV": 10.85,
+                "APD": 10.85
+            },
+            "pontos": {
+                "APDPOR": 54.25,
+                "APDPTS": 12.33
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "APDPTSV": 12.2,
+                "APD": 12.2
+            },
+            "pontos": {
+                "APDPOR": 61,
+                "APDPTS": 13.86
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "APDPTSV": 12.45,
+                "APD": 12.45
+            },
+            "pontos": {
+                "APDPOR": 62.25,
+                "APDPTS": 14.15
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "APDPTSV": 11.3,
+                "APD": 11.3
+            },
+            "pontos": {
+                "APDPOR": 56.5,
+                "APDPTS": 12.84
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "APDPTSV": 8.65,
+                "APD": 8.65
+            },
+            "pontos": {
+                "APDPOR": 43.25,
+                "APDPTS": 9.83
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "APDPTSV": 15.2,
+                "APD": 15.2
+            },
+            "pontos": {
+                "APDPOR": 76,
+                "APDPTS": 17.27
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "APDPTSV": 12.5,
+                "APD": 12.5
+            },
+            "pontos": {
+                "APDPOR": 62.5,
+                "APDPTS": 14.2
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "APDPTSV": 11.05,
+                "APD": 11.05
+            },
+            "pontos": {
+                "APDPOR": 55.25,
+                "APDPTS": 12.56
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "APDPTSV": 12.75,
+                "APD": 12.75
+            },
+            "pontos": {
+                "APDPOR": 63.75,
+                "APDPTS": 14.49
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "APDPTSV": 9.65,
+                "APD": 9.65
+            },
+            "pontos": {
+                "APDPOR": 48.25,
+                "APDPTS": 10.97
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "APDPTSV": 10.8,
+                "APD": 10.8
+            },
+            "pontos": {
+                "APDPOR": 54,
+                "APDPTS": 12.27
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "APDPTSV": 13.8,
+                "APD": 13.8
+            },
+            "pontos": {
+                "APDPOR": 69,
+                "APDPTS": 15.68
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "APDPTSV": 11.7,
+                "APD": 11.7
+            },
+            "pontos": {
+                "APDPOR": 58.5,
+                "APDPTS": 13.3
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "APDPTSV": 12.5,
+                "APD": 12.5
+            },
+            "pontos": {
+                "APDPOR": 62.5,
+                "APDPTS": 14.2
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "APDPTSV": 15,
+                "APD": 15
+            },
+            "pontos": {
+                "APDPOR": 75,
+                "APDPTS": 17.05
+            }
+        },
+        {
+            "equipe": 34,
+            "vars": {
+                "APDPTSV": 8.9,
+                "APD": 8.9
+            },
+            "pontos": {
+                "APDPOR": 44.5,
+                "APDPTS": 10.11
+            }
+        },
+        {
+            "equipe": 35,
+            "vars": {
+                "APDPTSV": 9.55,
+                "APD": 9.55
+            },
+            "pontos": {
+                "APDPOR": 47.75,
+                "APDPTS": 10.85
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "APDPTSV": 10.7,
+                "APD": 10.7
+            },
+            "pontos": {
+                "APDPOR": 53.5,
+                "APDPTS": 12.16
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "APDPTSV": 14.4,
+                "APD": 14.4
+            },
+            "pontos": {
+                "APDPOR": 72,
+                "APDPTS": 16.36
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "APDPTSV": 4,
+                "APD": 4
+            },
+            "pontos": {
+                "APDPOR": 20,
+                "APDPTS": 4.55
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "APDPTSV": 12.45,
+                "APD": 12.45
+            },
+            "pontos": {
+                "APDPOR": 62.25,
+                "APDPTS": 14.15
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "APDPTSV": 14.25,
+                "APD": 14.25
+            },
+            "pontos": {
+                "APDPOR": 71.25,
+                "APDPTS": 16.19
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "APDPTSV": 6.75,
+                "APD": 6.75
+            },
+            "pontos": {
+                "APDPOR": 33.75,
+                "APDPTS": 7.67
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "APDPTSV": 12.4,
+                "APD": 12.4
+            },
+            "pontos": {
+                "APDPOR": 62,
+                "APDPTS": 14.09
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": {
+                "APDPTSV": 12.15,
+                "APD": 12.15
+            },
+            "pontos": {
+                "APDPOR": 60.75,
+                "APDPTS": 13.81
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "APDPTSV": 8,
+                "APD": 8
+            },
+            "pontos": {
+                "APDPOR": 40,
+                "APDPTS": 9.09
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": {
+                "APDPTSV": 13.55,
+                "APD": 13.55
+            },
+            "pontos": {
+                "APDPOR": 67.75,
+                "APDPTS": 15.4
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

@@ -1,0 +1,338 @@
+{
+    "evento": "22SE",
+    "prova": "APD",
+    "nome": "Avaliação de Projeto Dinânico",
+    "type": "normal",
+    "stored_totals": {
+        "APDcom": 0,
+        "APDmax": 13.6,
+        "APDmin": 3.8
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "POR": 26.5,
+                "APD": 5.3
+            },
+            "pontos": {
+                "APD_NOT": 7.794117647058823,
+                "APD_POR": 26.5
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "POR": 40.25000000000001,
+                "APD": 8.05
+            },
+            "pontos": {
+                "APD_NOT": 11.838235294117649,
+                "APD_POR": 40.25000000000001
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "POR": 57.75,
+                "APD": 11.55
+            },
+            "pontos": {
+                "APD_NOT": 16.98529411764706,
+                "APD_POR": 57.75
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "POR": 58.75,
+                "APD": 11.75
+            },
+            "pontos": {
+                "APD_NOT": 17.279411764705884,
+                "APD_POR": 58.75
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "POR": 42.5,
+                "APD": 8.5
+            },
+            "pontos": {
+                "APD_NOT": 12.5,
+                "APD_POR": 42.5
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "POR": 46.25,
+                "APD": 9.25
+            },
+            "pontos": {
+                "APD_NOT": 13.602941176470589,
+                "APD_POR": 46.25
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "POR": 40.75,
+                "APD": 8.15
+            },
+            "pontos": {
+                "APD_NOT": 11.985294117647062,
+                "APD_POR": 40.75
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "POR": 49.25,
+                "APD": 9.85
+            },
+            "pontos": {
+                "APD_NOT": 14.485294117647058,
+                "APD_POR": 49.25
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "POR": 62.75,
+                "APD": 12.55
+            },
+            "pontos": {
+                "APD_NOT": 18.455882352941178,
+                "APD_POR": 62.75
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "POR": 24.75,
+                "APD": 4.95
+            },
+            "pontos": {
+                "APD_NOT": 7.279411764705883,
+                "APD_POR": 24.75
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "POR": 33.25,
+                "APD": 6.65
+            },
+            "pontos": {
+                "APD_NOT": 9.779411764705884,
+                "APD_POR": 33.25
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "POR": 29.75,
+                "APD": 5.95
+            },
+            "pontos": {
+                "APD_NOT": 8.75,
+                "APD_POR": 29.75
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "POR": 43.25,
+                "APD": 8.65
+            },
+            "pontos": {
+                "APD_NOT": 12.72058823529412,
+                "APD_POR": 43.25
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "POR": 31.75,
+                "APD": 6.35
+            },
+            "pontos": {
+                "APD_NOT": 9.338235294117647,
+                "APD_POR": 31.75
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "POR": 56.25,
+                "APD": 11.25
+            },
+            "pontos": {
+                "APD_NOT": 16.544117647058826,
+                "APD_POR": 56.25
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "POR": 38.75,
+                "APD": 7.75
+            },
+            "pontos": {
+                "APD_NOT": 11.397058823529411,
+                "APD_POR": 38.75
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "POR": 34.25,
+                "APD": 6.85
+            },
+            "pontos": {
+                "APD_NOT": 10.073529411764707,
+                "APD_POR": 34.25
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "POR": 39.25,
+                "APD": 7.85
+            },
+            "pontos": {
+                "APD_NOT": 11.544117647058822,
+                "APD_POR": 39.25
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "POR": 51.75,
+                "APD": 10.35
+            },
+            "pontos": {
+                "APD_NOT": 15.220588235294116,
+                "APD_POR": 51.75
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "POR": 68,
+                "APD": 13.6
+            },
+            "pontos": {
+                "APD_NOT": 20,
+                "APD_POR": 68
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "POR": 41.50000000000001,
+                "APD": 8.3
+            },
+            "pontos": {
+                "APD_NOT": 12.205882352941178,
+                "APD_POR": 41.50000000000001
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "POR": 66.5,
+                "APD": 13.3
+            },
+            "pontos": {
+                "APD_NOT": 19.558823529411768,
+                "APD_POR": 66.5
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "POR": 47.5,
+                "APD": 9.5
+            },
+            "pontos": {
+                "APD_NOT": 13.97058823529412,
+                "APD_POR": 47.5
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "POR": 33.75,
+                "APD": 6.75
+            },
+            "pontos": {
+                "APD_NOT": 9.926470588235293,
+                "APD_POR": 33.75
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "POR": 62.25,
+                "APD": 12.45
+            },
+            "pontos": {
+                "APD_NOT": 18.308823529411764,
+                "APD_POR": 62.25
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "POR": 21,
+                "APD": 4.2
+            },
+            "pontos": {
+                "APD_NOT": 6.176470588235294,
+                "APD_POR": 21
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "POR": 50,
+                "APD": 10
+            },
+            "pontos": {
+                "APD_NOT": 14.705882352941178,
+                "APD_POR": 50
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "POR": 19,
+                "APD": 3.8
+            },
+            "pontos": {
+                "APD_NOT": 5.588235294117647,
+                "APD_POR": 19
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "POR": 21.749999999999996,
+                "APD": 4.35
+            },
+            "pontos": {
+                "APD_NOT": 6.397058823529411,
+                "APD_POR": 21.749999999999996
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

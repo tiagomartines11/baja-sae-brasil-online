@@ -1,0 +1,14 @@
+{
+    "evento": "26BR",
+    "prova": "ABS",
+    "nome": "Abastecimento",
+    "type": "normal",
+    "stored_totals": null,
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

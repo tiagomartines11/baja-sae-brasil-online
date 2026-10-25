@@ -19,7 +19,8 @@ Ajuda::secao('visao-geral', 'Visão geral');
     <p>O campo <strong>Menu</strong> do evento define o menu do site de resultados: uma <strong>lista JSON</strong> em que cada elemento vira um item do menu, na ordem em que aparece.</p>
     <p>Os itens apontam para <a href="ajuda_resultado.php">resultados</a> pelo <strong>ID do resultado</strong> (ex.: <code>26BR_ACE</code>); o texto mostrado é o <em>Título</em> do resultado.
     Se o ID não existir, o próprio ID aparece no menu.</p>
-    <div class="aviso">Se o JSON estiver inválido, o menu é salvo como <code>null</code> sem nenhum aviso e o site fica só com os itens automáticos.
+    <div class="aviso">Se o JSON estiver inválido, nada é salvo: a página mostra o erro e devolve o texto para correção.
+    Já um menu <strong>vazio</strong> (ou <code>null</code>) é salvo e o site fica só com os itens automáticos.
     O menu não tem backups: copie o conteúdo antes de fazer mudanças grandes.</div>
 </td></tr>
 <?php
@@ -64,7 +65,6 @@ Ajuda::secao('cuidados', 'Cuidados');
             seria tratado como ID de resultado e ficaria quebrado &mdash; coloque esses links no primeiro nível (<code>{"Almanaque": "https://...pdf"}</code>).</li>
         <li>Em um submenu escrito como <strong>lista</strong>, um link aparece com o número da posição como texto (&quot;0&quot;, &quot;1&quot;&hellip;). Para links com texto, use a forma de objeto.</li>
         <li>Os IDs precisam ser de resultados <strong>deste evento</strong>: o site de resultados só abre resultados do evento da URL.</li>
-        <li>Ao <a href="clonar_evento.php">clonar um evento</a>, confira o menu: hoje ele é copiado sem trocar o prefixo dos IDs (ex.: continua <code>25BR_ACE</code> no evento 26BR).</li>
     </ul>
 </td></tr>
 <?php

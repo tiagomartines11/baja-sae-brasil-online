@@ -1,0 +1,131 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22NE",
+    "id": "22NE_SGE",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "#",
+                "Team",
+                "Documents",
+                "Inspection",
+                "Status",
+                "Approval Time",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "#": "2",
+                    "Team": "Parahybaja<br><i class=\"nomeEscola\">UFCG</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:37",
+                    "Points": "0"
+                },
+                {
+                    "#": "3",
+                    "Team": "Car-Kará Baja SAE<br><i class=\"nomeEscola\">UFRN</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:37",
+                    "Points": "0"
+                },
+                {
+                    "#": "5",
+                    "Team": "Carpoeira Baja<br><i class=\"nomeEscola\">UFBA</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:38",
+                    "Points": "0"
+                },
+                {
+                    "#": "6",
+                    "Team": "Mangue Baja Tecnoferr<br><i class=\"nomeEscola\">UFPE</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:38",
+                    "Points": "0"
+                },
+                {
+                    "#": "8",
+                    "Team": "ZabumBaja<br><i class=\"nomeEscola\">UFRPE</i>",
+                    "Documents": "0",
+                    "Inspection": "-30",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:39",
+                    "Points": "-30"
+                },
+                {
+                    "#": "9",
+                    "Team": "Bumba Meu Baja<br><i class=\"nomeEscola\">UEMA</i>",
+                    "Documents": "0",
+                    "Inspection": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:40",
+                    "Points": "-15"
+                },
+                {
+                    "#": "11",
+                    "Team": "Cactus Baja<br><i class=\"nomeEscola\">UFERSA - Mossoró</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:40",
+                    "Points": "0"
+                },
+                {
+                    "#": "12",
+                    "Team": "Caraubaja SAE<br><i class=\"nomeEscola\">UFERSA - Caraúbas</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:40",
+                    "Points": "0"
+                },
+                {
+                    "#": "13",
+                    "Team": "UFPBaja<br><i class=\"nomeEscola\">UFPB</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:41",
+                    "Points": "0"
+                },
+                {
+                    "#": "14",
+                    "Team": "Calangotec Baja<br><i class=\"nomeEscola\">SENAI CIMATEC</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:41",
+                    "Points": "0"
+                },
+                {
+                    "#": "15",
+                    "Team": "Mandacaru Baja<br><i class=\"nomeEscola\">UNIFACS</i>",
+                    "Documents": "0",
+                    "Inspection": "-15",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:42",
+                    "Points": "-15"
+                },
+                {
+                    "#": "16",
+                    "Team": "Bajampa<br><i class=\"nomeEscola\">IFPB</i>",
+                    "Documents": "0",
+                    "Inspection": "0",
+                    "Status": "<span style=\"color:green; font-weight:bold\">OK</span>",
+                    "Approval Time": "11:42",
+                    "Points": "0"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

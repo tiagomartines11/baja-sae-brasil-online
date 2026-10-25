@@ -1,0 +1,35 @@
+{
+    "evento": "25BR",
+    "prova": "EPN",
+    "nome": "Penalizações Enduro",
+    "type": "rolling",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 16,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 51,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

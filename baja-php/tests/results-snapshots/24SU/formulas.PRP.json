@@ -1,0 +1,233 @@
+{
+    "evento": "24SU",
+    "prova": "PRP",
+    "nome": "Apresentação de Projeto - Powertrain",
+    "type": "normal",
+    "stored_totals": {
+        "APRPWTcom": 0,
+        "APRPWTmax": 9.2,
+        "APRPWTmin": 2.4,
+        "FINPWTcom": 0,
+        "FINPWTmax": 9.2,
+        "FINPWTmin": 8.7,
+        "TOPPWTcom": 0,
+        "TOPPWTmax": 9.2,
+        "TOPPWTmin": 8.7
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 9.2,
+                "APRPWT": 9.2,
+                "FINPWT": 9.2,
+                "TOPPWT": 9.2
+            },
+            "pontos": {
+                "APRPTS_PWT": 9.2,
+                "APRPTS_PWT_FIN": 9.2
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 3.1,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 3.1,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 9.2,
+                "APRPWT": 9.2,
+                "FINPWT": 8.7,
+                "TOPPWT": 9.2
+            },
+            "pontos": {
+                "APRPTS_PWT": 9.2,
+                "APRPTS_PWT_FIN": 8.7
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 3.6,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 3.6,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 0,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 0,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 8.7,
+                "APRPWT": 8.7,
+                "FINPWT": 9,
+                "TOPPWT": 8.7
+            },
+            "pontos": {
+                "APRPTS_PWT": 8.7,
+                "APRPTS_PWT_FIN": 9
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 4,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 4,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 0,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 0,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 8.2,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 8.2,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 3.5,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 3.5,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 5.2,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 5.2,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 4.3,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 4.3,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 5.2,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 5.2,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 5.5,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 5.5,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 0,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 0,
+                "APRPTS_PWT_FIN": 0
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRPWT": 2.4,
+                "FINPWT": 0,
+                "TOPPWT": 0
+            },
+            "pontos": {
+                "APRPTS_PWT": 2.4,
+                "APRPTS_PWT_FIN": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

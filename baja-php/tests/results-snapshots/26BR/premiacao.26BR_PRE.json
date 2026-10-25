@@ -1,0 +1,2031 @@
+{
+    "premiacao": "26BR_PRE",
+    "evento": "26BR",
+    "nome": "Premiações 2026",
+    "categorias": [
+        {
+            "config": {
+                "id": "trofeu_5s",
+                "modo": "manual",
+                "titulo": "Troféu 5S",
+                "mostrar": [
+                    "#",
+                    "Equipe",
+                    "UF"
+                ],
+                "manual_team_ids": []
+            },
+            "headers": [
+                "#",
+                "Equipe",
+                "UF"
+            ],
+            "rows": [],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "desafio_projeto_3",
+                "modo": "column_top",
+                "titulo": "3º Lugar de Relatório de Desafio Técnico",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Relatório de Desafio Técnico"
+                ],
+                "direction": "desc",
+                "positions": [
+                    3
+                ],
+                "sort_header": "Relatório de Desafio Técnico",
+                "include_ties": true,
+                "resultado_id": "26BR_RDT"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Relatório de Desafio Técnico"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 2,
+                    "Equipe": "Equipe FEI Baja",
+                    "UF": "SP",
+                    "Relatório de Desafio Técnico": "<b>85.94%</b><br /> 46.14"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "desafio_projeto_2",
+                "modo": "column_top",
+                "titulo": "2º Lugar de Relatório de Desafio Técnico",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Relatório de Desafio Técnico"
+                ],
+                "direction": "desc",
+                "positions": [
+                    2
+                ],
+                "sort_header": "Relatório de Desafio Técnico",
+                "include_ties": true,
+                "resultado_id": "26BR_RDT"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Relatório de Desafio Técnico"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 3,
+                    "Equipe": "Komiketo Baja",
+                    "UF": "MG",
+                    "Relatório de Desafio Técnico": "<b>88%</b><br /> 47.25"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "desafio_projeto_1",
+                "modo": "column_top",
+                "titulo": "1º Lugar de Relatório de Desafio Técnico",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Relatório de Desafio Técnico"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Relatório de Desafio Técnico",
+                "include_ties": true,
+                "resultado_id": "26BR_RDT"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Relatório de Desafio Técnico"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 5,
+                    "Equipe": "Poli Baja",
+                    "UF": "SP",
+                    "Relatório de Desafio Técnico": "<b>93.13%</b><br /> 50"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "relatorio_projeto_3",
+                "modo": "column_top",
+                "titulo": "3º Lugar de Relatório de Projeto",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Relatório de Projeto"
+                ],
+                "direction": "desc",
+                "positions": [
+                    3
+                ],
+                "sort_header": "Relatório de Projeto",
+                "include_ties": true,
+                "resultado_id": "26BR_REL"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Relatório de Projeto"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 23,
+                    "Equipe": "EESC USP TRACTIAN Baja",
+                    "UF": "SP",
+                    "Relatório de Projeto": "<b>84.75%</b><br /> 69.11"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "relatorio_projeto_2",
+                "modo": "column_top",
+                "titulo": "2º Lugar de Relatório de Projeto",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Relatório de Projeto"
+                ],
+                "direction": "desc",
+                "positions": [
+                    2
+                ],
+                "sort_header": "Relatório de Projeto",
+                "include_ties": true,
+                "resultado_id": "26BR_REL"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Relatório de Projeto"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 1,
+                    "Equipe": "BAJA UFMG",
+                    "UF": "MG",
+                    "Relatório de Projeto": "<b>85.39%</b><br /> 69.63"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "relatorio_projeto_1",
+                "modo": "column_top",
+                "titulo": "1º Lugar de Relatório de Projeto",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Relatório de Projeto"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Relatório de Projeto",
+                "include_ties": true,
+                "resultado_id": "26BR_REL"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Relatório de Projeto"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 2,
+                    "Equipe": "Equipe FEI Baja",
+                    "UF": "SP",
+                    "Relatório de Projeto": "<b>85.84%</b><br /> 70"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_projeto_dinamico_3",
+                "modo": "column_top",
+                "titulo": "3º Lugar de Apresentação de Projeto Dinâmico",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Aproveitamento - APD"
+                ],
+                "direction": "desc",
+                "positions": [
+                    3
+                ],
+                "sort_header": "Aproveitamento - APD",
+                "include_ties": true,
+                "resultado_id": "26BR_APX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Aproveitamento - APD"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 12,
+                    "Equipe": "Car-Kará Baja SAE",
+                    "UF": "RN",
+                    "Aproveitamento - APD": "81%"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_projeto_dinamico_2",
+                "modo": "column_top",
+                "titulo": "2º Lugar de Apresentação de Projeto Dinâmico",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Aproveitamento - APD"
+                ],
+                "direction": "desc",
+                "positions": [
+                    2
+                ],
+                "sort_header": "Aproveitamento - APD",
+                "include_ties": true,
+                "resultado_id": "26BR_APX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Aproveitamento - APD"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 13,
+                    "Equipe": "CEFAST BAJA SAE",
+                    "UF": "MG",
+                    "Aproveitamento - APD": "81.75%"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_projeto_dinamico_1",
+                "modo": "column_top",
+                "titulo": "1º Lugar de Apresentação de Projeto Dinâmico",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Aproveitamento - APD"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Aproveitamento - APD",
+                "include_ties": true,
+                "resultado_id": "26BR_APX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Aproveitamento - APD"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 9,
+                    "Equipe": "Caraubaja",
+                    "UF": "RN",
+                    "Aproveitamento - APD": "88%"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "tracao_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar de Tração",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_TRA"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 29,
+                    "Equipe": "Buffalo Baja - UFLA",
+                    "UF": "MG",
+                    "Pontos": 42.73
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "tracao_2",
+                "modo": "result_top",
+                "titulo": "2º Lugar de Tração",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_TRA"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 9,
+                    "Equipe": "Caraubaja",
+                    "UF": "RN",
+                    "Pontos": 44.83
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "tracao_1",
+                "modo": "result_top",
+                "titulo": "1º Lugar de Tração",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_TRA"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 6,
+                    "Equipe": "Imperador",
+                    "UF": "PR",
+                    "Pontos": 50
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "aceleracao_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar de Aceleração",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_ACE"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 2,
+                    "Equipe": "Equipe FEI Baja",
+                    "UF": "SP",
+                    "Pontos": 27.28
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "aceleracao_2",
+                "modo": "result_top",
+                "titulo": "2º Lugar de Aceleração",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_ACE"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 23,
+                    "Equipe": "EESC USP TRACTIAN Baja",
+                    "UF": "SP",
+                    "Pontos": 28.84
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "aceleracao_1",
+                "modo": "result_top",
+                "titulo": "1º Lugar de Aceleração",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_ACE"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 14,
+                    "Equipe": "Tuffão Baja SAE",
+                    "UF": "RJ",
+                    "Pontos": 30
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "velocidade_maxima_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar de Velocidade Máxima",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_VEL"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 5,
+                    "Equipe": "Poli Baja",
+                    "UF": "SP",
+                    "Pontos": 20.61
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "velocidade_maxima_2",
+                "modo": "result_top",
+                "titulo": "2º Lugar de Velocidade Máxima",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_VEL"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 32,
+                    "Equipe": "Vitória Baja",
+                    "UF": "ES",
+                    "Pontos": 20.75
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "velocidade_maxima_1",
+                "modo": "result_top",
+                "titulo": "1º Lugar de Velocidade Máxima",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_VEL"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 23,
+                    "Equipe": "EESC USP TRACTIAN Baja",
+                    "UF": "SP",
+                    "Pontos": 30
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "manobrabilidade_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar de Manobrabilidade",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_MAN"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 6,
+                    "Equipe": "Imperador",
+                    "UF": "PR",
+                    "Pontos": 42.37
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "manobrabilidade_2",
+                "modo": "result_top",
+                "titulo": "2º Lugar de Manobrabilidade",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_MAN"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 23,
+                    "Equipe": "EESC USP TRACTIAN Baja",
+                    "UF": "SP",
+                    "Pontos": 44.92
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "manobrabilidade_1",
+                "modo": "result_top",
+                "titulo": "1º Lugar de Manobrabilidade",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_MAN"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 26,
+                    "Equipe": "Saci Baja UNIFEI",
+                    "UF": "MG",
+                    "Pontos": 50
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "suspensao_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar de Suspensão",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_SUS"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 2,
+                    "Equipe": "Equipe FEI Baja",
+                    "UF": "SP",
+                    "Pontos": 67.46
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "suspensao_2",
+                "modo": "result_top",
+                "titulo": "2º Lugar de Suspensão",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_SUS"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 1,
+                    "Equipe": "BAJA UFMG",
+                    "UF": "MG",
+                    "Pontos": 68.62
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "suspensao_1",
+                "modo": "result_top",
+                "titulo": "1º Lugar de Suspensão",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_SUS"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 5,
+                    "Equipe": "Poli Baja",
+                    "UF": "SP",
+                    "Pontos": 70
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "super_prime_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar de Super Prime",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_SPP"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 9,
+                    "Equipe": "Caraubaja",
+                    "UF": "RN",
+                    "Pontos": 30
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "super_prime_2",
+                "modo": "result_top",
+                "titulo": "2º Lugar de Super Prime",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_SPP"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 7,
+                    "Equipe": "Sinuelo",
+                    "UF": "RS",
+                    "Pontos": 40
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "super_prime_1",
+                "modo": "result_top",
+                "titulo": "1º Lugar de Super Prime",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Pontos"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_SPP"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 5,
+                    "Equipe": "Poli Baja",
+                    "UF": "SP",
+                    "Pontos": 50
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "enduro_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar de Enduro",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Voltas",
+                    "Pontos"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_END"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Voltas",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 7,
+                    "Equipe": "Sinuelo",
+                    "UF": "RS",
+                    "Voltas": 68,
+                    "Pontos": 394.2
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "enduro_2",
+                "modo": "result_top",
+                "titulo": "2º Lugar de Enduro",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Voltas",
+                    "Pontos"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_END"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Voltas",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 9,
+                    "Equipe": "Caraubaja",
+                    "UF": "RN",
+                    "Voltas": 69,
+                    "Pontos": 400
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "enduro_1",
+                "modo": "result_top",
+                "titulo": "1º Lugar de Enduro",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Voltas",
+                    "Pontos"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_END"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Voltas",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 6,
+                    "Equipe": "Imperador",
+                    "UF": "PR",
+                    "Voltas": 69,
+                    "Pontos": 400
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "solicitacao_proposta",
+                "modo": "column_top",
+                "titulo": "Melhor Solicitação de Proposta",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Solicitação de Proposta"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Solicitação de Proposta",
+                "include_ties": true,
+                "resultado_id": "26BR_SLP"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Solicitação de Proposta"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 11,
+                    "Equipe": "Parahybaja",
+                    "UF": "PB",
+                    "Solicitação de Proposta": "<b>75%</b><br /> 20"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_negocios",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação de Negócios",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Negócios"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Negócios",
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Negócios"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 5,
+                    "Equipe": "Poli Baja",
+                    "UF": "SP",
+                    "Negócios": "8.15<br /> <s>7.16</s>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_gestao",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação de Gestão da Equipe",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Gestão"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Gestão",
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Gestão"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 17,
+                    "Equipe": "Rampage Baja UFJF",
+                    "UF": "MG",
+                    "Gestão": "7.8<br /> <s>7.8</s>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_nucleo_tecnico",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação do Núcleo Técnico",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Núcleo Técnico"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Núcleo Técnico",
+                "include_ties": true,
+                "resultado_id": "26BR_P2X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Núcleo Técnico"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 24,
+                    "Equipe": "SAGUI Baja",
+                    "UF": "PR",
+                    "Núcleo Técnico": 50.28
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_eletrica",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação de Elétrica",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Eletrônica"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Eletrônica",
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Eletrônica"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 17,
+                    "Equipe": "Rampage Baja UFJF",
+                    "UF": "MG",
+                    "Eletrônica": "5.58<br /> <s>5.575</s>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_design",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação de Design e Ergonomia",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Design"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Design",
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Design"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 8,
+                    "Equipe": "Cactus Baja",
+                    "UF": "RN",
+                    "Design": "9.32<br /> <s>9.32</s>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_freios",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação de Freios",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Freio"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Freio",
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Freio"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 6,
+                    "Equipe": "Imperador",
+                    "UF": "PR",
+                    "Freio": "9.53<br /> <s>8.625</s>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_suspensao_direcao",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação de Suspensão e Direção",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Susp. e Dir."
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Susp. e Dir.",
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Susp. e Dir."
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 2,
+                    "Equipe": "Equipe FEI Baja",
+                    "UF": "SP",
+                    "Susp. e Dir.": "6.53<br /> <s>6.525</s>"
+                },
+                {
+                    "Pos": 1,
+                    "#": 3,
+                    "Equipe": "Komiketo Baja",
+                    "UF": "MG",
+                    "Susp. e Dir.": "6.53<br /> <s>6.525</s>"
+                },
+                {
+                    "Pos": 1,
+                    "#": 19,
+                    "Equipe": "Kaizen Piratas do Cerrado",
+                    "UF": "DF",
+                    "Susp. e Dir.": "6.53<br /> <s>6.525</s>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_powertrain",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação de Powertrain",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Powertrain"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Powertrain",
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Powertrain"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 6,
+                    "Equipe": "Imperador",
+                    "UF": "PR",
+                    "Powertrain": "8.11<br /> <s>7.375</s>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_calculo_estrutural",
+                "modo": "column_top",
+                "titulo": "Melhor Apresentação de Cálculo Estrutural",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Cálculo Estrutural"
+                ],
+                "direction": "desc",
+                "positions": [
+                    1
+                ],
+                "sort_header": "Cálculo Estrutural",
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Cálculo Estrutural"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 3,
+                    "Equipe": "Komiketo Baja",
+                    "UF": "MG",
+                    "Cálculo Estrutural": "9.68<br /> <s>9.675</s>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_projeto_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar de Apresentação de Projeto",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 17,
+                    "Equipe": "Rampage Baja UFJF",
+                    "UF": "MG",
+                    "Total": 102.9
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_projeto_2",
+                "modo": "result_top",
+                "titulo": "2º Lugar de Apresentação de Projeto",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 5,
+                    "Equipe": "Poli Baja",
+                    "UF": "SP",
+                    "Total": 103.32
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "apresentacao_projeto_1",
+                "modo": "result_top",
+                "titulo": "1º Lugar de Apresentação de Projeto",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_P1X"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 6,
+                    "Equipe": "Imperador",
+                    "UF": "PR",
+                    "Total": 114.88
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "equipe_novata",
+                "modo": "result_top",
+                "titulo": "Melhor Equipe Novata",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    1
+                ],
+                "novice_only": true,
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "regiao_norte",
+                "modo": "result_top",
+                "region": "Norte",
+                "titulo": "Melhor Equipe da Região Norte",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 36,
+                    "Equipe": "BAJAUEA",
+                    "UF": "AM",
+                    "Total": "<b>155.83</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "regiao_centro_oeste",
+                "modo": "result_top",
+                "region": "Centro-Oeste",
+                "titulo": "Melhor Equipe da Região Centro-Oeste",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 19,
+                    "Equipe": "Kaizen Piratas do Cerrado",
+                    "UF": "DF",
+                    "Total": "<b>378.01</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "regiao_nordeste",
+                "modo": "result_top",
+                "region": "Nordeste",
+                "titulo": "Melhor Equipe da Região Nordeste",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 9,
+                    "Equipe": "Caraubaja",
+                    "UF": "RN",
+                    "Total": "<b>686.73</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "regiao_sul",
+                "modo": "result_top",
+                "region": "Sul",
+                "titulo": "Melhor Equipe da Região Sul",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 6,
+                    "Equipe": "Imperador",
+                    "UF": "PR",
+                    "Total": "<b>756.1</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "regiao_sudeste",
+                "modo": "result_top",
+                "region": "Sudeste",
+                "titulo": "Melhor Equipe da Região Sudeste",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 5,
+                    "Equipe": "Poli Baja",
+                    "UF": "SP",
+                    "Total": "<b>816.24</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "geral_5",
+                "modo": "result_top",
+                "titulo": "5º Lugar Geral",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    5
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 5,
+                    "#": 7,
+                    "Equipe": "Sinuelo",
+                    "UF": "RS",
+                    "Total": "<b>734.89</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "geral_4",
+                "modo": "result_top",
+                "titulo": "4º Lugar Geral",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    4
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 4,
+                    "#": 23,
+                    "Equipe": "EESC USP TRACTIAN Baja",
+                    "UF": "SP",
+                    "Total": "<b>744.82</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "geral_3",
+                "modo": "result_top",
+                "titulo": "3º Lugar Geral",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    3
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 3,
+                    "#": 2,
+                    "Equipe": "Equipe FEI Baja",
+                    "UF": "SP",
+                    "Total": "<b>752.49</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "vice_campeao",
+                "modo": "result_top",
+                "titulo": "Vice-Campeão",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    2
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 2,
+                    "#": 6,
+                    "Equipe": "Imperador",
+                    "UF": "PR",
+                    "Total": "<b>756.1</b>"
+                }
+            ],
+            "error": null
+        },
+        {
+            "config": {
+                "id": "campeao",
+                "modo": "result_top",
+                "titulo": "Campeão",
+                "mostrar": [
+                    "Pos",
+                    "#",
+                    "Equipe",
+                    "UF",
+                    "Total"
+                ],
+                "positions": [
+                    1
+                ],
+                "include_ties": true,
+                "resultado_id": "26BR_GXX"
+            },
+            "headers": [
+                "Pos",
+                "#",
+                "Equipe",
+                "UF",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "Pos": 1,
+                    "#": 5,
+                    "Equipe": "Poli Baja",
+                    "UF": "SP",
+                    "Total": "<b>816.24</b>"
+                }
+            ],
+            "error": null
+        }
+    ],
+    "error": null
+}

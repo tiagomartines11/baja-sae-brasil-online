@@ -1,0 +1,390 @@
+{
+    "evento": "26BR",
+    "prova": "AP2",
+    "nome": "Projeto Segundo Pelotão",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 7,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 41.6,
+                "AP2TECPTS": 30.66
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 49.46,
+                "AP2TECPTS": 35.9
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 24.98,
+                "AP2TECPTS": 14.74
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 56.16,
+                "AP2TECPTS": 50.28
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 25.55,
+                "AP2TECPTS": 17.42
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 34.88,
+                "AP2TECPTS": 21.63
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 35.71,
+                "AP2TECPTS": 25.88
+            }
+        },
+        {
+            "equipe": 36,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 31.44,
+                "AP2TECPTS": 18.59
+            }
+        },
+        {
+            "equipe": 37,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 21.21,
+                "AP2TECPTS": 10.21
+            }
+        },
+        {
+            "equipe": 38,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 27.49,
+                "AP2TECPTS": 24.34
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        },
+        {
+            "equipe": 42,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        },
+        {
+            "equipe": 43,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        },
+        {
+            "equipe": 44,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 20.77,
+                "AP2TECPTS": 13.15
+            }
+        },
+        {
+            "equipe": 45,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        },
+        {
+            "equipe": 47,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 27.19,
+                "AP2TECPTS": 27.19
+            }
+        },
+        {
+            "equipe": 48,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        },
+        {
+            "equipe": 49,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 26.01,
+                "AP2TECPTS": 18.54
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        },
+        {
+            "equipe": 53,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 26.39,
+                "AP2TECPTS": 15.86
+            }
+        },
+        {
+            "equipe": 58,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 9.29,
+                "AP2TECPTS": 2.69
+            }
+        },
+        {
+            "equipe": 61,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 48.16,
+                "AP2TECPTS": 37.21
+            }
+        },
+        {
+            "equipe": 62,
+            "vars": {
+                "CAP_CAE": 26.82,
+                "CAP_DER": 16.12,
+                "CAP_GES": 14.68,
+                "CAP_NEG": 14.484,
+                "CAP_PWF": 29.995,
+                "CAP_SUD": 12.84
+            },
+            "pontos": {
+                "AP2PTS": 0,
+                "AP2TECPTS": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

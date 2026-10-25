@@ -119,7 +119,9 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
         $this->assertSame(200, $page['status']);
         $this->assertMatchesRegularExpression('/<input[^>]+name="VOLTAS"/', $page['body']);
 
-        $saved = $this->postForm($savePage, $cookies, ['submit' => 'Salvar', 'VOLTAS' => '7', 'LAST' => '', 'BEST' => '', 'DESCLAS' => 'NÃO']);
+        // All four fields are in group 1, and the page only saves a complete
+        // group (save_entry.php checks that too, see EntryValidator).
+        $saved = $this->postForm($savePage, $cookies, ['submit' => 'Salvar', 'VOLTAS' => '7', 'LAST' => '3600', 'BEST' => '95', 'DESCLAS' => 'NÃO']);
         $this->assertSame(302, $saved['status']);
         $this->assertEquals(7, $this->publishedData(self::CAR_A)['VOLTAS']);
 

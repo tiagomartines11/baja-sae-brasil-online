@@ -1,0 +1,14 @@
+{
+    "evento": "22NE",
+    "prova": "PEN",
+    "nome": "Penalties",
+    "type": "normal",
+    "stored_totals": null,
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

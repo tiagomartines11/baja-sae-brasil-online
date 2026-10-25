@@ -1,0 +1,49 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "25BR",
+    "id": "25BR_EPN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "Hora Lançada",
+                "#",
+                "Equipe Escola",
+                "Onde",
+                "Penalização"
+            ],
+            "rows": [
+                {
+                    "Hora Lançada": "21:00:00",
+                    "#": "51",
+                    "Equipe Escola": "Sinuelo<br><i class=\"nomeEscola\">Faculdade Horizontina</i>",
+                    "Onde": "A",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "12:28:22",
+                    "#": "16",
+                    "Equipe Escola": "Forja Baja<br><i class=\"nomeEscola\">Universidade Federal Fluminense</i>",
+                    "Onde": "G",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "13:45:13",
+                    "#": "5",
+                    "Equipe Escola": "Poli Baja<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Onde": "G",
+                    "Penalização": "Passar em área não autorizada (2 min)"
+                },
+                {
+                    "Hora Lançada": "13:45:41",
+                    "#": "23",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro federal de educação tecnológica de Minas Gerais</i>",
+                    "Onde": "N",
+                    "Penalização": "Passar em área não autorizada (2 min)"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

@@ -1,0 +1,299 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SE",
+    "id": "23SE_X4X",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Desafio Dinâmica Vertical",
+                "Penalização Din Vertical",
+                "Desafio 4x4",
+                "Penalização 4x4",
+                "Desafio Custos",
+                "Penalização Custos",
+                "Total"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "1",
+                    "Equipe Escola": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Desafio Dinâmica Vertical": "<b>76.67%</b><br> 40",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>70.31%</b><br> 35.6",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>62.93%</b><br> 27.84",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "103.44",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "2",
+                    "Equipe Escola": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Desafio Dinâmica Vertical": "<b>57.08%</b><br> 29.78",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>58.17%</b><br> 29.45",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>71.67%</b><br> 31.7",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "90.93"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "3",
+                    "Equipe Escola": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Desafio Dinâmica Vertical": "<b>57.08%</b><br> 29.78",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>64.35%</b><br> 32.58",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>80.83%</b><br> 35.75",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "98.12"
+                },
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "5",
+                    "Equipe Escola": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Desafio Dinâmica Vertical": "<b>55%</b><br> 28.69",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>68.3%</b><br> 34.58",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>75.83%</b><br> 33.54",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "96.82"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "6",
+                    "Equipe Escola": "BAJA UFMG<br><i class=\"nomeEscola\">Universidade Federal de Minas Gerais</i>",
+                    "Desafio Dinâmica Vertical": "<b>75.42%</b><br> 39.35",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>72%</b><br> 36.46",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>89.17%</b><br> 39.44",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "115.25",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "11º",
+                    "#": "8",
+                    "Equipe Escola": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Desafio Dinâmica Vertical": "<b>58.75%</b><br> 30.65",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>51.98%</b><br> 26.32",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>70.83%</b><br> 31.33",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "88.3"
+                },
+                {
+                    "[img trofeu.png]": "13º",
+                    "#": "9",
+                    "Equipe Escola": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Desafio Dinâmica Vertical": "<b>40.42%</b><br> 21.09",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>77%</b><br> 38.99",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>56.67%</b><br> 25.07",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "85.14"
+                },
+                {
+                    "[img trofeu.png]": "17º",
+                    "#": "10",
+                    "Equipe Escola": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Desafio Dinâmica Vertical": "<b>%</b><br> 0",
+                    "Penalização Din Vertical": "<b></b>",
+                    "Desafio 4x4": "<b>25.75%</b><br> 13.04",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>60.73%</b><br> 26.86",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "39.9"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "11",
+                    "Equipe Escola": "EQUIPE REPTILES BAJA PUC-RIO<br><i class=\"nomeEscola\">Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)</i>",
+                    "Desafio Dinâmica Vertical": "<b>67.92%</b><br> 35.43",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>46.83%</b><br> 23.71",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>59.47%</b><br> 26.31",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "85.45"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">3º</p>",
+                    "#": "12",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Desafio Dinâmica Vertical": "<b>57.08%</b><br> 29.78",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>72.33%</b><br> 36.62",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>80.83%</b><br> 35.75",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "102.16",
+                    "td.class": {
+                        "[img trofeu.png]": "bronze"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "10º",
+                    "#": "13",
+                    "Equipe Escola": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Desafio Dinâmica Vertical": "<b>49.58%</b><br> 25.87",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>56.23%</b><br> 28.47",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>77.5%</b><br> 34.28",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "88.62"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "14",
+                    "Equipe Escola": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Desafio Dinâmica Vertical": "<b>64.17%</b><br> 33.48",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>58.95%</b><br> 29.85",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>59.17%</b><br> 26.17",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "89.5"
+                },
+                {
+                    "[img trofeu.png]": "14º",
+                    "#": "15",
+                    "Equipe Escola": "BAJA UFSCAR<br><i class=\"nomeEscola\">Universidade Federal de São Carlos</i>",
+                    "Desafio Dinâmica Vertical": "<b>50.42%</b><br> 26.3",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>65.67%</b><br> 33.25",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>9.9%</b><br> 4.38",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "63.93"
+                },
+                {
+                    "[img trofeu.png]": "18º",
+                    "#": "16",
+                    "Equipe Escola": "ZEBU BAJA<br><i class=\"nomeEscola\">Universidade Federal do Triângulo Mineiro</i>",
+                    "Desafio Dinâmica Vertical": "<b>%</b><br> 0",
+                    "Penalização Din Vertical": "<b></b>",
+                    "Desafio 4x4": "<b>26.88%</b><br> 13.61",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>49.17%</b><br> 21.75",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "35.36"
+                },
+                {
+                    "[img trofeu.png]": "21º",
+                    "#": "17",
+                    "Equipe Escola": "TATU BAJA<br><i class=\"nomeEscola\">Instituto Federal de São Paulo (IFSP) - Campus Sertãozinho</i>",
+                    "Desafio Dinâmica Vertical": "<b>%</b><br> 0",
+                    "Penalização Din Vertical": "<b></b>",
+                    "Desafio 4x4": "<b>%</b><br> 0",
+                    "Penalização 4x4": "<b></b>",
+                    "Desafio Custos": "<b>48.23%</b><br> 21.33",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "21.33"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "18",
+                    "Equipe Escola": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Desafio Dinâmica Vertical": "<b>50.83%</b><br> 26.52",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>79%</b><br> 40",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>59.17%</b><br> 26.17",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "92.69"
+                },
+                {
+                    "[img trofeu.png]": "20º",
+                    "#": "19",
+                    "Equipe Escola": "FOX BAJA<br><i class=\"nomeEscola\">Insper - Instituto de Ensino e Pesquisa</i>",
+                    "Desafio Dinâmica Vertical": "<b>21.67%</b><br> 11.31",
+                    "Penalização Din Vertical": "<b>10</b>",
+                    "Desafio 4x4": "<b>29.25%</b><br> 14.81",
+                    "Penalização 4x4": "<b>10</b>",
+                    "Desafio Custos": "<b>43.97%</b><br> 19.45",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "25.57"
+                },
+                {
+                    "[img trofeu.png]": "16º",
+                    "#": "20",
+                    "Equipe Escola": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Desafio Dinâmica Vertical": "<b>45%</b><br> 23.48",
+                    "Penalização Din Vertical": "<b>10</b>",
+                    "Desafio 4x4": "<b>33.5%</b><br> 16.96",
+                    "Penalização 4x4": "<b>10</b>",
+                    "Desafio Custos": "<b>75.03%</b><br> 33.19",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "53.63"
+                },
+                {
+                    "[img trofeu.png]": "22º",
+                    "#": "21",
+                    "Equipe Escola": "FATECNÓLOGOS<br><i class=\"nomeEscola\">Fatec São Paulo</i>",
+                    "Desafio Dinâmica Vertical": "<b>19.58%</b><br> 10.22",
+                    "Penalização Din Vertical": "<b>10</b>",
+                    "Desafio 4x4": "<b>0%</b><br> 0",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>42.5%</b><br> 18.8",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "19.01"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "22",
+                    "Equipe Escola": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Desafio Dinâmica Vertical": "<b>47.5%</b><br> 24.78",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>49.08%</b><br> 24.85",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>90.43%</b><br> 40",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "89.63"
+                },
+                {
+                    "[img trofeu.png]": "19º",
+                    "#": "23",
+                    "Equipe Escola": "EQUIPE CORSÁRIOS BAJA<br><i class=\"nomeEscola\">Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais</i>",
+                    "Desafio Dinâmica Vertical": "<b>29.58%</b><br> 15.43",
+                    "Penalização Din Vertical": "<b>10</b>",
+                    "Desafio 4x4": "<b>%</b><br> 0",
+                    "Penalização 4x4": "<b></b>",
+                    "Desafio Custos": "<b>66.67%</b><br> 29.49",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "34.92"
+                },
+                {
+                    "[img trofeu.png]": "15º",
+                    "#": "26",
+                    "Equipe Escola": "MINERVA BAJA<br><i class=\"nomeEscola\">UFRJ - CENTRO DE TECNOLOGIA</i>",
+                    "Desafio Dinâmica Vertical": "<b>36.67%</b><br> 19.13",
+                    "Penalização Din Vertical": "<b>0</b>",
+                    "Desafio 4x4": "<b>36.67%</b><br> 18.57",
+                    "Penalização 4x4": "<b>0</b>",
+                    "Desafio Custos": "<b>37.5%</b><br> 16.59",
+                    "Penalização Custos": "<b>0</b>",
+                    "Total": "54.29"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null
+}

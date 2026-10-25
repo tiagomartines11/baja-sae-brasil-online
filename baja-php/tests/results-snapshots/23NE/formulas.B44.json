@@ -1,0 +1,29 @@
+{
+    "evento": "23NE",
+    "prova": "B44",
+    "nome": "Bônus 4x4",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": {
+                "B44PTS": 30
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": {
+                "B44PTS": 150
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

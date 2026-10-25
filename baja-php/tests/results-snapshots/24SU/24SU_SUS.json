@@ -1,0 +1,144 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "24SU",
+    "id": "24SU_SUS",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Equipe Escola",
+                "Passou Obstáculo 1",
+                "Passou Obstáculo 2",
+                "Passou Obstáculo 3",
+                "Passou Obstáculo 4",
+                "Passou Obstáculo 5",
+                "Pontos"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "5º",
+                    "#": "1",
+                    "Equipe Escola": "BAJA DE GALPÃO - UNISC<br><i class=\"nomeEscola\">Universidade de Santa Cruz do Sul</i>",
+                    "Passou Obstáculo 1": "SIM (4 <img class=\"cone\">)<br> SIM (3 <img class=\"cone\">)",
+                    "Passou Obstáculo 2": "SIM (3 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "SIM (4 <img class=\"cone\">)<br> SIM (2 <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "NÃO (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "SIM (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)",
+                    "Pontos": "38"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Equipe Escola": "BAJA UNIVATES TEAM<br><i class=\"nomeEscola\">Universidade do Vale do Taquari - Univates</i>",
+                    "Passou Obstáculo 1": "NÃO (0 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 2": "SIM (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "NÃO (0 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "NÃO (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "SIM (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Pontos": "49",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "3",
+                    "Equipe Escola": "BOMBAJA UFSM<br><i class=\"nomeEscola\">Universidade Federal de Santa Maria</i>",
+                    "Passou Obstáculo 1": "SIM (4 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 2": "SIM (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "SIM (0 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "NÃO (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "SIM (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Pontos": "52",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "4",
+                    "Equipe Escola": "CATARATAS BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual do Oeste do Paraná (UNIOESTE)</i>",
+                    "Passou Obstáculo 1": "SIM (1 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 2": "SIM (0 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "NÃO (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "SIM (1 <img class=\"cone\">)<br> SIM (2 <img class=\"cone\">)",
+                    "Pontos": "49",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "7º",
+                    "#": "6",
+                    "Equipe Escola": "IMPERADOR<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Curitiba</i>",
+                    "Passou Obstáculo 1": "NÃO (0 <img class=\"cone\">)<br> SIM (4 <img class=\"cone\">)",
+                    "Passou Obstáculo 2": "SIM (0 <img class=\"cone\">)<br> SIM (2 <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Pontos": "13"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "7",
+                    "Equipe Escola": "LONDRIBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Londrina</i>",
+                    "Passou Obstáculo 1": "<br>",
+                    "Passou Obstáculo 2": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "NÃO (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "9",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Pato Branco</i>",
+                    "Passou Obstáculo 1": "SIM (3 <img class=\"cone\">)<br> SIM (4 <img class=\"cone\">)",
+                    "Passou Obstáculo 2": "SIM (2 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "SIM (1 <img class=\"cone\">)<br> SIM (2 <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "SIM (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)",
+                    "Pontos": "41"
+                },
+                {
+                    "[img trofeu.png]": "9º",
+                    "#": "11",
+                    "Equipe Escola": "PROCOBAJA<br><i class=\"nomeEscola\">UTFPR - Universidade Tecnológica Federal do Paraná - Campus Cornélio Procópio</i>",
+                    "Passou Obstáculo 1": "NÃO (0 <img class=\"cone\">)<br>",
+                    "Passou Obstáculo 2": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Pontos": "0"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "13",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">Faculdade Horizontina - FAHOR</i>",
+                    "Passou Obstáculo 1": "NÃO (0 <img class=\"cone\">)<br> SIM (4 <img class=\"cone\">)",
+                    "Passou Obstáculo 2": "SIM (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "NÃO (0 <img class=\"cone\">)<br> NÃO (0 <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "SIM (0 <img class=\"cone\">)<br> SIM (0 <img class=\"cone\">)",
+                    "Pontos": "28"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "16",
+                    "Equipe Escola": "BAJA SATC<br><i class=\"nomeEscola\">SATC</i>",
+                    "Passou Obstáculo 1": "NÃO (0 <img class=\"cone\">)<br> SIM (1 <img class=\"cone\">)",
+                    "Passou Obstáculo 2": "NÃO (0 <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 3": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 4": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Passou Obstáculo 5": "( <img class=\"cone\">)<br> ( <img class=\"cone\">)",
+                    "Pontos": "12"
+                }
+            ],
+            "footer": null
+        }
+    ],
+    "error": null
+}

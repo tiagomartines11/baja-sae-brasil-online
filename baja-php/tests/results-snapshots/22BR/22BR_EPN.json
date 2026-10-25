@@ -1,0 +1,126 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "22BR",
+    "id": "22BR_EPN",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "Hora Lançada",
+                "#",
+                "Equipe Escola",
+                "Onde",
+                "Penalização"
+            ],
+            "rows": [
+                {
+                    "Hora Lançada": "10:42:45",
+                    "#": "18",
+                    "Equipe Escola": "CAR-KARÁ BAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO NORTE</i>",
+                    "Onde": "M",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "11:37:50",
+                    "#": "52",
+                    "Equipe Escola": "TCHÊ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
+                    "Onde": "W",
+                    "Penalização": "Desviar de obstáculo deliberadamente (2 min)"
+                },
+                {
+                    "Hora Lançada": "11:55:57",
+                    "#": "52",
+                    "Equipe Escola": "TCHÊ<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL</i>",
+                    "Onde": "E",
+                    "Penalização": "Desviar de obstáculo deliberadamente (2 min)"
+                },
+                {
+                    "Hora Lançada": "12:33:47",
+                    "#": "30",
+                    "Equipe Escola": "BAJA MUD RACING<br><i class=\"nomeEscola\">CENTRO UNIVERSITÁRIO FACENS</i>",
+                    "Onde": "A",
+                    "Penalização": "Derramamento de combustível durante reabastecimento (5 min)"
+                },
+                {
+                    "Hora Lançada": "12:55:08",
+                    "#": "23",
+                    "Equipe Escola": "CORISCO<br><i class=\"nomeEscola\">UNIVERSIDADE DE PERNAMBUCO</i>",
+                    "Onde": "G",
+                    "Penalização": "Desviar de obstáculo deliberadamente (2 min)"
+                },
+                {
+                    "Hora Lançada": "12:58:20",
+                    "#": "22",
+                    "Equipe Escola": "SINUELO<br><i class=\"nomeEscola\">FACULDADE HORIZONTINA - FAHOR</i>",
+                    "Onde": "T",
+                    "Penalização": "Desviar de obstáculo deliberadamente (2 min)"
+                },
+                {
+                    "Hora Lançada": "13:10:44",
+                    "#": "12",
+                    "Equipe Escola": "CARAUBAJA SAE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL RURAL DO SEMI-ÁRIDO</i>",
+                    "Onde": "F",
+                    "Penalização": "Desviar de obstáculo deliberadamente (2 min)"
+                },
+                {
+                    "Hora Lançada": "13:20:03",
+                    "#": "46",
+                    "Equipe Escola": "UFSC UIRAÇU<br><i class=\"nomeEscola\">UNIVERSIDADE: UNIVERSIDADE FEDERAL DE SANTA CATARINA - FLORIANÓPOLIS</i>",
+                    "Onde": "M",
+                    "Penalização": "Passar em área não autorizada (2 min)"
+                },
+                {
+                    "Hora Lançada": "13:20:18",
+                    "#": "9",
+                    "Equipe Escola": "RAMPAGE<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE JUIZ DE FORA</i>",
+                    "Onde": "K",
+                    "Penalização": "Não respeitar a bandeira azul (2 min)"
+                },
+                {
+                    "Hora Lançada": "13:26:41",
+                    "#": "40",
+                    "Equipe Escola": "UFVBAJA PERERECAS<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE VIÇOSA</i>",
+                    "Onde": "K",
+                    "Penalização": "Não respeitar a bandeira azul (2 min)"
+                },
+                {
+                    "Hora Lançada": "13:34:28",
+                    "#": "24",
+                    "Equipe Escola": "FORJA BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA INDUSTRIAL E METALÚRGICA DE VOLTA REDONDA - UFF</i>",
+                    "Onde": "W",
+                    "Penalização": "Desviar de obstáculo deliberadamente (2 min)"
+                },
+                {
+                    "Hora Lançada": "13:51:15",
+                    "#": "2",
+                    "Equipe Escola": "SACI<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DE ITAJUBÁ</i>",
+                    "Onde": "L",
+                    "Penalização": "Teste"
+                },
+                {
+                    "Hora Lançada": "13:51:15",
+                    "#": "68",
+                    "Equipe Escola": "EEP BAJA<br><i class=\"nomeEscola\">ESCOLA DE ENGENHARIA DE PIRACICABA</i>",
+                    "Onde": "L",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                },
+                {
+                    "Hora Lançada": "13:52:18",
+                    "#": "35",
+                    "Equipe Escola": "PATO BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ - CAMPUS PATO BRANCO</i>",
+                    "Onde": "K",
+                    "Penalização": "Não respeitar a bandeira azul (2 min)"
+                },
+                {
+                    "Hora Lançada": "13:58:05",
+                    "#": "49",
+                    "Equipe Escola": "VITÓRIA BAJA<br><i class=\"nomeEscola\">UNIVERSIDADE FEDERAL DO ESPÍRITO SANTO - UFES</i>",
+                    "Onde": "B",
+                    "Penalização": "Não respeitar bandeira amarela (5 min)"
+                }
+            ],
+            "footer": "Prova Finalizada<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}

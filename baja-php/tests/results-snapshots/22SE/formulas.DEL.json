@@ -1,0 +1,378 @@
+{
+    "evento": "22SE",
+    "prova": "DEL",
+    "nome": "Desafio Técnico - Eletrônica",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "NOT": 8.37548315847598,
+                "POR": 25.28
+            },
+            "pontos": {
+                "DEL_NOT": 8.37548315847598,
+                "DEL_POR": 25.28
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "NOT": 24.864715626725566,
+                "POR": 75.05
+            },
+            "pontos": {
+                "DEL_NOT": 24.864715626725566,
+                "DEL_POR": 75.05
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "NOT": 15.783545002760908,
+                "POR": 47.64
+            },
+            "pontos": {
+                "DEL_NOT": 15.783545002760908,
+                "DEL_POR": 47.64
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "NOT": 24.646051905024848,
+                "POR": 74.39
+            },
+            "pontos": {
+                "DEL_NOT": 24.646051905024848,
+                "DEL_POR": 74.39
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "NOT": 6.974047487575925,
+                "POR": 21.05
+            },
+            "pontos": {
+                "DEL_NOT": 6.974047487575925,
+                "DEL_POR": 21.05
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "NOT": 27.882937603533964,
+                "POR": 84.16
+            },
+            "pontos": {
+                "DEL_NOT": 27.882937603533964,
+                "DEL_POR": 84.16
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "NOT": 10.22087244616234,
+                "POR": 30.85
+            },
+            "pontos": {
+                "DEL_NOT": 10.22087244616234,
+                "DEL_POR": 30.85
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DEL_NOT": 0,
+                "DEL_POR": 0
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "NOT": 15.18387631143015,
+                "POR": 45.83
+            },
+            "pontos": {
+                "DEL_NOT": 15.18387631143015,
+                "DEL_POR": 45.83
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "NOT": 24.662617338487024,
+                "POR": 74.44
+            },
+            "pontos": {
+                "DEL_NOT": 24.662617338487024,
+                "DEL_POR": 74.44
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "NOT": 17.860850358917727,
+                "POR": 53.91
+            },
+            "pontos": {
+                "DEL_NOT": 17.860850358917727,
+                "DEL_POR": 53.91
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "NOT": 8.557702926559912,
+                "POR": 25.830000000000002
+            },
+            "pontos": {
+                "DEL_NOT": 8.557702926559912,
+                "DEL_POR": 25.830000000000002
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "NOT": 14.614025400331307,
+                "POR": 44.11
+            },
+            "pontos": {
+                "DEL_NOT": 14.614025400331307,
+                "DEL_POR": 44.11
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "NOT": 21.46880176697957,
+                "POR": 64.80000000000001
+            },
+            "pontos": {
+                "DEL_NOT": 21.46880176697957,
+                "DEL_POR": 64.80000000000001
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "NOT": 23.6885698509111,
+                "POR": 71.5
+            },
+            "pontos": {
+                "DEL_NOT": 23.6885698509111,
+                "DEL_POR": 71.5
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "NOT": 28.94975151849807,
+                "POR": 87.38
+            },
+            "pontos": {
+                "DEL_NOT": 28.94975151849807,
+                "DEL_POR": 87.38
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "NOT": 26.484815019326337,
+                "POR": 79.94
+            },
+            "pontos": {
+                "DEL_NOT": 26.484815019326337,
+                "DEL_POR": 79.94
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "NOT": 29.264494754279408,
+                "POR": 88.33
+            },
+            "pontos": {
+                "DEL_NOT": 29.264494754279408,
+                "DEL_POR": 88.33
+            }
+        },
+        {
+            "equipe": 19,
+            "vars": {
+                "NOT": 13.490889011595804,
+                "POR": 40.72
+            },
+            "pontos": {
+                "DEL_NOT": 13.490889011595804,
+                "DEL_POR": 40.72
+            }
+        },
+        {
+            "equipe": 20,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DEL_NOT": 0,
+                "DEL_POR": 0
+            }
+        },
+        {
+            "equipe": 21,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DEL_NOT": 0,
+                "DEL_POR": 0
+            }
+        },
+        {
+            "equipe": 22,
+            "vars": {
+                "NOT": 24.579790171176146,
+                "POR": 74.19
+            },
+            "pontos": {
+                "DEL_NOT": 24.579790171176146,
+                "DEL_POR": 74.19
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "NOT": 26.50469353948095,
+                "POR": 80
+            },
+            "pontos": {
+                "DEL_NOT": 26.50469353948095,
+                "DEL_POR": 80
+            }
+        },
+        {
+            "equipe": 24,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DEL_NOT": 0,
+                "DEL_POR": 0
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "NOT": 17.10546659304252,
+                "POR": 51.63
+            },
+            "pontos": {
+                "DEL_NOT": 17.10546659304252,
+                "DEL_POR": 51.63
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "NOT": 30,
+                "POR": 90.55
+            },
+            "pontos": {
+                "DEL_NOT": 30,
+                "DEL_POR": 90.55
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "NOT": 29.300938707896186,
+                "POR": 88.44
+            },
+            "pontos": {
+                "DEL_NOT": 29.300938707896186,
+                "DEL_POR": 88.44
+            }
+        },
+        {
+            "equipe": 28,
+            "vars": {
+                "NOT": 10.048591938155717,
+                "POR": 30.33
+            },
+            "pontos": {
+                "DEL_NOT": 10.048591938155717,
+                "DEL_POR": 30.33
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "NOT": 18.6791827719492,
+                "POR": 56.379999999999995
+            },
+            "pontos": {
+                "DEL_NOT": 18.6791827719492,
+                "DEL_POR": 56.379999999999995
+            }
+        },
+        {
+            "equipe": 30,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DEL_NOT": 0,
+                "DEL_POR": 0
+            }
+        },
+        {
+            "equipe": 31,
+            "vars": {
+                "NOT": 11.638873550524572,
+                "POR": 35.129999999999995
+            },
+            "pontos": {
+                "DEL_NOT": 11.638873550524572,
+                "DEL_POR": 35.129999999999995
+            }
+        },
+        {
+            "equipe": 32,
+            "vars": {
+                "NOT": 19.583655438983985,
+                "POR": 59.11
+            },
+            "pontos": {
+                "DEL_NOT": 19.583655438983985,
+                "DEL_POR": 59.11
+            }
+        },
+        {
+            "equipe": 33,
+            "vars": {
+                "NOT": null,
+                "POR": null
+            },
+            "pontos": {
+                "DEL_NOT": 0,
+                "DEL_POR": 0
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

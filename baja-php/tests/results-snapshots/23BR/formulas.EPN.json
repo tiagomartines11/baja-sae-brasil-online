@@ -1,0 +1,135 @@
+{
+    "evento": "23BR",
+    "prova": "EPN",
+    "nome": "Penalizações Enduro",
+    "type": "rolling",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 18,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 20,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 21,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 27,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 28,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 29,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 30,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 33,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 36,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 38,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 41,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 42,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 43,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 48,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 49,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 56,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 67,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 99,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

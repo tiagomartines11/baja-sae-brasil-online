@@ -1,0 +1,14 @@
+{
+    "evento": "23SU",
+    "prova": "SGD",
+    "nome": "Segurança Dinâmica",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

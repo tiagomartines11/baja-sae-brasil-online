@@ -90,6 +90,22 @@ Before requesting review:
       `insercao-http-test.sh` one after the other, not at the same time:
       both create partial batches with overlapping synthetic documents and
       make each other's counts wrong.
+- [ ] If you touched anything that computes or shows results
+      (`baja-php/resultados/prova*.php`, `torneio.php`,
+      `baja-php/src/Baja/Results/`, `baja-php/src/Baja/Premiacao/`,
+      `Input::solveFormula` and the other
+      formula code in `src/Baja/Model/Input.php` / `Prova.php`,
+      `src/Baja/Site/Template.php`), the results builder's unit tests pass
+      (`vendor/bin/phpunit --testsuite unit`, see `tests/Unit/Results/`) and
+      the results snapshots still match:
+
+      ```
+      docker compose exec --user "$(id -u):$(id -g)" baja-app php scripts/results-snapshot.php --check
+      ```
+
+      If they differ on purpose, accept with `--update` and say in the PR
+      which results change and why. CI runs `--check` too. See
+      [`results-snapshots.md`](results-snapshots.md).
 - [ ] If you edited `baja-php/schema.xml`, the generated `Base*` classes,
       table maps and `src/loadDatabase.php` were regenerated and committed:
       `docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build`.

@@ -1,0 +1,205 @@
+{
+    "evento": "26BR",
+    "prova": "GRI",
+    "nome": "Grid",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 2,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 3,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 4,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 5,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 6,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 7,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 8,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 9,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 11,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 12,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 13,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 14,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 15,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 16,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 17,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 19,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 21,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 23,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 24,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 26,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 28,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 29,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 30,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 31,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 32,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 33,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 34,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 35,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 36,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 38,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 43,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 44,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 47,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 49,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 53,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 58,
+            "vars": [],
+            "pontos": []
+        },
+        {
+            "equipe": 61,
+            "vars": [],
+            "pontos": []
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

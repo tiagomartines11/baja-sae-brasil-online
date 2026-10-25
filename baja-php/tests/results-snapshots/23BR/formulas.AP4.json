@@ -1,0 +1,64 @@
+{
+    "evento": "23BR",
+    "prova": "AP4",
+    "nome": "Projeto 4x4",
+    "type": "normal",
+    "stored_totals": {
+        "P4x4MMcom": 0,
+        "P4x4MMmax": 7.25,
+        "P4x4MMmin": 3
+    },
+    "inputs": [
+        {
+            "equipe": 17,
+            "vars": {
+                "P4x4MM": 4.5
+            },
+            "pontos": {
+                "APR_4x4_PTS": 12.413793103448276
+            }
+        },
+        {
+            "equipe": 41,
+            "vars": {
+                "P4x4MM": 7.25
+            },
+            "pontos": {
+                "APR_4x4_PTS": 20
+            }
+        },
+        {
+            "equipe": 50,
+            "vars": {
+                "P4x4MM": 3
+            },
+            "pontos": {
+                "APR_4x4_PTS": 8.275862068965518
+            }
+        },
+        {
+            "equipe": 55,
+            "vars": {
+                "P4x4MM": 4.5
+            },
+            "pontos": {
+                "APR_4x4_PTS": 12.413793103448276
+            }
+        },
+        {
+            "equipe": 60,
+            "vars": {
+                "P4x4MM": 3.75
+            },
+            "pontos": {
+                "APR_4x4_PTS": 10.344827586206897
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

@@ -29,19 +29,33 @@ echo '
         </th>
         </tr>
         <form action="save_rolling_entry.php?p='.$_page.'" method="POST">
-    </thead>
+    </thead>';
+
+// Set by save_rolling_entry.php when it refused to save what this form sent.
+if (!empty($entradaRecusada)) {
+    echo '<tr><td colspan="2" style="color: red; font-weight: bold;">Nada foi salvo. Corrija e salve de novo:<ul>';
+    foreach ($entradaRecusada as $erro) {
+        echo '<li>' . htmlspecialchars($erro) . '</li>';
+    }
+    echo '</ul></td></tr>';
+}
+$typedTeam = !empty($entradaRecusada) ? EntryValidator::typedValue($_POST, 'team') : null;
+
+echo '
     <tr>
     <td><label for="team">Equipe</label></td>
     <td><select style="width: 100%; font: 20px/20px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" name="team"><option value="" />';
 
 foreach ($equipes as $e) {
-    echo '<option value="'.$e->getEquipeId().'">'.$e->getEquipeId().'</option>';
+    echo '<option value="'.$e->getEquipeId().'"'.((string)$e->getEquipeId() === $typedTeam ? ' selected' : '').'>'.$e->getEquipeId().'</option>';
 }
 echo '</select></td></tr>';
 
 $fields = $prova->getParamsInputs();
 foreach ($fields as $k=>$field) {
-    echo '<tr '.(($field->getPass() == 1 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == 2)) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf() . '</tr>';
+    // Nothing was saved: show what the judge typed.
+    $value = !empty($entradaRecusada) ? EntryValidator::typedValue($_POST, $field->getCode()) : null;
+    echo '<tr '.(($field->getPass() == 1 && (isset($fields[$k+1]) && $fields[$k+1]->getPass() == 2)) ? 'style="border-bottom: solid 2px black;' : '').' ">'. $field->printSelf($value) . '</tr>';
 }
 
 ?>

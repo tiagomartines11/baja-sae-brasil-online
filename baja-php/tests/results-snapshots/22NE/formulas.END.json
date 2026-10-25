@@ -1,0 +1,100 @@
+{
+    "evento": "22NE",
+    "prova": "END",
+    "nome": "Endurance",
+    "type": "normal",
+    "stored_totals": {
+        "Vcom": 0,
+        "Vmax": 65,
+        "Vmin": 2
+    },
+    "inputs": [
+        {
+            "equipe": 3,
+            "vars": {
+                "V": 36
+            },
+            "pontos": {
+                "ENDPTS": 166.15384615384616
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "V": 65
+            },
+            "pontos": {
+                "ENDPTS": 300
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "V": 62
+            },
+            "pontos": {
+                "ENDPTS": 286.15384615384613
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "V": 2
+            },
+            "pontos": {
+                "ENDPTS": 9.23076923076923
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "V": 36
+            },
+            "pontos": {
+                "ENDPTS": 166.15384615384616
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "V": 59
+            },
+            "pontos": {
+                "ENDPTS": 272.3076923076923
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "V": 46
+            },
+            "pontos": {
+                "ENDPTS": 212.30769230769232
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "V": 4
+            },
+            "pontos": {
+                "ENDPTS": 18.46153846153846
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "V": 14
+            },
+            "pontos": {
+                "ENDPTS": 64.61538461538461
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

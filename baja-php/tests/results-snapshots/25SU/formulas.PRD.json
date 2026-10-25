@@ -1,0 +1,249 @@
+{
+    "evento": "25SU",
+    "prova": "PRD",
+    "nome": "Apresentação de Projeto - Design",
+    "type": "normal",
+    "stored_totals": {
+        "APRDEScom": 0,
+        "APRDESmax": 7.94,
+        "APRDESmin": 1.08,
+        "FINDEScom": 0,
+        "FINDESmax": 10.00001,
+        "FINDESmin": 1.0e-5,
+        "TOPDEScom": 0,
+        "TOPDESmax": 7.94,
+        "TOPDESmin": 6.83
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "FIN": 6.83,
+                "APRDES": 6.83,
+                "FINDES": 5.00001,
+                "TOPDES": 6.83
+            },
+            "pontos": {
+                "APRPTS_DES": 6.83,
+                "APRPTS_DES_FIN": 7.38499889,
+                "NOTA_DES": 6.83
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 6.37,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 6.37,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 6.37
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.21,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.21,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 2.21
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 4.26,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 4.26,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 4.26
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.6,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.6,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 2.6
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.22,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.22,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 2.22
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "FIN": 7.84,
+                "APRDES": 7.84,
+                "FINDES": 10.00001,
+                "TOPDES": 7.84
+            },
+            "pontos": {
+                "APRPTS_DES": 7.84,
+                "APRPTS_DES_FIN": 7.93999889,
+                "NOTA_DES": 7.84
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.28,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.28,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 2.28
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3.65,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3.65,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 3.65
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 2.27,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 2.27,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 2.27
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 3.16,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 3.16,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 3.16
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "FIN": 7.94,
+                "APRDES": 7.94,
+                "FINDES": 1.0e-5,
+                "TOPDES": 7.94
+            },
+            "pontos": {
+                "APRPTS_DES": 7.94,
+                "APRPTS_DES_FIN": 6.82999889,
+                "NOTA_DES": 7.94
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 6.46,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 6.46,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 6.46
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 1.73,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 1.73,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 1.73
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 1.08,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 1.08,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 1.08
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "FIN": 0,
+                "APRDES": 0,
+                "FINDES": 0,
+                "TOPDES": 0
+            },
+            "pontos": {
+                "APRPTS_DES": 0,
+                "APRPTS_DES_FIN": 0,
+                "NOTA_DES": 1.34
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

@@ -1,0 +1,252 @@
+{
+    "evento": "25SU",
+    "prova": "AVF",
+    "nome": "Aceleração e Velocidade Final",
+    "type": "normal",
+    "stored_totals": {
+        "ACEcom": 0,
+        "ACEmax": 5.223,
+        "ACEmin": 4.202,
+        "VELcom": 0,
+        "VELmax": 47.93,
+        "VELmin": 32.72
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "ACE_1": 4.967,
+                "ACE_2": null,
+                "ACE_3": null,
+                "ACE_4": null,
+                "ACE_5": null,
+                "ACE_6": null,
+                "VEL_1": 38.05,
+                "VEL_2": null,
+                "VEL_3": null,
+                "VEL_4": null,
+                "VEL_5": null,
+                "VEL_6": null,
+                "ACE": 4.967,
+                "VEL": 38.05
+            },
+            "pontos": {
+                "ACEPTS": 8.775710088148882,
+                "VELPTS": 12.26495726495726
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "ACE_1": 4.663,
+                "ACE_2": 4.731,
+                "ACE_3": 4.839,
+                "ACE_4": 4.918,
+                "ACE_5": null,
+                "ACE_6": null,
+                "VEL_1": 40.7,
+                "VEL_2": 39.76,
+                "VEL_3": 37.88,
+                "VEL_4": 37.2,
+                "VEL_5": null,
+                "VEL_6": null,
+                "ACE": 4.663,
+                "VEL": 40.7
+            },
+            "pontos": {
+                "ACEPTS": 19.19686581782565,
+                "VELPTS": 18.36291913214991
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "ACE_1": 5.223,
+                "ACE_2": null,
+                "ACE_3": null,
+                "ACE_4": null,
+                "ACE_5": null,
+                "ACE_6": null,
+                "VEL_1": 32.72,
+                "VEL_2": null,
+                "VEL_3": null,
+                "VEL_4": null,
+                "VEL_5": null,
+                "VEL_6": null,
+                "ACE": 5.223,
+                "VEL": 32.72
+            },
+            "pontos": {
+                "ACEPTS": 0,
+                "VELPTS": 0
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "ACE_1": 4.335,
+                "ACE_2": 4.424,
+                "ACE_3": 4.204,
+                "ACE_4": 4.27,
+                "ACE_5": 4.374,
+                "ACE_6": null,
+                "VEL_1": 45.93,
+                "VEL_2": 47.29,
+                "VEL_3": 47.15,
+                "VEL_4": 47.93,
+                "VEL_5": 47.07,
+                "VEL_6": null,
+                "ACE": 4.204,
+                "VEL": 47.93
+            },
+            "pontos": {
+                "ACEPTS": 34.93143976493634,
+                "VELPTS": 35
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "ACE_1": 4.739,
+                "ACE_2": 4.888,
+                "ACE_3": null,
+                "ACE_4": null,
+                "ACE_5": null,
+                "ACE_6": null,
+                "VEL_1": 37.78,
+                "VEL_2": 36.47,
+                "VEL_3": null,
+                "VEL_4": null,
+                "VEL_5": null,
+                "VEL_6": null,
+                "ACE": 4.739,
+                "VEL": 37.78
+            },
+            "pontos": {
+                "ACEPTS": 16.591576885406464,
+                "VELPTS": 11.64365548980934
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "ACE_1": 4.579,
+                "ACE_2": 4.602,
+                "ACE_3": 4.459,
+                "ACE_4": 4.406,
+                "ACE_5": 4.608,
+                "ACE_6": null,
+                "VEL_1": 42.3,
+                "VEL_2": 41.96,
+                "VEL_3": 42.38,
+                "VEL_4": 42.51,
+                "VEL_5": 42.24,
+                "VEL_6": null,
+                "ACE": 4.406,
+                "VEL": 42.51
+            },
+            "pontos": {
+                "ACEPTS": 28.006856023506376,
+                "VELPTS": 22.527942143326754
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "ACE_1": 4.874,
+                "ACE_2": 4.816,
+                "ACE_3": 4.609,
+                "ACE_4": null,
+                "ACE_5": null,
+                "ACE_6": null,
+                "VEL_1": 37.73,
+                "VEL_2": 41.35,
+                "VEL_3": 42.14,
+                "VEL_4": null,
+                "VEL_5": null,
+                "VEL_6": null,
+                "ACE": 4.609,
+                "VEL": 42.14
+            },
+            "pontos": {
+                "ACEPTS": 21.04799216454456,
+                "VELPTS": 21.676528599605525
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "ACE_1": 4.981,
+                "ACE_2": null,
+                "ACE_3": null,
+                "ACE_4": null,
+                "ACE_5": null,
+                "ACE_6": null,
+                "VEL_1": 36.82,
+                "VEL_2": null,
+                "VEL_3": null,
+                "VEL_4": null,
+                "VEL_5": null,
+                "VEL_6": null,
+                "ACE": 4.981,
+                "VEL": 36.82
+            },
+            "pontos": {
+                "ACEPTS": 8.295788442703232,
+                "VELPTS": 9.434582511505592
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "ACE_1": 4.404,
+                "ACE_2": 4.202,
+                "ACE_3": null,
+                "ACE_4": null,
+                "ACE_5": null,
+                "ACE_6": null,
+                "VEL_1": 45.28,
+                "VEL_2": 45.86,
+                "VEL_3": null,
+                "VEL_4": null,
+                "VEL_5": null,
+                "VEL_6": null,
+                "ACE": 4.202,
+                "VEL": 45.86
+            },
+            "pontos": {
+                "ACEPTS": 35,
+                "VELPTS": 30.236686390532544
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "ACE_1": 4.529,
+                "ACE_2": 4.508,
+                "ACE_3": null,
+                "ACE_4": null,
+                "ACE_5": null,
+                "ACE_6": null,
+                "VEL_1": 43.99,
+                "VEL_2": 44.03,
+                "VEL_3": null,
+                "VEL_4": null,
+                "VEL_5": null,
+                "VEL_6": null,
+                "ACE": 4.508,
+                "VEL": 44.03
+            },
+            "pontos": {
+                "ACEPTS": 24.51028403525955,
+                "VELPTS": 26.02564102564103
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

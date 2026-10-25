@@ -1,0 +1,1476 @@
+{
+    "page": "resultados/torneio.php",
+    "evento": "26BR",
+    "id": "26BR_SPR",
+    "spoilers": false,
+    "rounds": [
+        {
+            "round": "32 avos de Final",
+            "matches": [
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">6 - Imperador</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">34 - ITA</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">16 - Forja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">21 - Mud Racing</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">15 - UFSCar</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">4 - Pato</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">24 - Sagui</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Caraubaja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">33 - PAC</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">2 - FEI</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">44 - TEC Ilha</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">47 - Londribaja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">23 - EESC</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">17 - Rampage</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">7 - Sinuelo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">12 - Car-Kará</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">49 - FHO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">14 - Tuffão</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">38 - Tchê</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">5 - Poli</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">28 - Tatu</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">19 - Piratas Cerrado</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">61 - Pererecas</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">32 - Vitória</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">26 - Saci</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">31 - Unicamp</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">3 - Komiketo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">11 - Parahybaja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">1 - Baja UFMG</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">43 - Velociraptor</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">58 - Maua</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">29 - Buffalo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">13 - Cefast</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">8 - Cactus</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">35 - Carpoeira</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">36 - BAJAUEA</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">30 - Mangue</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">53 - ZABUMBAJA</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">WO</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "16 avos de Final",
+            "matches": [
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">6 - Imperador</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">16 - Forja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">21 - Mud Racing</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">15 - UFSCar</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">4 - Pato</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">24 - Sagui</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Caraubaja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">33 - PAC</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">2 - FEI</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">44 - TEC Ilha</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">23 - EESC</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">17 - Rampage</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">7 - Sinuelo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">12 - Car-Kará</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">14 - Tuffão</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">38 - Tchê</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">5 - Poli</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">19 - Piratas Cerrado</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">61 - Pererecas</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">32 - Vitória</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">26 - Saci</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">31 - Unicamp</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">3 - Komiketo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">11 - Parahybaja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">1 - Baja UFMG</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">43 - Velociraptor</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">29 - Buffalo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">13 - Cefast</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">8 - Cactus</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">35 - Carpoeira</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">30 - Mangue</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">53 - ZABUMBAJA</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Oitavas de Final",
+            "matches": [
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">6 - Imperador</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">15 - UFSCar</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">4 - Pato</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Caraubaja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">2 - FEI</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">17 - Rampage</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">7 - Sinuelo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">14 - Tuffão</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">5 - Poli</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">61 - Pererecas</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">26 - Saci</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">3 - Komiketo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">1 - Baja UFMG</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">29 - Buffalo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">8 - Cactus</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">53 - ZABUMBAJA</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Quartas de final",
+            "matches": [
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">6 - Imperador</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Caraubaja</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">2 - FEI</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">7 - Sinuelo</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">5 - Poli</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">26 - Saci</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "columns": [
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">1 - Baja UFMG</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Equipe": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">8 - Cactus</abbr></span>",
+                            "td.class": {
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Semifinais",
+            "matches": [
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Caraubaja</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">1</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">7 - Sinuelo</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                },
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">5 - Poli</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">8 - Cactus</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Final",
+            "matches": [
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">7 - Sinuelo</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">5 - Poli</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        },
+        {
+            "round": "Disputa 3° lugar",
+            "matches": [
+                {
+                    "caption": "Melhor de 3",
+                    "columns": [
+                        "Vitórias",
+                        "Equipe"
+                    ],
+                    "rows": [
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">9 - Caraubaja</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">2</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team tournament-bracket__team--winner"
+                        },
+                        {
+                            "Vitórias": "<span class=\"tournament-bracket__number\"><abbr class=\"tournament-bracket__code\">8 - Cactus</abbr></span>",
+                            "Equipe": "<span class=\"tournament-bracket__number\">0</span>",
+                            "td.class": {
+                                "Vitórias": "tournament-bracket__score",
+                                "Equipe": "tournament-bracket__score"
+                            },
+                            "tr.class": "tournament-bracket__team"
+                        }
+                    ],
+                    "footer": null
+                }
+            ]
+        }
+    ],
+    "error": null
+}

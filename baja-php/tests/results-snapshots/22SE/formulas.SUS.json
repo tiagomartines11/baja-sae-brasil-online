@@ -1,0 +1,293 @@
+{
+    "evento": "22SE",
+    "prova": "SUS",
+    "nome": "Suspensão",
+    "type": "normal",
+    "stored_totals": {
+        "TCcom": null,
+        "TCmax": null,
+        "TCmin": null,
+        "OBScom": 0,
+        "OBSmax": 6,
+        "OBSmin": 2
+    },
+    "inputs": [
+        {
+            "equipe": 3,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 6
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 75
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 3
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 37.5
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 3
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 37.5
+            }
+        },
+        {
+            "equipe": 8,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 12,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 3
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 37.5
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 3
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 37.5
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 18,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 23,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 25,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 2
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 25
+            }
+        },
+        {
+            "equipe": 26,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 3
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 37.5
+            }
+        },
+        {
+            "equipe": 27,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 3
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 37.5
+            }
+        },
+        {
+            "equipe": 29,
+            "vars": {
+                "TC_1": null,
+                "TC_2": null,
+                "PART_COMP": "Participou",
+                "TC": null,
+                "OBS": 3
+            },
+            "pontos": {
+                "PENALTS": 0,
+                "SUSPTS": 37.5
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": [
+            3,
+            4,
+            6,
+            7,
+            8,
+            9,
+            10,
+            12,
+            13,
+            14,
+            16,
+            17,
+            18,
+            23,
+            25,
+            26,
+            27,
+            29
+        ]
+    },
+    "recompute_error": null,
+    "error": null
+}

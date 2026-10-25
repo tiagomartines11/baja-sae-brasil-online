@@ -1,0 +1,112 @@
+{
+    "evento": "23SU",
+    "prova": "ST4",
+    "nome": "Suspensão 4",
+    "type": "normal",
+    "stored_totals": [],
+    "inputs": [
+        {
+            "equipe": 3,
+            "vars": {
+                "PESO_4": 20,
+                "CORR4_1": null,
+                "CORR4_2": null
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 5,
+            "vars": {
+                "PESO_4": 20,
+                "CORR4_1": null,
+                "CORR4_2": null
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 7,
+            "vars": {
+                "PESO_4": 20,
+                "CORR4_1": null,
+                "CORR4_2": null
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 10,
+            "vars": {
+                "PESO_4": 20,
+                "CORR4_1": null,
+                "CORR4_2": null
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "PESO_4": 20,
+                "CORR4_1": null,
+                "CORR4_2": null
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 14,
+            "vars": {
+                "PESO_4": 20,
+                "CORR4_1": null,
+                "CORR4_2": null
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 15,
+            "vars": {
+                "PESO_4": 20,
+                "CORR4_1": null,
+                "CORR4_2": null
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        },
+        {
+            "equipe": 17,
+            "vars": {
+                "PESO_4": 20,
+                "CORR4_1": null,
+                "CORR4_2": null
+            },
+            "pontos": {
+                "SUS4PTS": null
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": [
+            3,
+            5,
+            7,
+            10,
+            13,
+            14,
+            15,
+            17
+        ]
+    },
+    "recompute_error": null,
+    "error": null
+}

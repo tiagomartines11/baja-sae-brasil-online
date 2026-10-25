@@ -1,0 +1,121 @@
+{
+    "evento": "24SU",
+    "prova": "TRA",
+    "nome": "Tração",
+    "type": "normal",
+    "stored_totals": {
+        "Dcom": -1,
+        "Dmax": 38.72,
+        "Dmin": 25.32,
+        "Tcom": -0.25,
+        "Tmax": 23.84,
+        "Tmin": 18.06
+    },
+    "inputs": [
+        {
+            "equipe": 1,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 18.06
+            },
+            "pontos": {
+                "TRAPTS": 50
+            }
+        },
+        {
+            "equipe": 2,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": 38.7,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 29.31719798657718
+            }
+        },
+        {
+            "equipe": 3,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 20.9
+            },
+            "pontos": {
+                "TRAPTS": 43.20574162679426
+            }
+        },
+        {
+            "equipe": 4,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 19.74
+            },
+            "pontos": {
+                "TRAPTS": 45.744680851063826
+            }
+        },
+        {
+            "equipe": 6,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 23.84
+            },
+            "pontos": {
+                "TRAPTS": 37.877516778523486
+            }
+        },
+        {
+            "equipe": 9,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 18.3
+            },
+            "pontos": {
+                "TRAPTS": 49.34426229508196
+            }
+        },
+        {
+            "equipe": 11,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": 38.72,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 29.332348993288587
+            }
+        },
+        {
+            "equipe": 13,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": null,
+                "T": 21.82
+            },
+            "pontos": {
+                "TRAPTS": 41.38405132905591
+            }
+        },
+        {
+            "equipe": 16,
+            "vars": {
+                "DISTANCIA_MAX": 50,
+                "D": 25.32,
+                "T": null
+            },
+            "pontos": {
+                "TRAPTS": 19.181174496644292
+            }
+        }
+    ],
+    "differs_from_stored": {
+        "vars": [],
+        "pontos": []
+    },
+    "recompute_error": null,
+    "error": null
+}

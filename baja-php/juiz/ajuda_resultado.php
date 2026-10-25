@@ -24,6 +24,8 @@ Ajuda::secao('visao-geral', 'Visão geral');
 <tr><td>
     <p>Um <strong>resultado</strong> é uma tabela pública no site de resultados. Ele junta os dados de uma ou mais <a href="ajuda_prova.php">provas</a>
     e define quais colunas mostrar e como classificar as equipes.</p>
+    <p>A página de resultados, a cópia dos juízes, as premiações e a API seguem as mesmas regras de cálculo e de classificação,
+    descritas com exemplos em <a href="https://github.com/tiagomartines11/baja-sae-brasil-online/blob/develop/docs/results-rules.md" target="_blank">Regras dos resultados</a> (em inglês).</p>
     <p><strong>Campos do formulário:</strong></p>
     <ul>
         <li><strong>ID Resultado</strong> &mdash; até 8 caracteres, <strong>único entre todos os eventos</strong>. Por convenção, o ID do evento + <code>_</code> + código:
@@ -35,7 +37,8 @@ Ajuda::secao('visao-geral', 'Visão geral');
     <p><strong>Como a tabela é montada:</strong> uma linha por equipe que tenha dados em pelo menos uma das provas de <em>Inputs</em>
     (provas <code>"rolling"</code> geram uma linha por lançamento). As linhas aparecem em ordem de número do carro; o público pode clicar no cabeçalho para ordenar.
     Se o resultado usa uma única prova, o rodapé mostra o status dela (Parcial/Final, alterado em <a href="admin_provas.php">Administrar provas</a>) e a hora da última atualização.</p>
-    <div class="aviso">Se o JSON estiver inválido, as colunas são salvas como <code>null</code> sem nenhum aviso e a página pública passa a mostrar o aviso de &quot;sem resultados&quot;.
+    <div class="aviso">Se o JSON estiver inválido, nada é salvo: a página mostra o erro e devolve o texto para correção.
+    Já colunas <strong>vazias</strong> (ou <code>null</code>) são salvas e a página pública passa a mostrar o aviso de &quot;sem resultados&quot;.
     A versão anterior fica no backup <strong>-1</strong>.</div>
 </td></tr>
 <?php
@@ -58,12 +61,13 @@ Ajuda::opcao('$EQUIPE', 'equipe', 'Nome da equipe.');
 Ajuda::opcao('$ESCOLA', 'equipe', 'Nome da escola.');
 Ajuda::opcao('$ESTADO', 'equipe', 'UF da equipe.');
 Ajuda::opcao('$DESCLASSIFICADO', 'equipe', 'Verdadeiro se a equipe foi desclassificada.');
+Ajuda::opcao('$TEAM_ID', 'equipe', 'Identificador da equipe no banco (normalmente igual a <code>$NUM</code>).');
 Ajuda::opcao('$CODIGO', 'prova', 'Cada <code>code</code> dos <code>inputs</code>, cada <code>vars</code>, cada <code>min_max</code> e cada <code>pontos</code> das provas listadas.
     Os Totais (<code>$Xmax</code>, <code>$Xmin</code>) <strong>não</strong> estão disponíveis aqui.');
 Ajuda::opcao('$ts', 'prova rolling', 'Hora do lançamento (timestamp Unix) de cada entrada.');
 Ajuda::opcao('$Cabecalho', 'colunas anteriores', 'O valor já calculado de cada coluna anterior, pelo nome do <code>header</code> &mdash; só para cabeçalhos sem espaços, como <code>Pontos</code> ou <code>Segurança</code>.
-    <div class="aviso">Funciona na página de resultados, mas <strong>não nas premiações</strong>, e enquanto houver spoiler a coluna anterior pode valer <code>\'SPOILERS\'</code>.
-    Prefira repetir a fórmula (ex.: <code>ROUND($ACEPTS, 2)</code>) em vez de referenciar outra coluna.</div>');
+    Funciona igual na página de resultados e nas premiações. Só colunas <strong>anteriores</strong>: uma coluna <code>Pos</code> ainda não tem valor.
+    <div class="aviso">Enquanto houver spoiler, a coluna anterior pode valer <code>\'SPOILERS\'</code>.</div>');
 ?>
 <tr><td colspan="3">As regras de escrita das fórmulas estão na <a href="ajuda_prova.php#formulas">ajuda de provas</a>. Nos resultados as fórmulas podem devolver HTML (negrito, cores, quebras de linha).</td></tr>
 <?php
@@ -71,9 +75,9 @@ Ajuda::fimSecao();
 
 Ajuda::secao('chaves', 'Chaves principais', ['Chave', 'Tipo', 'Descrição']);
 Ajuda::opcao('colunas', 'lista', 'Colunas da tabela, na ordem em que aparecem. Veja <a href="#colunas">colunas</a>.');
-Ajuda::opcao('pos', 'texto', '<code>header</code> da coluna usada para classificar. Sem <code>pos</code>, não há classificação e a coluna <code>Pos</code> fica vazia. Veja <a href="#classificacao">Classificação</a>.');
-Ajuda::opcao('pos_order', 'texto', '<code>"desc"</code> (padrão, maior é melhor) ou <code>"asc"</code> (menor é melhor, ex.: posição no grid).');
-Ajuda::opcao('tiebreak', 'fórmula', 'Critério de desempate quando o valor de <code>pos</code> é igual. Segue o mesmo sentido de <code>pos_order</code>.');
+Ajuda::opcao('pos', 'texto', '<code>header</code> da coluna usada para classificar (ou, se nenhuma coluna tiver esse header, o nome de uma variável). Sem <code>pos</code>, não há classificação e a coluna <code>Pos</code> mostra &ldquo;–&rdquo;. Veja <a href="#classificacao">Classificação</a>.');
+Ajuda::opcao('pos_order', 'texto', '<code>"desc"</code> (padrão, maior é melhor) ou <code>"asc"</code> (menor é melhor, ex.: posição no grid). Maiúsculas ou minúsculas, tanto faz.');
+Ajuda::opcao('tiebreak', 'fórmula', 'Critério de desempate quando o valor de <code>pos</code> é igual. Segue o mesmo sentido de <code>pos_order</code>. Vazio (<code>""</code>) é o mesmo que não ter; <code>"0"</code> é uma fórmula.');
 Ajuda::opcao('filter', 'nome de variável', 'Só mostra as equipes em que essa variável é verdadeira/preenchida. Veja <a href="#filter">filter</a>.');
 Ajuda::opcao('authorized_users', 'lista', 'Usuários que veem os valores reais enquanto a proteção de spoiler está ligada. Veja <a href="#spoilers">Spoilers</a>.');
 Ajuda::opcao('type', 'texto', '<code>"tournament"</code> para mostrar um chaveamento. Veja <a href="#torneio">Torneio</a>.');
@@ -92,7 +96,7 @@ Ajuda::opcao('val', 'fórmula, lista ou especial', '<ul>
         <li>uma fórmula &mdash; ex.: <code>"ROUND($ACEPTS, 2)"</code>;</li>
         <li>uma lista de fórmulas &mdash; cada valor em uma linha da mesma célula (ex.: 1ª e 2ª tentativas).</li>
     </ul>');
-Ajuda::opcao('highlight', 'fórmula', 'Somente com <code>val</code> em lista: o valor da lista igual ao resultado desta fórmula aparece em <strong>negrito</strong> (ex.: a tentativa que valeu).');
+Ajuda::opcao('highlight', 'fórmula', 'Somente com <code>val</code> em lista: o valor da lista igual ao resultado desta fórmula aparece em <strong>negrito</strong> (ex.: a tentativa que valeu). Sem <code>highlight</code> (ou com <code>""</code>), nada fica em negrito.');
 Ajuda::opcao('val_spoilers', 'fórmula ou lista', 'Mostrado no lugar de <code>val</code> enquanto a proteção de spoiler está ativa. Veja <a href="#spoilers">Spoilers</a>.');
 Ajuda::opcao('sort', 'texto', 'Como o público ordena a coluna ao clicar no cabeçalho:
     <ul>
@@ -130,10 +134,16 @@ Ajuda::secao('classificacao', 'Classificação: pos, pos_order e tiebreak');
 ?>
 <tr><td>
     <ul>
-        <li><code>pos</code> aponta para o <strong>header</strong> de uma coluna (não para uma variável). O valor da coluna é lido como número, ignorando HTML (<code>&lt;b&gt;812.4&lt;/b&gt;</code> vale 812.4).</li>
-        <li>Empates recebem a mesma posição e a seguinte é pulada: 1º, 1º, 3º.</li>
-        <li><code>tiebreak</code> é calculado por equipe e desempata no mesmo sentido de <code>pos_order</code>
+        <li><code>pos</code> aponta para o <strong>header</strong> de uma coluna (ou, se não houver, para uma variável).
+            O valor é lido como número: o conteúdo riscado (<code>&lt;s&gt;</code>, <code>&lt;strike&gt;</code>, <code>&lt;del&gt;</code>) é descartado, o HTML é ignorado
+            e vale o <strong>primeiro</strong> número, com vírgula ou ponto decimal
+            (<code>&lt;b&gt;812.4&lt;/b&gt;</code> vale 812.4, <code>1,5 pts</code> vale 1.5, <code>&lt;b&gt;0&lt;/b&gt; &lt;s&gt;13.87&lt;/s&gt;</code> vale 0).</li>
+        <li>Uma equipe sem número (célula vazia, texto, só conteúdo riscado) fica <strong>sem posição</strong>: a coluna <code>Pos</code> mostra &ldquo;–&rdquo;,
+            ela aparece depois das classificadas e nunca é premiada.</li>
+        <li>Números iguais empatam e a posição seguinte é pulada: 1º, 1º, 3º. Equipes ainda empatadas são listadas pelo número do carro.</li>
+        <li><code>tiebreak</code> é lido do mesmo jeito e desempata no mesmo sentido de <code>pos_order</code>
             (com o padrão <code>"desc"</code>, maior tiebreak fica na frente).</li>
+        <li>As premiações classificam exatamente assim. Detalhes e exemplos: <a href="https://github.com/tiagomartines11/baja-sae-brasil-online/blob/develop/docs/results-rules.md" target="_blank">Regras dos resultados</a>.</li>
     </ul>
     <?= Ajuda::exemplo(<<<'JSON'
 {
@@ -270,7 +280,7 @@ JSON, 'Segurança (baseado em 26BR_SGE, Inputs: SGE) — sem classificação, st
     {"val": "'<b>'.MAX(0, ROUND($PENPTS,2) + ROUND($SGEPTS,2) + ROUND($ACEPTS,2) + ROUND($VELPTS,2) + ROUND($SUSPTS,2) + ROUND($MANPTS,2) + ROUND($TRAPTS,2) + ROUND($ENDPTS,2)).'</b>'", "header": "Total"}
   ]
 }
-JSON, 'Geral (simplificado a partir de 26BR_GER, Inputs: AVF, MAN, TRA, SUS, END, SGE, PEN) — o Total repete as somas para funcionar também nas premiações') ?>
+JSON, 'Geral (simplificado a partir de 26BR_GER, Inputs: AVF, MAN, TRA, SUS, END, SGE, PEN) — o Total repete as somas; também poderia usar as colunas anteriores pelo header') ?>
 </td></tr>
 <?php
 Ajuda::fimSecao();

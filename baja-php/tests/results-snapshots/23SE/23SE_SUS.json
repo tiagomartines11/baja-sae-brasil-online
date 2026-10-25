@@ -1,0 +1,135 @@
+{
+    "page": "resultados/prova.php",
+    "evento": "23SE",
+    "id": "23SE_SUS",
+    "spoilers": false,
+    "tables": [
+        {
+            "columns": [
+                "[img trofeu.png]",
+                "#",
+                "Team",
+                "Tempo[s]",
+                "Obstáculos",
+                "Points"
+            ],
+            "rows": [
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "1",
+                    "Team": "EQUIPE FEI BAJA<br><i class=\"nomeEscola\">Centro Universitário da FEI</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "27.46"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "2",
+                    "Team": "STARA KOMIKETO BAJA UFSJ<br><i class=\"nomeEscola\">Universidade Federal de São João del-Rei</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>7</b><br> 1",
+                    "Points": "48.06",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">2º</p>",
+                    "#": "3",
+                    "Team": "EQUIPE POLI<br><i class=\"nomeEscola\">Escola Politécnica da Universidade de São Paulo</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>7</b><br> -",
+                    "Points": "48.06",
+                    "td.class": {
+                        "[img trofeu.png]": "prata"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "5",
+                    "Team": "PAC BAJA<br><i class=\"nomeEscola\">UNESP Bauru</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>1</b><br> -",
+                    "Points": "6.87"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "8",
+                    "Team": "UNICAMP BAJA SAE<br><i class=\"nomeEscola\">Universidade Estadual de Campinas - UNICAMP</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>6</b><br> 4",
+                    "Points": "41.19"
+                },
+                {
+                    "[img trofeu.png]": "<p style=\"color:transparent\">1º</p>",
+                    "#": "9",
+                    "Team": "SACI BAJA<br><i class=\"nomeEscola\">Universidade Federal de Itajubá</i>",
+                    "Tempo[s]": "<b>89.25</b><br> -",
+                    "Obstáculos": "<b>8</b><br> 1",
+                    "Points": "85",
+                    "td.class": {
+                        "[img trofeu.png]": "ouro"
+                    }
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "10",
+                    "Team": "TEC-ILHA BAJA<br><i class=\"nomeEscola\">UNESP - FEIS</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "1<br> <b>5</b>",
+                    "Points": "34.33"
+                },
+                {
+                    "[img trofeu.png]": "6º",
+                    "#": "12",
+                    "Team": "VITÓRIA BAJA<br><i class=\"nomeEscola\">Universidade Federal do Espírito Santo</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "4<br> <b>5</b>",
+                    "Points": "34.33"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "13",
+                    "Team": "CEFAST BAJA SAE<br><i class=\"nomeEscola\">Centro Federal de Educação Tecnológica de Minas Gerais (CEFET/MG)</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "2<br> <b>4</b>",
+                    "Points": "27.46"
+                },
+                {
+                    "[img trofeu.png]": "4º",
+                    "#": "14",
+                    "Team": "ITA BAJA<br><i class=\"nomeEscola\">ITA - Instituto Tecnológico de Aeronáutica</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>6</b><br> 1",
+                    "Points": "41.19"
+                },
+                {
+                    "[img trofeu.png]": "12º",
+                    "#": "18",
+                    "Team": "KAIZEN PIRATAS DO CERRADO<br><i class=\"nomeEscola\">Universidade de Brasília</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>1</b><br> <b>1</b>",
+                    "Points": "6.87"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "20",
+                    "Team": "GARRA BAJA<br><i class=\"nomeEscola\">Universidade São Judas Tadeu</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "1<br> <b>4</b>",
+                    "Points": "27.46"
+                },
+                {
+                    "[img trofeu.png]": "8º",
+                    "#": "22",
+                    "Team": "RAMPAGE BAJA UFJF<br><i class=\"nomeEscola\">Universidade Federal de Juiz de Fora</i>",
+                    "Tempo[s]": "-<br> -",
+                    "Obstáculos": "<b>4</b><br> <b>4</b>",
+                    "Points": "27.46"
+                }
+            ],
+            "footer": "Prova Em Andamento<br>Última Atualização: [timestamp]"
+        }
+    ],
+    "error": null
+}
