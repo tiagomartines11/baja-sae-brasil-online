@@ -120,6 +120,71 @@ warn() { printf '[%s] WARNING: %s\n' "${LOG_PREFIX:-backup}" "$*" >&2; }
 err()  { printf '[%s] ERROR: %s\n' "${LOG_PREFIX:-backup}" "$*" >&2; }
 die()  { err "$*"; exit 1; }
 
+# ----- The stack's .env -----
+#
+# load_env_file FILE: reads FILE as docker compose reads it and exports
+# every KEY=value in it. Later lines win, as in compose.
+#
+# Never `source` it. The .env is written for compose, not bash:
+# `SMTP_FROM_NAME=SAE BRASIL - Certificados` is a fine compose value and,
+# sourced, runs a command called BRASIL, which under `set -e` kills the
+# nightly backup before it starts. Sourcing would also run any `$(...)` a
+# value happens to hold.
+#
+# What compose does and this repeats: blank lines and lines starting with
+# `#` are skipped; an optional `export ` prefix is dropped; '...' is taken
+# literally; "..." and unquoted values expand ${VAR} and ${VAR:-default}
+# from what is already loaded or exported; an unquoted value ends at
+# whitespace followed by `#`. Not repeated: escapes inside "...", and
+# `$VAR` without braces (no .env.example value uses either).
+_env_expand() {
+    local s="$1" out="" name val
+    while [[ "$s" == *"\${"* ]]; do
+        out+="${s%%"\${"*}"
+        s="${s#*"\${"}"
+        if [[ "$s" =~ ^([A-Za-z_][A-Za-z0-9_]*)(:-([^}]*))?\}(.*)$ ]]; then
+            name="${BASH_REMATCH[1]}"
+            if [[ -n "${BASH_REMATCH[2]}" ]]; then
+                val="${!name:-${BASH_REMATCH[3]}}"
+            else
+                val="${!name-}"
+            fi
+            out+="$val"
+            s="${BASH_REMATCH[4]}"
+        else
+            out+="\${"
+        fi
+    done
+    printf '%s' "${out}${s}"
+}
+
+load_env_file() {
+    local file="$1" line key value n=0
+    [[ -r "$file" ]] || die "cannot read ${file}"
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        n=$((n + 1))
+        line="${line%$'\r'}"
+        [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+        if [[ ! "$line" =~ ^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
+            die "${file}:${n}: not a KEY=value line"
+        fi
+        key="${BASH_REMATCH[2]}"
+        value="${BASH_REMATCH[3]}"
+        if [[ "$value" =~ ^\'([^\']*)\'[[:space:]]*(#.*)?$ ]]; then
+            value="${BASH_REMATCH[1]}"
+        elif [[ "$value" =~ ^\"([^\"]*)\"[[:space:]]*(#.*)?$ ]]; then
+            value="$(_env_expand "${BASH_REMATCH[1]}")"
+        else
+            value="${value%%[[:space:]]#*}"
+            value="${value%"${value##*[![:space:]]}"}"
+            value="$(_env_expand "$value")"
+        fi
+        printf -v "$key" '%s' "$value"
+        # shellcheck disable=SC2163  # exports the variable named by $key
+        export "$key"
+    done < "$file"
+}
+
 # ----- MySQL access -----
 #
 # Credentials go through a 0600 option file, never on the command line:

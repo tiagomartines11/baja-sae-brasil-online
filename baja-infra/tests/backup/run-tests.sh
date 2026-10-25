@@ -381,6 +381,54 @@ test_erasure_log_round_trip() {
 # The stack's .env, for recovering every secret from nothing
 # ======================================================================
 
+test_env_file_is_read_as_compose_reads_it() {
+    # backup-run.sh and verify-run.sh read the stack's .env. It is written
+    # for compose: sourced by bash, `SMTP_FROM_NAME=SAE BRASIL - ...` runs
+    # a command and the nightly backup dies before it starts.
+    local base="${TMP}/env-read"
+    mkdir -p "$base"
+    LOG_PREFIX='test'
+    # shellcheck source=backup-lib.sh
+    source "${SCRIPTS}/backup-lib.sh"
+
+    # The whole of .env.example loads, with compose's values.
+    ( load_env_file "${HERE}/../../.env.example"
+      same "$SMTP_FROM_NAME" "SAE BRASIL - Certificados" "SMTP_FROM_NAME"
+      same "$COMPOSE_PROFILES" "dev" "COMPOSE_PROFILES (\${ENV})"
+      same "$ERASURE_LOG_DIR" "./backup-local/erasure" "ERASURE_LOG_DIR"
+      same "$(env | grep -c '^BAJA_DOMAIN=baja.local$')" 1 "BAJA_DOMAIN exported"
+    ) || fail ".env.example"
+
+    {
+        printf '%s\n' '# a comment' '' \
+            'SPACES=a b  c' \
+            'TRAILING=value # a comment' \
+            'HASH=a#b' \
+            "SINGLE='\${SPACES} # kept'" \
+            'DOUBLE="${SPACES} # kept"' \
+            'DEFAULTED=${UNSET_IN_TEST:-fallback}' \
+            'export EXPORTED=yes' \
+            'RUN=$(touch '"${base}"'/ran)' \
+            'LATER=first' 'LATER=second'
+        printf 'CRLF=dos\r\n'
+    } > "${base}/.env"
+    load_env_file "${base}/.env"
+    same "$SPACES" "a b  c" "SPACES"
+    same "$TRAILING" "value" "TRAILING"
+    same "$HASH" "a#b" "HASH"
+    same "$SINGLE" '${SPACES} # kept' "SINGLE"
+    same "$DOUBLE" "a b  c # kept" "DOUBLE"
+    same "$DEFAULTED" "fallback" "DEFAULTED"
+    same "$EXPORTED" "yes" "EXPORTED"
+    same "$RUN" "\$(touch ${base}/ran)" "RUN"
+    [[ ! -e "${base}/ran" ]] || fail "a value was run as a command"
+    same "$LATER" "second" "LATER"
+    same "$CRLF" "dos" "CRLF"
+
+    printf 'not an assignment\n' > "${base}/bad.env"
+    if ( load_env_file "${base}/bad.env" ) 2>/dev/null; then fail "accepted a line that is not KEY=value"; fi
+}
+
 # A made-up .env. Real ones hold the production passwords; this one holds
 # obviously fake values.
 make_env_file() {
@@ -576,6 +624,7 @@ run_test "the manifest lists every artifact with its checksum, and no file names
 run_test "the manifest refuses anything that looks like personal data"           test_manifest_refuses_personal_data
 run_test "the manifest is uploaded last, in daily/, monthly/ and yearly/"        test_manifest_is_uploaded_last_in_every_tier
 run_test "the erasure log survives backup and restore with its chain intact"     test_erasure_log_round_trip
+run_test "the stack's .env is read as compose reads it, and never run"         test_env_file_is_read_as_compose_reads_it
 run_test "the .env copy is encrypted to exactly one recipient, the escrow key" test_env_copy_is_for_the_escrow_key_only
 run_test "an unchanged .env is not uploaded again, and its copy still checks"  test_unchanged_env_is_not_uploaded_again
 run_test "an event archive records event, time, code version and snapshot count, and restores" test_event_archive_manifest_and_restore

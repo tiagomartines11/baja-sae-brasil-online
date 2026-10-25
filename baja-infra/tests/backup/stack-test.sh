@@ -50,10 +50,11 @@ say()  { printf '\n[stack-test] %s\n' "$*"; }
 fail() { printf '\n[stack-test] FAILED: %s\n' "$*" >&2; exit 1; }
 
 [[ -f "${INFRA}/.env" ]] || fail "no ${INFRA}/.env — copy .env.example first"
-set -a
-# shellcheck disable=SC1090,SC1091
-source "${INFRA}/.env"
-set +a
+LOG_PREFIX="stack-test"
+# shellcheck source-path=SCRIPTDIR/../../scripts
+# shellcheck source=backup-lib.sh
+source "${INFRA}/scripts/backup-lib.sh"
+load_env_file "${INFRA}/.env"
 [[ "${BAJA_DOMAIN:-}" != "bajasaebrasil.net" ]] || fail "this is the production .env; run this on dev or staging only"
 
 COMPOSE=(docker compose --project-directory "$INFRA" -f "${INFRA}/docker-compose.yml")

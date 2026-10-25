@@ -49,14 +49,11 @@ LOCK_FD=9
 load_config() {
     # BAJA_ENV_FILE lets a test (tests/backup/stack-test.sh) hand over a
     # copy of .env with its own destination and keys. Everything this
-    # sources is exported, and docker compose prefers exported variables
+    # loads is exported, and docker compose prefers exported variables
     # to its .env, so the copy wins everywhere.
     local env_file="${BAJA_ENV_FILE:-${INFRA_DIR}/.env}"
     [[ -f "$env_file" ]] || die "stack env not found: ${env_file}"
-    set -a
-    # shellcheck disable=SC1090
-    source "$env_file"
-    set +a
+    load_env_file "$env_file"
 
     # Production and staging run with the prod overlay; it is what mounts
     # the forum uploads from /srv/baja into the backup container.
