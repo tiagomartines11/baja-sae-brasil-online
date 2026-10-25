@@ -232,13 +232,12 @@ Ajuda::secao('min_max', 'min_max — valores comparados entre equipes');
     <?= Ajuda::exemplo(<<<'JSON'
 {
   "min_max": {
-    "FIN": "$T < 9999 ? 1 : null",
-    "TFIN": "$T < 9999 ? $T : null"
+    "FIN": "$T !== null && $T < 9999 ? 1 : null",
+    "TFIN": "$T !== null && $T < 9999 ? $T : null"
   }
 }
 JSON, 'Exemplo: $FINcount é o número de equipes que completaram; $TFINsum soma só os tempos delas (um SOMASE) e $TFINavg é o tempo médio delas.') ?>
-    <div class="aviso">Uma equipe com <code>T</code> vazio dá <code>1</code> em <code>FIN</code> (para o PHP, vazio é menor que 9999) e conta como se tivesse completado.
-        Se isso puder acontecer, use <code>$T !== null &amp;&amp; $T &lt; 9999 ? 1 : null</code>.</div>
+    <div class="aviso">Não tire o <code>$T !== null</code>: para o PHP, vazio é menor que 9999, e sem ele uma equipe com <code>T</code> vazio contaria como se tivesse completado.</div>
     <p>Os Totais aparecem no campo &quot;Totais&quot; da prova e só podem ser usados em <code>pontos</code> (não ficam disponíveis nos resultados).</p>
     <?= Ajuda::exemplo(<<<'JSON'
 {
