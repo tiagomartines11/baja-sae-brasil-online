@@ -45,6 +45,17 @@ final class ResultsConfig
         return is_int($this->pos) ? $this->pos : (string)$this->pos;
     }
 
+    /** Whether at least one column has a "val_spoilers", so spoilers can hide something. */
+    public function hasSpoilerColumns(): bool
+    {
+        foreach ($this->columns as $column) {
+            if ($column->hasSpoilerValue()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** "asc" (lowest first) or "desc" (highest first, the default); not case sensitive (R5). */
     public function direction(): string
     {

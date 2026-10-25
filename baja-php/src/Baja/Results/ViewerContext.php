@@ -11,17 +11,22 @@ namespace Baja\Results;
  * "val_spoilers" then show that instead of their real value (for example
  * "?" instead of the points), until the event is finished.
  *
- *   publicView()    the public results page (resultados/prova.php without
- *                   a forum session) and the results API. Spoilers are
- *                   hidden whenever the event has them on and is not
+ *   publicView()    the results page as the public gets it (resultados/
+ *                   prova.php, from the cache or for any session that does
+ *                   not get past the spoilers) and the results API. Spoilers
+ *                   are hidden whenever the event has them on and is not
  *                   finished. Nobody gets past them here, whoever they are:
- *                   the page is cached publicly.
+ *                   the page is cached publicly. While they are hidden, a
+ *                   resultado with a hidden column ranks nobody
+ *                   (hidesRanking()).
  *
  *   authorized()    resultados/prova.php with a forum session, which nginx
  *                   gives only to a browser with the judges' staff cookie
  *                   (docs/results-caching.md). Same rule, except that a user
  *                   named in the resultado's "authorized_users", or a
- *                   developer, sees the real values. Never cached.
+ *                   developer, sees the real values, and the ranking.
+ *                   prova.php uses it only for those users; anybody else
+ *                   with a session gets publicView(). Never cached.
  *
  *   premiacao()     the awards screens (Baja\Premiacao\Resolver). They have
  *                   never hidden spoilers; they only exist for the organisers.
@@ -69,11 +74,36 @@ final class ViewerContext
         if ($this->kind === self::PREMIACAO) {
             return false;
         }
-        $eventHidesThem = $this->event->spoilers && !$this->event->finished;
-        if (!$eventHidesThem || $this->kind === self::PUBLIC) {
-            return $eventHidesThem;
+        if (!$this->eventHidesSpoilers() || $this->kind === self::PUBLIC) {
+            return $this->eventHidesSpoilers();
         }
         // The loose in_array() is what the judge page always did.
         return !$this->developer && !in_array($this->username, $authorizedUsers);
+    }
+
+    /**
+     * Whether nobody is ranked for this viewer (BAJAAPP-42): the public view,
+     * while spoilers apply, of a resultado with at least one column that has
+     * a "val_spoilers".
+     *
+     * The order of the teams would give away what the hidden columns hide:
+     * with "pos" naming a hidden column it ranks by the spoiler value, and
+     * with "pos" naming a formula variable it would rank by the real points.
+     * So no team gets a position at all: every "Pos" cell shows "–".
+     *
+     * A resultado with no "val_spoilers" column hides nothing, so it ranks as
+     * usual. authorized() and the premiação are not affected.
+     */
+    public function hidesRanking(ResultsConfig $config): bool
+    {
+        return $this->kind === self::PUBLIC
+            && $this->eventHidesSpoilers()
+            && $config->hasSpoilerColumns();
+    }
+
+    /** The event has spoilers on and is not finished. */
+    private function eventHidesSpoilers(): bool
+    {
+        return $this->event->spoilers && !$this->event->finished;
     }
 }

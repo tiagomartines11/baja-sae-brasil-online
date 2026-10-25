@@ -59,5 +59,13 @@
         <testsuite name="results-check-db">
             <directory>tests/ResultsCheck/Db</directory>
         </testsuite>
+        <!--
+          Prova totals ($Xmax, $Xcount...) worked out by a real save, on a
+          made-up event that the test inserts and deletes. Needs the app's
+          database variables and BAJA_TEST_DB set to 1; skipped without them.
+        -->
+        <testsuite name="prova-db">
+            <directory>tests/Prova/Db</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

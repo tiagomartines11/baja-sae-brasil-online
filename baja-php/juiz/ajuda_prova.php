@@ -33,7 +33,7 @@ Ajuda::secao('visao-geral', 'Visão geral');
             e o código usado no campo <em>Inputs</em> dos resultados.</li>
         <li><strong>Nome Prova</strong> &mdash; aparece na lista do juiz e no cabeçalho das telas de lançamento.</li>
         <li><strong>Parâmetros</strong> &mdash; JSON descrito nesta página.</li>
-        <li><strong>Totais</strong> &mdash; somente leitura: máximos/mínimos calculados a partir de <a href="#min_max"><code>min_max</code></a>.</li>
+        <li><strong>Totais</strong> &mdash; somente leitura: máximos, mínimos, contagens, somas e médias calculados a partir de <a href="#min_max"><code>min_max</code></a>.</li>
     </ul>
     <p><strong>Ordem de cálculo</strong> (por equipe, a cada lançamento ou &quot;Refresh Pontos&quot;):</p>
     <?= Ajuda::codigo("lançamento do juiz (inputs)  →  vars  →  min_max  →  Totais (todas as equipes)  →  pontos") ?>
@@ -50,7 +50,7 @@ Ajuda::secao('chaves', 'Chaves principais', ['Chave', 'Tipo', 'Descrição']);
 Ajuda::opcao('type', 'texto', 'Tipo de lançamento: omitido (normal), <code>"rolling"</code>, <code>"tournament"</code> ou <code>"laps"</code>. Veja <a href="#type">type</a>.');
 Ajuda::opcao('inputs', 'lista', 'Campos que o juiz preenche. Veja <a href="#inputs">inputs</a>.');
 Ajuda::opcao('vars', 'objeto', 'Variáveis calculadas por equipe a partir dos inputs. Veja <a href="#vars">vars</a>.');
-Ajuda::opcao('min_max', 'objeto', 'Variáveis por equipe cujo máximo/mínimo entre todas as equipes é calculado. Veja <a href="#min_max">min_max</a>.');
+Ajuda::opcao('min_max', 'objeto', 'Variáveis por equipe cujo máximo, mínimo, contagem, soma e média entre todas as equipes são calculados. Veja <a href="#min_max">min_max</a>.');
 Ajuda::opcao('pontos', 'objeto', 'Fórmulas de pontuação. Veja <a href="#pontos">pontos</a>.');
 Ajuda::opcao('seeding', 'objeto', 'Somente torneio: quem participa e como é feita a classificação. Veja <a href="#torneio">Torneio</a>.');
 Ajuda::opcao('status', 'objeto', 'Somente torneio: estado da classificação (gerenciado pela tela de chaveamento). Veja <a href="#torneio">Torneio</a>.');
@@ -220,8 +220,25 @@ Ajuda::secao('min_max', 'min_max — valores comparados entre equipes');
     <ul>
         <li><code>$NOMEmax</code> &mdash; maior valor, ignorando vazios e <code>9999</code>;</li>
         <li><code>$NOMEmin</code> &mdash; menor valor, ignorando vazios e <code>0</code>;</li>
-        <li><code>$NOMEcom</code> &mdash; metade da fração de equipes com valor <code>9999</code> (use 9999 para &quot;não completou&quot;).</li>
+        <li><code>$NOMEcom</code> &mdash; metade da fração de equipes com valor <code>9999</code> (use 9999 para &quot;não completou&quot;);</li>
+        <li><code>$NOMEcount</code> &mdash; quantas equipes têm valor;</li>
+        <li><code>$NOMEsum</code> &mdash; soma dos valores (0 se nenhuma equipe tem valor);</li>
+        <li><code>$NOMEavg</code> &mdash; média dos valores (vazio se nenhuma equipe tem valor).</li>
     </ul>
+    <p>Para <code>count</code>, <code>sum</code> e <code>avg</code>, &quot;ter valor&quot; é não estar vazio e não ser <code>9999</code>.
+    O <code>0</code> é um valor e conta; valores negativos também.</p>
+    <p><strong>Contar ou somar só algumas equipes:</strong> não precisa de sintaxe especial. Faça uma variável em <code>min_max</code> que dá vazio
+    (<code>null</code>) para as equipes que não entram. Por exemplo, com o tempo <code>T</code> (um input ou uma var) valendo 9999 para quem não completou:</p>
+    <?= Ajuda::exemplo(<<<'JSON'
+{
+  "min_max": {
+    "FIN": "$T < 9999 ? 1 : null",
+    "TFIN": "$T < 9999 ? $T : null"
+  }
+}
+JSON, 'Exemplo: $FINcount é o número de equipes que completaram; $TFINsum soma só os tempos delas (um SOMASE) e $TFINavg é o tempo médio delas.') ?>
+    <div class="aviso">Uma equipe com <code>T</code> vazio dá <code>1</code> em <code>FIN</code> (para o PHP, vazio é menor que 9999) e conta como se tivesse completado.
+        Se isso puder acontecer, use <code>$T !== null &amp;&amp; $T &lt; 9999 ? 1 : null</code>.</div>
     <p>Os Totais aparecem no campo &quot;Totais&quot; da prova e só podem ser usados em <code>pontos</code> (não ficam disponíveis nos resultados).</p>
     <?= Ajuda::exemplo(<<<'JSON'
 {
@@ -230,10 +247,11 @@ Ajuda::secao('min_max', 'min_max — valores comparados entre equipes');
     "VEL": "(count(array_diff([$VEL_1, $VEL_2], [null])) > 0) ? max(array_diff([$VEL_1, $VEL_2], [null])) : null"
   }
 }
-JSON, 'Exemplo (26BR_AVF): melhor tempo de aceleração e melhor velocidade de cada equipe. Gera $ACEmin, $ACEmax, $VELmin, $VELmax.') ?>
+JSON, 'Exemplo (26BR_AVF): melhor tempo de aceleração e melhor velocidade de cada equipe. Gera $ACEmin, $ACEmax, $ACEcount..., $VELmin, $VELmax, $VELcount...') ?>
     <?= Ajuda::codigo(<<<'TXT'
 "Totais" resultantes (ilustrativo):
-{"ACEmax": 6.512, "ACEmin": 4.103, "ACEcom": 0, "VELmax": 52.3, "VELmin": 38.9, "VELcom": 0}
+{"ACEmax": 6.512, "ACEmin": 4.103, "ACEcom": 0, "ACEcount": 40, "ACEsum": 201.4, "ACEavg": 5.035,
+ "VELmax": 52.3, "VELmin": 38.9, "VELcom": 0, "VELcount": 40, "VELsum": 1820, "VELavg": 45.5}
 TXT) ?>
 </td></tr>
 <?php
@@ -242,7 +260,7 @@ Ajuda::fimSecao();
 Ajuda::secao('pontos', 'pontos — pontuação');
 ?>
 <tr><td>
-    <p>Objeto <code>{"NOME": fórmula}</code>. Enxerga inputs, <code>vars</code>, <code>min_max</code> da equipe e os Totais (<code>$NOMEmax</code>, <code>$NOMEmin</code>, <code>$NOMEcom</code>).</p>
+    <p>Objeto <code>{"NOME": fórmula}</code>. Enxerga inputs, <code>vars</code>, <code>min_max</code> da equipe e os Totais (<code>$NOMEmax</code>, <code>$NOMEmin</code>, <code>$NOMEcom</code>, <code>$NOMEcount</code>, <code>$NOMEsum</code>, <code>$NOMEavg</code>).</p>
     <ul>
         <li>As fórmulas são calculadas em <strong>ordem alfabética do nome</strong>, e cada resultado fica disponível para as seguintes.
             Ex.: <code>SGE_STATUS</code> pode usar <code>$SGEPTS</code>, mas não o contrário.</li>

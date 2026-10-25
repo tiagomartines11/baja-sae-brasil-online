@@ -11,9 +11,12 @@ namespace Baja\Results;
  *   cells      one Cell per column header. Two columns with the same
  *              header share one cell, the later one's, as on the page.
  *   position   1 for the best, equal for a tie; null when the row has no
- *              value to rank by, or the resultado ranks nothing ("pos" not
- *              set). A "Pos" column then shows NO_POSITION.
- *   tiebreak   the value of the "tiebreak" formula, if there is one
+ *              value to rank by, the resultado ranks nothing ("pos" not
+ *              set), or the ranking is hidden while spoilers apply
+ *              (ViewerContext::hidesRanking). A "Pos" column then shows
+ *              NO_POSITION.
+ *   tiebreak   the value of the "tiebreak" formula, if there is one; null
+ *              while the ranking is hidden
  *   variables  the formula variables the row was computed from
  */
 final class ResultRow

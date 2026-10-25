@@ -25,10 +25,13 @@ use Baja\Results\Ranking\Ranking;
  *
  *   1. The inputs of the resultado's provas are merged into one set of
  *      formula variables per team, one entry per run (Build\TeamEntries).
- *   2. The viewer decides whether spoilers are hidden (ViewerContext).
+ *   2. The viewer decides whether spoilers are hidden, and whether the
+ *      ranking is hidden with them (ViewerContext).
  *   3. Each entry's columns and tiebreak are worked out with
  *      Input::solveFormula (Build\ColumnEvaluator).
- *   4. The rows are ranked by "pos" (Ranking\Ranking).
+ *   4. The rows are ranked by "pos" (Ranking\Ranking), unless the ranking
+ *      is hidden: then no row has a position or a tiebreak value, so the
+ *      rows cannot give away what the spoilers hide.
  */
 final class ResultsBuilder
 {
@@ -42,18 +45,22 @@ final class ResultsBuilder
     public static function build(ResultsConfig $config, array $inputs, ViewerContext $viewer): ResultTable
     {
         $hideSpoilers = $viewer->hidesSpoilers($config->authorizedUsers);
+        $hideRanking = $viewer->hidesRanking($config);
         $rows = [];
         foreach (TeamEntries::of($inputs, $config->filter) as $entry) {
             ColumnEvaluator::evaluate($entry, $config, $hideSpoilers);
             $team = self::team($entry);
-            $rows[] = new ResultRow($team, Cells::of($config->columns, $entry, $team), null, $entry->tiebreak, $entry->variables);
+            // The tiebreak is still worked out (a broken formula is still
+            // reported), but a hidden ranking does not show it.
+            $tiebreak = $hideRanking ? null : $entry->tiebreak;
+            $rows[] = new ResultRow($team, Cells::of($config->columns, $entry, $team), null, $tiebreak, $entry->variables);
         }
 
         $key = $config->rankingKey();
-        if ($key !== null) {
+        if ($key !== null && !$hideRanking) {
             $rows = Ranking::rank($rows, $key, $config->direction(), $config->tiebreakFormula() !== null);
         }
-        return new ResultTable($config->columns, $rows, $hideSpoilers);
+        return new ResultTable($config->columns, $rows, $hideSpoilers, $hideRanking);
     }
 
     /** The team, from the variables (which an input can override). */
