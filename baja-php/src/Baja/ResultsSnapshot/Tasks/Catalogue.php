@@ -13,7 +13,7 @@ use Baja\Model\ResultadoQuery;
  * The list of everything to snapshot, read from the database.
  *
  * For every event with finalizado = 1 (the seed has 17 events, 14 of them
- * finished):
+ * finished), or for the events asked for, finished or not:
  *
  *   every resultado     prova.php
  *   tournament ones     also torneio.php
@@ -32,9 +32,13 @@ final class Catalogue
      */
     public static function tasks(?array $onlyEvents = null): array
     {
-        $query = EventoQuery::create()->filterByFinalizado(true)->orderByEventoId();
+        $query = EventoQuery::create()->orderByEventoId();
         if ($onlyEvents !== null) {
+            // Named events are taken as they are, finished or not
+            // (docs/results-snapshots.md, pre-release check).
             $query->filterByEventoId($onlyEvents);
+        } else {
+            $query->filterByFinalizado(true);
         }
 
         $tasks = [];
