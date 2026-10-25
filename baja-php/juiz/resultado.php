@@ -243,7 +243,7 @@ Template::printHeader("Detalhes de Resultado", false);
     </form>
 
     <script type="text/javascript">
-        // Html::js, not plain json_encode: a header or name holding "</script>"
+        // Html::js, not plain json_encode: a header or name holding a closing script tag
         // would end this block. The backups were printed as stored, raw.
         const atual = <?= $novo?'[]':Html::js($resultado->getColunas()) ?>;
         const backs = <?= (!$novo && $resultado->getColunasBackup())?Html::js(json_decode($resultado->getColunasBackup()) ?? new \stdClass()):'{}' ?>;

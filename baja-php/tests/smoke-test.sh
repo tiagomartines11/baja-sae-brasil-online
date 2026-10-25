@@ -727,6 +727,32 @@ body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/26BR/index.php")
 check_body "juiz1 keeps the Enduro grant from 06-contagem.sql" "$body" 'href="contagem.php?p=END"'
 check_body "juiz1 keeps the score-entry grants from 05-seed-baja-resultados.sql" "$body" 'href="dashboard.php?p=MAN"'
 
+# 30. The prova editor's script stays a script (BAJAAPP-75).
+#
+# The browser ends a <script> element at the first "</script" it meets, even
+# one inside a JavaScript comment or string. A comment in juiz/prova.php wrote
+# the tag out, so the script ended there and its code, starting with
+# "const atual = ...", was printed on the page as text; the backup and restore
+# buttons did nothing. tests/Unit/Site/ScriptBlockEndTest.php catches that in
+# the source; this checks the page as served.
+#
+# The script elements are cut out the way the browser cuts them (up to the
+# first "</script"), and "const atual" must not be left in what remains. The
+# first check makes sure the editor rendered at all, so that a refusal or a
+# redirect cannot pass the second. superadmin has the admin permission
+# prova.php asks for; END is the 26BR Enduro both seed files know.
+login_as superadmin
+body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/26BR/prova.php?id=END")
+check_body "prova editor renders for superadmin (26BR END)" "$body" 'const atual'
+outside_scripts=$(printf '%s' "$body" | perl -0777 -pe 's{<script\b[^>]*>.*?</script}{}gis')
+if echo "$outside_scripts" | grep -qF 'const atual'; then
+    red "FAIL  prova editor: 'const atual' is printed as page text, outside any <script>"
+    FAIL=$((FAIL + 1))
+else
+    green "PASS  prova editor: 'const atual' only inside a <script>"
+    PASS=$((PASS + 1))
+fi
+
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"
 [[ $FAIL -eq 0 ]] || exit 1
