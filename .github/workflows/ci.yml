@@ -182,6 +182,7 @@ jobs:
       #   05  the results data: 17 events, 22BR to 26BR
       #   06  the lap counting tables; it also edits the 26BR Enduro's
       #       inputs list, so without it CI would not match a dev database
+      #   07  the event archive queue (BAJAAPP-67)
       # 03 and 04 are the forum databases, which SKIP_AUTH pages never read.
       - name: Load the dev seed
         working-directory: baja-infra/mysql/init
@@ -191,11 +192,15 @@ jobs:
           MYSQL_RESULTADOS_PASSWORD: unused-in-ci
           MYSQL_PHPBB_BAJA_PASSWORD: unused-in-ci
           MYSQL_PHPBB_FORMULA_PASSWORD: unused-in-ci
+          # 02 also creates the read-only backup user, and runs under set -u.
+          MYSQL_BACKUP_USER: backup
+          MYSQL_BACKUP_PASSWORD: unused-in-ci
         run: |
           mysql -uroot -proot < 01-create-databases.sql
           bash 02-create-users.sh
           mysql -uroot -proot < 05-seed-baja-resultados.sql
           mysql -uroot -proot < 06-contagem.sql
+          mysql -uroot -proot < 07-evento-arquivamento.sql
           mysql -uroot -proot -e "CREATE USER 'snapshot'@'%' IDENTIFIED BY 'snapshot'; GRANT SELECT ON baja_resultados.* TO 'snapshot'@'%';"
 
       - name: PHPUnit (the tool writes nothing)
@@ -238,6 +243,18 @@ jobs:
           BAJA_TEST_DB_PASS: root
         run: vendor/bin/phpunit --testsuite prova-db --fail-on-skipped
 
+      # The event archive queue (BAJAAPP-67): marking an event finalizado
+      # records exactly one pending archive, and the nightly job consumes
+      # it. Writes a made-up event, so BAJA_TEST_DB=1 and the account that
+      # may write. --fail-on-skipped: a test skipped here would be a check
+      # nobody ran.
+      - name: PHPUnit (event archive queue)
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite results-archive-db --fail-on-skipped
+
       # scripts/formula-engine-compare.php (docs/formula-engine.md): on the
       # seed, eval() and the new formula engine give the same value for every
       # formula and team, and the tool writes nothing. CompareFixtureTest loads
@@ -262,12 +279,46 @@ jobs:
           FORMULA_ENGINE: safe
         run: php scripts/results-snapshot.php --check --jobs 4
 
+      # The backup MySQL user against this real server: its exact grants,
+      # that it cannot read mysql.user (password hashes) or write, that the
+      # backup's own dump code still dumps all three databases with only
+      # those grants, and that restoring a dump replaces a database instead
+      # of merging into it. Last, because it restores baja_resultados over
+      # itself; the forum seeds (03, 04) are loaded only for this.
+      - name: Backup user and dumps
+        working-directory: baja-infra
+        env:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_BACKUP_USER: backup
+          MYSQL_BACKUP_PASSWORD: unused-in-ci
+        run: |
+          mysql -h127.0.0.1 -uroot -proot < mysql/init/03-seed-phpbb-baja.sql
+          mysql -h127.0.0.1 -uroot -proot < mysql/init/04-seed-phpbb-formula.sql
+          tests/backup/dump-with-backup-user.sh
+
   infra:
     name: Infrastructure (baja-infra)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+
+      - name: Shellcheck
+        run: |
+          # -x follows sourced files. The scripts carry
+          # `# shellcheck source-path=SCRIPTDIR`, so backup-lib.sh is
+          # resolved regardless of the working directory.
+          #
+          # Scoped to the directories this repo actually maintains as
+          # scripts. The phpBB entrypoints are excluded: they trip SC2016
+          # on `envsubst '${VAR}'`, where the single quotes are envsubst's
+          # variable whitelist and removing them would break the config
+          # templating. Worth silencing there one day, but not from a
+          # backups change.
+          find baja-infra/scripts baja-infra/mysql/init baja-infra/tests -name '*.sh' -print0 \
+            | xargs -0 shellcheck -x
+          shellcheck baja-infra/tests/backup/fake-bin/rclone
 
       - name: Validate docker-compose syntax
         working-directory: baja-infra
@@ -277,3 +328,40 @@ jobs:
           # We use --quiet to suppress the resolved YAML output.
           cp .env.example .env 2>/dev/null || true
           docker compose config --quiet
+          # The verify stack is a separate compose project and is never
+          # brought up by `docker compose up`, so nothing else would
+          # notice it going stale.
+          docker compose -f docker-compose.verify.yml config --quiet
+
+      # Every install that predates the backups has an .env without any of
+      # their variables. Merging must not break it: a blank variable in a
+      # volume path is an "invalid spec" and stops `docker compose up` for
+      # the whole stack, not just the backup services. Pinned to develop's
+      # .env.example from before the backups (841d172), since develop's own
+      # copy gains the variables once this lands.
+      - name: Compose config with a pre-backups .env
+        working-directory: baja-infra
+        run: |
+          git fetch --no-tags --depth=1 origin 841d1724d481ae8f48a2ee1d41f34ac820f669b9
+          git show 841d1724d481ae8f48a2ee1d41f34ac820f669b9:baja-infra/.env.example > "$RUNNER_TEMP/old.env"
+          docker compose --env-file "$RUNNER_TEMP/old.env" \
+            -f docker-compose.yml -f docker-compose.prod.yml config --quiet
+          docker compose --env-file "$RUNNER_TEMP/old.env" \
+            -f docker-compose.yml -f docker-compose.prod.yml --profile tools config --quiet
+          docker compose --env-file "$RUNNER_TEMP/old.env" \
+            -f docker-compose.verify.yml config --quiet
+
+      - name: Retention pruner tests
+        # Apps Script cannot run in CI, so the pruner's logic is exercised
+        # against a fake Drive. It is the only code in the backup system
+        # that can actively destroy data.
+        run: node baja-infra/gas/retention/test/prune.test.js
+
+      # The backup scripts on made-up files with a fake Shared Drive: file
+      # set and erasure log round trips, the manifest, manifest-last, the
+      # event archives. Needs age; nothing else beyond the runner's tools.
+      - name: Backup script tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age
+          baja-infra/tests/backup/run-tests.sh

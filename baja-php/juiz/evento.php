@@ -4,6 +4,7 @@ namespace Baja\Juiz;
 use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\Evento;
+use Baja\ResultsArchive\Queue;
 use Baja\Session;
 use Baja\Site\Html;
 use DateTimeZone;
@@ -83,7 +84,13 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
 
                 $evento->setEmAndamento(false);
 
-                $evento->save();
+                // A new event created already finalizado asks for an
+                // archive like any other (BAJAAPP-67). The event is saved
+                // even when the archive queue cannot be written; then the
+                // event's own page opens, to show why.
+                if (!Queue::saveEvento($evento, false, Session::getCurrentUser()->getUsername())) {
+                    header("Location: evento.php?id=" . urlencode($evento->getEventoId()) . "&arquivo=falhou"); exit;
+                }
 
                 header("Location: admin_eventos.php"); exit;
             }
@@ -94,6 +101,10 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
 
     $evento = EventoQuery::create()->findOneByEventoId($_REQUEST['id']);
     if (!$evento) { header("Location: admin_eventos.php"); exit; }
+
+    // As stored, before the form changes it: marking finalizado is what
+    // asks for the event's results to be archived (BAJAAPP-67).
+    $eraFinalizado = (bool)$evento->getFinalizado();
 
     if (@$_REQUEST['act'] == 'Atualizar') {
         $evento->setTitulo($_POST['titulo']);
@@ -148,7 +159,10 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
         } else {
             $evento->setMenu($menu->valor);
 
-            $evento->save();
+            // Saves, then records or cancels the archive request a
+            // finalizado change asks for. The event is saved even when that
+            // second step fails; the page then says so (below).
+            $arquivoOk = Queue::saveEvento($evento, $eraFinalizado, Session::getCurrentUser()->getUsername());
 
             if (isset($_POST['em_andamento']) && $_POST['em_andamento']=='1') {
                 EventoQuery::create()
@@ -157,7 +171,7 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             }
 
 
-            header("Location: evento.php?id=".$_page); exit;
+            header("Location: evento.php?id=".$_page . ($arquivoOk ? '' : '&arquivo=falhou')); exit;
         }
     }
 
@@ -190,6 +204,11 @@ Template::printHeader("Detalhes do Evento", false);
                 </tr>
             </thead>
             <tbody>
+                <?php if (@$_GET['arquivo'] === 'falhou') { ?>
+                <tr>
+                    <td colspan="2" style="color: #a60; font-weight: bold;">Evento salvo, mas o arquivamento dos resultados não foi registrado (erro no servidor, já anotado no log). Avise a equipe técnica. Depois que for corrigido, desmarque e marque "Finalizado?" de novo para pedir o arquivamento.</td>
+                </tr>
+                <?php } ?>
                 <?php if ($erroJson !== null) { ?>
                 <tr>
                     <td colspan="2" style="color: red; font-weight: bold;">Evento não salvo: o JSON do menu é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto do menu e salve de novo.</td>
@@ -237,7 +256,32 @@ Template::printHeader("Detalhes do Evento", false);
                 </tr>
                 <tr>
                     <td>Finalizado?</td>
-                    <td><input type="checkbox" name="finalizado" value="1" <?= $novo?'':($evento->getFinalizado()?'checked':'') ?> /></td>
+                    <td><input type="checkbox" name="finalizado" value="1" <?= $novo?'':($evento->getFinalizado()?'checked':'') ?> />
+                        <?php
+                        // Where the archive of the published results stands (BAJAAPP-67).
+                        // Only the display is forgiving: before the migration has run
+                        // there is no table, and the page must still open.
+                        try {
+                            $arquivamento = $novo ? null : Queue::forApp()->latestFor((string)$evento->getEventoId());
+                        } catch (\Throwable $e) {
+                            $arquivamento = null;
+                        }
+                        if ($arquivamento !== null) {
+                            $quando = static fn($ms) => $ms === null ? '' : (new \DateTime('@' . intdiv((int)$ms, 1000)))->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('d/m/Y H:i');
+                            if ($arquivamento['estado'] === Queue::PENDENTE) {
+                                $texto = 'Arquivamento dos resultados pendente desde ' . $quando($arquivamento['pedido_em_ms']) . '; é feito no backup da noite.';
+                                if ((int)$arquivamento['tentativas'] > 0) {
+                                    $texto .= ' Falhou ' . (int)$arquivamento['tentativas'] . 'x: ' . $arquivamento['ultimo_erro'];
+                                }
+                            } elseif ($arquivamento['estado'] === Queue::ARQUIVADO) {
+                                $texto = 'Resultados arquivados em ' . $quando($arquivamento['concluido_em_ms']) . ' (' . $arquivamento['pasta'] . ').';
+                            } else {
+                                $texto = 'Último pedido de arquivamento cancelado: ' . $arquivamento['ultimo_erro'] . '.';
+                            }
+                            echo '<span style="font-size: 12px; margin-left: 8px;">' . htmlspecialchars($texto) . '</span>';
+                        }
+                        ?>
+                    </td>
                 </tr>
                 <tr>
                     <td>Spoilers?</td>

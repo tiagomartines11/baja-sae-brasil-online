@@ -89,5 +89,16 @@
         <testsuite name="results-api-db">
             <directory>tests/Api/Resultados/Db</directory>
         </testsuite>
+        <!--
+          The event archive queue (BAJAAPP-67): what ticking and unticking
+          "Finalizado?" in juiz/evento.php records, and how the nightly job
+          consumes it. Writes a made-up event and its queue rows, so it needs
+          BAJA_TEST_DB set to 1 and the app's database variables; skipped
+          without them. The packaging and upload half is tested by
+          baja-infra/tests/backup/run-tests.sh.
+        -->
+        <testsuite name="results-archive-db">
+            <directory>tests/ResultsArchive/Db</directory>
+        </testsuite>
     </testsuites>
 </phpunit>

@@ -76,6 +76,17 @@ services:
       - baja
     entrypoint: ["/usr/local/bin/cron-loop.sh"]
 
+  # The same forum uploads the forum containers bind above, read-only and
+  # nested at the paths the backup reads in dev (see the backup service in
+  # docker-compose.yml). Without these the production backup would archive
+  # the empty mount points inside the code volumes.
+  backup:
+    volumes:
+      - /srv/baja/phpbb-baja/files:/state/phpbb-baja/files:ro
+      - /srv/baja/phpbb-baja/avatars:/state/phpbb-baja/images/avatars/upload:ro
+      - /srv/baja/phpbb-formula/files:/state/phpbb-formula/files:ro
+      - /srv/baja/phpbb-formula/avatars:/state/phpbb-formula/images/avatars/upload:ro
+
   nginx:
     ports:
       - "443:443"

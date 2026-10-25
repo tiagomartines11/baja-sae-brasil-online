@@ -1,0 +1,23 @@
+# .dockerignore for builds whose context is baja-infra/ (currently the
+# `backup` service — see docker/backup/Dockerfile). The monorepo root has
+# its own; this one exists because a context rooted here would otherwise
+# ship baja-infra/.env — every production password in the stack — to the
+# docker daemon on every build.
+
+# Local env — never ship secrets into a build context
+.env
+.env.local
+.env.*.local
+
+# Service-account keys and age material, if anyone keeps them here
+secrets/
+*.json.key
+*.age
+*.sql
+*.sql.gz
+
+# Version control / editor noise
+.git
+.gitignore
+.idea
+.vscode

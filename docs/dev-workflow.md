@@ -139,6 +139,16 @@ Before requesting review:
       API vhost, `baja-php/tests/Api/results-http-test.sh`. Its contract is
       [`results-api.md`](results-api.md): add fields, never rename or
       remove one.
+- [ ] If you touched the backups (`baja-infra/scripts/backup-*.sh`,
+      `verify-*.sh`, `archive-event.sh`, `erasure-log.sh`,
+      `baja-infra/docker/backup/`, `baja-infra/gas/retention/`, the
+      `backup`/`results-archive` services, or `src/Baja/ResultsArchive/`),
+      `baja-infra/tests/backup/run-tests.sh` and the pruner's
+      `node baja-infra/gas/retention/test/prune.test.js` pass (CI runs
+      both), and `baja-infra/tests/backup/stack-test.sh` passes against your
+      running stack. Anything that writes files somewhere new must be added
+      as a file set; see "What is not in the backups" in
+      [`baja-infra/docs/backup-restore.md`](../baja-infra/docs/backup-restore.md).
 - [ ] If you touched a page in `baja-php/juiz/` or anything that prints
       stored text, it escapes what it prints and its forms carry a CSRF
       token (BAJAAPP-41):

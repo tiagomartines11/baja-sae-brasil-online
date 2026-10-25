@@ -849,4 +849,57 @@
       <parameter name="Engine" value="InnoDB"/>
     </vendor>
   </table>
+
+  <!-- ===================================================================
+       Event result archives (BAJAAPP-67). See baja-infra/docs/backup-restore.md,
+       "Event archives".
+
+       One row per request to freeze an event's published results in the
+       backups. juiz/evento.php adds a `pendente` row right after saving,
+       when an admin marks the event finalizado, and cancels it if the mark
+       is taken off before the archive is made. Saving the event never
+       depends on this table: if it is missing, the event is saved, the
+       error logged and the admin warned (Baja\ResultsArchive\Queue).
+       The nightly baja-infra/scripts/backup-run.sh takes the pending rows,
+       archives each one and marks it `arquivado` with the Shared Drive
+       folder it went to. Re-marking makes a new row, so every archive ever
+       made keeps its row.
+
+       Same conventions as the contagem_* tables: times are BIGINT
+       milliseconds since the Unix epoch (UTC), and `estado` is a short
+       VARCHAR rather than a Propel ENUM so the raw table reads as words.
+       No foreign key to evento: an event deleted later must keep the
+       record of where its results were archived, which is exactly when
+       someone will go looking for it.
+
+       Read and written with plain SQL by Baja\ResultsArchive\Queue, not
+       through generated model classes.
+       =================================================================== -->
+  <table name="evento_arquivamento" idMethod="native" phpName="EventoArquivamento">
+    <column name="arquivamento_id" phpName="ArquivamentoId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="evento_id" phpName="EventoId" type="CHAR" size="4" required="true"/>
+    <column name="pedido_em_ms" phpName="PedidoEmMs" type="BIGINT" required="true"/>
+    <!-- The judge-area username of the admin who marked the event. -->
+    <column name="pedido_por" phpName="PedidoPor" type="VARCHAR" size="45"/>
+    <!-- pendente | arquivado | cancelado -->
+    <column name="estado" phpName="Estado" type="VARCHAR" size="12" required="true" defaultValue="pendente"/>
+    <column name="concluido_em_ms" phpName="ConcluidoEmMs" type="BIGINT"/>
+    <!-- events/<EVT>/<YYYYMMDDTHHMMSSZ> on the Shared Drive, once archived. -->
+    <column name="pasta" phpName="Pasta" type="VARCHAR" size="255"/>
+    <column name="tentativas" phpName="Tentativas" type="INTEGER" required="true" defaultValue="0"/>
+    <column name="ultimo_erro" phpName="UltimoErro" type="VARCHAR" size="500"/>
+    <index name="evento_arquivamento_estado_idx">
+      <index-column name="estado"/>
+      <index-column name="pedido_em_ms"/>
+    </index>
+    <index name="evento_arquivamento_evento_idx">
+      <index-column name="evento_id"/>
+      <index-column name="pedido_em_ms"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+      <parameter name="Charset" value="utf8mb4"/>
+      <parameter name="Collate" value="utf8mb4_unicode_ci"/>
+    </vendor>
+  </table>
 </database>
