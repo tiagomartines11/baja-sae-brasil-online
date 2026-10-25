@@ -3,7 +3,7 @@
 # below are relative to baja-sae-brasil-online/.
 
 # Stage 1: install full deps and build the app.
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 # HUSKY=0 disables husky's prepare-script hook install, which fails inside
 # a container with no .git dir. Juan's package.json declares "prepare": "husky".
@@ -14,7 +14,7 @@ COPY baja-js/ ./
 RUN npm run build
 
 # Stage 2: production runtime — copies build output and installs prod deps.
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV HUSKY=0

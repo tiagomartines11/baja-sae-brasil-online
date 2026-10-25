@@ -39,7 +39,7 @@ updates:
       npm-security: { applies-to: security-updates, patterns: ["*"] }
       npm-routine: { applies-to: version-updates, update-types: [minor, patch], patterns: ["*"] }
     ignore:
-      # Next 14 -> 16 (and Node 20 -> 22+) is BAJAAPP-47.
+      # A Next major is a project, not a bump (14 -> 16 was BAJAAPP-47).
       - dependency-name: next
         update-types: ["version-update:semver-major"]
 

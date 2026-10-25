@@ -26,7 +26,7 @@ Este projeto foi desenvolvido utilizando as seguintes tecnologias e ferramentas:
 
 Certifique-se de ter o seguinte instalado em sua máquina:
 
-- Node.js (versão 16 ou superior)
+- Node.js 22 (LTS)
 - Gerenciador de pacotes (npm ou yarn)
 
 ### Passos para rodar o projeto
