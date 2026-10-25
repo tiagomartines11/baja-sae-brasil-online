@@ -1,3 +1,15 @@
+<?php
+use Baja\Model\EventoQuery;
+use Baja\Site\CachePolicy;
+use Baja\Site\CleanUrl;
+
+// The broadcast overlay (OBS browser source). A public page, cached by
+// Cloudflare (docs/results-caching.md). It reads evt and ovl; any other
+// parameter is dropped by a redirect.
+CleanUrl::enforce(['evt', 'ovl']);
+$evt = $_GET['evt'] ?? '';
+CachePolicy::send(EventoQuery::create()->findOneByEventoId(is_string($evt) ? $evt : ''));
+?>
 <!doctype html>
 
 <html lang="pt-br">
@@ -57,8 +69,10 @@
 
 
   <script>
-    evt = '<?= $_REQUEST['evt'] ?>';
-    ovl = <?= $_REQUEST['ovl'] ?>;
+    // From the URL, so encoded rather than printed raw: a cached page is
+    // served to everyone who opens that URL.
+    evt = <?= json_encode(is_string($evt) ? $evt : '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    ovl = <?= (int)($_GET['ovl'] ?? 0) ?>;
   </script>
 
 </body>

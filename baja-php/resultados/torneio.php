@@ -8,8 +8,20 @@ use Baja\Model\Equipe;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\InputQuery;
 use Baja\Model\TournamentQuery;
+use Baja\Site\CachePolicy;
+use Baja\Site\CleanUrl;
 
-$evt = ResultadoQuery::create()->findOneByResultadoId($_REQUEST['id'])->getEventoId();
+// A public page, cached by Cloudflare (docs/results-caching.md). It reads
+// id and overlay; any other parameter is dropped by a redirect.
+CleanUrl::enforce(['id', 'overlay']);
+
+// The bracket comes from the resultado's own event, whatever the URL's, so
+// that event's status decides how long it is cached. An unknown id used to
+// stop here with a fatal error; it now goes to the index like prova.php.
+$torneio = ResultadoQuery::create()->findOneByResultadoId($_REQUEST['id'] ?? null);
+if (!$torneio) { CachePolicy::send(null); header("Location: index.php"); exit; }
+$evt = $torneio->getEventoId();
+CachePolicy::send(EventoQuery::create()->findOneByEventoId($evt));
 
 $resultado = ResultadoQuery::create()->filterByEventoId($evt)->findPk($_REQUEST['id']);
 if (!$resultado) { header("Location: index.php"); exit; }

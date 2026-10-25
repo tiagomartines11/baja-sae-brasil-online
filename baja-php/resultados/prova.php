@@ -1,5 +1,7 @@
 <?php
 use Baja\Model\ProvaQuery;
+use Baja\Site\CachePolicy;
+use Baja\Site\CleanUrl;
 use Baja\Site\Template;
 use Baja\Model\EventoQuery;
 use Baja\Model\ResultadoQuery;
@@ -9,27 +11,37 @@ use Baja\Results\ResultRow;
 use Baja\Results\ResultsConfig;
 use Baja\Results\ViewerContext;
 
-// The public results page. prova_juiz.php shows this same page to judges:
-// it sets $judgeViewer and $judgeMenu, then includes this file. Requests
-// that come straight here (nginx gives them SKIP_AUTH, no forum session)
-// always get the public view, which is cached publicly.
-if (!isset($judgeViewer)) {
-    header('Cache-Control: public, max-age=30');
-}
+// The results page, for the public and for judges, on the same URL
+// (docs/results-caching.md). nginx runs it one of two ways:
+//
+//   - without the forum session, for everybody without the judges' staff
+//     cookie. The public view, cached by Cloudflare;
+//   - with the forum session, for a browser with the staff cookie. A user in
+//     the resultado's "authorized_users" (or a developer) sees past spoilers,
+//     anybody else gets the public view. Never cached.
+//
+// prova_juiz.php, the judges' former copy, redirects here.
+CleanUrl::enforce(['id']);
+CachePolicy::send(EventoQuery::getCurrentEvent());
 
-$resultado = ResultadoQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->findPk($_REQUEST['id']);
+$resultado = ResultadoQuery::create()->filterByEventoId(EventoQuery::getCurrentEvent()->getEventoId())->findPk($_REQUEST['id'] ?? null);
 if (!$resultado) {
     header("Location: index.php");
     exit;
 }
 $config = ResultsConfig::fromColunas($resultado->getColunas());
-if ($config->type == "tournament") { header("Location: torneio.php?id=".$_REQUEST['id']); exit; }
+if ($config->type == "tournament") { header("Location: torneio.php?id=".rawurlencode($resultado->getResultadoId())); exit; }
 $colunas = $config->columns;
 
-$viewer = $judgeViewer ?? ViewerContext::publicView(EventStatus::of(EventoQuery::getCurrentEvent()));
+$eventStatus = EventStatus::of(EventoQuery::getCurrentEvent());
+// $user and $_DEV_MODE come from src/bootstrap.php, which sets $user only
+// when it loaded the session.
+$viewer = CachePolicy::hasSession()
+    ? ViewerContext::authorized($eventStatus, $user->data['username'] ?? null, $_DEV_MODE)
+    : ViewerContext::publicView($eventStatus);
 $rows = ResultsBuilder::buildFor($resultado, $config, $viewer)->pageOrder();
 
-Template::printHeader($resultado->getNome(), true, $judgeMenu ?? false);
+Template::printHeader($resultado->getNome());
 ?>
 <script id="js">
 	$(function(){

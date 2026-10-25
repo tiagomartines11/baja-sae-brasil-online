@@ -6,7 +6,7 @@ use Baja\Model\ResultadoQuery;
 
 class Template
 {
-    static function printHeader($title, $stickyHeader = true, $juiz=false) {
+    static function printHeader($title, $stickyHeader = true) {
         ?>
         <!DOCTYPE html>
         <html>
@@ -79,7 +79,7 @@ class Template
         </head>
         <body class="body-blue">
         <?php
-        self::printMenu(false, $juiz);
+        self::printMenu();
     }
 
     static function printHeaderTournament($title) {
@@ -123,7 +123,9 @@ class Template
         <?php
     }
 
-    static function printMenu($mobile = false, $juiz=false) {
+    // Judges and the public get the same menu, linking to prova.php: the
+    // same URL serves judges the live page (docs/results-caching.md).
+    static function printMenu($mobile = false) {
         ?>
         <div style="background: #004785;">
         <div class="top-header">
@@ -158,12 +160,7 @@ class Template
                                     if (strstr($v, "php") === false) {
                                         $resultado = ResultadoQuery::create()->findPk($v);
                                         $nome = $resultado ? $resultado->getNome() : $v;
-                                        if (@$juiz) {
-                                            echo '<li><a id="' . $v . '" href="prova_juiz.php?id=' . $v . '">' . $nome . '</a></li>';
-                                        } else {
-                                            echo '<li><a id="' . $v . '" href="prova.php?id=' . $v . '">' . $nome . '</a></li>';
-                                        }
-                                        
+                                        echo '<li><a id="' . $v . '" href="prova.php?id=' . $v . '">' . $nome . '</a></li>';
                                     } else {
                                         echo '<li><a id="' . $k . '" href="' . $v . '">' . $k . '</a></li>';
                                     }
@@ -176,11 +173,7 @@ class Template
                     } else {
                         $resultado = ResultadoQuery::create()->findPk($item);
                         $nome = $resultado ? $resultado->getNome() : $item;
-                        if ($juiz) {
-                            echo '<li><a id="'.$item.'" href="prova_juiz.php?id='.$item.'">'.$nome.'</a></li>';
-                        } else {
-                            echo '<li><a id="'.$item.'" href="prova.php?id='.$item.'">'.$nome.'</a></li>';
-                        }
+                        echo '<li><a id="'.$item.'" href="prova.php?id='.$item.'">'.$nome.'</a></li>';
                     }
                 }
                 ?>
@@ -204,7 +197,13 @@ class Template
             </ul>
         </div>
         </div>
-        <script id="js"> selectItem($("[href='<?= substr($_SERVER['SCRIPT_NAME'], 1) ?>'],[href$='<?= "?".$_SERVER['QUERY_STRING'] ?>']")); </script>
+        <?php
+        // The query string comes from the visitor, and a public page is
+        // cached for everyone who asks for that URL: encoded for a script
+        // block, never printed raw.
+        $selector = "[href='" . substr($_SERVER['SCRIPT_NAME'], 1) . "'],[href$='?" . ($_SERVER['QUERY_STRING'] ?? '') . "']";
+        ?>
+        <script id="js"> selectItem($(<?= json_encode($selector, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>)); </script>
         <?php
     }
 

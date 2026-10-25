@@ -11,15 +11,17 @@ namespace Baja\Results;
  * "val_spoilers" then show that instead of their real value (for example
  * "?" instead of the points), until the event is finished.
  *
- *   publicView()    the public results page (resultados/prova.php) and the
- *                   results API. Spoilers are hidden whenever the event has
- *                   them on and is not finished. Nobody gets past them here,
- *                   whoever they are: the page is cached publicly.
+ *   publicView()    the public results page (resultados/prova.php without
+ *                   a forum session) and the results API. Spoilers are
+ *                   hidden whenever the event has them on and is not
+ *                   finished. Nobody gets past them here, whoever they are:
+ *                   the page is cached publicly.
  *
- *   authorized()    the judges' copy of the page (resultados/prova_juiz.php),
- *                   for a forum user. Same rule, except that a user named in
- *                   the resultado's "authorized_users", or a developer, sees
- *                   the real values.
+ *   authorized()    resultados/prova.php with a forum session, which nginx
+ *                   gives only to a browser with the judges' staff cookie
+ *                   (docs/results-caching.md). Same rule, except that a user
+ *                   named in the resultado's "authorized_users", or a
+ *                   developer, sees the real values. Never cached.
  *
  *   premiacao()     the awards screens (Baja\Premiacao\Resolver). They have
  *                   never hidden spoilers; they only exist for the organisers.

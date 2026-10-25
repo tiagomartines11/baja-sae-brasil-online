@@ -5,6 +5,15 @@ use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\ResultadoQuery;
+use Baja\Site\CachePolicy;
+use Baja\Site\CleanUrl;
+
+// The data behind overlay.php and the broadcast graphics, as JSON. Public,
+// and cached by Cloudflare when asked for with GET (docs/results-caching.md);
+// overlay.js itself POSTs, which no cache stores. Only these parameters are
+// read; a GET with any other is redirected without it.
+CleanUrl::enforce(['evt', 'mode', 'order', 'time']);
+CachePolicy::send(EventoQuery::create()->findOneByEventoId(is_string($_REQUEST['evt'] ?? null) ? $_REQUEST['evt'] : ''));
 
 if (isset($_REQUEST['time'])) {
   $p = ProvaQuery::create()->filterByEventoId($_REQUEST['evt'])->findOneByProvaId('END');
