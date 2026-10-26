@@ -150,7 +150,7 @@ not done in the PR. Order matters roughly top to bottom.
 - [ ] Deploy with the migration: `./propel migration:migrate` creates `evento_arquivamento`. If it is missed, admins can still edit events. They get an orange "archive not queued" warning, the error is logged, and the nightly archive monitor alerts. No finished event is queued until the migration runs.
 - [ ] Create the MySQL `backup` user with the per-database grants (runbook, "MySQL backup user"). The init script does not run on an existing server. If an earlier version of this branch was ever applied by hand with `ON *.*`, revoke that.
 - [ ] Create `/srv/baja/erasure/erasure-log.jsonl` (0700 folder, 0600 file, `chattr +a`). Set `ERASURE_LOG_DIR=/srv/baja/erasure`.
-- [ ] Fill in the backup block of `.env`: `MYSQL_BACKUP_PASSWORD`, `MYSQL_VERIFY_ROOT_PASSWORD` (different from root's), `GDRIVE_SHARED_DRIVE_ID`, the recipients and paths above, and `VERIFY_MIN_ROWS_USER` (production's `user` count, minus a margin).
+- [ ] Fill in the backup block of `.env`: `MYSQL_BACKUP_PASSWORD`, `MYSQL_VERIFY_ROOT_PASSWORD` (different from root's), `GDRIVE_SHARED_DRIVE_ID`, the recipients and paths above, and `VERIFY_MIN_ROWS_PARTICIPANTES` (production's `participantes` count, about 31,000, minus a margin; the default is 20000).
 - [ ] Measure: `sudo du -sh /srv/baja/phpbb-*/files /srv/baja/phpbb-*/avatars`. If the attachments are several GB, 35 daily copies plus monthlies may matter for Drive quota. Tell whoever maintains the backups before switching on.
 - [ ] Check whether either forum has ACP-uploaded smilies, ranks or icons outside the stock set. If so, bind-mount those folders and add them to the file sets.
 - [ ] Add both cron entries (runbook, "What runs, and when").

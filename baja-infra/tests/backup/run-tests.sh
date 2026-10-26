@@ -33,17 +33,25 @@
 #     is uploaded again only when the .env changed, and the manifest still
 #     names a valid copy when it did not;
 #   - an event archive records the event, the time, the code version and
-#     the number of snapshots, restores, and passes the verifier.
+#     the number of snapshots, restores, and passes the verifier;
+#   - restoring a dump into a scratch database with scripts/restore-db.sh
+#     leaves the live database alone, and the helper refuses the mistakes
+#     that would not (see "Restoring a database" below);
+#   - the weekly verifier fails a backup whose certificate table is
+#     suspiciously small.
 #
-# Nothing here needs Docker, MySQL or a Google account. It needs bash,
-# GNU tar, jq and age (`sudo apt install age jq` on Ubuntu/Debian).
+# Nothing here needs Docker or a Google account. It needs bash, GNU tar, jq
+# and age (`sudo apt install age jq` on Ubuntu/Debian). The restore and
+# floor tests also need a throwaway MySQL server and the mysql, mysqldump
+# and perl commands; without one they are skipped (see "A real MySQL").
 #
 # HOW TO RUN, from the repository root:
 #
 #     baja-infra/tests/backup/run-tests.sh
 #
-# It prints "ok" or "FAIL" for each test and exits non-zero if any failed.
-# Everything it creates is in a temporary folder that is removed at the end.
+# It prints "ok", "FAIL" or "skip" for each test and exits non-zero if any
+# failed. Everything it creates is in a temporary folder that is removed at
+# the end, and in databases on the throwaway server that it drops.
 
 set -euo pipefail
 
@@ -75,6 +83,59 @@ export AGE_RECIPIENT_ESCROW AGE_RECIPIENT_VERIFIER
 # The fake rclone goes first on PATH, so the scripts use it without knowing.
 export PATH="${HERE}/fake-bin:${PATH}"
 
+# ----- A real MySQL, for the restore and floor tests -----
+#
+# The restore tests guard against something MySQL itself does (it runs a
+# statement that looks like a comment; see "Restoring a database"), so
+# only a real MySQL can show the danger is gone. They run when
+# TEST_MYSQL_HOST names a THROWAWAY server you may log in to as root, for
+# example one made just for this:
+#
+#     docker run -d --rm --name baja-test-mysql -e MYSQL_ROOT_PASSWORD=root \
+#         -p 127.0.0.1:33306:3306 mysql:8.4
+#     TEST_MYSQL_HOST=127.0.0.1 TEST_MYSQL_PORT=33306 TEST_MYSQL_ROOT_PASSWORD=root \
+#         baja-infra/tests/backup/run-tests.sh
+#
+# Without TEST_MYSQL_HOST they are listed as "skip". CI also sets
+# TEST_MYSQL_REQUIRED=1, which turns a skip into a failure: a test that
+# quietly did not run is a check nobody made.
+#
+# These tests create and drop a database called baja_resultados. So that it
+# can never be a real one, they refuse to start if the server already holds
+# a database of that name (or phpbb_baja, phpbb_formula, or the scratch
+# name below) that they did not make. Theirs always carry a table named
+# fixture_made_by_run_tests.
+TEST_CNF=""
+SCRATCH_DB=baja_restore_check
+if [[ -n "${TEST_MYSQL_HOST:-}" ]]; then
+    for tool in mysql mysqldump perl; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            echo "missing tool: ${tool} (on Ubuntu/Debian: sudo apt install mysql-client perl)" >&2
+            exit 2
+        fi
+    done
+    TEST_CNF="${TMP}/root.cnf"
+    # The same option file the backup writes, so no password is on a
+    # command line here either.
+    ( LOG_PREFIX='test'
+      # shellcheck source=backup-lib.sh
+      source "${SCRIPTS}/backup-lib.sh"
+      write_defaults_file "$TEST_CNF" "$TEST_MYSQL_HOST" "${TEST_MYSQL_PORT:-3306}" root "${TEST_MYSQL_ROOT_PASSWORD:-}" )
+    if ! mysql --defaults-file="$TEST_CNF" -BN -e "SELECT 1" >/dev/null 2>&1; then
+        echo "cannot log in to MySQL at ${TEST_MYSQL_HOST}:${TEST_MYSQL_PORT:-3306} as root (TEST_MYSQL_ROOT_PASSWORD)" >&2
+        exit 2
+    fi
+    not_ours="$(mysql --defaults-file="$TEST_CNF" -BN -e "
+        SELECT s.SCHEMA_NAME FROM information_schema.SCHEMATA s
+        WHERE s.SCHEMA_NAME IN ('baja_resultados', 'phpbb_baja', 'phpbb_formula', '${SCRATCH_DB}')
+          AND NOT EXISTS (SELECT 1 FROM information_schema.TABLES t
+                          WHERE t.TABLE_SCHEMA = s.SCHEMA_NAME AND t.TABLE_NAME = 'fixture_made_by_run_tests')")"
+    if [[ -n "$not_ours" ]]; then
+        echo "MySQL at ${TEST_MYSQL_HOST} already holds: $(tr '\n' ' ' <<< "$not_ours")— these tests drop databases of those names; point TEST_MYSQL_HOST at a throwaway server" >&2
+        exit 2
+    fi
+fi
+
 # ----- A tiny test runner -----
 #
 # Each test is a function run in its own subshell, so whatever one test
@@ -91,6 +152,21 @@ run_test() {
         echo "  FAIL ${name}"
         printf '%s\n' "$out" | tail -15 | sed 's/^/         /'
         FAILED=$(( FAILED + 1 ))
+    fi
+}
+# The same for a test that needs the MySQL above: skipped without one,
+# failed without one when TEST_MYSQL_REQUIRED=1.
+SKIPPED=0
+run_mysql_test() {
+    if [[ -n "$TEST_CNF" ]]; then
+        run_test "$@"
+    elif [[ "${TEST_MYSQL_REQUIRED:-0}" == 1 ]]; then
+        echo "  FAIL $1"
+        echo "         TEST_MYSQL_REQUIRED=1 but TEST_MYSQL_HOST is not set"
+        FAILED=$(( FAILED + 1 ))
+    else
+        echo "  skip $1 (no TEST_MYSQL_HOST)"
+        SKIPPED=$(( SKIPPED + 1 ))
     fi
 }
 fail() { echo "ASSERTION FAILED: $*" >&2; exit 1; }
@@ -613,6 +689,318 @@ test_event_archive_refuses_wrong_input() {
     same "$(find "$FAKE_DRIVE" -type f | wc -l)" 0 "files uploaded"
 }
 
+# ======================================================================
+# Restoring a database (BAJAAPP-4)
+# ======================================================================
+#
+# SOME BACKGROUND, FOR SOMEONE WHO HAS NEVER LOOKED INSIDE A DUMP
+#
+# A "dump" is a plain text file of SQL statements, written by the
+# mysqldump program, that rebuilds a database when you feed it back to
+# MySQL: create the database, create each table, insert the rows. The
+# nightly backup's dumps start like this:
+#
+#     /*!40000 DROP DATABASE IF EXISTS `baja_resultados`*/;
+#     CREATE DATABASE /*!32312 IF NOT EXISTS*/ `baja_resultados` ...;
+#     USE `baja_resultados`;
+#
+# In SQL, text between /* and */ is normally a comment, which the database
+# ignores. But when it starts with an exclamation mark and a number, like
+# /*!40000 ... */, it is a MySQL "conditional comment" (also called a
+# version comment): other database programs skip it as a comment, while
+# MySQL, if its version is at least the number (40000 means 4.0.0), RUNS
+# the statement inside. Every MySQL in use today is far newer than that,
+# so for us the first line simply means
+#
+#     DROP DATABASE IF EXISTS `baja_resultados`;
+#
+# that is, "delete the whole baja_resultados database". That is on
+# purpose: restoring a backup should REPLACE the database, never mix the
+# backup's rows into whatever is there.
+#
+# The trap: to look at a backup BESIDE the live database, someone renamed
+# the database in the CREATE DATABASE and USE lines and read the first
+# line as a comment. MySQL deleted the live baja_resultados, then created
+# the copy under the new name and filled it. That happened on staging.
+# scripts/restore-db.sh renames the database in all three statements,
+# conditional comments included, and refuses any dump it cannot rename
+# safely. These tests prove it on a real MySQL.
+#
+# They never touch a real baja_resultados: they build a small fake one on
+# the throwaway server (see "A real MySQL" at the top), back it up with the
+# backup's own code, and restore that.
+
+as_root() { mysql --defaults-file="$TEST_CNF" -BN "$@"; }
+count_rows() { as_root -e "SELECT COUNT(*) FROM \`$1\`.participantes"; }
+db_exists() { [[ "$(as_root -e "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = '$1'")" == 1 ]]; }
+drop_test_dbs() { as_root -e "DROP DATABASE IF EXISTS baja_resultados; DROP DATABASE IF EXISTS ${SCRATCH_DB}"; }
+
+# The helper, as a person would run it, but connecting to the throwaway
+# server directly instead of through the stack's mysql container.
+restore() { RESTORE_DEFAULTS_FILE="$TEST_CNF" "${SCRIPTS}/restore-db.sh" "$@"; }
+
+# make_fake_resultados N: a tiny stand-in for baja_resultados, made from
+# nothing (any earlier one and any scratch copy are dropped first), with N
+# rows in participantes (one per certificate in the real one), one event in
+# evento (the backup reads accented text from it, see the charset canary
+# in backup-lib.sh), and enough extra empty tables to reach the 13 that
+# the verifier expects a real baja_resultados to have.
+make_fake_resultados() {
+    local n="$1" i extra=""
+    for i in 01 02 03 04 05 06 07 08 09 10; do
+        extra+="CREATE TABLE extra_${i} (i INT PRIMARY KEY); "
+    done
+    drop_test_dbs
+    as_root <<SQL
+CREATE DATABASE baja_resultados CHARACTER SET utf8mb4;
+USE baja_resultados;
+CREATE TABLE fixture_made_by_run_tests (i INT PRIMARY KEY);
+CREATE TABLE evento (evento_id VARCHAR(8) PRIMARY KEY, titulo VARCHAR(100), nome VARCHAR(100),
+                     \`local\` VARCHAR(100), presidente VARCHAR(100));
+INSERT INTO evento VALUES ('26BR', 'Competição Baja SAE BRASIL', 'Baja SAE BRASIL', 'São José dos Campos', 'Fulana');
+CREATE TABLE participantes (token VARCHAR(32) PRIMARY KEY, nome VARCHAR(100), evento VARCHAR(8));
+INSERT INTO participantes (token, nome, evento)
+    WITH RECURSIVE k (n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM k WHERE n < ${n})
+    SELECT CONCAT('T', LPAD(n, 8, '0')), CONCAT('Participante ', n), '26BR' FROM k;
+${extra}
+SQL
+}
+
+# dump_fake DIR: backs the fake up exactly as the nightly job backs up the
+# real one (dump_one from backup-db.sh, the same mysqldump options) into
+# DIR/baja_resultados.sql, with the row counts the backup records for the
+# manifest in DIR/dbmeta.baja_resultados.json.
+dump_fake() {
+    local dir="$1"
+    mkdir -p "$dir"
+    ( LOG_PREFIX='test'
+      # shellcheck source=backup-db.sh
+      source "${SCRIPTS}/backup-db.sh"
+      # backup-db.sh deletes its work folder when it exits. Here that
+      # folder holds the dump the test needs, so keep it.
+      trap - EXIT
+      RUN_DIR="$dir"
+      MYSQL_DEFAULTS_FILE="$TEST_CNF"
+      dump_one baja_resultados >/dev/null )
+}
+
+# A certificate issued AFTER the backup was taken. The backup does not
+# have it, so if a restore touched the live database in any way (dropped
+# it, or replaced it with the backup), this row is gone. Its presence is
+# the proof the live database was left alone.
+add_row_after_the_backup() {
+    as_root -e "INSERT INTO baja_resultados.participantes VALUES ('AFTER-THE-BACKUP', 'Issued today', '26BR')"
+}
+
+test_restore_into_scratch_leaves_the_original_alone() {
+    # Arrange: a "live" database with 5 certificates, last night's backup
+    # of it, then one more certificate today (6 live, 5 in the backup).
+    local dir="${TMP}/restore-scratch" out
+    make_fake_resultados 5
+    dump_fake "${dir}/run"
+    add_row_after_the_backup
+    # The manifest the backup uploads beside the dump. restore-db.sh only
+    # reads its row counts, so this one holds just those.
+    jq -n --slurpfile m "${dir}/run/dbmeta.baja_resultados.json" \
+        '{artifacts: {baja_resultados: $m[0]}}' > "${dir}/manifest.json"
+
+    # Act: restore the backup BESIDE the live database, under another name.
+    out="$(restore "${dir}/run/baja_resultados.sql" --into "$SCRATCH_DB" --manifest "${dir}/manifest.json" 2>&1)" \
+        || fail "restore-db.sh failed: ${out}"
+
+    # Assert: the live database is untouched. It still exists, with all 6
+    # rows, today's included...
+    db_exists baja_resultados || fail "the live database is GONE"
+    same "$(count_rows baja_resultados)" 6 "rows in the live database"
+    same "$(as_root -e "SELECT COUNT(*) FROM baja_resultados.participantes WHERE token = 'AFTER-THE-BACKUP'")" 1 \
+        "today's row in the live database"
+    # ...while the copy holds what the backup holds: 5 rows, not today's.
+    same "$(count_rows "$SCRATCH_DB")" 5 "rows in the scratch copy"
+    # And it printed each table's restored row count beside the manifest's
+    # ("participantes   5   5"), so a person can see the restore is whole.
+    grep -Eq '^ +participantes +5 +5 *$' <<< "$out" || fail "no 'participantes 5 5' line in: ${out}"
+    drop_test_dbs
+}
+
+test_restore_refuses_a_live_name_without_replace() {
+    # Restoring INTO baja_resultados replaces the live database with the
+    # backup, and everything written since the backup is lost. Sometimes
+    # that is exactly the job (the live one is broken), so it is allowed,
+    # but only when you say so with --replace. Typing the live name by
+    # habit must stop before anything is sent to MySQL.
+    local dir="${TMP}/restore-live" out
+    make_fake_resultados 5
+    dump_fake "${dir}/run"
+    add_row_after_the_backup
+
+    if out="$(restore "${dir}/run/baja_resultados.sql" --into baja_resultados 2>&1)"; then
+        fail "restored over the live database without --replace"
+    fi
+    # The refusal tells the person how to mean it.
+    grep -q -- '--replace' <<< "$out" || fail "the refusal does not mention --replace: ${out}"
+    # Today's row is still there: nothing happened.
+    same "$(count_rows baja_resultados)" 6 "rows in the live database"
+
+    # For contrast: with --replace it is a real restore. The live database
+    # becomes the backup, 5 rows, and today's row is gone, as intended.
+    restore "${dir}/run/baja_resultados.sql" --into baja_resultados --replace >/dev/null 2>&1 \
+        || fail "--replace failed"
+    same "$(count_rows baja_resultados)" 5 "rows after --replace"
+    drop_test_dbs
+}
+
+test_restore_refuses_a_truncated_dump() {
+    # A dump cut short (a full disk, a download that stopped halfway) is
+    # still valid SQL up to the point where it stops, so MySQL imports that
+    # first part without a single error, and you would think you had the
+    # whole database. mysqldump writes "-- Dump completed on <date>" as
+    # its very last line. No last line, no import.
+    local dir="${TMP}/restore-truncated" dump half
+    make_fake_resultados 5
+    dump_fake "${dir}/run"
+    dump="${dir}/run/baja_resultados.sql"
+    half="${dir}/half.sql"
+    head -c "$(( $(stat -c %s "$dump") / 2 ))" "$dump" > "$half"
+
+    if restore "$half" --into "$SCRATCH_DB" >/dev/null 2>&1; then
+        fail "imported a truncated dump"
+    fi
+    # Nothing was imported at all, and the live database is as it was.
+    if db_exists "$SCRATCH_DB"; then fail "part of the truncated dump was imported"; fi
+    same "$(count_rows baja_resultados)" 5 "rows in the live database"
+    drop_test_dbs
+}
+
+test_restore_rewrites_the_conditional_drop() {
+    local dir="${TMP}/restore-conditional" dump copy="${TMP}/restore-conditional/rewritten.sql"
+    make_fake_resultados 5
+    dump_fake "${dir}/run"
+    dump="${dir}/run/baja_resultados.sql"
+
+    # 1. The backup's dump really does start with the conditional DROP
+    #    described above.
+    grep -qxF '/*!40000 DROP DATABASE IF EXISTS `baja_resultados`*/;' "$dump" \
+        || fail "the dump has no /*!40000 DROP DATABASE line; the test no longer matches the backup"
+
+    # 2. What went wrong on staging, replayed on the fake: rename the
+    #    database in the CREATE DATABASE and USE lines only, and import.
+    #    MySQL runs the "comment", and the live database is gone. This is
+    #    the danger the helper exists for; if MySQL ever stopped running
+    #    /*!40000 ... */, this would say so.
+    sed -e '/^CREATE DATABASE /s/`baja_resultados`/`'"${SCRATCH_DB}"'`/' \
+        -e '/^USE /s/`baja_resultados`/`'"${SCRATCH_DB}"'`/' "$dump" > "${dir}/renamed-by-hand.sql"
+    as_root < "${dir}/renamed-by-hand.sql"
+    if db_exists baja_resultados; then
+        fail "the hand-renamed dump left baja_resultados alone: does MySQL no longer run /*!40000 ... */?"
+    fi
+
+    # 3. The helper's rewritten copy: the DROP inside the conditional
+    #    comment now names the scratch database, as CREATE DATABASE and
+    #    USE do, and no line that MySQL would run names baja_resultados any
+    #    more. (Lines starting with "--" are ordinary comments, never run;
+    #    mysqldump writes the database name in a few of them.)
+    ( LOG_PREFIX='test'
+      # shellcheck source=restore-db.sh
+      source "${SCRIPTS}/restore-db.sh"
+      restore_rewrite "$dump" "$copy" "$SCRATCH_DB" >/dev/null )
+    grep -qxF "/*!40000 DROP DATABASE IF EXISTS \`${SCRATCH_DB}\`*/;" "$copy" \
+        || fail "the conditional DROP was not rewritten"
+    grep -qE "^CREATE DATABASE /\*!32312 IF NOT EXISTS\*/ \`${SCRATCH_DB}\` " "$copy" \
+        || fail "CREATE DATABASE was not rewritten"
+    grep -qxF "USE \`${SCRATCH_DB}\`;" "$copy" || fail "USE was not rewritten"
+    if grep -v '^--' "$copy" | grep -q 'baja_resultados'; then
+        fail "a statement in the rewritten dump still names baja_resultados"
+    fi
+    drop_test_dbs
+}
+
+test_restore_refuses_another_statement_naming_the_original() {
+    # Today those three are the only statements in a dump that name the
+    # database. If a future dump had another (a view that reads
+    # `baja_resultados`.`participantes`, an ALTER DATABASE...), renaming
+    # the three would leave that one aimed at the live database. The
+    # helper refuses rather than guess, and says on which line.
+    local dir="${TMP}/restore-other" out
+    make_fake_resultados 5
+    dump_fake "${dir}/run"
+    # One such statement, added right after the USE line.
+    awk '{ print } /^USE `baja_resultados`;$/ && !done { print "ALTER DATABASE `baja_resultados` CHARACTER SET utf8mb4;"; done = 1 }' \
+        "${dir}/run/baja_resultados.sql" > "${dir}/extra.sql"
+
+    if out="$(restore "${dir}/extra.sql" --into "$SCRATCH_DB" 2>&1)"; then
+        fail "imported a dump with an ALTER DATABASE naming the original"
+    fi
+    grep -Eq 'line [0-9]+: names the original database' <<< "$out" || fail "the refusal does not name the line: ${out}"
+    if db_exists "$SCRATCH_DB"; then fail "something was imported"; fi
+    same "$(count_rows baja_resultados)" 5 "rows in the live database"
+    drop_test_dbs
+}
+
+# ======================================================================
+# The verifier's floor on participantes
+# ======================================================================
+#
+# Every week the verifier restores the newest backup and compares it with
+# the manifest the backup wrote beside it. That catches damage on the way
+# (a flipped byte in an upload), but not a backup that was wrong from the
+# start: if the backup's MySQL user lost permission to read a table, the
+# backup would count the rows it could see, write that count in the
+# manifest, and backup and manifest would agree perfectly.
+#
+# So the verifier also has "floors": minimums known from outside, which no
+# manifest can talk it out of. One is on participantes, one row per
+# certificate. Production has about 31,000 and the number only grows, so
+# VERIFY_MIN_ROWS_PARTICIPANTES defaults to 20000. (It used to be a floor
+# on `user`, which holds 3 staff accounts in production: that default
+# failed every real run.) A restored backup below the floor is not the
+# database we think it is.
+#
+# Here the floor is set to 3, and the fake database is backed up with 2
+# rows, and then with 4.
+
+# floor_failures N: backs up a fake with N rows, imports the backup as the
+# verifier does, runs the verifier's floor check, and prints the hard
+# failures it recorded (nothing, if it passed).
+floor_failures() {
+    local n="$1" dir="${TMP}/floor-${1}"
+    make_fake_resultados "$n"
+    dump_fake "${dir}/run"
+    # The verifier imports into an empty scratch server. Here: drop the
+    # fake, and import its backup in its place.
+    as_root -e "DROP DATABASE baja_resultados"
+    as_root < "${dir}/run/baja_resultados.sql"
+
+    export VERIFY_MIN_ROWS_PARTICIPANTES=3
+    export AGE_IDENTITY_VERIFIER="${TMP}/keys/verifier.key"
+    LOG_PREFIX='test'
+    # shellcheck source=verify-db.sh
+    source "${SCRIPTS}/verify-db.sh"
+    MYSQL_DEFAULTS_FILE="$TEST_CNF"
+    check_floors baja_resultados 2>/dev/null
+    drop_test_dbs
+    printf '%s\n' "${HARD_FAILURES[@]}"
+}
+
+test_floor_fails_a_backup_below_it() {
+    local failures
+    failures="$(floor_failures 2)"
+    # Exactly one failure, and it is this one. (The fake has the 13
+    # tables the other floor wants, so that one passes.)
+    same "$(grep -c . <<< "$failures")" 1 "number of hard failures"
+    [[ "$failures" == "baja_resultados.participantes has 2 rows, floor is 3 "* ]] \
+        || fail "unexpected failure: ${failures}"
+}
+
+test_floor_passes_a_backup_above_it() {
+    same "$(floor_failures 4)" "" "hard failures"
+    # Without the variable, the floor is the production one.
+    same "$( unset VERIFY_MIN_ROWS_PARTICIPANTES
+             LOG_PREFIX='test'
+             # shellcheck source=verify-db.sh
+             source "${SCRIPTS}/verify-db.sh"
+             echo "$VERIFY_MIN_ROWS_PARTICIPANTES" )" 20000 "default floor"
+}
+
 echo
 echo "backup scripts"
 echo
@@ -629,6 +1017,16 @@ run_test "the .env copy is encrypted to exactly one recipient, the escrow key" t
 run_test "an unchanged .env is not uploaded again, and its copy still checks"  test_unchanged_env_is_not_uploaded_again
 run_test "an event archive records event, time, code version and snapshot count, and restores" test_event_archive_manifest_and_restore
 run_test "an event archive refuses input that is not one event's snapshots"      test_event_archive_refuses_wrong_input
+run_mysql_test "restoring into a scratch name leaves the live database and its rows alone" test_restore_into_scratch_leaves_the_original_alone
+run_mysql_test "restoring into a live database's name refuses without --replace" test_restore_refuses_a_live_name_without_replace
+run_mysql_test "restoring a truncated dump refuses, and imports nothing"          test_restore_refuses_a_truncated_dump
+run_mysql_test "the /*!40000 DROP DATABASE in a dump is rewritten (and is not a comment)" test_restore_rewrites_the_conditional_drop
+run_mysql_test "restoring refuses a dump that names the original anywhere else"    test_restore_refuses_another_statement_naming_the_original
+run_mysql_test "the verifier fails a backup with fewer participantes than the floor" test_floor_fails_a_backup_below_it
+run_mysql_test "the verifier passes a backup with more participantes than the floor" test_floor_passes_a_backup_above_it
+if [[ -n "$TEST_CNF" ]]; then
+    drop_test_dbs
+fi
 echo
-echo "${PASSED} passed, ${FAILED} failed"
+echo "${PASSED} passed, ${FAILED} failed, ${SKIPPED} skipped"
 (( FAILED == 0 ))

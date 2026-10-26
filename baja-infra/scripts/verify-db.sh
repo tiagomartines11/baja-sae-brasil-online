@@ -66,7 +66,7 @@
 #   GDRIVE_SHARED_DRIVE_ID
 #   AGE_IDENTITY_VERIFIER          path to the verifier PRIVATE key
 #   KUMA_PUSH_URL_VERIFY
-#   VERIFY_MIN_ROWS_USER           floor for baja_resultados.user
+#   VERIFY_MIN_ROWS_PARTICIPANTES  floor for baja_resultados.participantes
 #   VERIFY_REMOTE                  test hook, mirrors BACKUP_REMOTE
 #   VERIFY_STATE_DIR               previous run's hashes (default
 #                                  /var/lib/baja-verify)
@@ -83,7 +83,7 @@ MYSQL_HOST="${MYSQL_HOST:-verify-mysql}"
 MYSQL_PORT="${MYSQL_PORT:-3306}"
 VERIFY_REMOTE="${VERIFY_REMOTE:-gdrive:}"
 VERIFY_STATE_DIR="${VERIFY_STATE_DIR:-/var/lib/baja-verify}"
-VERIFY_MIN_ROWS_USER="${VERIFY_MIN_ROWS_USER:-50}"
+VERIFY_MIN_ROWS_PARTICIPANTES="${VERIFY_MIN_ROWS_PARTICIPANTES:-20000}"
 VERIFY_MAX_MANIFEST_AGE_HOURS="${VERIFY_MAX_MANIFEST_AGE_HOURS:-26}"
 EXPECTED_SCRATCH_HOSTNAME="${EXPECTED_SCRATCH_HOSTNAME:-baja-verify-mysql}"
 
@@ -472,6 +472,12 @@ check_fidelity() {
 # correctness. If the backup user silently loses SELECT on a table, the
 # manifest records the wrong count too and the diff passes happily. These
 # floors are the only checks here that do not trust the manifest.
+#
+# The row floor is on participantes, the certificates themselves: about
+# 31,000 rows in production, growing every event. It used to be on
+# `user`, which holds only the handful of staff accounts (3 in
+# production), so no floor there could tell a real dump from an empty one
+# and the default failed every real run.
 check_floors() {
     local db="$1"
 
@@ -484,10 +490,10 @@ check_floors() {
     fi
 
     if [[ "$db" == "baja_resultados" ]]; then
-        local users
-        users="$(db_query "$db" "SELECT COUNT(*) FROM \`user\`")"
-        if (( users < VERIFY_MIN_ROWS_USER )); then
-            fail_hard "baja_resultados.user has ${users} rows, floor is ${VERIFY_MIN_ROWS_USER} — the dump is not of the database we think it is"
+        local participantes
+        participantes="$(db_query "$db" "SELECT COUNT(*) FROM participantes")"
+        if (( participantes < VERIFY_MIN_ROWS_PARTICIPANTES )); then
+            fail_hard "baja_resultados.participantes has ${participantes} rows, floor is ${VERIFY_MIN_ROWS_PARTICIPANTES} — the dump is not of the database we think it is"
         fi
     fi
 }

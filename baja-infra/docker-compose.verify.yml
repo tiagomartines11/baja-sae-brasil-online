@@ -97,7 +97,7 @@ services:
       GDRIVE_SHARED_DRIVE_ID: ${GDRIVE_SHARED_DRIVE_ID}
       AGE_IDENTITY_VERIFIER: /run/secrets/age-verifier.key
       KUMA_PUSH_URL_VERIFY: ${KUMA_PUSH_URL_VERIFY}
-      VERIFY_MIN_ROWS_USER: ${VERIFY_MIN_ROWS_USER:-50}
+      VERIFY_MIN_ROWS_PARTICIPANTES: ${VERIFY_MIN_ROWS_PARTICIPANTES:-20000}
       VERIFY_REMOTE: ${VERIFY_REMOTE:-}
     volumes:
       - ${GDRIVE_SA_READER_JSON:-./secrets/gdrive-backup-reader.json}:/run/secrets/gdrive-backup-reader.json:ro

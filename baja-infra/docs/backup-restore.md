@@ -285,22 +285,40 @@ tail -1 baja_resultados.sql        # must be: -- Dump completed on ...
 
 ### 4. Import
 
-Each artifact carries its own `CREATE DATABASE IF NOT EXISTS` and `USE`,
-so restoring is one command and does not depend on you remembering the
-database name. Into the stack's MySQL, from `baja-infra/`:
+**Importing an artifact DROPS the database it was taken from, then
+recreates it from the backup.** Everything in that database when you
+import, including whatever was written since the backup, is gone.
+
+Each artifact starts with these three statements, so restoring is one
+command and does not depend on you remembering the database name:
+
+```
+/*!40000 DROP DATABASE IF EXISTS `baja_resultados`*/;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `baja_resultados` ...;
+USE `baja_resultados`;
+```
+
+The first line is **not a comment**. MySQL runs whatever is inside
+`/*!NNNNN ... */` (a "conditional comment"), so it drops the database.
+That is deliberate: an import over existing data would merge rather than
+replace, which is worse than either. It also means you never drop the
+database by hand first, not even on a fresh server, where the first boot
+of the MySQL container has loaded the dev seed from `mysql/init/`.
+
+**Never edit the names in the file to restore under another name.** If
+you change `CREATE DATABASE` and `USE` and miss that first line, the
+import drops the live database, then loads the backup somewhere else.
+That happened on staging. To look at a backup beside the live database,
+see [Restore into a scratch database](#restore-into-a-scratch-database-to-inspect-or-compare).
+
+Into the stack's MySQL, from `baja-infra/`:
 
 ```
 docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < baja_resultados.sql
 ```
 
-**Drop the database first** if one exists — an import over existing data
-merges rather than replaces, which is worse than either. On a fresh
-server one always exists: the first boot of the MySQL container loads the
-dev seed from `mysql/init/`.
-
-```
-docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS baja_resultados"'
-```
+On the server, `scripts/restore-db.sh baja_resultados.sql --into baja_resultados --replace`
+does the same import after checking the trailer and the dump.
 
 Old dumps from before the containerised stack may need
 `SET FOREIGN_KEY_CHECKS=0;` prepended; see `migrate.sh` for the historical
@@ -369,6 +387,66 @@ jq '.artifacts.baja_resultados.table_counts' manifest.json
 Then generate one certificate through the web UI. That exercises the query
 the whole system exists for, and it is the check that catches an import
 that succeeded and mangled every accented name.
+
+### Restore into a scratch database (to inspect or compare)
+
+To look at what a backup holds without replacing anything (what a row
+was last week, whether a backup is whole, what changed since), restore it
+under **another name**, beside the live database. Use
+`scripts/restore-db.sh`. **Never rename the database in the dump with a
+hand-written `sed`** or an editor: see step 4 for how that dropped the
+live database on staging.
+
+This needs the server (or a dev stack): the helper is in the repository
+and imports through the stack's `mysql` container. Steps 1 to 3 above
+give you the decrypted `.sql` and the run's `manifest.json`. Then, from
+`baja-infra/`:
+
+```
+scripts/restore-db.sh restore/baja_resultados.sql --into baja_resultados_20261025 --manifest restore/manifest.json
+```
+
+It changes the database name in **every** `DROP DATABASE`,
+`CREATE DATABASE` and `USE` statement, the `/*!NNNNN ... */` forms
+included, checks the whole file before anything is sent to MySQL, and
+imports. It refuses, with nothing imported:
+
+- a dump without the `-- Dump completed` trailer (truncated);
+- `--into` a live database (`baja_resultados`, `phpbb_baja`,
+  `phpbb_formula`), unless you add `--replace`, which makes it a real
+  restore (step 4); and always one live database's dump into a different
+  live database;
+- a dump in which anything else that MySQL would run still names the
+  original database (it prints the line numbers), or that drops, creates
+  or switches to any other database.
+
+At the end it prints each restored table's row count beside the
+manifest's and flags any that differ:
+
+```
+[restore] restored baja_resultados as baja_resultados_20261025; row counts:
+  table                              restored   manifest
+  evento                                   17         17
+  participantes                         31012      31012
+  ...
+```
+
+Restoring again into the same scratch name replaces the earlier copy.
+Query it like any other database:
+
+```
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" baja_resultados_20261025 \
+    -e "SELECT COUNT(*) FROM participantes"'
+```
+
+**Drop it as soon as you are done.** It is decrypted backup data on a
+live server, it is not in any backup, and it holds rows that LGPD
+erasures since the backup removed from the live database (step 5 does not
+apply to it, so do not use it for anything but looking):
+
+```
+docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "DROP DATABASE baja_resultados_20261025"'
+```
 
 ---
 
@@ -443,7 +521,8 @@ The order matters; each step needs the previous one.
    loads the dev seed and creates the application users with the
    passwords from `.env`.
 3. **Every database**: [Restore a database](#restore-a-database), steps
-   1–4, dropping each seeded database first, from **one** run.
+   1–4, from **one** run. Each artifact drops the seeded database it
+   replaces by itself.
 4. **The MySQL backup user**: the init script created it with `.env`'s
    password, but check the grants as in [MySQL backup user](#mysql-backup-user).
 5. **The files**: [Restore files](#restore-files), from the same run.
@@ -708,6 +787,7 @@ healthy `baja_resultados`:
 | `DECRYPT FAILED` | Wrong verifier key, or a damaged artifact |
 | `row counts differ` | Data changed in transit, **or** the backup user lost SELECT |
 | `CHARSET CANARY MISMATCH` | Accents did not survive. Do **not** restore from this |
+| `participantes has N rows, floor is M` | The backup holds far fewer certificates than production has ever had: it is not the database we think it is, or the backup user lost SELECT. `VERIFY_MIN_ROWS_PARTICIPANTES` (default 20000; production has about 31,000) is the one floor that does not trust the manifest. Lower it only on dev and staging |
 | `certificate lookup is missing ...` / `query failed` | The restore imports but cannot produce a PDF, or the schema moved away from what the check reads |
 | `FILES DIFFER` / `CONTENT DIFFERS` | The file set does not restore to what was archived. Do not trust it; check the previous run |
 | `ENTRIES DIFFER` / `CHAIN BROKEN` | The erasure log did not survive the round trip. Keep the live one safe |
@@ -1077,7 +1157,13 @@ manifest's contents and its personal-data guard, the manifest going last in
 every tier (tests 1 and 10 below without a database), the erasure log
 round trip, the `.env` copy (encrypted to the escrow key alone; not
 uploaded again while unchanged, with the manifest still naming a copy that
-checks), and the event archives. The pruner's tests are
+checks), and the event archives. With a throwaway MySQL (CI provides one;
+see the top of the script) it also covers
+`scripts/restore-db.sh`: a scratch restore leaving the live database and
+its rows untouched, refusing a live name without `--replace`, a truncated
+dump, and a dump naming the original elsewhere; the `/*!40000 DROP` line
+being rewritten (and, renamed by hand, really dropping the database); and
+the verifier's `participantes` floor. The pruner's tests are
 `node baja-infra/gas/retention/test/prune.test.js`. The event archive queue
 is `vendor/bin/phpunit --testsuite results-archive-db` (BAJA_TEST_DB=1),
 including "the queue table is missing: the event is still saved".
