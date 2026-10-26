@@ -269,7 +269,7 @@ Template::printHeader("Detalhes de Prova", false);
     
 
     <script type="text/javascript">
-        // Html::js, not plain json_encode: a name or value holding "</script>"
+        // Html::js, not plain json_encode: a name or value holding a closing script tag
         // would end this block. The backups were printed as stored, raw.
         const atual = <?= $nova?'[]':Html::js($prova->getParams()) ?>;
         const backs = <?= (!$nova && $prova->getParamsBackup())?Html::js(json_decode($prova->getParamsBackup()) ?? new \stdClass()):'{}' ?>;

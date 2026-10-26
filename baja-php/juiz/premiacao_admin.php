@@ -207,7 +207,7 @@ Template::printHeader("Premiação", false);
     </form>
 
     <script type="text/javascript">
-        // Html::js, not plain json_encode: a name holding "</script>" would end
+        // Html::js, not plain json_encode: a name holding a closing script tag would end
         // this block. The backups were printed as stored, raw.
         const atual = <?= $nova ? 'null' : Html::js($premiacao->getCategorias()) ?>;
         const backs = <?= (!$nova && $premiacao->getCategoriasBackup()) ? Html::js(json_decode($premiacao->getCategoriasBackup()) ?? new \stdClass()) : '{}' ?>;
