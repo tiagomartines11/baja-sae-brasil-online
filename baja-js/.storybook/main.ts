@@ -1,11 +1,11 @@
 const config = {
   stories: ['../src/components/**/*.stories.tsx'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-viewport'],
+  addons: ['@storybook/addon-docs'],
   framework: {
     name: '@storybook/nextjs',
     options: {}
   },
-  staticDirs: ['..\\public'],
+  staticDirs: ['../public'],
   docs: {},
   webpackFinal: (config) => {
     config.resolve.modules.push(`${process.cwd()}/src`)

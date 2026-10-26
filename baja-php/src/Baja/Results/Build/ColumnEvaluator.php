@@ -35,7 +35,7 @@ final class ColumnEvaluator
             unset($entry->lines[$key], $entry->apiValues[$key]);
             $variables = $entry->variables;
 
-            if ($hideSpoilers && $column->valSpoilers) {
+            if ($hideSpoilers && $column->hasSpoilerValue()) {
                 $entry->variables[$key] = SpoilerValue::of($column, $variables, $entry);
                 continue;
             }

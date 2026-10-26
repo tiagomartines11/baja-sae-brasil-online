@@ -94,6 +94,20 @@ final class EntryValidatorTest extends TestCase
     }
 
     /**
+     * Both forms now carry a hidden security token, "_csrf" (BAJAAPP-41,
+     * see src/Baja/Auth/Csrf.php). Like the button name, it is not one of
+     * the prova's fields. If the validator treated it as an unknown field,
+     * every save would be refused with "o campo _csrf não existe".
+     */
+    public function testOCodigoDeSegurancaNaoEhUmCampoDesconhecido(): void
+    {
+        $inputs = '[{"code": "TEMPO", "name": "Tempo", "type": "number", "precision": 3}]';
+
+        $this->assertSame([], $this->entrada($inputs, ['TEMPO' => '12.345', '_csrf' => str_repeat('a', 64)]));
+        $this->assertSame([], $this->rolante($inputs, ['TEMPO' => '12.345', '_csrf' => str_repeat('a', 64)]));
+    }
+
+    /**
      * A tab was opened while the prova still had a field PENA; then the
      * organiser removed PENA from the configuration, and the judge saved
      * from the old tab. PENA no longer means anything, and before this

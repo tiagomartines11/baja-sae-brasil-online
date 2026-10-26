@@ -1,9 +1,12 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\Evento;
+use Baja\ResultsArchive\Queue;
 use Baja\Session;
+use Baja\Site\Html;
 use DateTimeZone;
 use Propel\Runtime\ActiveQuery\Criteria;
 
@@ -12,6 +15,9 @@ if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) { header("Location: ad
 $_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
+
+// Every act saves or deletes: refused without the form's token, before anything else.
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
     $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
@@ -78,7 +84,13 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
 
                 $evento->setEmAndamento(false);
 
-                $evento->save();
+                // A new event created already finalizado asks for an
+                // archive like any other (BAJAAPP-67). The event is saved
+                // even when the archive queue cannot be written; then the
+                // event's own page opens, to show why.
+                if (!Queue::saveEvento($evento, false, Session::getCurrentUser()->getUsername())) {
+                    header("Location: evento.php?id=" . urlencode($evento->getEventoId()) . "&arquivo=falhou"); exit;
+                }
 
                 header("Location: admin_eventos.php"); exit;
             }
@@ -89,6 +101,10 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
 
     $evento = EventoQuery::create()->findOneByEventoId($_REQUEST['id']);
     if (!$evento) { header("Location: admin_eventos.php"); exit; }
+
+    // As stored, before the form changes it: marking finalizado is what
+    // asks for the event's results to be archived (BAJAAPP-67).
+    $eraFinalizado = (bool)$evento->getFinalizado();
 
     if (@$_REQUEST['act'] == 'Atualizar') {
         $evento->setTitulo($_POST['titulo']);
@@ -143,7 +159,10 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
         } else {
             $evento->setMenu($menu->valor);
 
-            $evento->save();
+            // Saves, then records or cancels the archive request a
+            // finalizado change asks for. The event is saved even when that
+            // second step fails; the page then says so (below).
+            $arquivoOk = Queue::saveEvento($evento, $eraFinalizado, Session::getCurrentUser()->getUsername());
 
             if (isset($_POST['em_andamento']) && $_POST['em_andamento']=='1') {
                 EventoQuery::create()
@@ -152,7 +171,7 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             }
 
 
-            header("Location: evento.php?id=".$_page); exit;
+            header("Location: evento.php?id=".$_page . ($arquivoOk ? '' : '&arquivo=falhou')); exit;
         }
     }
 
@@ -170,19 +189,26 @@ Template::printHeader("Detalhes do Evento", false);
 <div style="max-width: 1000px; margin: 0 auto; height:100vh;">
 <?php if ($novo) { ?>
     <form action="evento.php?novo=true" method="POST">
+        <?= Csrf::field() ?>
 <?php } else { ?>
-    <form action="evento.php?id=<?= $evento->getEventoId() ?>" method="POST">
+    <form action="evento.php?id=<?= Html::e(rawurlencode($evento->getEventoId())) ?>" method="POST">
+        <?= Csrf::field() ?>
 <?php } ?>    
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
                 <tr style="height: 50px">
                     <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                         <span style="float:left"><a href="admin_eventos.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                        <span style="font-size: 28px;"><?= $novo?'Novo Evento':$evento->getNome(); ?></span> <br />
+                        <span style="font-size: 28px;"><?= $novo?'Novo Evento':Html::e($evento->getNome()); ?></span> <br />
                     </th>
                 </tr>
             </thead>
             <tbody>
+                <?php if (@$_GET['arquivo'] === 'falhou') { ?>
+                <tr>
+                    <td colspan="2" style="color: #a60; font-weight: bold;">Evento salvo, mas o arquivamento dos resultados não foi registrado (erro no servidor, já anotado no log). Avise a equipe técnica. Depois que for corrigido, desmarque e marque "Finalizado?" de novo para pedir o arquivamento.</td>
+                </tr>
+                <?php } ?>
                 <?php if ($erroJson !== null) { ?>
                 <tr>
                     <td colspan="2" style="color: red; font-weight: bold;">Evento não salvo: o JSON do menu é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto do menu e salve de novo.</td>
@@ -190,23 +216,23 @@ Template::printHeader("Detalhes do Evento", false);
                 <?php } ?>
                 <tr>
                     <td>ID Evento</td>
-                    <td><input style="width:700px;" type="text" name="evento_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':$evento->getEventoId() ?>"/></td>
+                    <td><input style="width:700px;" type="text" name="evento_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':Html::field($evento->getEventoId()) ?>"/></td>
                 </tr>
                 <tr>
                     <td>Título</td>
-                    <td><input style="width:700px;" type="text" name="titulo" value="<?= $novo?'':$evento->getTitulo() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="titulo" value="<?= $novo?'':Html::field($evento->getTitulo()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Nome</td>
-                    <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':$evento->getNome() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':Html::field($evento->getNome()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Tipo</td>
-                    <td><input style="width:700px;" type="text" name="programa" value="<?= $novo?'':$evento->getTipo() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="programa" value="<?= $novo?'':Html::field($evento->getTipo()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Ano</td>
-                    <td><input style="width:700px;" type="number" name="ano" value="<?= $novo?'':$evento->getAno() ?>" /></td>
+                    <td><input style="width:700px;" type="number" name="ano" value="<?= $novo?'':Html::field($evento->getAno()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Menu<br /><a href="ajuda_menu.php" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
@@ -216,7 +242,7 @@ Template::printHeader("Detalhes do Evento", false);
                             echo htmlspecialchars($_POST['menu'] ?? '');
                         } else {
                             $menu = $novo ? null : $evento->getMenu();
-                            echo $menu === null ? '' : json_encode($menu, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                            echo $menu === null ? '' : Html::field(json_encode($menu, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
                         }
                     ?></textarea></td>
                 </tr>
@@ -230,7 +256,32 @@ Template::printHeader("Detalhes do Evento", false);
                 </tr>
                 <tr>
                     <td>Finalizado?</td>
-                    <td><input type="checkbox" name="finalizado" value="1" <?= $novo?'':($evento->getFinalizado()?'checked':'') ?> /></td>
+                    <td><input type="checkbox" name="finalizado" value="1" <?= $novo?'':($evento->getFinalizado()?'checked':'') ?> />
+                        <?php
+                        // Where the archive of the published results stands (BAJAAPP-67).
+                        // Only the display is forgiving: before the migration has run
+                        // there is no table, and the page must still open.
+                        try {
+                            $arquivamento = $novo ? null : Queue::forApp()->latestFor((string)$evento->getEventoId());
+                        } catch (\Throwable $e) {
+                            $arquivamento = null;
+                        }
+                        if ($arquivamento !== null) {
+                            $quando = static fn($ms) => $ms === null ? '' : (new \DateTime('@' . intdiv((int)$ms, 1000)))->setTimezone(new DateTimeZone('America/Sao_Paulo'))->format('d/m/Y H:i');
+                            if ($arquivamento['estado'] === Queue::PENDENTE) {
+                                $texto = 'Arquivamento dos resultados pendente desde ' . $quando($arquivamento['pedido_em_ms']) . '; é feito no backup da noite.';
+                                if ((int)$arquivamento['tentativas'] > 0) {
+                                    $texto .= ' Falhou ' . (int)$arquivamento['tentativas'] . 'x: ' . $arquivamento['ultimo_erro'];
+                                }
+                            } elseif ($arquivamento['estado'] === Queue::ARQUIVADO) {
+                                $texto = 'Resultados arquivados em ' . $quando($arquivamento['concluido_em_ms']) . ' (' . $arquivamento['pasta'] . ').';
+                            } else {
+                                $texto = 'Último pedido de arquivamento cancelado: ' . $arquivamento['ultimo_erro'] . '.';
+                            }
+                            echo '<span style="font-size: 12px; margin-left: 8px;">' . htmlspecialchars($texto) . '</span>';
+                        }
+                        ?>
+                    </td>
                 </tr>
                 <tr>
                     <td>Spoilers?</td>
@@ -242,23 +293,23 @@ Template::printHeader("Detalhes do Evento", false);
                 </tr>
                 <tr>
                     <td>Data Evento</td>
-                    <td><input style="width:700px;" type="text" name="data" value="<?= $novo?'':$evento->getData() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="data" value="<?= $novo?'':Html::field($evento->getData()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Local Evento</td>
-                    <td><input style="width:700px;" type="text" name="local" value="<?= $novo?'':$evento->getLocal() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="local" value="<?= $novo?'':Html::field($evento->getLocal()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Presidente SAE</td>
-                    <td><input style="width:700px;" type="text" name="presidente" value="<?= $novo?'':$evento->getPresidente() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="presidente" value="<?= $novo?'':Html::field($evento->getPresidente()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Mandato Presidente</td>
-                    <td><input style="width:700px;" type="text" name="mandato" value="<?= $novo?'':$evento->getMandatoPresidente() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="mandato" value="<?= $novo?'':Html::field($evento->getMandatoPresidente()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Carga Horária</td>
-                    <td><input style="width:700px;" type="number" name="carga_horaria" value="<?= $novo?'':$evento->getCargaHoraria() ?>" min="1" max="9999"/></td>
+                    <td><input style="width:700px;" type="number" name="carga_horaria" value="<?= $novo?'':Html::field($evento->getCargaHoraria()) ?>" min="1" max="9999"/></td>
                 </tr>                
             </tbody>
             <tfoot>

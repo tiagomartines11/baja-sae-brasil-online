@@ -38,10 +38,27 @@ class RateLimiter
     private const LIMIT_LOGIN = 3;
     private const WINDOW_LOGIN = 60;
 
+    /**
+     * Public results API (api/resultados/, docs/results-api.md): 120
+     * requests/minute per client, counted for each endpoint on its own.
+     *
+     * An overlay polls each endpoint about once a second (60/minute), so
+     * this leaves it room for retries and a second tab, and polling all five
+     * at once never adds up to one shared limit. Cloudflare answers most of
+     * these requests from its cache, so this only counts the ones that reach
+     * PHP: it is a backstop for someone defeating the cache, not the
+     * protection itself.
+     */
+    public const LIMIT_RESULTADOS = 120;
+    public const WINDOW_RESULTADOS = 60;
+
+    /** @var string[] The endpoints of the public results API, which each have their own bucket. */
+    public const RESULTADOS_ENDPOINTS = ['evento', 'equipes', 'resultado', 'corrida', 'torneio'];
+
     /** @var string Redis key prefix */
     private const KEY_PREFIX = 'rate_limit:';
 
-    /** @var string[] Every category buildKey() can produce; used by clear(). */
+    /** @var string[] Every category buildKey() can produce, besides "resultados:<endpoint>"; used by clear(). */
     private const CATEGORIES = ['auth:login', 'auth:general', 'write', 'read'];
 
     /**
@@ -84,6 +101,31 @@ class RateLimiter
 
     /** @var bool Set once a connection attempt has failed */
     private static bool $redisDisabled = false;
+
+    /**
+     * Who a request counts against: the one place that decides it.
+     *
+     * Today that is the client's IP, REMOTE_ADDR only, never a request
+     * header. Headers like X-Forwarded-For and X-Real-IP are
+     * attacker-controlled: nginx maps whatever the client sends into HTTP_*,
+     * so trusting them lets anyone mint a fresh rate-limit bucket per
+     * request and bypass the limiter entirely.
+     *
+     * Making REMOTE_ADDR truthful is nginx's job, and is where the only
+     * dev/prod difference lives: behind Cloudflare, 00-cloudflare-realip.conf
+     * restores the client from CF-Connecting-IP; in dev the peer address is
+     * already the client. See baja-infra/nginx/templates/baja-app-api.conf.template.
+     *
+     * When the API gets keys, the key will replace the IP here, so a client
+     * is limited per key rather than per address (an event venue puts
+     * hundreds of phones behind one IP).
+     *
+     * @param array<string, mixed> $server $_SERVER
+     */
+    public static function clientIdentifier(array $server): string
+    {
+        return (string)($server['REMOTE_ADDR'] ?? 'unknown');
+    }
 
     /**
      * Check if the current request should be rate limited.
@@ -165,6 +207,12 @@ class RateLimiter
             return [self::LIMIT_AUTH, self::WINDOW_AUTH];
         }
 
+        // Public results API: every method is a read there (anything else
+        // is refused with 405, and still counted here)
+        if (self::resultadosEndpoint($endpoint) !== null) {
+            return [self::LIMIT_RESULTADOS, self::WINDOW_RESULTADOS];
+        }
+
         // Write operations
         if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
             return [self::LIMIT_WRITE, self::WINDOW_WRITE];
@@ -206,12 +254,33 @@ class RateLimiter
             return 'auth:general';
         }
 
+        // Public results API: one bucket per endpoint, so an overlay polling
+        // all of them is not limited as if it polled one
+        $resultados = self::resultadosEndpoint($endpoint);
+        if ($resultados !== null) {
+            return 'resultados:' . $resultados;
+        }
+
         // For other endpoints, group by method type
         if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
             return 'write';
         }
 
         return 'read';
+    }
+
+    /**
+     * The public results endpoint a path names ("corrida" for
+     * /api/resultados/corrida.php), or null. Only the known ones: a made-up
+     * name must not get a bucket of its own.
+     */
+    private static function resultadosEndpoint(string $endpoint): ?string
+    {
+        if (preg_match('#^/api/resultados/([a-z]+)\.php$#', $endpoint, $m) === 1
+            && in_array($m[1], self::RESULTADOS_ENDPOINTS, true)) {
+            return $m[1];
+        }
+        return null;
     }
 
     /**
@@ -284,7 +353,8 @@ class RateLimiter
         }
 
         // Clear all categories for this identifier
-        foreach (self::CATEGORIES as $category) {
+        $resultados = array_map(fn(string $name) => 'resultados:' . $name, self::RESULTADOS_ENDPOINTS);
+        foreach (array_merge(self::CATEGORIES, $resultados) as $category) {
             $key = self::KEY_PREFIX . hash('xxh64', $identifier . ':' . $category);
 
             try {

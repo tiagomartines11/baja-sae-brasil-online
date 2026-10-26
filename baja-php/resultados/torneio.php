@@ -8,8 +8,21 @@ use Baja\Model\Equipe;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\InputQuery;
 use Baja\Model\TournamentQuery;
+use Baja\Site\CachePolicy;
+use Baja\Site\CleanUrl;
+use Baja\Site\Html;
 
-$evt = ResultadoQuery::create()->findOneByResultadoId($_REQUEST['id'])->getEventoId();
+// A public page, cached by Cloudflare (docs/results-caching.md). It reads
+// id and overlay; any other parameter is dropped by a redirect.
+CleanUrl::enforce(['id', 'overlay']);
+
+// The bracket comes from the resultado's own event, whatever the URL's, so
+// that event's status decides how long it is cached. An unknown id used to
+// stop here with a fatal error; it now goes to the index like prova.php.
+$torneio = ResultadoQuery::create()->findOneByResultadoId($_REQUEST['id'] ?? null);
+if (!$torneio) { CachePolicy::send(null); header("Location: index.php"); exit; }
+$evt = $torneio->getEventoId();
+CachePolicy::send(EventoQuery::create()->findOneByEventoId($evt));
 
 $resultado = ResultadoQuery::create()->filterByEventoId($evt)->findPk($_REQUEST['id']);
 if (!$resultado) { header("Location: index.php"); exit; }
@@ -33,8 +46,8 @@ $teams = EquipeQuery::create()->filterByEventoId($evt);
 ?>
 
 <div class="container">
-  <h1><?= $resultado->getNome() ?></h1>
-  <h2><?=  EventoQuery::getCurrentEvent()->getNome() ?></h2>
+  <h1><?= Html::e($resultado->getNome()) ?></h1>
+  <h2><?= Html::e(EventoQuery::getCurrentEvent()->getNome()) ?></h2>
   <div class="tournament-bracket tournament-bracket--rounded">
 
   <?php
@@ -55,8 +68,8 @@ $teams = EquipeQuery::create()->filterByEventoId($evt);
         $current_round = $m->getRound();
 
         ?>
-        <div class="tournament-bracket__round tournament-bracket__round--<?= $current_round ?>">
-          <h3 class="tournament-bracket__round-title"><?= $rounds[$current_round] ?></h3>
+        <div class="tournament-bracket__round tournament-bracket__round--<?= Html::e($current_round) ?>">
+          <h3 class="tournament-bracket__round-title"><?= Html::e($rounds[$current_round] ?? '') ?></h3>
           <ul class="tournament-bracket__list">
       
         <?php
@@ -71,7 +84,7 @@ $teams = EquipeQuery::create()->filterByEventoId($evt);
           <?php if (is_int(json_decode($m->getDados())->bestof)) { ?>
           
             <caption class="tournament-bracket__caption">
-                <time>Melhor de <?= json_decode($m->getDados())->bestof ?></time>
+                <time>Melhor de <?= Html::e(json_decode($m->getDados())->bestof) ?></time>
             </caption>
         <?php } ?>
 
@@ -87,25 +100,25 @@ $teams = EquipeQuery::create()->filterByEventoId($evt);
             <tbody class="tournament-bracket__content">
               <tr class="tournament-bracket__team <?= ($m->getWinner() == $m->getEquipe1Id() && ctype_digit($m->getEquipe1Id()))?'tournament-bracket__team--winner':'' ?>">
                 <td class="tournament-bracket__score">
-                  <span class="tournament-bracket__number"><abbr class="tournament-bracket__code"><?= (!ctype_digit($m->getEquipe1Id()))?($m->getEquipe1Id()=='WO'?'WO':'?'):($m->getEquipe1Id().' - '.EquipeQuery::create()->filterByEventoId($evt)->findOneByEquipeId($m->getEquipe1Id())->getEquipeCurto()) ?></abbr></span>
+                  <span class="tournament-bracket__number"><abbr class="tournament-bracket__code"><?= Html::e((!ctype_digit($m->getEquipe1Id()))?($m->getEquipe1Id()=='WO'?'WO':'?'):($m->getEquipe1Id().' - '.EquipeQuery::create()->filterByEventoId($evt)->findOneByEquipeId($m->getEquipe1Id())->getEquipeCurto())) ?></abbr></span>
                 </td>
 
                 <?php if (is_int(json_decode($m->getDados())->bestof)) { ?>
           
                     <td class="tournament-bracket__score">
-                    <span class="tournament-bracket__number"><?= json_decode($m->getDados())->win1 ?></span>
+                    <span class="tournament-bracket__number"><?= Html::e(json_decode($m->getDados())->win1 ?? null) ?></span>
                   </td>
                 <?php } ?>   
 
               </tr>
               <tr class="tournament-bracket__team <?= ($m->getWinner() == $m->getEquipe2Id() && ctype_digit($m->getEquipe1Id()))?'tournament-bracket__team--winner':'' ?>">
                 <td class="tournament-bracket__score">
-                <span class="tournament-bracket__number"><abbr class="tournament-bracket__code"><?= (!ctype_digit($m->getEquipe2Id()))?($m->getEquipe2Id()=='WO'?'WO':'?'):($m->getEquipe2Id().' - '.EquipeQuery::create()->filterByEventoId($evt)->findOneByEquipeId($m->getEquipe2Id())->getEquipeCurto()) ?></abbr></span>
+                <span class="tournament-bracket__number"><abbr class="tournament-bracket__code"><?= Html::e((!ctype_digit($m->getEquipe2Id()))?($m->getEquipe2Id()=='WO'?'WO':'?'):($m->getEquipe2Id().' - '.EquipeQuery::create()->filterByEventoId($evt)->findOneByEquipeId($m->getEquipe2Id())->getEquipeCurto())) ?></abbr></span>
                 </td>
                 <?php if (is_int(json_decode($m->getDados())->bestof)) { ?>
           
                     <td class="tournament-bracket__score">
-                    <span class="tournament-bracket__number"><?= json_decode($m->getDados())->win2 ?></span>
+                    <span class="tournament-bracket__number"><?= Html::e(json_decode($m->getDados())->win2 ?? null) ?></span>
                     </td>
                 <?php } ?>   
               </tr>

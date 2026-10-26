@@ -62,9 +62,10 @@ final class LiveSource
     /**
      * The event's resultados (or only the one with id $only), each with its
      * columns twice: decoded, to check, and exactly as stored, for the guard
-     * of the SQL fix.
+     * of the SQL fix; and the names its provas' configs declare
+     * (UnknownVariables::declaredBy()).
      *
-     * @return list<array{resultado: string, nome: string, colunas: ?string, inputs: list<TeamInput>}>
+     * @return list<array{resultado: string, nome: string, colunas: ?string, inputs: list<TeamInput>, declared: array<string, true>}>
      */
     public function resultados(string $event, ?string $only = null): array
     {
@@ -85,9 +86,24 @@ final class LiveSource
                 'nome' => (string)$resultado->getNome(),
                 'colunas' => $stored[$id] ?? null,
                 'inputs' => TeamInput::forResultado($resultado),
+                'declared' => self::declared($event, $resultado->getInputs()),
             ];
         }
         return $resultados;
+    }
+
+    /**
+     * The names the configs of these provas declare.
+     *
+     * @return array<string, true>
+     */
+    private static function declared(string $event, mixed $provas): array
+    {
+        $names = [];
+        foreach (ProvaQuery::create()->filterByEventoId($event)->filterByProvaId($provas)->find() as $prova) {
+            $names += UnknownVariables::declaredBy($prova);
+        }
+        return $names;
     }
 
     /**

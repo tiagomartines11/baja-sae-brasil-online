@@ -20,7 +20,7 @@ namespace Baja\ResultsCheck;
 final class Report
 {
     /** The kinds of problem, in the order they are shown: the worst first. */
-    private const KINDS = [Finding::FATAL, Finding::FORMULA_ERROR, Finding::RANKING, Finding::EMPTY_COLUMN];
+    private const KINDS = [Finding::FATAL, Finding::FORMULA_ERROR, Finding::RANKING, Finding::EMPTY_COLUMN, Finding::UNKNOWN_VARIABLE];
 
     /**
      * @param list<array{event: string, resultados: list<array>, provas: list<array>}> $events

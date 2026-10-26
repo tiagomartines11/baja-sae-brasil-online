@@ -4,6 +4,7 @@ namespace Baja\Juiz;
 use Baja\Model\EventoQuery;
 use Baja\Model\PremiacaoQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
 
@@ -21,7 +22,7 @@ Template::printHeader("Admin");
             <tr style="height: 50px;">
                 <th colspan="4" class="sorter-false">
                     <span style="float:left;"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                    <span style="font-size: 28px;">Premiações (<?= $evento ?>)</span>
+                    <span style="font-size: 28px;">Premiações (<?= Html::e($evento) ?>)</span>
                 </th>
             </tr>
             <tr>

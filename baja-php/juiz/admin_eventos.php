@@ -6,6 +6,7 @@ use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
 
@@ -40,11 +41,11 @@ Template::printHeader("Admin");
 
 <?php foreach ($eventos as $ev) { ?>
             <tr>
-                <td><a href="/<?= $ev->getEventoId() ?>/admin.php"><?= $ev->getEventoId() ?></a></td>
-                <td><?= ($ev->isEmAndamento()?'<b>':'') . $ev->getNome() . ($ev->isEmAndamento()?'</b>':'') ?></td>
-                <td><?= $ev->getTipo() ?></td>
-                <td><?= $ev->getAno() ?></td>
-                <td><a href='evento.php?id=<?= $ev->getEventoId() ?>'>&nbsp;✏️&nbsp;</a></td>
+                <td><a href="/<?= Html::e($ev->getEventoId()) ?>/admin.php"><?= Html::e($ev->getEventoId()) ?></a></td>
+                <td><?= ($ev->isEmAndamento()?'<b>':'') . Html::e($ev->getNome()) . ($ev->isEmAndamento()?'</b>':'') ?></td>
+                <td><?= Html::e($ev->getTipo()) ?></td>
+                <td><?= Html::e($ev->getAno()) ?></td>
+                <td><a href='evento.php?id=<?= Html::e($ev->getEventoId()) ?>'>&nbsp;✏️&nbsp;</a></td>
             </tr>
 <?php } ?>
         </tbody>

@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\Evento;
 use Baja\Model\ProvaQuery;
@@ -9,6 +10,7 @@ use Baja\Model\ResultadoQuery;
 use Baja\Model\Resultado;
 use Propel\Runtime\Propel;
 use Baja\Session;
+use Baja\Site\Html;
 use DateTimeZone;
 // Without this, "Exception" below means Baja\Juiz\Exception, which does not
 // exist: the error paths died with "class not found" instead of their message.
@@ -18,6 +20,9 @@ use Baja\Model\Map\EventoTableMap;
 Session::permissionCheck('admin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Cloning creates an event: refused without the form's token, before anything else.
+    Csrf::enforce();
+
     $refEventoId    = $_POST['ref_evento_id'] ?? null;
     $novoEventoId    = $_POST['novo_evento_id'] ?? null;
     $cloneProvas    = !empty($_POST['clone_provas']);
@@ -140,13 +145,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } catch (\Propel\Runtime\Exception\PropelException $e) {
         if (str_contains($e->getMessage(), '1062')) {
-            echo "❌ O evento '$novoEventoId' já existe.";
+            echo "❌ O evento '" . Html::e($novoEventoId) . "' já existe.";
         } else {
-            echo "❌ Erro no banco de dados: " . $e->getMessage();
+            echo "❌ Erro no banco de dados: " . Html::e($e->getMessage());
             var_dump($e);
         }
     } catch (Exception $e) {
-        echo "❌ Falha ao clonar evento: " . $e->getMessage();
+        echo "❌ Falha ao clonar evento: " . Html::e($e->getMessage());
     }
 } else {
 
@@ -157,6 +162,7 @@ Template::printHeader("Detalhes do Evento", false);
 ?>
 <div style="max-width: 1000px; margin: 0 auto; height:100vh;">
     <form action="clonar_evento.php" method="POST">
+        <?= Csrf::field() ?>
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
                 <tr style="height: 50px">
@@ -177,7 +183,7 @@ Template::printHeader("Detalhes do Evento", false);
                         <select name="ref_evento_id">
                             <option disabled selected value> -- Selecione -- </option>
             <?php foreach ($eventos as $ev) { ?>
-                            <option value="<?= $ev->getEventoId() ?>" ><?= $ev->getEventoId() ?></option>
+                            <option value="<?= Html::field($ev->getEventoId()) ?>" ><?= Html::e($ev->getEventoId()) ?></option>
             <?php } ?>
                         </select>
                     </td>

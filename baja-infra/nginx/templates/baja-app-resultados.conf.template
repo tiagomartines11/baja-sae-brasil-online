@@ -1,3 +1,22 @@
+# Whether a public results page runs without the forum session (SKIP_AUTH=1,
+# the page Cloudflare caches) or with it (SKIP_AUTH=0, never cached). Only a
+# baja_staff cookie of exactly STAFF_COOKIE_VALUE gets the session; no cookie,
+# or any other value, gets the public page. The cookie is given to judges by
+# baja-app (Baja\Auth\StaffCookie). See docs/results-caching.md.
+#
+# "0" rather than an empty value for the session: src/bootstrap.php loads the
+# session whenever SKIP_AUTH is falsy, and PHP reads "0" as false.
+#
+# A regex anchored at both ends, so still an exact match, rather than a plain
+# string: plain keys go in a hash whose buckets (map_hash_bucket_size, 64 by
+# default) are too small for a 48-character value, and nginx then refuses to
+# start. A regex has no such limit. The value is letters and digits only
+# (see .env.example), so nothing in it means anything to the regex.
+map $cookie_baja_staff $baja_results_skip_auth {
+    default                     1;
+    "~^${STAFF_COOKIE_VALUE}$"  0;
+}
+
 server {
     include /etc/nginx/conf.d/snippets/${LISTEN_MODE}.conf;
     server_name resultados.${BAJA_DOMAIN};
@@ -39,17 +58,25 @@ server {
         try_files $uri $uri/ /index.php$is_args$args;
     }
 
-    # prova.php gets SKIP_AUTH=1 to bypass phpBB session check (Cloudflare cache pattern)
-    location = /prova.php {
+    # The public results pages, cached by Cloudflare (docs/results-caching.md
+    # lists them and what each sends). SKIP_AUTH comes from the map above:
+    # without the staff cookie the page never touches the forum session, so
+    # every visitor gets the same page. A page added here must call
+    # Baja\Site\CleanUrl::enforce() and Baja\Site\CachePolicy::send(), and be
+    # added to the Cloudflare rule in that doc.
+    #
+    # Must stay above the generic \.php$ location: regex locations are tried
+    # in order. The index is reached as /index.php through try_files above.
+    location ~ ^/(index|prova|torneio|mapa|clock|notificacoes|overlay|overlaydata|enduro_dump)\.php$ {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         fastcgi_pass baja-app:9000;
         fastcgi_index index.php;
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME /var/www/html/resultados/prova.php;
+        fastcgi_param SCRIPT_FILENAME /var/www/html/resultados$fastcgi_script_name;
         fastcgi_param PATH_INFO $fastcgi_path_info;
         fastcgi_param PHP_VALUE "auto_prepend_file=/var/www/html/src/bootstrap.php";
         fastcgi_param REDIRECT_EVENT $event_code;
-        fastcgi_param SKIP_AUTH 1;
+        fastcgi_param SKIP_AUTH $baja_results_skip_auth;
     }
 
     # The public lap counting feed (overlays, broadcast graphics). No forum

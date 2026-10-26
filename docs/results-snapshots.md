@@ -14,7 +14,7 @@ runs `--check` on every PR against the dev seed.
 | Change coming | What must stay equal | Snapshot files |
 |---|---|---|
 | BAJAAPP-54: one shared results builder replacing `resultados/prova.php`, `prova_juiz.php` and `Baja\Premiacao\Resolver` | every public results table, every premiação | `<ID>.json`, `<ID>.torneio.json`, `premiacao.<ID>.json` |
-| BAJAAPP-35: replacing `eval()` in `Input::solveFormula` | every team's vars and pontos | `formulas.<PROVA>.json` |
+| BAJAAPP-35: replacing `eval()` in `Input::solveFormula` | every team's vars and pontos, and every page (CI runs `--check` again with `FORMULA_ENGINE=safe`; [`formula-engine.md`](formula-engine.md)) | `formulas.<PROVA>.json`, all of them |
 | BAJAAPP-42 and the future API: what the public sees *during* an event | the spoiler view | `<ID>.spoilers.json` |
 
 For every event with `finalizado = 1` (14 of the 17 events in the seed):
@@ -31,11 +31,14 @@ For every event with `finalizado = 1` (14 of the 17 events in the seed):
 - **`formulas.<PROVA>.json`**: each team's vars and pontos, recomputed by
   `Input::updateVars()` and `Input::updatePontos()`.
 
-Not snapshotted: `resultados/prova_juiz.php`.
-Run without a forum login, `prova_juiz.php` shows the same rows as
-`prova.php`. Its one difference, the `authorized_users` path that lets
-named judges see past spoilers, needs a logged-in user. That path is left
-to the unit tests of the shared results builder (BAJAAPP-54).
+Not snapshotted: `prova.php` as a judge sees it. The snapshots run the
+public path (no forum session, as nginx serves the page to everybody
+without the staff cookie). The session path, which lets users in
+`authorized_users` see past spoilers on the same URL, needs a logged-in
+user; it is covered by the unit tests of the shared results builder
+(BAJAAPP-54) and by `baja-php/tests/results-caching/http-test.sh`
+([`results-caching.md`](results-caching.md)). `prova_juiz.php` only
+redirects to `prova.php` now.
 
 ## How it works
 
@@ -247,7 +250,8 @@ Things to keep in mind:
 - The data must not change between steps 2 and 4. On a static copy it does
   not. Do not point this at the live production database during an event.
 - By default every event with `finalizado = 1` is covered. Add
-  `--events 26BR` to limit it, or to include an event that is not finished.
+  `--events 26BR` to limit it, or to include an event that is not finished
+  (named events are taken finished or not).
 - Differences the release *should* make (a bug fix) show up here like any
   other. Compare them with what the release notes promise.
 - `--dir` folders hold real team names and scores, so treat them like the

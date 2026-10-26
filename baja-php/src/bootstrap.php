@@ -33,16 +33,9 @@ $isApiVhost = !empty($_SERVER['BAJA_API_VHOST']);
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
 
 if ($isApiVhost || strpos($requestPath, '/api/') === 0) {
-    // REMOTE_ADDR only, never a request header. Headers like X-Forwarded-For
-    // and X-Real-IP are attacker-controlled: nginx maps whatever the client
-    // sends into HTTP_*, so trusting them lets anyone mint a fresh rate-limit
-    // bucket per request and bypass the limiter entirely.
-    //
-    // Making REMOTE_ADDR truthful is nginx's job, and is where the only
-    // dev/prod difference lives: in prod the API vhost runs realip against
-    // Cloudflare's ranges with CF-Connecting-IP; in dev the peer address is
-    // already the client. See baja-infra/nginx/conf.d*/baja-app-api.conf.
-    $clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    // Who the request counts against: the IP today (REMOTE_ADDR, never a
+    // header), an API key one day. Decided in one place; see there.
+    $clientId = \Baja\Api\RateLimiter::clientIdentifier($_SERVER);
 
     // Canonicalise to a /api/... path before handing it over. RateLimiter
     // picks the limit by pattern-matching the endpoint (/api/auth/login.php
@@ -53,7 +46,7 @@ if ($isApiVhost || strpos($requestPath, '/api/') === 0) {
 
     // Enforce rate limits (returns 429 and exits if exceeded)
     \Baja\Api\RateLimiter::enforce(
-        $clientIp,
+        $clientId,
         $endpoint,
         $_SERVER['REQUEST_METHOD'] ?? 'GET'
     );
@@ -62,6 +55,15 @@ if ($isApiVhost || strpos($requestPath, '/api/') === 0) {
 if (!getenv('SKIP_AUTH')) {
     require_once(__DIR__ . "/phpbb_login.php");
     $_DEV_MODE = $user->data["username"] == "Tiago" || $user->data["username"] == "jbresolin";
+
+    // The cookie that lets a judge skip the results cache (docs/results-caching.md):
+    // set for users with judge permissions, cleared for everybody else. Every
+    // page with a session does it, so a judge gets it on the page the login
+    // lands on, and a new value from .env on their next page. Not on the API
+    // vhost, which serves programs, not judges' browsers.
+    if (!$isApiVhost) {
+        \Baja\Auth\StaffCookie::sync(\Baja\Session::getCurrentUserOrNull());
+    }
 } else {
     // No error-reporting changes here on purpose. Whether a request renders
     // errors is decided at the top of this file, from ENV alone; a SKIP_AUTH

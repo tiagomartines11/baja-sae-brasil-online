@@ -11,25 +11,28 @@ use Baja\Util\Mailer;
 /**
  * Who gets told about a new report.
  *
- * Everybody who can act on one, which is the same permission that opens the
- * insertion pages — `certificados`, plus `admin`, which implies it everywhere
- * else in this system. Deriving the list from the permission rather than
- * keeping a mailing list means the two cannot drift: somebody granted the
- * permission starts receiving reports, and somebody who loses it stops,
- * without a second place to remember.
+ * CERT_REPORT_EMAILS decides, when it holds at least one valid address: those
+ * addresses and nobody else. It replaces the derived list rather than adding
+ * to it, so that a deployment can send reports to one shared inbox without
+ * every admin receiving a copy, and the forum is not even asked.
  *
- * The addresses come from the forum. See Baja\Auth\PhpbbEmails for why there
- * is no email column here.
+ * Blank, the list is derived: everybody who can act on a report, which is the
+ * same permission that opens the insertion pages — `certificados`, plus
+ * `admin`, which implies it everywhere else in this system. Deriving the list
+ * from the permission rather than keeping a mailing list means the two cannot
+ * drift: somebody granted the permission starts receiving reports, and
+ * somebody who loses it stops, without a second place to remember. The
+ * addresses come from the forum. See Baja\Auth\PhpbbEmails for why there is
+ * no email column here.
  *
- * CERT_REPORT_EMAILS is added to that list, never used instead of it. It is
- * there for the two cases the derived list cannot cover: a shared inbox that
- * belongs to no forum account, and a deployment where the phpBB read fails.
- * A report with no recipient is the one outcome worth avoiding — the person
- * has been told it was received.
+ * Set, but with no valid address in it, is a typo, not a request to notify
+ * nobody: the derived list is used instead and the misconfiguration is
+ * logged. A report with no recipient is the one outcome worth avoiding — the
+ * person has been told it was received.
  */
 final class Destinatarios
 {
-    /** Extra addresses, comma-separated. Added to the derived list. */
+    /** Addresses, comma-separated. When any is valid, used instead of the derived list. */
     public const ENV_EXTRA = 'CERT_REPORT_EMAILS';
 
     /**
@@ -39,26 +42,57 @@ final class Destinatarios
      */
     public static function todos(): array
     {
-        $enderecos = array_merge(self::doEnv(), self::daEquipe());
+        return self::escolher(
+            (string) Env::get(self::ENV_EXTRA, ''),
+            static fn (): array => self::daEquipe()
+        );
+    }
 
-        // Case-insensitively, because the same mailbox reached from a forum
-        // profile and from the env list is one recipient, not two.
-        $unicos = [];
-        foreach ($enderecos as $endereco) {
-            if (Mailer::enderecoValido($endereco)) {
-                $unicos[strtolower($endereco)] = $endereco;
-            }
+    /**
+     * The rule itself, given the variable's value and a way to get the
+     * derived list.
+     *
+     * The derived list is passed as a callable rather than a value because
+     * computing it is the expensive part — a scan of `user` and a query
+     * against the forum database — and it is only needed when the variable
+     * does not decide. todos() is the only production caller; the tests call
+     * this directly so they need neither a database nor a forum.
+     *
+     * @param callable(): array<int, string> $daEquipe
+     * @return array<int, string>
+     */
+    public static function escolher(string $configurado, callable $daEquipe): array
+    {
+        $configurados = self::separar($configurado);
+        $doEnv        = self::validosSemRepeticao($configurados);
+
+        if ($doEnv !== []) {
+            return $doEnv;
         }
 
-        if ($unicos === []) {
+        if (trim($configurado) !== '') {
+            // Only a count: the variable is staff configuration, but a log
+            // line is read by more people than the .env file is.
             error_log(
-                'Certificado\Requerimento\Destinatarios: nobody to notify — no user holds the "'
-                . Acesso::PERMISSAO . '" permission with a forum email, and ' . self::ENV_EXTRA
-                . ' is unset. Reports are still being saved.'
+                'Certificado\Requerimento\Destinatarios: ' . self::ENV_EXTRA . ' is set but none of its '
+                . count($configurados) . ' entries is a valid address. Notifying the users with the "'
+                . Acesso::PERMISSAO . '" permission instead; fix the variable.'
             );
         }
 
-        return array_values($unicos);
+        $unicos = self::validosSemRepeticao($daEquipe());
+
+        if ($unicos === []) {
+            error_log(
+                'Certificado\Requerimento\Destinatarios: nobody to notify — ' . self::ENV_EXTRA
+                . (trim($configurado) === '' ? ' is blank' : ' has no valid address')
+                . ', and no user holding the "' . Acesso::PERMISSAO
+                . '" or "admin" permission has a valid email in their forum profile.'
+                . ' Reports are still being saved.'
+            );
+        }
+
+        return $unicos;
     }
 
     /**
@@ -88,6 +122,24 @@ final class Destinatarios
         return $usernames;
     }
 
+    /**
+     * @param array<int, string> $enderecos
+     * @return array<int, string>
+     */
+    private static function validosSemRepeticao(array $enderecos): array
+    {
+        // Case-insensitively, because the same mailbox reached from two
+        // places, or typed twice with different capitals, is one recipient.
+        $unicos = [];
+        foreach ($enderecos as $endereco) {
+            if (Mailer::enderecoValido($endereco)) {
+                $unicos[strtolower($endereco)] = $endereco;
+            }
+        }
+
+        return array_values($unicos);
+    }
+
     /** @return array<int, string> */
     private static function daEquipe(): array
     {
@@ -101,14 +153,8 @@ final class Destinatarios
     }
 
     /** @return array<int, string> */
-    private static function doEnv(): array
+    private static function separar(string $bruto): array
     {
-        $bruto = (string) Env::get(self::ENV_EXTRA, '');
-
-        if ($bruto === '') {
-            return [];
-        }
-
         return array_values(array_filter(array_map('trim', explode(',', $bruto))));
     }
 }

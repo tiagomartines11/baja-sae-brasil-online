@@ -6,6 +6,7 @@ use Baja\Contagem\Access\ContagemAccess;
 use Baja\Model\EventoQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("index");
 
@@ -24,7 +25,7 @@ echo '<div style="max-width: 400px; margin: 0 auto"><table class="tablesorter">
                 </th>
             </tr>	
             <tr class="tablesorter-ignoreRow" style="height: 40px;">
-                <th class="sorter-false" style="line-height: 22px;">'.EventoQuery::getCurrentEvent()->getNome().'<br />Entrada de Dados</th>
+                <th class="sorter-false" style="line-height: 22px;">'.Html::e(EventoQuery::getCurrentEvent()->getNome()).'<br />Entrada de Dados</th>
             </tr>
         </thead>
         <tr></tr>

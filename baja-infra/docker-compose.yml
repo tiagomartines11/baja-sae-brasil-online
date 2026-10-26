@@ -11,6 +11,12 @@ services:
       MYSQL_RESULTADOS_PASSWORD: ${MYSQL_RESULTADOS_PASSWORD}
       MYSQL_PHPBB_BAJA_PASSWORD: ${MYSQL_PHPBB_BAJA_PASSWORD}
       MYSQL_PHPBB_FORMULA_PASSWORD: ${MYSQL_PHPBB_FORMULA_PASSWORD}
+      # Read-only user for the `backup` service below. On an ALREADY
+      # INITIALISED server (i.e. production) these are inert — the init
+      # scripts only run on first boot — and the GRANT has to be applied
+      # by hand. See baja-infra/docs/backup-restore.md.
+      MYSQL_BACKUP_USER: ${MYSQL_BACKUP_USER}
+      MYSQL_BACKUP_PASSWORD: ${MYSQL_BACKUP_PASSWORD}
     ports:
       - "127.0.0.1:3306:3306"
     volumes:
@@ -126,9 +132,9 @@ services:
       ENV: ${ENV}
       # Keys the /buscar per-document backoff. See .env.example.
       CERT_BACKOFF_SECRET: ${CERT_BACKOFF_SECRET}
-      # /requerimento, the participant-facing correction form. See
-      # .env.example; the notification recipients are derived from the
-      # `certificados` permission, and this list is added to them.
+      # /requerimento, the participant-facing correction form. Who gets the
+      # notification: this list when it has a valid address, otherwise the
+      # users with the `certificados` or `admin` permission. See .env.example.
       CERT_REPORT_EMAILS: ${CERT_REPORT_EMAILS}
       # Cloudflare Turnstile, the anti-robot check on that form. Unset means
       # the check is skipped and said to be skipped, not that the form breaks.
@@ -153,6 +159,10 @@ services:
       # from, so a link can never name a host or scheme nginx is not serving.
       BAJA_DOMAIN: ${BAJA_DOMAIN}
       LISTEN_MODE: ${LISTEN_MODE}
+      # The baja_staff cookie given to judges so they skip the results cache;
+      # the same value as nginx's below. See .env.example and
+      # docs/results-caching.md.
+      STAFF_COOKIE_VALUE: ${STAFF_COOKIE_VALUE:?set STAFF_COOKIE_VALUE in .env, see .env.example}
       # phpBB session shim — see baja-php/src/Baja/Auth/SessionStore.php.
       # The shim connects as the `resultados` MySQL user (full grants on
       # baja_resultados, SELECT on phpbb_baja). One MySQL account, two
@@ -176,10 +186,13 @@ services:
       API_CORS_ORIGINS: ${API_CORS_ORIGINS}
       STORAGE_ENCRYPTION_KEY: ${STORAGE_ENCRYPTION_KEY}
       LOG_LEVEL: ${LOG_LEVEL}
+      # Which engine works out prova and resultado formulas: eval (blank, the
+      # default), safe or shadow. See .env.example and docs/formula-engine.md.
+      FORMULA_ENGINE: ${FORMULA_ENGINE:-}
       # Text-to-speech for timer sounds. Unset hides the feature.
       TTS_URL: http://tts:5000
     volumes:
-      - ${BAJA_APP_PATH}:/var/www/html
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/html
     depends_on:
       mysql:
         condition: service_healthy
@@ -211,6 +224,130 @@ services:
     networks:
       - baja
 
+  # Nightly encrypted backup of the three databases, the files kept
+  # outside them, and the erasure log, to the SAE BRASIL `baja-backups`
+  # Google Shared Drive. See baja-infra/docs/backup-restore.md.
+  #
+  # profiles: ["tools"] keeps it out of `docker compose up` — this is a
+  # run-to-completion job, not a service. Host cron invokes
+  # scripts/backup-run.sh, which runs
+  #
+  #     docker compose --profile tools run --rm backup
+  #
+  # and then the event archives. Ad-hoc runs come free. That matters: the documented
+  # pre-event ritual is to run this manually before and after each scoring
+  # session, because a 24-hour RPO is the wrong answer on results day.
+  #
+  # It talks to MySQL as an ordinary CLIENT over the compose network. It
+  # does NOT mount the docker socket, and must never be given it: a job
+  # whose whole purpose is to read every row in the database has no
+  # business also being able to control the daemon that runs production.
+  backup:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    image: baja-backup:latest
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_BACKUP_USER: ${MYSQL_BACKUP_USER}
+      MYSQL_BACKUP_PASSWORD: ${MYSQL_BACKUP_PASSWORD}
+      # NOTE the two-sidedness: in .env this variable holds the HOST path
+      # to the service-account key (used by the bind mount below); inside
+      # the container it is the fixed read-only path the key appears at.
+      GDRIVE_SA_WRITER_JSON: /run/secrets/gdrive-backup-writer.json
+      GDRIVE_SHARED_DRIVE_ID: ${GDRIVE_SHARED_DRIVE_ID}
+      AGE_RECIPIENT_ESCROW: ${AGE_RECIPIENT_ESCROW}
+      AGE_RECIPIENT_VERIFIER: ${AGE_RECIPIENT_VERIFIER}
+      KUMA_PUSH_URL_BACKUP: ${KUMA_PUSH_URL_BACKUP}
+      # Test hooks. BACKUP_REMOTE redirects the upload away from Drive and
+      # suppresses the Kuma heartbeat; BACKUP_RUN_ID fakes the date so the
+      # monthly/yearly branches can be exercised. Both empty in normal use.
+      BACKUP_REMOTE: ${BACKUP_REMOTE:-}
+      BACKUP_RUN_ID: ${BACKUP_RUN_ID:-}
+    volumes:
+      - ${GDRIVE_SA_WRITER_JSON:-./secrets/gdrive-backup-writer.json}:/run/secrets/gdrive-backup-writer.json:ro
+      # The file sets (scripts/backup-lib.sh, BACKUP_FILE_SETS), all
+      # READ-ONLY: the backup reads state, it never writes it. In dev the
+      # forum uploads live inside these code volumes; in production
+      # docker-compose.prod.yml mounts the /srv/baja bind folders over the
+      # same paths, so the script sees one layout everywhere.
+      - phpbb_baja_html:/state/phpbb-baja:ro
+      - phpbb_formula_html:/state/phpbb-formula:ro
+      - ${BAJA_APP_PATH:-../baja-php}/juiz/sons:/state/baja-app-sons:ro
+      # The stack's own .env, read-only, for the secrets-recovery copy: it
+      # is encrypted to the ESCROW key alone and uploaded to secrets/ when
+      # it changes. Nothing on the server can decrypt that copy. See
+      # "Secrets" in docs/backup-restore.md.
+      - ./.env:/run/secrets/stack.env:ro
+      # The erasure log, read-only here. It is written only through the
+      # erasure-log service below.
+      - ${ERASURE_LOG_DIR:-./backup-local/erasure}:/srv/baja/erasure:ro
+      # Where BACKUP_REMOTE=:local:/drive/ writes, so a dev or staging test
+      # run leaves its "Shared Drive" on the host for the verifier and for
+      # you to look at. Unused when BACKUP_REMOTE is empty (production).
+      - ${BACKUP_LOCAL_DRIVE:-./backup-local/drive}:/drive
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - baja
+
+  # The erasure log's only writer: `record` appends to it, `replay` deletes
+  # from a RESTORED database. Same image as the backup (it needs mysql and
+  # jq), separate service so that the nightly backup keeps a read-only view
+  # of the log. See the "Erasure log" section of docs/backup-restore.md.
+  #
+  #     docker compose --profile tools run --rm erasure-log list
+  erasure-log:
+    profiles: ["tools"]
+    image: baja-backup:latest
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    entrypoint: ["/usr/local/bin/erasure-log.sh"]
+    environment:
+      TZ: America/Sao_Paulo
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+    volumes:
+      - ${ERASURE_LOG_DIR:-./backup-local/erasure}:/srv/baja/erasure
+    networks:
+      - baja
+
+  # Event archives (BAJAAPP-67): the PHP half, on the baja-app image. It
+  # reads and updates the evento_arquivamento queue as the app's own
+  # MySQL user, and runs results-snapshot.php for one event as the
+  # read-only backup user. scripts/backup-run.sh drives it; nothing else
+  # should. The code is mounted read-only and the image's entrypoint
+  # (which writes into the tree and may run composer) is bypassed.
+  results-archive:
+    profiles: ["tools"]
+    image: baja-app:latest
+    working_dir: /var/www/html
+    entrypoint: ["php", "scripts/results-archive.php"]
+    environment:
+      TZ: America/Sao_Paulo
+      ENV: ${ENV}
+      PHPBB_DB_HOST: mysql
+      PHPBB_DB_PORT: "3306"
+      PHPBB_DB_NAME: phpbb_baja
+      PHPBB_DB_USER: resultados
+      PHPBB_DB_PASS: ${MYSQL_RESULTADOS_PASSWORD}
+      ARCHIVE_DB_USER: ${MYSQL_BACKUP_USER}
+      ARCHIVE_DB_PASS: ${MYSQL_BACKUP_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    volumes:
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/html:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - baja
+
   nginx:
     image: nginx:1.27-alpine
     container_name: baja-nginx
@@ -222,13 +359,18 @@ services:
       BAJA_DOMAIN: ${BAJA_DOMAIN}
       FORMULA_DOMAIN: ${FORMULA_DOMAIN}
       LISTEN_MODE: ${LISTEN_MODE}
+      # The results vhost loads the forum session only for a baja_staff
+      # cookie of exactly this value. Required: an empty one would make the
+      # map in baja-app-resultados.conf.template match visitors with no
+      # cookie at all.
+      STAFF_COOKIE_VALUE: ${STAFF_COOKIE_VALUE:?set STAFF_COOKIE_VALUE in .env, see .env.example}
       # The image's 20-envsubst-on-templates.sh substitutes EVERY $VAR it
       # finds unless filtered — which would blank $host, $remote_addr,
       # $request_uri and the rest of nginx's own runtime variables, silently
       # breaking the Cloudflare real-IP restoration and every proxy header
-      # while still starting cleanly. Restrict it to exactly our three.
+      # while still starting cleanly. Restrict it to exactly ours.
       # The $$ is Compose escaping for a literal $.
-      NGINX_ENVSUBST_FILTER: "^(BAJA_DOMAIN|FORMULA_DOMAIN|LISTEN_MODE)$$"
+      NGINX_ENVSUBST_FILTER: "^(BAJA_DOMAIN|FORMULA_DOMAIN|LISTEN_MODE|STAFF_COOKIE_VALUE)$$"
     ports:
       - "80:80"
     volumes:
@@ -239,7 +381,7 @@ services:
       - ./nginx/templates:/etc/nginx/templates:ro
       - phpbb_baja_html:/var/www/phpbb-baja:ro
       - phpbb_formula_html:/var/www/phpbb-formula:ro
-      - ${BAJA_APP_PATH}:/var/www/baja-app:ro
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/baja-app:ro
     depends_on:
       - phpbb-baja
       - phpbb-formula

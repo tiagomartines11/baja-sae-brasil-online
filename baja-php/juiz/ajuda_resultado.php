@@ -79,7 +79,7 @@ Ajuda::opcao('pos', 'texto', '<code>header</code> da coluna usada para classific
 Ajuda::opcao('pos_order', 'texto', '<code>"desc"</code> (padrão, maior é melhor) ou <code>"asc"</code> (menor é melhor, ex.: posição no grid). Maiúsculas ou minúsculas, tanto faz.');
 Ajuda::opcao('tiebreak', 'fórmula', 'Critério de desempate quando o valor de <code>pos</code> é igual. Segue o mesmo sentido de <code>pos_order</code>. Vazio (<code>""</code>) é o mesmo que não ter; <code>"0"</code> é uma fórmula.');
 Ajuda::opcao('filter', 'nome de variável', 'Só mostra as equipes em que essa variável é verdadeira/preenchida. Veja <a href="#filter">filter</a>.');
-Ajuda::opcao('authorized_users', 'lista', 'Usuários que veem os valores reais enquanto a proteção de spoiler está ligada. Veja <a href="#spoilers">Spoilers</a>.');
+Ajuda::opcao('authorized_users', 'lista', 'Usuários que veem os valores reais enquanto a proteção de spoiler está ligada, só na visão de juiz (na página pública não tem efeito). Veja <a href="#spoilers">Spoilers</a>.');
 Ajuda::opcao('type', 'texto', '<code>"tournament"</code> para mostrar um chaveamento. Veja <a href="#torneio">Torneio</a>.');
 ?>
 <tr><td colspan="3">As premiações usam as mesmas chaves <code>pos</code>, <code>pos_order</code>, <code>tiebreak</code> e <code>filter</code> para montar os pódios.</td></tr>
@@ -181,9 +181,15 @@ Ajuda::secao('spoilers', 'Spoilers: val_spoilers e authorized_users');
     e ainda não está <strong>Finalizado</strong>. Enquanto ativa, as colunas que têm <code>val_spoilers</code> mostram esse valor no lugar de <code>val</code>.</p>
     <ul>
         <li>Colunas sem <code>val_spoilers</code> continuam mostrando o valor real.</li>
-        <li>A coluna <code>Pos</code> continua mostrando a posição real &mdash; retire-a enquanto houver spoiler se a classificação não puder vazar.</li>
-        <li><code>authorized_users</code> (nomes de usuário) veem os valores reais apenas na visão de juiz dos resultados (link &quot;Resultados&quot; da tela do juiz).
-            A página pública não identifica o usuário e sempre aplica a proteção.</li>
+        <li>Na <strong>página pública</strong>, um resultado com pelo menos uma coluna com <code>val_spoilers</code> <strong>não classifica ninguém</strong>:
+            a coluna <code>Pos</code> mostra &ldquo;–&rdquo; para todas as equipes, sem medalhas, e as linhas ficam na ordem de sempre (não na ordem da classificação).
+            Assim a posição não revela o que está escondido, mesmo quando <code>pos</code> é uma variável e não uma coluna.
+            Um resultado sem nenhuma coluna com <code>val_spoilers</code> não esconde nada e classifica normalmente.</li>
+        <li><code>authorized_users</code> só vale na <strong>visão de juiz</strong> dos resultados: a mesma página dos resultados (link &quot;Resultados&quot; da tela do juiz),
+            aberta no navegador em que se fez login na área de juiz. Para quem está logado no fórum com um nome de usuário da lista, ela mostra os valores reais e a classificação.</li>
+        <li><code>authorized_users</code> <strong>não tem efeito na página pública</strong>, e isso é intencional: a página pública é a mesma para todo mundo
+            (fica em cache), então lá a proteção vale para todos, inclusive para quem está na lista.</li>
+        <li>Um juiz que <strong>não</strong> está na lista vê a página pública, sem a classificação. As premiações nunca escondem spoilers e classificam normalmente.</li>
     </ul>
     <?= Ajuda::exemplo(<<<'JSON'
 {

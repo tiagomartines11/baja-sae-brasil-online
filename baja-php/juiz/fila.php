@@ -1,10 +1,12 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\FilaQuery;
 use Baja\Model\Fila;
 use Baja\Session;
+use Baja\Site\Html;
 use DateTimeZone;
 use Baja\Fila\Fila as FilaAdmin;
 
@@ -13,6 +15,9 @@ if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: ad
 $_fila_id = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
+
+// Every act saves or deletes: refused without the form's token, before anything else.
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
@@ -208,6 +213,7 @@ FilaAdmin::checkOpen($currentEventId, $_fila_id)
     ->findOne();    
 ?>
     <form action="fila.php?nova=true" method="POST">
+        <?= Csrf::field() ?>
 <?php } else { 
     $abertura = $fila->getAberturaProgramada() ? $fila->getAberturaProgramada()->format('Y-m-d\TH:i') : '';
     $fechamento = $fila->getFechamentoProgramado() ? $fila->getFechamentoProgramado()->format('Y-m-d\TH:i') : '';
@@ -230,29 +236,30 @@ FilaAdmin::checkOpen($currentEventId, $_fila_id)
     }
 
     ?>
-    <form action="fila.php?evento=<?= $fila->getEventoId() ?>&id=<?= $fila->getFilaId() ?>" method="POST">
+    <form action="fila.php?evento=<?= Html::e(rawurlencode($fila->getEventoId())) ?>&amp;id=<?= Html::e(rawurlencode($fila->getFilaId())) ?>" method="POST">
+        <?= Csrf::field() ?>
 <?php } ?>    
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
                 <tr style="height: 50px">
                     <th colspan="2" style="vertical-align: middle;" class="sorter-false">
                         <span style="float:left"><a href="admin_filas.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                        <span style="font-size: 28px;"><?= $novo?'Nova Fila':$fila->getNome(); ?></span> <br />
+                        <span style="font-size: 28px;"><?= $novo?'Nova Fila':Html::e($fila->getNome()); ?></span> <br />
                     </th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>ID Evento</td>
-                    <td><input style="width:700px;" type="text" name="evento_id" readonly    value="<?= $novo?$currentEventId:$fila->getEventoId() ?>"/></td>
+                    <td><input style="width:700px;" type="text" name="evento_id" readonly    value="<?= Html::field($novo?$currentEventId:$fila->getEventoId()) ?>"/></td>
                 </tr>
                 <tr>
                     <td>ID Fila</td>
-                    <td><input style="width:700px;" type="number" min=1 max=9999 name="fila_id" <?= $novo?'':'disabled' ?> value="<?= $novo?$novoId:$fila->getFilaId() ?>" /></td>
+                    <td><input style="width:700px;" type="number" min=1 max=9999 name="fila_id" <?= $novo?'':'disabled' ?> value="<?= Html::field($novo?$novoId:$fila->getFilaId()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Nome</td>
-                    <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':$fila->getNome() ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':Html::field($fila->getNome()) ?>" /></td>
                 </tr>
                 <?php if (!$novo) { ?>
                 <tr>
@@ -286,7 +293,7 @@ FilaAdmin::checkOpen($currentEventId, $_fila_id)
                 </tr>
                 <tr>
                     <td>Tempo de espera [s]</td>
-                    <td><input style="width:700px;" min=0 max=36000 type="number" name="tempo_espera" value="<?= $novo?'':$fila->getTempoEspera() ?>" /></td>
+                    <td><input style="width:700px;" min=0 max=36000 type="number" name="tempo_espera" value="<?= $novo?'':Html::field($fila->getTempoEspera()) ?>" /></td>
                 </tr>
                 <tr>
                     <td>Abertura programada</td>

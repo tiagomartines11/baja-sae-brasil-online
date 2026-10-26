@@ -1,12 +1,17 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\EquipeQuery;
+use Baja\Site\Html;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 
 Session::permissionCheck("admin");
+
+// Sending reaches every subscribed visitor's phone: refused without the form's token (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
 $equipes = EquipeQuery::create()->filterByEventoId($evento)->orderByEquipeId()->find();
@@ -109,22 +114,23 @@ Template::printHeader("Admin");
         <tr style="height: 50px;">
             <th colspan="2" class="sorter-false">
                 <span style="float:left;"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                <span style="font-size: 28px;">Enviar Notificações (<?= $evento ?>)</span>
+                <span style="font-size: 28px;">Enviar Notificações (<?= Html::e($evento) ?>)</span>
             </th>
         </tr>
     </thead>
     <tbody>
 <?php if (isset($success)) { ?>
-        <tr><td colspan="2" style="background: #d4edda; color: #155724; padding: 15px;"><?= $success ?></td></tr>
+        <tr><td colspan="2" style="background: #d4edda; color: #155724; padding: 15px;"><?= Html::e($success) ?></td></tr>
 <?php } ?>
 
 <?php if (isset($error)) { ?>
-        <tr><td colspan="2" style="background: #f8d7da; color: #721c24; padding: 15px;"><?= $error ?></td></tr>
+        <tr><td colspan="2" style="background: #f8d7da; color: #721c24; padding: 15px;"><?= Html::e($error) ?></td></tr>
 <?php } ?>
     </tbody>
 </table>
 
 <form action="admin_push.php?act=send" method="POST">
+    <?= Csrf::field() ?>
     <table class="tablesorter">
         <thead>
             <tr>
@@ -195,10 +201,10 @@ Template::printHeader("Admin");
                 ?>
                 <tr style="<?= $i % 2 == 0 ? 'background: #f9f9f9;' : '' ?>">
                     <td style="text-align: center;">
-                        <input type="checkbox" name="teams[]" value="<?= $eq->getEquipeId() ?>">
+                        <input type="checkbox" name="teams[]" value="<?= Html::field($eq->getEquipeId()) ?>">
                     </td>
-                    <td><?= $eq->getEquipeId() ?></td>
-                    <td><?= substr($eq->getEquipe(), 0, 50) ?></td>
+                    <td><?= Html::e($eq->getEquipeId()) ?></td>
+                    <td><?= Html::e(mb_substr((string)$eq->getEquipe(), 0, 50)) ?></td>
                 </tr>
                 <?php } ?>
             </tbody>

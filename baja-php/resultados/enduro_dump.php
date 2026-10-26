@@ -5,9 +5,18 @@ use Baja\Site\Template;
 use Baja\Model\EventoQuery;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\InputQuery;
+use Baja\Site\CachePolicy;
+use Baja\Site\CleanUrl;
+use Baja\Site\Html;
 
 $_evento = '19SU';
 $_prova = '19SU_END';
+
+// Race data, cached by Cloudflare for seconds until the event is
+// finished (docs/results-caching.md). It reads no query parameter, so any
+// is dropped by a redirect.
+CleanUrl::enforce([]);
+CachePolicy::sendRaceData(EventoQuery::create()->findOneByEventoId($_evento));
 
 $resultado = ResultadoQuery::create()->filterByEventoId($_evento)->findPk($_prova);
 if (!$resultado) { header("Location: index.php"); exit; }
@@ -29,7 +38,7 @@ foreach ($i as $input) {
 
 echo '<table>';
 foreach ($vars as $v) {
-    echo "<tr><td>{$v["NUM"]}</td>";
-    echo "<td>{$v["VOLTAS"]}</td></tr>";
+    echo "<tr><td>" . Html::e($v["NUM"]) . "</td>";
+    echo "<td>" . Html::e($v["VOLTAS"] ?? null) . "</td></tr>";
 }
 echo '</table>';

@@ -114,7 +114,11 @@ class GenerateDocs
         // Extract PHPDoc block at start of file
         if (preg_match('/^<\?php\s*\n\/\*\*(.*?)\*\//s', $content, $matches)) {
             $docBlock = $matches[1];
-            $info = array_merge($info, self::parseDocBlock($docBlock));
+            $parsed = self::parseDocBlock($docBlock);
+            // Without @api-category the parser says null; the directory's
+            // category stands then, as the comment on getCategories() says.
+            $parsed['category'] ??= $info['category'];
+            $info = array_merge($info, $parsed);
         }
 
         // Extract HTTP methods from Access-Control-Allow-Methods header

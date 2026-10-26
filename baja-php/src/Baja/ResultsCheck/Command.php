@@ -111,7 +111,7 @@ final class Command
             // A tournament is shown by torneio.php from its own tables; no columns to check.
             return ['entry' => ['skipped' => 'tournament or no columns'] + $entry, 'fix' => null];
         }
-        $check = ResultadoCheck::run($colunas, $resultado['inputs']);
+        $check = ResultadoCheck::run($colunas, $resultado['inputs'], $resultado['declared']);
         $fix = FixProposal::for($colunas, $resultado['inputs'], $check['findings']);
         return [
             'entry' => ['teams' => $check['teams'], 'findings' => $check['findings'], 'fix' => $fix] + $entry,

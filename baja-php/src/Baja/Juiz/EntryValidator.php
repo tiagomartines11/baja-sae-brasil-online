@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\JSON\Field;
 
 /**
@@ -79,13 +80,13 @@ final class EntryValidator
      */
     public static function forEntry(array $fields, array $engineOwned = []): self
     {
-        return new self($fields, ['submit', 'delete'], array_map('strval', range(1, 10)), $engineOwned);
+        return new self($fields, ['submit', 'delete', Csrf::FIELD], array_map('strval', range(1, 10)), $engineOwned);
     }
 
     /** The form of juiz/rolling_entry.php, posted to juiz/save_rolling_entry.php. */
     public static function forRolling(array $fields): self
     {
-        return new self($fields, ['submit', 'team'], ['1', '2'], []);
+        return new self($fields, ['submit', 'team', Csrf::FIELD], ['1', '2'], []);
     }
 
     /**

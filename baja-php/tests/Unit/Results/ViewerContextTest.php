@@ -18,9 +18,10 @@ use PHPUnit\Framework\TestCase;
  *
  * Who is looking matters (ViewerContext):
  *
- *   public      resultados/prova.php and the API. Spoilers apply to
- *               everybody, with no exceptions.
- *   authorized  the judges' copy, prova_juiz.php. Users listed in the
+ *   public      resultados/prova.php as the public gets it, and the API.
+ *               Spoilers apply to everybody, with no exceptions.
+ *   authorized  resultados/prova.php with a judge's staff cookie and forum
+ *               session (docs/results-caching.md). Users listed in the
  *               resultado's "authorized_users", and developers, see the
  *               real values.
  *   premiacao   the awards screens, which never applied spoilers.
@@ -158,20 +159,8 @@ final class ViewerContextTest extends TestCase
         $this->assertSame('?<br /> 12', $table->rows[0]->display('Tempos'));
     }
 
-    /**
-     * The ranking uses what is SHOWN, so during spoilers it ranks by the
-     * spoiler value. That is the known bug BAJAAPP-42, left for its own fix.
-     * Here every team shows "?", which has no number, so nobody is ranked
-     * (R3): every Pos cell shows "–". (Before the shared rules, "?" was read
-     * as 0 and everybody was shown 1st.)
+    /*
+     * What happens to the ranking while spoilers apply (no positions for the
+     * public, BAJAAPP-42) is in SpoilerRankingTest.
      */
-    public function testRankingDuringSpoilersUsesTheSpoilerValue(): void
-    {
-        $config = Fixtures::config('{"pos": "Pontos", "colunas": [{"header": "Pos", "val": "Pos"}, {"header": "Pontos", "val": "$PONTOS", "val_spoilers": "\"?\""}]}');
-        $viewer = ViewerContext::publicView(self::duringEventWithSpoilers());
-        $table = Fixtures::build($config, [Fixtures::team(1, ['PONTOS' => 10]), Fixtures::team(2, ['PONTOS' => 90])], $viewer);
-
-        $this->assertSame([1 => null, 2 => null], Fixtures::positions($table->rows));
-        $this->assertSame('–', $table->rows[0]->display('Pos'));
-    }
 }

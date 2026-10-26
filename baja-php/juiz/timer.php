@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\TimerQuery;
 use Baja\Session;
@@ -25,7 +26,7 @@ if (!$timer && $usuario) {
     }
 }
 
-$porChave = isset($_REQUEST['k']) && $_REQUEST['k'] !== '';
+$porChave = TimerAcesso::porChave();
 $erro = null;
 if (!$timer && $porChave) $erro = 'Chave inválida.';
 elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encontrado ou sem permissão.' : 'Faça login ou use a chave de acesso.';
@@ -38,6 +39,8 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="google" content="notranslate">
     <meta name="theme-color" content="#10151c">
+    <?php // Opened by id, timer_action.php wants the session's token with every action (Baja\Auth\Csrf); by key, the key is enough. ?>
+    <?php if (!$porChave) { ?><meta name="csrf-token" content="<?= $h(Csrf::token()) ?>"><?php } ?>
     <link rel="icon" href="img/baja.png" type="image/png">
     <title><?= $timer ? $h($timer->getNome()) . ' - ' : '' ?>Timer Baja SAE BRASIL</title>
     <style>
@@ -200,6 +203,7 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
     ], $jsonFlags) ?>;
 
     const PARADO = { status: "stopped", step: 0, started_at: 0, remaining_ms: 0, at: 0 };
+    const CSRF = (document.querySelector('meta[name="csrf-token"]') || {}).content;
     const $ = (id) => document.getElementById(id);
 
     // ---- Local persistence -------------------------------------------------
@@ -338,6 +342,7 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
             method: enviados.length ? "POST" : "GET",
             body: enviados.length ? JSON.stringify({ acoes: enviados }) : undefined,
             signal: ctrl.signal, cache: "no-store", credentials: "same-origin",
+            headers: CSRF ? { "X-CSRF-Token": CSRF } : {},
         }).then((r) => {
             if (r.status === 403) { revogado(); throw 0; }
             if (!r.ok) throw 0;

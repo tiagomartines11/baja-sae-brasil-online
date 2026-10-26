@@ -1,11 +1,13 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EquipeQuery;
 use Baja\Model\EventoQuery;
 use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
+use Baja\Site\Html;
 
 if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
@@ -25,17 +27,18 @@ echo '
     <thead>
     <tr>
         <th colspan="2" style="border: solid 2px black; padding-bottom: 20px;" class="sorter-false">
-        <span style="font-size: 28px; line-height: 34px;">'.$prova->getNome().'</span> <br />
+        <span style="font-size: 28px; line-height: 34px;">'.Html::e($prova->getNome()).'</span> <br />
         </th>
         </tr>
-        <form action="save_rolling_entry.php?p='.$_page.'" method="POST">
+        <form action="save_rolling_entry.php?p='.Html::e(rawurlencode((string)$_page)).'" method="POST">
+        '.Csrf::field().'
     </thead>';
 
 // Set by save_rolling_entry.php when it refused to save what this form sent.
 if (!empty($entradaRecusada)) {
     echo '<tr><td colspan="2" style="color: red; font-weight: bold;">Nada foi salvo. Corrija e salve de novo:<ul>';
     foreach ($entradaRecusada as $erro) {
-        echo '<li>' . htmlspecialchars($erro) . '</li>';
+        echo '<li>' . Html::e($erro) . '</li>';
     }
     echo '</ul></td></tr>';
 }
@@ -47,7 +50,7 @@ echo '
     <td><select style="width: 100%; font: 20px/20px \'Trebuchet MS\', Arial , Sans-serif; border: 0; margin: 0; padding: 0" name="team"><option value="" />';
 
 foreach ($equipes as $e) {
-    echo '<option value="'.$e->getEquipeId().'"'.((string)$e->getEquipeId() === $typedTeam ? ' selected' : '').'>'.$e->getEquipeId().'</option>';
+    echo '<option value="'.Html::field($e->getEquipeId()).'"'.((string)$e->getEquipeId() === $typedTeam ? ' selected' : '').'>'.Html::e($e->getEquipeId()).'</option>';
 }
 echo '</select></td></tr>';
 

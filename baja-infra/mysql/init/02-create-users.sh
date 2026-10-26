@@ -35,5 +35,55 @@ GRANT SELECT ON phpbb_baja.* TO 'resultados'@'%';
 FLUSH PRIVILEGES;
 EOF
 
+    # An .env from before the backups has no MYSQL_BACKUP_USER/PASSWORD, and
+    # compose passes them as empty strings, which `set -u` does not catch.
+    # Creating ''@'%' with an empty password would be MySQL's anonymous
+    # account: any username, no password, SELECT on every database. Skip
+    # the backup user instead; backup-db.sh's preflight fails until it is
+    # created (docs/backup-restore.md).
+    if [ -z "${MYSQL_BACKUP_USER:-}" ] || [ -z "${MYSQL_BACKUP_PASSWORD:-}" ]; then
+        echo "MYSQL_BACKUP_USER or MYSQL_BACKUP_PASSWORD is empty: backup user NOT created."
+        echo "Application users created."
+        exit 0
+    fi
+
+    mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" <<EOF
+-- Backup user (baja-infra/scripts/backup-db.sh). Read-only by
+-- construction: no INSERT, UPDATE, DELETE, CREATE or DROP anywhere, so a
+-- compromised backup container cannot alter production.
+--
+-- Each grant earns its place against a mysqldump flag:
+--   SELECT       read the rows
+--   LOCK TABLES  historically required; harmless alongside
+--                --single-transaction, which does not take table locks
+--   SHOW VIEW    dump view definitions
+--   TRIGGER      --triggers (SHOW TRIGGERS is gated on it)
+--   EVENT        --events
+--
+-- TRIGGER is the one that is not purely read-only: it also permits
+-- CREATE/DROP TRIGGER. It is nonetheless the minimum MySQL offers for
+-- dumping triggers, so it stays, and is called out here rather than being
+-- quietly widened to root the first time --triggers errors out.
+--
+-- Per database, not ON *.*. SELECT ON *.* would also cover the mysql
+-- schema, whose user table holds every account's password hash, and
+-- the backup container has no reason to read those. information_schema
+-- shows each account the objects it has privileges on, so preflight and
+-- the dump see exactly these three databases. A database added later is
+-- added here and to BACKUP_DATABASES in scripts/backup-lib.sh together;
+-- preflight fails with "not visible to 'backup'" until both are done.
+--
+-- SHOW_ROUTINE is the one global grant, and it is read-only: since MySQL
+-- 8.0.20 it is what lets --routines read the body of a procedure another
+-- account defined. It exists only as a global privilege.
+CREATE USER IF NOT EXISTS '${MYSQL_BACKUP_USER}'@'%' IDENTIFIED BY '${MYSQL_BACKUP_PASSWORD}';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON baja_resultados.* TO '${MYSQL_BACKUP_USER}'@'%';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON phpbb_baja.* TO '${MYSQL_BACKUP_USER}'@'%';
+GRANT SELECT, LOCK TABLES, SHOW VIEW, TRIGGER, EVENT ON phpbb_formula.* TO '${MYSQL_BACKUP_USER}'@'%';
+GRANT SHOW_ROUTINE ON *.* TO '${MYSQL_BACKUP_USER}'@'%';
+
+FLUSH PRIVILEGES;
+EOF
+
     echo "Application users created."
 )

@@ -1,6 +1,7 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Model\ResultadoQuery;
@@ -8,8 +9,14 @@ use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Site\Html;
 
 Session::permissionCheck("admin");
+
+// Both acts below change something: refused without the form's token, before
+// anything else. They used to be plain links, so a link or an <img> on any
+// other page could flip a prova's status or the event's spoilers.
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
 $users = UserQuery::create()->find();
@@ -41,7 +48,7 @@ Template::printHeader("Admin");
             <tr style="height: 50px;">
                 <th colspan="3" class="sorter-false">
                     <span style="float:left;"><a href="admin.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span> 
-                    <span style="font-size: 28px;">Resultados (<?= $evento ?>)</span>
+                    <span style="font-size: 28px;">Resultados (<?= Html::e($evento) ?>)</span>
                 </th>
             </tr>
             <tr> 
@@ -54,9 +61,9 @@ Template::printHeader("Admin");
 
 <?php foreach ($resultados as $r) { ?>
             <tr>
-                <td><?= $r->getResultadoId() ?></td>
-                <td><?= $r->getNome() ?></td>
-                <td><a href='resultado.php?id=<?= $r->getResultadoId() ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
+                <td><?= Html::e($r->getResultadoId()) ?></td>
+                <td><?= Html::e($r->getNome()) ?></td>
+                <td><a href='resultado.php?id=<?= Html::e(rawurlencode($r->getResultadoId())) ?>'><span>&nbsp;✏️&nbsp;</span></a></td>
             </tr>
 <?php } ?>
         </tbody>

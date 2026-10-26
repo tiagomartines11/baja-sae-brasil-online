@@ -1,16 +1,22 @@
 <?php
 namespace Baja\Juiz;
 
+use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\PremiacaoQuery;
 use Baja\Model\Premiacao;
 use Baja\Session;
+use Baja\Site\Html;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_premiacoes.php"); exit; }
 
 $_page = @$_REQUEST['id'];
 
 Session::permissionCheck('admin');
+
+// Every act changes something: no act runs without the form's token, which
+// also refuses a GET link carrying one (Baja\Auth\Csrf).
+if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 
@@ -111,8 +117,10 @@ Template::printHeader("Premiação", false);
 <div style="max-width: 1000px; margin: 0 auto; height:100vh;">
 <?php if ($nova) { ?>
     <form action="premiacao_admin.php?nova=true" method="POST">
+        <?= Csrf::field() ?>
 <?php } else { ?>
-    <form action="premiacao_admin.php?id=<?= urlencode($premiacao->getPremiacaoId()) ?>" method="POST">
+    <form action="premiacao_admin.php?id=<?= Html::e(urlencode($premiacao->getPremiacaoId())) ?>" method="POST">
+        <?= Csrf::field() ?>
 <?php } ?>
         <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
             <thead>
@@ -171,7 +179,7 @@ Template::printHeader("Premiação", false);
                 <tr>
                     <td><textarea style="width:700px;min-height:600px;" name="categorias" id="categorias" <?= $nova ? '' : 'oninput="resetStyles();"' ?>><?php
                         $categorias = $nova ? null : $premiacao->getCategorias();
-                        echo $categorias === null ? '' : json_encode($categorias, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                        echo $categorias === null ? '' : Html::field(json_encode($categorias, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
                     ?></textarea></td>
                 </tr>
             </tbody>
@@ -199,8 +207,10 @@ Template::printHeader("Premiação", false);
     </form>
 
     <script type="text/javascript">
-        const atual = <?= $nova ? 'null' : json_encode($premiacao->getCategorias()) ?>;
-        const backs = <?= (!$nova && $premiacao->getCategoriasBackup()) ? $premiacao->getCategoriasBackup() : '{}' ?>;
+        // Html::js, not plain json_encode: a name holding a closing script tag would end
+        // this block. The backups were printed as stored, raw.
+        const atual = <?= $nova ? 'null' : Html::js($premiacao->getCategorias()) ?>;
+        const backs = <?= (!$nova && $premiacao->getCategoriasBackup()) ? Html::js(json_decode($premiacao->getCategoriasBackup()) ?? new \stdClass()) : '{}' ?>;
 
         const categoriasEl = document.getElementById("categorias");
         const selectEl = document.getElementById("nomeado");

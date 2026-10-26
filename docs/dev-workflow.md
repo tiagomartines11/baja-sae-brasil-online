@@ -30,7 +30,18 @@ match what's actually happening, the doc is wrong; fix it.
   driven by "we have N things ready and nothing in flight that we'd
   block on."
 - Production deploy is triggered by the merge into `master`. Same
-  commit gets tagged in case we need to roll back.
+  commit gets tagged in case we need to roll back. See
+  [Releases](#releases).
+
+## Local setup
+
+`baja-infra/.env` must set `STAFF_COOKIE_VALUE`, or `docker compose`
+refuses to run ("set STAFF_COOKIE_VALUE in .env, see .env.example"). It
+is the value of the `baja_staff` cookie that lets judges see results
+pages past spoilers. Any value works in dev; `.env.example` has one.
+Production and staging each need their own, generated with
+`openssl rand -hex 24`. See
+[`results-caching.md`](results-caching.md), "The staff cookie".
 
 ## Pre-merge checklist (PRs into `develop`)
 
@@ -106,6 +117,56 @@ Before requesting review:
       If they differ on purpose, accept with `--update` and say in the PR
       which results change and why. CI runs `--check` too. See
       [`results-snapshots.md`](results-snapshots.md).
+- [ ] If you touched the public results pages (`baja-php/resultados/`),
+      `Template.php`, `src/Baja/Site/CachePolicy.php` / `CleanUrl.php`,
+      `src/Baja/Auth/StaffCookie.php`, the session code in
+      `src/bootstrap.php` / `src/Baja/Session.php`, or the resultados vhost,
+      the results cache tests pass against a running stack:
+
+      ```
+      baja-php/tests/results-caching/http-test.sh http://resultados.baja.local http://juiz.baja.local
+      ```
+
+      They check that a visitor without the staff cookie always gets the
+      same cacheable page and no cookie, and that only a judge's session sees
+      past spoilers, never cached. See
+      [`results-caching.md`](results-caching.md), "Tests".
+- [ ] If you touched the public results API (`baja-php/api/resultados/`,
+      `baja-php/src/Baja/Api/`) or anything the results-builder bullet
+      above lists, the
+      API's suites pass: `vendor/bin/phpunit --testsuite unit` and
+      `--testsuite results-api-db` (CI runs both), and, if you touched the
+      API vhost, `baja-php/tests/Api/results-http-test.sh`. Its contract is
+      [`results-api.md`](results-api.md): add fields, never rename or
+      remove one.
+- [ ] If you touched the backups (`baja-infra/scripts/backup-*.sh`,
+      `verify-*.sh`, `archive-event.sh`, `erasure-log.sh`,
+      `baja-infra/docker/backup/`, `baja-infra/gas/retention/`, the
+      `backup`/`results-archive` services, or `src/Baja/ResultsArchive/`),
+      `baja-infra/tests/backup/run-tests.sh` and the pruner's
+      `node baja-infra/gas/retention/test/prune.test.js` pass (CI runs
+      both), and `baja-infra/tests/backup/stack-test.sh` passes against your
+      running stack. Anything that writes files somewhere new must be added
+      as a file set; see "What is not in the backups" in
+      [`baja-infra/docs/backup-restore.md`](../baja-infra/docs/backup-restore.md).
+- [ ] If you touched a page in `baja-php/juiz/` or anything that prints
+      stored text, it escapes what it prints and its forms carry a CSRF
+      token (BAJAAPP-41):
+      - print names, labels, options and anything typed through
+        `Baja\Site\Html::e()`, in text and in quoted attributes, and data
+        inside `<script>` through `Html::js()`. Results cells (formula
+        output) are the one exception: they are meant to hold HTML;
+      - a form that changes something has `<?= Csrf::field() ?>`, and the
+        page calls `Csrf::enforce()` before changing anything
+        (`src/Baja/Auth/Csrf.php`). A script sends the token from
+        `<meta name="csrf-token">` as the `X-CSRF-Token` header. Never
+        change anything on a GET;
+      - `vendor/bin/phpunit --testsuite unit` passes: `CsrfCoverageTest`
+        fails for a judge page that writes without a check, or shows a POST
+        form without a token;
+      - add the form to `baja-php/tests/csrf/cases/` and run, against a
+        running stack,
+        `baja-php/tests/csrf/http-test.sh http://juiz.baja.local`.
 - [ ] If you edited `baja-php/schema.xml`, the generated `Base*` classes,
       table maps and `src/loadDatabase.php` were regenerated and committed:
       `docker compose exec --user "$(id -u):$(id -g)" baja-app ./propel model:build`.
@@ -138,6 +199,58 @@ Before requesting review:
       are blockers.
 - [ ] Skim the database migration list (`baja-php/generated-migrations/`,
       phpBB migrations) — flag anything risky for the deploy notes.
+
+## Releases
+
+A release is `develop` merged into `master`, tagged `vN`. A hotfix on top
+of a release is tagged `vN.M`: the first hotfix on `v3` is `v3.1`, the
+next `v3.2`.
+
+| Tag    | Commit    | Date       | What                    |
+|--------|-----------|------------|-------------------------|
+| `v3`   | `37775c9` | 2026-10-22 | release                 |
+| `v3.1` | `aea6d65` | 2026-10-24 | hotfix (#69) on `v3`    |
+| `v4`   | `77a90e1` | 2026-10-24 | release                 |
+| `v5`   |           |            | next release            |
+
+### Cutting a release
+
+0. Run the pre-release check in
+   [`results-snapshots.md`](results-snapshots.md), "Pre-release check
+   against a copy of production". The "before" snapshot
+   (`<live-release-tag>`) is the tag live now; the "after" one
+   (`<candidate-branch-or-tag>`) is the candidate.
+1. Open a PR `develop` → `master` and merge it with **Create a merge
+   commit**. Never squash or rebase: `master` and `develop` must keep the
+   same commits.
+2. On GitHub, **Releases → Draft a new release**. Under "Choose a tag",
+   type the new tag `vN` with `master` as the target; set "Previous tag"
+   to the last release; click **Generate release notes**; publish.
+
+### Deploying
+
+On the server, `git pull` on `master`. The release's runbook lists any
+extra steps (migrations, new `.env` values, rebuilds).
+
+To roll back: `git checkout <previous tag>`, then recreate the containers
+the release changed (`docker compose up -d --force-recreate <service>...`
+from `baja-infra/`). If a phpBB container was among them, also
+`docker compose restart nginx`; see the FAQ below. Go back to `master`
+once the fix is released.
+
+### Hotfixes
+
+1. Branch from `master`: `git switch -c hotfix/<thing> origin/master`.
+2. PR into `master`. `develop` is the default branch, so pick the base by
+   hand (`gh pr create --base master`). Merge with a merge commit and tag
+   it `vN.M` as above.
+3. Open a back-merge PR `master` → `develop`
+   (`gh pr create --base develop --head master`) and merge it with a merge
+   commit.
+
+**WARNING: on a back-merge PR (head = `master`), never click "Delete
+branch" after merging. It deletes `master`.** It happened on 2026-10-24;
+`master` was restored from PR #74.
 
 ## Deploy
 

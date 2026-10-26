@@ -59,5 +59,46 @@
         <testsuite name="results-check-db">
             <directory>tests/ResultsCheck/Db</directory>
         </testsuite>
+        <!--
+          The formula engine comparison (docs/formula-engine.md) on the dev
+          seed: no formula differs, nothing is written. Needs the app's
+          database variables, skipped without them. CompareFixtureTest also
+          needs BAJA_TEST_DB set to 1, because it loads a made-up event first.
+          The engines' own tests are in tests/Unit/Formula, part of the unit
+          suite.
+        -->
+        <testsuite name="formula-compare-db">
+            <directory>tests/FormulaCompare/Db</directory>
+        </testsuite>
+        <!--
+          Prova totals ($Xmax, $Xcount...) worked out by a real save, on a
+          made-up event that the test inserts and deletes. Needs the app's
+          database variables and BAJA_TEST_DB set to 1; skipped without them.
+        -->
+        <testsuite name="prova-db">
+            <directory>tests/Prova/Db</directory>
+        </testsuite>
+        <!--
+          The public results API (docs/results-api.md) on the dev seed: every
+          table equals the results builder's public one, spoilers included;
+          the tournament and the lap-counted prova are well formed; unknown
+          ids give 404. Read-only. Needs the app's database variables,
+          skipped without them. Its unit tests are in tests/Unit/Api, part
+          of the unit suite.
+        -->
+        <testsuite name="results-api-db">
+            <directory>tests/Api/Resultados/Db</directory>
+        </testsuite>
+        <!--
+          The event archive queue (BAJAAPP-67): what ticking and unticking
+          "Finalizado?" in juiz/evento.php records, and how the nightly job
+          consumes it. Writes a made-up event and its queue rows, so it needs
+          BAJA_TEST_DB set to 1 and the app's database variables; skipped
+          without them. The packaging and upload half is tested by
+          baja-infra/tests/backup/run-tests.sh.
+        -->
+        <testsuite name="results-archive-db">
+            <directory>tests/ResultsArchive/Db</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
