@@ -134,11 +134,35 @@ final class CommandTest extends TestCase
 
     public function testBadOptionsStopBeforeAnythingIsBuilt(): void
     {
-        foreach ([[], ['--check', '--update'], ['--check', '--events', '22XX'], ['--check', '--jobs', '0'], ['--chek']] as $arguments) {
+        foreach ([[], ['--check', '--update'], ['--check', '--events', '22br'], ['--check', '--jobs', '0'], ['--chek']] as $arguments) {
             $this->assertSame(Command::CANNOT_RUN, $this->runCommand(...$arguments), 'Options: ' . implode(' ', $arguments));
         }
         $this->assertSame([], $this->builds, 'With bad options the database is never touched.');
         $this->assertStringContainsString('Usage:', $this->printedText());
+    }
+
+    /**
+     * An event code is two digits and two capitals or digits (Baja\Evento\
+     * EventCode). The tool used to know only BR, SE, SU and NE, and refused
+     * the other competitions' events: "Not an event code: 25AR" (BAJAAPP-74).
+     */
+    public function testAnEventOfAnyCompetitionCanBeNamed(): void
+    {
+        $this->assertSame(Command::OK, $this->runCommand('--update', '--events', '25AR,24H2'), $this->printedText());
+        $this->assertSame(['25AR', '24H2'], end($this->builds));
+    }
+
+    /**
+     * A code that looks right but is no event (a typo, say 27BR for 26BR)
+     * is not a format error, and not "nothing to snapshot" either: the tool
+     * stops and names it, before building anything.
+     */
+    public function testAWellFormedCodeOfNoEventIsReportedAsNoSuchEvent(): void
+    {
+        $this->assertSame(Command::CANNOT_RUN, $this->runCommand('--update', '--events', '22BR,27ZZ'));
+        $this->assertStringContainsString('No such event: 27ZZ', $this->printedText());
+        $this->assertStringNotContainsString('Not an event code', $this->printedText());
+        $this->assertSame([], $this->builds, 'Nothing was built.');
     }
 
     public function testWarningsAloneAreAReportThatWritesNothingAndNeverFails(): void
@@ -202,6 +226,12 @@ final class CommandTest extends TestCase
                     ],
                     warnings: ['22BR/22BR_GER.json' => $this->warnings, '22BR/formulas.ACE.json' => []],
                 );
+            }
+
+            /** The events this fake "database" has. */
+            public function missingEvents(array $events): array
+            {
+                return array_values(array_diff($events, ['22BR', '23SU', '25AR', '24H2']));
             }
         };
         $command = new Command(fn(int $parallel) => $source, $this->folder, function (string $text): void {
