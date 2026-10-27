@@ -19,8 +19,9 @@
              production.
 
              It also holds the competition programs' database tests
-             (tests/Programa/Db, BAJAAPP-11), in the group "programa".
-             Those need MySQL only, so CI runs that group on its own.
+             (tests/Programa/Db, BAJAAPP-11), in the group "programa", and
+             the RBAC ones (tests/Rbac/Db, BAJAAPP-12), in the group "rbac".
+             Those need MySQL only, so CI runs each group on its own.
 
   The exact commands are in docs/contagem.md, "Tests". They are not repeated
   here because an XML comment cannot contain two hyphens in a row, which
@@ -41,6 +42,7 @@
         <testsuite name="db">
             <directory>tests/Contagem/Db</directory>
             <directory>tests/Programa/Db</directory>
+            <directory>tests/Rbac/Db</directory>
         </testsuite>
         <!--
           Results regression snapshots (docs/results-snapshots.md).
