@@ -950,4 +950,124 @@
       <parameter name="Collate" value="utf8mb4_unicode_ci"/>
     </vendor>
   </table>
+
+  <!-- ===================================================================
+       Roles and grants (RBAC, BAJAAPP-12). docs/rbac.md explains the
+       model; in short: a ROLE is a named set of permissions that may be
+       given on some node types; a GRANT gives one user one role on one
+       node of the scope tree (platform > programa > evento > prova|fila),
+       and reaches everything below it.
+
+       Read and written with plain SQL by Baja\Rbac (repositories under
+       src/Baja/Rbac/Role and Grant), not through generated model classes,
+       like evento_arquivamento: the delegation rules need transactions
+       and row locks spelled out.
+
+       Nothing here has a foreign key to user. Users are deleted by the
+       admin pages, and the record of who had what must outlive them.
+
+       Times are DATETIME in the application's time zone.
+
+       Created by PropelMigration_1793080000, and for fresh dev databases
+       by baja-infra/mysql/init/09-rbac.sql.
+       =================================================================== -->
+
+  <!-- allowed_scope_types: comma-separated ScopeType values, e.g. "prova".
+       is_system: may only be given by holders of role.manage. -->
+  <table name="role" idMethod="native" phpName="Role">
+    <column name="role_id" phpName="RoleId" type="INTEGER" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="code" phpName="Code" type="VARCHAR" size="40" required="true"/>
+    <column name="name" phpName="Name" type="VARCHAR" size="100" required="true"/>
+    <column name="description" phpName="Description" type="VARCHAR" size="500"/>
+    <column name="is_system" phpName="IsSystem" type="BOOLEAN" required="true" defaultValue="false"/>
+    <column name="allowed_scope_types" phpName="AllowedScopeTypes" type="VARCHAR" size="200" required="true"/>
+    <unique name="role_code_unique">
+      <unique-column name="code"/>
+    </unique>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+      <parameter name="Charset" value="utf8mb4"/>
+      <parameter name="Collate" value="utf8mb4_unicode_ci"/>
+    </vendor>
+  </table>
+
+  <!-- One row per permission of a role. permission is a
+       Baja\Rbac\Permission\Permission value ("prova.enter_scores"). -->
+  <table name="role_permission" idMethod="native" phpName="RolePermission">
+    <column name="role_id" phpName="RoleId" type="INTEGER" primaryKey="true" required="true"/>
+    <column name="permission" phpName="Permission" type="VARCHAR" size="64" primaryKey="true" required="true"/>
+    <foreign-key foreignTable="role" name="role_permission_role_id" onDelete="CASCADE" onUpdate="CASCADE">
+      <reference local="role_id" foreign="role_id"/>
+    </foreign-key>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+      <parameter name="Charset" value="utf8mb4"/>
+      <parameter name="Collate" value="utf8mb4_unicode_ci"/>
+    </vendor>
+  </table>
+
+  <!-- A grant. Never deleted: revoking fills revoked_at and revoked_by.
+       scope_id: '' for the platform, 'AERO', '26BR', '26BR/END' (prova),
+       '26BR/3' (fila). granted_by is null only for the migration's own
+       grants. valid_until null: no end. -->
+  <table name="user_role" idMethod="native" phpName="UserRole">
+    <column name="grant_id" phpName="GrantId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="user_id" phpName="UserId" type="INTEGER" required="true"/>
+    <column name="role_id" phpName="RoleId" type="INTEGER" required="true"/>
+    <column name="scope_type" phpName="ScopeType" type="VARCHAR" size="16" required="true"/>
+    <column name="scope_id" phpName="ScopeId" type="VARCHAR" size="64" required="true"/>
+    <column name="granted_by" phpName="GrantedBy" type="INTEGER"/>
+    <column name="granted_at" phpName="GrantedAt" type="TIMESTAMP" sqlType="DATETIME" required="true"/>
+    <column name="valid_until" phpName="ValidUntil" type="TIMESTAMP" sqlType="DATETIME"/>
+    <column name="revoked_at" phpName="RevokedAt" type="TIMESTAMP" sqlType="DATETIME"/>
+    <column name="revoked_by" phpName="RevokedBy" type="INTEGER"/>
+    <foreign-key foreignTable="role" name="user_role_role_id" onDelete="RESTRICT" onUpdate="CASCADE">
+      <reference local="role_id" foreign="role_id"/>
+    </foreign-key>
+    <index name="user_role_user_idx">
+      <index-column name="user_id"/>
+      <index-column name="revoked_at"/>
+    </index>
+    <index name="user_role_scope_idx">
+      <index-column name="scope_type"/>
+      <index-column name="scope_id"/>
+    </index>
+    <index name="user_role_role_id_idx">
+      <index-column name="role_id"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+      <parameter name="Charset" value="utf8mb4"/>
+      <parameter name="Collate" value="utf8mb4_unicode_ci"/>
+    </vendor>
+  </table>
+
+  <!-- Append-only record of every grant, revoke and role edit. The
+       application only ever INSERTs here. No foreign keys: an entry must
+       survive whatever it talks about. actor_user_id is null for the
+       migration. details: JSON, what changed. -->
+  <table name="role_audit" idMethod="native" phpName="RoleAudit">
+    <column name="audit_id" phpName="AuditId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
+    <column name="occurred_at" phpName="OccurredAt" type="TIMESTAMP" sqlType="DATETIME" required="true"/>
+    <column name="actor_user_id" phpName="ActorUserId" type="INTEGER"/>
+    <!-- grant | revoke | role_create | role_update -->
+    <column name="action" phpName="Action" type="VARCHAR" size="20" required="true"/>
+    <column name="grant_id" phpName="GrantId" type="BIGINT"/>
+    <column name="role_id" phpName="RoleId" type="INTEGER"/>
+    <column name="target_user_id" phpName="TargetUserId" type="INTEGER"/>
+    <column name="scope_type" phpName="ScopeType" type="VARCHAR" size="16"/>
+    <column name="scope_id" phpName="ScopeId" type="VARCHAR" size="64"/>
+    <column name="details" phpName="Details" type="LONGVARCHAR" sqlType="json"/>
+    <index name="role_audit_grant_idx">
+      <index-column name="grant_id"/>
+    </index>
+    <index name="role_audit_occurred_idx">
+      <index-column name="occurred_at"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+      <parameter name="Charset" value="utf8mb4"/>
+      <parameter name="Collate" value="utf8mb4_unicode_ci"/>
+    </vendor>
+  </table>
 </database>
