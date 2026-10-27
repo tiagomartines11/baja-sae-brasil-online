@@ -158,6 +158,19 @@ final class TorneioShapeTest extends TestCase
         $this->assertNull($matches[1]['winner']);
     }
 
+    /**
+     * The winner in slot 2, with nobody ("WO") in slot 1. The page used to
+     * test slot 1 when marking slot 2's winner and missed this one
+     * (BAJAAPP-37); the API looks at each slot on its own.
+     */
+    public function testAWinnerInSlot2IsTheWinnerWhateverSlot1Holds(): void
+    {
+        foreach (['WO', '6', 'win1'] as $slot1) {
+            $match = self::shape([self::match(1, 1, $slot1, '8', winner: 8)])['rounds'][0]['matches'][0];
+            $this->assertSame(8, $match['winner'], "slot 1 = $slot1");
+        }
+    }
+
     /** As on the page, a winner who is not one of the two cars is no winner. */
     public function testAWinnerWhoIsNotInTheMatchIsIgnored(): void
     {
