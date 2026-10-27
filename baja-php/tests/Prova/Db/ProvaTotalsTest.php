@@ -267,7 +267,7 @@ final class ProvaTotalsTest extends TestCase
     private static function insertFixture(): void
     {
         self::execute(
-            "INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers) VALUES (?, 'Fixture BAJAAPP-65', 'Evento de teste (totais)', 0, 2099, 0, 0, 0)",
+            "INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers, programa_id) VALUES (?, 'Fixture BAJAAPP-65', 'Evento de teste (totais)', 0, 2099, 0, 0, 0, 'BAJA')",
             [self::EVENT]
         );
         self::execute(

@@ -15,8 +15,8 @@
 -- Not finished and not active, so the results snapshots never see it.
 -- Deleting the event deletes everything else here (ON DELETE CASCADE).
 
-INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers)
-VALUES ('98FE', 'Fixture BAJAAPP-35', 'Evento de teste (motores de fórmula)', 0, 2098, 0, 0, 0);
+INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers, programa_id)
+VALUES ('98FE', 'Fixture BAJAAPP-35', 'Evento de teste (motores de fórmula)', 0, 2098, 0, 0, 0, 'BAJA');
 
 INSERT INTO equipe (evento_id, equipe_id, escola, equipe, estado) VALUES
     ('98FE', 1, 'ESCOLA DE TESTE UM', 'EQUIPE TESTE 1', 'SP'),

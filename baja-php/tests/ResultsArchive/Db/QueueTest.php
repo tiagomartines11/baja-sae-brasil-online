@@ -116,8 +116,8 @@ final class QueueTest extends TestCase
         // finished, and has no archive requests.
         self::removeFixture();
         self::$database->prepare(
-            "INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers)
-             VALUES (?, 'Fixture BAJAAPP-67', 'Evento de teste (arquivamento)', 0, 2099, 0, 0, 0)"
+            "INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers, programa_id)
+             VALUES (?, 'Fixture BAJAAPP-67', 'Evento de teste (arquivamento)', 0, 2099, 0, 0, 0, 'BAJA')"
         )->execute([self::EVENT]);
     }
 

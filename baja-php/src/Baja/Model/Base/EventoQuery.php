@@ -35,6 +35,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery orderByLocal($order = Criteria::ASC) Order by the local column
  * @method     ChildEventoQuery orderByEmAndamento($order = Criteria::ASC) Order by the em_andamento column
  * @method     ChildEventoQuery orderByCargaHoraria($order = Criteria::ASC) Order by the carga_horaria column
+ * @method     ChildEventoQuery orderByProgramaId($order = Criteria::ASC) Order by the programa_id column
  *
  * @method     ChildEventoQuery groupByEventoId() Group by the evento_id column
  * @method     ChildEventoQuery groupByTitulo() Group by the titulo column
@@ -52,6 +53,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery groupByLocal() Group by the local column
  * @method     ChildEventoQuery groupByEmAndamento() Group by the em_andamento column
  * @method     ChildEventoQuery groupByCargaHoraria() Group by the carga_horaria column
+ * @method     ChildEventoQuery groupByProgramaId() Group by the programa_id column
  *
  * @method     ChildEventoQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildEventoQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -60,6 +62,16 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery leftJoinWith($relation) Adds a LEFT JOIN clause and with to the query
  * @method     ChildEventoQuery rightJoinWith($relation) Adds a RIGHT JOIN clause and with to the query
  * @method     ChildEventoQuery innerJoinWith($relation) Adds a INNER JOIN clause and with to the query
+ *
+ * @method     ChildEventoQuery leftJoinPrograma($relationAlias = null) Adds a LEFT JOIN clause to the query using the Programa relation
+ * @method     ChildEventoQuery rightJoinPrograma($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Programa relation
+ * @method     ChildEventoQuery innerJoinPrograma($relationAlias = null) Adds a INNER JOIN clause to the query using the Programa relation
+ *
+ * @method     ChildEventoQuery joinWithPrograma($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Programa relation
+ *
+ * @method     ChildEventoQuery leftJoinWithPrograma() Adds a LEFT JOIN clause and with to the query using the Programa relation
+ * @method     ChildEventoQuery rightJoinWithPrograma() Adds a RIGHT JOIN clause and with to the query using the Programa relation
+ * @method     ChildEventoQuery innerJoinWithPrograma() Adds a INNER JOIN clause and with to the query using the Programa relation
  *
  * @method     ChildEventoQuery leftJoinEquipe($relationAlias = null) Adds a LEFT JOIN clause to the query using the Equipe relation
  * @method     ChildEventoQuery rightJoinEquipe($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Equipe relation
@@ -141,7 +153,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery rightJoinWithSenha() Adds a RIGHT JOIN clause and with to the query using the Senha relation
  * @method     ChildEventoQuery innerJoinWithSenha() Adds a INNER JOIN clause and with to the query using the Senha relation
  *
- * @method     \Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery|\Baja\Model\FilaQuery|\Baja\Model\PremiacaoQuery|\Baja\Model\TimerQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     \Baja\Model\ProgramaQuery|\Baja\Model\EquipeQuery|\Baja\Model\ParticipanteQuery|\Baja\Model\ProvaQuery|\Baja\Model\ResultadoQuery|\Baja\Model\FilaQuery|\Baja\Model\PremiacaoQuery|\Baja\Model\TimerQuery|\Baja\Model\SenhaQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildEvento|null findOne(?ConnectionInterface $con = null) Return the first ChildEvento matching the query
  * @method     ChildEvento findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildEvento matching the query, or a new ChildEvento object populated from the query conditions when no match is found
@@ -162,6 +174,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento|null findOneByLocal(string $local) Return the first ChildEvento filtered by the local column
  * @method     ChildEvento|null findOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column
  * @method     ChildEvento|null findOneByCargaHoraria(int $carga_horaria) Return the first ChildEvento filtered by the carga_horaria column
+ * @method     ChildEvento|null findOneByProgramaId(string $programa_id) Return the first ChildEvento filtered by the programa_id column
  *
  * @method     ChildEvento requirePk($key, ?ConnectionInterface $con = null) Return the ChildEvento by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOne(?ConnectionInterface $con = null) Return the first ChildEvento matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -182,6 +195,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento requireOneByLocal(string $local) Return the first ChildEvento filtered by the local column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByCargaHoraria(int $carga_horaria) Return the first ChildEvento filtered by the carga_horaria column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEvento requireOneByProgramaId(string $programa_id) Return the first ChildEvento filtered by the programa_id column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildEvento[]|Collection find(?ConnectionInterface $con = null) Return ChildEvento objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildEvento> find(?ConnectionInterface $con = null) Return ChildEvento objects based on current ModelCriteria
@@ -218,6 +232,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildEvento> findByEmAndamento(boolean|array<boolean> $em_andamento) Return ChildEvento objects filtered by the em_andamento column
  * @method     ChildEvento[]|Collection findByCargaHoraria(int|array<int> $carga_horaria) Return ChildEvento objects filtered by the carga_horaria column
  * @psalm-method Collection&\Traversable<ChildEvento> findByCargaHoraria(int|array<int> $carga_horaria) Return ChildEvento objects filtered by the carga_horaria column
+ * @method     ChildEvento[]|Collection findByProgramaId(string|array<string> $programa_id) Return ChildEvento objects filtered by the programa_id column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByProgramaId(string|array<string> $programa_id) Return ChildEvento objects filtered by the programa_id column
  *
  * @method     ChildEvento[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildEvento> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -317,7 +333,7 @@ abstract class EventoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers, tem_certificado, presidente, data, mandato_presidente, local, em_andamento, carga_horaria FROM evento WHERE evento_id = :p0';
+        $sql = 'SELECT evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers, tem_certificado, presidente, data, mandato_presidente, local, em_andamento, carga_horaria, programa_id FROM evento WHERE evento_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
@@ -899,6 +915,209 @@ abstract class EventoQuery extends ModelCriteria
         $this->addUsingAlias(EventoTableMap::COL_CARGA_HORARIA, $cargaHoraria, $comparison);
 
         return $this;
+    }
+
+    /**
+     * Filter the query on the programa_id column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByProgramaId('fooValue');   // WHERE programa_id = 'fooValue'
+     * $query->filterByProgramaId('%fooValue%', Criteria::LIKE); // WHERE programa_id LIKE '%fooValue%'
+     * $query->filterByProgramaId(['foo', 'bar']); // WHERE programa_id IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $programaId The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByProgramaId($programaId = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($programaId)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(EventoTableMap::COL_PROGRAMA_ID, $programaId, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\Programa object
+     *
+     * @param \Baja\Model\Programa|ObjectCollection $programa The related object(s) to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByPrograma($programa, ?string $comparison = null)
+    {
+        if ($programa instanceof \Baja\Model\Programa) {
+            return $this
+                ->addUsingAlias(EventoTableMap::COL_PROGRAMA_ID, $programa->getProgramaId(), $comparison);
+        } elseif ($programa instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            $this
+                ->addUsingAlias(EventoTableMap::COL_PROGRAMA_ID, $programa->toKeyValue('PrimaryKey', 'ProgramaId'), $comparison);
+
+            return $this;
+        } else {
+            throw new PropelException('filterByPrograma() only accepts arguments of type \Baja\Model\Programa or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Programa relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinPrograma(?string $relationAlias = null, ?string $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Programa');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Programa');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Programa relation Programa object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\ProgramaQuery A secondary query class using the current class as primary query
+     */
+    public function useProgramaQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinPrograma($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Programa', '\Baja\Model\ProgramaQuery');
+    }
+
+    /**
+     * Use the Programa relation Programa object
+     *
+     * @param callable(\Baja\Model\ProgramaQuery):\Baja\Model\ProgramaQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withProgramaQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::INNER_JOIN
+    ) {
+        $relatedQuery = $this->useProgramaQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the relation to Programa table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\ProgramaQuery The inner query object of the EXISTS statement
+     */
+    public function useProgramaExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\ProgramaQuery */
+        $q = $this->useExistsQuery('Programa', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Programa table for a NOT EXISTS query.
+     *
+     * @see useProgramaExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ProgramaQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useProgramaNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ProgramaQuery */
+        $q = $this->useExistsQuery('Programa', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the relation to Programa table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\ProgramaQuery The inner query object of the IN statement
+     */
+    public function useInProgramaQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\ProgramaQuery */
+        $q = $this->useInQuery('Programa', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the relation to Programa table for a NOT IN query.
+     *
+     * @see useProgramaInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\ProgramaQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInProgramaQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\ProgramaQuery */
+        $q = $this->useInQuery('Programa', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
     }
 
     /**
