@@ -51,7 +51,7 @@ instead. `scripts/backup-run.sh` adds it by itself whenever `ENV` is not
 |---|---|---|---|
 | Backup: databases, files, erasure log | 04:00 America/Sao_Paulo, daily | host cron → `scripts/backup-run.sh` | `KUMA_PUSH_URL_BACKUP` |
 | Event archives (BAJAAPP-67) | right after the backup, same script | host cron → `scripts/backup-run.sh` | `KUMA_PUSH_URL_ARCHIVE` |
-| Verify | 04:00 Tuesdays | host cron → `scripts/verify-run.sh` | `KUMA_PUSH_URL_VERIFY` |
+| Verify | 05:30 Tuesdays | host cron → `scripts/verify-run.sh` | `KUMA_PUSH_URL_VERIFY` |
 | Prune | daily | Google Apps Script | `KUMA_PUSH_URL_PRUNE` |
 | Secondary copy (optional) | whatever its operator chooses | outside the VPS, read-only account | a check that does not run on the same machine — see [Secondary copies](#secondary-copies) |
 
@@ -94,17 +94,18 @@ same rule holds for each event archive under `events/`.
 Production's push monitors are on Healthchecks.io; the variables keep the
 `KUMA_` names they were built with.
 
-Host cron, in the deploy user's crontab (see
-[Setting up a new server](#setting-up-a-new-server)):
+Host cron, in root's crontab in production (the deploy user's works too;
+see [Setting up a new server](#setting-up-a-new-server)):
 
 ```
 0 4 * * * /srv/baja/baja-sae-brasil-online/baja-infra/scripts/backup-run.sh >> /var/log/baja-backup.log 2>&1
-0 4 * * 2 cd /srv/baja/baja-sae-brasil-online/baja-infra && ./scripts/verify-run.sh >> /var/log/baja-verify.log 2>&1
+30 5 * * 2 cd /srv/baja/baja-sae-brasil-online/baja-infra && ./scripts/verify-run.sh >> /var/log/baja-verify.log 2>&1
 ```
 
-On Tuesdays both start at 04:00. That is fine: verify reads Drive, and
-its freshness limit (26h) is met by Monday's run. Move verify to 05:00 if
-you want it to check Tuesday's.
+Verify starts at 05:30, after the backup and the archives have finished,
+because a verify that overlaps the backup skips the run still uploading
+and then fails its 26h freshness limit against the previous night's
+(28h old by then), as happened in production on 2026-10-27.
 
 ---
 
@@ -264,7 +265,7 @@ its last steps use the cron and pruner parts of this list.
 - [ ] Generate the **verifier** pair. Its private key goes on the VPS at `AGE_IDENTITY_VERIFIER` (0600); its public key goes into `.env` as `AGE_RECIPIENT_VERIFIER`. It cannot read the `.env` copies, by design.
 
 **Push monitors** — Healthchecks.io in production
-- [ ] Four checks, on a service that does not run on the VPS: backup (period 1 day, grace about 2h), event archives (1 day), verify (7 days, grace about 1 day), prune (1 day). Put their ping URLs in `.env` (`KUMA_PUSH_URL_BACKUP`, `_ARCHIVE`, `_VERIFY`) and in the pruner's script properties (`KUMA_PUSH_URL_PRUNE`).
+- [ ] Four checks, on a service that does not run on the VPS. Give each the same cron expression as its crontab line, in the server's time zone (America/Sao_Paulo), rather than a period: backup and event archives `0 4 * * *` with 2h grace, verify `30 5 * * 2` with 3h grace, prune daily (at the hour of its Apps Script trigger) with 3h grace. A new Healthchecks check never alerts before its first ping, so a check that has never been pinged proves nothing: run each job once by hand (below) and see it turn green. Put their ping URLs in `.env` (`KUMA_PUSH_URL_BACKUP`, `_ARCHIVE`, `_VERIFY`) and in the pruner's script properties (`KUMA_PUSH_URL_PRUNE`).
 - [ ] The variables keep their `KUMA_` names from when this was built for Uptime Kuma. Any push URL that accepts a GET works: the jobs send a GET with `status`, `msg` and `ping` added to the query string, which Healthchecks.io ignores and Kuma reads.
 
 **Production server**
@@ -275,9 +276,10 @@ its last steps use the cron and pruner parts of this list.
 - [ ] Measure: `sudo du -sh /srv/baja/phpbb-*/files /srv/baja/phpbb-*/avatars`. If the attachments are several GB, 35 daily copies plus monthlies may matter for Drive quota.
 - [ ] Check whether either forum has ACP-uploaded smilies, ranks or icons outside the stock set. If so, bind-mount those folders and add them to the file sets.
 
-**Cron** — the **deploy user's** host crontab, never a container
-- [ ] `backup-run.sh` and `verify-run.sh` drive `docker compose`, so they need the docker socket, and no container in this stack may have it: a container with the socket is root on the host, and the backup container's lack of one is part of what limits a compromise (see [Known limits](#known-limits)). Not root's crontab either: the deploy user (the one that owns the checkout and is in the `docker` group) is enough.
-- [ ] The entries in [What runs, and when](#what-runs-and-when) log to `/var/log`, where that user cannot create files. Create the logs for it first, or cron's redirect fails and the script never starts:
+**Cron** — a host crontab, root's or the deploy user's, never a container
+- [ ] `backup-run.sh` and `verify-run.sh` drive `docker compose`, so they need the docker socket, and no container in this stack may have it: a container with the socket is root on the host, and the backup container's lack of one is part of what limits a compromise (see [Known limits](#known-limits)).
+- [ ] Either crontab works. Production uses **root's** (`sudo crontab -e`), with the logs in `/var/log` as in [What runs, and when](#what-runs-and-when); root can create them, so there is nothing else to do.
+- [ ] To use the **deploy user's** instead (the one that owns the checkout and is in the `docker` group), create the logs for it first: it cannot create files in `/var/log`, and if cron's redirect fails the script never starts:
 
   ```
   sudo install -o "$USER" -g "$USER" -m 640 /dev/null /var/log/baja-backup.log
@@ -592,7 +594,7 @@ The order matters; each step needs the previous one.
 7. **Migrations, caches, search index**: `propel migration:status`, the
    phpBB `cache:purge` on both forums, then rebuild both search indexes.
 8. **The backup itself**: the cron entries in [What runs, and when](#what-runs-and-when)
-   (in the deploy user's crontab, see [Cron](#setting-up-a-new-server)),
+   (in root's or the deploy user's crontab, see [Cron](#setting-up-a-new-server)),
    the service-account keys and the verifier key at the paths `.env`
    names, then `scripts/backup-run.sh` once by hand. A restored server
    that is not backing itself up is the next incident.
@@ -757,7 +759,7 @@ data it came from and delete it afterwards.
 
 ## Weekly verification
 
-An untested backup is a hypothesis. Every Tuesday at 04:00 the newest
+An untested backup is a hypothesis. Every Tuesday at 05:30 the newest
 `daily/` run is downloaded, decrypted, imported into a throwaway MySQL,
 and compared against its own manifest; every file set is extracted and
 compared, file by file, with the manifest's description; the erasure log
