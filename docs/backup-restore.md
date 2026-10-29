@@ -20,7 +20,9 @@ why, is in [What is not in the backups](#what-is-not-in-the-backups).
 
 **Forum attachments or avatars are gone.** → [Restore files](#restore-files)
 
-**Uptime Kuma says the backup is down.** → [When Kuma alerts](#when-kuma-alerts)
+**A push monitor says the backup is down.** → [When Kuma alerts](#when-kuma-alerts)
+
+**You are setting the backups up on a server for the first time.** → [Setting up a new server](#setting-up-a-new-server)
 
 **You are about to score a session and want a snapshot first.**
 
@@ -49,7 +51,7 @@ instead. `scripts/backup-run.sh` adds it by itself whenever `ENV` is not
 |---|---|---|---|
 | Backup: databases, files, erasure log | 04:00 America/Sao_Paulo, daily | host cron → `scripts/backup-run.sh` | `KUMA_PUSH_URL_BACKUP` |
 | Event archives (BAJAAPP-67) | right after the backup, same script | host cron → `scripts/backup-run.sh` | `KUMA_PUSH_URL_ARCHIVE` |
-| Verify | 04:00 Tuesdays | host cron → `scripts/verify-run.sh` | `KUMA_PUSH_URL_VERIFY` |
+| Verify | 05:30 Tuesdays | host cron → `scripts/verify-run.sh` | `KUMA_PUSH_URL_VERIFY` |
 | Prune | daily | Google Apps Script | `KUMA_PUSH_URL_PRUNE` |
 | Secondary copy (optional) | whatever its operator chooses | outside the VPS, read-only account | a check that does not run on the same machine — see [Secondary copies](#secondary-copies) |
 
@@ -89,16 +91,21 @@ The run id is UTC (`T070000Z` is 04:00 in São Paulo).
 complete.** A folder without one is a partial upload, not a backup. The
 same rule holds for each event archive under `events/`.
 
-Host cron:
+Production's push monitors are on Healthchecks.io; the variables keep the
+`KUMA_` names they were built with.
+
+Host cron, in root's crontab in production (the deploy user's works too;
+see [Setting up a new server](#setting-up-a-new-server)):
 
 ```
 0 4 * * * /srv/baja/baja-sae-brasil-online/baja-infra/scripts/backup-run.sh >> /var/log/baja-backup.log 2>&1
-0 4 * * 2 cd /srv/baja/baja-sae-brasil-online/baja-infra && ./scripts/verify-run.sh >> /var/log/baja-verify.log 2>&1
+30 5 * * 2 cd /srv/baja/baja-sae-brasil-online/baja-infra && ./scripts/verify-run.sh >> /var/log/baja-verify.log 2>&1
 ```
 
-On Tuesdays both start at 04:00. That is fine: verify reads Drive, and
-its freshness limit (26h) is met by Monday's run. Move verify to 05:00 if
-you want it to check Tuesday's.
+Verify starts at 05:30, after the backup and the archives have finished,
+because a verify that overlaps the backup skips the run still uploading
+and then fails its 26h freshness limit against the previous night's
+(28h old by then), as happened in production on 2026-10-27.
 
 ---
 
@@ -234,6 +241,62 @@ public repository**.
 
 The twice-yearly [drill](#human-restore-drill) should, at least once a
 year, start from this section rather than from a running server.
+
+---
+
+## Setting up a new server
+
+Everything the backups need that the repository cannot do for you: an
+account, a key, or the server. This is what production was set up with;
+order matters roughly top to bottom. Moving a server that already had
+backups is [Restore onto a fresh server](#restore-onto-a-fresh-server);
+its last steps use the cron and pruner parts of this list.
+
+**Google (Workspace admin, or whoever owns SAE BRASIL's Drive)**
+- [ ] Create the `baja-backups` **Shared Drive** (org-owned, not anyone's My Drive). Note its ID.
+- [ ] In a Google Cloud project, create the service accounts `baja-backup-writer` and `baja-backup-reader`, and download a JSON key for each.
+- [ ] **Enable the Google Drive API in that same Cloud project** (APIs & Services → Library → Google Drive API). It is off by default, and without it every rclone call fails with a 403 that reads like a permissions problem ("Google Drive API has not been used in project ... or it is disabled"), not like a missing switch.
+- [ ] Add the writer as **Contributor** and the reader as **Viewer** on the Shared Drive.
+- [ ] Create or choose the **role account** (not a person) and make it **Manager**. It owns the pruner.
+- [ ] Put both JSON keys on the VPS at the paths `GDRIVE_SA_WRITER_JSON` / `GDRIVE_SA_READER_JSON` name (mode 0600).
+
+**age keys** — see [Keys, and who holds what](#keys-and-who-holds-what)
+- [ ] Generate the **escrow** pair offline (`age-keygen`). Each of the two escrow holders keeps the private key in their own password manager **and** in an offline copy (printed, or on a removable drive). Only the `age1...` public key goes into `.env` as `AGE_RECIPIENT_ESCROW`. This key alone can read the `.env` copies.
+- [ ] Generate the **verifier** pair. Its private key goes on the VPS at `AGE_IDENTITY_VERIFIER` (0600); its public key goes into `.env` as `AGE_RECIPIENT_VERIFIER`. It cannot read the `.env` copies, by design.
+
+**Push monitors** — Healthchecks.io in production
+- [ ] Four checks, on a service that does not run on the VPS. Give each the same cron expression as its crontab line, in the server's time zone (America/Sao_Paulo), rather than a period: backup and event archives `0 4 * * *` with 2h grace, verify `30 5 * * 2` with 3h grace, prune daily (at the hour of its Apps Script trigger) with 3h grace. A new Healthchecks check never alerts before its first ping, so a check that has never been pinged proves nothing: run each job once by hand (below) and see it turn green. Put their ping URLs in `.env` (`KUMA_PUSH_URL_BACKUP`, `_ARCHIVE`, `_VERIFY`) and in the pruner's script properties (`KUMA_PUSH_URL_PRUNE`).
+- [ ] The variables keep their `KUMA_` names from when this was built for Uptime Kuma. Any push URL that accepts a GET works: the jobs send a GET with `status`, `msg` and `ping` added to the query string, which Healthchecks.io ignores and Kuma reads.
+
+**Production server**
+- [ ] Deploy with the migration: `./propel migration:migrate` creates `evento_arquivamento`. If it is missed, admins can still edit events. They get an orange "archive not queued" warning, the error is logged, and the nightly archive monitor alerts. No finished event is queued until the migration runs.
+- [ ] Create the MySQL `backup` user with the per-database grants ([MySQL backup user](#mysql-backup-user)). The init script does not run on an existing server. If an early version of the backups was ever applied by hand with `ON *.*`, revoke that.
+- [ ] Create `/srv/baja/erasure/erasure-log.jsonl` as in [Erasure log](#erasure-log) (0700 folder, 0600 file, `chattr +a`). Set `ERASURE_LOG_DIR=/srv/baja/erasure`.
+- [ ] Fill in the backup block of `.env`: `MYSQL_BACKUP_PASSWORD`, `MYSQL_VERIFY_ROOT_PASSWORD` (different from root's), `GDRIVE_SHARED_DRIVE_ID`, the recipients and paths above, the push URLs, and `VERIFY_MIN_ROWS_PARTICIPANTES` (production's `participantes` count minus a margin; the default is 20000).
+- [ ] Measure: `sudo du -sh /srv/baja/phpbb-*/files /srv/baja/phpbb-*/avatars`. If the attachments are several GB, 35 daily copies plus monthlies may matter for Drive quota.
+- [ ] Check whether either forum has ACP-uploaded smilies, ranks or icons outside the stock set. If so, bind-mount those folders and add them to the file sets.
+
+**Cron** — a host crontab, root's or the deploy user's, never a container
+- [ ] `backup-run.sh` and `verify-run.sh` drive `docker compose`, so they need the docker socket, and no container in this stack may have it: a container with the socket is root on the host, and the backup container's lack of one is part of what limits a compromise (see [Known limits](#known-limits)).
+- [ ] Either crontab works. Production uses **root's** (`sudo crontab -e`), with the logs in `/var/log` as in [What runs, and when](#what-runs-and-when); root can create them, so there is nothing else to do.
+- [ ] To use the **deploy user's** instead (the one that owns the checkout and is in the `docker` group), create the logs for it first: it cannot create files in `/var/log`, and if cron's redirect fails the script never starts:
+
+  ```
+  sudo install -o "$USER" -g "$USER" -m 640 /dev/null /var/log/baja-backup.log
+  sudo install -o "$USER" -g "$USER" -m 640 /dev/null /var/log/baja-verify.log
+  crontab -e
+  ```
+- [ ] Run `scripts/backup-run.sh` by hand once, then the [acceptance tests](#acceptance-tests), especially **#2: the writer cannot trash**.
+- [ ] Run `scripts/verify-run.sh` by hand with production up, and note the peak memory it prints.
+
+**Pruner** — [`baja-infra/gas/retention/`](../baja-infra/gas/retention/README.md)
+- [ ] As the role account: `clasp push`, script properties, daily trigger. The directory's `.claspignore` restricts the push to `Code.js` and `appsscript.json`; check it is there before pushing, because a pushed test file breaks every run.
+- [ ] One week in dry run; a person reads `retention-log/`; then `DRY_RUN=false`. The prune monitor stays silent during the dry run (it only pings on live runs). Pause it or expect the alert.
+
+**Secrets and people**
+- [ ] After the first nightly run, confirm `secrets/<run_id>/env.json` exists and the run's manifest names it (`env.folder`). An escrow holder decrypts it once, on their own machine, to prove the key works, then deletes the plaintext.
+- [ ] Schedule the first [human restore drill](#human-restore-drill), by a maintainer who did not set this up, on a machine that is not the VPS. At least once a year, start it from [Restore a server from nothing](#restore-a-server-from-nothing).
+- [ ] Optional: a [secondary copy](#secondary-copies) with its own snapshots, pulled with the reader account.
 
 ---
 
@@ -530,7 +593,8 @@ The order matters; each step needs the previous one.
    restored database (step 5 of the database restore).
 7. **Migrations, caches, search index**: `propel migration:status`, the
    phpBB `cache:purge` on both forums, then rebuild both search indexes.
-8. **The backup itself**: the cron entries in [What runs, and when](#what-runs-and-when),
+8. **The backup itself**: the cron entries in [What runs, and when](#what-runs-and-when)
+   (in root's or the deploy user's crontab, see [Cron](#setting-up-a-new-server)),
    the service-account keys and the verifier key at the paths `.env`
    names, then `scripts/backup-run.sh` once by hand. A restored server
    that is not backing itself up is the next incident.
@@ -695,7 +759,7 @@ data it came from and delete it afterwards.
 
 ## Weekly verification
 
-An untested backup is a hypothesis. Every Tuesday at 04:00 the newest
+An untested backup is a hypothesis. Every Tuesday at 05:30 the newest
 `daily/` run is downloaded, decrypted, imported into a throwaway MySQL,
 and compared against its own manifest; every file set is extracted and
 compared, file by file, with the manifest's description; the erasure log
@@ -877,7 +941,7 @@ not corruption.
 ### What enforces this
 
 A Google Apps Script pruner, source in
-[`baja-infra/gas/retention/`](../gas/retention/README.md), running daily
+[`baja-infra/gas/retention/`](../baja-infra/gas/retention/README.md), running daily
 under a **dedicated role account** — not a person's, because Apps Script
 triggers execute as whoever installed them and a trigger bound to a
 student who graduates is exactly the failure this work package exists to

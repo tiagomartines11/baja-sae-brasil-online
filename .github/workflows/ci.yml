@@ -332,6 +332,11 @@ jobs:
             | xargs -0 shellcheck -x
           shellcheck baja-infra/tests/backup/fake-bin/rclone
 
+      # The runbooks link to each other and to the code they describe; a
+      # moved file must not leave an on-call reader at a dead link.
+      - name: Markdown links in docs/ and baja-infra/
+        run: baja-infra/tests/docs/check-md-links.sh
+
       - name: Validate docker-compose syntax
         working-directory: baja-infra
         run: |

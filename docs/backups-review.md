@@ -1,9 +1,14 @@
 # Backups: readiness review (BAJAAPP-4, BAJAAPP-67)
 
+> **Historical.** This is the review that came with #93 (`chore/db-backups`)
+> and is kept as it was written then; it is not updated as the backups
+> change. For how things are now, read the runbook,
+> [`docs/backup-restore.md`](backup-restore.md).
+
 A review of the unfinished `feature/db-backups` branch (5 commits, last on
 2026-08-17) against `develop` as of 2026-10-25, and of what this PR
 (`chore/db-backups`) changes. The runbook itself is
-[`baja-infra/docs/backup-restore.md`](../baja-infra/docs/backup-restore.md).
+[`docs/backup-restore.md`](backup-restore.md).
 
 ## Summary
 
@@ -132,42 +137,7 @@ still gets wrong.
 
 ## Maintainer setup checklist
 
-Everything here needs an account, a key or the server, which is why it is
-not done in the PR. Order matters roughly top to bottom.
-
-**Google (Workspace admin, or whoever owns SAE BRASIL's Drive)**
-- [ ] Create the `baja-backups` **Shared Drive** (org-owned, not anyone's My Drive). Note its ID.
-- [ ] Create the service accounts `baja-backup-writer` and `baja-backup-reader`, and download a JSON key for each.
-- [ ] Add the writer as **Contributor** and the reader as **Viewer** on the Shared Drive.
-- [ ] Create or choose the **role account** (not a person) as **Manager**. It owns the pruner.
-- [ ] Put both JSON keys on the VPS at the paths `GDRIVE_SA_WRITER_JSON` / `GDRIVE_SA_READER_JSON` name (mode 0600).
-
-**age keys**
-- [ ] Generate the **escrow** pair offline (`age-keygen`). Each of the two escrow holders keeps the private key in their own password manager **and** in an offline copy (printed, or on a removable drive). Only the `age1...` public key goes into `.env` as `AGE_RECIPIENT_ESCROW`. This key alone can read the `.env` copies.
-- [ ] Generate the **verifier** pair. Its private key goes on the VPS at `AGE_IDENTITY_VERIFIER` (0600); its public key goes into `.env` as `AGE_RECIPIENT_VERIFIER`. It cannot read the `.env` copies, by design.
-
-**Production server**
-- [ ] Deploy with the migration: `./propel migration:migrate` creates `evento_arquivamento`. If it is missed, admins can still edit events. They get an orange "archive not queued" warning, the error is logged, and the nightly archive monitor alerts. No finished event is queued until the migration runs.
-- [ ] Create the MySQL `backup` user with the per-database grants (runbook, "MySQL backup user"). The init script does not run on an existing server. If an earlier version of this branch was ever applied by hand with `ON *.*`, revoke that.
-- [ ] Create `/srv/baja/erasure/erasure-log.jsonl` (0700 folder, 0600 file, `chattr +a`). Set `ERASURE_LOG_DIR=/srv/baja/erasure`.
-- [ ] Fill in the backup block of `.env`: `MYSQL_BACKUP_PASSWORD`, `MYSQL_VERIFY_ROOT_PASSWORD` (different from root's), `GDRIVE_SHARED_DRIVE_ID`, the recipients and paths above, and `VERIFY_MIN_ROWS_PARTICIPANTES` (production's `participantes` count, about 31,000, minus a margin; the default is 20000).
-- [ ] Measure: `sudo du -sh /srv/baja/phpbb-*/files /srv/baja/phpbb-*/avatars`. If the attachments are several GB, 35 daily copies plus monthlies may matter for Drive quota. Tell whoever maintains the backups before switching on.
-- [ ] Check whether either forum has ACP-uploaded smilies, ranks or icons outside the stock set. If so, bind-mount those folders and add them to the file sets.
-- [ ] Add both cron entries (runbook, "What runs, and when").
-- [ ] Run `scripts/backup-run.sh` by hand once, then the acceptance tests in the runbook, especially **#2: the writer cannot trash**.
-- [ ] Run `scripts/verify-run.sh` by hand with production up, and note the peak memory it prints.
-
-**Uptime Kuma** (on a machine other than the VPS)
-- [ ] Four push monitors: backup (daily, about 26h grace), event archives (daily), verify (weekly, about 8 days), prune (daily). Put their URLs in `.env` (`KUMA_PUSH_URL_BACKUP`, `_ARCHIVE`, `_VERIFY`) and in the pruner's script properties (`KUMA_PUSH_URL_PRUNE`).
-
-**Pruner**
-- [ ] As the role account: `clasp push`, script properties, daily trigger (`gas/retention/README.md`).
-- [ ] One week in dry run; a person reads `retention-log/`; then `DRY_RUN=false`. The prune monitor stays silent during the dry run (it only pings on live runs). Pause it or expect the alert.
-
-**Secrets and people**
-- [ ] After the first nightly run, confirm `secrets/<run_id>/env.json` exists and the run's manifest names it (`env.folder`). An escrow holder decrypts it once, on their own machine, to prove the key works, then deletes the plaintext.
-- [ ] Schedule the first human restore drill, by a maintainer who did not set this up, on a machine that is not the VPS. At least once a year, start it from the runbook's "Restore a server from nothing".
-- [ ] Optional: a [secondary copy](../baja-infra/docs/backup-restore.md#secondary-copies) with its own snapshots, pulled with the reader account.
+Moved to the runbook, updated to what production used: [Setting up a new server](backup-restore.md#setting-up-a-new-server).
 
 ## Risks
 

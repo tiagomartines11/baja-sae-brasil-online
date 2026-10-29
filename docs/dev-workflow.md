@@ -148,7 +148,7 @@ Before requesting review:
       both), and `baja-infra/tests/backup/stack-test.sh` passes against your
       running stack. Anything that writes files somewhere new must be added
       as a file set; see "What is not in the backups" in
-      [`baja-infra/docs/backup-restore.md`](../baja-infra/docs/backup-restore.md).
+      [`docs/backup-restore.md`](backup-restore.md).
 - [ ] If you touched a page in `baja-php/juiz/` or anything that prints
       stored text, it escapes what it prints and its forms carry a CSRF
       token (BAJAAPP-41):
