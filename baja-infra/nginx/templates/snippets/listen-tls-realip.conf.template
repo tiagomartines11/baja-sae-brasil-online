@@ -1,0 +1,5 @@
+# Real client IP for production: Cloudflare connects to nginx directly, so
+# trust Cloudflare's ranges (cloudflare-realip.conf) to tell us the visitor's
+# address in CF-Connecting-IP.
+include /etc/nginx/conf.d/snippets/cloudflare-realip.conf;
+real_ip_header CF-Connecting-IP;

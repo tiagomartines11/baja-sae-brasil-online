@@ -41,6 +41,8 @@ LOG_PREFIX="backup-run"
 # shellcheck source-path=SCRIPTDIR
 # shellcheck source=./backup-lib.sh
 source "$SCRIPT_DIR/backup-lib.sh"
+# shellcheck source-path=SCRIPTDIR source=./compose-files.sh
+source "$SCRIPT_DIR/compose-files.sh"
 
 COMPOSE=()
 CODE_VERSION="unknown"
@@ -55,13 +57,16 @@ load_config() {
     [[ -f "$env_file" ]] || die "stack env not found: ${env_file}"
     load_env_file "$env_file"
 
-    # Production and staging run with the prod overlay; it is what mounts
-    # the forum uploads from /srv/baja into the backup container.
-    COMPOSE=(docker compose --project-directory "$INFRA_DIR" -f "${INFRA_DIR}/docker-compose.yml")
+    # The .env's COMPOSE_FILE when it sets one (staging: see
+    # compose-files.sh). Otherwise production and staging run with the prod
+    # overlay; it is what mounts the forum uploads from /srv/baja into the
+    # backup container.
+    local defaults=(docker-compose.yml)
     if [[ "${ENV:-dev}" != "dev" ]]; then
-        COMPOSE+=(-f "${INFRA_DIR}/docker-compose.prod.yml")
+        defaults+=(docker-compose.prod.yml)
     fi
-    COMPOSE+=(--profile tools)
+    compose_file_args "$INFRA_DIR" "${defaults[@]}"
+    COMPOSE=(docker compose --project-directory "$INFRA_DIR" "${COMPOSE_FILE_ARGS[@]}" --profile tools)
 
     # What the deployed checkout is, for the manifests. A tag on a release,
     # "v4-12-gabc1234" between releases, "unknown" without git or tags.

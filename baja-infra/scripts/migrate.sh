@@ -45,7 +45,10 @@ set -euo pipefail
 # Resolve our own location so paths are CWD-independent.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_DIR="$(dirname "$SCRIPT_DIR")"
-COMPOSE_FILES=(-f "$INFRA_DIR/docker-compose.yml" -f "$INFRA_DIR/docker-compose.prod.yml")
+# shellcheck source-path=SCRIPTDIR source=./compose-files.sh
+source "$SCRIPT_DIR/compose-files.sh"
+# Filled in by load_config, once the .env (and its COMPOSE_FILE) is read.
+COMPOSE_FILES=()
 
 # ----- Logging helpers -----
 log()  { printf '[migrate] %s\n' "$*"; }
@@ -69,6 +72,13 @@ load_config() {
     # shellcheck disable=SC1090
     source "$mig_env"
     set +a
+
+    # Staging's .env sets COMPOSE_FILE to add docker-compose.staging.yml;
+    # without it, the base file and the prod overlay as before. Never the
+    # two files alone on staging: `restart` or `exec` with them would
+    # recreate nginx with the host ports Caddy owns. See compose-files.sh.
+    compose_file_args "$INFRA_DIR" docker-compose.yml docker-compose.prod.yml
+    COMPOSE_FILES=("${COMPOSE_FILE_ARGS[@]}")
 
     # Production DB names default to the historical setup. Override via
     # migration.env if prod has been renamed.
