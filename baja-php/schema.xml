@@ -38,8 +38,56 @@
     <column name="local" phpName="Local" type="VARCHAR" size="120"/>
     <column name="em_andamento" phpName="EmAndamento" type="BOOLEAN" required="true" default="false"/>
     <column name="carga_horaria" phpName="CargaHoraria" type="integer" required="false" size="4"/>
+    <!-- The competition program this event belongs to (BAJA, AERO, ...).
+         Stored, never worked out from the event code: see programa below. -->
+    <column name="programa_id" phpName="ProgramaId" type="VARCHAR" size="16" required="true"/>
+    <foreign-key foreignTable="programa" name="evento_programa_id" onDelete="RESTRICT" onUpdate="CASCADE">
+      <reference local="programa_id" foreign="programa_id"/>
+    </foreign-key>
+    <index name="evento_programa_id_idx">
+      <index-column name="programa_id"/>
+    </index>
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>
+    </vendor>
+  </table>
+
+  <!-- ===================================================================
+       Competition programs (BAJAAPP-11): Baja SAE, AeroDesign, Fórmula
+       SAE... Every event belongs to exactly one (evento.programa_id).
+
+       A program may sit under another one (parent_id): the Fórum
+       AeroDesign is part of AeroDesign. Access rules use this tree, so a
+       grant on AERO also covers the events of AERO_FORUM. See
+       Baja\Programa\ProgramaTree.
+
+       programa_id is a short code that never changes once events use it
+       (the foreign keys refuse to delete a program that still has events
+       or children). nome is what people read. ordem orders lists.
+       ativo = 0 hides a program from new-event forms; its old events keep
+       it.
+
+       The table is utf8mb4 like every new one, but its two key columns are
+       latin1, like evento and every older table, because a foreign key
+       needs both sides in the same character set. The migration
+       (PropelMigration_1793070000) says so column by column.
+       =================================================================== -->
+  <table name="programa" idMethod="native" phpName="Programa">
+    <column name="programa_id" phpName="ProgramaId" type="VARCHAR" size="16" primaryKey="true" required="true"/>
+    <column name="parent_id" phpName="ParentId" type="VARCHAR" size="16"/>
+    <column name="nome" phpName="Nome" type="VARCHAR" size="100" required="true"/>
+    <column name="ordem" phpName="Ordem" type="INTEGER" required="true" defaultValue="0"/>
+    <column name="ativo" phpName="Ativo" type="BOOLEAN" required="true" defaultValue="true"/>
+    <foreign-key foreignTable="programa" name="programa_parent_id" phpName="Parent" refPhpName="Child" onDelete="RESTRICT" onUpdate="CASCADE">
+      <reference local="parent_id" foreign="programa_id"/>
+    </foreign-key>
+    <index name="programa_parent_id_idx">
+      <index-column name="parent_id"/>
+    </index>
+    <vendor type="mysql">
+      <parameter name="Engine" value="InnoDB"/>
+      <parameter name="Charset" value="utf8mb4"/>
+      <parameter name="Collate" value="utf8mb4_unicode_ci"/>
     </vendor>
   </table>
   <table name="input" idMethod="native" phpName="Input">

@@ -185,6 +185,7 @@ jobs:
       #   06  the lap counting tables; it also edits the 26BR Enduro's
       #       inputs list, so without it CI would not match a dev database
       #   07  the event archive queue (BAJAAPP-67)
+      #   08  the competition programs, and each event's (BAJAAPP-11)
       # 03 and 04 are the forum databases, which SKIP_AUTH pages never read.
       - name: Load the dev seed
         working-directory: baja-infra/mysql/init
@@ -203,6 +204,7 @@ jobs:
           mysql -uroot -proot < 05-seed-baja-resultados.sql
           mysql -uroot -proot < 06-contagem.sql
           mysql -uroot -proot < 07-evento-arquivamento.sql
+          mysql -uroot -proot < 08-programa.sql
           mysql -uroot -proot -e "CREATE USER 'snapshot'@'%' IDENTIFIED BY 'snapshot'; GRANT SELECT ON baja_resultados.* TO 'snapshot'@'%';"
 
       - name: PHPUnit (the tool writes nothing)
@@ -256,6 +258,20 @@ jobs:
           BAJA_TEST_DB_USER: root
           BAJA_TEST_DB_PASS: root
         run: vendor/bin/phpunit --testsuite results-archive-db --fail-on-skipped
+
+      # Competition programs (BAJAAPP-11): the migration's backfill (on a
+      # temporary table, never the real events), what the programa and
+      # evento tables refuse, and ProgramaResolver. They are in the db
+      # suite, group "programa"; the rest of that suite is lap counting,
+      # which needs Redis and is not run here. Writes a made-up event and
+      # program, so BAJA_TEST_DB=1 and the account that may write.
+      # --fail-on-skipped: a test skipped here would be a check nobody ran.
+      - name: PHPUnit (competition programs)
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite db --group programa --fail-on-skipped
 
       # scripts/formula-engine-compare.php (docs/formula-engine.md): on the
       # seed, eval() and the new formula engine give the same value for every

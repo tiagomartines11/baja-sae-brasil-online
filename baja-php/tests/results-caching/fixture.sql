@@ -17,8 +17,8 @@
 -- 29NE because a results URL's event prefix must look like an event code
 -- (two digits then BR, SE, SU or NE): /29NE/prova.php?id=29NE_SPL.
 
-INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers, em_andamento)
-VALUES ('29NE', 'Fixture BAJAAPP-23', 'Evento de teste (cache dos resultados)', 3, 2029, 0, 0, 1, 0);
+INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers, em_andamento, programa_id)
+VALUES ('29NE', 'Fixture BAJAAPP-23', 'Evento de teste (cache dos resultados)', 3, 2029, 0, 0, 1, 0, 'BAJA');
 
 INSERT INTO equipe (evento_id, equipe_id, escola, equipe, estado) VALUES
     ('29NE', 1, 'ESCOLA DE TESTE UM', 'EQUIPE TESTE 1', 'SP');

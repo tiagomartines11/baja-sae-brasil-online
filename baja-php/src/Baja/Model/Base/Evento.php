@@ -14,6 +14,8 @@ use Baja\Model\Participante as ChildParticipante;
 use Baja\Model\ParticipanteQuery as ChildParticipanteQuery;
 use Baja\Model\Premiacao as ChildPremiacao;
 use Baja\Model\PremiacaoQuery as ChildPremiacaoQuery;
+use Baja\Model\Programa as ChildPrograma;
+use Baja\Model\ProgramaQuery as ChildProgramaQuery;
 use Baja\Model\Prova as ChildProva;
 use Baja\Model\ProvaQuery as ChildProvaQuery;
 use Baja\Model\Resultado as ChildResultado;
@@ -203,6 +205,18 @@ abstract class Evento implements ActiveRecordInterface
      * @var        int|null
      */
     protected $carga_horaria;
+
+    /**
+     * The value for the programa_id field.
+     *
+     * @var        string
+     */
+    protected $programa_id;
+
+    /**
+     * @var        ChildPrograma
+     */
+    protected $aPrograma;
 
     /**
      * @var        ObjectCollection|ChildEquipe[] Collection to store aggregation of ChildEquipe objects.
@@ -787,6 +801,16 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Get the [programa_id] column value.
+     *
+     * @return string
+     */
+    public function getProgramaId()
+    {
+        return $this->programa_id;
+    }
+
+    /**
      * Set the value of [evento_id] column.
      *
      * @param string $v New value
@@ -1152,6 +1176,30 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [programa_id] column.
+     *
+     * @param string $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setProgramaId($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->programa_id !== $v) {
+            $this->programa_id = $v;
+            $this->modifiedColumns[EventoTableMap::COL_PROGRAMA_ID] = true;
+        }
+
+        if ($this->aPrograma !== null && $this->aPrograma->getProgramaId() !== $v) {
+            $this->aPrograma = null;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -1255,6 +1303,9 @@ abstract class Evento implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 15 + $startcol : EventoTableMap::translateFieldName('CargaHoraria', TableMap::TYPE_PHPNAME, $indexType)];
             $this->carga_horaria = (null !== $col) ? (int) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 16 + $startcol : EventoTableMap::translateFieldName('ProgramaId', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->programa_id = (null !== $col) ? (string) $col : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -1262,7 +1313,7 @@ abstract class Evento implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 16; // 16 = EventoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 17; // 17 = EventoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Evento'), 0, $e);
@@ -1285,6 +1336,9 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function ensureConsistency(): void
     {
+        if ($this->aPrograma !== null && $this->programa_id !== $this->aPrograma->getProgramaId()) {
+            $this->aPrograma = null;
+        }
     }
 
     /**
@@ -1324,6 +1378,7 @@ abstract class Evento implements ActiveRecordInterface
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aPrograma = null;
             $this->collEquipes = null;
 
             $this->collParticipantes = null;
@@ -1442,6 +1497,18 @@ abstract class Evento implements ActiveRecordInterface
         $affectedRows = 0; // initialize var to track total num of affected rows
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
+
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aPrograma !== null) {
+                if ($this->aPrograma->isModified() || $this->aPrograma->isNew()) {
+                    $affectedRows += $this->aPrograma->save($con);
+                }
+                $this->setPrograma($this->aPrograma);
+            }
 
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
@@ -1660,6 +1727,9 @@ abstract class Evento implements ActiveRecordInterface
         if ($this->isColumnModified(EventoTableMap::COL_CARGA_HORARIA)) {
             $modifiedColumns[':p' . $index++]  = 'carga_horaria';
         }
+        if ($this->isColumnModified(EventoTableMap::COL_PROGRAMA_ID)) {
+            $modifiedColumns[':p' . $index++]  = 'programa_id';
+        }
 
         $sql = sprintf(
             'INSERT INTO evento (%s) VALUES (%s)',
@@ -1733,6 +1803,10 @@ abstract class Evento implements ActiveRecordInterface
                         break;
                     case 'carga_horaria':
                         $stmt->bindValue($identifier, $this->carga_horaria, PDO::PARAM_INT);
+
+                        break;
+                    case 'programa_id':
+                        $stmt->bindValue($identifier, $this->programa_id, PDO::PARAM_STR);
 
                         break;
                 }
@@ -1838,6 +1912,9 @@ abstract class Evento implements ActiveRecordInterface
             case 15:
                 return $this->getCargaHoraria();
 
+            case 16:
+                return $this->getProgramaId();
+
             default:
                 return null;
         } // switch()
@@ -1882,6 +1959,7 @@ abstract class Evento implements ActiveRecordInterface
             $keys[13] => $this->getLocal(),
             $keys[14] => $this->getEmAndamento(),
             $keys[15] => $this->getCargaHoraria(),
+            $keys[16] => $this->getProgramaId(),
         ];
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -1889,6 +1967,21 @@ abstract class Evento implements ActiveRecordInterface
         }
 
         if ($includeForeignObjects) {
+            if (null !== $this->aPrograma) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'programa';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'programa';
+                        break;
+                    default:
+                        $key = 'Programa';
+                }
+
+                $result[$key] = $this->aPrograma->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
             if (null !== $this->collEquipes) {
 
                 switch ($keyType) {
@@ -2097,6 +2190,9 @@ abstract class Evento implements ActiveRecordInterface
             case 15:
                 $this->setCargaHoraria($value);
                 break;
+            case 16:
+                $this->setProgramaId($value);
+                break;
         } // switch()
 
         return $this;
@@ -2170,6 +2266,9 @@ abstract class Evento implements ActiveRecordInterface
         }
         if (array_key_exists($keys[15], $arr)) {
             $this->setCargaHoraria($arr[$keys[15]]);
+        }
+        if (array_key_exists($keys[16], $arr)) {
+            $this->setProgramaId($arr[$keys[16]]);
         }
 
         return $this;
@@ -2261,6 +2360,9 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(EventoTableMap::COL_CARGA_HORARIA)) {
             $criteria->add(EventoTableMap::COL_CARGA_HORARIA, $this->carga_horaria);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_PROGRAMA_ID)) {
+            $criteria->add(EventoTableMap::COL_PROGRAMA_ID, $this->programa_id);
         }
 
         return $criteria;
@@ -2366,6 +2468,7 @@ abstract class Evento implements ActiveRecordInterface
         $copyObj->setLocal($this->getLocal());
         $copyObj->setEmAndamento($this->getEmAndamento());
         $copyObj->setCargaHoraria($this->getCargaHoraria());
+        $copyObj->setProgramaId($this->getProgramaId());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -2447,6 +2550,57 @@ abstract class Evento implements ActiveRecordInterface
         $this->copyInto($copyObj, $deepCopy);
 
         return $copyObj;
+    }
+
+    /**
+     * Declares an association between this object and a ChildPrograma object.
+     *
+     * @param ChildPrograma $v
+     * @return $this The current object (for fluent API support)
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function setPrograma(ChildPrograma $v = null)
+    {
+        if ($v === null) {
+            $this->setProgramaId(NULL);
+        } else {
+            $this->setProgramaId($v->getProgramaId());
+        }
+
+        $this->aPrograma = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildPrograma object, it will not be re-added.
+        if ($v !== null) {
+            $v->addEvento($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildPrograma object
+     *
+     * @param ConnectionInterface $con Optional Connection object.
+     * @return ChildPrograma The associated ChildPrograma object.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getPrograma(?ConnectionInterface $con = null)
+    {
+        if ($this->aPrograma === null && (($this->programa_id !== "" && $this->programa_id !== null))) {
+            $this->aPrograma = ChildProgramaQuery::create()->findPk($this->programa_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aPrograma->addEventos($this);
+             */
+        }
+
+        return $this->aPrograma;
     }
 
 
@@ -4508,6 +4662,9 @@ abstract class Evento implements ActiveRecordInterface
      */
     public function clear()
     {
+        if (null !== $this->aPrograma) {
+            $this->aPrograma->removeEvento($this);
+        }
         $this->evento_id = null;
         $this->titulo = null;
         $this->nome = null;
@@ -4524,6 +4681,7 @@ abstract class Evento implements ActiveRecordInterface
         $this->local = null;
         $this->em_andamento = null;
         $this->carga_horaria = null;
+        $this->programa_id = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();
@@ -4596,6 +4754,7 @@ abstract class Evento implements ActiveRecordInterface
         $this->collPremiacaos = null;
         $this->collTimers = null;
         $this->collSenhas = null;
+        $this->aPrograma = null;
         return $this;
     }
 

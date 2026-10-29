@@ -124,8 +124,8 @@ for db in "${BACKUP_DATABASES[@]}"; do
         || fail "the dump of ${db} does not start by dropping the database"
 done
 # A row the dump does not have, standing in for the dev seed's data.
-as_root -e "INSERT INTO baja_resultados.evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers)
-            VALUES ('99MG', 'not in the dump', 'not in the dump', 0, 2099, 0, 0, 0)"
+as_root -e "INSERT INTO baja_resultados.evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers, programa_id)
+            VALUES ('99MG', 'not in the dump', 'not in the dump', 0, 2099, 0, 0, 0, 'BAJA')"
 as_root < "${RUN_DIR}/baja_resultados.sql"
 if [[ "$(as_root -e "SELECT COUNT(*) FROM baja_resultados.evento WHERE evento_id = '99MG'")" != "0" ]]; then
     as_root -e "DELETE FROM baja_resultados.evento WHERE evento_id = '99MG'"

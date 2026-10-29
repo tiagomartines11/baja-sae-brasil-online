@@ -17,8 +17,8 @@
 -- which only look at finished events, never see it. Deleting the event
 -- deletes everything else here with it (ON DELETE CASCADE).
 
-INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers)
-VALUES ('99FX', 'Fixture BAJAAPP-63', 'Evento de teste (fórmula fatal)', 0, 2099, 0, 0, 0);
+INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers, programa_id)
+VALUES ('99FX', 'Fixture BAJAAPP-63', 'Evento de teste (fórmula fatal)', 0, 2099, 0, 0, 0, 'BAJA');
 
 INSERT INTO equipe (evento_id, equipe_id, escola, equipe, estado) VALUES
     ('99FX', 1, 'ESCOLA DE TESTE UM', 'EQUIPE TESTE 1', 'SP'),

@@ -4,6 +4,7 @@ namespace Baja\Juiz;
 use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\Evento;
+use Baja\Model\ProgramaQuery;
 use Baja\ResultsArchive\Queue;
 use Baja\Session;
 use Baja\Site\Html;
@@ -26,6 +27,14 @@ $novo = false;
 // Set when the submitted menu is not valid JSON: nothing is saved and the
 // form is shown again with the text as typed and this message.
 $erroJson = null;
+
+// Every event belongs to a program (BAJAAPP-11), chosen on this form and
+// never worked out from the event code. A save without a known, active
+// program saves nothing and shows the form again with this set.
+$erroPrograma = false;
+$programaEscolhido = isset($_POST['programa_id']) && is_string($_POST['programa_id'])
+    ? ProgramaQuery::create()->findPk($_POST['programa_id'])
+    : null;
 
 if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
     $novo = true;
@@ -79,8 +88,11 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             $menu = ConfigJson::decodificar($_POST['menu'] ?? '');
             if (!$menu->valido()) {
                 $erroJson = $menu->erro;
+            } elseif ($programaEscolhido === null || !$programaEscolhido->getAtivo()) {
+                $erroPrograma = true;
             } else {
                 $evento->setMenu($menu->valor);
+                $evento->setProgramaId($programaEscolhido->getProgramaId());
 
                 $evento->setEmAndamento(false);
 
@@ -156,8 +168,14 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
         $menu = ConfigJson::decodificar($_POST['menu'] ?? '');
         if (!$menu->valido()) {
             $erroJson = $menu->erro;
+        } elseif ($programaEscolhido === null
+            || (!$programaEscolhido->getAtivo() && $programaEscolhido->getProgramaId() !== $evento->getProgramaId())) {
+            // An inactive program is only accepted when it is the one the
+            // event already has, as the select below offers.
+            $erroPrograma = true;
         } else {
             $evento->setMenu($menu->valor);
+            $evento->setProgramaId($programaEscolhido->getProgramaId());
 
             // Saves, then records or cancels the archive request a
             // finalizado change asks for. The event is saved even when that
@@ -214,6 +232,11 @@ Template::printHeader("Detalhes do Evento", false);
                     <td colspan="2" style="color: red; font-weight: bold;">Evento não salvo: o JSON do menu é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto do menu e salve de novo.</td>
                 </tr>
                 <?php } ?>
+                <?php if ($erroPrograma) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Evento não salvo: escolha o programa do evento e salve de novo.</td>
+                </tr>
+                <?php } ?>
                 <tr>
                     <td>ID Evento</td>
                     <td><input style="width:700px;" type="text" name="evento_id" <?= $novo?'':'disabled' ?> value="<?= $novo?'':Html::field($evento->getEventoId()) ?>"/></td>
@@ -225,6 +248,22 @@ Template::printHeader("Detalhes do Evento", false);
                 <tr>
                     <td>Nome</td>
                     <td><input style="width:700px;" type="text" name="nome" value="<?= $novo?'':Html::field($evento->getNome()) ?>" /></td>
+                </tr>
+                <tr>
+                    <td>Programa</td>
+                    <td><select name="programa_id" required>
+                        <?php
+                        // Active programs, plus this event's own if it was made inactive
+                        // since: an old event keeps its program.
+                        $programaAtual = $novo ? null : $evento->getProgramaId();
+                        if ($novo) { ?>
+                        <option value="">(escolha)</option>
+                        <?php }
+                        foreach (ProgramaQuery::create()->orderByOrdem()->find() as $programa) {
+                            if (!$programa->getAtivo() && $programa->getProgramaId() !== $programaAtual) continue; ?>
+                        <option value="<?= Html::e($programa->getProgramaId()) ?>" <?= $programa->getProgramaId() === $programaAtual ? 'selected' : '' ?>><?= Html::e($programa->getNome()) ?></option>
+                        <?php } ?>
+                    </select></td>
                 </tr>
                 <tr>
                     <td>Tipo</td>

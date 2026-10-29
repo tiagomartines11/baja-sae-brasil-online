@@ -36,14 +36,14 @@ php_in_app '
 form_case "evento.php: Atualizar (with spoilers)" "$SID_ADM" \
     "/$EVT/evento.php?id=28SU" "/$EVT/evento.php?id=28SU" \
     '$e = EventoQuery::create()->findPk("28SU"); echo $e->getTitulo() . "|" . (int) $e->getSpoilers();' \
-    "act=Atualizar" "titulo=ZZ Atualizado" "nome=Evento de teste (CSRF)" "programa=Sul" "ano=2028" \
+    "act=Atualizar" "titulo=ZZ Atualizado" "nome=Evento de teste (CSRF)" "programa=Sul" "programa_id=BAJA" "ano=2028" \
     "carga_horaria=10" "spoilers=1" "data=" "local=" "presidente=" "mandato=" "menu=[]"
 
 # Creating an event, 28NE. The state is whether 28NE exists: 0, then 1.
 form_case "evento.php: Salvar (new event)" "$SID_ADM" \
     "/$EVT/evento.php?novo=true" "/$EVT/evento.php?novo=true" \
     'echo EventoQuery::create()->findPk("28NE") ? 1 : 0;' \
-    "act=Salvar" "evento_id=28NE" "titulo=ZZ Novo" "nome=Evento novo (CSRF)" "programa=Sul" "ano=2028" \
+    "act=Salvar" "evento_id=28NE" "titulo=ZZ Novo" "nome=Evento novo (CSRF)" "programa=Sul" "programa_id=BAJA" "ano=2028" \
     "carga_horaria=10" "data=" "local=" "presidente=" "mandato=" "menu=[]"
 
 # Deleting the event just made. The state is whether 28NE exists: 1, then 0.

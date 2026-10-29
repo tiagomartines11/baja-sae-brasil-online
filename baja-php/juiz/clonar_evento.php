@@ -61,6 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $novoEvento = new Evento();
             $novoEvento->setEventoId($novoEventoId);
             $novoEvento->setTipo($refEvento->getTipo());
+            // A clone is the same competition again (BAJAAPP-11). Copied
+            // from the reference event, never worked out from the new code.
+            $novoEvento->setProgramaId($refEvento->getProgramaId());
 
             $titulo = $refEvento->getTitulo();
             $nome = $refEvento->getNome();

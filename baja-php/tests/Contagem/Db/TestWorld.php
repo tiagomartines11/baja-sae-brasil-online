@@ -98,8 +98,8 @@ final class TestWorld
         // "ativo = 0" keeps the made-up event out of every public list
         // while the test runs.
         $connection->prepare(
-            'INSERT INTO evento (evento_id, titulo, nome, ano, ativo) VALUES (?, ?, ?, ?, 0)'
-        )->execute([self::EVENTO_ID, 'Teste de contagem', 'Evento de teste da contagem de voltas', 1999]);
+            'INSERT INTO evento (evento_id, titulo, nome, ano, ativo, programa_id) VALUES (?, ?, ?, ?, 0, ?)'
+        )->execute([self::EVENTO_ID, 'Teste de contagem', 'Evento de teste da contagem de voltas', 1999, 'BAJA']);
 
         $insertTeam = $connection->prepare(
             'INSERT INTO equipe (evento_id, equipe_id, escola, escola_curto, cidade, equipe, equipe_curto, estado, presente)
