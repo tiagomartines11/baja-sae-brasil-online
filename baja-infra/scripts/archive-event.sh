@@ -97,7 +97,7 @@ main() {
 
     # The event code becomes a folder name on the Shared Drive. Same rule
     # as results-snapshot.php's --events.
-    [[ "$event" =~ ^[0-9]{2}(BR|SE|SU|NE)$ ]] || die "not an event code: '${event}'"
+    backup_is_event_code "$event" || die "not an event code: '${event}'"
     [[ "$request_id" =~ ^[0-9]+$ ]] || die "request id is not a number: '${request_id}'"
     [[ "$requested" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] \
         || die "request time is not an ISO UTC timestamp: '${requested}'"

@@ -17,4 +17,14 @@ interface SnapshotSource
      * @param callable(string):void $progress   receives a line of progress now and then
      */
     public function build(?array $onlyEvents, callable $progress): Build;
+
+    /**
+     * Those of $events that are no event in the database. A code that is
+     * well formed but missing is a typo, not an event with no results, so
+     * Command stops on it instead of building nothing for it.
+     *
+     * @param list<string> $events
+     * @return list<string>
+     */
+    public function missingEvents(array $events): array;
 }

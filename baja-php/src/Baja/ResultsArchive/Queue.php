@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\ResultsArchive;
 
+use Baja\Evento\EventCode;
 use Baja\Logger;
 use Baja\Model\Evento;
 use Baja\Model\Map\EventoTableMap;
@@ -181,7 +182,7 @@ final class Queue
      */
     public function markArchived(int $arquivamentoId, string $pasta, int $agoraMs): void
     {
-        if (preg_match('#^events/\d{2}(BR|SE|SU|NE)/\d{8}T\d{6}Z$#', $pasta) !== 1) {
+        if (preg_match('#^events/([^/]*)/\d{8}T\d{6}Z$#D', $pasta, $match) !== 1 || !EventCode::isValid($match[1])) {
             throw new RuntimeException('Not an event archive folder: ' . $pasta);
         }
         $changed = $this->execute(

@@ -203,8 +203,17 @@ jobs:
           mysql -uroot -proot < 07-evento-arquivamento.sql
           mysql -uroot -proot -e "CREATE USER 'snapshot'@'%' IDENTIFIED BY 'snapshot'; GRANT SELECT ON baja_resultados.* TO 'snapshot'@'%';"
 
+      # The tool writes nothing, and takes an event of any competition
+      # (BAJAAPP-74). That last test loads a made-up event, 97AR, first, so
+      # it needs BAJA_TEST_DB=1 and an account that may write; the tool
+      # itself still runs as the SELECT-only "snapshot". --fail-on-skipped:
+      # a test skipped here would be a check nobody ran.
       - name: PHPUnit (the tool writes nothing)
-        run: vendor/bin/phpunit --testsuite results-snapshot-db
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite results-snapshot-db --fail-on-skipped
 
       # The public results API (docs/results-api.md) on the seed, as the
       # SELECT-only "snapshot" account: every table equals the results

@@ -188,7 +188,7 @@ final class QueueTest extends TestCase
     {
         $this->saveFinalizado(true, 1_000);
         $first = $this->queue()->pending(1_500)[0]['arquivamento_id'];
-        $this->queue()->markArchived($first, 'events/99BR/20990101T040000Z', 2_000);
+        $this->queue()->markArchived($first, 'events/99AR/20990101T040000Z', 2_000);
 
         $this->saveFinalizado(false, 3_000);
         $this->saveFinalizado(true, 4_000);
@@ -196,7 +196,7 @@ final class QueueTest extends TestCase
         $rows = $this->requests();
         $this->assertCount(2, $rows);
         $this->assertSame([Queue::ARQUIVADO, Queue::PENDENTE], array_column($rows, 'estado'));
-        $this->assertSame('events/99BR/20990101T040000Z', $rows[0]['pasta']);
+        $this->assertSame('events/99AR/20990101T040000Z', $rows[0]['pasta']);
     }
 
     // --- The archive queue must never block saving an event ----------------
@@ -264,7 +264,7 @@ final class QueueTest extends TestCase
         $this->assertCount(1, $pending);
         $this->assertSame(self::EVENT, $pending[0]['evento_id']);
 
-        $this->queue()->markArchived($pending[0]['arquivamento_id'], 'events/99BR/20990101T040000Z', 3_000);
+        $this->queue()->markArchived($pending[0]['arquivamento_id'], 'events/99AR/20990101T040000Z', 3_000);
 
         $this->assertSame([], $this->queue()->pending(4_000));
         $row = $this->requests()[0];
@@ -277,10 +277,10 @@ final class QueueTest extends TestCase
     {
         $this->saveFinalizado(true, 1_000);
         $id = $this->queue()->pending(2_000)[0]['arquivamento_id'];
-        $this->queue()->markArchived($id, 'events/99BR/20990101T040000Z', 3_000);
+        $this->queue()->markArchived($id, 'events/99AR/20990101T040000Z', 3_000);
 
         $this->expectException(\RuntimeException::class);
-        $this->queue()->markArchived($id, 'events/99BR/20990102T040000Z', 4_000);
+        $this->queue()->markArchived($id, 'events/99AR/20990102T040000Z', 4_000);
     }
 
     /** A failed attempt (Drive down, say) leaves it pending, counted, with the reason. */
@@ -329,6 +329,47 @@ final class QueueTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->queue()->markArchived($id, 'daily/20990101T040000Z', 3_000);
+    }
+
+    /**
+     * The folder is events/<event code>/<timestamp>. An event code is two
+     * digits and two capitals or digits (Baja\Evento\EventCode), so the
+     * events of every competition can be archived: H2, AR, EQ... not only
+     * BR, SE, SU and NE (BAJAAPP-74). Before, such an event's archive was
+     * uploaded every night and then refused here, so it never left the
+     * queue and the backup alerted every night.
+     */
+    public function testAFolderOfAnyCompetitionsEventCanBeRecorded(): void
+    {
+        $this->saveFinalizado(true, 1_000);
+        $id = $this->queue()->pending(2_000)[0]['arquivamento_id'];
+
+        $this->queue()->markArchived($id, 'events/24H2/20990101T040000Z', 3_000);
+
+        $this->assertSame('events/24H2/20990101T040000Z', $this->requests()[0]['pasta']);
+    }
+
+    /** Still never a folder whose event part is not an event code, nor a path. */
+    public function testAFolderWithAMalformedEventCodeIsRefused(): void
+    {
+        $this->saveFinalizado(true, 1_000);
+        $id = $this->queue()->pending(2_000)[0]['arquivamento_id'];
+
+        foreach ([
+            'events/24h2/20990101T040000Z',          // lowercase
+            'events/224H2/20990101T040000Z',         // three digits
+            'events//20990101T040000Z',              // no code at all
+            'events/26BR/../x/20990101T040000Z',     // a path that climbs out
+            "events/26BR/20990101T040000Z\n",        // a newline after
+        ] as $folder) {
+            try {
+                $this->queue()->markArchived($id, $folder, 3_000);
+                $this->fail('Recorded ' . json_encode($folder));
+            } catch (\RuntimeException $e) {
+                $this->assertStringStartsWith('Not an event archive folder', $e->getMessage());
+            }
+        }
+        $this->assertSame(Queue::PENDENTE, $this->requests()[0]['estado'], 'Nothing was recorded; the request is still pending.');
     }
 
     // --- Helpers --------------------------------------------------------------

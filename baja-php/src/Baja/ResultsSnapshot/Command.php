@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\ResultsSnapshot;
 
+use Baja\Evento\EventCode;
 use Baja\ResultsSnapshot\Files\Comparison;
 use Baja\ResultsSnapshot\Files\SnapshotFiles;
 use Throwable;
@@ -71,6 +72,11 @@ final class Command
         $started = microtime(true);
         try {
             $source = ($this->sourceFactory)($options['jobs']);
+            $missing = $options['events'] === null ? [] : $source->missingEvents($options['events']);
+            if ($missing !== []) {
+                $this->say('No such event: ' . implode(', ', $missing) . "\n");
+                return self::CANNOT_RUN;
+            }
             $build = $source->build($options['events'], fn(string $line) => $this->say($line . "\n"));
             $fresh = SnapshotFiles::encodeAll($build->documents);
         } catch (Throwable $e) {
@@ -172,7 +178,7 @@ final class Command
         if ($values['events'] !== null) {
             $events = array_values(array_filter(array_map('trim', explode(',', $values['events'])), 'strlen'));
             foreach ($events as $event) {
-                if (preg_match('/^\d{2}(BR|SE|SU|NE)$/', $event) !== 1) {
+                if (!EventCode::isValid($event)) {
                     return 'Not an event code: ' . $event;
                 }
             }
