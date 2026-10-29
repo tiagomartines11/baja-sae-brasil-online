@@ -322,10 +322,11 @@ Ajuda::opcao('seeding.classification', 'lista', 'Critérios de classificação, 
         <li><code>title</code> &mdash; cabeçalho da coluna na tela de chaveamento;</li>
         <li><code>inputs</code> &mdash; provas cujos dados são usados;</li>
         <li><code>formula</code> &mdash; fórmula, ou <code>"random"</code> para sorteio;</li>
-        <li><code>order</code> &mdash; <code>"desc"</code> (maior primeiro) ou <code>"asc"</code>.</li>
+        <li><code>order</code> &mdash; <code>"desc"</code>: <strong>maior é melhor</strong> (pontos); <code>"asc"</code>: <strong>menor é melhor</strong> (tempo, posição). Sem <code>order</code>, vale <code>"desc"</code>.</li>
     </ul>
-    <div class="aviso">Hoje <code>order</code> é ignorado: todos os critérios são ordenados do maior para o menor. Para &quot;menor é melhor&quot;, inverta o sinal na fórmula (ex.: <code>-$TEMPO</code>).</div>');
-Ajuda::opcao('status', 'objeto', '<strong>Obrigatório</strong> &mdash; comece com <code>{"frozen": false, "classification": false}</code>. Depois é gerenciado pela tela de chaveamento:
+    <p>Cada critério usa a sua própria ordem; o seguinte só é usado quando todos os anteriores empatam. Equipe com fórmula sem valor (<code>null</code>) fica por último no critério, em qualquer ordem.</p>
+    <div class="aviso">Escreva a fórmula com o valor como ele é (ex.: <code>$TEMPO</code> com <code>"asc"</code>). Não inverta o sinal: com <code>-$TEMPO</code> e <code>"asc"</code>, o tempo maior ficaria em primeiro.</div>');
+Ajuda::opcao('status', 'objeto', 'Gerenciado pela tela de chaveamento; pode ficar de fora (é criado ao congelar). Se escrever, use <code>{"frozen": false, "classification": false}</code>:
     <code>frozen</code> indica classificação congelada e <code>classification</code> guarda a lista de carros na ordem classificada.');
 Ajuda::opcao('tournament.third_place_match', 'booleano', 'Cria a disputa de 3º lugar.');
 Ajuda::opcao('tournament.bestof', 'objeto', 'Opcional. <code>{"matches": 3, "from_round": 1}</code>: confrontos &quot;melhor de 3&quot; a partir da rodada 1 (semifinais) até a final, incluindo a disputa de 3º.
