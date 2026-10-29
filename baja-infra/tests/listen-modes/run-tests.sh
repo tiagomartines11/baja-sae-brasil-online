@@ -283,6 +283,10 @@ echo
 run_test "staging: nginx publishes no host port, joins baja-edge, mounts no certificates" test_staging_nginx_has_no_host_port
 run_test "dev and production: compose config is unchanged"                           test_dev_and_prod_compose_unchanged
 make_certs
+# Pulled here, once, so that `docker run` never pulls it inside render(): the
+# pull progress it would print lands in the rendered output and makes the
+# first render differ from the second.
+docker pull -q "$NGINX_IMAGE" > /dev/null
 run_test "nginx accepts the configuration in listen-http, listen-tls and listen-proxied" test_nginx_accepts_every_mode
 run_test "dev and production: nginx directives, real-IP ones included, are unchanged"  test_dev_and_prod_nginx_unchanged
 run_test "listen-proxied: trusts only baja-edge, plain HTTP on 80, no redirect"        test_proxied_trusts_only_baja_edge
