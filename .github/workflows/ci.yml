@@ -377,6 +377,22 @@ jobs:
           docker compose --env-file "$RUNNER_TEMP/old.env" \
             -f docker-compose.verify.yml config --quiet
 
+      # Staging runs nginx behind the VPS's shared Caddy, which owns host
+      # ports 80 and 443 (docker-compose.staging.yml, LISTEN_MODE=
+      # listen-proxied). The script checks, with a staging-like .env, that
+      # nginx publishes no host port and is on the external baja-edge
+      # network; that the dev and production compose config is unchanged
+      # from develop before that change (BASELINE_REF in the script, fetched
+      # here); and, in throwaway nginx containers, that every listen mode's
+      # config loads and that dev's and production's nginx directives, the
+      # real-IP ones included, are unchanged too.
+      - name: Listen modes and compose file sets
+        run: |
+          # docker-compose.staging.yml needs 2.24.4+ (!reset, !override).
+          docker compose version
+          git fetch --no-tags --depth=1 origin 9b2832a5e17d7d5d768f12721b27b8c2b1127bc3
+          BASELINE_REF=9b2832a5e17d7d5d768f12721b27b8c2b1127bc3 baja-infra/tests/listen-modes/run-tests.sh
+
       - name: Retention pruner tests
         # Apps Script cannot run in CI, so the pruner's logic is exercised
         # against a fake Drive. It is the only code in the backup system
