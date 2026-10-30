@@ -102,5 +102,17 @@
         <testsuite name="results-archive-db">
             <directory>tests/ResultsArchive/Db</directory>
         </testsuite>
+        <!--
+          The judge area getting a forum session back from the "remember me"
+          key, logout, and the keep-alive (BAJAAPP-86), through the real web
+          server. Needs the dev stack, BAJA_TEST_DB set to 1, and
+          BAJA_TEST_DB_USER / BAJA_TEST_DB_PASS for an account that may write
+          to phpbb_baja; skipped without them. The command is in
+          tests/Auth/Http/ForumSessionTestCase.php. The decisions alone are
+          unit tested in tests/Unit/Auth, part of the unit suite.
+        -->
+        <testsuite name="auth-http">
+            <directory suffix="Test.php">tests/Auth/Http</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
