@@ -6,7 +6,7 @@ use Propel\Generator\Manager\MigrationManager;
  *
  * Adds evento_arquivamento, the queue of requests to archive a finished
  * event's published results in the backups (BAJAAPP-67). schema.xml
- * explains the table; baja-infra/docs/backup-restore.md, "Event archives",
+ * explains the table; docs/backup-restore.md, "Event archives",
  * explains what reads it. The same DDL is in
  * baja-infra/mysql/init/07-evento-arquivamento.sql for fresh dev
  * databases, which also records this version as applied.

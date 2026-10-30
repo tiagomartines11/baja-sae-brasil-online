@@ -186,6 +186,7 @@ jobs:
       #       inputs list, so without it CI would not match a dev database
       #   07  the event archive queue (BAJAAPP-67)
       #   08  the competition programs, and each event's (BAJAAPP-11)
+      #   09  roles and grants (BAJAAPP-12)
       # 03 and 04 are the forum databases, which SKIP_AUTH pages never read.
       - name: Load the dev seed
         working-directory: baja-infra/mysql/init
@@ -205,10 +206,20 @@ jobs:
           mysql -uroot -proot < 06-contagem.sql
           mysql -uroot -proot < 07-evento-arquivamento.sql
           mysql -uroot -proot < 08-programa.sql
+          mysql -uroot -proot < 09-rbac.sql
           mysql -uroot -proot -e "CREATE USER 'snapshot'@'%' IDENTIFIED BY 'snapshot'; GRANT SELECT ON baja_resultados.* TO 'snapshot'@'%';"
 
+      # The tool writes nothing, and takes an event of any competition
+      # (BAJAAPP-74). That last test loads a made-up event, 97AR, first, so
+      # it needs BAJA_TEST_DB=1 and an account that may write; the tool
+      # itself still runs as the SELECT-only "snapshot". --fail-on-skipped:
+      # a test skipped here would be a check nobody ran.
       - name: PHPUnit (the tool writes nothing)
-        run: vendor/bin/phpunit --testsuite results-snapshot-db
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite results-snapshot-db --fail-on-skipped
 
       # The public results API (docs/results-api.md) on the seed, as the
       # SELECT-only "snapshot" account: every table equals the results
@@ -272,6 +283,18 @@ jobs:
           BAJA_TEST_DB_USER: root
           BAJA_TEST_DB_PASS: root
         run: vendor/bin/phpunit --testsuite db --group programa --fail-on-skipped
+
+      # RBAC core (BAJAAPP-12, docs/rbac.md): who may do what where, the
+      # delegation rules, the audit trail, expiry and the migration's data.
+      # In the db suite, group "rbac", for the same reason as above. Writes
+      # made-up users, events, roles and grants, and removes them.
+      # --fail-on-skipped: a test skipped here would be a check nobody ran.
+      - name: PHPUnit (RBAC)
+        env:
+          BAJA_TEST_DB: '1'
+          BAJA_TEST_DB_USER: root
+          BAJA_TEST_DB_PASS: root
+        run: vendor/bin/phpunit --testsuite db --group rbac --fail-on-skipped
 
       # scripts/formula-engine-compare.php (docs/formula-engine.md): on the
       # seed, eval() and the new formula engine give the same value for every
@@ -349,6 +372,11 @@ jobs:
           find baja-infra/scripts baja-infra/mysql/init baja-infra/tests -name '*.sh' -print0 \
             | xargs -0 shellcheck -x
           shellcheck baja-infra/tests/backup/fake-bin/rclone
+
+      # The runbooks link to each other and to the code they describe; a
+      # moved file must not leave an on-call reader at a dead link.
+      - name: Markdown links in docs/ and baja-infra/
+        run: baja-infra/tests/docs/check-md-links.sh
 
       - name: Validate docker-compose syntax
         working-directory: baja-infra

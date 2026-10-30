@@ -14,7 +14,7 @@ services:
       # Read-only user for the `backup` service below. On an ALREADY
       # INITIALISED server (i.e. production) these are inert — the init
       # scripts only run on first boot — and the GRANT has to be applied
-      # by hand. See baja-infra/docs/backup-restore.md.
+      # by hand. See docs/backup-restore.md.
       MYSQL_BACKUP_USER: ${MYSQL_BACKUP_USER}
       MYSQL_BACKUP_PASSWORD: ${MYSQL_BACKUP_PASSWORD}
     ports:
@@ -226,7 +226,7 @@ services:
 
   # Nightly encrypted backup of the three databases, the files kept
   # outside them, and the erasure log, to the SAE BRASIL `baja-backups`
-  # Google Shared Drive. See baja-infra/docs/backup-restore.md.
+  # Google Shared Drive. See docs/backup-restore.md.
   #
   # profiles: ["tools"] keeps it out of `docker compose up` — this is a
   # run-to-completion job, not a service. Host cron invokes

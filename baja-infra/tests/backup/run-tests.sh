@@ -33,7 +33,8 @@
 #     is uploaded again only when the .env changed, and the manifest still
 #     names a valid copy when it did not;
 #   - an event archive records the event, the time, the code version and
-#     the number of snapshots, restores, and passes the verifier;
+#     the number of snapshots, restores, and passes the verifier, for the
+#     events of every competition (BR, AR, H2...), not only some;
 #   - restoring a dump into a scratch database with scripts/restore-db.sh
 #     leaves the live database alone, and the helper refuses the mistakes
 #     that would not (see "Restoring a database" below);
@@ -681,12 +682,75 @@ test_event_archive_refuses_wrong_input() {
     rm "${base}/empty/snapshots/22BR/"*.json
     if run_archive "${base}/empty"; then fail "archived an event with no snapshot"; fi
 
-    # 3. An event code that would make a strange folder name.
-    make_archive_input "${base}/name" 22BR
-    jq '.evento_id = "../x"' "${base}/name/request.json" > "${base}/r" && mv "${base}/r" "${base}/name/request.json"
-    if run_archive "${base}/name"; then fail "accepted event code ../x"; fi
+    # 3. An event code that would make a strange folder name, or is not
+    #    one at all.
+    local bad n=0
+    for bad in "../x" "26BR/../x" "26br" "226BR" ""; do
+        n=$(( n + 1 ))
+        make_archive_input "${base}/name${n}" 22BR
+        jq --arg e "$bad" '.evento_id = $e' "${base}/name${n}/request.json" > "${base}/r" && mv "${base}/r" "${base}/name${n}/request.json"
+        if run_archive "${base}/name${n}"; then fail "accepted event code '${bad}'"; fi
+    done
 
     same "$(find "$FAKE_DRIVE" -type f | wc -l)" 0 "files uploaded"
+}
+
+# An event code is two digits for the year and two capitals or digits for
+# the competition: 26BR, 25AR, 24H2. The scripts once accepted only BR,
+# SE, SU and NE after the year, so the events of every other competition
+# could not be archived, and the backup alerted every night (BAJAAPP-74).
+# Now every script asks one function in backup-lib.sh, with the same rule
+# as the PHP side (Baja\Evento\EventCode): one rule in one place, so they
+# cannot disagree.
+test_event_code_rule() {
+    LOG_PREFIX='test'
+    # shellcheck source=backup-lib.sh
+    source "${SCRIPTS}/backup-lib.sh"
+    local code
+    # Every competition seen on production, and one nobody has made yet.
+    for code in 22BR 23SE 24SU 25NE 25AR 24FA 23FO 26EQ 24H2 27ZZ; do
+        backup_is_event_code "$code" || fail "refused ${code}"
+    done
+    # Not codes: lowercase (also in a locale where [A-Z] could match it),
+    # three digits, empty, extra characters, and paths.
+    for code in 26br 26Br 226BR 6BR 26B 26BRX "" " 26BR" "26BR " $'26BR\n' "26BR/../x" "../x" ".." "26ÁR"; do
+        if backup_is_event_code "$code"; then fail "accepted '${code}'"; fi
+        if LC_ALL=en_US.UTF-8 backup_is_event_code "$code" 2>/dev/null; then fail "accepted '${code}' in en_US.UTF-8"; fi
+    done
+}
+
+# The whole path for two events of other competitions, H2 and AR: each is
+# archived under its own events/<EVT>/ folder, and the weekly verifier
+# restores both. A folder whose name is not an event code is skipped with
+# a note, not restored.
+test_event_archive_of_other_competitions() {
+    local base="${TMP}/event-other"
+    export FAKE_DRIVE="${base}/drive" FAKE_RCLONE_LOG="${base}/rclone.log"
+    mkdir -p "$FAKE_DRIVE"
+
+    local event out
+    for event in 24H2 25AR; do
+        make_archive_input "${base}/input-${event}" "$event"
+        out="$(ARCHIVE_INPUT_DIR="${base}/input-${event}" BACKUP_REMOTE="fake:" BACKUP_WORK_DIR="${base}/work" \
+               BACKUP_CODE_VERSION="v4-12-gabc1234" ARCHIVE_TIMESTAMP=20261021T070102Z \
+               "${SCRIPTS}/archive-event.sh")"
+        same "$(printf '%s\n' "$out" | tail -1)" "ARCHIVED events/${event}/20261021T070102Z" "${event}: last line"
+        same "$(jq -r .event "${FAKE_DRIVE}/events/${event}/20261021T070102Z/manifest.json")" "$event" "${event}: manifest event"
+    done
+    mkdir -p "${FAKE_DRIVE}/events/not-a-code/20261021T070102Z"
+
+    export AGE_IDENTITY_VERIFIER="${TMP}/keys/verifier.key" VERIFY_REMOTE="fake:"
+    LOG_PREFIX='test'
+    # shellcheck source=verify-db.sh
+    source "${SCRIPTS}/verify-db.sh"
+    WORK_DIR="${base}/verify"
+    mkdir -p "$WORK_DIR"
+    verify_event_archives >/dev/null 2>&1
+    same "${EVENT_RESULTS[*]}" \
+         "events/24H2/20261021T070102Z: OK (3 snapshots, v4-12-gabc1234) events/25AR/20261021T070102Z: OK (3 snapshots, v4-12-gabc1234)" \
+         "verifier"
+    (( ${#HARD_FAILURES[@]} == 0 )) || fail "hard failures: ${HARD_FAILURES[*]}"
+    same "${SOFT_NOTES[*]}" "events/not-a-code: not an event code, skipped" "soft notes"
 }
 
 # ======================================================================
@@ -1017,6 +1081,8 @@ run_test "the .env copy is encrypted to exactly one recipient, the escrow key" t
 run_test "an unchanged .env is not uploaded again, and its copy still checks"  test_unchanged_env_is_not_uploaded_again
 run_test "an event archive records event, time, code version and snapshot count, and restores" test_event_archive_manifest_and_restore
 run_test "an event archive refuses input that is not one event's snapshots"      test_event_archive_refuses_wrong_input
+run_test "an event code is two digits and two capitals or digits, any competition" test_event_code_rule
+run_test "events of other competitions (H2, AR) are archived and verified"        test_event_archive_of_other_competitions
 run_mysql_test "restoring into a scratch name leaves the live database and its rows alone" test_restore_into_scratch_leaves_the_original_alone
 run_mysql_test "restoring into a live database's name refuses without --replace" test_restore_refuses_a_live_name_without_replace
 run_mysql_test "restoring a truncated dump refuses, and imports nothing"          test_restore_refuses_a_truncated_dump

@@ -11,8 +11,8 @@
 #   ./verify-run.sh          # the whole cycle
 #   ./verify-run.sh -h | --help
 #
-# Cron (Tuesdays 04:00 America/Sao_Paulo):
-#   0 4 * * 2 cd /srv/baja/baja-sae-brasil-online/baja-infra && ./scripts/verify-run.sh >> /var/log/baja-verify.log 2>&1
+# Cron (Tuesdays 05:30 America/Sao_Paulo, after the backup):
+#   30 5 * * 2 cd /srv/baja/baja-sae-brasil-online/baja-infra && ./scripts/verify-run.sh >> /var/log/baja-verify.log 2>&1
 #
 # WHY THE KUMA PING IS SENT FROM HERE
 #
