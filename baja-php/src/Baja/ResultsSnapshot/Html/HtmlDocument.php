@@ -7,14 +7,27 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use DOMXPath;
+use Masterminds\HTML5;
 
 /**
  * A results page, parsed, with the few questions the readers ask of it.
  *
- * Uses PHP's built-in DOM, which reads HTML the forgiving way a browser
- * does: the pages have unclosed tags and stray quotes (prova.php prints
- * `<th ">Equipe`), and a page that died half way stops in the middle of a
- * table. None of that is an error here.
+ * Reads HTML the forgiving way a browser does: the pages have unclosed tags
+ * and stray quotes (prova.php prints `<th ">Equipe`), and a page that died
+ * half way stops in the middle of a table. None of that is an error here.
+ *
+ * Parsed with masterminds/html5, which is plain PHP, not with
+ * DOMDocument::loadHTML, which uses the machine's libxml2. A snapshot must
+ * come out the same on every machine, and libxml2 2.14 changed how it reads
+ * broken markup: a CI image update alone changed 22SE_SGD's snapshot
+ * (BAJAAPP-85). tests/ResultsSnapshot/Unit/HtmlParsingTest.php pins what
+ * comes out of such markup.
+ *
+ * Cells are still printed back with DOMDocument::saveHTML. masterminds'
+ * own printer writes a non-breaking space as `&nbsp;` where saveHTML writes
+ * the character itself, which Text::normaliseWhitespace turns into a
+ * space; switching would change every name typed with one (two teams in
+ * the seed, on every 25SU page).
  */
 final class HtmlDocument
 {
@@ -23,16 +36,10 @@ final class HtmlDocument
 
     public function __construct(string $html)
     {
-        $this->document = new DOMDocument();
-        // The XML declaration is the documented way to make DOMDocument read
-        // the bytes as UTF-8; without it, accented names come out garbled.
-        $previous = libxml_use_internal_errors(true);
-        $this->document->loadHTML(
-            '<?xml encoding="UTF-8">' . ($html === '' ? '<html></html>' : $html),
-            LIBXML_NONET | LIBXML_COMPACT
-        );
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
+        // Without disable_html_ns every element is in the XHTML namespace,
+        // and XPath like //table would find nothing.
+        $html5 = new HTML5(['disable_html_ns' => true]);
+        $this->document = $html5->loadHTML($html === '' ? '<html></html>' : $html);
         $this->xpath = new DOMXPath($this->document);
     }
 
