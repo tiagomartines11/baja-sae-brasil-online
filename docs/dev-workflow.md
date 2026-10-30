@@ -382,10 +382,11 @@ multi-WP effort, not covered here. When in doubt, ask before
 duplicating logic across the two.
 
 **Q: My PR has lint failures only on Windows line endings.**
-A: This repo's PHP files use CRLF (legacy convention). Configure
-your editor to preserve existing line endings rather than rewriting
-them. The TS/JS files in `baja-js/` use LF (Next.js convention).
-Don't normalize across the boundary.
+A: The PHP files use LF, like the TS/JS files in `baja-js/`. A few
+older PHP files still have CRLF (`git ls-files --eol` lists them).
+Write new files with LF, and configure your editor to keep an existing
+file's line endings rather than rewriting them, so a change to one of
+those older files does not show up as every line changed.
 
 **Q: I want to add a new container/service.**
 A: Edit `baja-infra/docker-compose.yml`. If it needs a custom
