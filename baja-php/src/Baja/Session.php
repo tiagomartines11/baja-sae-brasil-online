@@ -99,8 +99,10 @@ class Session
         // skip the results cache for nothing. Cleared here, on our own host,
         // because it is ours and not phpBB's; the parent domain covers it.
         StaffCookie::clear();
-        $scheme = $_SERVER['REQUEST_SCHEME'] ?? Url::scheme();
-        $host   = $_SERVER['HTTP_HOST']      ?? Url::domain();
+        // Url::scheme(), not REQUEST_SCHEME: that is nginx's own scheme, which
+        // is http behind staging's Caddy even though the visitor is on https.
+        $scheme = Url::scheme();
+        $host   = $_SERVER['HTTP_HOST'] ?? Url::domain();
         $loginUrl = $scheme . '://' . $host . '/login.php';
         // The csrf token is what distinguishes this from a forged logout —
         // /baja/logout answers to GET, so without it any <img src> on a page
