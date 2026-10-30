@@ -5,6 +5,7 @@ namespace Baja\Tests\Contagem\Db;
 
 use Baja\Contagem\Service\RedisClient;
 use Baja\Model\ContagemFonte;
+use Baja\Tests\Support\LegacyGrants;
 use Propel\Runtime\Propel;
 
 /**
@@ -98,8 +99,11 @@ final class TestWorld
         // "ativo = 0" keeps the made-up event out of every public list
         // while the test runs.
         $connection->prepare(
-            'INSERT INTO evento (evento_id, titulo, nome, ano, ativo, programa_id) VALUES (?, ?, ?, ?, 0, ?)'
-        )->execute([self::EVENTO_ID, 'Teste de contagem', 'Evento de teste da contagem de voltas', 1999, 'BAJA']);
+            'INSERT INTO evento (evento_id, titulo, nome, ano, ativo, programa_id, data_fim) VALUES (?, ?, ?, ?, 0, ?, ?)'
+        )->execute([self::EVENTO_ID, 'Teste de contagem', 'Evento de teste da contagem de voltas', 1999, 'BAJA', '2099-12-31']);
+        // data_fim far ahead: a role given on the event's prova (a counter
+        // linked by the controller, BAJAAPP-76) ends some days after it, and
+        // must not be born ended.
 
         $insertTeam = $connection->prepare(
             'INSERT INTO equipe (evento_id, equipe_id, escola, escola_curto, cidade, equipe, equipe_curto, estado, presente)
@@ -163,7 +167,9 @@ final class TestWorld
         }
         $connection->prepare('DELETE FROM evento WHERE evento_id = ?')->execute([self::EVENTO_ID]);
         // The backslash makes the underscore literal; a bare "_" in LIKE
-        // means "any one character".
+        // means "any one character". Their grants first (only tests delete
+        // grants; their role_audit rows stay, append-only).
+        LegacyGrants::removeForUsers($connection, 'zzt\\_%');
         $connection->prepare('DELETE FROM `user` WHERE username LIKE ?')->execute(['zzt\\_%']);
         // The application's log of edits is not linked to the event, so the
         // lines written about the test prova have to be removed by name.

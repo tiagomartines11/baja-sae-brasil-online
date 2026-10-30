@@ -5,6 +5,9 @@ use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\Evento;
 use Baja\Model\ProgramaQuery;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 use Baja\Juiz\DatasEvento;
 use Baja\ResultsArchive\Queue;
 use Baja\Session;
@@ -16,7 +19,14 @@ if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) { header("Location: ad
 
 $_page = @$_REQUEST['id'];
 
-Session::permissionCheck('admin');
+// Editing an event: evento.manage on it. Creating one: evento.manage on its
+// program, checked on save below; the empty form only asks that the user
+// manage events somewhere.
+if (isset($_REQUEST['id'])) {
+    Authorization::require(Permission::EVENTO_MANAGE, ScopeNode::evento((string) $_REQUEST['id']));
+} elseif (!Authorization::canAnywhere(Session::getCurrentUser(), Permission::EVENTO_MANAGE)) {
+    die(Authorization::REFUSAL);
+}
 
 // Every act saves or deletes: refused without the form's token, before anything else.
 if (isset($_REQUEST['act'])) Csrf::enforce();
@@ -36,6 +46,12 @@ $erroPrograma = false;
 $programaEscolhido = isset($_POST['programa_id']) && is_string($_POST['programa_id'])
     ? ProgramaQuery::create()->findPk($_POST['programa_id'])
     : null;
+
+// Putting an event in a program (a new one, or moving one) needs
+// evento.manage on that program: creating events is what it means there.
+$podeUsarPrograma = fn($programa, $atual = null) => $programa !== null
+    && ($programa->getProgramaId() === $atual
+        || Authorization::currentUserCan(Permission::EVENTO_MANAGE, ScopeNode::programa((string) $programa->getProgramaId())));
 
 // The event's first and last day (BAJAAPP-12). Optional, but a date that is
 // not a real day, or a last day before the first, saves nothing and shows
@@ -97,6 +113,8 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
                 $erroJson = $menu->erro;
             } elseif ($programaEscolhido === null || !$programaEscolhido->getAtivo()) {
                 $erroPrograma = true;
+            } elseif (!$podeUsarPrograma($programaEscolhido)) {
+                die(Authorization::REFUSAL);
             } elseif (!$datas->valido()) {
                 $erroDatas = $datas->erro;
             } else {
@@ -184,6 +202,8 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             // An inactive program is only accepted when it is the one the
             // event already has, as the select below offers.
             $erroPrograma = true;
+        } elseif (!$podeUsarPrograma($programaEscolhido, $evento->getProgramaId())) {
+            die(Authorization::REFUSAL);
         } elseif (!$datas->valido()) {
             $erroDatas = $datas->erro;
         } else {

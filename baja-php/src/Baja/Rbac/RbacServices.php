@@ -37,6 +37,7 @@ final class RbacServices
         public readonly Authorizer $authorizer,
         public readonly RoleGranting $granting,
         public readonly RoleEditor $roleEditor,
+        public readonly Clock $clock,
     ) {
     }
 
@@ -65,6 +66,7 @@ final class RbacServices
             $authorizer,
             new RoleGranting($con, $tree, $roles, $grants, $authorizer, $expiry, $audit, $clock, $warn),
             new RoleEditor($con, $roles, $authorizer, $audit, $clock, $warn),
+            $clock,
         );
     }
 }

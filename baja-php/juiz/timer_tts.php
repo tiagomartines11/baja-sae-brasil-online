@@ -4,11 +4,13 @@ namespace Baja\Juiz;
 use Baja\Auth\Csrf;
 use Baja\Model\Timer;
 use Baja\Session;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 // Turns a sentence into a sound file for the timers, using the stack's own
 // text-to-speech service (baja-infra/tts). Called from timer_admin.php.
 
-Session::permissionCheck('TIMER_ADMIN');
+Authorization::require(Permission::TIMER_MANAGE, Authorization::currentEvent());
 
 // Writes a file into the sounds folder: only with the page's token, sent by
 // timer_admin.php as the X-CSRF-Token header (Baja\Auth\Csrf).

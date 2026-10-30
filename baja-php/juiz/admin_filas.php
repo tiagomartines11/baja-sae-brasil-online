@@ -6,8 +6,10 @@ use Baja\Model\FilaQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck("admin");
+Authorization::require(Permission::FILA_MANAGE, Authorization::currentEvent());
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
 

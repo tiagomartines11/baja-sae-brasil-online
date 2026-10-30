@@ -191,6 +191,9 @@ final class UploadRulesTest extends DbTestCase
     public function testAUserWhoseDeviceWasRevokedGetsNoNewTokenUntilReleased(): void
     {
         $this->createUser('zzt_ana', ['index']);
+        // The controller who links her: the judge role on the prova (legacy
+        // code 00NE_ZZL). Linking gives a role on their authority.
+        $this->createUser(self::USER_PREFIX . 'controle', ['index', self::EVENTO_ID . '_' . self::PROVA_ID]);
         CounterLinks::link($this->fontes[0], 'zzt_ana', self::USER_PREFIX . 'controle');
         $token = $this->issueToken($this->fontes[0], 'zzt_ana');
         $this->assertFalse(DeviceTokens::isBlocked($this->fontes[0], 'zzt_ana'));
@@ -218,6 +221,9 @@ final class UploadRulesTest extends DbTestCase
     public function testLinkingTheUserAgainAlsoEndsTheBlock(): void
     {
         $this->createUser('zzt_ana', ['index']);
+        // The controller who links her: the judge role on the prova (legacy
+        // code 00NE_ZZL). Linking gives a role on their authority.
+        $this->createUser(self::USER_PREFIX . 'controle', ['index', self::EVENTO_ID . '_' . self::PROVA_ID]);
         CounterLinks::link($this->fontes[0], 'zzt_ana', self::USER_PREFIX . 'controle');
         $token = $this->issueToken($this->fontes[0], 'zzt_ana');
         Clock::freezeAt($this->at(610));

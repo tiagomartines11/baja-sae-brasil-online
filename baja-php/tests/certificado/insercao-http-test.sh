@@ -78,6 +78,7 @@ cleanup() {
         \Baja\Model\ParticipanteQuery::create()
             ->filterByNome("ZZHttp%", \Propel\Runtime\ActiveQuery\Criteria::LIKE)
             ->delete();
+        \Baja\Tests\Support\LegacyGrants::removeForUsers(\Propel\Runtime\Propel::getWriteConnection("resultados"), "ZZHttp%Permissao");
         \Baja\Model\UserQuery::create()
             ->filterByUsername(["ZZHttpComPermissao", "ZZHttpSemPermissao"])
             ->delete();
@@ -86,7 +87,9 @@ cleanup() {
 trap cleanup EXIT
 
 # Two provisioned users, one holding `certificados` and one not, plus a third
-# session for a forum account with no row here at all.
+# session for a forum account with no row here at all. Since BAJAAPP-76 the
+# pages read grants: each user also gets what the migration makes of their
+# codes (certificate_manager on every top program for `certificados`).
 docker exec "$APP" php -r '
     require "/var/www/html/vendor/autoload.php";
     require "/var/www/html/src/config.php";
@@ -95,6 +98,7 @@ docker exec "$APP" php -r '
         $u->setUsername($nome);
         $u->setPermissions($perms);
         $u->save();
+        \Baja\Tests\Support\LegacyGrants::give(\Propel\Runtime\Propel::getWriteConnection("resultados"), (int) $u->getUserId(), $perms);
     }
     $r = new Redis();
     $r->connect(getenv("REDIS_HOST"), (int) getenv("REDIS_PORT"));
@@ -139,8 +143,8 @@ for pagina in "${PAGINAS[@]}"; do
     same "$pagina is refused without the permission" 403 "$(status "$PREFIX_SEM" "$pagina")"
 done
 negado=$(body "$PREFIX_SEM" /certificados.php)
-contains "the refusal names the permission" "certificados" "$negado"
-contains "and says it is not the same as being a judge" "permissões de juiz" "$negado"
+contains "the refusal names the role" "certificate_manager" "$negado"
+contains "and says it is not the same as being a judge" "papéis de juiz" "$negado"
 lacks "and no form is rendered" "<form" "$negado"
 
 indice=$(body "$PREFIX_SEM" /index.php)

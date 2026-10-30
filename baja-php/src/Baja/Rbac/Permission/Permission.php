@@ -16,10 +16,10 @@ use Baja\Rbac\Scope\ScopeType;
  * different thing: a grant on an event, a program or the platform holds
  * it for every prova below. See Authorizer.
  *
- * Phase 2 adds the catalogue only. No page checks these yet; today's
- * checks (Session::hasPermission and the legacy codes) are unchanged until
- * phase 3. "Legacy" below says which of today's codes each one is meant to
- * replace, from an inventory of every hasPermission / permissionCheck call.
+ * Since phase 3 (BAJAAPP-76) every staff page asks these, through
+ * Baja\Rbac\Authorization. "Legacy" below says which of the old codes in
+ * user.permissions each one replaced; the full table, call site by call
+ * site, is in docs/rbac.md.
  */
 enum Permission: string
 {
@@ -47,8 +47,11 @@ enum Permission: string
     /** Insert, review and annul certificates. Legacy: 'certificados', which was global. */
     case CERTIFICADO_MANAGE = 'certificado.manage';
 
-    /** An event's prizes. Legacy: <EVENT>_PREMIACAO, and 'admin' on premiacao_admin.php, admin_premiacoes.php. */
+    /** An event's prizes: create and edit them, and see the ones not published yet. Legacy: 'admin' on premiacao_admin.php, admin_premiacoes.php, and on the drafts in premiacoes.php, premiacao_view.php, premiacao_pdf.php. */
     case PREMIACAO_MANAGE = 'premiacao.manage';
+
+    /** See an event's published prizes (the judges' list, the page, the PDF). Legacy: <EVENT>_PREMIACAO on premiacoes.php, premiacao_view.php, premiacao_pdf.php and the start page's link. Added in phase 3: the legacy code let people read the prizes, not manage them. */
+    case PREMIACAO_VIEW = 'premiacao.view';
 
     /** An event's teams. Legacy: 'admin' on admin_equipes.php, equipe.php. */
     case EQUIPE_MANAGE = 'equipe.manage';
@@ -80,7 +83,7 @@ enum Permission: string
             self::FILA_MANAGE => [ScopeType::EVENTO, ScopeType::FILA],
             self::PROVA_ENTER_SCORES, self::CONTAGEM_COUNT, self::CONTAGEM_PIT_LOG, self::CONTAGEM_CONTROL => [ScopeType::PROVA],
             self::RESULTADO_EDIT, self::TIMER_MANAGE, self::TIMER_OPERATE, self::PREMIACAO_MANAGE,
-            self::EQUIPE_MANAGE, self::NOTIFICACAO_SEND => [ScopeType::EVENTO],
+            self::PREMIACAO_VIEW, self::EQUIPE_MANAGE, self::NOTIFICACAO_SEND => [ScopeType::EVENTO],
             self::ROLE_GRANT => ScopeType::cases(),
             self::ROLE_MANAGE => [ScopeType::PLATFORM],
         };

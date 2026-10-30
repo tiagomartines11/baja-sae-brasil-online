@@ -9,12 +9,14 @@ use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
 
-Session::permissionCheck($_page);
+Authorization::require(Permission::PROVA_ENTER_SCORES, Authorization::prova($_page));
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);

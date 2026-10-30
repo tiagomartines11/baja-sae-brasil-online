@@ -4,11 +4,14 @@ namespace Baja\Juiz;
 use Baja\Model\EventoQuery;
 use Baja\Model\PremiacaoQuery;
 use Baja\Session;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck('PREMIACAO');
+Authorization::require(Permission::PREMIACAO_VIEW, Authorization::currentEvent());
 
 $currentEvent = EventoQuery::getCurrentEvent();
-$isAdmin = Session::getCurrentUser()->hasPermission('admin');
+// Drafts (not published yet) are for whoever manages the prizes.
+$isAdmin = Authorization::currentUserCan(Permission::PREMIACAO_MANAGE, Authorization::currentEvent());
 
 $query = PremiacaoQuery::create()->filterByEventoId($currentEvent->getEventoId());
 if (!$isAdmin) {

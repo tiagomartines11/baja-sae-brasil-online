@@ -7,8 +7,10 @@ use Baja\Model\EquipeQuery;
 use Baja\Site\Html;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck("admin");
+Authorization::require(Permission::NOTIFICACAO_SEND, Authorization::currentEvent());
 
 // Sending reaches every subscribed visitor's phone: refused without the form's token (Baja\Auth\Csrf).
 if (isset($_REQUEST['act'])) Csrf::enforce();

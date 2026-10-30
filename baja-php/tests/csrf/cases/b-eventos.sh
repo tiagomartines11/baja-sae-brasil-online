@@ -127,7 +127,7 @@ form_case "clonar_evento.php: Clonar" "$SID_ADM" \
 # --- put the shared rows back -----------------------------------------------------
 php_in_app '
     $e = EventoQuery::create()->findPk("28SU");
-    $e->setTitulo("Fixture BAJAAPP-41"); $e->setSpoilers(false); $e->setDataInicio(null); $e->setDataFim(null); $e->save();
+    $e->setTitulo("Fixture BAJAAPP-41"); $e->setSpoilers(false); $e->setDataInicio(null); $e->setDataFim("2099-12-31"); $e->save();
     \Propel\Runtime\Propel::getConnection()->exec("UPDATE prova SET status = 1 WHERE evento_id = \"28SU\" AND prova_id = \"ZZA\"");
     $q = EquipeQuery::create()->filterByEventoId("28SU")->findOneByEquipeId(1);
     $q->setEquipe("EQUIPE TESTE 1"); $q->save();

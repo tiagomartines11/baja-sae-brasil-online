@@ -75,8 +75,8 @@ final class Destinatarios
             // line is read by more people than the .env file is.
             error_log(
                 'Certificado\Requerimento\Destinatarios: ' . self::ENV_EXTRA . ' is set but none of its '
-                . count($configurados) . ' entries is a valid address. Notifying the users with the "'
-                . Acesso::PERMISSAO . '" permission instead; fix the variable.'
+                . count($configurados) . ' entries is a valid address. Notifying the users who may open the certificate pages ("'
+                . Acesso::PERMISSAO->value . '") instead; fix the variable.'
             );
         }
 
@@ -86,8 +86,8 @@ final class Destinatarios
             error_log(
                 'Certificado\Requerimento\Destinatarios: nobody to notify — ' . self::ENV_EXTRA
                 . (trim($configurado) === '' ? ' is blank' : ' has no valid address')
-                . ', and no user holding the "' . Acesso::PERMISSAO
-                . '" or "admin" permission has a valid email in their forum profile.'
+                . ', and no user who may open the certificate pages ("' . Acesso::PERMISSAO->value
+                . '") has a valid email in their forum profile.'
                 . ' Reports are still being saved.'
             );
         }
@@ -98,11 +98,10 @@ final class Destinatarios
     /**
      * The usernames that hold the permission.
      *
-     * A full scan of `user`, which is a staff table with tens of rows, and
-     * the permission list is a serialized column that cannot be filtered in
-     * SQL anyway. hasPermission() rather than a string search on the column:
-     * it is the same method Session uses to decide access, and a report going
-     * to somebody who cannot open the page it links to would be its own bug.
+     * A full scan of `user`, which is a staff table with tens of rows.
+     * Acesso::usuarioPode() rather than a query of its own: it is the same
+     * rule the pages use to decide access, and a report going to somebody
+     * who cannot open the page it links to would be its own bug.
      *
      * @return array<int, string>
      */
@@ -111,7 +110,7 @@ final class Destinatarios
         $usernames = [];
 
         foreach (UserQuery::create()->find() as $usuario) {
-            if ($usuario->hasPermission(Acesso::PERMISSAO) || $usuario->hasPermission('admin')) {
+            if (Acesso::usuarioPode($usuario)) {
                 $username = trim((string) $usuario->getUsername());
                 if ($username !== '') {
                     $usernames[] = $username;

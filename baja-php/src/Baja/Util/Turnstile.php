@@ -15,7 +15,7 @@ namespace Baja\Util;
  *    when something about their own certificate is wrong.
  *  - reCAPTCHA is an international transfer of personal data to a new
  *    controller (LGPD Art. 33). Cloudflare is already in front of every
- *    request to this stack — see 00-cloudflare-realip.conf — so Turnstile
+ *    request to this stack — see 00-realip.conf — so Turnstile
  *    adds no recipient that was not already in the path.
  *  - Turnstile is usually invisible, and the people filling this form in are
  *    already annoyed.
@@ -92,7 +92,7 @@ final class Turnstile
 
         // Optional, and only sent when nginx has given us something that
         // looks like an address. Behind Cloudflare $remote_addr is the real
-        // client — 00-cloudflare-realip.conf restores it — but on a direct
+        // client — 00-realip.conf restores it — but on a direct
         // origin it may be a proxy, and a wrong address makes Cloudflare
         // reject a legitimate token.
         if ($remoteIp !== '' && filter_var($remoteIp, FILTER_VALIDATE_IP) !== false) {

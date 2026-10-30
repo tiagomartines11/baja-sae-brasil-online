@@ -10,11 +10,13 @@ use Baja\Model\TournamentQuery;
 use Baja\Session;
 use Baja\Site\Html;
 use Baja\Torneio\Confronto;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
-Session::permissionCheck($_page);
+Authorization::require(Permission::PROVA_ENTER_SCORES, Authorization::prova($_page));
 
 // Both change the bracket. They used to be plain links, so an <img src> on
 // any page a judge opened could pick a winner: now they are POST forms with

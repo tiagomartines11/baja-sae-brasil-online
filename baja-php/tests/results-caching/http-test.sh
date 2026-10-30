@@ -102,7 +102,7 @@ fi
 #
 #   SID_AUT  ZZStaffAutorizado  judge, in 29NE_SPL's authorized_users
 #   SID_JUI  ZZStaffJuiz        judge, NOT in authorized_users
-#   SID_EQU  ZZStaffEquipe      team member: a queue (fila) permission only
+#   SID_EQU  ZZStaffEquipe      team member: a team queue code only (no role)
 #   SID_SEM  ZZStaffSemConta    logged in to the forum, no account here
 #   SID_GUE  a forum guest: phpBB gives every visitor a session id, with
 #            _u=1 (the anonymous user). Not seeded; it is not looked up.
@@ -123,6 +123,7 @@ cleanup() {
         foreach (["'"$SID_AUT"'", "'"$SID_JUI"'", "'"$SID_EQU"'", "'"$SID_SEM"'"] as $sid) {
             $r->del("baja:phpbb:session:" . $sid);
         }
+        \Baja\Tests\Support\LegacyGrants::removeForUsers(\Propel\Runtime\Propel::getWriteConnection("resultados"), "ZZStaff%");
         \Baja\Model\UserQuery::create()
             ->filterByUsername(["ZZStaffAutorizado", "ZZStaffJuiz", "ZZStaffEquipe"])
             ->delete();
@@ -149,6 +150,9 @@ php_in_app '
         $u->setUsername($nome);
         $u->setPermissions($perms);
         $u->save();
+        // Staff since BAJAAPP-76 means holding a grant: what the migration
+        // makes of the codes (a team queue code gives none).
+        \Baja\Tests\Support\LegacyGrants::give(\Propel\Runtime\Propel::getWriteConnection("resultados"), (int) $u->getUserId(), $perms);
     }
     $r = new Redis();
     $r->connect(getenv("REDIS_HOST"), (int) getenv("REDIS_PORT"));

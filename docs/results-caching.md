@@ -124,8 +124,9 @@ cache.
   a session whose user is not a judge, or with no user at all.
 - **Attributes:** domain `.<BAJA_DOMAIN>` (so the resultados host sees it),
   `Path=/`, `HttpOnly`, `SameSite=Lax`, `Secure` when the site runs on
-  https (`LISTEN_MODE=listen-tls`; the dev stack is plain http, where a
-  Secure cookie would be dropped). It lasts 30 days, so that phpBB's
+  https (`LISTEN_MODE=listen-tls`, or `listen-proxied` on staging behind
+  Caddy; the dev stack is plain http, where a Secure cookie would be
+  dropped). It lasts 30 days, so that phpBB's
   "remember me" judges keep it across browser restarts.
 - **The value:** letters and digits, at least 32. Generate it with
   `openssl rand -hex 24`. Anything else counts as unset, and then nobody

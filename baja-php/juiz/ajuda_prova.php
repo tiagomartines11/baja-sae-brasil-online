@@ -2,8 +2,10 @@
 namespace Baja\Juiz;
 
 use Baja\Session;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck('admin');
+Authorization::require(Permission::PROVA_CONFIGURE, Authorization::currentEvent());
 
 Ajuda::printHeader("Parâmetros de Prova", "admin_provas.php", [
     'visao-geral' => 'Visão geral',

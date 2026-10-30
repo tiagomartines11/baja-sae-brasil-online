@@ -9,10 +9,16 @@ use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 
-Session::permissionCheck("admin");
+// The event's people at a glance: who enters scores on which prova. Read
+// only since BAJAAPP-76; roles are given and taken on admin_usuario.php,
+// through RoleGranting. For whoever may give roles on the whole event.
+Authorization::require(Permission::ROLE_GRANT, Authorization::currentEvent());
 
-// Every act changes a user's permissions: refused without the form's token (Baja\Auth\Csrf).
+// Creating a user only makes the row: refused without the form's token (Baja\Auth\Csrf).
 if (isset($_REQUEST['act'])) Csrf::enforce();
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
@@ -30,28 +36,19 @@ if (@$_REQUEST['act'] == 'create') {
     }
 
     $user = UserQuery::create()->findOneByUsername($novoUsername);
-    $isNew = !$user;
-    if ($isNew) {
+    if (!$user) {
         $user = new User();
         $user->setUsername($novoUsername);
-    }
-    // Only touch the provas of the current event; every other permission the
-    // user holds (admin, other events, PREMIACAO, FILA, ...) is preserved.
-    $scope = [];
-    foreach ($provas as $p) $scope[] = $p->getFullCode();
-    $user->setScopedPermissions($scope, (array)@$_POST['j']);
-
-    if ($user->hasNoMeaningfulPermissions()) {
-        // Never create an empty user; delete an existing one only when nothing
-        // is left across ANY scope, not just this event.
-        if (!$isNew) $user->delete();
-    } else {
         $user->save();
     }
-    header("Location: admin_users.php"); exit;
+    header("Location: admin_usuario.php?id=" . $user->getUserId()); exit;
 }
 
-$users = UserQuery::create()->find();
+// Everyone holding something in this event (or above it).
+$users = array_filter(
+    iterator_to_array(UserQuery::create()->orderByUsername()->find()),
+    fn($u) => Authorization::hasAnyGrantInEvent($u, $evento)
+);
 
 Template::printHeader("Admin");
 
@@ -76,10 +73,10 @@ Template::printHeader("Admin");
         <tbody>
 <?php foreach ($users as $u) { ?>
             <tr>
-                <td><a href='user.php?id=<?= Html::e($u->getUserId()) ?>'><?= Html::e($u->getUsername()) ?></a></td>
+                <td><a href='admin_usuario.php?id=<?= Html::e($u->getUserId()) ?>'><?= Html::e($u->getUsername()) ?></a></td>
         
 <?php foreach ($provas as $p) { ?>
-                <td><?= array_search($p->getFullCode(), $u->getPermissions()) === false ? "" : "J" ?></td>
+                <td><?= Authorization::can($u, Permission::PROVA_ENTER_SCORES, ScopeNode::prova($evento, (string) $p->getProvaId())) ? "J" : "" ?></td>
 
 <?php } } ?>
             </tr>
@@ -88,18 +85,15 @@ Template::printHeader("Admin");
             <form action="admin_users.php?act=create" method="POST">
                 <?= Csrf::field() ?>
                 <tr>
-                    <td style="text-align: left;">
-                        Username:<br />
-                        <input type="text" name="username" id="username" style="width: 95%;"><br />
-                        <input type="hidden" name="c[]" value="index"><input type="hidden" name="j[]" value="index">
+                    <td colspan="<?= 1 + count($provas) ?>" style="text-align: left;">
+                        Username:
+                        <input type="text" name="username" id="username" style="width: 50%;">
+                        <span style="font-size: 12px; color: #666;">abre a página de papéis do usuário</span>
                     </td>
-<?php foreach ($provas as $p) { ?>
-                    <td><input type="checkbox" name="j[]" value="<?= Html::field($p->getFullCode()) ?>"><br /> J <br /></td>
-<?php } ?>
                 </tr>
                 <tr>
                     <th colspan="<?= 1 + count($provas) ?>" style="height: 30px">
-                        <input type="submit" id="userSubmit" value="Atualizar Usuário" disabled />
+                        <input type="submit" id="userSubmit" value="Papéis do usuário" disabled />
                     </th>
                 </tr>
             </form>

@@ -8,6 +8,7 @@ use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\CarRoster;
 use Baja\Contagem\Service\LockBusy;
 use Baja\Contagem\Service\ScoringFields;
+use Baja\Rbac\Authorization;
 use Baja\Session;
 use InvalidArgumentException;
 
@@ -16,7 +17,11 @@ use InvalidArgumentException;
 // source(s) a controller linked them to and, with the pit code, the pit log,
 // and nothing else.
 
-Session::permissionCheck('index');
+// As juiz/index.php: anyone with a grant in this event gets as far as the
+// door; ContagemAccess::mayEnter() below decides who comes in.
+if (!Authorization::hasAnyGrantInEvent(Session::getCurrentUser(), Authorization::currentEventId())) {
+    die(Authorization::REFUSAL);
+}
 
 $prova = Pagina::provaOrRedirect();
 $h = [Pagina::class, 'h'];

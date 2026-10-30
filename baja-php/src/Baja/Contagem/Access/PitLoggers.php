@@ -12,17 +12,17 @@ use Propel\Runtime\Propel;
 
 /**
  * Who may log the pit lane and the fueling station of a prova: the people
- * holding the permission code {evento}_{prova}_BOX.
+ * holding the pit_logger role on it (before RBAC, BAJAAPP-76: the code
+ * {evento}_{prova}_BOX).
  *
  * The prova's controller is usually not an administrator, yet must be able
  * to hand the pit phones to volunteers on race morning, as they do with the
  * counters (CounterLinks). So the "Usuários" page of the lap counting can
- * give and take this one code. It is the only permission this class ever
- * touches: every other code of the user's row stays exactly as it was.
+ * give and take this one role (ContagemRoles, on the controller's
+ * authority). It is the only access this class ever touches.
  *
  * Unlike the counters, the pit log has no table of links: one box source per
- * prova, and the code itself says who may use it. So the users' rows ARE the
- * list.
+ * prova, and the grants themselves say who may use it. So they ARE the list.
  */
 final class PitLoggers
 {
@@ -36,7 +36,7 @@ final class PitLoggers
      * @param string $username forum username, as typed by the controller
      * @throws \InvalidArgumentException with a message in Portuguese, fit to show to the controller
      */
-    public static function add(Prova $prova, string $username): void
+    public static function add(Prova $prova, string $username, string $addedBy): void
     {
         $username = trim($username);
         if ($username === '') {
@@ -46,10 +46,7 @@ final class PitLoggers
         $connection->beginTransaction();
         try {
             $user = CounterLinks::findOrCreateUser($username);
-            $permissions = (array) $user->getPermissions();
-            $permissions[] = self::pitLogCode($prova);
-            $user->setPermissions(array_values(array_unique(array_merge(User::SENTINEL_PERMISSIONS, $permissions))));
-            $user->save();
+            ContagemRoles::give(ContagemRoles::PIT_LOGGER, (string) $prova->getEventoId(), (string) $prova->getProvaId(), $user, $addedBy);
 
             // A user whose pit phone was revoked by "remover" earlier would
             // otherwise stay blocked on the box source: adding them again
@@ -65,27 +62,23 @@ final class PitLoggers
     /**
      * Takes the pit log away from a user.
      *
-     * The code goes, and every device of theirs on the prova's box source is
-     * revoked at once: the phone at the pit lane stops before its next
-     * upload, and keeps what it recorded for export. The user's other codes
-     * (counting, other provas, admin) are left alone, and so are their
-     * devices on the counting sources. The row itself stays even if nothing
-     * is left in it: deleting accounts is the administrators' job.
+     * The role goes (revoked by $removedBy, the controller), and every
+     * device of theirs on the prova's box source is revoked at once: the
+     * phone at the pit lane stops before its next upload, and keeps what it
+     * recorded for export. The user's other roles are left alone, and so are
+     * their devices on the counting sources.
+     *
+     * @throws \InvalidArgumentException with a message in Portuguese, when the role cannot be taken away
      */
-    public static function remove(Prova $prova, string $username): void
+    public static function remove(Prova $prova, string $username, string $removedBy): void
     {
         $connection = Propel::getWriteConnection('resultados');
         $connection->beginTransaction();
         try {
             $user = UserQuery::create()->findOneByUsername($username);
             if ($user !== null) {
-                $code = self::pitLogCode($prova);
-                $user->setPermissions(array_values(array_filter(
-                    (array) $user->getPermissions(),
-                    fn($permission) => $permission !== $code
-                )));
-                $user->save();
                 $username = (string) $user->getUsername();
+                ContagemRoles::take(ContagemRoles::PIT_LOGGER, (string) $prova->getEventoId(), (string) $prova->getProvaId(), $username, $removedBy);
             }
             DeviceTokens::revokeForUserOnSource(DeviceTokens::boxSourceFor($prova), $username);
             $connection->commit();
@@ -96,33 +89,23 @@ final class PitLoggers
     }
 
     /**
-     * The users holding the pit log code of the prova, by name, with when
-     * each was last heard from on a pit phone of this prova.
+     * The users holding the pit_logger role on the prova, by name, with
+     * when each was last heard from on a pit phone of this prova.
      *
-     * The controller (prova code) and administrators may log stops too
-     * without being on this list; it lists who was GIVEN the pit log.
+     * The controller and anyone above may log stops too without being on
+     * this list; it lists who was GIVEN the pit log.
      *
      * @return array<int, array{usuario: string, visto_em_ms: ?int}>
      */
     public static function listForProva(Prova $prova): array
     {
-        $code = self::pitLogCode($prova);
         $lastSeen = self::lastSeenOnTheBoxSource($prova);
 
         $list = [];
-        foreach (UserQuery::create()->orderByUsername()->find() as $user) {
-            if (in_array($code, (array) $user->getPermissions(), true)) {
-                $name = (string) $user->getUsername();
-                $list[] = ['usuario' => $name, 'visto_em_ms' => $lastSeen[$name] ?? null];
-            }
+        foreach (ContagemRoles::holders(ContagemRoles::PIT_LOGGER, (string) $prova->getEventoId(), (string) $prova->getProvaId()) as $name) {
+            $list[] = ['usuario' => $name, 'visto_em_ms' => $lastSeen[$name] ?? null];
         }
         return $list;
-    }
-
-    /** The code that opens the pit log of this prova, e.g. "26BR_END_BOX". */
-    public static function pitLogCode(Prova $prova): string
-    {
-        return $prova->getEventoId() . '_' . $prova->getProvaId() . ContagemAccess::PIT_LOG_SUFFIX;
     }
 
     /** @return array<string, int> username => last contact of any of their devices on the box source */
