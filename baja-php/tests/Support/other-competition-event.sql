@@ -14,9 +14,10 @@
 -- never sees it. Deleting the event deletes everything else here with it
 -- (ON DELETE CASCADE).
 
-INSERT INTO evento (evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers)
+-- AR is an AeroDesign event, so its program is AERO (BAJAAPP-11).
+INSERT INTO evento (evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers, programa_id)
 VALUES ('97AR', 'Fixture BAJAAPP-74', 'Evento de teste (outra competição)', 0, 2097,
-        '[{"Projeto": ["97AR_REL"]}]', 0, 0, 0);
+        '[{"Projeto": ["97AR_REL"]}]', 0, 0, 0, 'AERO');
 
 INSERT INTO equipe (evento_id, equipe_id, escola, equipe, estado) VALUES
     ('97AR', 1, 'ESCOLA DE TESTE UM', 'EQUIPE TESTE 1', 'SP'),

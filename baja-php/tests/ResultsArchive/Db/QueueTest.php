@@ -117,7 +117,7 @@ final class QueueTest extends TestCase
         self::removeFixture();
         self::$database->prepare(
             "INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers, programa_id)
-             VALUES (?, 'Fixture BAJAAPP-67', 'Evento de teste (arquivamento)', 0, 2099, 0, 0, 0, 'BAJA')"
+             VALUES (?, 'Fixture BAJAAPP-67', 'Evento de teste (arquivamento)', 0, 2099, 0, 0, 0, 'AERO')"
         )->execute([self::EVENT]);
     }
 
