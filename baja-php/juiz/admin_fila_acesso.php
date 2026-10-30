@@ -8,8 +8,26 @@ use Baja\Model\FilaQuery;
 use Baja\Model\UserQuery;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
+use Baja\Rbac\Scope\ScopeType;
 
-Session::permissionCheck("admin");
+// Teams' own queue codes ({EVT}_FILA_{n}_{team}, still in user.permissions:
+// they are not roles, and move with the teams package). Managing them is
+// fila.manage on each queue touched, checked per queue below. The page
+// itself is for whoever manages the queues of an event (or more): a
+// manager of one queue adds teams to it in fila/filaadmin.php, as before.
+$usuarioAtual = Session::getCurrentUser();
+$geraFilasDeEvento = array_filter(
+    Authorization::nodesGiving($usuarioAtual, Permission::FILA_MANAGE),
+    fn(ScopeNode $n) => $n->type !== ScopeType::FILA
+);
+if ($geraFilasDeEvento === []) {
+    die(Authorization::REFUSAL);
+}
+$podeGerirFila = fn(string $ev, string $fid) => preg_match('/^\d+$/', $fid) === 1
+    && Authorization::can($usuarioAtual, Permission::FILA_MANAGE, ScopeNode::fila($ev, (int) $fid));
 
 // grant and revoke change every listed user's permissions: refused without the form's token (Baja\Auth\Csrf).
 if (isset($_REQUEST['act'])) Csrf::enforce();
@@ -66,6 +84,10 @@ if (@$_REQUEST['act'] == 'grant') {
         }
         foreach ($parsed['teams'] as $team) {
             foreach ($filaIds as $fid) {
+                if (!$podeGerirFila((string) $ev, (string) $fid)) {
+                    $results[] = ['user' => $parsed['user'], 'team' => $team, 'status' => "sem acesso (fila $fid)"];
+                    continue;
+                }
                 $ok = Fila::addPermissaoFila($ev, $fid, $team, $parsed['user']);
                 $results[] = [
                     'user' => $parsed['user'],
@@ -84,26 +106,32 @@ $revokeResults = null;
 if (@$_REQUEST['act'] == 'revoke') {
     $ev = $_POST['rm_evento'] ?? '';
     $filaSel = $_POST['rm_fila'] ?? '';
-    // '*' nukes every fila of the event; otherwise a single fila. The trailing
-    // underscore keeps fila "1" from also matching "10".
-    $prefix = $filaSel === '*' ? $ev.'_FILA_' : $ev.'_FILA_'.$filaSel.'_';
+    // '*' is every fila of the event; otherwise a single fila. Only the
+    // queues this user manages, and only teams' codes: the old
+    // {EVT}_FILA_{n}_ADMIN codes are frozen in the column for rollback and
+    // left alone (queue managers are roles now).
+    $filaIds = $filaSel === '*'
+        ? array_column($eventsData[$ev]['filas'] ?? [], 'id')
+        : [$filaSel];
+    $filaIds = array_values(array_filter($filaIds, fn($fid) => $podeGerirFila((string) $ev, (string) $fid)));
+    if ($filaIds === []) die(Authorization::REFUSAL);
+    // The trailing underscore keeps fila "1" from also matching "10".
+    $prefixes = array_map(fn($fid) => $ev.'_FILA_'.$fid.'_', $filaIds);
+    $removable = fn($p) => !str_ends_with($p, '_ADMIN')
+        && array_filter($prefixes, fn($prefix) => strpos($p, $prefix) === 0) !== [];
 
     $revokeResults = [];
     foreach (UserQuery::create()->find() as $u) {
         $before = $u->getPermissions();
-        $kept = array_values(array_filter($before, fn($p) => strpos($p, $prefix) !== 0));
+        $kept = array_values(array_filter($before, fn($p) => !$removable($p)));
         $removed = count($before) - count($kept);
         if ($removed === 0) continue;
 
+        // The row stays: it may hold grants, and deleting accounts is not
+        // a side effect of this page any more.
         $u->setPermissions($kept);
-        $deleted = false;
-        if ($u->hasNoMeaningfulPermissions()) {
-            $u->delete();
-            $deleted = true;
-        } else {
-            $u->save();
-        }
-        $revokeResults[] = ['user' => $u->getUsername(), 'removed' => $removed, 'deleted' => $deleted];
+        $u->save();
+        $revokeResults[] = ['user' => $u->getUsername(), 'removed' => $removed, 'deleted' => false];
     }
 }
 

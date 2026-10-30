@@ -8,12 +8,14 @@ use Baja\Model\Timer;
 use Baja\Session;
 use Baja\Site\Html;
 use Baja\Url;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_timers.php"); exit; }
 
 $_page = (int)@$_REQUEST['id'];
 
-Session::permissionCheck('TIMER_ADMIN');
+Authorization::require(Permission::TIMER_MANAGE, Authorization::currentEvent());
 
 // Every act changes something (a new key locks out whoever holds the old
 // one): no act runs without the form's token, which also refuses a GET link

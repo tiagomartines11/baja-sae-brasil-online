@@ -5,12 +5,14 @@ use Baja\Model\EventoQuery;
 use Baja\Model\TimerQuery;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck("TIMER_ADMIN");
+Authorization::require(Permission::TIMER_MANAGE, Authorization::currentEvent());
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
 $timers = TimerQuery::create()->filterByEventoId($evento)->orderByTimerId()->find();
-$voltar = Session::getCurrentUser()->hasPermission('admin') ? 'admin.php' : 'timer.php';
+$voltar = Authorization::currentUserCan(Permission::EVENTO_MANAGE, Authorization::currentEvent()) ? 'admin.php' : 'timer.php';
 
 Template::printHeader("Admin");
 

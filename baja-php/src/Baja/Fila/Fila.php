@@ -12,6 +12,9 @@ use Baja\Model\Equipe;
 use Baja\Model\EquipeQuery;
 
 use Baja\Model\Map\SenhaTableMap;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 use Propel\Runtime\Propel;
 
 use \Datetime;
@@ -148,52 +151,79 @@ class Fila
         return $senha->getEquipeId();
     }
 
+    /**
+     * The queues this user may use, in events not yet finalized, as
+     * ['evento_id', 'fila_id', 'permissao']: 'ADMIN' to run the queue, or
+     * a team number to take tickets for that team.
+     *
+     * Two sources since BAJAAPP-76:
+     *
+     *   ADMIN    fila.manage on the queue (RBAC: queue_manager on it, or a
+     *            role above it). Was the code {EVT}_FILA_{n}_ADMIN.
+     *   a team   the team's own code {EVT}_FILA_{n}_{team} in
+     *            user.permissions. Not a role: it belongs to the team, and
+     *            moves with the teams package. Still read here.
+     */
     static function getFilasUsuario($usuario) {
         $usuario = UserQuery::create()->findOneByUsername($usuario);
 
         if ($usuario === null) return false;
 
-        $permissoes = $usuario->getPermissions();
-
         $permissoes_filas = array();
 
-        foreach($permissoes as $p) {
-            if (str_contains($p, 'FILA')) {
-                $permissao_detalhes = explode('_', $p);
-                
-                if (!EventoQuery::create()->findPk($permissao_detalhes[0])->isFinalizado()) {                
-                    array_push($permissoes_filas, array("evento_id"=>$permissao_detalhes[0],"fila_id"=>$permissao_detalhes[2],"permissao"=>$permissao_detalhes[3]));
-                }
+        foreach (FilaQuery::create()->orderByEventoId()->orderByFilaId()->find() as $fila) {
+            $evento = EventoQuery::create()->findPk($fila->getEventoId());
+            if ($evento === null || $evento->isFinalizado()) continue;
+            if (Authorization::can($usuario, Permission::FILA_MANAGE, ScopeNode::fila($fila->getEventoId(), (int) $fila->getFilaId()))) {
+                array_push($permissoes_filas, array("evento_id"=>$fila->getEventoId(),"fila_id"=>(string) $fila->getFilaId(),"permissao"=>'ADMIN'));
             }
+        }
 
+        foreach(self::codigosDeEquipe($usuario) as $p) {
+            $permissao_detalhes = explode('_', $p);
+
+            $evento = EventoQuery::create()->findPk($permissao_detalhes[0]);
+            if ($evento !== null && !$evento->isFinalizado()) {
+                array_push($permissoes_filas, array("evento_id"=>$permissao_detalhes[0],"fila_id"=>$permissao_detalhes[2],"permissao"=>$permissao_detalhes[3]));
+            }
         }
 
         return $permissoes_filas;
     }
 
+    /**
+     * May this user act on the queue: as its manager (fila.manage on it),
+     * or for this team (the team's own code)?
+     */
     static function checkPermissaoFila($usuario, $evento_id, $fila_id, $equipe_id, $check_admin=false) {
-        //$permissoes = self::getFilasUsuario($usuario);
-        
         $usr = UserQuery::create()->findOneByUsername($usuario);
-        
-        $is_admin = false;
-        
-        if ($usr) {
-            $is_admin = $usr->hasPermission($evento_id.'_FILA_'.$fila_id.'_ADMIN');
 
-            if ($check_admin && $is_admin) {
-                return true;
-            } elseif ($is_admin) {
-                return true;
-            } else {
-                return UserQuery::create()->findOneByUsername($usuario)->hasPermission($evento_id.'_FILA_'.$fila_id.'_'.$equipe_id); 
-            }
-    
-            return false;
+        if (!$usr) return false;
+
+        if (preg_match('/^\d+$/', (string) $fila_id) === 1
+            && Authorization::can($usr, Permission::FILA_MANAGE, ScopeNode::fila((string) $evento_id, (int) $fila_id))) {
+            return true;
         }
 
-        return false;
+        // Never the old {EVT}_FILA_{n}_ADMIN code, which stays in the column
+        // for one release (rollback) but means nothing now: a team called
+        // "ADMIN" would read it back.
+        if ((string) $equipe_id === 'ADMIN') return false;
 
+        return $usr->hasPermission($evento_id.'_FILA_'.$fila_id.'_'.$equipe_id);
+    }
+
+    /**
+     * The team queue codes ({EVT}_FILA_{n}_{team}) in user.permissions:
+     * the one kind of legacy code still read (see getFilasUsuario).
+     *
+     * @return string[]
+     */
+    static function codigosDeEquipe(User $usuario) {
+        return array_values(array_filter(
+            (array) $usuario->getPermissions(),
+            fn($p) => preg_match('/^[^_]+_FILA_[^_]+_(?!ADMIN$)[^_]+$/', (string) $p) === 1
+        ));
     }
 
     static function addPermissaoFila($evento_id, $fila_id, $equipe_id, $novo_usuario) {

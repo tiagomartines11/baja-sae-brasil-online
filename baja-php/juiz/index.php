@@ -5,10 +5,16 @@ use Baja\Certificado\Insercao\Acesso;
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Model\EventoQuery;
 use Baja\Model\ProvaQuery;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 use Baja\Session;
 use Baja\Site\Html;
 
-Session::permissionCheck("index");
+// Anyone holding any active grant in this event (on it, one of its provas
+// or queues) or above it. What they then see depends on what they hold.
+if (!Authorization::hasAnyGrantInEvent(Session::getCurrentUser(), Authorization::currentEventId())) {
+    die(Authorization::REFUSAL);
+}
 
 Template::printHeader("Início");
 
@@ -40,7 +46,7 @@ foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->get
         }
         continue;
     }
-    if (Session::hasPermission($prova->getProvaId()) && (count($prova->getParamsInputs()) > 0 || $prova->getType() == 'tournament')) {
+    if (Authorization::currentUserCan(Permission::PROVA_ENTER_SCORES, Authorization::prova($prova->getProvaId())) && (count($prova->getParamsInputs()) > 0 || $prova->getType() == 'tournament')) {
         if ($prova->getType() == 'normal') {
             echo '<tr style="height: 40px"><td><a href="dashboard.php?p=' . htmlspecialchars(rawurlencode((string) $prova->getProvaId())) . '">' . htmlspecialchars((string) $prova->getNome()) . '</a></td></tr>';
         } elseif ($prova->getType() == 'tournament'){
@@ -51,11 +57,11 @@ foreach(ProvaQuery::create()->findByEventoId(EventoQuery::getCurrentEvent()->get
     }
 }
 
-if (Session::hasPermission('PREMIACAO')) {
+if (Authorization::currentUserCan(Permission::PREMIACAO_VIEW, Authorization::currentEvent())) {
     echo '<tr style="height: 40px"><td><a href="premiacoes.php">Premia&ccedil;&otilde;es</a></td></tr>';
 }
 
-// Rendered only for a user who actually holds `certificados`. Most people
+// Rendered only for a user who may open the certificate pages. Most people
 // reaching this page are judges, and a link that greets them with a permission
 // rejection is worse than no link — the same check that gates the page gates
 // the link. A stopgap alongside Logout and Resultados until there is real
@@ -64,11 +70,9 @@ if (Acesso::permitido()) {
     echo '<tr style="height: 40px"><td><a href="certificados.php">Certificados</a></td></tr>';
 }
 
-$timerPrefix = EventoQuery::getCurrentEvent()->getEventoId() . '_TIMER_';
-$temTimer = Session::hasPermission('TIMER_ADMIN');
-foreach (Session::getCurrentUser()->getPermissions() as $perm) {
-    if (strpos($perm, $timerPrefix) === 0) $temTimer = true;
-}
+// Whoever configures this event's timers or operates them.
+$temTimer = Authorization::currentUserCan(Permission::TIMER_MANAGE, Authorization::currentEvent())
+    || Authorization::currentUserCan(Permission::TIMER_OPERATE, Authorization::currentEvent());
 if ($temTimer) {
     echo '<tr style="height: 40px"><td><a href="timer.php">Timers</a></td></tr>';
 }
@@ -77,7 +81,7 @@ echo '
 <tfoot>
 <tr>
     <th style="height: 20px; font-size: 100%;">
-        '.(Session::hasPermission('admin') ? '<a href="admin.php" style="color: white;">Administração</a>&emsp;&emsp;&middot;&emsp;&emsp;' : '').'
+        '.(Authorization::currentUserCan(Permission::EVENTO_MANAGE, Authorization::currentEvent()) ? '<a href="admin.php" style="color: white;">Administração</a>&emsp;&emsp;&middot;&emsp;&emsp;' : '').'
         <a href="login.php?act=logout" style="color: white;">Logout</a>
     </th>
 </tr>

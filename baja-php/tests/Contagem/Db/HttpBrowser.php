@@ -4,11 +4,13 @@ declare(strict_types=1);
 namespace Baja\Tests\Contagem\Db;
 
 use Baja\Model\UserQuery;
+use Baja\Tests\Support\LegacyGrants;
+use Propel\Runtime\Propel;
 
 /**
  * What a test needs to behave like a browser against the REAL web server:
  * logging in at the forum, sending requests with the cookies it got, and
- * lending a seeded account a permission for the length of one test.
+ * lending a seeded account a role for the length of one test.
  *
  * Shared by the tests named Http*. See HttpAccessTest for why some tests go
  * through HTTP at all and how the login works.
@@ -31,14 +33,12 @@ trait HttpBrowser
      */
     protected const LOGIN_CSRF_TOKEN = 'contagem-http-tests-csrf-token-00000000000000000000000000000000';
 
-    /** @var array<string, string[]> username => permission codes this test added and must remove */
+    /** @var int[] the grants this test gave the seeded accounts, removed afterwards */
     private array $grantedByThisTest = [];
 
     protected function tearDown(): void
     {
-        foreach ($this->grantedByThisTest as $username => $codes) {
-            $this->changePermissions($username, [], $codes);
-        }
+        LegacyGrants::remove(Propel::getWriteConnection('resultados'), $this->grantedByThisTest);
         $this->grantedByThisTest = [];
         parent::tearDown();
     }
@@ -198,38 +198,18 @@ trait HttpBrowser
     }
 
     // ------------------------------------------------------------------
-    // Permissions of the seeded accounts
+    // Roles of the seeded accounts
     // ------------------------------------------------------------------
 
-    /** Gives a seeded account one more permission until the end of the test. */
-    private function grant(string $username, string $code): void
-    {
-        if (in_array($code, $this->permissionsOf($username), true)) {
-            return;
-        }
-        $this->grantedByThisTest[$username][] = $code;
-        $this->changePermissions($username, [$code], []);
-    }
-
     /**
-     * @param string[] $add
-     * @param string[] $remove
+     * Gives a seeded account, until the end of the test, what this legacy
+     * code became in the switch-over to RBAC (BAJAAPP-76): '00NE_ZZL' the
+     * judge role on the test prova, '00NE_ZZL_CONT' the lap counter role,
+     * 'admin' the platform admin (tests/Support/LegacyGrants.php). The web
+     * server is another PHP process; it reads the grant on its next
+     * request.
      */
-    private function changePermissions(string $username, array $add, array $remove): void
-    {
-        TestWorld::forgetLoadedRows();
-        $user = UserQuery::create()->findOneByUsername($username);
-        if ($user === null) {
-            return;
-        }
-        // Only these codes are touched; whatever else the account holds stays.
-        $permissions = array_diff(array_merge((array) $user->getPermissions(), $add), $remove);
-        $user->setPermissions(array_values(array_unique($permissions)));
-        $user->save();
-    }
-
-    /** @return string[] */
-    private function permissionsOf(string $username): array
+    private function grant(string $username, string $code): void
     {
         TestWorld::forgetLoadedRows();
         $user = UserQuery::create()->findOneByUsername($username);
@@ -238,6 +218,7 @@ trait HttpBrowser
                 'A conta "' . $username . '" não existe na tabela user. Este teste precisa do banco de desenvolvimento semeado.'
             );
         }
-        return array_values((array) $user->getPermissions());
+        $ids = LegacyGrants::give(Propel::getWriteConnection('resultados'), (int) $user->getUserId(), [$code]);
+        $this->grantedByThisTest = array_merge($this->grantedByThisTest, $ids);
     }
 }

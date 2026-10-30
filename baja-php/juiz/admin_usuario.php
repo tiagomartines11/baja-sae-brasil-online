@@ -3,16 +3,40 @@ namespace Baja\Juiz;
 
 use Baja\Auth\Csrf;
 use Baja\Contagem\Access\ContagemAccess;
-use Baja\Model\EventoQuery;
-use Baja\Model\FilaQuery;
+use Baja\Contagem\Access\ContagemRoles;
+use Baja\Fila\Fila;
 use Baja\Model\ProvaQuery;
-use Baja\Model\TimerQuery;
 use Baja\Model\UserQuery;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Delegation\GrantRefused;
+use Baja\Rbac\GrantableNodes;
+use Baja\Rbac\Grant\GrantRepository;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 use Baja\Session;
+use DateTimeImmutable;
 
-Session::permissionCheck("admin");
+// One user's roles (BAJAAPP-76): their active grants, each with its place
+// and end, and a form to give a role or take one away. Every change goes
+// through RoleGranting, so the delegation rules, the expiry cap and the
+// audit trail apply (docs/rbac.md). A stopgap until the role screens of the
+// new site (BAJAAPP-78).
+//
+// For anyone who may give roles somewhere (role.grant): a platform admin
+// everywhere, a head judge on their prova. The form offers only the places
+// they cover, and RoleGranting checks again.
+//
+// The legacy permission list (user.permissions) is not edited here any
+// more: it is frozen for one release, for rollback. Teams' own queue codes,
+// which are not roles, are shown read-only and managed in
+// admin_fila_acesso.php.
 
-// Saving rewrites (or deletes) the user: refused without the form's token (Baja\Auth\Csrf).
+$granter = Session::getCurrentUser();
+if (!Authorization::canAnywhere($granter, Permission::ROLE_GRANT)) {
+    die(Authorization::REFUSAL);
+}
+
+// Giving and taking roles: refused without the form's token (Baja\Auth\Csrf).
 if (isset($_REQUEST['act'])) Csrf::enforce();
 
 if (!isset($_REQUEST['id'])) { header("Location: admin_usuarios.php"); exit(); }
@@ -20,271 +44,191 @@ if (!isset($_REQUEST['id'])) { header("Location: admin_usuarios.php"); exit(); }
 $user = UserQuery::create()->findOneByUserId($_REQUEST['id']);
 if (!$user) { header("Location: admin_usuarios.php"); exit(); }
 
-if (@$_REQUEST['act'] == 'save') {
-    // This page controls the user's FULL permission set across every scope, so a
-    // plain overwrite is correct here. Empty strings and duplicates are dropped.
-    $posted = array_values(array_unique(array_filter(
-        (array)@$_POST['j'],
-        fn($v) => trim($v) !== ''
-    )));
-
-    $user->setPermissions($posted);
-
-    if ($user->hasNoMeaningfulPermissions()) {
-        $user->delete();
-        header("Location: admin_usuarios.php");
-    } else {
-        if (!in_array('index', $posted, true)) {
-            $posted[] = 'index';
-            $user->setPermissions($posted);
-        }
-        $user->save();
-        header("Location: admin_usuario.php?id=".$user->getUserId());
-    }
-    exit();
-}
-
-$perms = $user->getPermissions();
-
-$eventos = EventoQuery::create()->orderByEventoId('desc')->find();
-
-$provasByEvent = [];
-foreach (ProvaQuery::create()->find() as $p) $provasByEvent[$p->getEventoId()][] = $p;
-
-$filasByEvent = [];
-foreach (FilaQuery::create()->find() as $f) $filasByEvent[$f->getEventoId()][] = $f;
-
-$timersByEvent = [];
-foreach (TimerQuery::create()->orderByTimerId()->find() as $t) $timersByEvent[$t->getEventoId()][] = $t;
-
-// Compact data model handed to the client so it can build event sections and the
-// fila helper without a round-trip.
-$eventsData = [];
-foreach ($eventos as $ev) {
-    $evId = $ev->getEventoId();
-    $provas = [];
-    foreach ($provasByEvent[$evId] ?? [] as $p) {
-        $provas[] = ['code' => $p->getFullCode(), 'label' => strtoupper($p->getProvaId())];
-        // A lap counting prova has a code of its own for the pit lane (and
-        // fueling, when the prova logs it), apart from the counters' (which comes with linking
-        // a counter, on the prova's "Usuários" page).
-        if ($p->getType() === ContagemAccess::PROVA_TYPE) {
-            $provas[] = ['code' => $p->getFullCode() . ContagemAccess::PIT_LOG_SUFFIX, 'label' => strtoupper($p->getProvaId()) . ' · ' . ContagemAccess::pitLogLabel($p)];
-        }
-    }
-    $filas = [];
-    foreach ($filasByEvent[$evId] ?? [] as $f) $filas[] = ['id' => (string)$f->getFilaId(), 'nome' => $f->getNome()];
-    $timers = [['code' => $evId.'_TIMER_ADMIN', 'label' => 'TIMER_ADMIN']];
-    foreach ($timersByEvent[$evId] ?? [] as $t) $timers[] = ['code' => $evId.'_TIMER_'.$t->getTimerId(), 'label' => 'TIMER '.$t->getTimerId().' ('.$t->getNome().')'];
-    $eventsData[$evId] = ['nome' => $ev->getNome(), 'provas' => $provas, 'filas' => $filas, 'timers' => $timers];
-}
-
-// Split the user's permissions: global sentinels/flags, per-event buckets, and
-// anything that doesn't map to a known event (surfaced raw so it's never hidden).
-$globalPerms = [];
-$permsByEvent = [];
-$otherPerms = [];
-foreach ($perms as $p) {
-    if (in_array($p, ['admin', 'index', 'certificados'], true)) { $globalPerms[] = $p; continue; }
-    $matched = false;
-    foreach ($eventsData as $evId => $_d) {
-        if (strpos($p, $evId.'_') === 0) { $permsByEvent[$evId][] = $p; $matched = true; break; }
-    }
-    if (!$matched) $otherPerms[] = $p;
-}
-
+$rbac = Authorization::services();
 $h = fn($s) => htmlspecialchars((string)$s);
-$cb = function ($code, $label, $checked) use ($h) {
-    return '<label style="display:inline-block; margin: 2px 12px 2px 0; white-space: nowrap;">'
-        . '<input type="checkbox" name="j[]" value="'.$h($code).'" '.($checked ? 'checked' : '').'> '
-        . $h($label) . '</label>';
+$erro = null;
+$aviso = $_GET['ok'] ?? null;
+
+if (@$_REQUEST['act'] == 'grant') {
+    // The node arrives as "type:id", as the select below writes it.
+    $nodeValue = is_string($_POST['node'] ?? null) ? $_POST['node'] : '';
+    $parts = explode(':', $nodeValue, 2);
+    $node = count($parts) === 2 ? ScopeNode::fromStored($parts[0], $parts[1]) : null;
+    $roleCode = is_string($_POST['role'] ?? null) ? $_POST['role'] : '';
+
+    // Empty end date: the RBAC core decides (7 days after the event, never
+    // after the granter's own right to grant there). A date: until 23:59:59
+    // that day.
+    $fim = trim((string) ($_POST['valid_until'] ?? ''));
+    $validUntil = null;
+    if ($fim !== '') {
+        $dia = DateTimeImmutable::createFromFormat('!Y-m-d', $fim);
+        $validUntil = $dia === false ? false : $dia->setTime(23, 59, 59);
+    }
+
+    if ($node === null || $roleCode === '') {
+        $erro = 'Escolha o papel e o lugar.';
+    } elseif ($validUntil === false) {
+        $erro = 'Data de término inválida.';
+    } else {
+        try {
+            $rbac->granting->grant((int) $granter->getUserId(), (int) $user->getUserId(), $roleCode, $node, $validUntil);
+            header("Location: admin_usuario.php?id=" . $user->getUserId() . "&ok=dado"); exit();
+        } catch (GrantRefused $refused) {
+            $erro = Papeis::recusa($refused);
+        }
+    }
+}
+
+if (@$_REQUEST['act'] == 'revoke') {
+    try {
+        $rbac->granting->revoke((int) $granter->getUserId(), (int) ($_POST['grant_id'] ?? 0));
+        header("Location: admin_usuario.php?id=" . $user->getUserId() . "&ok=removido"); exit();
+    } catch (GrantRefused $refused) {
+        $erro = Papeis::recusa($refused);
+    }
+}
+
+$grants = $rbac->authorizer->activeGrants((int) $user->getUserId());
+$nomes = [];
+$nomeDe = function (?int $userId) use (&$nomes): string {
+    if ($userId === null) return 'migração';
+    return $nomes[$userId] ??= (string) (UserQuery::create()->findPk($userId)?->getUsername() ?? "#$userId");
 };
 
-Template::printHeader("Permissões de Usuário", false, false);
+$papeis = array_filter($rbac->roles->all(), fn($r) => !$r->isSystem
+    || Authorization::can($granter, Permission::ROLE_MANAGE, ScopeNode::platform()));
+usort($papeis, fn($a, $b) => strcmp($a->name, $b->name));
 
-echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-height: 1.4; }</style>';
+$lugares = GrantableNodes::forUser($granter);
+$codigosDeEquipe = Fila::codigosDeEquipe($user);
+
+Template::printHeader("Papéis de Usuário", false, false);
+
+echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-height: 1.4; } .erro { color: #b00; } .ok { color: #070; }</style>';
 
 ?>
-    <div style="max-width: 720px; margin: 0 auto;">
-        <form action="admin_usuario.php?id=<?= $h($user->getUserId()) ?>&amp;act=save" method="POST">
+    <div style="max-width: 820px; margin: 0 auto;">
+        <table id="grants" class="tablesorter" style="margin-bottom: 0;">
+            <thead>
+            <tr style="height: 50px">
+                <th colspan="5" style="vertical-align: middle;" class="sorter-false">
+                    <span style="float:left"><a href="admin_usuarios.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
+                    <span style="font-size: 28px;"><?= $h($user->getUsername()) ?></span>
+                </th>
+            </tr>
+<?php if ($erro !== null) { ?>
+            <tr><th colspan="5" class="erro" id="erro" style="background: #fee;"><?= $h($erro) ?></th></tr>
+<?php } elseif ($aviso === 'dado' || $aviso === 'removido') { ?>
+            <tr><th colspan="5" class="ok" id="ok" style="background: #efe;"><?= $aviso === 'dado' ? 'Papel dado.' : 'Papel removido.' ?></th></tr>
+<?php } ?>
+            <tr>
+                <th>Papel</th>
+                <th>Onde</th>
+                <th>Até</th>
+                <th>Dado por</th>
+                <th class="sorter-false"></th>
+            </tr>
+            </thead>
+            <tbody>
+<?php if (!$grants) { ?>
+            <tr><td colspan="5">Nenhum papel ativo.</td></tr>
+<?php } ?>
+<?php foreach ($grants as $g) {
+        $role = $rbac->roles->byId($g->roleId);
+        $node = $g->scope();
+        $nomePapel = $role?->name ?? '?';
+        // The pit log is named as its prova names it: "Registro de box", or
+        // "... e abastecimento" when the prova logs the fueling station.
+        if ($role?->code === ContagemRoles::PIT_LOGGER && $node !== null && $node->type->value === 'prova') {
+            [$ev, $pv] = $node->eventAndLocalId();
+            $provaDoPapel = ProvaQuery::create()->filterByEventoId($ev)->findOneByProvaId($pv);
+            if ($provaDoPapel !== null) $nomePapel = ContagemAccess::pitLogLabel($provaDoPapel);
+        }
+?>
+            <tr class="grant" data-grant="<?= (int) $g->id ?>">
+                <td><?= $h($nomePapel) ?> <span class="muted-note">(<?= $h($role?->code ?? $g->roleId) ?>)</span></td>
+                <td><?= $h($node === null ? $g->scopeType . ':' . $g->scopeId : GrantableNodes::describe($node)) ?></td>
+                <td><?= $g->validUntil === null ? 'sem fim' : $h(GrantRepository::format($g->validUntil)) ?></td>
+                <td><?= $h($nomeDe($g->grantedBy)) ?></td>
+                <td>
+<?php if ($node !== null && Authorization::can($granter, Permission::ROLE_GRANT, $node)) { ?>
+                    <form action="admin_usuario.php?id=<?= $h($user->getUserId()) ?>&amp;act=revoke" method="POST" style="margin: 0;"
+                          onsubmit="return confirm('Remover este papel?');">
+                        <?= Csrf::field() ?>
+                        <input type="hidden" name="grant_id" value="<?= (int) $g->id ?>">
+                        <input type="submit" value="Remover" style="color: #b00;">
+                    </form>
+<?php } ?>
+                </td>
+            </tr>
+<?php } ?>
+            </tbody>
+        </table>
+
+        <form action="admin_usuario.php?id=<?= $h($user->getUserId()) ?>&amp;act=grant" method="POST">
             <?= Csrf::field() ?>
-            <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
-                <thead>
-                <tr style="height: 50px">
-                    <th style="vertical-align: middle;" class="sorter-false">
-                        <span style="float:left"><a href="admin_usuarios.php" style="color: white; font-size: 12px;">&nbsp;Voltar</a></span>
-                        <span style="font-size: 28px;"><?= $h($user->getUsername()) ?></span>
-                    </th>
-                </tr>
-                </thead>
+            <table class="tablesorter" style="margin-top: 0;">
                 <tbody>
-                <tr><td style="text-align: left;">
-                    <strong>Global</strong><br />
-                    <?= $cb('admin', 'admin', in_array('admin', $perms, true)) ?>
-                    <?= $cb('index', 'index', in_array('index', $perms, true)) ?>
-                    <?= $cb('certificados', 'certificados', in_array('certificados', $perms, true)) ?>
+                <tr><td style="text-align: left; line-height: 2;">
+                    <strong>Dar um papel</strong><br />
+                    Papel:
+                    <select name="role" id="role" required>
+                        <option value="">— escolher —</option>
+<?php foreach ($papeis as $r) { ?>
+                        <option value="<?= $h($r->code) ?>" data-types="<?= $h(implode(',', $r->allowedScopeTypeCodes())) ?>"><?= $h($r->name) ?> (<?= $h(implode(', ', $r->allowedScopeTypeCodes())) ?>)</option>
+<?php } ?>
+                    </select><br />
+                    Onde:
+                    <select name="node" id="node" required style="max-width: 100%;">
+                        <option value="">— escolher —</option>
+<?php $grupo = null;
+      foreach ($lugares as $l) {
+          if ($l['group'] !== $grupo) {
+              if ($grupo !== null) echo '</optgroup>';
+              $grupo = $l['group'];
+              echo '<optgroup label="' . $h($grupo) . '">';
+          } ?>
+                        <option value="<?= $h($l['node']->type->value . ':' . $l['node']->id) ?>" data-type="<?= $h($l['node']->type->value) ?>"><?= $h($l['label']) ?></option>
+<?php } if ($grupo !== null) echo '</optgroup>'; ?>
+                    </select><br />
+                    Até (opcional): <input type="date" name="valid_until" id="valid_until">
                     <div class="muted-note">
-                        <strong>certificados</strong> permite emitir certificados para
-                        qualquer evento. Não é a mesma coisa que ser juiz.
+                        Sem data, um papel num evento (ou numa prova ou fila dele) termina
+                        <?= $h(\Baja\Rbac\Expiry\GrantExpiry::configuredDays()) ?> dias depois do fim do evento,
+                        e nunca depois do seu próprio acesso. Um papel num programa ou na
+                        plataforma não tem fim, a não ser que o seu tenha.
                     </div>
                 </td></tr>
-
-                <tr><td style="text-align: left;">
-                    <strong>Adicionar permissões de fila</strong><br />
-                    <div style="margin-top: 6px; line-height: 2;">
-                        Evento:
-                        <select id="fhEvent">
-<?php foreach ($eventsData as $evId => $d) { ?>
-                            <option value="<?= $h($evId) ?>"><?= $h($evId) ?> — <?= $h($d['nome']) ?></option>
-<?php } ?>
-                        </select>
-                        Fila: <select id="fhFila"></select><br />
-                        <label><input type="radio" name="fhType" value="ADMIN" checked> Admin da fila</label>&emsp;
-                        <label><input type="radio" name="fhType" value="TEAM"> Equipe nº</label>
-                        <input type="number" id="fhTeam" min="1" step="1" style="width: 90px;">
-                        <input type="button" id="fhAdd" value="Adicionar" />
-                    </div>
-                </td></tr>
-
-                <tr><td style="text-align: left;">
-                    <strong>Adicionar evento</strong>
-                    <select id="addEvent">
-                        <option value="">— escolher evento —</option>
-<?php foreach ($eventsData as $evId => $d) { ?>
-                        <option value="<?= $h($evId) ?>"><?= $h($evId) ?> — <?= $h($d['nome']) ?></option>
-<?php } ?>
-                    </select>
-                    <input type="button" id="addEventBtn" value="Adicionar" />
-                </td></tr>
-
-                <tr><td style="text-align: left; padding: 0;">
-                    <div id="eventSections">
-<?php foreach ($eventsData as $evId => $d) {
-        if (!isset($permsByEvent[$evId])) continue;
-        $provaCodes = array_merge(array_column($d['provas'], 'code'), array_column($d['timers'], 'code'));
-        $premiacao = $evId.'_PREMIACAO';
-?>
-                        <div class="event-section" data-ev="<?= $h($evId) ?>" style="padding: 8px 8px 12px; border-top: 1px solid #ddd;">
-                            <strong><?= $h($evId) ?></strong> &mdash; <?= $h($d['nome']) ?><br />
-<?php foreach ($d['provas'] as $pr) echo $cb($pr['code'], $pr['label'], in_array($pr['code'], $perms, true)); ?>
-                            <?= $cb($premiacao, 'PREMIACAO', in_array($premiacao, $perms, true)) ?>
-<?php foreach ($d['timers'] as $tm) echo $cb($tm['code'], $tm['label'], in_array($tm['code'], $perms, true)); ?>
-                            <div class="outras">
-<?php foreach ($permsByEvent[$evId] as $p) {
-          if (in_array($p, $provaCodes, true) || $p === $premiacao) continue;
-          echo '<div>'.$cb($p, $p, true).'</div>';
-      } ?>
-                            </div>
-                        </div>
-<?php } ?>
-                    </div>
-                </td></tr>
-
-<?php if ($otherPerms) { ?>
-                <tr><td style="text-align: left;">
-                    <strong>Outras permissões</strong>
-                    <div id="others">
-<?php foreach ($otherPerms as $code) echo '<div>'.$cb($code, $code, true).'</div>'; ?>
-                    </div>
-                </td></tr>
-<?php } ?>
                 </tbody>
                 <tfoot>
-                <tr>
-                    <th style="height: 30px">
-                        <input type="button" id="clearAll" value="Limpar tudo" style="color: #b00; margin-right: 12px;" />
-                        <input type="submit" name="submit" value="Salvar" />
-                    </th>
-                </tr>
+                <tr><th style="height: 30px"><input type="submit" value="Dar papel" /></th></tr>
                 </tfoot>
             </table>
         </form>
+
+<?php if ($codigosDeEquipe) { ?>
+        <table class="tablesorter">
+            <thead><tr><th>Acesso de equipe às filas (não é um papel)</th></tr></thead>
+            <tbody>
+            <tr><td style="text-align: left;">
+<?php foreach ($codigosDeEquipe as $c) echo '<div>' . $h($c) . '</div>'; ?>
+                <div class="muted-note">Gerenciado em <a href="admin_fila_acesso.php">Acesso em massa às filas</a>.</div>
+            </td></tr>
+            </tbody>
+        </table>
+<?php } ?>
     </div>
 
 <script type="text/javascript">
-    var EVENTS = <?= json_encode($eventsData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
-
-    function cb(code, label, checked) {
-        var $l = $('<label style="display:inline-block; margin: 2px 12px 2px 0; white-space: nowrap;"></label>');
-        var $i = $('<input type="checkbox" name="j[]">').val(code);
-        if (checked) $i.prop('checked', true);
-        $l.append($i).append(' ').append(document.createTextNode(label));
-        return $l;
-    }
-
-    // Ensures an event section exists in the DOM, building it (all provas
-    // unchecked + PREMIACAO + empty "outras" bucket) if needed. Returns the section.
-    function ensureSection(evId) {
-        var $s = $('.event-section[data-ev="' + evId + '"]');
-        if ($s.length) return $s;
-        var d = EVENTS[evId];
-        if (!d) return $();
-        $s = $('<div class="event-section" style="padding: 8px 8px 12px; border-top: 1px solid #ddd;"></div>').attr('data-ev', evId);
-        $s.append($('<strong></strong>').text(evId)).append(document.createTextNode(' — ' + d.nome)).append('<br />');
-        d.provas.forEach(function (p) { $s.append(cb(p.code, p.label, false)); });
-        $s.append(cb(evId + '_PREMIACAO', 'PREMIACAO', false));
-        d.timers.forEach(function (t) { $s.append(cb(t.code, t.label, false)); });
-        $s.append('<div class="outras"></div>');
-        $('#eventSections').append($s);
-        return $s;
-    }
-
-    // Add a raw permission code as a removable checkbox inside its event's "outras"
-    // bucket (creating the event section on demand). No-op if it already exists.
-    function addCode(code) {
-        var exists = false;
-        $('input[name="j[]"]').each(function () { if ($(this).val() === code) exists = true; });
-        if (exists) return;
-        var evId = null;
-        for (var k in EVENTS) { if (code.indexOf(k + '_') === 0) { evId = k; break; } }
-        var $target = evId ? ensureSection(evId).find('.outras').first() : $('#others');
-        if (!$target.length) { // no "others" block rendered yet — create one
-            $target = $('<div id="others"></div>');
-            $('#eventSections').before($('<div style="text-align:left; padding:8px;"><strong>Outras permissões</strong></div>').append($target));
-        }
-        $target.append($('<div></div>').append(cb(code, code, true)));
-    }
-
-    // ---- Fila helper ----
-    function refreshFilaOptions() {
-        var d = EVENTS[$('#fhEvent').val()] || { filas: [] };
-        var $f = $('#fhFila').empty();
-        $f.append($('<option></option>').val('*').text('* (todas as filas)'));
-        d.filas.forEach(function (fl) {
-            $f.append($('<option></option>').val(fl.id).text(fl.id + ' — ' + fl.nome));
+    // Only the places where the chosen role may be given. The server checks again.
+    $('#role').on('change', function () {
+        var types = ($(this).find(':selected').data('types') || '').split(',');
+        $('#node option[data-type]').each(function () {
+            var ok = types.indexOf($(this).data('type')) !== -1;
+            $(this).prop('disabled', !ok).toggle(ok);
         });
-    }
-    $('#fhEvent').on('change', refreshFilaOptions);
-    refreshFilaOptions();
-
-    $('#fhAdd').on('click', function () {
-        var ev = $('#fhEvent').val();
-        var fila = $('#fhFila').val();
-        var isAdmin = $('input[name="fhType"]:checked').val() === 'ADMIN';
-        var team = $.trim($('#fhTeam').val());
-        if (!isAdmin && !/^\d+$/.test(team)) { alert('Informe o número da equipe.'); return; }
-        var suffix = isAdmin ? 'ADMIN' : team;
-        var filaIds = [];
-        if (fila === '*') { (EVENTS[ev] || { filas: [] }).filas.forEach(function (fl) { filaIds.push(fl.id); }); }
-        else { filaIds = [fila]; }
-        if (!filaIds.length) { alert('Este evento não possui filas.'); return; }
-        filaIds.forEach(function (fid) { addCode(ev + '_FILA_' + fid + '_' + suffix); });
-    });
-
-    // ---- Add event ----
-    $('#addEventBtn').on('click', function () {
-        var ev = $('#addEvent').val();
-        if (!ev) return;
-        var $s = ensureSection(ev);
-        if ($s.length) $s[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-
-    // ---- Limpar tudo ----
-    $('#clearAll').on('click', function () {
-        if (!confirm('Remover TODAS as permissões deste usuário? (o usuário será excluído ao salvar)')) return;
-        $('input[name="j[]"]').prop('checked', false);
-        $('.event-section .outras').empty();
-        $('#others').empty();
+        if ($('#node option:selected').prop('disabled')) $('#node').val('');
     });
 </script>
 

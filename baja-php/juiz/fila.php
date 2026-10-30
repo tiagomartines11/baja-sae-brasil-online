@@ -9,12 +9,18 @@ use Baja\Session;
 use Baja\Site\Html;
 use DateTimeZone;
 use Baja\Fila\Fila as FilaAdmin;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_filas.php"); exit; }
 
 $_fila_id = @$_REQUEST['id'];
 
-Session::permissionCheck('admin');
+// A queue's settings (name, schedule, rules) are the event's business:
+// fila.manage on the event, not on the queue. A queue manager runs their
+// queue in fila/filaadmin.php; before RBAC this page was 'admin' only.
+Authorization::require(Permission::FILA_MANAGE, Authorization::currentEvent());
 
 // Every act saves or deletes: refused without the form's token, before anything else.
 if (isset($_REQUEST['act'])) Csrf::enforce();
@@ -30,6 +36,8 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
         if (!isset($_POST['evento_id']) || $_POST['evento_id'] == '' || !isset($_POST['fila_id']) || $_POST['fila_id'] == '') {
             header("Location: fila.php?nova=true"); exit;
         } else {
+            // The form names the event: creating a queue there needs fila.manage on THAT event.
+            Authorization::require(Permission::FILA_MANAGE, ScopeNode::evento((string) $_POST['evento_id']));
             $fila = FilaQuery::create()->filterByEventoId($_POST['evento_id'])->findOneByFilaId($_POST['fila_id']);
             if ($fila) { header("Location: fila.php?evento=".$_POST['evento_id']."&id=".$_POST['fila_id']); exit; }
 

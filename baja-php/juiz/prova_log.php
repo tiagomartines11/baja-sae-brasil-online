@@ -9,8 +9,10 @@ use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck("admin");
+Authorization::require(Permission::PROVA_CONFIGURE, isset($_REQUEST['id']) ? Authorization::prova($_REQUEST['id']) : Authorization::currentEvent());
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_provas.php"); exit; }
 

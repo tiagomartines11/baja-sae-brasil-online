@@ -35,14 +35,15 @@ namespace Baja\Tests\Contagem\Db;
  *   juiz1     plays the controller of the test prova
  *   equipe1   plays a counter
  *
- * What an account may DO is decided by its row in this application's
- * `user` table. The test adds the permission it needs to that row before
- * the request and takes it away again afterwards (also when an assertion
- * fails), leaving the account's other permissions untouched.
+ * What an account may DO is decided by its RBAC grants (docs/rbac.md). The
+ * test gives the account the grant it needs before the request and takes it
+ * away again afterwards (also when an assertion fails), leaving the
+ * account's other grants untouched.
  *
- * The test prova is "ZZL" of the made-up event "00NE" (see DbTestCase), so
- * the permission codes are "00NE_ZZL" (controller) and "00NE_ZZL_CONT"
- * (counter).
+ * The test prova is "ZZL" of the made-up event "00NE" (see DbTestCase). The
+ * tests name the legacy codes, "00NE_ZZL" (controller) and "00NE_ZZL_CONT"
+ * (counter), and the account gets what the migration made of them: the
+ * judge role and the lap counter role on 00NE/ZZL.
  *
  * Needs the dev stack running: run with BAJA_TEST_DB=1 (see DbTestCase).
  */
@@ -67,13 +68,13 @@ final class HttpAccessTest extends ReviewDbTestCase
      * it on race day.
      *
      * EXPECTED: the page is served, complete with its forms and the three
-     * counters of the test prova, to an account that holds the prova's
-     * permission and does not hold "admin".
+     * counters of the test prova, to an account that holds the judge role on
+     * the prova and is not a platform admin.
      */
     public function testTheContadoresPageIsServedToTheControllerWhoIsNotAnAdministrator(): void
     {
         $this->grant(self::CONTROLLER, '00NE_ZZL');
-        $this->assertNotContains('admin', $this->permissionsOf(self::CONTROLLER), 'the account must not be an administrator, or the test proves nothing');
+        $this->assertNotContains('platform_admin@platform:', $this->activeRolesOf(self::CONTROLLER), 'the account must not be an administrator, or the test proves nothing');
 
         $response = $this->get(self::COUNTERS_PAGE, $this->loginAndGetCookies(self::CONTROLLER));
 

@@ -1,6 +1,6 @@
 # shellcheck shell=bash
-# Users and permissions: the admin pages that create users, change what they
-# may do, or delete them. Read by ../http-test.sh, which defines form_case,
+# Users and roles: the admin pages that create users and give or take their
+# roles (BAJAAPP-76), and the bulk page for teams' queue codes. Read by ../http-test.sh, which defines form_case,
 # php_in_app, the sessions ($SID_ADM ...) and $EVT (28SU).
 #
 # Each form_case reads: "who submits it, the page that shows the form, where
@@ -10,54 +10,60 @@
 # Every user made here is called ZZCsrf..., so the runner's cleanup removes
 # it whatever happens.
 
-# A user's permissions, or "nao existe" when there is no such user. This is
-# the state every case below looks at.
+# A user's team queue codes (the one kind of legacy code still written),
+# or "nao existe" when there is no such user.
 perms_of() { # username
     echo 'echo ($u = UserQuery::create()->findOneByUsername("'"$1"'")) ? json_encode($u->getPermissions()) : "nao existe";'
 }
 
+# A user's active roles, "role@type:id", or "nao existe" when there is no
+# such user. Since BAJAAPP-76 that is what the user pages change.
+roles_of() { # username
+    echo '$u = UserQuery::create()->findOneByUsername("'"$1"'"); if (!$u) { echo "nao existe"; return; }
+          $s = \Propel\Runtime\Propel::getConnection()->prepare("SELECT CONCAT(r.code, \"@\", g.scope_type, \":\", g.scope_id) FROM user_role g JOIN role r ON r.role_id = g.role_id WHERE g.user_id = ? AND g.revoked_at IS NULL ORDER BY 1");
+          $s->execute([$u->getUserId()]); echo json_encode($s->fetchAll(PDO::FETCH_COLUMN));'
+}
+
 # --- admin_usuarios.php: "Adicionar usuário" ----------------------------------
-# Creates a user with no permissions yet. Before: ZZCsrfNovo does not exist.
-# After a real submit: it exists.
+# Creates a user holding nothing yet. Before: ZZCsrfNovo does not exist.
+# After a real submit: it exists, with no roles ("[]").
 form_case "admin_usuarios.php: Adicionar usuário" "$SID_ADM" \
     "/$EVT/admin_usuarios.php" "/$EVT/admin_usuarios.php?act=create" \
-    "$(perms_of ZZCsrfNovo)" \
+    "$(roles_of ZZCsrfNovo)" \
     "username=ZZCsrfNovo"
 
-# --- admin_users.php: "Atualizar Usuário" -------------------------------------
-# The per-event grid: makes ZZCsrfGrade a judge of prova ZZA. The hidden
-# j[]=index is what the real form always sends.
-form_case "admin_users.php: Atualizar Usuário" "$SID_ADM" \
+# --- admin_users.php: "Papéis do usuário" -------------------------------------
+# The per-event grid is read only since BAJAAPP-76; its form only creates
+# the row, then opens the user's role page.
+form_case "admin_users.php: Papéis do usuário" "$SID_ADM" \
     "/$EVT/admin_users.php" "/$EVT/admin_users.php?act=create" \
-    "$(perms_of ZZCsrfGrade)" \
-    "username=ZZCsrfGrade" "j[]=index" "j[]=${EVT}_ZZA"
+    "$(roles_of ZZCsrfGrade)" \
+    "username=ZZCsrfGrade"
 
-# A user for the two edit pages below to change. Its own, so that removing
-# its permissions cannot take away a session another group's cases log in
-# with.
+# A user for the role page below to change: holds nothing yet.
 php_in_app '
     $u = new \Baja\Model\User();
     $u->setUsername("ZZCsrfAlvo");
-    $u->setPermissions(["index", "'"$EVT"'_ZZA"]);
     $u->save();
 ' >/dev/null
 ALVO_ID=$(php_in_app 'echo UserQuery::create()->findOneByUsername("ZZCsrfAlvo")->getUserId();')
 
-# --- user.php: "Salvar" -------------------------------------------------------
-# The current event's provas plus the admin flag. Ticking admin (and
-# unticking ZZA) changes ZZCsrfAlvo from ["index","28SU_ZZA"].
-form_case "user.php: Salvar" "$SID_ADM" \
-    "/$EVT/user.php?id=$ALVO_ID" "/$EVT/user.php?id=$ALVO_ID&act=save" \
-    "$(perms_of ZZCsrfAlvo)" \
-    "j[]=index" "j[]=admin"
+# --- admin_usuario.php: "Dar papel" -------------------------------------------
+# Gives ZZCsrfAlvo the judge role on prova ZZA of 28SU, through RoleGranting.
+# The end date is left to the RBAC core; 28SU must have a data_fim
+# (fixture.sql) or the grant is refused and nothing changes.
+form_case "admin_usuario.php: Dar papel" "$SID_ADM" \
+    "/$EVT/admin_usuario.php?id=$ALVO_ID" "/$EVT/admin_usuario.php?id=$ALVO_ID&act=grant" \
+    "$(roles_of ZZCsrfAlvo)" \
+    "role=judge" "node=prova:$EVT/ZZA" "valid_until="
 
-# --- admin_usuario.php: "Salvar" ----------------------------------------------
-# The full permission editor: replaces the whole list, here with
-# index + certificados, which is neither what it had nor what user.php left.
-form_case "admin_usuario.php: Salvar" "$SID_ADM" \
-    "/$EVT/admin_usuario.php?id=$ALVO_ID" "/$EVT/admin_usuario.php?id=$ALVO_ID&act=save" \
-    "$(perms_of ZZCsrfAlvo)" \
-    "j[]=index" "j[]=certificados"
+# --- admin_usuario.php: "Remover" ---------------------------------------------
+# Takes that grant away again.
+GRANT_ID=$(php_in_app '$s = \Propel\Runtime\Propel::getConnection()->prepare("SELECT grant_id FROM user_role WHERE user_id = ? AND revoked_at IS NULL"); $s->execute(['"$ALVO_ID"']); echo $s->fetchColumn();')
+form_case "admin_usuario.php: Remover" "$SID_ADM" \
+    "/$EVT/admin_usuario.php?id=$ALVO_ID" "/$EVT/admin_usuario.php?id=$ALVO_ID&act=revoke" \
+    "$(roles_of ZZCsrfAlvo)" \
+    "grant_id=$GRANT_ID"
 
 # --- admin_fila_acesso.php: "Conceder acessos" --------------------------------
 # One pasted line, "ZZCsrfFila, 7": the queue (fila) 1 of 28SU for team 7.
@@ -69,8 +75,9 @@ form_case "admin_fila_acesso.php: Conceder acessos" "$SID_ADM" \
 
 # --- admin_fila_acesso.php: "Remover acessos" ---------------------------------
 # Takes fila 1 of 28SU away from every user. ZZCsrfFila had only that, so a
-# real submit deletes it ("nao existe"). Only 28SU permissions match, so no
-# real user of the dev database is touched.
+# real submit leaves it with nothing ("[]"); the row itself stays since
+# BAJAAPP-76. Only 28SU codes match, so no real user of the dev database is
+# touched.
 form_case "admin_fila_acesso.php: Remover acessos" "$SID_ADM" \
     "/$EVT/admin_fila_acesso.php" "/$EVT/admin_fila_acesso.php?act=revoke" \
     "$(perms_of ZZCsrfFila)" \

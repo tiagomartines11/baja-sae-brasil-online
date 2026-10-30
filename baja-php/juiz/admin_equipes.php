@@ -7,8 +7,10 @@ use Baja\Model\User;
 use Baja\Model\UserQuery;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck("admin");
+Authorization::require(Permission::EQUIPE_MANAGE, Authorization::currentEvent());
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
 $equipes = EquipeQuery::create()->filterByEventoId($evento)->find();

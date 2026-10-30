@@ -4,10 +4,17 @@ namespace Baja\Juiz;
 use Baja\Auth\Csrf;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 use Baja\Session;
 use Baja\Site\Html;
 
-Session::permissionCheck("admin");
+// For anyone who may give roles somewhere (role.grant): admin_usuario.php
+// offers them only the places they cover.
+$atual = Session::getCurrentUser();
+if (!Authorization::canAnywhere($atual, Permission::ROLE_GRANT)) {
+    die(Authorization::REFUSAL);
+}
 
 // Creating a user is a change: refused without the form's token (Baja\Auth\Csrf).
 if (isset($_REQUEST['act'])) Csrf::enforce();
@@ -17,11 +24,10 @@ if (@$_REQUEST['act'] == 'create') {
     if ($username !== '') {
         $user = UserQuery::create()->findOneByUsername($username);
         if (!$user) {
-            // Persist with just the sentinel so the row exists; the editor is where
-            // real permissions get added.
+            // Only the row, holding nothing: admin_usuario.php is where roles
+            // are given.
             $user = new User();
             $user->setUsername($username);
-            $user->setPermissions(['index']);
             $user->save();
         }
         header("Location: admin_usuario.php?id=".$user->getUserId()); exit;
@@ -30,6 +36,7 @@ if (@$_REQUEST['act'] == 'create') {
 }
 
 $users = UserQuery::create()->orderByUsername()->find();
+$authorizer = Authorization::services()->authorizer;
 
 Template::printHeader("Usuários", false, false);
 
@@ -52,7 +59,7 @@ Template::printHeader("Usuários", false, false);
             </tr>
             <tr>
                 <th>Username</th>
-                <th class="sorter-false">Permissões</th>
+                <th class="sorter-false">Papéis ativos</th>
                 <th class="sorter-false">Editar</th>
             </tr>
         </thead>
@@ -60,7 +67,7 @@ Template::printHeader("Usuários", false, false);
 <?php foreach ($users as $u) { ?>
             <tr>
                 <td class="username"><?= Html::e($u->getUsername()) ?></td>
-                <td style="text-align: center;"><?= count(array_diff($u->getPermissions(), \Baja\Model\User::SENTINEL_PERMISSIONS)) ?></td>
+                <td style="text-align: center;"><?= count($authorizer->activeGrants((int) $u->getUserId())) ?></td>
                 <td style="text-align: center;"><a href="admin_usuario.php?id=<?= Html::e($u->getUserId()) ?>"><span>&nbsp;✏️&nbsp;</span></a></td>
             </tr>
 <?php } ?>
@@ -76,11 +83,13 @@ Template::printHeader("Usuários", false, false);
                 </th>
             </tr>
             </form>
+<?php if (array_filter(Authorization::nodesGiving($atual, Permission::FILA_MANAGE), fn($n) => $n->type->value !== 'fila') !== []) { ?>
             <tr>
                 <th colspan="3" style="height: 30px">
                     <input type="button" onclick="location.href='admin_fila_acesso.php';" value="Acesso em massa às filas" />
                 </th>
             </tr>
+<?php } ?>
         </tfoot>
     </table>
     <br /><br />

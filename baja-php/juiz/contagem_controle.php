@@ -17,6 +17,9 @@ use Baja\Contagem\Service\Clock;
 use Baja\Contagem\Service\ContagemService;
 use Baja\Contagem\Service\LockBusy;
 use Baja\Contagem\Service\SnapshotStore;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 use Baja\Session;
 use InvalidArgumentException;
 
@@ -30,8 +33,9 @@ $service = ContagemService::forProva($prova);
 $errorMessage = null;
 // Set when an action answered "ask the person first": shown with a button that sends the form again.
 $question = null;
-// Wiping a race that was started is for administrators only.
-$isAdmin = Session::hasPermission('admin');
+// Wiping a race that was started is for whoever configures the prova
+// (before RBAC: the 'admin' code only), not for its judges.
+$isAdmin = Authorization::currentUserCan(Permission::PROVA_CONFIGURE, ScopeNode::prova($prova->getEventoId(), $prova->getProvaId()));
 
 if (Pagina::isPost()) {
     Pagina::requireCsrfPost($prova);
