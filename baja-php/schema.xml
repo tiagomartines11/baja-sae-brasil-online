@@ -899,7 +899,7 @@
   </table>
 
   <!-- ===================================================================
-       Event result archives (BAJAAPP-67). See baja-infra/docs/backup-restore.md,
+       Event result archives (BAJAAPP-67). See docs/backup-restore.md,
        "Event archives".
 
        One row per request to freeze an event's published results in the

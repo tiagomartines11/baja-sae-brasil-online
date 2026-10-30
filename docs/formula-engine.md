@@ -267,7 +267,10 @@ Things to keep in mind:
 - Steps 3 and 4 compare the two engines on the same code and the same data,
   so any difference is the engine's. `--events "$EVENTS"` names every event,
   finished or not (without it the snapshots only take finished ones; on the
-  seed that is 636 snapshots, with every event named 765). The data must not
+  seed that is 636 snapshots, with every event named 765). That includes the
+  events of every competition, AR, FA, FO, EQ and H2 as well as BR, SE, SU and
+  NE: the tools take any code of two digits and two capitals or digits
+  (BAJAAPP-74), so the list needs no filtering. The data must not
   change between them: on a static copy it does not.
 - `/tmp/formula-eval` lives inside the `baja-app` container: do not recreate
   the container between steps 3 and 4.

@@ -11,6 +11,8 @@ use Baja\Model\Tournament;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Torneio\CriteriosClassificacao;
+use Baja\Torneio\Status;
 use DateTimeZone;
 use Baja\Model\Input;
 use Baja\Model\ResultadoQuery;
@@ -32,14 +34,15 @@ $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $prova = ProvaQuery::create()->filterByEventoId($currentEventId)->findOneByProvaId($_page);
 if (!$prova) { header("Location: index.php"); exit; }
 
-$params = $prova->getParams();
+$params = $prova->getParams() ?? new \stdClass();
+// A config without "status" reads as not frozen (Baja\Torneio\Status).
+Status::de($params);
 
 $match_count = TournamentQuery::create()->filterByEventoId($currentEventId)->filterByProvaId($_page)->count();
 
 if (isset($_REQUEST['freeze']) && isset($_REQUEST['classification'])) {
 
-    $params->status->frozen = true;
-    $params->status->classification = array_map('intval',explode(",",$_REQUEST['classification']));
+    Status::congelar($params, (string)$_REQUEST['classification']);
 
     $prova->setParams($params)->save();
 
@@ -48,8 +51,7 @@ if (isset($_REQUEST['freeze']) && isset($_REQUEST['classification'])) {
 }
 
 if (isset($_REQUEST['unfreeze'])) {
-    $params->status->frozen = false;
-    $params->status->classification = false;
+    Status::descongelar($params);
 
     $prova->setParams($params)->save();
 
@@ -280,19 +282,9 @@ foreach ($able_cars as $k => $ac) {
     }
 }
 
-for($x = ($classificion_count+1); $x>1; $x--) {
-    usort($able_cars, function($a, $b) use ($x) {
-        $scoreA = $a[$x];
-        $scoreB = $b[$x];
-        
-        // Compare scores based on sorting order
-        if ($scoreA != $scoreB) {
-            return ($classifications[$x-2] == 'asc') ? ($scoreA > $scoreB) : ($scoreA < $scoreB);
-        }
-    // If all scores are equal, maintain the original order
-        return 0;
-    });
-}
+// Each row is [car, team, one score per criterion]: compare the scores.
+$criterios = new CriteriosClassificacao($classifications);
+usort($able_cars, fn($a, $b) => $criterios->compare(array_slice($a, 2), array_slice($b, 2)));
 
 $current_classification = [];
 

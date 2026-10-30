@@ -31,6 +31,39 @@ php_in_app '
     $m->save();
 ' >/dev/null || bad "could not create the tournament fixture"
 
+# Two more for BAJAAPP-37, also inside 28SU:
+#   ZZU  a tournament prova whose params have no "status", which used to
+#        crash "Congelar Classificação";
+#   ZZS  a semifinal, match 125, car 1 against car 2 as a single race, and
+#        the match for third place, 128, waiting for its loser ("los125").
+#        A single race used to send the WINNER there.
+php_in_app '
+    $p = new \Baja\Model\Prova();
+    $p->setEventoId("28SU");
+    $p->setProvaId("ZZU");
+    $p->setNome("Torneio sem status");
+    $p->setParams(json_decode("{\"type\": \"tournament\", \"inputs\": [], \"pontos\": {},
+        \"seeding\": {\"able\": {\"inputs\": [\"ZZA\"], \"formula\": \"1\"}, \"classification\": []},
+        \"tournament\": {\"third_place_match\": false}}"));
+    $p->save();
+    $p = new \Baja\Model\Prova();
+    $p->setEventoId("28SU");
+    $p->setProvaId("ZZS");
+    $p->setNome("Torneio com disputa de 3o");
+    $p->setParams(json_decode("{\"type\": \"tournament\", \"inputs\": [], \"pontos\": {}}"));
+    $p->save();
+    foreach ([[125, 1, "1", "2"], [128, -1, "los125", "WO"]] as [$id, $round, $e1, $e2]) {
+        $m = new \Baja\Model\Tournament();
+        $m->setEventoId("28SU");
+        $m->setProvaId("ZZS");
+        $m->setMatchId($id);
+        $m->setRound($round);
+        $m->setEquipe1Id($e1);
+        $m->setEquipe2Id($e2);
+        $m->save();
+    }
+' >/dev/null || bad "could not create the BAJAAPP-37 tournament fixtures"
+
 # The sound timer_tts.php would make, removed at the end (it is a file, not a row).
 EXTRA_CLEANUP+='
     @unlink(\Baja\Model\Timer::soundsDir() . "/" . \Baja\Model\Timer::GENERATED_DIR . "/zzcsrf-teste.wav");
@@ -227,6 +260,18 @@ form_case "tournament_entry.php: undo the winner (Cancelar Resultado)" "$SID_ADM
     "/$EVT/tournament_entry.php?p=ZZT&round=0" "/$EVT/tournament_entry.php?p=ZZT&round=0" "$MATCH_WINNER" \
     "reset=1"
 
+# BAJAAPP-37: car 1 wins semifinal 125 (a single race), so the match for
+# third place gets the LOSER, car 2. It used to get car 1.
+TERCEIRO_LUGAR='$m = \Baja\Model\TournamentQuery::create()->filterByEventoId("28SU")->filterByProvaId("ZZS")->filterByMatchId(128)->findOne(); echo $m->getEquipe1Id();'
+
+form_case "tournament_entry.php: a semifinal's loser goes to third place (✅)" "$SID_ADM" \
+    "/$EVT/tournament_entry.php?p=ZZS&round=1" "/$EVT/tournament_entry.php?p=ZZS&round=1" "$TERCEIRO_LUGAR" \
+    "match=125" "setwinner=1"
+
+terceiro=$(php_in_app "$TERCEIRO_LUGAR")
+if [[ "$terceiro" == 2 ]]; then ok "tournament_entry.php: third place got car 2, the semifinal's loser"
+else bad "tournament_entry.php: third place got \"$terceiro\", expected car 2 (the semifinal's loser)"; fi
+
 # --- torneio.php: the admin draws the bracket -----------------------------------------
 
 TORNEIO_FROZEN='echo ProvaQuery::create()->filterByEventoId("28SU")->findOneByProvaId("ZZT")->getParams()->status->frozen ? "congelada" : "aberta";'
@@ -250,3 +295,15 @@ form_case "torneio.php: draw the bracket (Criar Chaveamento)" "$SID_ADM" \
 form_case "torneio.php: unfreeze the seeding (Descongelar Classificação)" "$SID_ADM" \
     "/$EVT/torneio.php?id=ZZT" "/$EVT/torneio.php?id=ZZT" "$TORNEIO_FROZEN" \
     "unfreeze=Descongelar Classificação"
+
+# BAJAAPP-37: freezing a prova whose params have no "status" used to crash.
+# It now creates the status.
+TORNEIO_ZZU='$s = ProvaQuery::create()->filterByEventoId("28SU")->findOneByProvaId("ZZU")->getParams()->status ?? null; echo $s === null ? "sem status" : json_encode($s);'
+
+form_case "torneio.php: freeze a prova without status (Congelar Classificação)" "$SID_ADM" \
+    "/$EVT/torneio.php?id=ZZU" "/$EVT/torneio.php?id=ZZU" "$TORNEIO_ZZU" \
+    "freeze=Congelar Classificação" "classification=2,1"
+
+zzu=$(php_in_app "$TORNEIO_ZZU")
+if [[ "$zzu" == '{"frozen":true,"classification":[2,1]}' ]]; then ok "torneio.php: the status was created, frozen with 2, 1"
+else bad "torneio.php: status after freezing is $zzu"; fi

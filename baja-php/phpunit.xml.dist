@@ -49,6 +49,8 @@
           results-snapshot      the tool itself, on made-up pages; no database.
           results-snapshot-db   proves the tool writes nothing; needs the app's
                                 database variables, skipped without them.
+                                OtherCompetitionTest also needs BAJA_TEST_DB set
+                                to 1, because it loads a made-up event first.
         -->
         <testsuite name="results-snapshot">
             <directory>tests/ResultsSnapshot/Unit</directory>

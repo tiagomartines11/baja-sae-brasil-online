@@ -22,7 +22,7 @@
  * child process whose only database credentials are the read-only ones,
  * and results-snapshot.php also switches every session to read-only. A
  * missing ARCHIVE_DB_USER is refused rather than replaced by the app's
- * account. Everything is explained in baja-infra/docs/backup-restore.md,
+ * account. Everything is explained in docs/backup-restore.md,
  * "Event archives".
  *
  * Output meant for backup-run.sh goes to stdout; everything else to stderr.

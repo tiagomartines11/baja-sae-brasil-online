@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\ResultsCheck;
 
+use Baja\Evento\EventCode;
 use RuntimeException;
 use Throwable;
 
@@ -169,7 +170,7 @@ final class Command
         if ($values['events'] !== null) {
             $events = array_values(array_filter(array_map('trim', explode(',', strtoupper($values['events']))), 'strlen'));
             foreach ($events as $event) {
-                if (preg_match('/^[0-9A-Z]{4}$/', $event) !== 1) {
+                if (!EventCode::isValid($event)) {
                     return 'Not an event code: ' . $event;
                 }
             }
