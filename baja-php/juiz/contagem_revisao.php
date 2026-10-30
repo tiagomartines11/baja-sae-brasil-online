@@ -33,6 +33,7 @@ $entryModule = $importMap['/js/contagem/revisao.js'] ?? '/js/contagem/revisao.js
     <meta name="google" content="notranslate">
     <link rel="icon" href="img/baja.png" type="image/png">
     <title>Revisão - <?= $h($prova->getNome()) ?></title>
+    <?= \Baja\Auth\ForumResume::keepAliveTag() ?>
     <?= Pagina::stylesheetTag() ?>
     <script type="importmap"><?= json_encode(['imports' => (object) $importMap], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
 </head>

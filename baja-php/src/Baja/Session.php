@@ -1,7 +1,9 @@
 <?php
 namespace Baja;
+use Baja\Auth\ForumResume;
 use Baja\Auth\LoginCsrf;
 use Baja\Auth\NaoProvisionado;
+use Baja\Auth\PhpbbSessionShim;
 use Baja\Auth\StaffCookie;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
@@ -32,7 +34,21 @@ class Session
             Session::$_currentUser = UserQuery::create()->findOneByUsername($username);
         }
 
-        if (Session::$_currentUser || $_SERVER["SCRIPT_NAME"] == "/login.php") {
+        if (Session::$_currentUser) {
+            return;
+        }
+
+        // No session here, but the forum may still have one to give back: the
+        // "remember me" key resumes it on the forum's side. Sends the browser
+        // there and back to this same page, once, and returns when that
+        // cannot work, to the login form as before. The login page itself
+        // included, which is where a judge whose session expired often lands.
+        // See Baja\Auth\ForumResume.
+        if ($username === '') {
+            ForumResume::bounceIfPossible();
+        }
+
+        if ($_SERVER["SCRIPT_NAME"] == "/login.php") {
             return;
         }
 
@@ -95,6 +111,14 @@ class Session
         // redirects the browser back to our login page, which lands
         // anonymous on the next request.
         Session::$_currentUser = null;
+        // Drop the judge area's cached copy of this session now. phpBB deletes
+        // the row below, but the cache would keep answering "logged in" for
+        // that _sid for up to SESSION_CACHE_TTL_SECONDS, to any browser still
+        // holding the old cookies.
+        global $user;
+        if ($user instanceof PhpbbSessionShim) {
+            $user->session_kill();
+        }
         // Without a session the cookie would only make the judge's browser
         // skip the results cache for nothing. Cleared here, on our own host,
         // because it is ours and not phpBB's; the parent domain covers it.
