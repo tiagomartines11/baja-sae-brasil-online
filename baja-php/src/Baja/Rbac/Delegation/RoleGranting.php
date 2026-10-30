@@ -31,6 +31,9 @@ use Throwable;
  *      more than they have: that is what stops escalation;
  *   5. if R is a system role (platform admin), they hold role.manage.
  *
+ * And the new grant never outlives the granter's own right to grant there
+ * (granterRightEnds(), applied by GrantExpiry).
+ *
  * Taking a grant away (revoke) asks the same of the grant's role and node:
  * whoever could give it may take it away.
  *
@@ -74,7 +77,7 @@ final class RoleGranting
                 throw new GrantRefused(GrantRefused::UNKNOWN_USER, "There is no user $userId.");
             }
             $this->assertMayHandOut($granterId, $role, $node);
-            $validUntil = $this->expiry->validUntilFor($node, $validUntil);
+            $validUntil = $this->expiry->validUntilFor($node, $validUntil, $this->granterRightEnds($granterId, $node));
         } catch (GrantRefused $refused) {
             $this->logRefusal('grant', $granterId, $refused, ['user' => $userId, 'role' => $roleCode, 'node' => $node->key()]);
             throw $refused;
@@ -153,6 +156,34 @@ final class RoleGranting
         if ($role->isSystem && !$this->authorizer->can($granterId, Permission::ROLE_MANAGE, ScopeNode::platform())) {
             throw new GrantRefused(GrantRefused::SYSTEM_ROLE, "The role '{$role->code}' is a system role: only holders of role.manage may give or take it.");
         }
+    }
+
+    /**
+     * When the granter's right to give roles on $node ends: the end of the
+     * latest-ending of their grants carrying role.grant on $node or above.
+     * Null when one of them never ends (a platform admin's, usually).
+     *
+     * A grant made now must not outlive it (GrantExpiry): otherwise a head
+     * judge whose role ends in five days could make a judge for a year.
+     */
+    private function granterRightEnds(int $granterId, ScopeNode $node): ?DateTimeImmutable
+    {
+        $covering = $this->authorizer->grantsGiving($granterId, Permission::ROLE_GRANT, $node);
+        if ($covering === []) {
+            // assertMayHandOut() has already refused this; never read "no
+            // covering grant" as "no limit".
+            throw new GrantRefused(GrantRefused::NO_ROLE_GRANT, "User $granterId may not give roles on {$node->key()}.");
+        }
+        $latest = null;
+        foreach ($covering as $grant) {
+            if ($grant->validUntil === null) {
+                return null;
+            }
+            if ($latest === null || $grant->validUntil > $latest) {
+                $latest = $grant->validUntil;
+            }
+        }
+        return $latest;
     }
 
     private function userExists(int $userId): bool

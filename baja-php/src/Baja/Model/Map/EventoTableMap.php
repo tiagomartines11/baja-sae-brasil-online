@@ -63,7 +63,7 @@ class EventoTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 17;
+    public const NUM_COLUMNS = 19;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class EventoTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 17;
+    public const NUM_HYDRATE_COLUMNS = 19;
 
     /**
      * the column name for the evento_id field
@@ -136,6 +136,16 @@ class EventoTableMap extends TableMap
     public const COL_DATA = 'evento.data';
 
     /**
+     * the column name for the data_inicio field
+     */
+    public const COL_DATA_INICIO = 'evento.data_inicio';
+
+    /**
+     * the column name for the data_fim field
+     */
+    public const COL_DATA_FIM = 'evento.data_fim';
+
+    /**
      * the column name for the mandato_presidente field
      */
     public const COL_MANDATO_PRESIDENTE = 'evento.mandato_presidente';
@@ -180,11 +190,11 @@ class EventoTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['EventoId', 'Titulo', 'Nome', 'Tipo', 'Ano', 'Menu', 'Ativo', 'Finalizado', 'Spoilers', 'TemCertificado', 'Presidente', 'Data', 'MandatoPresidente', 'Local', 'EmAndamento', 'CargaHoraria', 'ProgramaId', ],
-        self::TYPE_CAMELNAME     => ['eventoId', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', 'temCertificado', 'presidente', 'data', 'mandatoPresidente', 'local', 'emAndamento', 'cargaHoraria', 'programaId', ],
-        self::TYPE_COLNAME       => [EventoTableMap::COL_EVENTO_ID, EventoTableMap::COL_TITULO, EventoTableMap::COL_NOME, EventoTableMap::COL_TIPO, EventoTableMap::COL_ANO, EventoTableMap::COL_MENU, EventoTableMap::COL_ATIVO, EventoTableMap::COL_FINALIZADO, EventoTableMap::COL_SPOILERS, EventoTableMap::COL_TEM_CERTIFICADO, EventoTableMap::COL_PRESIDENTE, EventoTableMap::COL_DATA, EventoTableMap::COL_MANDATO_PRESIDENTE, EventoTableMap::COL_LOCAL, EventoTableMap::COL_EM_ANDAMENTO, EventoTableMap::COL_CARGA_HORARIA, EventoTableMap::COL_PROGRAMA_ID, ],
-        self::TYPE_FIELDNAME     => ['evento_id', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', 'tem_certificado', 'presidente', 'data', 'mandato_presidente', 'local', 'em_andamento', 'carga_horaria', 'programa_id', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ]
+        self::TYPE_PHPNAME       => ['EventoId', 'Titulo', 'Nome', 'Tipo', 'Ano', 'Menu', 'Ativo', 'Finalizado', 'Spoilers', 'TemCertificado', 'Presidente', 'Data', 'DataInicio', 'DataFim', 'MandatoPresidente', 'Local', 'EmAndamento', 'CargaHoraria', 'ProgramaId', ],
+        self::TYPE_CAMELNAME     => ['eventoId', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', 'temCertificado', 'presidente', 'data', 'dataInicio', 'dataFim', 'mandatoPresidente', 'local', 'emAndamento', 'cargaHoraria', 'programaId', ],
+        self::TYPE_COLNAME       => [EventoTableMap::COL_EVENTO_ID, EventoTableMap::COL_TITULO, EventoTableMap::COL_NOME, EventoTableMap::COL_TIPO, EventoTableMap::COL_ANO, EventoTableMap::COL_MENU, EventoTableMap::COL_ATIVO, EventoTableMap::COL_FINALIZADO, EventoTableMap::COL_SPOILERS, EventoTableMap::COL_TEM_CERTIFICADO, EventoTableMap::COL_PRESIDENTE, EventoTableMap::COL_DATA, EventoTableMap::COL_DATA_INICIO, EventoTableMap::COL_DATA_FIM, EventoTableMap::COL_MANDATO_PRESIDENTE, EventoTableMap::COL_LOCAL, EventoTableMap::COL_EM_ANDAMENTO, EventoTableMap::COL_CARGA_HORARIA, EventoTableMap::COL_PROGRAMA_ID, ],
+        self::TYPE_FIELDNAME     => ['evento_id', 'titulo', 'nome', 'tipo', 'ano', 'menu', 'ativo', 'finalizado', 'spoilers', 'tem_certificado', 'presidente', 'data', 'data_inicio', 'data_fim', 'mandato_presidente', 'local', 'em_andamento', 'carga_horaria', 'programa_id', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, ]
     ];
 
     /**
@@ -196,11 +206,11 @@ class EventoTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['EventoId' => 0, 'Titulo' => 1, 'Nome' => 2, 'Tipo' => 3, 'Ano' => 4, 'Menu' => 5, 'Ativo' => 6, 'Finalizado' => 7, 'Spoilers' => 8, 'TemCertificado' => 9, 'Presidente' => 10, 'Data' => 11, 'MandatoPresidente' => 12, 'Local' => 13, 'EmAndamento' => 14, 'CargaHoraria' => 15, 'ProgramaId' => 16, ],
-        self::TYPE_CAMELNAME     => ['eventoId' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, 'temCertificado' => 9, 'presidente' => 10, 'data' => 11, 'mandatoPresidente' => 12, 'local' => 13, 'emAndamento' => 14, 'cargaHoraria' => 15, 'programaId' => 16, ],
-        self::TYPE_COLNAME       => [EventoTableMap::COL_EVENTO_ID => 0, EventoTableMap::COL_TITULO => 1, EventoTableMap::COL_NOME => 2, EventoTableMap::COL_TIPO => 3, EventoTableMap::COL_ANO => 4, EventoTableMap::COL_MENU => 5, EventoTableMap::COL_ATIVO => 6, EventoTableMap::COL_FINALIZADO => 7, EventoTableMap::COL_SPOILERS => 8, EventoTableMap::COL_TEM_CERTIFICADO => 9, EventoTableMap::COL_PRESIDENTE => 10, EventoTableMap::COL_DATA => 11, EventoTableMap::COL_MANDATO_PRESIDENTE => 12, EventoTableMap::COL_LOCAL => 13, EventoTableMap::COL_EM_ANDAMENTO => 14, EventoTableMap::COL_CARGA_HORARIA => 15, EventoTableMap::COL_PROGRAMA_ID => 16, ],
-        self::TYPE_FIELDNAME     => ['evento_id' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, 'tem_certificado' => 9, 'presidente' => 10, 'data' => 11, 'mandato_presidente' => 12, 'local' => 13, 'em_andamento' => 14, 'carga_horaria' => 15, 'programa_id' => 16, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ]
+        self::TYPE_PHPNAME       => ['EventoId' => 0, 'Titulo' => 1, 'Nome' => 2, 'Tipo' => 3, 'Ano' => 4, 'Menu' => 5, 'Ativo' => 6, 'Finalizado' => 7, 'Spoilers' => 8, 'TemCertificado' => 9, 'Presidente' => 10, 'Data' => 11, 'DataInicio' => 12, 'DataFim' => 13, 'MandatoPresidente' => 14, 'Local' => 15, 'EmAndamento' => 16, 'CargaHoraria' => 17, 'ProgramaId' => 18, ],
+        self::TYPE_CAMELNAME     => ['eventoId' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, 'temCertificado' => 9, 'presidente' => 10, 'data' => 11, 'dataInicio' => 12, 'dataFim' => 13, 'mandatoPresidente' => 14, 'local' => 15, 'emAndamento' => 16, 'cargaHoraria' => 17, 'programaId' => 18, ],
+        self::TYPE_COLNAME       => [EventoTableMap::COL_EVENTO_ID => 0, EventoTableMap::COL_TITULO => 1, EventoTableMap::COL_NOME => 2, EventoTableMap::COL_TIPO => 3, EventoTableMap::COL_ANO => 4, EventoTableMap::COL_MENU => 5, EventoTableMap::COL_ATIVO => 6, EventoTableMap::COL_FINALIZADO => 7, EventoTableMap::COL_SPOILERS => 8, EventoTableMap::COL_TEM_CERTIFICADO => 9, EventoTableMap::COL_PRESIDENTE => 10, EventoTableMap::COL_DATA => 11, EventoTableMap::COL_DATA_INICIO => 12, EventoTableMap::COL_DATA_FIM => 13, EventoTableMap::COL_MANDATO_PRESIDENTE => 14, EventoTableMap::COL_LOCAL => 15, EventoTableMap::COL_EM_ANDAMENTO => 16, EventoTableMap::COL_CARGA_HORARIA => 17, EventoTableMap::COL_PROGRAMA_ID => 18, ],
+        self::TYPE_FIELDNAME     => ['evento_id' => 0, 'titulo' => 1, 'nome' => 2, 'tipo' => 3, 'ano' => 4, 'menu' => 5, 'ativo' => 6, 'finalizado' => 7, 'spoilers' => 8, 'tem_certificado' => 9, 'presidente' => 10, 'data' => 11, 'data_inicio' => 12, 'data_fim' => 13, 'mandato_presidente' => 14, 'local' => 15, 'em_andamento' => 16, 'carga_horaria' => 17, 'programa_id' => 18, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, ]
     ];
 
     /**
@@ -285,6 +295,22 @@ class EventoTableMap extends TableMap
         'evento.data' => 'DATA',
         'EventoTableMap::COL_DATA' => 'DATA',
         'COL_DATA' => 'DATA',
+        'DataInicio' => 'DATA_INICIO',
+        'Evento.DataInicio' => 'DATA_INICIO',
+        'dataInicio' => 'DATA_INICIO',
+        'evento.dataInicio' => 'DATA_INICIO',
+        'EventoTableMap::COL_DATA_INICIO' => 'DATA_INICIO',
+        'COL_DATA_INICIO' => 'DATA_INICIO',
+        'data_inicio' => 'DATA_INICIO',
+        'evento.data_inicio' => 'DATA_INICIO',
+        'DataFim' => 'DATA_FIM',
+        'Evento.DataFim' => 'DATA_FIM',
+        'dataFim' => 'DATA_FIM',
+        'evento.dataFim' => 'DATA_FIM',
+        'EventoTableMap::COL_DATA_FIM' => 'DATA_FIM',
+        'COL_DATA_FIM' => 'DATA_FIM',
+        'data_fim' => 'DATA_FIM',
+        'evento.data_fim' => 'DATA_FIM',
         'MandatoPresidente' => 'MANDATO_PRESIDENTE',
         'Evento.MandatoPresidente' => 'MANDATO_PRESIDENTE',
         'mandatoPresidente' => 'MANDATO_PRESIDENTE',
@@ -395,6 +421,8 @@ class EventoTableMap extends TableMap
         $this->addColumn('tem_certificado', 'TemCertificado', 'BOOLEAN', true, 1, false);
         $this->addColumn('presidente', 'Presidente', 'VARCHAR', false, 45, null);
         $this->addColumn('data', 'Data', 'VARCHAR', false, 100, null);
+        $this->addColumn('data_inicio', 'DataInicio', 'DATE', false, null, null);
+        $this->addColumn('data_fim', 'DataFim', 'DATE', false, null, null);
         $this->addColumn('mandato_presidente', 'MandatoPresidente', 'VARCHAR', false, 9, null);
         $this->addColumn('local', 'Local', 'VARCHAR', false, 120, null);
         $this->addColumn('em_andamento', 'EmAndamento', 'BOOLEAN', true, 1, false);
@@ -645,6 +673,8 @@ class EventoTableMap extends TableMap
             $criteria->addSelectColumn(EventoTableMap::COL_TEM_CERTIFICADO);
             $criteria->addSelectColumn(EventoTableMap::COL_PRESIDENTE);
             $criteria->addSelectColumn(EventoTableMap::COL_DATA);
+            $criteria->addSelectColumn(EventoTableMap::COL_DATA_INICIO);
+            $criteria->addSelectColumn(EventoTableMap::COL_DATA_FIM);
             $criteria->addSelectColumn(EventoTableMap::COL_MANDATO_PRESIDENTE);
             $criteria->addSelectColumn(EventoTableMap::COL_LOCAL);
             $criteria->addSelectColumn(EventoTableMap::COL_EM_ANDAMENTO);
@@ -663,6 +693,8 @@ class EventoTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.tem_certificado');
             $criteria->addSelectColumn($alias . '.presidente');
             $criteria->addSelectColumn($alias . '.data');
+            $criteria->addSelectColumn($alias . '.data_inicio');
+            $criteria->addSelectColumn($alias . '.data_fim');
             $criteria->addSelectColumn($alias . '.mandato_presidente');
             $criteria->addSelectColumn($alias . '.local');
             $criteria->addSelectColumn($alias . '.em_andamento');
@@ -698,6 +730,8 @@ class EventoTableMap extends TableMap
             $criteria->removeSelectColumn(EventoTableMap::COL_TEM_CERTIFICADO);
             $criteria->removeSelectColumn(EventoTableMap::COL_PRESIDENTE);
             $criteria->removeSelectColumn(EventoTableMap::COL_DATA);
+            $criteria->removeSelectColumn(EventoTableMap::COL_DATA_INICIO);
+            $criteria->removeSelectColumn(EventoTableMap::COL_DATA_FIM);
             $criteria->removeSelectColumn(EventoTableMap::COL_MANDATO_PRESIDENTE);
             $criteria->removeSelectColumn(EventoTableMap::COL_LOCAL);
             $criteria->removeSelectColumn(EventoTableMap::COL_EM_ANDAMENTO);
@@ -716,6 +750,8 @@ class EventoTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.tem_certificado');
             $criteria->removeSelectColumn($alias . '.presidente');
             $criteria->removeSelectColumn($alias . '.data');
+            $criteria->removeSelectColumn($alias . '.data_inicio');
+            $criteria->removeSelectColumn($alias . '.data_fim');
             $criteria->removeSelectColumn($alias . '.mandato_presidente');
             $criteria->removeSelectColumn($alias . '.local');
             $criteria->removeSelectColumn($alias . '.em_andamento');

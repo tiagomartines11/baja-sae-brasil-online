@@ -2,6 +2,7 @@
 
 namespace Baja\Model\Base;
 
+use \DateTime;
 use \Exception;
 use \PDO;
 use Baja\Model\Equipe as ChildEquipe;
@@ -45,6 +46,7 @@ use Propel\Runtime\Exception\LogicException;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Map\TableMap;
 use Propel\Runtime\Parser\AbstractParser;
+use Propel\Runtime\Util\PropelDateTime;
 
 /**
  * Base class that represents a row from the 'evento' table.
@@ -176,6 +178,20 @@ abstract class Evento implements ActiveRecordInterface
      * @var        string|null
      */
     protected $data;
+
+    /**
+     * The value for the data_inicio field.
+     *
+     * @var        DateTime|null
+     */
+    protected $data_inicio;
+
+    /**
+     * The value for the data_fim field.
+     *
+     * @var        DateTime|null
+     */
+    protected $data_fim;
 
     /**
      * The value for the mandato_presidente field.
@@ -751,6 +767,50 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Get the [optionally formatted] temporal [data_inicio] column value.
+     *
+     *
+     * @param string|null $format The date/time format string (either date()-style or strftime()-style).
+     *   If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime|null Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL, and 0 if column value is 0000-00-00.
+     *
+     * @throws \Propel\Runtime\Exception\PropelException - if unable to parse/validate the date/time value.
+     *
+     * @psalm-return ($format is null ? DateTime|null : string|null)
+     */
+    public function getDataInicio($format = null)
+    {
+        if ($format === null) {
+            return $this->data_inicio;
+        } else {
+            return $this->data_inicio instanceof \DateTimeInterface ? $this->data_inicio->format($format) : null;
+        }
+    }
+
+    /**
+     * Get the [optionally formatted] temporal [data_fim] column value.
+     *
+     *
+     * @param string|null $format The date/time format string (either date()-style or strftime()-style).
+     *   If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime|null Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL, and 0 if column value is 0000-00-00.
+     *
+     * @throws \Propel\Runtime\Exception\PropelException - if unable to parse/validate the date/time value.
+     *
+     * @psalm-return ($format is null ? DateTime|null : string|null)
+     */
+    public function getDataFim($format = null)
+    {
+        if ($format === null) {
+            return $this->data_fim;
+        } else {
+            return $this->data_fim instanceof \DateTimeInterface ? $this->data_fim->format($format) : null;
+        }
+    }
+
+    /**
      * Get the [mandato_presidente] column value.
      *
      * @return string|null
@@ -1088,6 +1148,46 @@ abstract class Evento implements ActiveRecordInterface
     }
 
     /**
+     * Sets the value of [data_inicio] column to a normalized version of the date/time value specified.
+     *
+     * @param string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this The current object (for fluent API support)
+     */
+    public function setDataInicio($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->data_inicio !== null || $dt !== null) {
+            if ($this->data_inicio === null || $dt === null || $dt->format("Y-m-d") !== $this->data_inicio->format("Y-m-d")) {
+                $this->data_inicio = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[EventoTableMap::COL_DATA_INICIO] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    }
+
+    /**
+     * Sets the value of [data_fim] column to a normalized version of the date/time value specified.
+     *
+     * @param string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this The current object (for fluent API support)
+     */
+    public function setDataFim($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->data_fim !== null || $dt !== null) {
+            if ($this->data_fim === null || $dt === null || $dt->format("Y-m-d") !== $this->data_fim->format("Y-m-d")) {
+                $this->data_fim = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[EventoTableMap::COL_DATA_FIM] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    }
+
+    /**
      * Set the value of [mandato_presidente] column.
      *
      * @param string|null $v New value
@@ -1291,19 +1391,31 @@ abstract class Evento implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 11 + $startcol : EventoTableMap::translateFieldName('Data', TableMap::TYPE_PHPNAME, $indexType)];
             $this->data = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : EventoTableMap::translateFieldName('MandatoPresidente', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 12 + $startcol : EventoTableMap::translateFieldName('DataInicio', TableMap::TYPE_PHPNAME, $indexType)];
+            if ($col === '0000-00-00') {
+                $col = null;
+            }
+            $this->data_inicio = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : EventoTableMap::translateFieldName('DataFim', TableMap::TYPE_PHPNAME, $indexType)];
+            if ($col === '0000-00-00') {
+                $col = null;
+            }
+            $this->data_fim = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 14 + $startcol : EventoTableMap::translateFieldName('MandatoPresidente', TableMap::TYPE_PHPNAME, $indexType)];
             $this->mandato_presidente = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 13 + $startcol : EventoTableMap::translateFieldName('Local', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 15 + $startcol : EventoTableMap::translateFieldName('Local', TableMap::TYPE_PHPNAME, $indexType)];
             $this->local = (null !== $col) ? (string) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 14 + $startcol : EventoTableMap::translateFieldName('EmAndamento', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 16 + $startcol : EventoTableMap::translateFieldName('EmAndamento', TableMap::TYPE_PHPNAME, $indexType)];
             $this->em_andamento = (null !== $col) ? (boolean) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 15 + $startcol : EventoTableMap::translateFieldName('CargaHoraria', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 17 + $startcol : EventoTableMap::translateFieldName('CargaHoraria', TableMap::TYPE_PHPNAME, $indexType)];
             $this->carga_horaria = (null !== $col) ? (int) $col : null;
 
-            $col = $row[TableMap::TYPE_NUM == $indexType ? 16 + $startcol : EventoTableMap::translateFieldName('ProgramaId', TableMap::TYPE_PHPNAME, $indexType)];
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 18 + $startcol : EventoTableMap::translateFieldName('ProgramaId', TableMap::TYPE_PHPNAME, $indexType)];
             $this->programa_id = (null !== $col) ? (string) $col : null;
 
             $this->resetModified();
@@ -1313,7 +1425,7 @@ abstract class Evento implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 17; // 17 = EventoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 19; // 19 = EventoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\Evento'), 0, $e);
@@ -1715,6 +1827,12 @@ abstract class Evento implements ActiveRecordInterface
         if ($this->isColumnModified(EventoTableMap::COL_DATA)) {
             $modifiedColumns[':p' . $index++]  = 'data';
         }
+        if ($this->isColumnModified(EventoTableMap::COL_DATA_INICIO)) {
+            $modifiedColumns[':p' . $index++]  = 'data_inicio';
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_DATA_FIM)) {
+            $modifiedColumns[':p' . $index++]  = 'data_fim';
+        }
         if ($this->isColumnModified(EventoTableMap::COL_MANDATO_PRESIDENTE)) {
             $modifiedColumns[':p' . $index++]  = 'mandato_presidente';
         }
@@ -1787,6 +1905,14 @@ abstract class Evento implements ActiveRecordInterface
                         break;
                     case 'data':
                         $stmt->bindValue($identifier, $this->data, PDO::PARAM_STR);
+
+                        break;
+                    case 'data_inicio':
+                        $stmt->bindValue($identifier, $this->data_inicio ? $this->data_inicio->format("Y-m-d") : null, PDO::PARAM_STR);
+
+                        break;
+                    case 'data_fim':
+                        $stmt->bindValue($identifier, $this->data_fim ? $this->data_fim->format("Y-m-d") : null, PDO::PARAM_STR);
 
                         break;
                     case 'mandato_presidente':
@@ -1901,18 +2027,24 @@ abstract class Evento implements ActiveRecordInterface
                 return $this->getData();
 
             case 12:
-                return $this->getMandatoPresidente();
+                return $this->getDataInicio();
 
             case 13:
-                return $this->getLocal();
+                return $this->getDataFim();
 
             case 14:
-                return $this->getEmAndamento();
+                return $this->getMandatoPresidente();
 
             case 15:
-                return $this->getCargaHoraria();
+                return $this->getLocal();
 
             case 16:
+                return $this->getEmAndamento();
+
+            case 17:
+                return $this->getCargaHoraria();
+
+            case 18:
                 return $this->getProgramaId();
 
             default:
@@ -1955,12 +2087,22 @@ abstract class Evento implements ActiveRecordInterface
             $keys[9] => $this->getTemCertificado(),
             $keys[10] => $this->getPresidente(),
             $keys[11] => $this->getData(),
-            $keys[12] => $this->getMandatoPresidente(),
-            $keys[13] => $this->getLocal(),
-            $keys[14] => $this->getEmAndamento(),
-            $keys[15] => $this->getCargaHoraria(),
-            $keys[16] => $this->getProgramaId(),
+            $keys[12] => $this->getDataInicio(),
+            $keys[13] => $this->getDataFim(),
+            $keys[14] => $this->getMandatoPresidente(),
+            $keys[15] => $this->getLocal(),
+            $keys[16] => $this->getEmAndamento(),
+            $keys[17] => $this->getCargaHoraria(),
+            $keys[18] => $this->getProgramaId(),
         ];
+        if ($result[$keys[12]] instanceof \DateTimeInterface) {
+            $result[$keys[12]] = $result[$keys[12]]->format('Y-m-d');
+        }
+
+        if ($result[$keys[13]] instanceof \DateTimeInterface) {
+            $result[$keys[13]] = $result[$keys[13]]->format('Y-m-d');
+        }
+
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
             $result[$key] = $virtualColumn;
@@ -2179,18 +2321,24 @@ abstract class Evento implements ActiveRecordInterface
                 $this->setData($value);
                 break;
             case 12:
-                $this->setMandatoPresidente($value);
+                $this->setDataInicio($value);
                 break;
             case 13:
-                $this->setLocal($value);
+                $this->setDataFim($value);
                 break;
             case 14:
-                $this->setEmAndamento($value);
+                $this->setMandatoPresidente($value);
                 break;
             case 15:
-                $this->setCargaHoraria($value);
+                $this->setLocal($value);
                 break;
             case 16:
+                $this->setEmAndamento($value);
+                break;
+            case 17:
+                $this->setCargaHoraria($value);
+                break;
+            case 18:
                 $this->setProgramaId($value);
                 break;
         } // switch()
@@ -2256,19 +2404,25 @@ abstract class Evento implements ActiveRecordInterface
             $this->setData($arr[$keys[11]]);
         }
         if (array_key_exists($keys[12], $arr)) {
-            $this->setMandatoPresidente($arr[$keys[12]]);
+            $this->setDataInicio($arr[$keys[12]]);
         }
         if (array_key_exists($keys[13], $arr)) {
-            $this->setLocal($arr[$keys[13]]);
+            $this->setDataFim($arr[$keys[13]]);
         }
         if (array_key_exists($keys[14], $arr)) {
-            $this->setEmAndamento($arr[$keys[14]]);
+            $this->setMandatoPresidente($arr[$keys[14]]);
         }
         if (array_key_exists($keys[15], $arr)) {
-            $this->setCargaHoraria($arr[$keys[15]]);
+            $this->setLocal($arr[$keys[15]]);
         }
         if (array_key_exists($keys[16], $arr)) {
-            $this->setProgramaId($arr[$keys[16]]);
+            $this->setEmAndamento($arr[$keys[16]]);
+        }
+        if (array_key_exists($keys[17], $arr)) {
+            $this->setCargaHoraria($arr[$keys[17]]);
+        }
+        if (array_key_exists($keys[18], $arr)) {
+            $this->setProgramaId($arr[$keys[18]]);
         }
 
         return $this;
@@ -2348,6 +2502,12 @@ abstract class Evento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(EventoTableMap::COL_DATA)) {
             $criteria->add(EventoTableMap::COL_DATA, $this->data);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_DATA_INICIO)) {
+            $criteria->add(EventoTableMap::COL_DATA_INICIO, $this->data_inicio);
+        }
+        if ($this->isColumnModified(EventoTableMap::COL_DATA_FIM)) {
+            $criteria->add(EventoTableMap::COL_DATA_FIM, $this->data_fim);
         }
         if ($this->isColumnModified(EventoTableMap::COL_MANDATO_PRESIDENTE)) {
             $criteria->add(EventoTableMap::COL_MANDATO_PRESIDENTE, $this->mandato_presidente);
@@ -2464,6 +2624,8 @@ abstract class Evento implements ActiveRecordInterface
         $copyObj->setTemCertificado($this->getTemCertificado());
         $copyObj->setPresidente($this->getPresidente());
         $copyObj->setData($this->getData());
+        $copyObj->setDataInicio($this->getDataInicio());
+        $copyObj->setDataFim($this->getDataFim());
         $copyObj->setMandatoPresidente($this->getMandatoPresidente());
         $copyObj->setLocal($this->getLocal());
         $copyObj->setEmAndamento($this->getEmAndamento());
@@ -4677,6 +4839,8 @@ abstract class Evento implements ActiveRecordInterface
         $this->tem_certificado = null;
         $this->presidente = null;
         $this->data = null;
+        $this->data_inicio = null;
+        $this->data_fim = null;
         $this->mandato_presidente = null;
         $this->local = null;
         $this->em_andamento = null;

@@ -121,7 +121,7 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
 
         // All four fields are in group 1, and the page only saves a complete
         // group (save_entry.php checks that too, see EntryValidator).
-        $saved = $this->postForm($savePage, $cookies, ['submit' => 'Salvar', 'VOLTAS' => '7', 'LAST' => '3600', 'BEST' => '95', 'DESCLAS' => 'NÃO']);
+        $saved = $this->submitForm($entryPage, $savePage, $cookies, ['submit' => 'Salvar', 'VOLTAS' => '7', 'LAST' => '3600', 'BEST' => '95', 'DESCLAS' => 'NÃO']);
         $this->assertSame(302, $saved['status']);
         $this->assertEquals(7, $this->publishedData(self::CAR_A)['VOLTAS']);
 
@@ -130,7 +130,8 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
         $this->assertDoesNotMatchRegularExpression('/<input[^>]+name="VOLTAS"/', $page['body']);
         $this->assertStringContainsString('Calculado pela contagem de voltas', $page['body']);
 
-        $this->postForm($savePage, $cookies, ['submit' => 'Salvar', 'VOLTAS' => '99', 'DESCLAS' => 'SIM']);
+        $saved = $this->submitForm($entryPage, $savePage, $cookies, ['submit' => 'Salvar', 'VOLTAS' => '99', 'DESCLAS' => 'SIM']);
+        $this->assertSame(302, $saved['status'], 'the save went through (only VOLTAS was ignored)');
         $this->assertNotEquals(99, $this->publishedData(self::CAR_A)['VOLTAS']);
         $this->assertSame('SIM', $this->publishedData(self::CAR_A)['DESCLAS']);
     }
@@ -212,7 +213,8 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
         $this->grant(self::CONTROLLER, '00NE_ZZL');
         $cookies = $this->loginAndGetCookies(self::CONTROLLER);
 
-        $answer = $this->postForm(
+        $answer = $this->submitForm(
+            '/00NE/entry.php?p=ZZL&t=' . self::CAR_A,
             '/00NE/save_entry.php?p=ZZL&t=' . self::CAR_A,
             $cookies,
             ['delete' => 'Deletar Nota', 'submit' => 'Salvar', 'DESCLAS' => 'NÃO']
@@ -525,7 +527,8 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
     // ------------------------------------------------------------------
 
     /**
-     * Sends a form the way a browser does.
+     * Sends a form exactly as given: the tests that check a request
+     * WITHOUT the form's token is refused use this directly.
      *
      * @param array<string, string> $cookies
      * @param array<string, string> $fields
@@ -534,6 +537,23 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
     private function postForm(string $path, array $cookies, array $fields): array
     {
         return $this->request('POST', $path, $cookies, http_build_query($fields), self::JUIZ_SITE, ['Content-Type: application/x-www-form-urlencoded']);
+    }
+
+    /**
+     * Sends a form the way a browser does: from the page it is on. That
+     * page is opened first and the secret token it printed into its forms
+     * (BAJAAPP-41) is sent with the fields. Without it the save page
+     * answers 403 and saves nothing, as it should for a forged request.
+     *
+     * @param string                $formPage the page that shows the form (entry.php for save_entry.php)
+     * @param array<string, string> $cookies
+     * @param array<string, string> $fields
+     * @return array{status: int, body: string, location: string, contentType: string, cookies: array<string, string>}
+     */
+    private function submitForm(string $formPage, string $action, array $cookies, array $fields): array
+    {
+        $page = $this->get($formPage, $cookies);
+        return $this->postForm($action, $cookies, $fields + ['_csrf' => $this->csrfTokenIn($page['body'])]);
     }
 
     /** The secret token a page printed into its forms. */

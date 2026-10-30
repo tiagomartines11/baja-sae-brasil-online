@@ -31,6 +31,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery orderByTemCertificado($order = Criteria::ASC) Order by the tem_certificado column
  * @method     ChildEventoQuery orderByPresidente($order = Criteria::ASC) Order by the presidente column
  * @method     ChildEventoQuery orderByData($order = Criteria::ASC) Order by the data column
+ * @method     ChildEventoQuery orderByDataInicio($order = Criteria::ASC) Order by the data_inicio column
+ * @method     ChildEventoQuery orderByDataFim($order = Criteria::ASC) Order by the data_fim column
  * @method     ChildEventoQuery orderByMandatoPresidente($order = Criteria::ASC) Order by the mandato_presidente column
  * @method     ChildEventoQuery orderByLocal($order = Criteria::ASC) Order by the local column
  * @method     ChildEventoQuery orderByEmAndamento($order = Criteria::ASC) Order by the em_andamento column
@@ -49,6 +51,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEventoQuery groupByTemCertificado() Group by the tem_certificado column
  * @method     ChildEventoQuery groupByPresidente() Group by the presidente column
  * @method     ChildEventoQuery groupByData() Group by the data column
+ * @method     ChildEventoQuery groupByDataInicio() Group by the data_inicio column
+ * @method     ChildEventoQuery groupByDataFim() Group by the data_fim column
  * @method     ChildEventoQuery groupByMandatoPresidente() Group by the mandato_presidente column
  * @method     ChildEventoQuery groupByLocal() Group by the local column
  * @method     ChildEventoQuery groupByEmAndamento() Group by the em_andamento column
@@ -170,6 +174,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento|null findOneByTemCertificado(boolean $tem_certificado) Return the first ChildEvento filtered by the tem_certificado column
  * @method     ChildEvento|null findOneByPresidente(string $presidente) Return the first ChildEvento filtered by the presidente column
  * @method     ChildEvento|null findOneByData(string $data) Return the first ChildEvento filtered by the data column
+ * @method     ChildEvento|null findOneByDataInicio(string $data_inicio) Return the first ChildEvento filtered by the data_inicio column
+ * @method     ChildEvento|null findOneByDataFim(string $data_fim) Return the first ChildEvento filtered by the data_fim column
  * @method     ChildEvento|null findOneByMandatoPresidente(string $mandato_presidente) Return the first ChildEvento filtered by the mandato_presidente column
  * @method     ChildEvento|null findOneByLocal(string $local) Return the first ChildEvento filtered by the local column
  * @method     ChildEvento|null findOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column
@@ -191,6 +197,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildEvento requireOneByTemCertificado(boolean $tem_certificado) Return the first ChildEvento filtered by the tem_certificado column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByPresidente(string $presidente) Return the first ChildEvento filtered by the presidente column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByData(string $data) Return the first ChildEvento filtered by the data column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEvento requireOneByDataInicio(string $data_inicio) Return the first ChildEvento filtered by the data_inicio column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildEvento requireOneByDataFim(string $data_fim) Return the first ChildEvento filtered by the data_fim column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByMandatoPresidente(string $mandato_presidente) Return the first ChildEvento filtered by the mandato_presidente column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByLocal(string $local) Return the first ChildEvento filtered by the local column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildEvento requireOneByEmAndamento(boolean $em_andamento) Return the first ChildEvento filtered by the em_andamento column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -224,6 +232,10 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildEvento> findByPresidente(string|array<string> $presidente) Return ChildEvento objects filtered by the presidente column
  * @method     ChildEvento[]|Collection findByData(string|array<string> $data) Return ChildEvento objects filtered by the data column
  * @psalm-method Collection&\Traversable<ChildEvento> findByData(string|array<string> $data) Return ChildEvento objects filtered by the data column
+ * @method     ChildEvento[]|Collection findByDataInicio(string|array<string> $data_inicio) Return ChildEvento objects filtered by the data_inicio column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByDataInicio(string|array<string> $data_inicio) Return ChildEvento objects filtered by the data_inicio column
+ * @method     ChildEvento[]|Collection findByDataFim(string|array<string> $data_fim) Return ChildEvento objects filtered by the data_fim column
+ * @psalm-method Collection&\Traversable<ChildEvento> findByDataFim(string|array<string> $data_fim) Return ChildEvento objects filtered by the data_fim column
  * @method     ChildEvento[]|Collection findByMandatoPresidente(string|array<string> $mandato_presidente) Return ChildEvento objects filtered by the mandato_presidente column
  * @psalm-method Collection&\Traversable<ChildEvento> findByMandatoPresidente(string|array<string> $mandato_presidente) Return ChildEvento objects filtered by the mandato_presidente column
  * @method     ChildEvento[]|Collection findByLocal(string|array<string> $local) Return ChildEvento objects filtered by the local column
@@ -333,7 +345,7 @@ abstract class EventoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers, tem_certificado, presidente, data, mandato_presidente, local, em_andamento, carga_horaria, programa_id FROM evento WHERE evento_id = :p0';
+        $sql = 'SELECT evento_id, titulo, nome, tipo, ano, menu, ativo, finalizado, spoilers, tem_certificado, presidente, data, data_inicio, data_fim, mandato_presidente, local, em_andamento, carga_horaria, programa_id FROM evento WHERE evento_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
@@ -785,6 +797,96 @@ abstract class EventoQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(EventoTableMap::COL_DATA, $data, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the data_inicio column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByDataInicio('2011-03-14'); // WHERE data_inicio = '2011-03-14'
+     * $query->filterByDataInicio('now'); // WHERE data_inicio = '2011-03-14'
+     * $query->filterByDataInicio(array('max' => 'yesterday')); // WHERE data_inicio > '2011-03-13'
+     * </code>
+     *
+     * @param mixed $dataInicio The value to use as filter.
+     *              Values can be integers (unix timestamps), DateTime objects, or strings.
+     *              Empty strings are treated as NULL.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByDataInicio($dataInicio = null, ?string $comparison = null)
+    {
+        if (is_array($dataInicio)) {
+            $useMinMax = false;
+            if (isset($dataInicio['min'])) {
+                $this->addUsingAlias(EventoTableMap::COL_DATA_INICIO, $dataInicio['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($dataInicio['max'])) {
+                $this->addUsingAlias(EventoTableMap::COL_DATA_INICIO, $dataInicio['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(EventoTableMap::COL_DATA_INICIO, $dataInicio, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the data_fim column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByDataFim('2011-03-14'); // WHERE data_fim = '2011-03-14'
+     * $query->filterByDataFim('now'); // WHERE data_fim = '2011-03-14'
+     * $query->filterByDataFim(array('max' => 'yesterday')); // WHERE data_fim > '2011-03-13'
+     * </code>
+     *
+     * @param mixed $dataFim The value to use as filter.
+     *              Values can be integers (unix timestamps), DateTime objects, or strings.
+     *              Empty strings are treated as NULL.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByDataFim($dataFim = null, ?string $comparison = null)
+    {
+        if (is_array($dataFim)) {
+            $useMinMax = false;
+            if (isset($dataFim['min'])) {
+                $this->addUsingAlias(EventoTableMap::COL_DATA_FIM, $dataFim['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($dataFim['max'])) {
+                $this->addUsingAlias(EventoTableMap::COL_DATA_FIM, $dataFim['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(EventoTableMap::COL_DATA_FIM, $dataFim, $comparison);
 
         return $this;
     }

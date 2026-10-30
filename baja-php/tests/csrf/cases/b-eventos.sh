@@ -30,21 +30,23 @@ php_in_app '
 
 # --- evento.php ---------------------------------------------------------------
 
-# Editing an event. The state is its title and its spoiler flag: the form
-# sends a new title and ticks "Spoilers?", so "Fixture BAJAAPP-41|0" should
-# become "ZZ Atualizado|1", and only with the token.
-form_case "evento.php: Atualizar (with spoilers)" "$SID_ADM" \
+# Editing an event. The state is its title, its spoiler flag and its first
+# and last day: the form sends a new title, ticks "Spoilers?" and gives the
+# dates (BAJAAPP-12), so "Fixture BAJAAPP-41|0||" should become
+# "ZZ Atualizado|1|2028-11-12|2028-11-14", and only with the token.
+form_case "evento.php: Atualizar (with spoilers and dates)" "$SID_ADM" \
     "/$EVT/evento.php?id=28SU" "/$EVT/evento.php?id=28SU" \
-    '$e = EventoQuery::create()->findPk("28SU"); echo $e->getTitulo() . "|" . (int) $e->getSpoilers();' \
+    '$e = EventoQuery::create()->findPk("28SU"); echo $e->getTitulo() . "|" . (int) $e->getSpoilers() . "|" . $e->getDataInicio("Y-m-d") . "|" . $e->getDataFim("Y-m-d");' \
     "act=Atualizar" "titulo=ZZ Atualizado" "nome=Evento de teste (CSRF)" "programa=Sul" "programa_id=BAJA" "ano=2028" \
-    "carga_horaria=10" "spoilers=1" "data=" "local=" "presidente=" "mandato=" "menu=[]"
+    "carga_horaria=10" "spoilers=1" "data=" "data_inicio=2028-11-12" "data_fim=2028-11-14" "local=" "presidente=" "mandato=" "menu=[]"
 
-# Creating an event, 28NE. The state is whether 28NE exists: 0, then 1.
+# Creating an event, 28NE, with its first and last day. The state is
+# whether 28NE exists, and then its last day: 0, then 2028-10-22.
 form_case "evento.php: Salvar (new event)" "$SID_ADM" \
     "/$EVT/evento.php?novo=true" "/$EVT/evento.php?novo=true" \
-    'echo EventoQuery::create()->findPk("28NE") ? 1 : 0;' \
+    '$e = EventoQuery::create()->findPk("28NE"); echo $e ? $e->getDataFim("Y-m-d") : 0;' \
     "act=Salvar" "evento_id=28NE" "titulo=ZZ Novo" "nome=Evento novo (CSRF)" "programa=Sul" "programa_id=BAJA" "ano=2028" \
-    "carga_horaria=10" "data=" "local=" "presidente=" "mandato=" "menu=[]"
+    "carga_horaria=10" "data=" "data_inicio=2028-10-20" "data_fim=2028-10-22" "local=" "presidente=" "mandato=" "menu=[]"
 
 # Deleting the event just made. The state is whether 28NE exists: 1, then 0.
 # The GET check matters most here: as a plain link, this used to delete.
@@ -125,7 +127,7 @@ form_case "clonar_evento.php: Clonar" "$SID_ADM" \
 # --- put the shared rows back -----------------------------------------------------
 php_in_app '
     $e = EventoQuery::create()->findPk("28SU");
-    $e->setTitulo("Fixture BAJAAPP-41"); $e->setSpoilers(false); $e->save();
+    $e->setTitulo("Fixture BAJAAPP-41"); $e->setSpoilers(false); $e->setDataInicio(null); $e->setDataFim(null); $e->save();
     \Propel\Runtime\Propel::getConnection()->exec("UPDATE prova SET status = 1 WHERE evento_id = \"28SU\" AND prova_id = \"ZZA\"");
     $q = EquipeQuery::create()->filterByEventoId("28SU")->findOneByEquipeId(1);
     $q->setEquipe("EQUIPE TESTE 1"); $q->save();

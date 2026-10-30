@@ -5,6 +5,7 @@ use Baja\Auth\Csrf;
 use Baja\Model\EventoQuery;
 use Baja\Model\Evento;
 use Baja\Model\ProgramaQuery;
+use Baja\Juiz\DatasEvento;
 use Baja\ResultsArchive\Queue;
 use Baja\Session;
 use Baja\Site\Html;
@@ -35,6 +36,12 @@ $erroPrograma = false;
 $programaEscolhido = isset($_POST['programa_id']) && is_string($_POST['programa_id'])
     ? ProgramaQuery::create()->findPk($_POST['programa_id'])
     : null;
+
+// The event's first and last day (BAJAAPP-12). Optional, but a date that is
+// not a real day, or a last day before the first, saves nothing and shows
+// the form again with this message.
+$datas = DatasEvento::doFormulario($_POST['data_inicio'] ?? null, $_POST['data_fim'] ?? null);
+$erroDatas = null;
 
 if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
     $novo = true;
@@ -90,9 +97,13 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
                 $erroJson = $menu->erro;
             } elseif ($programaEscolhido === null || !$programaEscolhido->getAtivo()) {
                 $erroPrograma = true;
+            } elseif (!$datas->valido()) {
+                $erroDatas = $datas->erro;
             } else {
                 $evento->setMenu($menu->valor);
                 $evento->setProgramaId($programaEscolhido->getProgramaId());
+                $evento->setDataInicio($datas->inicio);
+                $evento->setDataFim($datas->fim);
 
                 $evento->setEmAndamento(false);
 
@@ -173,9 +184,13 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             // An inactive program is only accepted when it is the one the
             // event already has, as the select below offers.
             $erroPrograma = true;
+        } elseif (!$datas->valido()) {
+            $erroDatas = $datas->erro;
         } else {
             $evento->setMenu($menu->valor);
             $evento->setProgramaId($programaEscolhido->getProgramaId());
+            $evento->setDataInicio($datas->inicio);
+            $evento->setDataFim($datas->fim);
 
             // Saves, then records or cancels the archive request a
             // finalizado change asks for. The event is saved even when that
@@ -235,6 +250,11 @@ Template::printHeader("Detalhes do Evento", false);
                 <?php if ($erroPrograma) { ?>
                 <tr>
                     <td colspan="2" style="color: red; font-weight: bold;">Evento não salvo: escolha o programa do evento e salve de novo.</td>
+                </tr>
+                <?php } ?>
+                <?php if ($erroDatas !== null) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Evento não salvo: <?= Html::e($erroDatas) ?>. Corrija as datas e salve de novo.</td>
                 </tr>
                 <?php } ?>
                 <tr>
@@ -333,6 +353,20 @@ Template::printHeader("Detalhes do Evento", false);
                 <tr>
                     <td>Data Evento</td>
                     <td><input style="width:700px;" type="text" name="data" value="<?= $novo?'':Html::field($evento->getData()) ?>" /></td>
+                </tr>
+                <?php
+                // After a refused save, the dates as typed; otherwise as stored.
+                $dataDoCampo = static fn(string $campo, ?string $salva): string
+                    => $erroDatas !== null ? (is_string($_POST[$campo] ?? null) ? $_POST[$campo] : '') : (string)$salva;
+                ?>
+                <tr>
+                    <td>Primeiro dia</td>
+                    <td><input type="date" name="data_inicio" value="<?= Html::field($dataDoCampo('data_inicio', $novo ? null : $evento->getDataInicio('Y-m-d'))) ?>" /></td>
+                </tr>
+                <tr>
+                    <td>Último dia</td>
+                    <td><input type="date" name="data_fim" value="<?= Html::field($dataDoCampo('data_fim', $novo ? null : $evento->getDataFim('Y-m-d'))) ?>" />
+                        <span style="font-size: 12px; margin-left: 8px;">Os papéis dados no evento (juízes, filas...) terminam alguns dias depois deste dia. Sem ele, cada papel precisa de uma data de fim.</span></td>
                 </tr>
                 <tr>
                     <td>Local Evento</td>
