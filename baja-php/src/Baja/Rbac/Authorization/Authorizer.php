@@ -67,15 +67,31 @@ final class Authorizer
      */
     public function holdsAt(int $userId, Permission $permission, ScopeNode $node): bool
     {
+        return $this->grantsGiving($userId, $permission, $node) !== [];
+    }
+
+    /**
+     * The user's active grants that give $permission on $node: on the node
+     * or above it, with a role that carries the permission and may be given
+     * on the grant's type of node. Empty when the node does not exist.
+     *
+     * Delegation uses it to find when the granter's own right to grant
+     * ends (RoleGranting).
+     *
+     * @return Grant[]
+     */
+    public function grantsGiving(int $userId, Permission $permission, ScopeNode $node): array
+    {
         $path = $this->tree->pathToRoot($node);
         if ($path === null) {
-            return false;
+            return [];
         }
         $reaches = [];
         foreach ($path as $pathNode) {
             $reaches[$pathNode->key()] = true;
         }
 
+        $giving = [];
         foreach ($this->activeGrants($userId) as $grant) {
             $grantNode = $grant->scope();
             if ($grantNode === null || !isset($reaches[$grantNode->key()])) {
@@ -83,10 +99,10 @@ final class Authorizer
             }
             $role = $this->roles->byId($grant->roleId);
             if ($role !== null && $role->isAllowedAt($grantNode->type) && $role->has($permission)) {
-                return true;
+                $giving[] = $grant;
             }
         }
-        return false;
+        return $giving;
     }
 
     /** Forgets what was read about this user: after this request changed their grants. */

@@ -207,6 +207,8 @@ jobs:
           mysql -uroot -proot < 07-evento-arquivamento.sql
           mysql -uroot -proot < 08-programa.sql
           mysql -uroot -proot < 09-rbac.sql
+          mysql -uroot -proot < 10-evento-datas.sql
+          mysql -uroot -proot < 11-role-audit-triggers.sql
           mysql -uroot -proot -e "CREATE USER 'snapshot'@'%' IDENTIFIED BY 'snapshot'; GRANT SELECT ON baja_resultados.* TO 'snapshot'@'%';"
 
       # The tool writes nothing, and takes an event of any competition

@@ -34,6 +34,12 @@
     <column name="tem_certificado" phpName="TemCertificado" type="BOOLEAN" required="true" default="false"/>
     <column name="presidente" phpName="Presidente" type="VARCHAR" size="45"/>
     <column name="data" phpName="Data" type="VARCHAR" size="100"/>
+    <!-- The event's first and last day, as dates (BAJAAPP-12). `data` above
+         stays the text people read ("20 a 24 de abril de 2022"); these are
+         what code reads: a role given on the event ends a few days after
+         data_fim (Baja\Rbac\Expiry\GrantExpiry). Empty when not known. -->
+    <column name="data_inicio" phpName="DataInicio" type="DATE"/>
+    <column name="data_fim" phpName="DataFim" type="DATE"/>
     <column name="mandato_presidente" phpName="MandatoPresidente" type="VARCHAR" size="9"/>
     <column name="local" phpName="Local" type="VARCHAR" size="120"/>
     <column name="em_andamento" phpName="EmAndamento" type="BOOLEAN" required="true" default="false"/>
@@ -1045,7 +1051,9 @@
   <!-- Append-only record of every grant, revoke and role edit. The
        application only ever INSERTs here. No foreign keys: an entry must
        survive whatever it talks about. actor_user_id is null for the
-       migration. details: JSON, what changed. -->
+       migration. details: JSON, what changed. MySQL refuses any UPDATE or
+       DELETE on it: triggers, created by PropelMigration_1793100000 (a
+       schema can't describe them). -->
   <table name="role_audit" idMethod="native" phpName="RoleAudit">
     <column name="audit_id" phpName="AuditId" type="BIGINT" primaryKey="true" autoIncrement="true" required="true"/>
     <column name="occurred_at" phpName="OccurredAt" type="TIMESTAMP" sqlType="DATETIME" required="true"/>

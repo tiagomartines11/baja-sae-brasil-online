@@ -30,7 +30,8 @@ use PHPUnit\Framework\Attributes\Group;
  *   4. they hold, on N, EVERY permission R carries (no escalation: you
  *      can only hand out what you have yourself);
  *   5. if R is a system role, they hold role.manage.
- * Revoking asks the same.
+ * Revoking asks the same. And the new grant never ends later than the
+ * granter's own right to grant there.
  *
  * Every refused attempt is checked to have written NOTHING: no grant, no
  * audit row (AuditTrailTest checks the audit rows of allowed ones).
@@ -277,8 +278,8 @@ final class DelegationTest extends RbacDbTestCase
         $this->assertSame('2099-03-19 23:59:59', $this->grantRows('judge')[0]['valid_until']);
     }
 
-    /** An event whose date cannot be read: refused without an end, accepted with one. */
-    public function testAnEventWithAnUnreadableDateNeedsAnExplicitEnd(): void
+    /** An event with no end date (data_fim) yet: refused without an end, accepted with one. */
+    public function testAnEventWithoutAnEndDateNeedsAnExplicitEnd(): void
     {
         $this->giveDirectly($this->user('admin'), 'platform_admin', ScopeNode::platform());
 
@@ -304,6 +305,155 @@ final class DelegationTest extends RbacDbTestCase
         $this->grant('admin', 'baja', 'program_manager', ScopeNode::programa('BAJA'));
 
         $this->assertNull($this->grantRows('baja')[0]['valid_until']);
+    }
+
+    // --- A grant never outlives the granter's right to grant -----------------------------------------
+    //
+    // WHY: without this, someone whose right to hand out roles ends in five
+    // days could make a judge for a year, and through that judge's friend
+    // (if the judge could grant) keep access going after their own ended.
+    // The limit is the end of the granter's "covering" grant: the
+    // latest-ending of their active grants carrying role.grant on the node
+    // or above it.
+
+    /**
+     * SITUATION: a head judge whose own role ends on 5 March, 18:00, asks to
+     * make a judge until 1 April. EXPECTED: refused, nothing written, and
+     * the message says until when they may grant.
+     */
+    public function testAGrantCannotBeAskedToOutliveTheGranter(): void
+    {
+        $this->giveDirectly($this->user('head'), 'head_judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-05 18:00:00');
+
+        $this->assertRefused(
+            GrantRefused::VALID_UNTIL_AFTER_GRANTER,
+            fn() => $this->grant('head', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2099-04-01 00:00:00')
+        );
+        try {
+            $this->grant('head', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2099-04-01 00:00:00');
+            $this->fail('The grant was allowed to outlive the head judge.');
+        } catch (GrantRefused $e) {
+            $this->assertStringContainsString('2099-03-05 18:00:00', $e->getMessage(), 'The message says until when the head judge may grant.');
+        }
+    }
+
+    /** Ending exactly when the granter's right ends is allowed. */
+    public function testAGrantMayEndExactlyWhenTheGranterDoes(): void
+    {
+        $this->giveDirectly($this->user('head'), 'head_judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-05 18:00:00');
+
+        $this->grant('head', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-05 18:00:00');
+
+        $this->assertSame('2099-03-05 18:00:00', $this->grantRows('judge')[0]['valid_until']);
+    }
+
+    /**
+     * With no end asked for, the default (19 March) would outlive the head
+     * judge (5 March): it is brought forward to 5 March, 18:00.
+     */
+    public function testTheDefaultEndIsBroughtForwardToTheGranterEnd(): void
+    {
+        $this->giveDirectly($this->user('head'), 'head_judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-05 18:00:00');
+
+        $this->grant('head', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'));
+
+        $this->assertSame('2099-03-05 18:00:00', $this->grantRows('judge')[0]['valid_until']);
+    }
+
+    /**
+     * Of several covering grants, the one that ends LAST sets the limit: a
+     * head judge until 5 March who is also event manager until 25 March may
+     * make a judge until 20 March.
+     */
+    public function testTheLatestEndingCoveringGrantSetsTheLimit(): void
+    {
+        $this->giveDirectly($this->user('head'), 'head_judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-05 18:00:00');
+        $this->giveDirectly($this->user('head'), 'event_manager', ScopeNode::evento('96BR'), '2099-03-25 00:00:00');
+
+        $this->grant('head', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-20 00:00:00');
+
+        $this->assertSame('2099-03-20 00:00:00', $this->grantRows('judge')[0]['valid_until']);
+    }
+
+    /**
+     * Only grants that carry role.grant count. Being a judge there until
+     * December does not stretch a head judge role that ends on 5 March: the
+     * judge role cannot give roles at all.
+     */
+    public function testAGrantWithoutRoleGrantDoesNotStretchTheLimit(): void
+    {
+        $this->giveDirectly($this->user('head'), 'head_judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-05 18:00:00');
+        $this->giveDirectly($this->user('head'), 'judge', ScopeNode::prova('96BR', 'ZZA'), '2099-12-31 00:00:00');
+
+        $this->assertRefused(
+            GrantRefused::VALID_UNTIL_AFTER_GRANTER,
+            fn() => $this->grant('head', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-20 00:00:00')
+        );
+    }
+
+    /**
+     * Only grants that reach the node count. Being head judge of the other
+     * prova until December says nothing about how long they may grant on
+     * this one.
+     */
+    public function testAGrantElsewhereDoesNotStretchTheLimit(): void
+    {
+        $this->giveDirectly($this->user('head'), 'head_judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-05 18:00:00');
+        $this->giveDirectly($this->user('head'), 'head_judge', ScopeNode::prova('96BR', 'ZZB'), '2099-12-31 00:00:00');
+
+        $this->assertRefused(
+            GrantRefused::VALID_UNTIL_AFTER_GRANTER,
+            fn() => $this->grant('head', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-20 00:00:00')
+        );
+    }
+
+    /** A revoked grant does not count either, however long it would have lasted. */
+    public function testARevokedGrantDoesNotStretchTheLimit(): void
+    {
+        $this->giveDirectly($this->user('head'), 'head_judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-05 18:00:00');
+        $this->giveDirectly($this->user('head'), 'event_manager', ScopeNode::evento('96BR'), null, '2099-02-01 00:00:00');
+
+        $this->assertRefused(
+            GrantRefused::VALID_UNTIL_AFTER_GRANTER,
+            fn() => $this->grant('head', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2099-03-20 00:00:00')
+        );
+    }
+
+    /**
+     * Above an event there is no default end. A program manager whose role
+     * ends on 30 June who makes another program manager: that grant ends on
+     * 30 June too, it does not last until revoked.
+     */
+    public function testAGrantWithNoDefaultEndTakesTheGranterEnd(): void
+    {
+        $this->giveDirectly($this->user('pm'), 'program_manager', ScopeNode::programa('BAJA'), '2099-06-30 23:59:59');
+
+        $this->grant('pm', 'pm2', 'program_manager', ScopeNode::programa('BAJA'));
+
+        $this->assertSame('2099-06-30 23:59:59', $this->grantRows('pm2')[0]['valid_until']);
+    }
+
+    /** A platform admin whose grant never ends has no limit: any future end, or none above an event. */
+    public function testAPlatformAdminWithoutAnEndIsNotLimited(): void
+    {
+        $this->giveDirectly($this->user('admin'), 'platform_admin', ScopeNode::platform());
+
+        $this->grant('admin', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2199-01-01 00:00:00');
+        $this->grant('admin', 'baja', 'program_manager', ScopeNode::programa('BAJA'));
+
+        $this->assertSame('2199-01-01 00:00:00', $this->grantRows('judge')[0]['valid_until']);
+        $this->assertNull($this->grantRows('baja')[0]['valid_until']);
+    }
+
+    /** A platform admin whose own grant ends is limited like anyone else. */
+    public function testAPlatformAdminWithAnEndIsLimitedToo(): void
+    {
+        $this->giveDirectly($this->user('admin'), 'platform_admin', ScopeNode::platform(), '2099-12-31 00:00:00');
+
+        $this->assertRefused(
+            GrantRefused::VALID_UNTIL_AFTER_GRANTER,
+            fn() => $this->grant('admin', 'judge', 'judge', ScopeNode::prova('96BR', 'ZZA'), '2199-01-01 00:00:00')
+        );
     }
 
     // --- Revoking ---------------------------------------------------------------------------------------

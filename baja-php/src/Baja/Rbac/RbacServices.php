@@ -48,7 +48,7 @@ final class RbacServices
     /**
      * @param callable|null $warn fn(string $message, array $context): void, for refusals and unknown nodes; Baja\Logger::warning by default
      * @param AuditLog|null $audit the role_audit table by default
-     * @param GrantExpiry|null $expiry from evento.data and the config by default
+     * @param GrantExpiry|null $expiry from evento.data_fim and the config by default
      */
     public static function create(ConnectionInterface $con, Clock $clock, ?callable $warn = null, ?AuditLog $audit = null, ?GrantExpiry $expiry = null): self
     {

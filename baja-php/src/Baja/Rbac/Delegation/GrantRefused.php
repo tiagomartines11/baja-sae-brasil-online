@@ -42,6 +42,9 @@ final class GrantRefused extends RuntimeException
     public const VALID_UNTIL_REQUIRED = 'valid_until_required';
     public const VALID_UNTIL_IN_PAST = 'valid_until_in_past';
 
+    /** The asked-for end is after the granter's own right to grant there ends. */
+    public const VALID_UNTIL_AFTER_GRANTER = 'valid_until_after_granter';
+
     public function __construct(public readonly string $reason, string $message)
     {
         parent::__construct($message);

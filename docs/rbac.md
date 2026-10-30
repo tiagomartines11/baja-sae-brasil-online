@@ -78,6 +78,11 @@ about:
 | role.grant | every type | `admin` on the user pages |
 | role.manage | platform only | (new) edit role definitions, give system roles |
 
+`<EVT>_TIMER_<id>` gave one timer of an event. `timer.operate` is given on
+the whole event instead: a timer operator may run every timer of their
+event. This is decided, not an oversight. Timers aren't scope nodes, and
+making them nodes for this one code isn't worth it.
+
 Two legacy codes have no permission: `index`, which only lets you reach the
 judge landing page, and `<EVT>_FILA_<id>_<equipe>`, a team's own access to
 its queue. A team isn't staff, so that code isn't a role.
@@ -129,6 +134,9 @@ someone holding `platform_admin` on the platform node.
    prevents escalation: you can only hand out what you hold yourself;
 5. for a system role, the granter has role.manage.
 
+The new grant also **never outlives the granter's own right to grant
+there**. See "Expiry" below.
+
 **Revoking** checks the same five rules. Anyone who could have given a
 grant can take it away.
 
@@ -139,9 +147,18 @@ transaction. A refused attempt writes nothing and logs a warning.
 `role_audit` row with the role before and after.
 
 Grants are never deleted. A revoke fills in `revoked_at` and `revoked_by`.
-Nothing updates or deletes `role_audit`, and
-`tests/Unit/Rbac/AuditIsAppendOnlyTest.php` checks that. The database
-account could do it, so the tests are what enforce it.
+
+`role_audit` is append-only, and MySQL itself enforces it: two triggers,
+`role_audit_no_update` and `role_audit_no_delete`, refuse every UPDATE and
+DELETE on it with an error (SQLSTATE 45000). Our code doesn't try either, and
+`tests/Unit/Rbac/AuditIsAppendOnlyTest.php` checks that.
+`tests/Rbac/Db/AuditIsAppendOnlyInMysqlTest.php` checks that MySQL refuses
+both.
+
+The triggers don't stop TRUNCATE or DROP TABLE, which fire no triggers, or
+someone dropping the triggers first. Each of those needs a privilege the
+application's MySQL account has today (ALL on `baja_resultados`). Taking
+those privileges away from it would be a separate change.
 
 ## Expiry
 
@@ -150,13 +167,35 @@ the event's last day**, at 23:59:59. That's the default when the granter
 doesn't give an end. You can change the 7 with the `config` key
 `rbac.dias_apos_evento`.
 
-The last day is read from `evento.data`, which is free text such as "20 a 24
-de abril de 2022". When it can't be read, the grant is **refused** unless the
-granter gives `valid_until` explicitly. Guessing would be wrong both ways:
-too early locks judges out during the event, and no end at all leaves access
-open forever.
+The last day is `evento.data_fim`, a DATE set on `juiz/evento.php` (along
+with `data_inicio`, the first day). When an event has no `data_fim`, the
+grant is **refused** unless the granter gives `valid_until` explicitly.
+Guessing would be wrong both ways: too early locks judges out during the
+event, and no end at all leaves access open forever.
 
-Grants on a program or on the platform have no default end.
+`evento.data` stays the free text people read ("20 a 24 de abril de 2022").
+Code never reads it. The migration that added the two date columns
+(`PropelMigration_1793090000`) read it once, for the events that already
+existed. It filled the dates where the text was exactly a date and printed
+the events it couldn't read.
+
+Grants on a program or on the platform have no default end of their own.
+
+**A grant never outlives the grant that allowed it.** The granter's limit
+is the end of their *covering* grant: the latest-ending of their active
+grants that carry role.grant on the node or above it. If one of those grants
+has no end, as with a platform admin, there is no limit. Then:
+
+- an explicit `valid_until` after the limit is **refused**
+  (`VALID_UNTIL_AFTER_GRANTER`), and the message says until when they may
+  grant. It is never quietly shortened, because the person asked for that
+  date;
+- the default end is brought forward to the limit when it would be later.
+  So is a grant that has no default end (one on a program). Nobody asked for
+  those dates, so taking the latest allowed one surprises no one.
+
+Revoking the covering grant later doesn't end grants made with it. They keep
+their own `valid_until`, which is never later than the covering grant's end.
 
 ## Caching
 
@@ -177,13 +216,15 @@ src/Baja/Rbac/
   Grant/                 Grant, GrantRepository
   Authorization/         Authorizer
   Delegation/            RoleGranting, RoleEditor, GrantRefused
-  Expiry/                GrantExpiry, EventDateParser
+  Expiry/                GrantExpiry
   Audit/                 AuditLog, DatabaseAuditLog
   RbacServices.php       wires one request's set
 ```
 
 The tables (`programa`, `role`, `role_permission`, `user_role`,
-`role_audit`) are in `schema.xml`, with comments. The RBAC tables are read
+`role_audit`) and `evento.data_inicio` / `data_fim` are in `schema.xml`, with
+comments. The `role_audit` triggers are in `PropelMigration_1793100000`,
+which explains them; `schema.xml` can't describe triggers. The RBAC tables are read
 with plain SQL, not with generated models.
 
 ## Tests
@@ -195,5 +236,7 @@ docker compose exec -e BAJA_TEST_DB=1 baja-app vendor/bin/phpunit --testsuite db
 ```
 
 The database tests create made-up events (96BR, 96SE, 96AR, 96FA, 97BR),
-users (`zzrbac_*`) and roles (`zz_*`), and remove them afterwards. CI runs
-both groups.
+users (`zzrbac_*`) and roles (`zz_*`), and remove them afterwards. The
+exception is their `role_audit` rows, which the triggers keep. Those rows
+name users and roles that no longer exist, and `AUTO_INCREMENT` never reuses
+those ids, so no later test reads them as its own. CI runs both groups.

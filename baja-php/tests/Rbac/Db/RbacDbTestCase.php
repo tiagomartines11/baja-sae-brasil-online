@@ -25,8 +25,8 @@ use Propel\Runtime\Connection\ConnectionInterface;
  *
  *     platform
  *       BAJA  (real program)
- *         96BR  "10 a 12 de março de 2099"   provas ZZA, ZZB   queues 1, 2
- *         96SE  "a definir" (no readable date)  prova ZZA
+ *         96BR  10 to 12 March 2099           provas ZZA, ZZB   queues 1, 2
+ *         96SE  no dates yet (data_fim empty)  prova ZZA
  *       AERO  (real program)
  *         96AR                                 prova ZZA
  *         AERO_FORUM  (real program)
@@ -179,13 +179,13 @@ abstract class RbacDbTestCase extends TestCase
     private function createWorld(): void
     {
         $event = $this->con->prepare(
-            "INSERT INTO evento (evento_id, titulo, nome, ano, ativo, programa_id, data)
-             VALUES (?, 'Fixture BAJAAPP-12', 'Evento de teste (RBAC)', 2099, 0, ?, ?)"
+            "INSERT INTO evento (evento_id, titulo, nome, ano, ativo, programa_id, data, data_inicio, data_fim)
+             VALUES (?, 'Fixture BAJAAPP-12', 'Evento de teste (RBAC)', 2099, 0, ?, ?, ?, ?)"
         );
-        $event->execute(['96BR', 'BAJA', '10 a 12 de março de 2099']);
-        $event->execute(['96SE', 'BAJA', 'a definir']);
-        $event->execute(['96AR', 'AERO', '10 a 12 de março de 2099']);
-        $event->execute(['96FA', 'AERO_FORUM', '10 a 12 de março de 2099']);
+        $event->execute(['96BR', 'BAJA', '10 a 12 de março de 2099', '2099-03-10', '2099-03-12']);
+        $event->execute(['96SE', 'BAJA', 'a definir', null, null]);
+        $event->execute(['96AR', 'AERO', '10 a 12 de março de 2099', '2099-03-10', '2099-03-12']);
+        $event->execute(['96FA', 'AERO_FORUM', '10 a 12 de março de 2099', '2099-03-10', '2099-03-12']);
 
         $prova = $this->con->prepare("INSERT INTO prova (evento_id, prova_id, nome) VALUES (?, ?, 'Prova de teste')");
         foreach ([['96BR', 'ZZA'], ['96BR', 'ZZB'], ['96SE', 'ZZA'], ['96AR', 'ZZA'], ['96FA', 'ZZA']] as $p) {
@@ -201,16 +201,18 @@ abstract class RbacDbTestCase extends TestCase
     {
         $users = $this->con->query("SELECT user_id FROM user WHERE username LIKE 'zzrbac\\_%'")->fetchAll(PDO::FETCH_COLUMN);
         $testRoles = $this->con->query("SELECT role_id FROM role WHERE code LIKE 'zz\\_%'")->fetchAll(PDO::FETCH_COLUMN);
+        // role_audit rows stay, the tests' own too: MySQL refuses to delete
+        // them (AuditIsAppendOnlyInMysqlTest). They name users and roles
+        // that are gone, and AUTO_INCREMENT never hands those ids out
+        // again, so no later test can mistake them for its own.
         if ($users !== []) {
             $ids = implode(',', array_map('intval', $users));
-            // Test rows only: the application itself never deletes either.
-            $this->con->exec("DELETE FROM role_audit WHERE actor_user_id IN ($ids) OR target_user_id IN ($ids)");
+            // Test rows only: the application itself never deletes grants.
             $this->con->exec("DELETE FROM user_role WHERE user_id IN ($ids)");
             $this->con->exec("DELETE FROM user WHERE user_id IN ($ids)");
         }
         if ($testRoles !== []) {
             $ids = implode(',', array_map('intval', $testRoles));
-            $this->con->exec("DELETE FROM role_audit WHERE role_id IN ($ids)");
             $this->con->exec("DELETE FROM user_role WHERE role_id IN ($ids)");
             $this->con->exec("DELETE FROM role WHERE role_id IN ($ids)");
         }
