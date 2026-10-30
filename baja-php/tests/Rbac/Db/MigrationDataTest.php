@@ -11,8 +11,11 @@ use PHPUnit\Framework\Attributes\Group;
 /**
  * What PropelMigration_1793080000 leaves in the database (BAJAAPP-12):
  * the eight starting roles, and the platform admin role for the users who
- * had the legacy 'admin' code. Checked on the dev database, where the same
- * data comes from baja-infra/mysql/init/09-rbac.sql.
+ * had the legacy 'admin' code. Then what PropelMigration_1793110000
+ * (BAJAAPP-76) added: four roles for the legacy codes no starting role
+ * matched, and premiacao.view. Checked on the dev database, where the same
+ * data comes from baja-infra/mysql/init/09-rbac.sql and 12-rbac-switchover.sql.
+ * The switch-over's grants are tested in LegacyMigrationTest.
  *
  * WHY IT MATTERS
  *
@@ -31,7 +34,7 @@ final class MigrationDataTest extends RbacDbTestCase
         'program_manager' => [false, ['programa'], 'ALL_BUT_ROLE_MANAGE'],
         'event_manager' => [false, ['evento'], [
             'contagem.control', 'contagem.count', 'contagem.pit_log', 'equipe.manage', 'evento.manage', 'fila.manage',
-            'notificacao.send', 'premiacao.manage', 'prova.configure', 'prova.enter_scores', 'resultado.edit',
+            'notificacao.send', 'premiacao.manage', 'premiacao.view', 'prova.configure', 'prova.enter_scores', 'resultado.edit',
             'role.grant', 'timer.manage', 'timer.operate',
         ]],
         'head_judge' => [false, ['prova'], ['contagem.control', 'prova.enter_scores', 'role.grant']],
@@ -39,9 +42,14 @@ final class MigrationDataTest extends RbacDbTestCase
         'queue_manager' => [false, ['fila'], ['fila.manage']],
         'timer_manager' => [false, ['evento'], ['timer.manage', 'timer.operate']],
         'certificate_manager' => [false, ['programa'], ['certificado.manage']],
+        // Added by the switch-over (BAJAAPP-76): one legacy code each.
+        'lap_counter' => [false, ['prova'], ['contagem.count']],
+        'pit_logger' => [false, ['prova'], ['contagem.pit_log']],
+        'timer_operator' => [false, ['evento'], ['timer.operate']],
+        'awards_viewer' => [false, ['evento'], ['premiacao.view']],
     ];
 
-    public function testTheEightStartingRolesAreExactlyAsPlanned(): void
+    public function testEveryRoleIsExactlyAsPlanned(): void
     {
         $all = array_map(fn(Permission $p) => $p->value, Permission::cases());
         sort($all);
@@ -130,30 +138,37 @@ final class MigrationDataTest extends RbacDbTestCase
     }
 
     /**
-     * Nobody else: the migration gave roles to the legacy admins only. Any
-     * other grant was made by a person (granted_by set) or by a test.
+     * Nobody else: PropelMigration_1793080000 gave the platform admin role
+     * to the legacy admins only. Its grants are the ones whose audit row
+     * names it; every one is a platform admin grant to a user with 'admin'.
      */
-    public function testTheMigrationGaveNothingToAnyoneElse(): void
+    public function testThePhase2MigrationGaveNothingToAnyoneElse(): void
     {
-        $others = $this->con->query(
-            "SELECT g.user_id FROM user_role g JOIN user u ON u.user_id = g.user_id
-             WHERE g.granted_by IS NULL AND u.permissions NOT LIKE '%| admin |%' AND u.username NOT LIKE 'zzrbac\\_%'"
-        )->fetchAll(PDO::FETCH_COLUMN);
-        $this->assertSame([], $others);
-
-        $nonAdminRoles = $this->con->query(
-            "SELECT DISTINCT r.code FROM user_role g JOIN role r ON r.role_id = g.role_id WHERE g.granted_by IS NULL AND r.code <> 'platform_admin' AND r.code NOT LIKE 'zz\\_%'"
-        )->fetchAll(PDO::FETCH_COLUMN);
-        $this->assertSame([], $nonAdminRoles);
+        $rows = $this->con->query(
+            "SELECT r.code, u.permissions FROM user_role g
+             JOIN role_audit a ON a.grant_id = g.grant_id AND a.action = 'grant'
+             JOIN role r ON r.role_id = g.role_id
+             JOIN user u ON u.user_id = g.user_id
+             WHERE JSON_UNQUOTE(JSON_EXTRACT(a.details, '$.source')) = 'PropelMigration_1793080000: legacy admin code'"
+        )->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertNotEmpty($rows);
+        foreach ($rows as $row) {
+            $this->assertSame('platform_admin', $row['code']);
+            $this->assertStringContainsString('| admin |', $row['permissions']);
+        }
     }
 
-    /** The seed's judges (juiz1, juiz2) keep their legacy codes and got no role: phase 3 decides. */
-    public function testLegacyJudgesGotNoRole(): void
+    /**
+     * The seed's judges got their provas from the switch-over
+     * (12-rbac-switchover.sql): juiz1 judges the Enduro and Manobrabilidade,
+     * juiz2 the Enduro but not Manobrabilidade, as their legacy codes said.
+     */
+    public function testTheSeedsJudgesGotTheirLegacyProvas(): void
     {
-        $judges = $this->con->query("SELECT user_id FROM user WHERE username IN ('juiz1', 'juiz2')")->fetchAll(PDO::FETCH_COLUMN);
-        $this->assertNotEmpty($judges, 'The dev seed has the two judges.');
-        foreach ($judges as $userId) {
-            $this->assertFalse($this->rbac->authorizer->can((int) $userId, Permission::PROVA_ENTER_SCORES, ScopeNode::prova('26BR', 'END')));
-        }
+        $id = fn(string $name) => (int) $this->con->query("SELECT user_id FROM user WHERE username = '$name'")->fetchColumn();
+        $this->assertTrue($this->rbac->authorizer->can($id('juiz1'), Permission::PROVA_ENTER_SCORES, ScopeNode::prova('26BR', 'END')));
+        $this->assertTrue($this->rbac->authorizer->can($id('juiz1'), Permission::PROVA_ENTER_SCORES, ScopeNode::prova('26BR', 'MAN')));
+        $this->assertTrue($this->rbac->authorizer->can($id('juiz2'), Permission::PROVA_ENTER_SCORES, ScopeNode::prova('26BR', 'END')));
+        $this->assertFalse($this->rbac->authorizer->can($id('juiz2'), Permission::PROVA_ENTER_SCORES, ScopeNode::prova('26BR', 'MAN')));
     }
 }

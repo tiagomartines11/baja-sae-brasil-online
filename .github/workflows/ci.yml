@@ -187,6 +187,8 @@ jobs:
       #   07  the event archive queue (BAJAAPP-67)
       #   08  the competition programs, and each event's (BAJAAPP-11)
       #   09  roles and grants (BAJAAPP-12)
+      #   10  event dates; 11 role_audit's append-only triggers
+      #   12  the RBAC switch-over's roles and the seed users' grants (BAJAAPP-76)
       # 03 and 04 are the forum databases, which SKIP_AUTH pages never read.
       - name: Load the dev seed
         working-directory: baja-infra/mysql/init
@@ -209,6 +211,7 @@ jobs:
           mysql -uroot -proot < 09-rbac.sql
           mysql -uroot -proot < 10-evento-datas.sql
           mysql -uroot -proot < 11-role-audit-triggers.sql
+          mysql -uroot -proot < 12-rbac-switchover.sql
           mysql -uroot -proot -e "CREATE USER 'snapshot'@'%' IDENTIFIED BY 'snapshot'; GRANT SELECT ON baja_resultados.* TO 'snapshot'@'%';"
 
       # The tool writes nothing, and takes an event of any competition
@@ -286,10 +289,12 @@ jobs:
           BAJA_TEST_DB_PASS: root
         run: vendor/bin/phpunit --testsuite db --group programa --fail-on-skipped
 
-      # RBAC core (BAJAAPP-12, docs/rbac.md): who may do what where, the
-      # delegation rules, the audit trail, expiry and the migration's data.
-      # In the db suite, group "rbac", for the same reason as above. Writes
-      # made-up users, events, roles and grants, and removes them.
+      # RBAC (BAJAAPP-12, BAJAAPP-76, docs/rbac.md): who may do what where,
+      # the delegation rules, the audit trail, expiry, the migrations' data,
+      # and parity: every staff check gives a user holding a migrated grant
+      # the answer the legacy code gave (CallSiteParityTest). In the db
+      # suite, group "rbac", for the same reason as above. Writes made-up
+      # users, events, roles and grants, and removes them.
       # --fail-on-skipped: a test skipped here would be a check nobody ran.
       - name: PHPUnit (RBAC)
         env:
