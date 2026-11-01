@@ -15,13 +15,15 @@ use Baja\Model\UserQuery;
 use Propel\Runtime\Propel;
 
 /**
- * Which users count on which source, and the permission that goes with it.
+ * Which users count on which source, and the role that goes with it.
  *
  * A controller of a prova is usually not an administrator, yet must be able
  * to hand phones to volunteers on race morning. So linking a user to a
- * source grants that user the {evento}_{prova}_CONT code automatically, and
- * removing their last link for the prova takes it away again. That one code
- * is the only permission this class ever touches.
+ * source gives that user the lap_counter role on the prova (ContagemRoles,
+ * on the controller's authority), and removing their last link for the
+ * prova takes it away again. Before RBAC (BAJAAPP-76) that was the code
+ * {evento}_{prova}_CONT. That one role is the only access this class ever
+ * touches.
  */
 final class CounterLinks
 {
@@ -53,11 +55,7 @@ final class CounterLinks
         $connection->beginTransaction();
         try {
             $user = self::findOrCreateUser($username);
-
-            $permissions = (array) $user->getPermissions();
-            $permissions[] = self::counterCode($fonte);
-            $user->setPermissions(array_values(array_unique(array_merge(User::SENTINEL_PERMISSIONS, $permissions))));
-            $user->save();
+            ContagemRoles::give(ContagemRoles::COUNTER, (string) $fonte->getEventoId(), (string) $fonte->getProvaId(), $user, $addedBy);
 
             // The spelling stored on the link is the one in `user`, so that
             // it matches what the session reports when that person logs in.
@@ -91,11 +89,12 @@ final class CounterLinks
      * Their devices for that source are revoked at once: the phone they
      * were using answers "token inválido" on its next upload and keeps its
      * local data for export. If this was their last source in the prova
-     * the _CONT code goes too. The `user` row itself is left in place even
-     * if no permission remains; deleting accounts is the administrators'
-     * job (admin_usuario.php), not a side effect of this page.
+     * the lap_counter role goes too (revoked by $removedBy, the
+     * controller). The `user` row itself is left in place.
+     *
+     * @throws \InvalidArgumentException with a message in Portuguese, when the role cannot be taken away
      */
-    public static function unlink(ContagemFonte $fonte, string $username): void
+    public static function unlink(ContagemFonte $fonte, string $username, string $removedBy): void
     {
         $connection = Propel::getWriteConnection('resultados');
         $connection->beginTransaction();
@@ -108,15 +107,7 @@ final class CounterLinks
             DeviceTokens::revokeForUserOnSource($fonte, $username);
 
             if (self::countLinksInProva($fonte, $username) === 0) {
-                $user = UserQuery::create()->findOneByUsername($username);
-                if ($user !== null) {
-                    $code = self::counterCode($fonte);
-                    $user->setPermissions(array_values(array_filter(
-                        (array) $user->getPermissions(),
-                        fn($permission) => $permission !== $code
-                    )));
-                    $user->save();
-                }
+                ContagemRoles::take(ContagemRoles::COUNTER, (string) $fonte->getEventoId(), (string) $fonte->getProvaId(), $username, $removedBy);
             }
 
             $connection->commit();
@@ -164,15 +155,10 @@ final class CounterLinks
         self::$forumLookup = $lookup;
     }
 
-    /** The permission code a counter of this source's prova holds, e.g. "26BR_END_CONT". */
-    public static function counterCode(ContagemFonte $fonte): string
-    {
-        return $fonte->getEventoId() . '_' . $fonte->getProvaId() . ContagemAccess::COUNTER_SUFFIX;
-    }
-
     /**
      * The `user` row of a forum username, created (not saved) when the
-     * forum confirms the name exists. Shared with PitLoggers, so a pit
+     * forum confirms the name exists. It holds no access of its own: that
+     * is the role given next. Shared with PitLoggers, so a pit
      * volunteer is added under exactly the same rule as a counter.
      *
      * @throws \InvalidArgumentException when the forum does not know the username
@@ -194,7 +180,6 @@ final class CounterLinks
         $user = new User();
         // The forum's own spelling: it is what the session will report.
         $user->setUsername((string) ($forumUser['username'] ?? $username));
-        $user->setPermissions(User::SENTINEL_PERMISSIONS);
         return $user;
     }
 

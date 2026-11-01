@@ -1,0 +1,58 @@
+# Staging overlay: nginx behind the VPS's shared Caddy. The THIRD file, after
+# the base and the prod overlay (staging needs prod's /srv/baja mounts and
+# MySQL bindings like production does):
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#       -f docker-compose.staging.yml up -d
+#
+# Staging's .env sets COMPOSE_FILE to those three, so a plain
+# `docker compose ...` and the scripts in scripts/ use all of them. See
+# "Staging behind Caddy" in docs/dev-workflow.md.
+#
+# On the staging VPS a separate, always-on Caddy stack owns host ports 80 and
+# 443, holds the certificates, and forwards each staging hostname to
+# baja-nginx:80 over a Docker network called baja-edge:
+#
+#   visitor -> Cloudflare -> Caddy (host 80/443) -> baja-nginx:80 (baja-edge)
+#
+# So nginx here must not publish any host port (Caddy needs them; two
+# containers cannot bind the same port), and must join baja-edge so Caddy can
+# reach it by name. LISTEN_MODE=listen-proxied in .env does the nginx side:
+# plain HTTP on 80, no redirect, real IP from Caddy. Production never loads
+# this file.
+#
+# Needs Docker Compose 2.24.4 or later for the !reset and !override tags
+# below. An older compose refuses the file outright instead of ignoring them.
+# ALWAYS check the merged result with `docker compose config nginx`.
+services:
+  nginx:
+    # Compose ADDS port lists across files: base publishes 80 and the prod
+    # overlay 443. "!reset []" throws away everything the earlier files listed
+    # and leaves nothing published, so nginx is only reachable from Docker
+    # networks.
+    ports: !reset []
+    # Base's mounts, restated: "!override" replaces the list instead of adding
+    # to it, which is the only way to drop the prod overlay's /etc/letsencrypt
+    # mount. Nothing in listen-proxied reads a certificate (Caddy has them).
+    # Keep this list identical to the nginx volumes in docker-compose.yml; CI
+    # checks that it is.
+    volumes: !override
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - phpbb_baja_html:/var/www/phpbb-baja:ro
+      - phpbb_formula_html:/var/www/phpbb-formula:ro
+      - ${BAJA_APP_PATH:-../baja-php}:/var/www/baja-app:ro
+    # Network lists are merged, so this adds baja-edge to base's baja. nginx
+    # still talks to the app containers over baja; Caddy reaches nginx over
+    # baja-edge. container_name stays baja-nginx (from base), which is the
+    # name Caddy forwards to.
+    networks:
+      - baja-edge
+
+networks:
+  # Made and owned by the Caddy stack (subnet 10.201.0.0/24), not by this
+  # one. "external" means compose only joins it, and fails with "network
+  # baja-edge not found" if the Caddy stack has not created it yet. `down`
+  # never deletes it.
+  baja-edge:
+    external: true
+    name: baja-edge

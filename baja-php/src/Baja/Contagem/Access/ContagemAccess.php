@@ -10,36 +10,36 @@ use Baja\Model\ContagemFonteQuery;
 use Baja\Model\ContagemFonteUsuarioQuery;
 use Baja\Model\Prova;
 use Baja\Model\ProvaQuery;
-use Baja\Model\UserQuery;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 use Baja\Session;
 use Propel\Runtime\Propel;
 
 /**
  * Who may do what in the lap counting of a prova.
  *
- * Three permission codes exist, all checked through Session::hasPermission()
- * (which adds the event prefix and lets `admin` through):
+ * Three permissions, each asked about the prova (docs/rbac.md):
  *
- *   {prova}        controller: review, race control, sources, counters,
- *                  and everything a counter can do
- *   {prova}_CONT   counter: may enter the count area. Which source they
- *                  count on is not in the code; it comes from their links
- *                  in contagem_fonte_usuario (see CounterLinks)
- *   {prova}_BOX    pit log: may log cars entering and leaving the pit lane
- *                  and the fueling station. Kept apart from _CONT on
- *                  purpose: the people at the pit lane are often not the
- *                  counters, and neither should get the other's page by
- *                  default. A controller has both.
+ *   contagem.control   controller: review, race control, sources, counters,
+ *                      and everything a counter can do. The judge role
+ *                      (legacy code {EVT}_{prova})
+ *   contagem.count     counter: may enter the count area. Which source they
+ *                      count on is not in the permission; it comes from
+ *                      their links in contagem_fonte_usuario (see
+ *                      CounterLinks). The lap_counter role ({EVT}_{prova}_CONT)
+ *   contagem.pit_log   pit log: may log cars entering and leaving the pit
+ *                      lane and the fueling station. Kept apart from
+ *                      counting on purpose: the people at the pit lane are
+ *                      often not the counters, and neither should get the
+ *                      other's page by default. A controller has both. The
+ *                      pit_logger role ({EVT}_{prova}_BOX)
  *
  * Every page asks this class instead of testing codes itself, so the rules
  * are written down once.
  */
 final class ContagemAccess
 {
-    public const COUNTER_SUFFIX = '_CONT';
-
-    public const PIT_LOG_SUFFIX = '_BOX';
-
     public const PROVA_TYPE = 'laps';
 
     /**
@@ -64,13 +64,13 @@ final class ContagemAccess
     public static function isController(Prova $prova): bool
     {
         return self::isInCurrentEvent($prova->getEventoId())
-            && Session::hasPermission($prova->getProvaId());
+            && Authorization::currentUserCan(Permission::CONTAGEM_CONTROL, self::node($prova->getEventoId(), $prova->getProvaId()));
     }
 
     public static function isCounter(Prova $prova): bool
     {
         return self::isInCurrentEvent($prova->getEventoId())
-            && Session::hasPermission($prova->getProvaId() . self::COUNTER_SUFFIX);
+            && Authorization::currentUserCan(Permission::CONTAGEM_COUNT, self::node($prova->getEventoId(), $prova->getProvaId()));
     }
 
     /**
@@ -177,12 +177,12 @@ final class ContagemAccess
         if ($fonte->getTipo() !== Source::TIPO_MANUAL || !self::isInCurrentEvent($fonte->getEventoId())) {
             return false;
         }
-        if (Session::hasPermission($fonte->getProvaId())) {
+        if (Authorization::currentUserCan(Permission::CONTAGEM_CONTROL, self::node($fonte->getEventoId(), $fonte->getProvaId()))) {
             return true;
         }
 
-        // The link alone decides, not the _CONT code: a stale code without
-        // a link must not open anything.
+        // The link alone decides, not contagem.count: a counter whose
+        // links were all removed must not open anything.
         $link = ContagemFonteUsuarioQuery::create()
             ->filterByFonteId($fonte->getFonteId())
             ->filterByUsuario(Session::getCurrentUser()->getUsername())
@@ -193,7 +193,8 @@ final class ContagemAccess
     public static function canUsePitLog(Prova $prova): bool
     {
         return self::isController($prova)
-            || (self::isInCurrentEvent($prova->getEventoId()) && Session::hasPermission($prova->getProvaId() . self::PIT_LOG_SUFFIX));
+            || (self::isInCurrentEvent($prova->getEventoId())
+                && Authorization::currentUserCan(Permission::CONTAGEM_PIT_LOG, self::node($prova->getEventoId(), $prova->getProvaId())));
     }
 
     /**
@@ -203,25 +204,26 @@ final class ContagemAccess
      * browser keeps the offline copy of the page), so without this a
      * person whose pit access was taken away could go on logging stops.
      *
-     * The same codes as canUsePitLog(), read from the user's row:
-     * `admin`, the controller code, or the pit log code.
+     * The same as canUsePitLog(), for a user known by name: the
+     * controller's permission or the pit log's, on the prova. An expired
+     * or revoked grant stops the phone on its next upload.
      */
     public static function userMayStillLogStops(string $username, string $eventoId, string $provaId): bool
     {
-        $user = UserQuery::create()->findOneByUsername($username);
-        if ($user === null) {
-            return false;
-        }
-        $controllerCode = $eventoId . '_' . $provaId;
-        return $user->hasPermission('admin')
-            || $user->hasPermission($controllerCode)
-            || $user->hasPermission($controllerCode . self::PIT_LOG_SUFFIX);
+        $node = self::node($eventoId, $provaId);
+        return Authorization::usernameCan($username, Permission::CONTAGEM_CONTROL, $node)
+            || Authorization::usernameCan($username, Permission::CONTAGEM_PIT_LOG, $node);
+    }
+
+    private static function node(string $eventoId, string $provaId): ScopeNode
+    {
+        return ScopeNode::prova($eventoId, $provaId);
     }
 
     /**
-     * Session::hasPermission() always prefixes the code with the event of
-     * the current request. Asking it about a prova of another event would
-     * silently check the wrong code, so that case is refused up front.
+     * The pages only ever act on the request's event (/26BR/...); a prova
+     * of another event reached through some id is refused up front, as it
+     * was when the legacy codes were prefixed with that event.
      */
     private static function isInCurrentEvent(string $eventoId): bool
     {

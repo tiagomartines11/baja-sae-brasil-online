@@ -17,21 +17,25 @@ use InvalidArgumentException;
  * BACKGROUND FOR SOMEONE NEW TO THIS
  *
  * The people at the pit lane are often not the counters, so the pit log has
- * a permission code of its own, "{evento}_{prova}_BOX" (here 00NE_ZZL_BOX).
- * Until now only an administrator could tick it, on the user's page. The
- * controller of a prova is usually not an administrator, and hands out the
- * phones on race morning; so the same page where they link counters to
- * sources can now add and remove pit loggers (Access\PitLoggers).
+ * a role of its own, "pit_logger" on the prova (before RBAC, BAJAAPP-76, the
+ * code "{evento}_{prova}_BOX", here 00NE_ZZL_BOX). The controller of a prova
+ * is usually not an administrator, and hands out the phones on race
+ * morning; so the same page where they link counters to sources can add and
+ * remove pit loggers (Access\PitLoggers), on the controller's own
+ * authority.
  *
- * That page may touch ONE code of a user's row: this prova's pit log code.
- * Everything else in the row (counting, other provas, admin) must survive.
+ * That page may touch ONE role of a user: the pit logger role on this
+ * prova. Everything else they hold (counting, other provas) must survive.
  *
  * Needs the dev database: run with BAJA_TEST_DB=1 (see DbTestCase).
  */
 final class SourceAdminPitLoggersTest extends ReviewDbTestCase
 {
-    private const PIT_CODE = self::EVENTO_ID . '_' . self::PROVA_ID . '_BOX';
-    private const COUNTER_CODE = self::EVENTO_ID . '_' . self::PROVA_ID . '_CONT';
+    private const CONTROLLER = 'zzt_controle';
+    private const PIT_ROLE = 'pit_logger@prova:00NE/ZZL';
+    private const COUNTER_ROLE = 'lap_counter@prova:00NE/ZZL';
+    /** What the legacy code 00NE_ZZB became: judge on another prova of the test event. */
+    private const OTHER_PROVA_ROLE = 'judge@prova:00NE/ZZB';
 
     protected function setUp(): void
     {
@@ -42,31 +46,36 @@ final class SourceAdminPitLoggersTest extends ReviewDbTestCase
         // with "zzt_" so that the test world removes them afterwards, even
         // one created by mistake.)
         CounterLinks::setForumLookup(fn(string $name) => in_array($name, ['zzt_ana', 'zzt_bia'], true) ? ['username' => $name] : null);
+        // The prova's controller: the judge role on it (legacy code 00NE_ZZL).
+        $this->createUser(self::CONTROLLER, ['index', self::EVENTO_ID . '_' . self::PROVA_ID]);
+        // A second prova of the test event, so "a role on another prova" exists.
+        \Propel\Runtime\Propel::getWriteConnection('resultados')
+            ->prepare("INSERT INTO prova (evento_id, prova_id, nome) VALUES (?, 'ZZB', 'Outra prova')")
+            ->execute([self::EVENTO_ID]);
     }
 
     /**
      * SITUATION: race morning. The controller adds "zzt_ana", who already
-     * has an account here with codes of another prova (00NE_XYZ) and of the
-     * site's index, to the pit log. Then adds her a second time by mistake.
-     * Then adds "zzt_bia", who never used this system.
+     * judges another prova (00NE_ZZB), to the pit log. Then adds her a second
+     * time by mistake. Then adds "zzt_bia", who never used this system.
      *
      * WHAT WENT WRONG: there was no way to do this without an
      * administrator.
      *
-     * EXPECTED: Ana's row gains exactly the pit code and keeps every other
-     * code; the second add changes nothing (the code is there once). Bia's
-     * row is created with "index" and the pit code. Both are listed.
+     * EXPECTED: Ana gains exactly the pit logger role and keeps her other
+     * role; the second add changes nothing (one grant). Bia's row is created
+     * and she gets the pit logger role. Both are listed.
      */
     public function testAddingGrantsOnlyThePitCodeOnceAndCreatesTheRowWhenTheForumKnowsTheName(): void
     {
-        $this->createUser('zzt_ana', ['index', '00NE_XYZ']);
+        $this->createUser('zzt_ana', ['index', '00NE_ZZB']);
 
-        PitLoggers::add($this->prova, 'zzt_ana');
-        PitLoggers::add($this->prova, 'zzt_ana');
-        PitLoggers::add($this->prova, '  zzt_bia ');
+        PitLoggers::add($this->prova, 'zzt_ana', self::CONTROLLER);
+        PitLoggers::add($this->prova, 'zzt_ana', self::CONTROLLER);
+        PitLoggers::add($this->prova, '  zzt_bia ', self::CONTROLLER);
 
-        $this->assertSame(['index', '00NE_XYZ', self::PIT_CODE], $this->permissionsOf('zzt_ana'));
-        $this->assertSame(['index', self::PIT_CODE], $this->permissionsOf('zzt_bia'));
+        $this->assertSame([self::OTHER_PROVA_ROLE, self::PIT_ROLE], $this->activeRolesOf('zzt_ana'));
+        $this->assertSame([self::PIT_ROLE], $this->activeRolesOf('zzt_bia'));
         $this->assertSame(['zzt_ana', 'zzt_bia'], array_column(PitLoggers::listForProva($this->prova), 'usuario'));
     }
 
@@ -81,7 +90,7 @@ final class SourceAdminPitLoggersTest extends ReviewDbTestCase
     {
         foreach (['zzt_ninguem', '   '] as $typed) {
             try {
-                PitLoggers::add($this->prova, $typed);
+                PitLoggers::add($this->prova, $typed, self::CONTROLLER);
                 $this->fail('"' . $typed . '" was accepted');
             } catch (InvalidArgumentException $refusal) {
                 $this->assertMatchesRegularExpression('/não existe no fórum|Informe o nome/', $refusal->getMessage());
@@ -100,25 +109,25 @@ final class SourceAdminPitLoggersTest extends ReviewDbTestCase
      * pit phone kept its token: it went on uploading until its user's code
      * was checked on the next stop.
      *
-     * EXPECTED: only the pit code goes. Her counter code, her other codes
-     * and her link to Contagem 1 stay, and so does her counting phone. Her
+     * EXPECTED: only the pit logger role goes. Her counter role, her other
+     * role and her link to Contagem 1 stay, and so does her counting phone. Her
      * pit phone is revoked at once: its next upload is refused (the token is
      * no longer valid) and nothing of it is stored; what it stored before
      * stays. She is no longer listed.
      */
     public function testRemovingTakesOnlyThePitCodeAndStopsHerPitPhoneButNotHerCounting(): void
     {
-        $this->createUser('zzt_ana', ['index', '00NE_XYZ']);
-        PitLoggers::add($this->prova, 'zzt_ana');
-        CounterLinks::link($this->fontes[0], 'zzt_ana', 'zzt_controle');
+        $this->createUser('zzt_ana', ['index', '00NE_ZZB']);
+        PitLoggers::add($this->prova, 'zzt_ana', self::CONTROLLER);
+        CounterLinks::link($this->fontes[0], 'zzt_ana', self::CONTROLLER);
         $countingToken = $this->issueToken($this->fontes[0], 'zzt_ana');
         $pitToken = $this->issuePitLogToken('zzt_ana');
         $first = $this->boxEntry(self::CAR_A, 120);
         $this->assertSame([$first['uuid']], $this->upload($pitToken, [], ['pit_events' => [$first]])['body']['stored_uuids']);
 
-        PitLoggers::remove($this->prova, 'zzt_ana');
+        PitLoggers::remove($this->prova, 'zzt_ana', self::CONTROLLER);
 
-        $this->assertSame(['index', '00NE_XYZ', self::COUNTER_CODE], $this->permissionsOf('zzt_ana'));
+        $this->assertSame([self::OTHER_PROVA_ROLE, self::COUNTER_ROLE], $this->activeRolesOf('zzt_ana'));
         $boxSource = \Baja\Contagem\Sync\DeviceTokens::boxSourceFor($this->prova);
         $this->assertSame(0, ContagemDispositivoQuery::create()
             ->filterByFonteId($boxSource->getFonteId())->filterByUsuario('zzt_ana')->filterByRevogadoEmMs(null)->count(),
@@ -145,30 +154,23 @@ final class SourceAdminPitLoggersTest extends ReviewDbTestCase
      * SITUATION: the controller removed "zzt_ana" from the pit log by
      * mistake, and adds her again.
      *
-     * EXPECTED: she gets the code back and may open a new pit phone: her
+     * EXPECTED: she gets the role back and may open a new pit phone: her
      * revoked device no longer keeps her out, as when a counter is linked
      * again.
      */
     public function testAddingSomebodyAgainLetsThemBackIn(): void
     {
         $this->createUser('zzt_ana', ['index']);
-        PitLoggers::add($this->prova, 'zzt_ana');
+        PitLoggers::add($this->prova, 'zzt_ana', self::CONTROLLER);
         $this->issuePitLogToken('zzt_ana');
-        PitLoggers::remove($this->prova, 'zzt_ana');
+        PitLoggers::remove($this->prova, 'zzt_ana', self::CONTROLLER);
         $boxSource = \Baja\Contagem\Sync\DeviceTokens::boxSourceFor($this->prova);
         $this->assertTrue(\Baja\Contagem\Sync\DeviceTokens::isBlocked($boxSource, 'zzt_ana'));
 
-        PitLoggers::add($this->prova, 'zzt_ana');
+        PitLoggers::add($this->prova, 'zzt_ana', self::CONTROLLER);
 
-        $this->assertContains(self::PIT_CODE, $this->permissionsOf('zzt_ana'));
+        $this->assertSame([self::PIT_ROLE], $this->activeRolesOf('zzt_ana'));
         $this->assertFalse(\Baja\Contagem\Sync\DeviceTokens::isBlocked($boxSource, 'zzt_ana'));
-    }
-
-    /** @return string[] */
-    private function permissionsOf(string $username): array
-    {
-        TestWorld::forgetLoadedRows();
-        return array_values((array) UserQuery::create()->findOneByUsername($username)->getPermissions());
     }
 
     private function boxEntry(int $car, int $seconds): array

@@ -118,10 +118,21 @@ final class GrantExpiry
                 "Event {$node->eventoId()} has no end date (data_fim), so this grant needs an explicit end (valid_until)."
             );
         }
-        return $lastDay->modify("+{$this->daysAfterEvent} days")->setTime(23, 59, 59);
+        return self::endAfterEvent($lastDay, $this->daysAfterEvent);
     }
 
-    private static function configuredDays(): int
+    /**
+     * 23:59:59 on the day $days after $lastDay: when a grant on an event
+     * ends by default. Also used by the migration of the legacy codes
+     * (Baja\Rbac\Legacy\LegacyGrantPlan), so both work it out the same way.
+     */
+    public static function endAfterEvent(DateTimeImmutable $lastDay, int $days): DateTimeImmutable
+    {
+        return $lastDay->modify("+{$days} days")->setTime(23, 59, 59);
+    }
+
+    /** rbac.dias_apos_evento, or the default when it is not set or not usable. */
+    public static function configuredDays(): int
     {
         try {
             $days = SysConfig::get(self::CONFIG_KEY, self::DEFAULT_DAYS_AFTER_EVENT);

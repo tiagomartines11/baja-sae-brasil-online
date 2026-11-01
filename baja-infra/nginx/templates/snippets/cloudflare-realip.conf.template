@@ -1,0 +1,40 @@
+# Cloudflare's address ranges, as trusted proxies for the real-IP module.
+#
+# Not a mode of its own: listen-http-realip.conf and listen-tls-realip.conf
+# both include this file, so the list exists exactly once. listen-proxied
+# does NOT include it; see listen-proxied-realip.conf.template for why.
+#
+# "set_real_ip_from X" means: when a request's TCP peer is in X, believe the
+# client address that peer puts in the real_ip_header (CF-Connecting-IP here)
+# and use it as $remote_addr. A request from any other address keeps its own
+# peer address, so a client cannot forge its IP by sending the header itself.
+#
+# Ranges from https://www.cloudflare.com/ips-v4 and .../ips-v6, fetched
+# 2026-08-16. Cloudflare adds ranges occasionally; re-check these if origin
+# logs start showing Cloudflare addresses again.
+
+# IPv4
+set_real_ip_from 173.245.48.0/20;
+set_real_ip_from 103.21.244.0/22;
+set_real_ip_from 103.22.200.0/22;
+set_real_ip_from 103.31.4.0/22;
+set_real_ip_from 141.101.64.0/18;
+set_real_ip_from 108.162.192.0/18;
+set_real_ip_from 190.93.240.0/20;
+set_real_ip_from 188.114.96.0/20;
+set_real_ip_from 197.234.240.0/22;
+set_real_ip_from 198.41.128.0/17;
+set_real_ip_from 162.158.0.0/15;
+set_real_ip_from 104.16.0.0/13;
+set_real_ip_from 104.24.0.0/14;
+set_real_ip_from 172.64.0.0/13;
+set_real_ip_from 131.0.72.0/22;
+
+# IPv6
+set_real_ip_from 2400:cb00::/32;
+set_real_ip_from 2606:4700::/32;
+set_real_ip_from 2803:f800::/32;
+set_real_ip_from 2405:b500::/32;
+set_real_ip_from 2405:8100::/32;
+set_real_ip_from 2a06:98c0::/29;
+set_real_ip_from 2c0f:f248::/32;

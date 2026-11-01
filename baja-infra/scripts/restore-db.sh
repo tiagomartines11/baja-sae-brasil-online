@@ -53,7 +53,8 @@
 #
 # Environment:
 #   BAJA_ENV_FILE           the stack's .env (default: baja-infra/.env);
-#                           read for ENV, which decides the compose files
+#                           read for COMPOSE_FILE, or else ENV, which decide
+#                           the compose files
 #   RESTORE_DEFAULTS_FILE   test hook: a MySQL option file to connect with
 #                           directly instead of through the mysql
 #                           container (tests/backup/run-tests.sh)
@@ -66,6 +67,8 @@ LOG_PREFIX="restore"
 # shellcheck source-path=SCRIPTDIR
 # shellcheck source=./backup-lib.sh
 source "$SCRIPT_DIR/backup-lib.sh"
+# shellcheck source-path=SCRIPTDIR source=./compose-files.sh
+source "$SCRIPT_DIR/compose-files.sh"
 
 COMPOSE=()
 WORK_DIR=""
@@ -103,10 +106,14 @@ load_config() {
     local env_file="${BAJA_ENV_FILE:-${INFRA_DIR}/.env}"
     [[ -f "$env_file" ]] || die "stack env not found: ${env_file}"
     load_env_file "$env_file"
-    COMPOSE=(docker compose --project-directory "$INFRA_DIR" -f "${INFRA_DIR}/docker-compose.yml")
+    # The .env's COMPOSE_FILE when it sets one (staging: see
+    # compose-files.sh), otherwise the files ENV implies.
+    local defaults=(docker-compose.yml)
     if [[ "${ENV:-dev}" != "dev" ]]; then
-        COMPOSE+=(-f "${INFRA_DIR}/docker-compose.prod.yml")
+        defaults+=(docker-compose.prod.yml)
     fi
+    compose_file_args "$INFRA_DIR" "${defaults[@]}"
+    COMPOSE=(docker compose --project-directory "$INFRA_DIR" "${COMPOSE_FILE_ARGS[@]}")
 }
 
 # ----- The rewrite -----

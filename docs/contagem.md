@@ -58,12 +58,15 @@ loses a lap. The flag `primeira_passagem_tardia` exists for that: see below.
 
 ## Roles
 
-| Role | Permission | What they do |
+Since the switch-over to RBAC (BAJAAPP-76) these are roles on the prova
+([rbac.md](rbac.md)); the legacy code each replaced is in brackets.
+
+| Who | Role (permission) | What they do |
 |---|---|---|
-| Controller (responsável pela prova) | `{evento}_{prova}`, for example `26BR_END` | Sets everything up, starts and stops the race, reviews flags |
-| Counter (contador) | `{evento}_{prova}_CONT`, granted automatically | Types car numbers on one source |
-| Pit log | `{evento}_{prova}_BOX`, ticked by an administrator as "Registro de box" ("Registro de box e abastecimento" when the fueling station is logged) | Logs cars entering and leaving the pit lane and the fueling station. Does not open the count page; a counter does not open the pit page |
-| Admin | `admin` | Only needed to wipe a race that has been started |
+| Controller (responsável pela prova) | judge (contagem.control) [`{evento}_{prova}`, for example `26BR_END`] | Sets everything up, starts and stops the race, reviews flags |
+| Counter (contador) | lap_counter (contagem.count) [`{evento}_{prova}_CONT`], given automatically | Types car numbers on one source |
+| Pit log | pit_logger (contagem.pit_log) [`{evento}_{prova}_BOX`], given on the Usuários page, or by an administrator on the user's role page as "Registro de box" ("Registro de box e abastecimento" when the fueling station is logged) | Logs cars entering and leaving the pit lane and the fueling station. Does not open the count page; a counter does not open the pit page |
+| Whoever configures the prova | prova.configure (an event manager or above) [`admin`] | Only needed to wipe a race that has been started |
 
 A controller can do everything a counter can.
 
@@ -73,9 +76,9 @@ A controller can do everything a counter can.
    and make sure the inputs include `VOLTAS`, `LAST` and `BEST` (plus
    `DESCLAS` if the scoring formula uses it). The scoring formulas do not
    change. Existing results are not touched until the race is started.
-2. **Give the controller the prova permission** (`{evento}_{prova}`) in
-   Administração → Usuários, as for any other prova. Counters and the pit
-   log need nothing there: they are added in step 4.
+2. **Give the controller the judge role on the prova** on the user's role
+   page (Administração → Usuários → the user), as for any other prova.
+   Counters and the pit log need nothing there: they are added in step 4.
 3. **Create the sources.** On the prova's hub (`juiz` → click the prova) open
    **Fontes e configurações** and create one source per counter, usually
    "Contagem 1", "Contagem 2", "Contagem 3", type `manual`.
@@ -83,14 +86,15 @@ A controller can do everything a counter can.
    source type the forum username of the person who will count there; link
    reliefs to the source they will take over. Under **Box e abastecimento**
    add the people who will log the pit lane and the fueling station. Each
-   gets their access automatically: `{evento}_{prova}_CONT` for a counter,
-   `{evento}_{prova}_BOX` for the pit log. The two are separate: a counter
-   does not open the pit page, and the pit log does not open a count page;
-   somebody who does both is added in both places. The controller can do
-   both without being listed. An administrator can also tick the pit code
-   on Administração → Usuários ("Registro de box", or "Registro de box e
-   abastecimento" when the prova logs the fueling station; every text of the
-   "Usuários" page names it the same way).
+   gets their role automatically, given by the controller and ending with
+   the controller's own: lap_counter for a counter, pit_logger for the pit
+   log. The two are separate: a counter does not open the pit page, and the
+   pit log does not open a count page; somebody who does both is added in
+   both places. The controller can do both without being listed. An
+   administrator can also give the pit_logger role on the user's role page
+   (shown as "Registro de box", or "Registro de box e abastecimento" when
+   the prova logs the fueling station; every text of the "Usuários" page
+   names it the same way).
 5. **Check the settings** on the Fontes page; see [Settings](#settings). The
    ones to decide on purpose are the pass-zero rule, the publish mode, the
    classification field and whether the fueling station is logged.
@@ -1521,7 +1525,7 @@ integer milliseconds since the Unix epoch, UTC.
 | Table | Content | Written by |
 |---|---|---|
 | `contagem_fonte` | Sources | Fontes page |
-| `contagem_fonte_usuario` | Which user may count on which source | Usuários page. The pit log has no rows here: its code is in `user.permissions` |
+| `contagem_fonte_usuario` | Which user may count on which source | Usuários page. The pit log has no rows here: its holders are the pit_logger grants on the prova (`user_role`) |
 | `contagem_dispositivo` | Devices and their token hashes, last contact, "synced through", closed | Device registration, sync |
 | `contagem_passagem` | Raw entries. **Append-only**. `equipe_numero` is NULL for a pass recorded without a number ("??", a timing sensor's mark) | Sync |
 | `contagem_ocorrencia` | Race control events and stops (pit lane, fueling station). Append-only | Controle page, pit log |
@@ -1887,7 +1891,7 @@ the start and never qualifies. Published times are whole seconds, rounded.
 |---|---|
 | `src/Baja/Contagem/Service/` | `ContagemService` is the one door for pages and endpoints and only delegates: `Recount` (running the engine, lap rows, scores), `SnapshotService` and `FullRunSettlement` (the slow path), `SettingsChanges` and `TestPreset`, `RaceRecords` and `InferredExits` (events and decisions), `ScorePublisher`, `PublicFeed`, loading |
 | `src/Baja/Contagem/Sync/` | Upload endpoint logic, device tokens and heartbeats |
-| `src/Baja/Contagem/Access/` | Who may do what; counter links and the automatic `_CONT` permission |
+| `src/Baja/Contagem/Access/` | Who may do what; counter links and the lap_counter and pit_logger roles they give (`ContagemRoles`) |
 | `src/Baja/Contagem/Review/` | Review state, timelines, decision rules and conflict detection, race control, sources and settings forms |
 | `juiz/contagem*.php` | Thin pages and endpoints |
 | `resultados/contagem_feed.php` | Public JSON feed for overlays |

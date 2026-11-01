@@ -2,8 +2,10 @@
 namespace Baja\Juiz;
 
 use Baja\Session;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck('admin');
+if (!Authorization::canAnywhere(Session::getCurrentUser(), Permission::EVENTO_MANAGE)) die(Authorization::REFUSAL);
 
 Ajuda::printHeader("Menu do Evento", "admin_eventos.php", [
     'visao-geral' => 'Visão geral',

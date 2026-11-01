@@ -111,8 +111,15 @@ final class Authorizer
         unset($this->grantsByUser[$userId]);
     }
 
-    /** @return Grant[] */
-    private function activeGrants(int $userId): array
+    /**
+     * The user's grants that are active now (read once per request, expiry
+     * checked every time). For the questions that are not one permission
+     * on one node: "does this user hold anything in this event?"
+     * (Baja\Rbac\Authorization).
+     *
+     * @return Grant[]
+     */
+    public function activeGrants(int $userId): array
     {
         if (!isset($this->grantsByUser[$userId])) {
             $this->grantsByUser[$userId] = $this->grants->activeForUser($userId, $this->clock->now());

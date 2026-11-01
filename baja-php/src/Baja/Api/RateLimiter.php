@@ -112,7 +112,7 @@ class RateLimiter
      * request and bypass the limiter entirely.
      *
      * Making REMOTE_ADDR truthful is nginx's job, and is where the only
-     * dev/prod difference lives: behind Cloudflare, 00-cloudflare-realip.conf
+     * dev/prod difference lives: behind Cloudflare, 00-realip.conf
      * restores the client from CF-Connecting-IP; in dev the peer address is
      * already the client. See baja-infra/nginx/templates/baja-app-api.conf.template.
      *

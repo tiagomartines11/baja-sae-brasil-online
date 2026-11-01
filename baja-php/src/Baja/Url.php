@@ -14,10 +14,16 @@ class Url
      * nginx terminate TLS" switch, so the scheme follows from it and cannot
      * disagree with what is actually being served. A separate scheme variable
      * could, and that class of drift is what the nginx templating removed.
+     *
+     * listen-proxied is https too: there nginx speaks plain HTTP, but only to
+     * a proxy in front of it (staging's shared Caddy) that serves the visitor
+     * over https. The scheme here is the visitor's, so links, redirects and
+     * every cookie's Secure flag follow it, not what nginx itself listens on.
      */
     public static function scheme(): string
     {
-        return getenv('LISTEN_MODE') === 'listen-tls' ? 'https' : 'http';
+        $mode = getenv('LISTEN_MODE');
+        return $mode === 'listen-tls' || $mode === 'listen-proxied' ? 'https' : 'http';
     }
 
     /**

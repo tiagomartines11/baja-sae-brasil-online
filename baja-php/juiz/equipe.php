@@ -8,12 +8,14 @@ use Baja\Model\Equipe;
 use Baja\Session;
 use Baja\Site\Html;
 use DateTimeZone;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_equipes.php"); exit; }
 
 $_page = @$_REQUEST['id'];
 
-Session::permissionCheck('admin');
+Authorization::require(Permission::EQUIPE_MANAGE, Authorization::currentEvent());
 
 // Every act saves or deletes: refused without the form's token, before anything else.
 if (isset($_REQUEST['act'])) Csrf::enforce();

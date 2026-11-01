@@ -15,16 +15,20 @@ or laptop and shown identically on every device that has the timer open.
 
 ## Permissions
 
-| Code | Grants |
+Since the switch-over to RBAC (BAJAAPP-76, [rbac.md](rbac.md)) these are
+roles on the event:
+
+| Role (legacy code) | Grants |
 | --- | --- |
-| `<evento>_TIMER_ADMIN` | configure and use every timer of the event |
-| `<evento>_TIMER_<id>` | use that one timer |
+| timer_manager (`<evento>_TIMER_ADMIN`) | timer.manage: configure and use every timer of the event |
+| timer_operator (`<evento>_TIMER_<id>`) | timer.operate: use every timer of the event. The legacy code named one timer; timers are not scope nodes, so the role covers the event |
 | access key | use that one timer, no login |
 | read-only key | watch that one timer, no login |
 
-`admin` implies all of them. Both keys are shown on the timer's config page
-and each can be regenerated there, which cuts off whoever had the old one.
-`timer_action.php` refuses actions posted with the read-only key.
+Event managers and above hold both permissions. Both keys are shown on the
+timer's config page and each can be regenerated there, which cuts off
+whoever had the old one. `timer_action.php` refuses actions posted with the
+read-only key.
 
 ## How a run is stored
 

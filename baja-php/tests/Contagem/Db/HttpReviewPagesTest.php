@@ -440,13 +440,13 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
      * SITUATION: the prova does not log the fueling station, and somebody
      * logs its pit lane. The controller reads the "Usuários" page: its help,
      * the question behind "remover" and the messages after adding and
-     * removing a pit logger. An administrator opens the controller's
-     * permissions.
+     * removing a pit logger. An administrator opens the pit logger's roles
+     * (admin_usuario.php, since BAJAAPP-76).
      *
      * EXPECTED: no text speaks of "box e abastecimento": each says
-     * "registro de box", as the page's heading does, and the administrator's
-     * checkbox for the pit log code reads "ZZL · Registro de box". With the
-     * fueling station logged, they say "registro de box e abastecimento".
+     * "registro de box", as the page's heading does, and the pit logger's
+     * role on prova 00NE/ZZL reads "Registro de box". With the fueling
+     * station logged, they say "registro de box e abastecimento".
      */
     public function testTheUsersPageAndThePermissionsPageNameThePitLogAsTheProvaDoes(): void
     {
@@ -455,7 +455,7 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
         $this->grant(self::CONTROLLER, 'admin');
         $this->grant(self::COUNTER, '00NE_ZZL_BOX');
         $cookies = $this->loginAndGetCookies(self::CONTROLLER);
-        $userId = (int) $this->fetchValue('SELECT user_id FROM user WHERE username = ?', [self::CONTROLLER]);
+        $userId = (int) $this->fetchValue('SELECT user_id FROM user WHERE username = ?', [self::COUNTER]);
 
         $users = html_entity_decode($this->get('/00NE/contagem_contadores.php?p=ZZL', $cookies)['body'], ENT_QUOTES);
         $this->assertStringNotContainsStringIgnoringCase('box e abastecimento', $users);
@@ -467,14 +467,14 @@ final class HttpReviewPagesTest extends ReviewDbTestCase
         $this->assertStringContainsString('Usuário removido do registro de box. Os aparelhos', $removed);
 
         $permissions = html_entity_decode($this->get('/admin_usuario.php?id=' . $userId, $cookies)['body'], ENT_QUOTES);
-        $this->assertStringContainsString('ZZL · Registro de box', $permissions);
+        $this->assertMatchesRegularExpression('/Registro de box\s*<span[^>]*>\(pit_logger\)<\/span><\/td>\s*<td>prova 00NE\/ZZL</u', $permissions);
         $this->assertStringNotContainsStringIgnoringCase('box e abastecimento', $permissions);
 
         $this->changeSettings(['abastecimento' => true]);
         $users = html_entity_decode($this->get('/00NE/contagem_contadores.php?p=ZZL', $cookies)['body'], ENT_QUOTES);
         $this->assertStringContainsString('Remover este usuário do registro de box e abastecimento?', $users);
         $permissions = html_entity_decode($this->get('/admin_usuario.php?id=' . $userId, $cookies)['body'], ENT_QUOTES);
-        $this->assertStringContainsString('ZZL · Registro de box e abastecimento', $permissions);
+        $this->assertMatchesRegularExpression('/Registro de box e abastecimento\s*<span[^>]*>\(pit_logger\)/u', $permissions);
     }
 
     /**

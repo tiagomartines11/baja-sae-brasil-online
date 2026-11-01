@@ -36,7 +36,6 @@
  * It never changes a setting: a person must, on the settings page.
  */
 
-use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Engine\Data\Ocorrencia;
 use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Engine\Settings;
@@ -46,6 +45,9 @@ use Baja\Model\ContagemFonteQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 use Baja\Util\Env;
 use Propel\Runtime\Propel;
 
@@ -180,13 +182,23 @@ if ($withSensor) {
 }
 
 // The upload endpoint checks, on every upload of stops, that the pit
-// phone's user still holds the pit log code. The simulated pit phone's
-// user gets that code here (dev stacks only, see the checks above).
-$pitCode = $prova->getEventoId() . '_' . $prova->getProvaId() . ContagemAccess::PIT_LOG_SUFFIX;
+// phone's user still holds contagem.pit_log on the prova. The simulated pit
+// phone's user gets the pit_logger role there (dev stacks only, see the
+// checks above), written straight to the tables like the migration's
+// grants (granted_by NULL), with its audit row.
 $simulationUser = UserQuery::create()->findOneByUsername(SIMULATION_USER) ?? (new User())->setUsername(SIMULATION_USER);
-if (!$simulationUser->hasPermission($pitCode)) {
-    $simulationUser->setPermissions(array_values(array_unique(array_merge($simulationUser->getPermissions() ?? [], [$pitCode]))));
+if ($simulationUser->isNew()) {
     $simulationUser->save();
+}
+$pitNode = ScopeNode::prova((string) $prova->getEventoId(), (string) $prova->getProvaId());
+if (!Authorization::can($simulationUser, Permission::CONTAGEM_PIT_LOG, $pitNode)) {
+    $con = Propel::getWriteConnection('resultados');
+    $con->prepare("INSERT INTO user_role (user_id, role_id, scope_type, scope_id, granted_by, granted_at, valid_until)
+                   SELECT ?, role_id, 'prova', ?, NULL, NOW(), NULL FROM role WHERE code = 'pit_logger'")
+        ->execute([(int) $simulationUser->getUserId(), $pitNode->id]);
+    $con->prepare("INSERT INTO role_audit (occurred_at, actor_user_id, action, grant_id, role_id, target_user_id, scope_type, scope_id, details)
+                   SELECT NOW(), NULL, 'grant', LAST_INSERT_ID(), role_id, ?, 'prova', ?, JSON_OBJECT('role', 'pit_logger', 'source', 'scripts/contagem-simular-apoio.php') FROM role WHERE code = 'pit_logger'")
+        ->execute([(int) $simulationUser->getUserId(), $pitNode->id]);
 }
 
 echo json_encode([

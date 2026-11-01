@@ -16,8 +16,16 @@ use DateTimeZone;
 // exist: the error paths died with "class not found" instead of their message.
 use Exception;
 use Baja\Model\Map\EventoTableMap;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 
-Session::permissionCheck('admin');
+// Cloning creates an event in the reference event's program: evento.manage
+// on that program, checked once the reference is known (below). The form
+// only asks that the user manage events somewhere.
+if (!Authorization::canAnywhere(Session::getCurrentUser(), Permission::EVENTO_MANAGE)) {
+    die(Authorization::REFUSAL);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Cloning creates an event: refused without the form's token, before anything else.
@@ -32,6 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$refEventoId || !$novoEventoId) {
         die("Falta ID novo evento e/ou evento referência.");
+    }
+
+    $refParaPrograma = EventoQuery::create()->findPk($refEventoId);
+    if ($refParaPrograma === null
+        || !Authorization::currentUserCan(Permission::EVENTO_MANAGE, ScopeNode::programa((string) $refParaPrograma->getProgramaId()))) {
+        die(Authorization::REFUSAL);
     }
 
     $con = Propel::getWriteConnection(EventoTableMap::DATABASE_NAME);

@@ -481,7 +481,7 @@ document.querySelectorAll('[data-multi]').forEach(function (bloco) {
     /**
      * The page a user without `certificados` gets.
      *
-     * A rendered page rather than Session::permissionCheck()'s bare die(),
+     * A rendered page rather than Authorization::require()'s bare die(),
      * because most people reaching /juiz are judges and this is a normal
      * thing for them to hit. It says what permission is missing and who
      * grants it, so the reader's next step is asking the right person rather
@@ -495,12 +495,13 @@ document.querySelectorAll('[data-multi]').forEach(function (bloco) {
     <div class="card">
         <h1>Você não tem acesso a esta página</h1>
         <p>
-            A emissão de certificados exige a permissão <code>certificados</code>,
-            que é concedida separadamente das permissões de juiz.
+            A emissão de certificados exige o papel de gestor de certificados
+            (<code>certificate_manager</code>) em todos os programas, que é dado
+            separadamente dos papéis de juiz.
         </p>
         <p class="muted">
             Se você precisa emitir certificados, peça a um administrador do sistema
-            para conceder essa permissão à sua conta.
+            para dar esse papel à sua conta.
         </p>
     </div>
         <?php

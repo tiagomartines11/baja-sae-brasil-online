@@ -42,6 +42,28 @@ final class GrantRepository
     }
 
     /**
+     * Every grant active now ON this exact node (not above it, not below),
+     * optionally of one role only. Who was given what here: a page's list
+     * of its counters, its pit loggers.
+     *
+     * @return Grant[]
+     */
+    public function activeOnNode(ScopeNode $node, DateTimeImmutable $now, ?int $roleId = null): array
+    {
+        $sql = 'SELECT ' . self::COLUMNS . ' FROM user_role WHERE scope_type = ? AND scope_id = ? AND revoked_at IS NULL';
+        $params = [$node->type->value, $node->id];
+        if ($roleId !== null) {
+            $sql .= ' AND role_id = ?';
+            $params[] = $roleId;
+        }
+        $statement = $this->con->prepare($sql . ' ORDER BY grant_id');
+        $statement->execute($params);
+        $grants = array_map([self::class, 'fromRow'], $statement->fetchAll(PDO::FETCH_ASSOC));
+        // The database compares ids without case; a node is its exact spelling.
+        return array_values(array_filter($grants, fn(Grant $g) => $g->scopeId === $node->id && $g->isActiveAt($now)));
+    }
+
+    /**
      * One grant, locked until the end of the caller's transaction, so two
      * revokes of the same grant cannot both go through.
      */

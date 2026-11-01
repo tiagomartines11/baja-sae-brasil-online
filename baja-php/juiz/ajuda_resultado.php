@@ -2,8 +2,10 @@
 namespace Baja\Juiz;
 
 use Baja\Session;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck('admin');
+Authorization::require(Permission::RESULTADO_EDIT, Authorization::currentEvent());
 
 Ajuda::printHeader("Configuração de Resultado", "admin_resultados.php", [
     'visao-geral' => 'Visão geral',

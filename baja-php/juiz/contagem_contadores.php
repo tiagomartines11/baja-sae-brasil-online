@@ -39,7 +39,7 @@ if (Pagina::isPost()) {
                 throw new InvalidArgumentException('Informe o nome de usuário do fórum.');
             }
             // Throws InvalidArgumentException, in Portuguese, when the forum does not know the username.
-            $action === 'box_adicionar' ? PitLoggers::add($prova, $username) : PitLoggers::remove($prova, $username);
+            $action === 'box_adicionar' ? PitLoggers::add($prova, $username, Pagina::username()) : PitLoggers::remove($prova, $username, Pagina::username());
             Pagina::redirectAfterPost('contagem_contadores.php', $prova, ['msg' => $action === 'box_adicionar' ? 'box_adicionado' : 'box_removido']);
         }
         $fonte = SourceAdmin::requireSource($prova, $_POST['fonte_id'] ?? null);
@@ -56,7 +56,7 @@ if (Pagina::isPost()) {
             Pagina::redirectAfterPost('contagem_contadores.php', $prova, ['msg' => 'vinculado']);
         }
         if ($action === 'remover') {
-            CounterLinks::unlink($fonte, $username);
+            CounterLinks::unlink($fonte, $username, Pagina::username());
             Pagina::redirectAfterPost('contagem_contadores.php', $prova, ['msg' => 'removido']);
         }
         throw new InvalidArgumentException('Ação desconhecida.');

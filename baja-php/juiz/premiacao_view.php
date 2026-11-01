@@ -6,11 +6,14 @@ use Baja\Model\PremiacaoQuery;
 use Baja\Premiacao\Renderer as PremiacaoRenderer;
 use Baja\Premiacao\Resolver as PremiacaoResolver;
 use Baja\Session;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck('PREMIACAO');
+Authorization::require(Permission::PREMIACAO_VIEW, Authorization::currentEvent());
 
 $currentEvent = EventoQuery::getCurrentEvent();
-$isAdmin = Session::getCurrentUser()->hasPermission('admin');
+// Drafts (not published yet) are for whoever manages the prizes.
+$isAdmin = Authorization::currentUserCan(Permission::PREMIACAO_MANAGE, Authorization::currentEvent());
 $premiacaoId = trim((string)@$_REQUEST['id']);
 
 if ($premiacaoId === '') {

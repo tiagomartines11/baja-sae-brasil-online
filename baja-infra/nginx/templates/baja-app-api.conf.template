@@ -71,7 +71,7 @@ server {
         # smuggle its own forwarding headers into PHP and mint a fresh bucket
         # per request.
         #
-        # Behind Cloudflare, 00-cloudflare-realip.conf has already rewritten
+        # Behind Cloudflare, 00-realip.conf has already rewritten
         # $remote_addr — and therefore REMOTE_ADDR — to the true client, so
         # PHP needs no header handling and stays identical everywhere. That
         # file used to carry a duplicate copy of these ranges inside this

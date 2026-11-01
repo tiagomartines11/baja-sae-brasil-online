@@ -17,12 +17,14 @@ use DateTimeZone;
 use Baja\Model\Input;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\InputQuery;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['id'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['id'];
 
-Session::permissionCheck('admin');
+Authorization::require(Permission::PROVA_CONFIGURE, Authorization::prova($_page));
 
 // Each of these buttons changes the bracket: none runs without the form's
 // token, which also refuses a GET link carrying one (Baja\Auth\Csrf).

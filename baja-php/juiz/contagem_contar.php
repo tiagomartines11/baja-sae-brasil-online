@@ -21,9 +21,9 @@ $fonte = ContagemFonteQuery::create()
     ->filterByProvaId($prova->getProvaId())
     ->findOneByFonteId((int) $_REQUEST['f']);
 
-// The same sentence Session::permissionCheck() uses. A source that does not
-// exist gets the same answer as one the user may not open, so the page does
-// not reveal which source ids exist.
+// The same sentence every staff page refuses with (Authorization::REFUSAL).
+// A source that does not exist gets the same answer as one the user may not
+// open, so the page does not reveal which source ids exist.
 if (!$fonte || $fonte->getTipo() !== Source::TIPO_MANUAL || !ContagemAccess::canCountOn($fonte)) {
     die("Você não tem acesso a essa página");
 }

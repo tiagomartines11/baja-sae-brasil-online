@@ -72,31 +72,27 @@ final class StaffCookieTest extends TestCase
     }
 
     // --- Who is a judge -------------------------------------------------------
-
-    /** "index" is the judge area's permission; every judge account has it. */
-    public function testAUserWithTheJudgeAreaIsStaff(): void
-    {
-        $this->assertTrue(StaffCookie::isStaff(self::user(['index', '26BR_ve1'])));
-    }
-
-    public function testAnAdminIsStaff(): void
-    {
-        $this->assertTrue(StaffCookie::isStaff(self::user(['admin'])));
-    }
-
-    /**
-     * A team member with a queue (fila) permission has a row here too, but
-     * no "index": not staff.
-     */
-    public function testATeamMemberWithQueuePermissionsIsNotStaff(): void
-    {
-        $this->assertFalse(StaffCookie::isStaff(self::user(['26BR_FILA_1_42'])));
-    }
+    //
+    // Since BAJAAPP-76 "staff" means "holds an active RBAC grant somewhere"
+    // (Authorization::isStaff), which needs the grants table. The judge, the
+    // admin, the team member with only a queue code, and the expired and
+    // revoked grants are tested against MySQL in
+    // tests/Rbac/Db/CallSiteParityTest.php. Here, only the cases that need
+    // no database.
 
     /** No row here at all: a forum user this system does not know. */
     public function testAForumUserWithNoAccountHereIsNotStaff(): void
     {
         $this->assertFalse(StaffCookie::isStaff(null));
+    }
+
+    /**
+     * A row that was never saved has no id, so it cannot hold a grant:
+     * not staff, whatever its old permission list says.
+     */
+    public function testAnUnsavedUserIsNotStaff(): void
+    {
+        $this->assertFalse(StaffCookie::isStaff(self::user(['index', 'admin'])));
     }
 
     // --- The value from .env --------------------------------------------------

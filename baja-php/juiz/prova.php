@@ -10,12 +10,14 @@ use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
 use DateTimeZone;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_provas.php"); exit; }
 
 $_page = @$_REQUEST['id'];
 
-Session::permissionCheck('admin');
+Authorization::require(Permission::PROVA_CONFIGURE, isset($_REQUEST['id']) ? Authorization::prova($_page) : Authorization::currentEvent());
 
 // Every act changes something (even Refresh Pontos rewrites every team's
 // points): no act runs without the form's token, which also refuses a GET

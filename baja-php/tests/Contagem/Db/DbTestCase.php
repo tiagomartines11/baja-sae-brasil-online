@@ -16,7 +16,11 @@ use Baja\Model\Prova;
 use Baja\Model\ProvaQuery;
 use Baja\Model\User;
 use Baja\Model\UserQuery;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\RbacServices;
+use Baja\Rbac\SystemClock;
 use Baja\Session;
+use Baja\Tests\Support\LegacyGrants;
 use PHPUnit\Framework\TestCase;
 use Propel\Runtime\Propel;
 
@@ -95,7 +99,7 @@ abstract class DbTestCase extends TestCase
         TestWorld::boot();
 
         // The application learns "which event is this request about" from
-        // this server variable. Permission codes are prefixed with it.
+        // this server variable (Authorization::currentEvent()).
         $_SERVER['REDIRECT_EVENT'] = self::EVENTO_ID;
 
         // A previous run that crashed half way may have left its world behind.
@@ -126,6 +130,8 @@ abstract class DbTestCase extends TestCase
     protected function newRequest(): void
     {
         TestWorld::forgetLoadedRows();
+        // A request reads the grants afresh (RBAC keeps them for one request).
+        Authorization::useServices(RbacServices::create(Propel::getWriteConnection('resultados'), new SystemClock()));
         $this->prova = ProvaQuery::create()->findPk([self::EVENTO_ID, self::PROVA_ID]);
         $this->service = ContagemService::forProva($this->prova);
     }
@@ -363,14 +369,15 @@ abstract class DbTestCase extends TestCase
      * From then on the phone proves who it is with that token alone.
      */
     /**
-     * A pit-log phone's token, for a user who holds the pit log permission
-     * ({evento}_{prova}_BOX). The upload endpoint checks that permission on
-     * every upload, so a token for a user without it would be refused.
+     * A pit-log phone's token, for a user who holds the pit log role (what
+     * the legacy code {evento}_{prova}_BOX became). The upload endpoint
+     * checks it on every upload, so a token for a user without it would be
+     * refused.
      */
     protected function issuePitLogToken(string $username = self::USER_PREFIX . 'box'): string
     {
         if (UserQuery::create()->findOneByUsername($username) === null) {
-            $this->createUser($username, ['index', self::EVENTO_ID . '_' . self::PROVA_ID . ContagemAccess::PIT_LOG_SUFFIX]);
+            $this->createUser($username, ['index', self::EVENTO_ID . '_' . self::PROVA_ID . '_BOX']);
         }
         return DeviceTokens::issue(DeviceTokens::boxSourceFor($this->prova), $username, 'Telefone do box');
     }
@@ -447,11 +454,15 @@ abstract class DbTestCase extends TestCase
     // ------------------------------------------------------------------
 
     /**
-     * Creates a row in the application's `user` table. This is what makes
-     * a forum account "exist" for this system and says what it may do.
+     * Creates a row in the application's `user` table (what makes a forum
+     * account "exist" for this system) and gives it what these legacy
+     * codes became in the switch-over to RBAC (BAJAAPP-76): '00NE_ZZL' is
+     * the judge role on the prova, '00NE_ZZL_CONT' the lap counter role,
+     * '00NE_ZZL_BOX' the pit logger role, 'admin' the platform admin.
+     * The codes are also kept in the old column, as the migration keeps it.
      *
      * @param string $username must start with "zzt_" so that tearDown() removes it
-     * @param string[] $permissions permission codes, e.g. ['index', '00NE_ZZL']
+     * @param string[] $permissions legacy codes, e.g. ['index', '00NE_ZZL']
      */
     protected function createUser(string $username, array $permissions): void
     {
@@ -459,6 +470,24 @@ abstract class DbTestCase extends TestCase
         $user->setUsername($username);
         $user->setPermissions($permissions);
         $user->save();
+        LegacyGrants::give(Propel::getWriteConnection('resultados'), (int) $user->getUserId(), $permissions);
+    }
+
+    /**
+     * The user's active grants, as "role@type:id", sorted: what they may do
+     * since the switch-over to RBAC.
+     *
+     * @return string[]
+     */
+    protected function activeRolesOf(string $username): array
+    {
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            "SELECT CONCAT(r.code, '@', g.scope_type, ':', g.scope_id) FROM user_role g
+             JOIN role r ON r.role_id = g.role_id JOIN user u ON u.user_id = g.user_id
+             WHERE u.username = ? AND g.revoked_at IS NULL ORDER BY 1"
+        );
+        $statement->execute([$username]);
+        return $statement->fetchAll(\PDO::FETCH_COLUMN);
     }
 
     /** Makes the rest of the test run as if this user were logged in. */

@@ -505,7 +505,8 @@ fi
 # contains "evil.com". A same-origin path that merely mentions the name (e.g.
 # /%09/evil.com, where the % is literal) is harmless, and a substring check
 # reports it as a failure.
-for payload in '/\evil.com' '/\/evil.com' "/$(printf '	')/evil.com" "/$(printf '')/evil.com"; do
+for payload in '/\evil.com' '/\/evil.com' "/$(printf '	')/evil.com" "/$(printf '
+')/evil.com"; do
     printable=$(printf '%s' "$payload" | cat -v)
 
     # The return hop is a GET route.
@@ -717,6 +718,11 @@ rm -f "$REALJAR2"
 # added juiz1 to the first file was merged with the one that added the second:
 # juiz1 came out of a fresh database with the Enduro and nothing else.
 #
+# Since the switch-over to RBAC (BAJAAPP-76) the pages read grants, not that
+# column: 12-rbac-switchover.sql gives juiz1 the judge role on the same five
+# provas. The rows still must agree (the column is the rollback path), and
+# this check now also catches 12 drifting from them.
+#
 # Checked through the dashboard rather than the database, because the
 # dashboard prints one link per prova the user may enter and so shows both
 # kinds of grant at once: the Enduro is a laps prova (contagem.php), and
@@ -739,8 +745,9 @@ check_body "juiz1 keeps the score-entry grants from 05-seed-baja-resultados.sql"
 # The script elements are cut out the way the browser cuts them (up to the
 # first "</script"), and "const atual" must not be left in what remains. The
 # first check makes sure the editor rendered at all, so that a refusal or a
-# redirect cannot pass the second. superadmin has the admin permission
-# prova.php asks for; END is the 26BR Enduro both seed files know.
+# redirect cannot pass the second. superadmin is the platform admin, which
+# carries the prova.configure prova.php asks for; END is the 26BR Enduro both
+# seed files know.
 login_as superadmin
 body=$(curl -s -b "$COOKIES" "$BASE_JUIZ/26BR/prova.php?id=END")
 check_body "prova editor renders for superadmin (26BR END)" "$body" 'const atual'

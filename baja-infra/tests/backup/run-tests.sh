@@ -39,7 +39,11 @@
 #     leaves the live database alone, and the helper refuses the mistakes
 #     that would not (see "Restoring a database" below);
 #   - the weekly verifier fails a backup whose certificate table is
-#     suspiciously small.
+#     suspiciously small;
+#   - backup-run.sh, restore-db.sh and migrate.sh run compose with the
+#     files in COMPOSE_FILE when the .env sets it (staging, where the
+#     extra file keeps nginx off the host's ports), and with the same files
+#     as before when it does not.
 #
 # Nothing here needs Docker or a Google account. It needs bash, GNU tar, jq
 # and age (`sudo apt install age jq` on Ubuntu/Debian). The restore and
@@ -1065,6 +1069,178 @@ test_floor_passes_a_backup_above_it() {
              echo "$VERIFY_MIN_ROWS_PARTICIPANTES" )" 20000 "default floor"
 }
 
+# ======================================================================
+# Which compose files the scripts use (COMPOSE_FILE)
+# ======================================================================
+#
+# On staging, nginx must never be started with host ports: the VPS's Caddy
+# owns 80 and 443. The ports are removed by docker-compose.staging.yml, and
+# staging's .env lists that file in COMPOSE_FILE so that plain
+# `docker compose` uses it. A script that passes its own `-f` flags ignores
+# COMPOSE_FILE, so backup-run.sh, restore-db.sh and migrate.sh choose their
+# files through scripts/compose-files.sh, which reads it. These tests check
+# that choice: COMPOSE_FILE when it is set, exactly the old files when not.
+#
+# The scripts run for real, but with a fake `docker` first on PATH that only
+# writes down how it was called. No Docker is needed.
+
+STAGING_FILES="docker-compose.yml:docker-compose.prod.yml:docker-compose.staging.yml"
+
+# make_fake_docker DIR: puts a `docker` in DIR that appends its arguments,
+# one call per line (newlines inside an argument, such as a multi-line SQL
+# query, become spaces), to $FAKE_DOCKER_LOG and prints nothing. It exits
+# with $FAKE_DOCKER_RC, 0 unless set.
+make_fake_docker() {
+    mkdir -p "$1"
+    printf '%s\n' '#!/usr/bin/env bash' \
+        'args="$*"' \
+        'printf "%s\n" "${args//$'"'"'\n'"'"'/ }" >> "$FAKE_DOCKER_LOG"' \
+        'exit "${FAKE_DOCKER_RC:-0}"' > "$1/docker"
+    chmod +x "$1/docker"
+}
+
+# compose_files_in CALL: the value after every "-f" in one logged call,
+# space separated. (The paths here are under mktemp's folder: no spaces.)
+compose_files_in() {
+    local -a words out=()
+    local i
+    read -r -a words <<< "$1"
+    for (( i = 0; i < ${#words[@]}; i++ )); do
+        if [[ "${words[i]}" == -f ]]; then out+=("${words[i+1]}"); fi
+    done
+    echo "${out[*]}"
+}
+
+# every_call_uses LOG EXPECTED: fails unless LOG holds at least one call,
+# and every call names exactly the files EXPECTED, in that order.
+every_call_uses() {
+    local log="$1" expected="$2" call
+    [[ -s "$log" ]] || fail "docker was never called"
+    while IFS= read -r call; do
+        same "$(compose_files_in "$call")" "$expected" "compose files in: ${call}"
+    done < "$log"
+}
+
+test_compose_file_selection() {
+    # shellcheck source=compose-files.sh
+    source "${SCRIPTS}/compose-files.sh"
+    unset COMPOSE_FILE COMPOSE_PATH_SEPARATOR
+
+    # Not set: the defaults the script gives, under the infra folder.
+    compose_file_args /infra docker-compose.yml docker-compose.prod.yml
+    same "${COMPOSE_FILE_ARGS[*]}" "-f /infra/docker-compose.yml -f /infra/docker-compose.prod.yml" "unset"
+
+    # Set to an empty value: the same as not set.
+    COMPOSE_FILE="" compose_file_args /infra docker-compose.yml
+    same "${COMPOSE_FILE_ARGS[*]}" "-f /infra/docker-compose.yml" "empty"
+
+    # Set: its files, in its order, and the defaults are ignored.
+    COMPOSE_FILE="$STAGING_FILES" compose_file_args /infra docker-compose.yml
+    same "${COMPOSE_FILE_ARGS[*]}" \
+        "-f /infra/docker-compose.yml -f /infra/docker-compose.prod.yml -f /infra/docker-compose.staging.yml" "staging"
+
+    # An absolute path is kept as it is, an empty entry is skipped, and
+    # COMPOSE_PATH_SEPARATOR is honoured as compose honours it.
+    COMPOSE_FILE="a.yml;;/elsewhere/b.yml;" COMPOSE_PATH_SEPARATOR=";" compose_file_args /infra x.yml
+    same "${COMPOSE_FILE_ARGS[*]}" "-f /infra/a.yml -f /elsewhere/b.yml" "separator"
+}
+
+# run_backup_archives ENV_FILE LOG: runs `backup-run.sh archives` (the
+# event-archive half; with the fake docker the queue is empty) against
+# ENV_FILE, logging the docker calls to LOG.
+run_backup_archives() {
+    env -u COMPOSE_FILE BAJA_ENV_FILE="$1" FAKE_DOCKER_LOG="$2" PATH="${TMP}/compose-files/bin:${PATH}" \
+        "${SCRIPTS}/backup-run.sh" archives > /dev/null 2>&1 \
+        || fail "backup-run.sh archives failed"
+}
+
+test_backup_run_honours_compose_file() {
+    local base="${TMP}/compose-files" infra
+    infra="$(dirname "$SCRIPTS")"
+    make_fake_docker "${base}/bin"
+    # BACKUP_REMOTE stops the script from pinging Kuma; the work folder
+    # keeps its lock file out of /var/tmp.
+    local common="BACKUP_REMOTE=:local:${base}/drive
+BACKUP_HOST_WORK_DIR=${base}/work"
+
+    printf 'ENV=staging\nCOMPOSE_FILE=%s\n%s\n' "$STAGING_FILES" "$common" > "${base}/staging.env"
+    run_backup_archives "${base}/staging.env" "${base}/staging.log"
+    every_call_uses "${base}/staging.log" \
+        "${infra}/docker-compose.yml ${infra}/docker-compose.prod.yml ${infra}/docker-compose.staging.yml"
+
+    # Production's .env has no COMPOSE_FILE: the base file and the prod
+    # overlay, exactly as before.
+    printf 'ENV=prod\n%s\n' "$common" > "${base}/prod.env"
+    run_backup_archives "${base}/prod.env" "${base}/prod.log"
+    every_call_uses "${base}/prod.log" "${infra}/docker-compose.yml ${infra}/docker-compose.prod.yml"
+
+    # Dev: the base file alone.
+    printf 'ENV=dev\n%s\n' "$common" > "${base}/dev.env"
+    run_backup_archives "${base}/dev.env" "${base}/dev.log"
+    every_call_uses "${base}/dev.log" "${infra}/docker-compose.yml"
+}
+
+test_restore_honours_compose_file() {
+    local base="${TMP}/compose-files-restore" infra
+    infra="$(dirname "$SCRIPTS")"
+    make_fake_docker "${base}/bin"
+    # A dump small enough to read: it passes every check before the import,
+    # then the script asks MySQL "SELECT 1" through compose. The fake docker
+    # fails that call (FAKE_DOCKER_RC=1), so the script stops there ("cannot
+    # reach MySQL") and nothing is imported anywhere. That is all this test
+    # needs: the call has been made and logged.
+    printf '%s\n' 'CREATE DATABASE `baja_resultados`;' 'USE `baja_resultados`;' '-- Dump completed on 2026-10-28' \
+        > "${base}/dump.sql"
+    printf 'ENV=staging\nCOMPOSE_FILE=%s\n' "$STAGING_FILES" > "${base}/staging.env"
+    env -u COMPOSE_FILE -u RESTORE_DEFAULTS_FILE \
+        BAJA_ENV_FILE="${base}/staging.env" FAKE_DOCKER_LOG="${base}/staging.log" FAKE_DOCKER_RC=1 \
+        PATH="${base}/bin:${PATH}" \
+        "${SCRIPTS}/restore-db.sh" "${base}/dump.sql" --into baja_restore_check > /dev/null 2>&1 || true
+    every_call_uses "${base}/staging.log" \
+        "${infra}/docker-compose.yml ${infra}/docker-compose.prod.yml ${infra}/docker-compose.staging.yml"
+}
+
+test_migrate_honours_compose_file() {
+    # migrate.sh reads migration.env from its own folder, and this test must
+    # not write into the repository. So it runs a copy of the script, made
+    # just now and unchanged, in a made-up baja-infra/scripts/ with made-up
+    # settings. `patch` is the phase used: its first step is a compose call
+    # (UPDATE through the mysql container). The fake docker answers nothing,
+    # so the phase then stops on its "is email disabled?" check.
+    local base="${TMP}/compose-files-migrate"
+    local infra="${base}/baja-infra"
+    mkdir -p "${infra}/scripts" "${base}/work"
+    cp "${SCRIPTS}/migrate.sh" "${SCRIPTS}/compose-files.sh" "${infra}/scripts/"
+    make_fake_docker "${base}/bin"
+
+    local var
+    for var in MYSQL_ROOT_PASSWORD BAJA_COOKIE_DOMAIN FORMULA_COOKIE_DOMAIN PHPBB_COOKIE_PREFIX \
+               PHPBB_FORMULA_COOKIE_PREFIX PROD_TAILSCALE_IP PROD_SSH_USER \
+               PROD_BAJA_RESULTADOS_USER PROD_BAJA_RESULTADOS_PASSWORD PROD_BAJA_FORUM_USER \
+               PROD_BAJA_FORUM_PASSWORD PROD_FORMULA_USER PROD_FORMULA_PASSWORD \
+               PROD_BAJA_FORUM_PATH PROD_FORMULA_FORUM_PATH \
+               STAGING_BAJA_FORUM_DOMAIN STAGING_FORMULA_FORUM_DOMAIN; do
+        printf '%s=made-up\n' "$var"
+    done > "${infra}/scripts/migration.env"
+    printf 'PROD_SSH_KEY=%s\nWORK_DIR=%s\n' "${base}/key" "${base}/work" >> "${infra}/scripts/migration.env"
+
+    run_migrate_patch() {
+        env -u COMPOSE_FILE FAKE_DOCKER_LOG="$1" PATH="${base}/bin:${PATH}" \
+            "${infra}/scripts/migrate.sh" patch > /dev/null 2>&1 || true
+    }
+
+    printf 'ENV=staging\nCOMPOSE_FILE=%s\n' "$STAGING_FILES" > "${infra}/.env"
+    run_migrate_patch "${base}/staging.log"
+    every_call_uses "${base}/staging.log" \
+        "${infra}/docker-compose.yml ${infra}/docker-compose.prod.yml ${infra}/docker-compose.staging.yml"
+
+    # Without COMPOSE_FILE: the base file and the prod overlay, as before
+    # (migrate.sh has only ever run on a server, never in dev).
+    printf 'ENV=staging\n' > "${infra}/.env"
+    run_migrate_patch "${base}/old.log"
+    every_call_uses "${base}/old.log" "${infra}/docker-compose.yml ${infra}/docker-compose.prod.yml"
+}
+
 echo
 echo "backup scripts"
 echo
@@ -1083,6 +1259,10 @@ run_test "an event archive records event, time, code version and snapshot count,
 run_test "an event archive refuses input that is not one event's snapshots"      test_event_archive_refuses_wrong_input
 run_test "an event code is two digits and two capitals or digits, any competition" test_event_code_rule
 run_test "events of other competitions (H2, AR) are archived and verified"        test_event_archive_of_other_competitions
+run_test "compose files come from COMPOSE_FILE when set, else the old defaults"   test_compose_file_selection
+run_test "backup-run.sh uses COMPOSE_FILE on staging, the old files elsewhere"   test_backup_run_honours_compose_file
+run_test "restore-db.sh uses COMPOSE_FILE on staging"                            test_restore_honours_compose_file
+run_test "migrate.sh uses COMPOSE_FILE on staging, base and prod without it"     test_migrate_honours_compose_file
 run_mysql_test "restoring into a scratch name leaves the live database and its rows alone" test_restore_into_scratch_leaves_the_original_alone
 run_mysql_test "restoring into a live database's name refuses without --replace" test_restore_refuses_a_live_name_without_replace
 run_mysql_test "restoring a truncated dump refuses, and imports nothing"          test_restore_refuses_a_truncated_dump

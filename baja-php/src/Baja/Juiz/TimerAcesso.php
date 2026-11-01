@@ -4,27 +4,37 @@ namespace Baja\Juiz;
 use Baja\Model\Timer;
 use Baja\Model\TimerQuery;
 use Baja\Model\User;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 use Baja\Session;
 
 class TimerAcesso
 {
     /**
+     * Create and configure the event's timers: timer.manage on the event.
+     *
      * @param string    $eventoId
      * @param User|null $user
      * @return bool
      */
     static function podeConfigurar($eventoId, $user) {
-        return $user && ($user->hasPermission('admin') || $user->hasPermission($eventoId . '_TIMER_ADMIN'));
+        return Authorization::can($user, Permission::TIMER_MANAGE, ScopeNode::evento((string) $eventoId));
     }
 
     /**
+     * Operate this timer: whoever may configure the event's timers, or holds
+     * timer.operate on the event. Timers are not scope nodes, so an operator
+     * runs every timer of their event; before RBAC the code named one timer
+     * ({EVT}_TIMER_{id}). Decided in docs/rbac.md.
+     *
      * @param Timer     $timer
      * @param User|null $user
      * @return bool
      */
     static function podeUsar($timer, $user) {
-        return $user && (self::podeConfigurar($timer->getEventoId(), $user)
-            || $user->hasPermission($timer->getEventoId() . '_TIMER_' . $timer->getTimerId()));
+        return self::podeConfigurar($timer->getEventoId(), $user)
+            || Authorization::can($user, Permission::TIMER_OPERATE, ScopeNode::evento((string) $timer->getEventoId()));
     }
 
     /**

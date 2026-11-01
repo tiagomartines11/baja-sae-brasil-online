@@ -10,12 +10,14 @@ use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
 use DateTimeZone;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['novo'])) { header("Location: admin_resultados.php"); exit; }
 
 $_page = @$_REQUEST['id'];
 
-Session::permissionCheck('admin');
+Authorization::require(Permission::RESULTADO_EDIT, Authorization::currentEvent());
 
 // Every act changes something: no act runs without the form's token, which
 // also refuses a GET link carrying one (Baja\Auth\Csrf).

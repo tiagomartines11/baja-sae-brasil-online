@@ -6,6 +6,7 @@ namespace Baja\Tests\Contagem\Db;
 use Baja\Contagem\Access\ContagemAccess;
 use Baja\Contagem\Service\Clock;
 use Baja\Model\UserQuery;
+use Propel\Runtime\Propel;
 
 /**
  * Who may log the pit lane and the fueling station.
@@ -13,11 +14,13 @@ use Baja\Model\UserQuery;
  * BACKGROUND FOR SOMEONE NEW TO THIS
  *
  * The people at the pit lane are often not the counters. So the pit log has
- * a permission code of its own, "{evento}_{prova}_BOX" (here 00NE_ZZL_BOX),
- * which an administrator ticks on the user's page as "box e
- * abastecimento". The counters' code (_CONT) does not open the pit page,
- * and the pit code does not open a count page. The controller (00NE_ZZL)
- * has both.
+ * a role of its own, pit_logger on the prova (before RBAC, BAJAAPP-76, the
+ * code "{evento}_{prova}_BOX", here 00NE_ZZL_BOX). The counter role does
+ * not open the pit page, and the pit role does not open a count page. The
+ * controller (the judge role, legacy 00NE_ZZL) has both.
+ *
+ * The tests below name the legacy codes; createUser() gives the user what
+ * the migration made of each (DbTestCase).
  *
  * A pit phone keeps its token after its user's access is removed, and the
  * browser keeps an offline copy of the page. So the upload endpoint, which
@@ -97,9 +100,12 @@ final class PitLogAccessTest extends DbTestCase
         $allowed = $this->upload($token, [], ['pit_events' => [$first]]);
         $this->assertSame([$first['uuid']], $allowed['body']['stored_uuids']);
 
+        // Her pit logger role is taken away (an administrator revoked it on
+        // admin_usuario.php). The phone keeps its token.
         $user = UserQuery::create()->findOneByUsername($username);
-        $user->setPermissions(['index']);
-        $user->save();
+        Propel::getWriteConnection('resultados')
+            ->prepare('UPDATE user_role SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL')
+            ->execute([(int) $user->getUserId()]);
 
         $second = $this->boxEntry(self::CAR_B, 180);
         $refused = $this->upload($token, [], ['pit_events' => [$second]]);
@@ -111,6 +117,29 @@ final class PitLogAccessTest extends DbTestCase
             'evento_id = ? AND prova_id = ? AND tipo = ?',
             [self::EVENTO_ID, self::PROVA_ID, 'box_entrada']
         ), 'the first stop stays, the second was not stored');
+    }
+
+    /**
+     * SITUATION: the same pit phone, but this time the pit logger role was
+     * not taken away: it ENDED (its valid_until passed, as every grant on
+     * an event does some days after the event).
+     *
+     * EXPECTED: refused just the same: 403 "sem_permissao", nothing stored.
+     */
+    public function testAPitPhoneWhoseRoleEndedCanNoLongerLogStops(): void
+    {
+        $username = self::USER_PREFIX . 'box';
+        $token = $this->issuePitLogToken($username);
+
+        $user = UserQuery::create()->findOneByUsername($username);
+        Propel::getWriteConnection('resultados')
+            ->prepare('UPDATE user_role SET valid_until = NOW() - INTERVAL 1 MINUTE WHERE user_id = ?')
+            ->execute([(int) $user->getUserId()]);
+
+        $refused = $this->upload($token, [], ['pit_events' => [$this->boxEntry(self::CAR_A, 120)]]);
+
+        $this->assertSame(403, $refused['status']);
+        $this->assertSame('sem_permissao', $refused['body']['erro']);
     }
 
     /**

@@ -10,15 +10,17 @@ use DateTimeZone;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 
 if (!isset($_REQUEST['id'])) { header("Location: admin.php"); exit; }
 
 $_user_id = $_REQUEST['id'];
 
-Session::permissionCheck('admin');
-
-// Saving rewrites (or deletes) the user: refused without the form's token (Baja\Auth\Csrf).
-if (isset($_REQUEST['act'])) Csrf::enforce();
+// A user's score entries in this event, and the roles they hold in it.
+// Read only since BAJAAPP-76: roles are given on admin_usuario.php.
+Authorization::require(Permission::ROLE_GRANT, Authorization::currentEvent());
 
 $currentEventId = EventoQuery::getCurrentEvent()->getEventoId();
 $user = UserQuery::create()->findOneByUserId($_user_id);
@@ -26,29 +28,12 @@ if (!$user) { header("Location: admin.php"); exit; }
 
 $provas = ProvaQuery::create()->filterByEventoId($currentEventId)->find();
 
-if (@$_REQUEST['act'] == 'save') {
-    // This form only exposes the global admin flag and the provas of the current
-    // event, so it must only edit those; other events, PREMIACAO, FILA, etc. stay.
-    $scope = ['admin'];
-    foreach ($provas as $p) $scope[] = $p->getFullCode();
-    $user->setScopedPermissions($scope, (array)@$_POST['j']);
-
-    if ($user->hasNoMeaningfulPermissions()) {
-        $user->delete();
-        header("Location: admin_users.php"); exit;
-    } else {
-        $user->save();
-        header("Location: user.php?id=".$_user_id); exit;
-    }
-}
 $logs = LogQuery::create()->filterByUser($user->getUsername())->orderById(Criteria::DESC)->find();
 
 Template::printHeader("Detalhes de Usuário", false);
 
 ?>
     <div style="max-width: 600px; margin: 0 auto;">
-        <form action="user.php?id=<?php echo Html::e($user->getUserId());?>&amp;act=save" method="POST">
-            <?= Csrf::field() ?>
             <table id="myTable" class="tablesorter" style="margin-bottom: 0;">
                 <thead>
                 <tr style="height: 50px">
@@ -59,19 +44,11 @@ Template::printHeader("Detalhes de Usuário", false);
                 </thead>
                 <tbody>
                 <?php
-                echo '<tr>
-                    <td>Admin:</td>
-                    <td>
-                        <input type="checkbox" name="j[]" value="admin" '.(array_search("admin", $user->getPermissions()) === false ? "" : "checked").'> J &emsp;
-                        <input type="hidden" name="j[]" value="index">
-                    </td>
-                </tr>';
                 foreach ($provas as $p) {
+                    $juiz = Authorization::can($user, Permission::PROVA_ENTER_SCORES, ScopeNode::prova($currentEventId, (string) $p->getProvaId()));
                     echo '<tr>
                             <td>'.Html::e(strtoupper($p->getProvaId())).':</td>
-                            <td>
-                                <input type="checkbox" name="j[]" value="'.Html::field($p->getFullCode()).'" '.(array_search($p->getFullCode(), $user->getPermissions()) === false ? "" : "checked").'> J &emsp; 
-                            </td>
+                            <td>'.($juiz ? 'J' : '').'</td>
                         </tr>';
                 }
                 ?>
@@ -79,12 +56,11 @@ Template::printHeader("Detalhes de Usuário", false);
                 <tfoot>
                 <tr>
                     <th colspan="2" style="height: 30px">
-                        <input type="submit" name="submit" value="Salvar" />
+                        <a href="admin_usuario.php?id=<?php echo Html::e($user->getUserId()); ?>" style="color: white;">Papéis do usuário</a>
                     </th>
                 </tr>
                 </tfoot>
             </table>
-        </form>
         <br />
         <table id="myTable2" class="tablesorter">
             <thead>

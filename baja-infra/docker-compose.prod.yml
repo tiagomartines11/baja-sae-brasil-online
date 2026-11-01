@@ -1,6 +1,10 @@
 # Production / staging overlay. Layered on the base file:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 #
+# Staging adds docker-compose.staging.yml on top of this (nginx behind the
+# VPS's Caddy, without the port and certificates below); its .env lists all
+# three in COMPOSE_FILE. See "Staging behind Caddy" in docs/dev-workflow.md.
+#
 # Adds durable bind-mounted data (survives `down -v`), Tailscale-only DB
 # access, and TLS on nginx. Does NOT re-list inherited mounts — Compose
 # concatenates service volume/port lists across files. ALWAYS verify the

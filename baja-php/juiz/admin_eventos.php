@@ -7,13 +7,23 @@ use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 
-Session::permissionCheck("admin");
+// Everyone who manages events somewhere; the list shows the events they
+// manage (evento.manage on the event, its program or above).
+$usuario = Session::getCurrentUser();
+if (!Authorization::canAnywhere($usuario, Permission::EVENTO_MANAGE)) {
+    die(Authorization::REFUSAL);
+}
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
-$users = UserQuery::create()->find();
 
-$eventos = EventoQuery::create()->orderByEventoId('desc')->find();
+$eventos = array_filter(
+    iterator_to_array(EventoQuery::create()->orderByEventoId('desc')->find()),
+    fn($ev) => Authorization::can($usuario, Permission::EVENTO_MANAGE, ScopeNode::evento((string) $ev->getEventoId()))
+);
 
 Template::printHeader("Admin");
 

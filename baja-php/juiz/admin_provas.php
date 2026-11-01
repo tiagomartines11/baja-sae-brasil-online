@@ -9,8 +9,10 @@ use Baja\Model\UserQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck("admin");
+Authorization::require(Permission::PROVA_CONFIGURE, Authorization::currentEvent());
 
 // Both acts below change something: refused without the form's token, before
 // anything else. They used to be plain links, so a link or an <img> on any

@@ -7,12 +7,14 @@ use Baja\Model\PremiacaoQuery;
 use Baja\Model\Premiacao;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['id']) && !isset($_REQUEST['nova'])) { header("Location: admin_premiacoes.php"); exit; }
 
 $_page = @$_REQUEST['id'];
 
-Session::permissionCheck('admin');
+Authorization::require(Permission::PREMIACAO_MANAGE, Authorization::currentEvent());
 
 // Every act changes something: no act runs without the form's token, which
 // also refuses a GET link carrying one (Baja\Auth\Csrf).

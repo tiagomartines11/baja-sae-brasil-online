@@ -1,0 +1,5 @@
+# Plain HTTP behind Caddy, and the fallback for any request whose Host header
+# matches no server_name. There is no redirect server on 80 in this mode (see
+# listen-proxied-redirect.conf.template), so this one owns default_server.
+# See listen-proxied.conf.template for what else differs from listen-http.
+listen 80 default_server;

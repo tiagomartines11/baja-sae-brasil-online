@@ -5,8 +5,10 @@ use Baja\Model\EventoQuery;
 use Baja\Model\PremiacaoQuery;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
-Session::permissionCheck("admin");
+Authorization::require(Permission::PREMIACAO_MANAGE, Authorization::currentEvent());
 
 $evento = EventoQuery::getCurrentEvent()->getEventoId();
 $premiacoes = PremiacaoQuery::create()->filterByEventoId($evento)->find();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Auth;
 
 use Baja\Model\User;
+use Baja\Rbac\Authorization;
 use Baja\Url;
 
 /**
@@ -24,10 +25,11 @@ use Baja\Url;
  * decided from the forum session (Baja\Results\ViewerContext). Somebody who
  * copies the cookie without a judge's session gets the public page, uncached.
  *
- * Who gets it: users with judge permissions, i.e. a row here holding "index"
- * (the judge area) or "admin". Team members also log in to the forum, and some
- * have a row for the queue (fila) permissions, but never "index"; they must
- * not get it, or every one of them would skip the cache.
+ * Who gets it: staff, i.e. anyone holding an active RBAC grant anywhere
+ * (Authorization::isStaff). Team members also log in to the forum, and some
+ * have a row for their team's queue code, but that is not a role; they must
+ * not get it, or every one of them would skip the cache. Before RBAC this
+ * was the legacy "index" or "admin" code.
  *
  * When: on every page that loads the forum session (sync(), from
  * src/bootstrap.php). Logging in lands the judge on such a page, so that is
@@ -64,10 +66,10 @@ final class StaffCookie
         return preg_match('/^[A-Za-z0-9]{32,}$/', $value) === 1 ? $value : '';
     }
 
-    /** Whether this user has judge permissions. */
+    /** Whether this user is staff: holds any active grant. */
     public static function isStaff(?User $user): bool
     {
-        return $user !== null && ($user->hasPermission('index') || $user->hasPermission('admin'));
+        return Authorization::isStaff($user);
     }
 
     /**

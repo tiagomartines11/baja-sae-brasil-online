@@ -1,0 +1,10 @@
+# Plain HTTP behind a TLS-terminating proxy. Staging only, where the VPS's
+# shared Caddy owns ports 80/443, holds the certificates and forwards every
+# staging hostname to baja-nginx:80 over the baja-edge network.
+#
+# The same listen line as listen-http. What differs is around it: no host
+# port is published (docker-compose.staging.yml), so nothing but Caddy can
+# reach this; the real IP comes from Caddy (listen-proxied-realip.conf); and
+# nginx's own redirects are relative (listen-proxied-redirect.conf), since
+# the visitor is on https and nginx is not.
+listen 80;

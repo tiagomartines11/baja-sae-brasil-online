@@ -10,13 +10,15 @@ use Baja\Model\Log;
 use Baja\Model\ProvaQuery;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
+use Baja\Rbac\Authorization;
+use Baja\Rbac\Permission\Permission;
 
 if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
 $_page = $_REQUEST['p'];
 $_team = is_string($_REQUEST['team'] ?? null) ? $_REQUEST['team'] : '';
 
-Session::permissionCheck($_page);
+Authorization::require(Permission::PROVA_ENTER_SCORES, Authorization::prova($_page));
 // Before anything is saved: a request without the form's token (another
 // site submitting it with the judge's session) changes nothing.
 Csrf::enforce();

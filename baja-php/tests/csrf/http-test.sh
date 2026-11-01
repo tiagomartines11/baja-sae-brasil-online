@@ -99,6 +99,7 @@ cleanup() {
         foreach (["'"$SID_ADM"'", "'"$SID_OUT"'", "'"$SID_JUI"'"] as $sid) {
             $r->del("baja:phpbb:session:" . $sid);
         }
+        \Baja\Tests\Support\LegacyGrants::removeForUsers(\Propel\Runtime\Propel::getWriteConnection("resultados"), "ZZCsrf%");
         UserQuery::create()->filterByUsername("ZZCsrf%", \Propel\Runtime\ActiveQuery\Criteria::LIKE)->delete();
         \Propel\Runtime\Propel::getConnection()->exec("DELETE FROM evento WHERE evento_id LIKE \"28SU%\"");
         '"$EXTRA_CLEANUP"'
@@ -124,6 +125,9 @@ php_in_app '
         $u->setUsername($nome);
         $u->setPermissions($perms);
         $u->save();
+        // What the pages read since BAJAAPP-76: the grants the migration
+        // makes of these codes (tests/Support/LegacyGrants.php).
+        \Baja\Tests\Support\LegacyGrants::give(\Propel\Runtime\Propel::getWriteConnection("resultados"), (int) $u->getUserId(), $perms);
     }
     $r = new Redis();
     $r->connect(getenv("REDIS_HOST"), (int) getenv("REDIS_PORT"));
