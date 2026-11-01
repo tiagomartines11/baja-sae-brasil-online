@@ -753,6 +753,41 @@ else
     PASS=$((PASS + 1))
 fi
 
+# ---------------------------------------------------------------------------
+# 31-33. Resuming an expired session, and the keep-alive (BAJAAPP-86).
+#
+# The judge area sends a browser whose forum session expired, but which still
+# has the "remember me" cookie, through /baja/resume and back to the same
+# page; juiz pages request /baja/keepalive so that the session does not expire
+# under a judge who never opens the forum. The full trips are tested in
+# tests/Auth/Http; here, that the routes exist at all (a stale compiled router
+# 404'd the other routes for months), keep the page's whole query string, and
+# refuse a foreign target.
+# ---------------------------------------------------------------------------
+
+target="$BASE_JUIZ/index.php?a=1&b=2"
+location=$(curl -s -o /dev/null -w "%{redirect_url}" -G --data-urlencode "redirect=$target" \
+    "$BASE_FORUM/app.php/baja/resume")
+if [[ "$location" == "$target" ]]; then
+    green "PASS  resume bounces back to the same page ('$location')"
+    PASS=$((PASS + 1))
+else
+    red "FAIL  resume target wrong: expected '$target', got '$location'"
+    FAIL=$((FAIL + 1))
+fi
+
+location=$(curl -s -o /dev/null -w "%{redirect_url}" "$BASE_FORUM/app.php/baja/resume?redirect=https://evil.com/steal")
+if echo "$location" | grep -q 'evil\.com'; then
+    red "FAIL  resume open-redirect honored: Location='$location'"
+    FAIL=$((FAIL + 1))
+else
+    green "PASS  resume open-redirect rejected (Location='$location')"
+    PASS=$((PASS + 1))
+fi
+
+status=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_FORUM/app.php/baja/keepalive")
+check_in "GET /app.php/baja/keepalive answers 204" "$status" 204
+
 echo
 echo "Smoke tests done.  PASS=$PASS  FAIL=$FAIL"
 [[ $FAIL -eq 0 ]] || exit 1
