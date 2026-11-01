@@ -30,5 +30,8 @@ $auth  = new PhpbbAuthShim($store);
 $user->session_begin();
 $auth->acl($user->data); // No-op; kept for API parity with the legacy bootstrap.
 
+// Back with a session after a bounce through the forum: drop the loop guard.
+\Baja\Auth\ForumResume::settle($user);
+
 $GLOBALS['user'] = $user;
 $GLOBALS['auth'] = $auth;
