@@ -35,6 +35,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimentoQuery orderByResolvidoPor($order = Criteria::ASC) Order by the resolvido_por column
  * @method     ChildCertificadoRequerimentoQuery orderByResolvidoEm($order = Criteria::ASC) Order by the resolvido_em column
  * @method     ChildCertificadoRequerimentoQuery orderByResolucao($order = Criteria::ASC) Order by the resolucao column
+ * @method     ChildCertificadoRequerimentoQuery orderByDuplicadoDe($order = Criteria::ASC) Order by the duplicado_de column
  *
  * @method     ChildCertificadoRequerimentoQuery groupByRequerimentoId() Group by the requerimento_id column
  * @method     ChildCertificadoRequerimentoQuery groupByCaso() Group by the caso column
@@ -52,6 +53,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimentoQuery groupByResolvidoPor() Group by the resolvido_por column
  * @method     ChildCertificadoRequerimentoQuery groupByResolvidoEm() Group by the resolvido_em column
  * @method     ChildCertificadoRequerimentoQuery groupByResolucao() Group by the resolucao column
+ * @method     ChildCertificadoRequerimentoQuery groupByDuplicadoDe() Group by the duplicado_de column
  *
  * @method     ChildCertificadoRequerimentoQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildCertificadoRequerimentoQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -71,7 +73,27 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimentoQuery rightJoinWithUser() Adds a RIGHT JOIN clause and with to the query using the User relation
  * @method     ChildCertificadoRequerimentoQuery innerJoinWithUser() Adds a INNER JOIN clause and with to the query using the User relation
  *
- * @method     \Baja\Model\UserQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
+ * @method     ChildCertificadoRequerimentoQuery leftJoinOriginal($relationAlias = null) Adds a LEFT JOIN clause to the query using the Original relation
+ * @method     ChildCertificadoRequerimentoQuery rightJoinOriginal($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Original relation
+ * @method     ChildCertificadoRequerimentoQuery innerJoinOriginal($relationAlias = null) Adds a INNER JOIN clause to the query using the Original relation
+ *
+ * @method     ChildCertificadoRequerimentoQuery joinWithOriginal($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Original relation
+ *
+ * @method     ChildCertificadoRequerimentoQuery leftJoinWithOriginal() Adds a LEFT JOIN clause and with to the query using the Original relation
+ * @method     ChildCertificadoRequerimentoQuery rightJoinWithOriginal() Adds a RIGHT JOIN clause and with to the query using the Original relation
+ * @method     ChildCertificadoRequerimentoQuery innerJoinWithOriginal() Adds a INNER JOIN clause and with to the query using the Original relation
+ *
+ * @method     ChildCertificadoRequerimentoQuery leftJoinDuplicado($relationAlias = null) Adds a LEFT JOIN clause to the query using the Duplicado relation
+ * @method     ChildCertificadoRequerimentoQuery rightJoinDuplicado($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Duplicado relation
+ * @method     ChildCertificadoRequerimentoQuery innerJoinDuplicado($relationAlias = null) Adds a INNER JOIN clause to the query using the Duplicado relation
+ *
+ * @method     ChildCertificadoRequerimentoQuery joinWithDuplicado($joinType = Criteria::INNER_JOIN) Adds a join clause and with to the query using the Duplicado relation
+ *
+ * @method     ChildCertificadoRequerimentoQuery leftJoinWithDuplicado() Adds a LEFT JOIN clause and with to the query using the Duplicado relation
+ * @method     ChildCertificadoRequerimentoQuery rightJoinWithDuplicado() Adds a RIGHT JOIN clause and with to the query using the Duplicado relation
+ * @method     ChildCertificadoRequerimentoQuery innerJoinWithDuplicado() Adds a INNER JOIN clause and with to the query using the Duplicado relation
+ *
+ * @method     \Baja\Model\UserQuery|\Baja\Model\CertificadoRequerimentoQuery|\Baja\Model\CertificadoRequerimentoQuery endUse() Finalizes a secondary criteria and merges it with its primary Criteria
  *
  * @method     ChildCertificadoRequerimento|null findOne(?ConnectionInterface $con = null) Return the first ChildCertificadoRequerimento matching the query
  * @method     ChildCertificadoRequerimento findOneOrCreate(?ConnectionInterface $con = null) Return the first ChildCertificadoRequerimento matching the query, or a new ChildCertificadoRequerimento object populated from the query conditions when no match is found
@@ -92,6 +114,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimento|null findOneByResolvidoPor(int $resolvido_por) Return the first ChildCertificadoRequerimento filtered by the resolvido_por column
  * @method     ChildCertificadoRequerimento|null findOneByResolvidoEm(string $resolvido_em) Return the first ChildCertificadoRequerimento filtered by the resolvido_em column
  * @method     ChildCertificadoRequerimento|null findOneByResolucao(string $resolucao) Return the first ChildCertificadoRequerimento filtered by the resolucao column
+ * @method     ChildCertificadoRequerimento|null findOneByDuplicadoDe(string $duplicado_de) Return the first ChildCertificadoRequerimento filtered by the duplicado_de column
  *
  * @method     ChildCertificadoRequerimento requirePk($key, ?ConnectionInterface $con = null) Return the ChildCertificadoRequerimento by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildCertificadoRequerimento requireOne(?ConnectionInterface $con = null) Return the first ChildCertificadoRequerimento matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -112,6 +135,7 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimento requireOneByResolvidoPor(int $resolvido_por) Return the first ChildCertificadoRequerimento filtered by the resolvido_por column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildCertificadoRequerimento requireOneByResolvidoEm(string $resolvido_em) Return the first ChildCertificadoRequerimento filtered by the resolvido_em column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildCertificadoRequerimento requireOneByResolucao(string $resolucao) Return the first ChildCertificadoRequerimento filtered by the resolucao column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildCertificadoRequerimento requireOneByDuplicadoDe(string $duplicado_de) Return the first ChildCertificadoRequerimento filtered by the duplicado_de column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildCertificadoRequerimento[]|Collection find(?ConnectionInterface $con = null) Return ChildCertificadoRequerimento objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> find(?ConnectionInterface $con = null) Return ChildCertificadoRequerimento objects based on current ModelCriteria
@@ -148,6 +172,8 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> findByResolvidoEm(string|array<string> $resolvido_em) Return ChildCertificadoRequerimento objects filtered by the resolvido_em column
  * @method     ChildCertificadoRequerimento[]|Collection findByResolucao(string|array<string> $resolucao) Return ChildCertificadoRequerimento objects filtered by the resolucao column
  * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> findByResolucao(string|array<string> $resolucao) Return ChildCertificadoRequerimento objects filtered by the resolucao column
+ * @method     ChildCertificadoRequerimento[]|Collection findByDuplicadoDe(string|array<string> $duplicado_de) Return ChildCertificadoRequerimento objects filtered by the duplicado_de column
+ * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> findByDuplicadoDe(string|array<string> $duplicado_de) Return ChildCertificadoRequerimento objects filtered by the duplicado_de column
  *
  * @method     ChildCertificadoRequerimento[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildCertificadoRequerimento> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -247,7 +273,7 @@ abstract class CertificadoRequerimentoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT requerimento_id, caso, token, evento, evento_texto, documento, nome, email, telefone, descricao, criado_em, avisado_em, status, resolvido_por, resolvido_em, resolucao FROM certificado_requerimento WHERE requerimento_id = :p0';
+        $sql = 'SELECT requerimento_id, caso, token, evento, evento_texto, documento, nome, email, telefone, descricao, criado_em, avisado_em, status, resolvido_por, resolvido_em, resolucao, duplicado_de FROM certificado_requerimento WHERE requerimento_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
@@ -872,6 +898,34 @@ abstract class CertificadoRequerimentoQuery extends ModelCriteria
     }
 
     /**
+     * Filter the query on the duplicado_de column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByDuplicadoDe('fooValue');   // WHERE duplicado_de = 'fooValue'
+     * $query->filterByDuplicadoDe('%fooValue%', Criteria::LIKE); // WHERE duplicado_de LIKE '%fooValue%'
+     * $query->filterByDuplicadoDe(['foo', 'bar']); // WHERE duplicado_de IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $duplicadoDe The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByDuplicadoDe($duplicadoDe = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($duplicadoDe)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE, $duplicadoDe, $comparison);
+
+        return $this;
+    }
+
+    /**
      * Filter the query by a related \Baja\Model\User object
      *
      * @param \Baja\Model\User|ObjectCollection $user The related object(s) to use as filter
@@ -1043,6 +1097,354 @@ abstract class CertificadoRequerimentoQuery extends ModelCriteria
     {
         /** @var $q \Baja\Model\UserQuery */
         $q = $this->useInQuery('User', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\CertificadoRequerimento object
+     *
+     * @param \Baja\Model\CertificadoRequerimento|ObjectCollection $certificadoRequerimento The related object(s) to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @throws \Propel\Runtime\Exception\PropelException
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByOriginal($certificadoRequerimento, ?string $comparison = null)
+    {
+        if ($certificadoRequerimento instanceof \Baja\Model\CertificadoRequerimento) {
+            return $this
+                ->addUsingAlias(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE, $certificadoRequerimento->getRequerimentoId(), $comparison);
+        } elseif ($certificadoRequerimento instanceof ObjectCollection) {
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+
+            $this
+                ->addUsingAlias(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE, $certificadoRequerimento->toKeyValue('PrimaryKey', 'RequerimentoId'), $comparison);
+
+            return $this;
+        } else {
+            throw new PropelException('filterByOriginal() only accepts arguments of type \Baja\Model\CertificadoRequerimento or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Original relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinOriginal(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Original');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Original');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Original relation CertificadoRequerimento object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery A secondary query class using the current class as primary query
+     */
+    public function useOriginalQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinOriginal($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Original', '\Baja\Model\CertificadoRequerimentoQuery');
+    }
+
+    /**
+     * Use the Original relation CertificadoRequerimento object
+     *
+     * @param callable(\Baja\Model\CertificadoRequerimentoQuery):\Baja\Model\CertificadoRequerimentoQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withOriginalQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::LEFT_JOIN
+    ) {
+        $relatedQuery = $this->useOriginalQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the Original relation to the CertificadoRequerimento table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the EXISTS statement
+     */
+    public function useOriginalExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useExistsQuery('Original', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the Original relation to the CertificadoRequerimento table for a NOT EXISTS query.
+     *
+     * @see useOriginalExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useOriginalNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useExistsQuery('Original', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the Original relation to the CertificadoRequerimento table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the IN statement
+     */
+    public function useInOriginalQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useInQuery('Original', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the Original relation to the CertificadoRequerimento table for a NOT IN query.
+     *
+     * @see useOriginalInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInOriginalQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useInQuery('Original', $modelAlias, $queryClass, 'NOT IN');
+        return $q;
+    }
+
+    /**
+     * Filter the query by a related \Baja\Model\CertificadoRequerimento object
+     *
+     * @param \Baja\Model\CertificadoRequerimento|ObjectCollection $certificadoRequerimento the related object to use as filter
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByDuplicado($certificadoRequerimento, ?string $comparison = null)
+    {
+        if ($certificadoRequerimento instanceof \Baja\Model\CertificadoRequerimento) {
+            $this
+                ->addUsingAlias(CertificadoRequerimentoTableMap::COL_REQUERIMENTO_ID, $certificadoRequerimento->getDuplicadoDe(), $comparison);
+
+            return $this;
+        } elseif ($certificadoRequerimento instanceof ObjectCollection) {
+            $this
+                ->useDuplicadoQuery()
+                ->filterByPrimaryKeys($certificadoRequerimento->getPrimaryKeys())
+                ->endUse();
+
+            return $this;
+        } else {
+            throw new PropelException('filterByDuplicado() only accepts arguments of type \Baja\Model\CertificadoRequerimento or Collection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Duplicado relation
+     *
+     * @param string|null $relationAlias Optional alias for the relation
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function joinDuplicado(?string $relationAlias = null, ?string $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Duplicado');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Duplicado');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Duplicado relation CertificadoRequerimento object
+     *
+     * @see useQuery()
+     *
+     * @param string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery A secondary query class using the current class as primary query
+     */
+    public function useDuplicadoQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinDuplicado($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Duplicado', '\Baja\Model\CertificadoRequerimentoQuery');
+    }
+
+    /**
+     * Use the Duplicado relation CertificadoRequerimento object
+     *
+     * @param callable(\Baja\Model\CertificadoRequerimentoQuery):\Baja\Model\CertificadoRequerimentoQuery $callable A function working on the related query
+     *
+     * @param string|null $relationAlias optional alias for the relation
+     *
+     * @param string|null $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return $this
+     */
+    public function withDuplicadoQuery(
+        callable $callable,
+        string $relationAlias = null,
+        ?string $joinType = Criteria::LEFT_JOIN
+    ) {
+        $relatedQuery = $this->useDuplicadoQuery(
+            $relationAlias,
+            $joinType
+        );
+        $callable($relatedQuery);
+        $relatedQuery->endUse();
+
+        return $this;
+    }
+
+    /**
+     * Use the Duplicado relation to the CertificadoRequerimento table for an EXISTS query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     * @param string $typeOfExists Either ExistsQueryCriterion::TYPE_EXISTS or ExistsQueryCriterion::TYPE_NOT_EXISTS
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the EXISTS statement
+     */
+    public function useDuplicadoExistsQuery($modelAlias = null, $queryClass = null, $typeOfExists = 'EXISTS')
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useExistsQuery('Duplicado', $modelAlias, $queryClass, $typeOfExists);
+        return $q;
+    }
+
+    /**
+     * Use the Duplicado relation to the CertificadoRequerimento table for a NOT EXISTS query.
+     *
+     * @see useDuplicadoExistsQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the exists query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the NOT EXISTS statement
+     */
+    public function useDuplicadoNotExistsQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useExistsQuery('Duplicado', $modelAlias, $queryClass, 'NOT EXISTS');
+        return $q;
+    }
+
+    /**
+     * Use the Duplicado relation to the CertificadoRequerimento table for an IN query.
+     *
+     * @see \Propel\Runtime\ActiveQuery\ModelCriteria::useInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the IN query, like ExtendedBookQuery::class
+     * @param string $typeOfIn Criteria::IN or Criteria::NOT_IN
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the IN statement
+     */
+    public function useInDuplicadoQuery($modelAlias = null, $queryClass = null, $typeOfIn = 'IN')
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useInQuery('Duplicado', $modelAlias, $queryClass, $typeOfIn);
+        return $q;
+    }
+
+    /**
+     * Use the Duplicado relation to the CertificadoRequerimento table for a NOT IN query.
+     *
+     * @see useDuplicadoInQuery()
+     *
+     * @param string|null $modelAlias sets an alias for the nested query
+     * @param string|null $queryClass Allows to use a custom query class for the NOT IN query, like ExtendedBookQuery::class
+     *
+     * @return \Baja\Model\CertificadoRequerimentoQuery The inner query object of the NOT IN statement
+     */
+    public function useNotInDuplicadoQuery($modelAlias = null, $queryClass = null)
+    {
+        /** @var $q \Baja\Model\CertificadoRequerimentoQuery */
+        $q = $this->useInQuery('Duplicado', $modelAlias, $queryClass, 'NOT IN');
         return $q;
     }
 

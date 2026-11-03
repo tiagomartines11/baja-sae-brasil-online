@@ -69,7 +69,11 @@ Before requesting review:
       what only exists once nginx and PHP are both in the path: routing,
       headers, rate limiting, and whether a document number can be found
       anywhere in a response. Pass it a token from your local database
-      and that participant's CPF.
+      and that participant's CPF. Its check that simultaneous
+      `/requerimento` submissions save one report counts rows through
+      `docker exec` into the app container (`APP_CONTAINER`, default
+      `baja-app`) and skips without one; it also clears the
+      `/requerimento` rate-limit counters in your local Redis first.
 
       The third covers the insertion pages, which are the only
       state-changing surface here: who is turned away and how, and that

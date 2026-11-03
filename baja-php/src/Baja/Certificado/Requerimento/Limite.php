@@ -43,8 +43,10 @@ final class Limite
     /**
      * Seconds until this caller may submit again, or null if they may now.
      *
-     * Checked before the form is validated, so a rejected submission costs
-     * nothing but the check.
+     * A read, and only a hint. It runs before the captcha so that an address
+     * already over the limit does not also spend a Turnstile verification,
+     * but it takes no slot: two requests that arrive together both see the
+     * same count here. reservar() is the check that holds.
      */
     public static function esperaSegundos(string $origem, string $email): ?int
     {
@@ -62,30 +64,71 @@ final class Limite
     }
 
     /**
-     * Count one accepted submission.
+     * Take one slot for this submission, or say how long to wait.
      *
-     * Only accepted ones. Counting rejections too would mean somebody who
-     * mistypes their email three times is locked out of reporting a problem
-     * with their own certificate, which is the failure mode most likely to
-     * actually happen — the same reasoning that put Backoff::clear() in
-     * /buscar.
+     * One INCR per counter, and the answer comes from what INCR returns
+     * rather than from a read made earlier. That is the whole fix: the old
+     * pair — read the count at the top of the request, add one at the bottom,
+     * after two SMTP conversations — let six requests that arrived within the
+     * same few seconds all read the same count and all pass (BAJAAPP-89).
+     * Redis runs INCR one at a time, so six concurrent requests get 1 to 6
+     * back and only the first three are under the email ceiling.
+     *
+     * Called only for a submission that passed the captcha and the form's
+     * validation. Counting rejections too would mean somebody who mistypes
+     * their email three times is locked out of reporting a problem with their
+     * own certificate, which is the failure most likely to actually happen —
+     * the same reasoning that put Backoff::clear() in /buscar.
+     *
+     * A refusal hands back what it took, so that being turned away by one
+     * counter does not use up a slot on the other.
+     *
+     * @return int|null null when the slot is taken and the caller may go on;
+     *                  otherwise the seconds until it may try again
      */
-    public static function registrar(string $origem, string $email): void
+    public static function reservar(string $origem, string $email): ?int
     {
         $redis = self::redis();
 
         if ($redis === null) {
-            return;
+            return null;
         }
 
-        foreach (array_keys(self::chaves($origem, $email)) as $chave) {
-            try {
-                $redis->incr($chave);
-                $redis->expire($chave, self::JANELA_SEGUNDOS);
-            } catch (\Throwable $e) {
-                error_log('Certificado\Requerimento\Limite: write failed: ' . $e->getMessage());
+        $incrementadas = [];
+        $espera        = null;
+
+        try {
+            foreach (self::chaves($origem, $email) as $chave => $maximo) {
+                $contagem        = (int) $redis->incr($chave);
+                $incrementadas[] = $chave;
+
+                // The first submission in the window starts the clock. Only
+                // the first: renewing it on every INCR would let somebody who
+                // keeps trying hold their own counter open forever.
+                if ($contagem === 1) {
+                    $redis->expire($chave, self::JANELA_SEGUNDOS);
+                }
+
+                if ($contagem > $maximo) {
+                    $ttl    = (int) $redis->ttl($chave);
+                    $espera = max($espera ?? 0, $ttl > 0 ? $ttl : self::JANELA_SEGUNDOS);
+                }
             }
+
+            if ($espera !== null) {
+                foreach ($incrementadas as $chave) {
+                    $redis->decr($chave);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fail open, like every read here: an outage must not take the
+            // correction channel down with it.
+            error_log('Certificado\Requerimento\Limite: reservation failed; allowing: ' . $e->getMessage());
+
+            return null;
         }
+
+        return $espera;
     }
 
     /**

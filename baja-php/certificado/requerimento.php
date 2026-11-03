@@ -40,11 +40,9 @@ use Baja\Certificado\Certificado;
 use Baja\Certificado\Config;
 use Baja\Certificado\Http;
 use Baja\Certificado\Insercao\Texto;
-use Baja\Certificado\Requerimento\Aviso;
 use Baja\Certificado\Requerimento\Caso;
 use Baja\Certificado\Requerimento\Formulario;
-use Baja\Certificado\Requerimento\Gravador;
-use Baja\Certificado\Requerimento\Limite;
+use Baja\Certificado\Requerimento\Recepcao;
 use Baja\Certificado\Template;
 use Baja\Certificado\Token;
 use Baja\Model\EventoQuery;
@@ -81,6 +79,7 @@ $protocolo     = null;
 $avisoErro     = '';
 $espera        = null;
 $reciboEnviado = false;
+$jaAberto      = false;
 
 // GET prefill. Read from $_GET, not $_REQUEST, so nothing about a POST leaks
 // into what the blank form shows.
@@ -102,73 +101,16 @@ if (!Caso::valido($casoInicial)) {
 $certificadoGet = Token::isWellFormed($tokenGet) ? Certificado::fromToken($tokenGet) : null;
 
 if ($isPost) {
-    /*
-     * The order matters. The cheap refusals come first so that a flood costs
-     * a Redis read rather than a database write and two SMTP conversations,
-     * and the limiter is consulted before the captcha so that a caller who is
-     * already over the limit does not also spend a Turnstile verification.
-     */
-    $origem = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    // Every decision about a submission is in Recepcao, in order, with the
+    // reasons. This page only prints what it decided.
+    $resposta = Recepcao::padrao()->receber($_POST, (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $eventos);
 
-    // Cleaned exactly as Formulario will clean it, or a trailing space buys a
-    // fresh counter — the check and the count have to agree on what one
-    // address is.
-    $emailBruto = Texto::limpar(Texto::escalar($_POST['email'] ?? ''));
-    $espera     = Limite::esperaSegundos($origem, $emailBruto);
-
-    /*
-     * The trap field. Anything in it means the submission was not typed by
-     * somebody looking at the page, and the answer is the ordinary success
-     * page with nothing written down — a bot told it failed tries again.
-     */
-    $armadilha = Texto::escalar($_POST[Formulario::CAMPO_ARMADILHA] ?? '') !== '';
-
-    if ($espera !== null) {
-        // Falls through to the "too many" card below.
-    } elseif ($armadilha) {
-        $protocolo = '';
-    } elseif (!Turnstile::verificar(Texto::escalar($_POST[Turnstile::CAMPO] ?? ''), $origem)) {
-        $avisoErro = 'Não foi possível confirmar que você não é um robô. Recarregue a página e tente de novo.';
-    } else {
-        $formulario = new Formulario($_POST, $eventos);
-
-        if ($formulario->valido()) {
-            $requerimento = Gravador::gravar($formulario);
-
-            /*
-             * The row is written before anything is sent, and the protocol is
-             * shown whether or not either message goes out.
-             *
-             * This is why the report is stored rather than mailed. A server
-             * with no relay configured still takes the report: it lands in the
-             * queue with avisado_em null, the staff page says so in as many
-             * words, and the person is told plainly that no confirmation is
-             * coming. Refusing the submission instead would turn a mail
-             * misconfiguration into "this person cannot report that their own
-             * certificate is wrong" — and the form is now the only channel
-             * there is.
-             */
-            $protocolo = $requerimento->getRequerimentoId();
-
-            // Always, including for a report this system decides not to alert
-            // anybody about. Being the fourth person to report one typo is not
-            // a reason to hear nothing back.
-            $reciboEnviado = Aviso::confirmarAoParticipante($requerimento);
-
-            if (Gravador::jaAvisadoRecentemente($requerimento)) {
-                // Somebody already reported this certificate today and nobody
-                // has closed it yet. The row still exists; only the repeat
-                // alert is suppressed.
-                Gravador::marcarAvisado($requerimento);
-            } elseif (Aviso::alertarEquipe($requerimento, Aviso::captchaAtivo())) {
-                Gravador::marcarAvisado($requerimento);
-            } else {
-                error_log('Certificado\Requerimento: saved ' . $requerimento->getRequerimentoId() . ' but the staff alert failed.');
-            }
-
-            Limite::registrar($origem, $formulario->email());
-        }
-    }
+    $formulario    = $resposta->formulario;
+    $protocolo     = $resposta->protocolo;
+    $avisoErro     = $resposta->avisoErro;
+    $espera        = $resposta->espera;
+    $reciboEnviado = $resposta->reciboEnviado;
+    $jaAberto      = $resposta->jaAberto;
 }
 
 /*
@@ -190,7 +132,18 @@ Template::printHeader('Abrir um requerimento - Certificados SAE BRASIL');
                 Guarde o número de protocolo:
                 <strong><?= $e($protocolo) ?></strong>
             </p>
-            <?php if ($reciboEnviado): ?>
+            <?php if ($jaAberto): ?>
+                <?php /*
+                 * The button pressed again, or the form sent again from the
+                 * same address while the first report is still open. Nothing
+                 * was written or sent this time, so this must not promise a
+                 * new email. The protocol above is that person's own: the
+                 * match included their address.
+                 */ ?>
+                <p class="alerta aviso">
+                    Você já tem um requerimento aberto para este certificado. O protocolo é o mesmo.
+                </p>
+            <?php elseif ($reciboEnviado): ?>
                 <p>
                     Enviamos uma confirmação para o e-mail informado. A equipe responsável
                     pelos certificados vai analisar o pedido e responder por lá.
@@ -544,7 +497,7 @@ Template::printHeader('Abrir um requerimento - Certificados SAE BRASIL');
          * the failure the other direction does not survive, where a required
          * field is hidden and the form can never be completed.
          *
-         * Inline rather than a file under /js/. It is fifteen lines that
+         * Inline rather than a file under /js/. It is a few dozen lines that
          * belong to this page, and the alternative is a request whose only
          * job is to arrive before somebody reads the second question.
          */ ?>
@@ -579,6 +532,36 @@ Template::printHeader('Abrir um requerimento - Certificados SAE BRASIL');
                 });
 
                 sincronizar();
+
+                /*
+                 * One press, one request (BAJAAPP-89). The answer takes
+                 * several seconds, because two emails are sent before it, and
+                 * a button that does nothing visible for that long gets
+                 * pressed again. Disabled only once the browser has accepted
+                 * the form: a form it refuses never leaves the page, and a
+                 * dead button there would strand the person.
+                 *
+                 * A convenience, not the guard. With JavaScript off this
+                 * never runs, and the server's duplicate check is what keeps
+                 * the second press from becoming a second report.
+                 */
+                var botao       = form.querySelector('button[type="submit"]');
+                var textoBotao  = botao ? botao.textContent : '';
+
+                form.addEventListener('submit', function () {
+                    if (!botao || !form.checkValidity()) { return; }
+                    botao.disabled    = true;
+                    botao.textContent = 'Enviando…';
+                });
+
+                // Coming back with the browser's back button can restore this
+                // page exactly as it was left, button disabled included.
+                // Somebody who comes back has to be able to send again.
+                window.addEventListener('pageshow', function () {
+                    if (!botao) { return; }
+                    botao.disabled    = false;
+                    botao.textContent = textoBotao;
+                });
             })();
         </script>
     </div>
