@@ -22,6 +22,14 @@ interface AuditLog
     public const ROLE_UPDATE = 'role_update';
 
     /**
+     * A program created or edited on juiz/admin_programas.php (BAJAAPP-90):
+     * a program's parent decides whose grants reach it. scope is the
+     * program; details hold it before and after.
+     */
+    public const PROGRAMA_CREATE = 'programa.create';
+    public const PROGRAMA_UPDATE = 'programa.update';
+
+    /**
      * @param string     $action  one of the constants above
      * @param int|null   $actorUserId who did it; null for the migration
      * @param array      $details what changed, stored as JSON

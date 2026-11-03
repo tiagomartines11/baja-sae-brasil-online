@@ -10,6 +10,7 @@ use Baja\Session;
 use Baja\Site\Html;
 use Baja\Rbac\Authorization;
 use Baja\Rbac\Permission\Permission;
+use Baja\Rbac\Scope\ScopeNode;
 
 Authorization::require(Permission::EVENTO_MANAGE, Authorization::currentEvent());
 
@@ -76,6 +77,11 @@ Template::printHeader("Admin");
         <tr><td>
             <a href="/admin_usuarios.php">Administrar usuários</a>
         </td></tr>
+<?php if (Authorization::currentUserCan(Permission::PROGRAMA_MANAGE, ScopeNode::platform())) { ?>
+        <tr><td>
+            <a href="/admin_programas.php">Administrar programas</a>
+        </td></tr>
+<?php } ?>
     </tbody>
 </table>
 

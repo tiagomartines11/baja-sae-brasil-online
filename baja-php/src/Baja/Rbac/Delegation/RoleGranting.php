@@ -40,6 +40,10 @@ use Throwable;
  * Each grant and revoke writes exactly one audit row, in the same
  * transaction. A refusal writes nothing; it is logged as a warning.
  *
+ * grantOnMany() gives one role on several places in one go (BAJAAPP-91),
+ * each place under the same rules as grant(), all in one transaction:
+ * if any place is refused, none is granted.
+ *
  * grantByAuthority() and revokeByAuthority() are a second, narrower door,
  * for a page that hands out ONE fixed role as part of its own work: the
  * lap counting's "Usuários" page, where a race controller (no role.grant)
@@ -52,6 +56,13 @@ use Throwable;
  */
 final class RoleGranting
 {
+    /**
+     * The most places grantOnMany() takes in one call. Generous for a real
+     * form (every prova of a few events), and a bound on what one request
+     * checks and writes.
+     */
+    public const MAX_PLACES_AT_ONCE = 200;
+
     /** @var callable(string, array): void */
     private $warn;
 
@@ -94,6 +105,121 @@ final class RoleGranting
         }
 
         return $this->insertGrant($granterId, $userId, $role, $node, $validUntil, []);
+    }
+
+    /**
+     * Gives $roleCode to $userId on each of $nodes (BAJAAPP-91): the role
+     * page's "several places at once".
+     *
+     * Exactly what grant() would do for each place (the five rules, the
+     * expiry cap, one grant and one audit row each), but ALL OR NOTHING:
+     * every place is checked first, and if any is refused nothing is
+     * written and BatchRefused lists each refused place with its reason.
+     * Otherwise every grant is written in ONE transaction, so a failure
+     * half way through leaves none of them.
+     *
+     * A place with another asked-for place above it (an event and one of
+     * its provas) is left out: the grant above already reaches it. The
+     * result says which, and under what. The same place asked twice counts
+     * once.
+     *
+     * A place where the user already holds the role gets another grant, as
+     * grant() does for one place: grants are not merged.
+     *
+     * @param ScopeNode[] $nodes
+     * @param DateTimeImmutable|null $validUntil the same end for every place; null for each place's default (GrantExpiry)
+     * @throws GrantRefused for the request as a whole (no place, too many, unknown role or user); nothing is written then
+     * @throws BatchRefused when one or more places are refused; nothing is written then
+     */
+    public function grantOnMany(int $granterId, int $userId, string $roleCode, array $nodes, ?DateTimeImmutable $validUntil = null): GrantBatch
+    {
+        $byKey = [];
+        foreach ($nodes as $node) {
+            $byKey[$node->key()] ??= $node;
+        }
+        $context = ['user' => $userId, 'role' => $roleCode, 'places' => count($byKey)];
+
+        try {
+            if ($byKey === []) {
+                throw new GrantRefused(GrantRefused::NO_PLACES, 'No place was given.');
+            }
+            if (count($byKey) > self::MAX_PLACES_AT_ONCE) {
+                throw new GrantRefused(GrantRefused::TOO_MANY_PLACES, count($byKey) . ' places at once; at most ' . self::MAX_PLACES_AT_ONCE . '.');
+            }
+            $role = $this->roles->byCode($roleCode);
+            if ($role === null) {
+                throw new GrantRefused(GrantRefused::UNKNOWN_ROLE, "There is no role '$roleCode'.");
+            }
+            if (!$this->userExists($userId)) {
+                throw new GrantRefused(GrantRefused::UNKNOWN_USER, "There is no user $userId.");
+            }
+        } catch (GrantRefused $refused) {
+            $this->logRefusal('grant', $granterId, $refused, $context);
+            throw $refused;
+        }
+
+        [$toGrant, $covered] = $this->withoutCovered(array_values($byKey));
+
+        // Every place checked, every refusal collected, before anything is written.
+        $planned = [];
+        $refusals = [];
+        foreach ($toGrant as $node) {
+            try {
+                $this->assertMayHandOut($granterId, $role, $node);
+                $planned[] = [$node, $this->expiry->validUntilFor($node, $validUntil, $this->granterRightEnds($granterId, $node, Permission::ROLE_GRANT))];
+            } catch (GrantRefused $refused) {
+                $this->logRefusal('grant', $granterId, $refused, ['user' => $userId, 'role' => $roleCode, 'node' => $node->key(), 'batch' => true]);
+                $refusals[] = ['node' => $node, 'refused' => $refused];
+            }
+        }
+        if ($refusals !== []) {
+            throw new BatchRefused($refusals);
+        }
+
+        $now = $this->clock->now();
+        $granted = $this->inTransaction(function () use ($planned, $granterId, $userId, $role, $now): array {
+            $granted = [];
+            foreach ($planned as [$node, $end]) {
+                $granted[] = ['node' => $node, 'grantId' => $this->writeGrant($granterId, $userId, $role, $node, $now, $end, [])];
+            }
+            return $granted;
+        });
+        $this->authorizer->forgetUser($userId);
+        return new GrantBatch($granted, $covered);
+    }
+
+    /**
+     * Splits the asked-for places into those to grant and those another
+     * asked-for place is above. A left-out place is paired with the
+     * HIGHEST asked-for place above it, which is the one granted (with an
+     * event, a prova of it and its program all ticked, only the program is).
+     * A place the tree does not know stays in, to be refused as unknown.
+     *
+     * @param ScopeNode[] $nodes no two alike
+     * @return array{0: ScopeNode[], 1: array<int, array{node: ScopeNode, by: ScopeNode}>}
+     */
+    private function withoutCovered(array $nodes): array
+    {
+        $asked = [];
+        foreach ($nodes as $node) {
+            $asked[$node->key()] = true;
+        }
+        $toGrant = [];
+        $covered = [];
+        foreach ($nodes as $node) {
+            $highest = null;
+            foreach ($this->tree->ancestorsOf($node) ?? [] as $above) {
+                if (isset($asked[$above->key()])) {
+                    $highest = $above;
+                }
+            }
+            if ($highest === null) {
+                $toGrant[] = $node;
+            } else {
+                $covered[] = ['node' => $node, 'by' => $highest];
+            }
+        }
+        return [$toGrant, $covered];
     }
 
     /**
@@ -273,15 +399,21 @@ final class RoleGranting
     private function insertGrant(int $granterId, int $userId, Role $role, ScopeNode $node, ?DateTimeImmutable $validUntil, array $extraDetails): int
     {
         $now = $this->clock->now();
-        $grantId = $this->inTransaction(function () use ($granterId, $userId, $role, $node, $now, $validUntil, $extraDetails): int {
-            $grantId = $this->grants->insert($userId, $role->id, $node, $granterId, $now, $validUntil);
-            $this->audit->record(
-                AuditLog::GRANT, $granterId, $now, $grantId, $role->id, $userId, $node,
-                ['role' => $role->code, 'valid_until' => $validUntil === null ? null : GrantRepository::format($validUntil)] + $extraDetails
-            );
-            return $grantId;
-        });
+        $grantId = $this->inTransaction(
+            fn(): int => $this->writeGrant($granterId, $userId, $role, $node, $now, $validUntil, $extraDetails)
+        );
         $this->authorizer->forgetUser($userId);
+        return $grantId;
+    }
+
+    /** The grant row and its audit row. The caller holds the transaction. */
+    private function writeGrant(int $granterId, int $userId, Role $role, ScopeNode $node, DateTimeImmutable $now, ?DateTimeImmutable $validUntil, array $extraDetails): int
+    {
+        $grantId = $this->grants->insert($userId, $role->id, $node, $granterId, $now, $validUntil);
+        $this->audit->record(
+            AuditLog::GRANT, $granterId, $now, $grantId, $role->id, $userId, $node,
+            ['role' => $role->code, 'valid_until' => $validUntil === null ? null : GrantRepository::format($validUntil)] + $extraDetails
+        );
         return $grantId;
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Juiz;
 
 use Baja\Rbac\Delegation\GrantRefused;
+use Baja\Rbac\Delegation\RoleGranting;
 
 /**
  * Words for juiz/admin_usuario.php, the stopgap page that gives and takes
@@ -27,6 +28,9 @@ final class Papeis
             GrantRefused::VALID_UNTIL_IN_PAST => 'A data de término já passou.',
             // The core's message says until when they may grant.
             GrantRefused::VALID_UNTIL_AFTER_GRANTER => 'A data de término é depois do fim do seu próprio acesso. ' . $refused->getMessage(),
+            GrantRefused::NO_PLACES => 'Marque pelo menos um lugar.',
+            GrantRefused::TOO_MANY_PLACES => 'Lugares demais de uma vez: marque no máximo ' . RoleGranting::MAX_PLACES_AT_ONCE
+                . '. Para tudo de um evento, marque o evento em vez de cada prova.',
             default => 'Não foi possível: ' . $refused->getMessage(),
         };
     }

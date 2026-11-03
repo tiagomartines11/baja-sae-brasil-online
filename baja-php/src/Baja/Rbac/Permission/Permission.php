@@ -74,6 +74,14 @@ enum Permission: string
     /** Edit what roles are (their permissions, where they may be given), and give system roles. Platform only. */
     case ROLE_MANAGE = 'role.manage';
 
+    /**
+     * Create and edit the competition programs (juiz/admin_programas.php,
+     * BAJAAPP-90). Platform only: a program's parent decides whose grants
+     * reach it, so moving one changes who may do what in it. No legacy code;
+     * added by PropelMigration_1793120000 to platform_admin.
+     */
+    case PROGRAMA_MANAGE = 'programa.manage';
+
     /** @return ScopeType[] the node types this permission can be asked about */
     public function appliesTo(): array
     {
@@ -85,7 +93,7 @@ enum Permission: string
             self::RESULTADO_EDIT, self::TIMER_MANAGE, self::TIMER_OPERATE, self::PREMIACAO_MANAGE,
             self::PREMIACAO_VIEW, self::EQUIPE_MANAGE, self::NOTIFICACAO_SEND => [ScopeType::EVENTO],
             self::ROLE_GRANT => ScopeType::cases(),
-            self::ROLE_MANAGE => [ScopeType::PLATFORM],
+            self::ROLE_MANAGE, self::PROGRAMA_MANAGE => [ScopeType::PLATFORM],
         };
     }
 
