@@ -66,11 +66,22 @@ final class PermissionCatalogueTest extends TestCase
         $this->assertSame([ScopeType::PLATFORM], Permission::ROLE_MANAGE->appliesTo());
     }
 
-    /** Only role.grant and role.manage can be asked about the platform itself. */
-    public function testOnlyRolePermissionsApplyToThePlatformItself(): void
+    /**
+     * Only role.grant, role.manage and programa.manage can be asked about
+     * the platform itself. programa.manage (BAJAAPP-90) is about the whole
+     * tree of programs, so it has no smaller place to be asked about.
+     */
+    public function testOnlyRoleAndProgramPermissionsApplyToThePlatformItself(): void
     {
         $atPlatform = array_filter(Permission::cases(), fn(Permission $p) => $p->appliesToType(ScopeType::PLATFORM));
-        $this->assertEqualsCanonicalizing([Permission::ROLE_GRANT, Permission::ROLE_MANAGE], array_values($atPlatform));
+        $this->assertEqualsCanonicalizing([Permission::ROLE_GRANT, Permission::ROLE_MANAGE, Permission::PROGRAMA_MANAGE], array_values($atPlatform));
+    }
+
+    /** Managing programs is asked about the platform and nowhere else (BAJAAPP-90). */
+    public function testProgramaManageAppliesOnlyToThePlatform(): void
+    {
+        $this->assertSame([ScopeType::PLATFORM], Permission::PROGRAMA_MANAGE->appliesTo());
+        $this->assertSame('programa.manage', Permission::PROGRAMA_MANAGE->value);
     }
 
     /** Scores are entered on a prova, not on an event or anything above. */

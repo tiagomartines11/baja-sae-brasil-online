@@ -31,7 +31,9 @@ final class MigrationDataTest extends RbacDbTestCase
     /** role code => [system?, allowed node types, permissions] */
     private const EXPECTED = [
         'platform_admin' => [true, ['platform'], 'ALL'],
-        'program_manager' => [false, ['programa'], 'ALL_BUT_ROLE_MANAGE'],
+        // Everything but the two platform-only permissions: role.manage,
+        // and programa.manage (BAJAAPP-90), which only platform_admin has.
+        'program_manager' => [false, ['programa'], 'ALL_BUT_PLATFORM_ONLY'],
         'event_manager' => [false, ['evento'], [
             'contagem.control', 'contagem.count', 'contagem.pit_log', 'equipe.manage', 'evento.manage', 'fila.manage',
             'notificacao.send', 'premiacao.manage', 'premiacao.view', 'prova.configure', 'prova.enter_scores', 'resultado.edit',
@@ -53,14 +55,14 @@ final class MigrationDataTest extends RbacDbTestCase
     {
         $all = array_map(fn(Permission $p) => $p->value, Permission::cases());
         sort($all);
-        $allButRoleManage = array_values(array_diff($all, ['role.manage']));
+        $allButPlatformOnly = array_values(array_diff($all, ['role.manage', 'programa.manage']));
 
         foreach (self::EXPECTED as $code => [$isSystem, $types, $permissions]) {
             $role = $this->rbac->roles->byCode($code);
             $this->assertNotNull($role, "Role $code is missing.");
             $expected = match ($permissions) {
                 'ALL' => $all,
-                'ALL_BUT_ROLE_MANAGE' => $allButRoleManage,
+                'ALL_BUT_PLATFORM_ONLY' => $allButPlatformOnly,
                 default => $permissions,
             };
             $this->assertSame($isSystem, $role->isSystem, "$code: system?");

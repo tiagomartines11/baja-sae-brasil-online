@@ -444,6 +444,100 @@ final class HttpJudgePagesTest extends DbTestCase
         }
     }
 
+    /**
+     * The program admin page (BAJAAPP-90) asks programa.manage on the
+     * platform. A judge is refused; so is an event manager of the test
+     * event (who may open admin.php there, but sees no link to it). The
+     * platform admin gets the list and the link.
+     */
+    public function testTheProgramPageIsOnlyForProgramaManageOnThePlatform(): void
+    {
+        $this->grant(self::CONTROLLER, '00NE_ZZN');
+        $this->assertStringContainsString(self::REFUSAL, $this->get('/admin_programas.php', $this->loginAndGetCookies(self::CONTROLLER))['body']);
+
+        // An event manager of 00NE: no legacy code maps to it, so the grant
+        // is written here (tearDown removes grants on 00NE).
+        Propel::getWriteConnection('resultados')->prepare(
+            "INSERT INTO user_role (user_id, role_id, scope_type, scope_id, granted_by, granted_at)
+             SELECT u.user_id, r.role_id, 'evento', '00NE', NULL, NOW() FROM user u, role r WHERE u.username = ? AND r.code = 'event_manager'"
+        )->execute([self::NOBODY]);
+        $manager = $this->loginAndGetCookies(self::NOBODY);
+        $this->assertStringContainsString(self::REFUSAL, $this->get('/admin_programas.php', $manager)['body']);
+        $adminPage = $this->get('/00NE/admin.php', $manager)['body'];
+        $this->assertStringContainsString('Administrar eventos', $adminPage, 'the event manager opens admin.php');
+        $this->assertStringNotContainsString('admin_programas.php', $adminPage, 'but sees no link to the program page');
+
+        $this->grant(self::CONTROLLER, 'admin');
+        $admin = $this->loginAndGetCookies(self::CONTROLLER);
+        $list = $this->get('/admin_programas.php', $admin);
+        $this->assertSame(200, $list['status']);
+        $this->assertStringNotContainsString(self::REFUSAL, $list['body']);
+        $this->assertStringContainsString('data-programa="BAJA"', $list['body']);
+        $this->assertStringContainsString('Um programa inativo não é oferecido em evento.php', $list['body'], 'what inactive means');
+        $this->assertStringContainsString('admin_programas.php', $this->get('/00NE/admin.php', $admin)['body']);
+    }
+
+    /**
+     * Creating and editing a program through the page, as the platform
+     * admin: ZZH_TESTE, made for this test and removed afterwards.
+     *
+     *   1. created at the top;
+     *   2. a forged edit that sends a new code is refused: nothing changes
+     *      and no program of the new code appears (the form never sends
+     *      the code; a request that does is trying to rename it);
+     *   3. moving it under BAJA first shows a confirmation that names the
+     *      effect, and saves nothing;
+     *   4. confirming saves it, with one audit row.
+     */
+    public function testTheProgramPageCreatesAndEditsAndNeverRenames(): void
+    {
+        $con = Propel::getWriteConnection('resultados');
+        $remove = fn() => $con->exec("DELETE FROM programa WHERE programa_id IN ('ZZH_TESTE', 'ZZH_OUTRO')");
+        $remove();
+        try {
+            $this->grant(self::CONTROLLER, 'admin');
+            $admin = $this->loginAndGetCookies(self::CONTROLLER);
+            $row = fn(string $code) => $this->fetchValue("SELECT CONCAT(nome, '|', COALESCE(parent_id, '-'), '|', ordem, '|', ativo) FROM programa WHERE programa_id = ?", [$code]);
+
+            // 1. Create.
+            $token = $this->tokenIn($this->get('/admin_programas.php?novo=true', $admin)['body']);
+            $created = $this->post('/admin_programas.php?novo=true&act=create', $admin, ['programa_id' => 'ZZH_TESTE', 'nome' => 'Programa HTTP', 'parent_id' => '', 'ordem' => '90', '_csrf' => $token]);
+            $this->assertSame(302, $created['status']);
+            $this->assertSame('Programa HTTP|-|90|1', $row('ZZH_TESTE'));
+
+            // 2. A forged rename.
+            $form = $this->get('/admin_programas.php?id=ZZH_TESTE', $admin)['body'];
+            $this->assertSame(0, $this->xpathOf($form)->query("//form//input[@name='programa_id']")->length, 'the edit form does not send the code');
+            $token = $this->tokenIn($form);
+            $forged = $this->post('/admin_programas.php?id=ZZH_TESTE&act=update', $admin, ['programa_id' => 'ZZH_OUTRO', 'nome' => 'Renomeado', 'parent_id' => '', 'ordem' => '90', 'ativo' => '1', '_csrf' => $token]);
+            $this->assertSame(200, $forged['status']);
+            $this->assertStringContainsString('O código de um programa não pode ser mudado', $forged['body']);
+            $this->assertSame('Programa HTTP|-|90|1', $row('ZZH_TESTE'), 'nothing changed');
+            $this->assertNull($this->fetchValue("SELECT programa_id FROM programa WHERE programa_id = 'ZZH_OUTRO'"), 'no program ZZH_OUTRO');
+
+            // 3. Moving it asks first.
+            $asked = $this->post('/admin_programas.php?id=ZZH_TESTE&act=update', $admin, ['nome' => 'Programa HTTP', 'parent_id' => 'BAJA', 'ordem' => '90', 'ativo' => '1', '_csrf' => $token]);
+            $this->assertSame(200, $asked['status']);
+            $question = $this->xpathOf($asked['body'])->query("//td[@id='confirmar']")->item(0);
+            $this->assertNotNull($question, 'a confirmation step');
+            $this->assertStringContainsString('quem tem papel em BAJA (ou acima dele) passará a ter esse papel também em ZZH_TESTE e nos seus eventos', $question->textContent);
+            $this->assertSame('Programa HTTP|-|90|1', $row('ZZH_TESTE'), 'not saved before confirming');
+            $this->assertSame(1, $this->xpathOf($asked['body'])->query("//input[@name='confirmar_pai'][@value='BAJA']")->length);
+
+            // 4. Confirmed.
+            // Counted before and after: earlier runs' rows for ZZH_TESTE are still there (the triggers keep them).
+            $updates = fn() => (int) $this->fetchValue("SELECT COUNT(*) FROM role_audit WHERE scope_type = 'programa' AND scope_id = 'ZZH_TESTE' AND action = 'programa.update'");
+            $auditBefore = $updates();
+            $saved = $this->post('/admin_programas.php?id=ZZH_TESTE&act=update', $admin, ['nome' => 'Programa HTTP', 'parent_id' => 'BAJA', 'confirmar_pai' => 'BAJA', 'ordem' => '90', 'ativo' => '1', '_csrf' => $token]);
+            $this->assertSame(302, $saved['status']);
+            $this->assertSame('Programa HTTP|BAJA|90|1', $row('ZZH_TESTE'));
+            $this->assertSame($auditBefore + 1, $updates());
+        } finally {
+            // Test rows only. Their role_audit rows stay (the triggers keep them).
+            $remove();
+        }
+    }
+
     // ------------------------------------------------------------------
 
     /** A redirect's target as a path for get(): the pages send "admin_usuario.php?...", relative to the site's root. */

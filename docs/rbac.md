@@ -21,7 +21,29 @@ Every event belongs to a program, stored in `evento.programa_id`:
 | H2 | H2 Challenge | |
 
 You choose the program on `juiz/evento.php`. A clone copies it from the
-reference event. **No code works out a program from an event code.** The
+reference event.
+
+Programs themselves are created and edited on `juiz/admin_programas.php`
+(BAJAAPP-90, linked from "Administração geral" on `admin.php` for those who
+may use it), which needs `programa.manage` on the platform. The rules are in
+`Baja\Programa\ProgramaAdmin`:
+
+- the code is upper case letters, digits and `_`, at most 16, unique, and
+  **never changes** after creation: grants and `role_audit` store it in a
+  plain `scope_id` column with no foreign key, so a rename would orphan them.
+  A request that sends a new code is refused;
+- there is no delete. A program is made inactive instead (`ativo = 0`).
+  Only `evento.php` reads `ativo`: an inactive program isn't offered for a
+  new event or for moving an event, and events already in it stay. Nothing
+  else changes: grants on it still work, and the role page still lists it;
+- a program can't go under itself or under one of its descendants. Changing
+  the parent first shows what it does (grants on the new parent reach this
+  program and its events; those on the old one stop), and saves only once
+  confirmed;
+- every create and every edit writes one `role_audit` row in the same
+  transaction: `programa.create` / `programa.update`, `scope_type`
+  programa, `scope_id` the code, the actor, and in `details` the fields that
+  changed, before and after. A save that changes nothing writes nothing. **No code works out a program from an event code.** The
 one exception was `PropelMigration_1793070000`, which filled the column once
 for the events that already existed (BR/SE/SU/NE → BAJA, AR → AERO,
 FA → AERO_FORUM, FO → FORMULA, EQ → ELETROQUAD, H2 → H2). It refuses to run
@@ -80,6 +102,7 @@ about:
 | contagem.control | prova | `<EVT>_<PROVA>` as race controller, `admin` |
 | role.grant | every type | `admin` on the user pages |
 | role.manage | platform only | (new) edit role definitions, give system roles |
+| programa.manage | platform only | (new, BAJAAPP-90) create and edit programs on `admin_programas.php` |
 
 `<EVT>_TIMER_<id>` gave one timer of an event. `timer.operate` is given on
 the whole event instead: a timer operator may run every timer of their
@@ -103,7 +126,7 @@ phase 3's (one legacy code each):
 | Role | Given on | Carries |
 |---|---|---|
 | platform_admin (system) | platform | everything |
-| program_manager | programa | everything except role.manage |
+| program_manager | programa | everything except role.manage and programa.manage |
 | event_manager | evento | everything except certificado.manage and role.manage |
 | head_judge | prova | prova.enter_scores, contagem.control, role.grant |
 | judge | prova | prova.enter_scores, contagem.control |
@@ -117,7 +140,9 @@ phase 3's (one legacy code each):
 
 Phase 3 also added `premiacao.view` to platform_admin, program_manager and
 event_manager, which carried `premiacao.manage`, so they still see what
-they saw.
+they saw. `PropelMigration_1793120000` (BAJAAPP-90) added `programa.manage`
+to platform_admin only: moving a program moves whose grants reach it, so it
+stays with the platform.
 
 Only `platform_admin` is a system role. If the others were system roles,
 nobody below the platform could hand them on, and a head judge couldn't add a
@@ -358,6 +383,7 @@ the prova to be in the request's event, as before.
 | `admin_push.php` | `permissionCheck('admin')` | `admin` | notificacao.send @ evento EVT |
 | `admin_usuarios.php`, `admin_usuario.php` | `permissionCheck('admin')` | `admin` | role.grant somewhere (the page offers only the places covered) |
 | `admin_users.php`, `user.php` | `permissionCheck('admin')` | `admin` | role.grant @ evento EVT (read only now) |
+| `admin_programas.php` (BAJAAPP-90), and its link on `admin.php` | (new page) | | programa.manage @ platform |
 | `Auth\StaffCookie::isStaff` (`src/bootstrap.php`) | `index` or `admin` in the row | `index`, `admin` | `isStaff`: any active grant |
 
 **Out of scope, unchanged:**
@@ -498,14 +524,18 @@ package has moved those.
 
 Roles and grants are read once per `RbacServices` and kept nowhere else (no
 Redis). `RbacServices::forRequest()` keeps one set for the length of one PHP
-request, so a grant made or revoked shows on the next request. A
+request, so a grant made or revoked shows on the next request. The same goes
+for the program tree: `ProgramaResolver`, the parent finders and
+`Authorization`'s list of top-level programs keep what they read for one
+request only, so an edit on `admin_programas.php` (which redirects after
+saving) is seen on the next one. A
 long-running script should call `RbacServices::create()` whenever it needs
 fresh answers.
 
 ## Code
 
 ```
-src/Baja/Programa/       ProgramaTree, ProgramaResolver
+src/Baja/Programa/       ProgramaTree, ProgramaResolver, ProgramaAdmin (the program admin page's rules)
 src/Baja/Rbac/
   Authorization.php      the one door the pages use (phase 3)
   GrantableNodes.php     the places a user may give roles on, for the role page
