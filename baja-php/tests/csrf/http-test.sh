@@ -16,6 +16,9 @@
 #   4. as a GET (a link, or an <img src> on another site) it changes nothing;
 #   5. with the right token it works: the change is made.
 #
+# Any of those responses that is a PHP fatal error also fails the case, with
+# PHP's message (fatal_check below).
+#
 # "Changes nothing" is checked in the database, not in the response: each
 # case gives a bit of PHP that prints the state the form would change, and
 # the state is compared before and after.
@@ -104,9 +107,12 @@ cleanup() {
         \Propel\Runtime\Propel::getConnection()->exec("DELETE FROM evento WHERE evento_id LIKE \"28SU%\"");
         '"$EXTRA_CLEANUP"'
     ' >/dev/null 2>&1
+    [[ -n "$BODIES" ]] && rm -rf "$BODIES"
 }
+BODIES=""
 trap cleanup EXIT
 cleanup  # left over from a run that was interrupted
+BODIES=$(mktemp -d)  # the responses' bodies, see fatal_check
 
 # fixture.sql, one statement at a time, so that an error in any of them stops.
 php_in_app '
@@ -144,11 +150,29 @@ php_in_app '
 
 cookies() { echo "phpbb3_baja_sid=$1; phpbb3_baja_u=2"; }
 
+# Every request below keeps the body of its response in $LAST_BODY, so that
+# a case can look for a PHP fatal error in it (fatal_check). The requests run
+# in $(...), a subshell, so the body goes through a file, not a variable.
+LAST_BODY="$BODIES/last.html"
+
+# Fails case $1 if the last response was a PHP fatal error, and prints PHP's
+# message. A fatal error still answers 200 (BAJAAPP-94: a page whose class
+# could not be loaded saved nothing, and the case only said "no change"), so
+# without this a crash looks like a refused or ignored form. $2 says which
+# request of the case it was.
+fatal_check() { # name request
+    local line
+    line=$(sed 's/<[^>]*>//g' "$LAST_BODY" 2>/dev/null | grep -m1 -E 'Fatal error|Uncaught')
+    [[ -z "$line" ]] && return 0
+    bad "$1: PHP fatal error ($2): $(echo "$line" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+/ /g; s/&quot;/"/g; s/&#0?39;/'"'"'/g; s/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g')"
+    return 1
+}
+
 # The token a page shows to session $1: the hidden form field, or the
 # <meta name="csrf-token"> that scripts read. Empty when the page has none.
 token_on_page() { # sid path
-    curl -s "${CURL_ARGS[@]}" -b "$(cookies "$1")" "$BASE$2" \
-        | grep -oE '(name="_csrf" value="|name="csrf-token" content=")[0-9a-f]{64}' \
+    curl -s "${CURL_ARGS[@]}" -b "$(cookies "$1")" -o "$LAST_BODY" "$BASE$2"
+    grep -oE '(name="_csrf" value="|name="csrf-token" content=")[0-9a-f]{64}' "$LAST_BODY" \
         | head -1 | grep -oE '[0-9a-f]{64}$'
 }
 
@@ -159,7 +183,7 @@ post_form() { # sid path token field...
     local data=()
     for f in "$@"; do data+=(--data-urlencode "$f"); done
     [[ -n "$token" ]] && data+=(--data-urlencode "_csrf=$token")
-    curl -s "${CURL_ARGS[@]}" -b "$(cookies "$sid")" -o /dev/null -w '%{http_code}' "${data[@]}" "$BASE$path"
+    curl -s "${CURL_ARGS[@]}" -b "$(cookies "$sid")" -o "$LAST_BODY" -w '%{http_code}' "${data[@]}" "$BASE$path"
 }
 
 # The same fields as a GET query string. Prints the HTTP status.
@@ -167,14 +191,14 @@ get_form() { # sid path field...
     local sid=$1 path=$2; shift 2
     local data=()
     for f in "$@"; do data+=(--data-urlencode "$f"); done
-    curl -s "${CURL_ARGS[@]}" -b "$(cookies "$sid")" -o /dev/null -w '%{http_code}' -G "${data[@]}" "$BASE$path"
+    curl -s "${CURL_ARGS[@]}" -b "$(cookies "$sid")" -o "$LAST_BODY" -w '%{http_code}' -G "${data[@]}" "$BASE$path"
 }
 
 # POST a JSON body, with the token in the X-CSRF-Token header ("" for none).
 post_json() { # sid path token body
     local hdr=()
     [[ -n "$3" ]] && hdr=(-H "X-CSRF-Token: $3")
-    curl -s "${CURL_ARGS[@]}" -b "$(cookies "$1")" -o /dev/null -w '%{http_code}' \
+    curl -s "${CURL_ARGS[@]}" -b "$(cookies "$1")" -o "$LAST_BODY" -w '%{http_code}' \
         -H 'Content-Type: application/json' "${hdr[@]}" --data-binary "$4" "$BASE$2"
 }
 
@@ -202,6 +226,7 @@ form_case() { # name sid form-page action state-php field...
     local token before now code wrong
 
     token=$(token_on_page "$sid" "$page")
+    fatal_check "$name" "the form page"
     if [[ -z "$token" ]]; then bad "$name: the form shows no token"; return; fi
     ok "$name: the form carries a token"
     wrong=$(token_on_page "$SID_OUT" "$page")
@@ -209,21 +234,25 @@ form_case() { # name sid form-page action state-php field...
     before=$(php_in_app "$state")
 
     code=$(post_form "$sid" "$action" "" "$@")
+    fatal_check "$name" "no token"
     now=$(php_in_app "$state")
     if [[ "$code" == 403 && "$now" == "$before" ]]; then ok "$name: no token: 403, nothing changed"
     else bad "$name: no token (expected 403 and \"$before\", got $code and \"$now\")"; fi
 
     code=$(post_form "$sid" "$action" "$wrong" "$@")
+    fatal_check "$name" "another session's token"
     now=$(php_in_app "$state")
     if [[ -n "$wrong" && "$wrong" != "$token" && "$code" == 403 && "$now" == "$before" ]]; then ok "$name: another session's token: 403, nothing changed"
     else bad "$name: another session's token (expected 403 and \"$before\", got $code and \"$now\")"; fi
 
     code=$(get_form "$sid" "$action" "$@")
+    fatal_check "$name" "as a GET"
     now=$(php_in_app "$state")
     if [[ "$now" == "$before" ]]; then ok "$name: as a GET: nothing changed (got $code)"
     else bad "$name: as a GET it changed \"$before\" to \"$now\""; fi
 
     code=$(post_form "$sid" "$action" "$token" "$@")
+    fatal_check "$name" "with the token"
     now=$(php_in_app "$state")
     if [[ "$code" != 403 && "$now" != "$before" ]]; then ok "$name: with the token: done (\"$before\" -> \"$now\")"
     else bad "$name: with the token (expected a change from \"$before\", got $code and \"$now\")"; fi
@@ -234,21 +263,25 @@ json_case() { # name sid token-page endpoint state-php body
     local token before now code wrong
 
     token=$(token_on_page "$sid" "$page")
+    fatal_check "$name" "the token page"
     if [[ -z "$token" ]]; then bad "$name: the page shows no token"; return; fi
     wrong=$(token_on_page "$SID_OUT" "$page")
     before=$(php_in_app "$state")
 
     code=$(post_json "$sid" "$endpoint" "" "$body")
+    fatal_check "$name" "no token"
     now=$(php_in_app "$state")
     if [[ "$code" == 403 && "$now" == "$before" ]]; then ok "$name: no token: 403, nothing changed"
     else bad "$name: no token (expected 403 and \"$before\", got $code and \"$now\")"; fi
 
     code=$(post_json "$sid" "$endpoint" "$wrong" "$body")
+    fatal_check "$name" "another session's token"
     now=$(php_in_app "$state")
     if [[ -n "$wrong" && "$code" == 403 && "$now" == "$before" ]]; then ok "$name: another session's token: 403, nothing changed"
     else bad "$name: another session's token (expected 403 and \"$before\", got $code and \"$now\")"; fi
 
     code=$(post_json "$sid" "$endpoint" "$token" "$body")
+    fatal_check "$name" "with the token"
     now=$(php_in_app "$state")
     if [[ "$code" != 403 && "$now" != "$before" ]]; then ok "$name: with the token: done (\"$before\" -> \"$now\")"
     else bad "$name: with the token (expected a change from \"$before\", got $code and \"$now\")"; fi
