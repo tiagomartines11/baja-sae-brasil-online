@@ -357,18 +357,29 @@ T::same(1, $alertas, 'one alert to staff');
 T::ok('the first press gets a protocol', is_string($respostas[0]->protocolo) && $respostas[0]->protocolo !== '');
 T::ok('and is not told it was already open', !$respostas[0]->jaAberto);
 
-// With Redis running, presses 4 to 6 are stopped by the limit (3 per email)
-// before they reach the duplicate check; without Redis they reach it and are
-// told the report is already open. Either way they must not create anything,
-// and a press that is answered with a protocol must get the first one.
+// Presses 2 to 6 must all see the "já tem um requerimento aberto" page with
+// the first protocol. None of them may be told "Muitos envios": a repeated
+// press is found before the limit is counted, so it does not use up a slot.
 for ($i = 1; $i < 6; $i++) {
     $r = $respostas[$i];
     T::ok(
-        'press ' . ($i + 1) . ' is told the report is already open, or to wait',
-        ($r->jaAberto && $r->protocolo === $respostas[0]->protocolo) || $r->espera !== null
+        'press ' . ($i + 1) . ' is told the report is already open, with the first protocol',
+        $r->jaAberto && $r->protocolo === $respostas[0]->protocolo
     );
+    T::same(null, $r->espera, 'press ' . ($i + 1) . ' is not told to wait');
 }
-T::ok('press 2 is told it is already open, with the same protocol', $respostas[1]->jaAberto && $respostas[1]->protocolo === $respostas[0]->protocolo);
+
+// The repeated presses took no slot, so this email can still send two more
+// different reports within the hour (the limit is 3, and press 1 used one).
+$outrasAceitas = 0;
+for ($i = 0; $i < 2; $i++) {
+    $outro = ['documento' => synthetic_cpf(sprintf('%09d', random_int(0, 999999999)))] + $post;
+    $r = $recepcao->receber($outro, $origem, $eventosRecepcao);
+    if ($r->protocolo !== null && $r->protocolo !== '' && !$r->jaAberto) {
+        $outrasAceitas++;
+    }
+}
+T::same(2, $outrasAceitas, 'the repeated presses used no slot: two more reports from the same email still go through');
 
 // --- the same report from another email: a second row, a receipt, no alert ----------
 

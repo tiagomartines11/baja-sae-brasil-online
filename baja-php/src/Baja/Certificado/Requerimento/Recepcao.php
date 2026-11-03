@@ -23,11 +23,13 @@ use Baja\Util\Turnstile;
  *   2. the trap field            a bot gets the success page and no row.
  *   3. the captcha               a failure costs no slot.
  *   4. Formulario                a form with errors costs no slot either.
- *   5. Limite::reservar()        the slot is taken here, atomically. This is
+ *   5. Duplicata (a read)        the same email already has this report open:
+ *                                show its protocol and stop. No slot taken.
+ *   6. Limite::reservar()        the slot is taken here, atomically. This is
  *                                what actually holds when six requests arrive
  *                                together; step 1 only saves work.
- *   6. Gravador::registrar()     the duplicate check and the write, together.
- *   7. the receipt and the alert, which are slow (two SMTP conversations) and
+ *   7. Gravador::registrar()     the duplicate check and the write, together.
+ *   8. the receipt and the alert, which are slow (two SMTP conversations) and
  *                                so come last, after everything that decides
  *                                whether they should be sent at all.
  */
@@ -92,6 +94,23 @@ final class Recepcao
 
         if (!$formulario->valido()) {
             return Resposta::formularioComErros($formulario);
+        }
+
+        /*
+         * Has this same email already sent this same report, and is it still
+         * open? Then this is somebody pressing the button again. Show them
+         * the protocol they already have, and stop here: no row, no email,
+         * and no slot taken from the limit below. Without this check, the
+         * fourth press would be told "Muitos envios" instead of the protocol.
+         *
+         * This is only a quick look, without the lock. Gravador::registrar()
+         * looks again, with the lock held, and that second look is the one
+         * that really decides. This one just answers the common case early.
+         */
+        $jaAberta = Duplicata::doMesmoEmail(Duplicata::abertas($formulario), $formulario->email());
+
+        if ($jaAberta !== null) {
+            return Resposta::registrada($formulario, new Registro(Registro::REPETIDO, $jaAberta), false);
         }
 
         $espera = Limite::reservar($origem, $formulario->email());
