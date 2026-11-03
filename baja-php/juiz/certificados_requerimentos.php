@@ -181,6 +181,13 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
     $resolvidoPor = $requerimento->getResolvidoPor() !== null
         ? UserQuery::create()->findPk($requerimento->getResolvidoPor())
         : null;
+    // Both directions of BAJAAPP-89's link: the report this one repeats, and
+    // the reports that repeat this one.
+    $duplicadoDe = (string) $requerimento->getDuplicadoDe();
+    $duplicados  = CertificadoRequerimentoQuery::create()
+        ->filterByDuplicadoDe($requerimento->getRequerimentoId())
+        ->orderByCriadoEm(Criteria::ASC)
+        ->find();
     ?>
     <div class="card">
         <h1><?= $e(Caso::resumo((string) $requerimento->getCaso())) ?></h1>
@@ -190,6 +197,39 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
             <?= $e(STATUS_ROTULOS[(string) $requerimento->getStatus()] ?? (string) $requerimento->getStatus()) ?>
         </p>
         <p><?= $e(Caso::rotulo((string) $requerimento->getCaso())) ?></p>
+
+        <?php if ($duplicadoDe !== ''): ?>
+            <?php /*
+             * "Possível", because the match is on what was typed: the same
+             * document, case and certificate or event, from another email
+             * address. Usually that is the same person trying an address that
+             * works; it can also be somebody else using their document. No
+             * alert was sent for this one, since the original already had one.
+             */ ?>
+            <p class="alerta aviso">
+                Possível duplicado de
+                <a href="certificados_requerimentos.php?id=<?= urlencode($duplicadoDe) ?>"><code><?= $e($duplicadoDe) ?></code></a>.
+                Mesmo documento e mesmo pedido, enviado de outro e-mail. A equipe não
+                recebeu um aviso separado por e-mail para este.
+            </p>
+        <?php endif; ?>
+
+        <?php if (count($duplicados) > 0): ?>
+            <p class="alerta aviso">
+                <?= count($duplicados) === 1
+                    ? 'Há 1 possível duplicado deste requerimento, enviado de outro e-mail:'
+                    : 'Há ' . count($duplicados) . ' possíveis duplicados deste requerimento, enviados de outros e-mails:' ?>
+            </p>
+            <ul>
+                <?php foreach ($duplicados as $duplicado): ?>
+                    <li>
+                        <a href="certificados_requerimentos.php?id=<?= urlencode((string) $duplicado->getRequerimentoId()) ?>"><code><?= $e((string) $duplicado->getRequerimentoId()) ?></code></a>
+                        · recebido em <?= $e((string) $duplicado->getCriadoEm('d/m/Y H:i')) ?>
+                        · <?= $e(STATUS_ROTULOS[(string) $duplicado->getStatus()] ?? (string) $duplicado->getStatus()) ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
 
         <?php if ($requerimento->getAvisadoEm() === null): ?>
             <p class="alerta aviso">
@@ -381,6 +421,9 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
                                 <a href="certificados_requerimentos.php?id=<?= urlencode((string) $linha->getRequerimentoId()) ?>">
                                     <?= $e((string) $linha->getNome()) ?>
                                 </a>
+                                <?php if ((string) $linha->getDuplicadoDe() !== ''): ?>
+                                    <br><span class="muted">Possível duplicado de <code><?= $e((string) $linha->getDuplicadoDe()) ?></code></span>
+                                <?php endif; ?>
                             </td>
                             <td data-rotulo="Evento"><?= $e($descreverEvento($linha)) ?></td>
                             <td data-rotulo="Situação"><?= $e(STATUS_ROTULOS[(string) $linha->getStatus()] ?? (string) $linha->getStatus()) ?></td>

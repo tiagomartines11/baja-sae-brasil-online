@@ -1,8 +1,10 @@
 <?php
 
+use Baja\Certificado\Requerimento\Aviso;
 use Baja\Certificado\Requerimento\Caso;
 use Baja\Certificado\Requerimento\Formulario;
 use Baja\Certificado\Requerimento\Limite;
+use Baja\Certificado\Requerimento\Recepcao;
 use Baja\Util\Mailer;
 use Baja\Util\Turnstile;
 
@@ -161,6 +163,10 @@ T::same($valido['descricao'], $f->valor('descricao'), 'a rejected form keeps the
 
 T::group('requerimento/limite');
 
+// Limite caps how often one address (IP) or one email may submit the form:
+// at most 5 per IP and 3 per email per hour. It keeps its counters in Redis,
+// so these tests need a Redis server and are skipped without one.
+
 if (getenv('REDIS_HOST') === false) {
     T::skip('submission limit', 'REDIS_HOST is not set');
 } else {
@@ -171,14 +177,21 @@ if (getenv('REDIS_HOST') === false) {
 
     T::same(null, Limite::esperaSegundos($origem, $email), 'a fresh caller may submit');
 
+    // reservar() is what the page calls once a submission has passed every
+    // other check. It answers null for "go ahead" (and counts the
+    // submission), or a number of seconds to wait.
+    //
     // The email ceiling is the lower of the two, and it is the one that
     // matters: every submission mails the address typed into the form, and
     // nothing proves it belongs to whoever is typing.
-    for ($i = 0; $i < 3; $i++) {
-        Limite::registrar($origem, $email);
+    for ($i = 1; $i <= 3; $i++) {
+        T::same(null, Limite::reservar($origem, $email), "reservation $i of 3 for one email is granted");
     }
 
-    T::ok('the fourth submission from one email waits', Limite::esperaSegundos($origem, $email) !== null);
+    $espera = Limite::reservar($origem, $email);
+    T::ok('the fourth reservation for one email is refused', $espera !== null);
+    T::ok('with a wait inside the one-hour window', $espera !== null && $espera > 0 && $espera <= 3600, var_export($espera, true));
+    T::ok('and the cheap read-only check now says to wait too', Limite::esperaSegundos($origem, $email) !== null);
 
     // And the wait must not follow the address to somebody else's mailbox, or
     // one abuser locks out a shared connection's worth of participants for an
@@ -186,4 +199,275 @@ if (getenv('REDIS_HOST') === false) {
     // that trips first.
     $outroEmail = 'zz-fixture-' . random_int(0, 999999) . '@example.org';
     T::same(null, Limite::esperaSegundos('', $outroEmail), 'another email is unaffected');
+
+    // A refused reservation gives back what it took. The fourth try above was
+    // refused because of the email, so it must not have used up one of the
+    // IP's five slots: three were taken, two are left.
+    $origem2 = '198.51.100.' . random_int(1, 254);
+    for ($i = 0; $i < 3; $i++) {
+        Limite::reservar($origem2, 'zz-fixture-a-' . random_int(0, 999999) . '@example.org');
+    }
+    $cheio = 'zz-fixture-cheio-' . random_int(0, 999999) . '@example.org';
+    for ($i = 0; $i < 3; $i++) {
+        Limite::reservar('', $cheio);
+    }
+    T::ok('an email over its limit is refused from any address', Limite::reservar($origem2, $cheio) !== null);
+    T::same(null, Limite::reservar($origem2, 'zz-fixture-b-' . random_int(0, 999999) . '@example.org'), 'the refusal did not use up a slot of the address: the 4th is granted');
+    T::same(null, Limite::reservar($origem2, 'zz-fixture-c-' . random_int(0, 999999) . '@example.org'), 'and so is the 5th');
+    T::ok('and the 6th from that address is refused', Limite::reservar($origem2, 'zz-fixture-d-' . random_int(0, 999999) . '@example.org') !== null);
+
+    // The race this replaced (BAJAAPP-89): six requests arriving together
+    // all read the counter before any of them added one, so all six passed.
+    // Here six separate PHP processes reserve for one email at the same
+    // instant; only three may get through.
+    $corrida = 'zz-fixture-corrida-' . random_int(0, 999999) . '@example.org';
+    $inicio  = microtime(true) + 1.0;
+    $codigo  = sprintf(
+        'require %s; while (microtime(true) < %F) { usleep(500); } echo Baja\Certificado\Requerimento\Limite::reservar("", %s) === null ? "ok" : "espera";',
+        var_export(__DIR__ . '/../../vendor/autoload.php', true),
+        $inicio,
+        var_export($corrida, true)
+    );
+    $processos = [];
+    $saidas    = [];
+    for ($i = 0; $i < 6; $i++) {
+        $processos[$i] = proc_open([PHP_BINARY, '-r', $codigo], [1 => ['pipe', 'w']], $pipes);
+        $saidas[$i]    = $pipes[1];
+    }
+    $concedidas = 0;
+    foreach ($processos as $i => $processo) {
+        if (trim(stream_get_contents($saidas[$i])) === 'ok') {
+            $concedidas++;
+        }
+        proc_close($processo);
+    }
+    T::same(3, $concedidas, 'six simultaneous reservations for one email: exactly three are granted');
 }
+
+// When Redis is down, the limit switches itself off instead of blocking
+// everyone: a broken cache must not stop somebody reporting a problem with
+// their own certificate. Simulated by pointing Limite at a port where nothing
+// is listening.
+$redisPortaAntes = $_ENV['REDIS_PORT'] ?? null;
+$_ENV['REDIS_PORT'] = '1';
+Limite::reset();
+
+T::same(null, Limite::esperaSegundos('203.0.113.9', 'zz@example.org'), 'with Redis unreachable, the check lets the submission through');
+$todasConcedidas = true;
+for ($i = 0; $i < 10; $i++) {
+    $todasConcedidas = $todasConcedidas && Limite::reservar('203.0.113.9', 'zz@example.org') === null;
+}
+T::ok('and every reservation is granted, however many', $todasConcedidas);
+
+if ($redisPortaAntes === null) {
+    unset($_ENV['REDIS_PORT']);
+} else {
+    $_ENV['REDIS_PORT'] = $redisPortaAntes;
+}
+Limite::reset();
+
+T::group('requerimento/recepcao');
+
+// Recepcao is everything POST /requerimento does, in order: the limit, the
+// trap field, the captcha, the form, the duplicate check, and the two emails.
+// Instead of the real captcha and real emails it is given small stand-in
+// functions that just count how often they were called, so these tests can
+// ask "how many receipts were sent?" without a mail server.
+
+if (!test_db_available()) {
+    T::skip('submission flow', 'BAJA_TEST_DB is not 1');
+    return;
+}
+
+$eventoRecepcao = \Baja\Model\EventoQuery::create()->findOne();
+if ($eventoRecepcao === null) {
+    T::skip('submission flow', 'need at least one event');
+    return;
+}
+$eventosRecepcao = [(string) $eventoRecepcao->getEventoId() => 'Evento de teste'];
+
+$prefixoRecepcao = 'ZZFixtureRecepcao';
+$limparRecepcao  = static function () use ($prefixoRecepcao): void {
+    \Baja\Model\CertificadoRequerimentoQuery::create()
+        ->filterByNome($prefixoRecepcao . '%', \Propel\Runtime\ActiveQuery\Criteria::LIKE)
+        ->delete();
+    \Baja\Model\Map\CertificadoRequerimentoTableMap::clearInstancePool();
+};
+$limparRecepcao();
+
+/**
+ * A Recepcao whose captcha answers $captchaPassa and whose emails are only
+ * counted. The counters are passed by reference so the test can read them.
+ */
+$montar = static function (bool $captchaPassa, int &$recibos, int &$alertas, array &$protocolosRecibos = []): Recepcao {
+    return new Recepcao(
+        static fn (string $token, string $origem): bool => $captchaPassa,
+        static function ($r) use (&$recibos, &$protocolosRecibos): bool {
+            $recibos++;
+            $protocolosRecibos[] = (string) $r->getRequerimentoId();
+
+            return true;
+        },
+        static function ($r) use (&$alertas): bool {
+            $alertas++;
+
+            return true;
+        }
+    );
+};
+
+// A fresh, valid "my certificate is missing" submission, with its own random
+// document and email so earlier runs cannot interfere.
+$novoPost = static function () use ($prefixoRecepcao, $eventosRecepcao): array {
+    return [
+        'caso'      => Caso::AUSENTE,
+        'evento'    => (string) array_key_first($eventosRecepcao),
+        'nome'      => $prefixoRecepcao . ' Fulana Testeson',
+        'documento' => synthetic_cpf(sprintf('%09d', random_int(0, 999999999))),
+        'email'     => 'zz-fixture-recepcao-' . random_int(0, 999999) . '@example.org',
+        'descricao' => 'Participei do evento e o certificado nao aparece na busca.',
+        'ciente'    => '1',
+    ];
+};
+
+$linhas = static function (string $documento): int {
+    \Baja\Model\Map\CertificadoRequerimentoTableMap::clearInstancePool();
+
+    return \Baja\Model\CertificadoRequerimentoQuery::create()->filterByDocumento($documento)->count();
+};
+
+$origemNova = static fn (): string => '192.0.2.' . random_int(1, 254);
+
+// --- six presses of the button: one row, one receipt, one staff alert --------------
+
+$recibos = 0;
+$alertas = 0;
+$recepcao = $montar(true, $recibos, $alertas);
+$post     = $novoPost();
+$origem   = $origemNova();
+
+$respostas = [];
+for ($i = 0; $i < 6; $i++) {
+    $respostas[] = $recepcao->receber($post, $origem, $eventosRecepcao);
+}
+
+T::same(1, $linhas($post['documento']), 'six submissions of the same report: one row');
+T::same(1, $recibos, 'one receipt to the participant');
+T::same(1, $alertas, 'one alert to staff');
+T::ok('the first press gets a protocol', is_string($respostas[0]->protocolo) && $respostas[0]->protocolo !== '');
+T::ok('and is not told it was already open', !$respostas[0]->jaAberto);
+
+// With Redis running, presses 4 to 6 are stopped by the limit (3 per email)
+// before they reach the duplicate check; without Redis they reach it and are
+// told the report is already open. Either way they must not create anything,
+// and a press that is answered with a protocol must get the first one.
+for ($i = 1; $i < 6; $i++) {
+    $r = $respostas[$i];
+    T::ok(
+        'press ' . ($i + 1) . ' is told the report is already open, or to wait',
+        ($r->jaAberto && $r->protocolo === $respostas[0]->protocolo) || $r->espera !== null
+    );
+}
+T::ok('press 2 is told it is already open, with the same protocol', $respostas[1]->jaAberto && $respostas[1]->protocolo === $respostas[0]->protocolo);
+
+// --- the same report from another email: a second row, a receipt, no alert ----------
+
+$recibos = 0;
+$alertas = 0;
+$protocolosRecibos = [];
+$recepcao = $montar(true, $recibos, $alertas, $protocolosRecibos);
+$post     = $novoPost();
+
+$primeira = $recepcao->receber($post, $origemNova(), $eventosRecepcao);
+$segunda  = $recepcao->receber(['email' => 'zz-fixture-outra-' . random_int(0, 999999) . '@example.org'] + $post, $origemNova(), $eventosRecepcao);
+
+T::same(2, $linhas($post['documento']), 'a second email gives a second row');
+T::same(2, $recibos, 'both senders get a receipt');
+T::same(1, $alertas, 'but staff are alerted only once');
+T::ok('the second sender is not told it was already open', !$segunda->jaAberto);
+
+// The privacy rule: whoever sent the second one may be somebody else typing
+// another person's document. Nothing they see may reveal the first report.
+T::notSame($primeira->protocolo, $segunda->protocolo, 'the second sender is shown their own protocol, never the first one');
+T::same([$primeira->protocolo, $segunda->protocolo], $protocolosRecibos, 'and each receipt carries its own protocol');
+
+$linhaSegunda = \Baja\Model\CertificadoRequerimentoQuery::create()->findPk($segunda->protocolo);
+T::same($primeira->protocolo, (string) $linhaSegunda->getDuplicadoDe(), 'the second row points at the first');
+T::ok('and is marked as dealt with, so the staff page does not report a failed alert', $linhaSegunda->getAvisadoEm() !== null);
+
+$recibo = Aviso::textoDoRecibo($linhaSegunda);
+T::ok('the second receipt does not mention the first protocol', !str_contains($recibo, (string) $primeira->protocolo));
+T::ok('or the first email address', !str_contains($recibo, $post['email']));
+
+// --- the limit is reserved after the captcha and the form, not before ---------------
+
+// Five failed captchas from one address and one email...
+$recibos = 0;
+$alertas = 0;
+$semCaptcha = $montar(false, $recibos, $alertas);
+$post       = $novoPost();
+$origem     = $origemNova();
+for ($i = 0; $i < 5; $i++) {
+    $r = $semCaptcha->receber($post, $origem, $eventosRecepcao);
+}
+T::ok('a failed captcha is refused with a message', $r->avisoErro !== '' && $r->protocolo === null);
+
+// ...then five forms with a mistake in them...
+$comCaptcha = $montar(true, $recibos, $alertas);
+for ($i = 0; $i < 5; $i++) {
+    $r = $comCaptcha->receber(['descricao' => 'curta'] + $post, $origem, $eventosRecepcao);
+}
+T::ok('a form with an error is shown again', $r->formulario !== null && !$r->formulario->valido());
+T::same(0, $linhas($post['documento']), 'neither wrote anything');
+
+// ...and three real, different reports from that same address and email
+// still go through. If the failures above had counted, the email (3 per hour)
+// would already be used up.
+$aceitas = 0;
+for ($i = 0; $i < 3; $i++) {
+    $diferente = ['documento' => synthetic_cpf(sprintf('%09d', random_int(0, 999999999)))] + $post;
+    $r = $comCaptcha->receber($diferente, $origem, $eventosRecepcao);
+    if ($r->protocolo !== null && $r->protocolo !== '' && !$r->jaAberto) {
+        $aceitas++;
+    }
+}
+T::same(3, $aceitas, 'failed captchas and invalid forms used up no slot: three reports still go through');
+
+if (getenv('REDIS_HOST') !== false) {
+    // And the fourth real report from that email is the one refused.
+    $quarta = $comCaptcha->receber(['documento' => synthetic_cpf(sprintf('%09d', random_int(0, 999999999)))] + $post, $origem, $eventosRecepcao);
+    T::ok('the fourth report from one email within the hour is told to wait', $quarta->espera !== null && $quarta->protocolo === null);
+}
+
+// --- Redis down: submissions still go through ---------------------------------------
+
+$redisPortaAntes = $_ENV['REDIS_PORT'] ?? null;
+$_ENV['REDIS_PORT'] = '1';
+Limite::reset();
+
+$recibos = 0;
+$alertas = 0;
+$recepcao = $montar(true, $recibos, $alertas);
+$post     = $novoPost();
+$semRedis = $recepcao->receber($post, $origemNova(), $eventosRecepcao);
+T::ok('with Redis unreachable, a report is still accepted', $semRedis->protocolo !== null && $semRedis->protocolo !== '');
+T::same(1, $linhas($post['documento']), 'and saved');
+
+// Without the limit in the way, every repeated press reaches the duplicate
+// check, which is now the only thing between the button and the database.
+for ($i = 0; $i < 5; $i++) {
+    $repetida = $recepcao->receber($post, $origemNova(), $eventosRecepcao);
+    T::ok('press ' . ($i + 2) . ' without Redis: already open, same protocol', $repetida->jaAberto && $repetida->protocolo === $semRedis->protocolo);
+}
+T::same(1, $linhas($post['documento']), 'six presses without Redis: still one row');
+T::same(1, $recibos, 'one receipt');
+T::same(1, $alertas, 'one alert');
+
+if ($redisPortaAntes === null) {
+    unset($_ENV['REDIS_PORT']);
+} else {
+    $_ENV['REDIS_PORT'] = $redisPortaAntes;
+}
+Limite::reset();
+
+$limparRecepcao();
