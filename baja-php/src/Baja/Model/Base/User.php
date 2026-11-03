@@ -2232,6 +2232,32 @@ abstract class User implements ActiveRecordInterface
         return $this;
     }
 
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this User is new, it will return
+     * an empty collection; or if this User has previously
+     * been saved, it will retrieve related CertificadoRequerimentos from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in User.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @param string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildCertificadoRequerimento[] List of ChildCertificadoRequerimento objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildCertificadoRequerimento}> List of ChildCertificadoRequerimento objects
+     */
+    public function getCertificadoRequerimentosJoinOriginal(?Criteria $criteria = null, ?ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildCertificadoRequerimentoQuery::create(null, $criteria);
+        $query->joinWith('Original', $joinBehavior);
+
+        return $this->getCertificadoRequerimentos($query, $con);
+    }
+
     /**
      * Clears out the collConfigs collection
      *

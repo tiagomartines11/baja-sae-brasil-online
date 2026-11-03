@@ -333,12 +333,33 @@
          leaves `aberto`, nullable in the schema because an open one has no
          answer yet. -->
     <column name="resolucao" phpName="Resolucao" type="VARCHAR" size="1000"/>
+    <!-- The open report this one repeats, when it came from a different
+         email address (BAJAAPP-89). A repeat from the SAME address is never
+         written at all; one from a new address is kept, because the new
+         address may be the one that works, but it does not alert staff again.
+         See Baja\Certificado\Requerimento\Duplicata for what "repeats" means.
+
+         Last, after `resolucao`, so the ALTER in PropelMigration_1793669096
+         and a fresh `sql:build` produce the same column order.
+
+         SET NULL, not CASCADE: the retention script deletes closed reports,
+         and an original that is purged must not take a still-open duplicate
+         with it. The duplicate just stops pointing anywhere. -->
+    <column name="duplicado_de" phpName="DuplicadoDe" type="CHAR" size="22">
+      <vendor type="mysql">
+        <parameter name="Charset" value="ascii"/>
+        <parameter name="Collate" value="ascii_bin"/>
+      </vendor>
+    </column>
     <!-- SET NULL for the same reason as participantes.criado_por:
          admin_usuario.php deletes the user row when somebody is left with no
          meaningful permissions, and losing the attribution is better than
          losing the report. -->
     <foreign-key foreignTable="user" name="certificado_requerimento_resolvido_por" onDelete="SETNULL" onUpdate="CASCADE">
       <reference local="resolvido_por" foreign="user_id"/>
+    </foreign-key>
+    <foreign-key foreignTable="certificado_requerimento" name="certificado_requerimento_duplicado_de" phpName="Original" refPhpName="Duplicado" onDelete="SETNULL" onUpdate="CASCADE">
+      <reference local="duplicado_de" foreign="requerimento_id"/>
     </foreign-key>
     <!-- The queue view is "open reports, oldest first", which is the only
          query this table serves often enough to index for. -->
@@ -353,6 +374,18 @@
     </index>
     <index name="certificado_requerimento_resolvido_por_idx">
       <index-column name="resolvido_por"/>
+    </index>
+    <!-- "Is this person's report already open" — asked on every submission
+         (BAJAAPP-89), inside a lock, so it has to be cheap. The document and
+         the status narrow it to a handful of rows at most; `caso` and the
+         subject are compared on those. -->
+    <index name="certificado_requerimento_duplicata_idx">
+      <index-column name="documento"/>
+      <index-column name="status"/>
+    </index>
+    <!-- The staff page lists an original's duplicates. -->
+    <index name="certificado_requerimento_duplicado_de_idx">
+      <index-column name="duplicado_de"/>
     </index>
     <vendor type="mysql">
       <parameter name="Engine" value="InnoDB"/>

@@ -116,3 +116,38 @@ T::ok(
 Backoff::clear($onFile);
 Backoff::clear($invented);
 Backoff::clear($documento);
+
+// --- the /requerimento limit keeps the same secrecy ----------------------------
+//
+// Limite (the 3-per-email, 5-per-address cap on the report form) stores its
+// counters in this same Redis, and since BAJAAPP-89 it writes them with
+// reservar() instead of registrar(). The new writer must keep the old rule:
+// an email address and an IP are personal data, so neither may be readable
+// back out of a Redis key name. Anybody who can run KEYS on the server would
+// otherwise get a list of who has been writing in.
+
+$emailLimite  = 'zz-fixture-chave-' . random_int(0, 999999) . '@example.org';
+$origemLimite = '203.0.113.' . random_int(1, 254);
+
+\Baja\Certificado\Requerimento\Limite::reset();
+\Baja\Certificado\Requerimento\Limite::reservar($origemLimite, $emailLimite);
+
+$chavesLimite = $redis->keys('cert_requerimento:*');
+$vazou = false;
+foreach ($chavesLimite as $chave) {
+    if (str_contains($chave, $emailLimite) || str_contains($chave, $origemLimite)) {
+        $vazou = true;
+    }
+}
+T::ok('a reservation leaves keys behind', $chavesLimite !== []);
+T::ok('no /requerimento limit key contains the email or the address', !$vazou, implode(', ', array_slice($chavesLimite, 0, 3)));
+
+// Every counter must expire. A key without an expiry would hold somebody's
+// count forever, and they could never submit again once they hit the limit.
+$semValidade = 0;
+foreach ($chavesLimite as $chave) {
+    if ($redis->ttl($chave) < 0) {
+        $semValidade++;
+    }
+}
+T::same(0, $semValidade, 'every /requerimento limit key has an expiry');
