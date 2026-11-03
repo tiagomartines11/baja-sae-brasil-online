@@ -260,7 +260,132 @@ final class HttpJudgePagesTest extends DbTestCase
         $this->assertStringContainsString(self::REFUSAL, $this->get('/00NE/dashboard.php?p=ZZN', $this->loginAndGetCookies(self::NOBODY))['body']);
     }
 
+    /**
+     * The "Dar um papel" form is laid out like the other admin forms
+     * (BAJAAPP-92), evento.php being the reference.
+     *
+     * WHAT "LAID OUT LIKE" MEANS HERE
+     *
+     * An admin form in the judge area is a table with the "tablesorter"
+     * class (the site's blue theme styles it). Its header row is a title;
+     * then one row per field, with the field's name in the LEFT cell and the
+     * thing you type or pick in the RIGHT cell; then a footer row holding
+     * the submit button. A message (an error, "saved") is a row of its own
+     * that spans both cells.
+     *
+     * The test reads both pages as a browser gets them, finds the table of
+     * each form, and describes it the same way (layoutOf below). Both must
+     * have that shape. It also checks the role page brings no look of its
+     * own: no <style> block, none of the CSS classes it used to invent.
+     */
+    public function testTheRoleFormIsLaidOutLikeTheEventForm(): void
+    {
+        $this->grant(self::CONTROLLER, 'admin');
+        $admin = $this->loginAndGetCookies(self::CONTROLLER);
+        $nobodyId = (int) $this->fetchValue('SELECT user_id FROM user WHERE username = ?', [self::NOBODY]);
+
+        $evento = $this->layoutOf($this->get('/00NE/evento.php?id=00NE', $admin)['body'], 'evento.php?id=');
+        $papel = $this->layoutOf($this->get('/admin_usuario.php?id=' . $nobodyId, $admin)['body'], 'act=grant');
+
+        foreach (['evento.php' => $evento, 'admin_usuario.php' => $papel] as $page => $layout) {
+            $this->assertTrue($layout['tablesorter'], "$page: the form's table has the tablesorter class");
+            $this->assertTrue($layout['header'], "$page: a header row");
+            $this->assertTrue($layout['submitInFooter'], "$page: the submit button is in the footer row");
+            $this->assertNotEmpty($layout['fields'], "$page: at least one field");
+            $this->assertSame([], $layout['otherRows'], "$page: every row is a field (label, control) or a message spanning both");
+        }
+        // The role form's three fields, each label in the left cell and its
+        // control in the right one.
+        $this->assertSame(
+            ['Papel' => 'select', 'Onde' => 'select', 'Até (opcional)' => 'input'],
+            $papel['fields']
+        );
+
+        $body = $this->get('/admin_usuario.php?id=' . $nobodyId, $admin)['body'];
+        $this->assertStringNotContainsString('<style', $body, 'no style block of its own');
+        foreach (['muted-note', 'class="erro"', 'class="ok"'] as $invented) {
+            $this->assertStringNotContainsString($invented, $body);
+        }
+    }
+
+    /**
+     * A refusal shows as the first row of the form's table, spanning both
+     * cells, as evento.php shows "Evento não salvo: ..." (BAJAAPP-92). Here:
+     * an end date that is not a date.
+     */
+    public function testARefusedGrantIsShownAsARowOfTheForm(): void
+    {
+        $this->grant(self::CONTROLLER, 'admin');
+        $admin = $this->loginAndGetCookies(self::CONTROLLER);
+        $nobodyId = (int) $this->fetchValue('SELECT user_id FROM user WHERE username = ?', [self::NOBODY]);
+        $page = '/admin_usuario.php?id=' . $nobodyId;
+        $token = $this->tokenIn($this->get($page, $admin)['body']);
+
+        $refused = $this->post("$page&act=grant", $admin, ['role' => 'judge', 'node' => 'prova:00NE/ZZN', 'valid_until' => 'not-a-date', '_csrf' => $token]);
+
+        $layout = $this->layoutOf($refused['body'], 'act=grant');
+        $this->assertSame(['Papel não dado: Data de término inválida.'], $layout['messages']);
+        $this->assertSame([], $layout['otherRows']);
+    }
+
     // ------------------------------------------------------------------
+
+    /**
+     * Describes the table of the form whose action contains $action:
+     *
+     *   tablesorter      the table has the class
+     *   header           it has a <thead> with a cell in it
+     *   submitInFooter   its <tfoot> holds an <input type="submit">
+     *   fields           label => the control's tag, for each body row of
+     *                    exactly two cells: text on the left, a control
+     *                    (input, select, textarea) on the right
+     *   messages         the text of each body row of ONE cell spanning two
+     *   otherRows        any body row that is neither (should be none)
+     *
+     * @return array{tablesorter: bool, header: bool, submitInFooter: bool, fields: array<string, string>, messages: string[], otherRows: string[]}
+     */
+    private function layoutOf(string $html, string $action): array
+    {
+        $doc = new \DOMDocument();
+        // The pages are HTML5, which this parser does not know: it warns
+        // about tags like <details>, and the warnings mean nothing here.
+        @$doc->loadHTML('<?xml encoding="UTF-8">' . $html);
+        $xpath = new \DOMXPath($doc);
+
+        $table = null;
+        foreach ($xpath->query('//form') as $form) {
+            if (str_contains((string) $form->getAttribute('action'), $action)) {
+                $table = $xpath->query('.//table', $form)->item(0);
+                break;
+            }
+        }
+        $this->assertNotNull($table, "no form posting to '$action' with a table in it");
+
+        $layout = [
+            'tablesorter' => in_array('tablesorter', explode(' ', (string) $table->getAttribute('class')), true),
+            'header' => $xpath->query('./thead//th', $table)->length > 0,
+            'submitInFooter' => $xpath->query('./tfoot//input[@type="submit"]', $table)->length > 0,
+            'fields' => [],
+            'messages' => [],
+            'otherRows' => [],
+        ];
+        $normal = fn(string $text) => trim((string) preg_replace('/\s+/u', ' ', $text));
+        foreach ($xpath->query('./tbody/tr', $table) as $row) {
+            $cells = $xpath->query('./td', $row);
+            if ($cells->length === 1 && $cells->item(0)->getAttribute('colspan') === '2') {
+                $layout['messages'][] = $normal($cells->item(0)->textContent);
+                continue;
+            }
+            $control = $cells->length === 2 ? $xpath->query('.//input | .//select | .//textarea', $cells->item(1))->item(0) : null;
+            $labelHasControl = $cells->length === 2 && $xpath->query('.//input | .//select | .//textarea', $cells->item(0))->length > 0;
+            if ($control === null || $labelHasControl) {
+                $layout['otherRows'][] = $normal($row->textContent);
+                continue;
+            }
+            $layout['fields'][$normal($cells->item(0)->textContent)] = $control->nodeName;
+        }
+        return $layout;
+    }
 
     /** @param array<string, string> $fields */
     private function post(string $path, array $cookies, array $fields): array

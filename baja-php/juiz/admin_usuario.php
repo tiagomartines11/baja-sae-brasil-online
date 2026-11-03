@@ -46,7 +46,10 @@ if (!$user) { header("Location: admin_usuarios.php"); exit(); }
 
 $rbac = Authorization::services();
 $h = fn($s) => htmlspecialchars((string)$s);
-$erro = null;
+// A refusal is shown in the table of the form that asked: giving in the
+// form at the bottom, taking away in the list of grants.
+$erroDar = null;
+$erroRemover = null;
 $aviso = $_GET['ok'] ?? null;
 
 if (@$_REQUEST['act'] == 'grant') {
@@ -67,15 +70,15 @@ if (@$_REQUEST['act'] == 'grant') {
     }
 
     if ($node === null || $roleCode === '') {
-        $erro = 'Escolha o papel e o lugar.';
+        $erroDar = 'Escolha o papel e o lugar.';
     } elseif ($validUntil === false) {
-        $erro = 'Data de término inválida.';
+        $erroDar = 'Data de término inválida.';
     } else {
         try {
             $rbac->granting->grant((int) $granter->getUserId(), (int) $user->getUserId(), $roleCode, $node, $validUntil);
             header("Location: admin_usuario.php?id=" . $user->getUserId() . "&ok=dado"); exit();
         } catch (GrantRefused $refused) {
-            $erro = Papeis::recusa($refused);
+            $erroDar = Papeis::recusa($refused);
         }
     }
 }
@@ -85,7 +88,7 @@ if (@$_REQUEST['act'] == 'revoke') {
         $rbac->granting->revoke((int) $granter->getUserId(), (int) ($_POST['grant_id'] ?? 0));
         header("Location: admin_usuario.php?id=" . $user->getUserId() . "&ok=removido"); exit();
     } catch (GrantRefused $refused) {
-        $erro = Papeis::recusa($refused);
+        $erroRemover = Papeis::recusa($refused);
     }
 }
 
@@ -105,8 +108,6 @@ $codigosDeEquipe = Fila::codigosDeEquipe($user);
 
 Template::printHeader("Papéis de Usuário", false, false);
 
-echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-height: 1.4; } .erro { color: #b00; } .ok { color: #070; }</style>';
-
 ?>
     <div style="max-width: 820px; margin: 0 auto;">
         <table id="grants" class="tablesorter" style="margin-bottom: 0;">
@@ -117,11 +118,6 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
                     <span style="font-size: 28px;"><?= $h($user->getUsername()) ?></span>
                 </th>
             </tr>
-<?php if ($erro !== null) { ?>
-            <tr><th colspan="5" class="erro" id="erro" style="background: #fee;"><?= $h($erro) ?></th></tr>
-<?php } elseif ($aviso === 'dado' || $aviso === 'removido') { ?>
-            <tr><th colspan="5" class="ok" id="ok" style="background: #efe;"><?= $aviso === 'dado' ? 'Papel dado.' : 'Papel removido.' ?></th></tr>
-<?php } ?>
             <tr>
                 <th>Papel</th>
                 <th>Onde</th>
@@ -131,6 +127,11 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
             </tr>
             </thead>
             <tbody>
+<?php if ($erroRemover !== null) { ?>
+            <tr><td colspan="5" id="erro" style="color: red; font-weight: bold;"><?= $h($erroRemover) ?></td></tr>
+<?php } elseif ($aviso === 'removido') { ?>
+            <tr><td colspan="5" id="ok" style="color: green; font-weight: bold;">Papel removido.</td></tr>
+<?php } ?>
 <?php if (!$grants) { ?>
             <tr><td colspan="5">Nenhum papel ativo.</td></tr>
 <?php } ?>
@@ -147,7 +148,7 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
         }
 ?>
             <tr class="grant" data-grant="<?= (int) $g->id ?>">
-                <td><?= $h($nomePapel) ?> <span class="muted-note">(<?= $h($role?->code ?? $g->roleId) ?>)</span></td>
+                <td><?= $h($nomePapel) ?> <span style="font-size: 12px;">(<?= $h($role?->code ?? $g->roleId) ?>)</span></td>
                 <td><?= $h($node === null ? $g->scopeType . ':' . $g->scopeId : GrantableNodes::describe($node)) ?></td>
                 <td><?= $g->validUntil === null ? 'sem fim' : $h(GrantRepository::format($g->validUntil)) ?></td>
                 <td><?= $h($nomeDe($g->grantedBy)) ?></td>
@@ -168,19 +169,35 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
 
         <form action="admin_usuario.php?id=<?= $h($user->getUserId()) ?>&amp;act=grant" method="POST">
             <?= Csrf::field() ?>
-            <table class="tablesorter" style="margin-top: 0;">
+            <?php // Laid out as the other admin forms (evento.php): a label cell and a control cell per field. ?>
+            <table id="dar" class="tablesorter" style="margin-top: 0;">
+                <thead>
+                <tr>
+                    <th colspan="2" class="sorter-false">Dar um papel</th>
+                </tr>
+                </thead>
                 <tbody>
-                <tr><td style="text-align: left; line-height: 2;">
-                    <strong>Dar um papel</strong><br />
-                    Papel:
-                    <select name="role" id="role" required>
+<?php if ($erroDar !== null) { ?>
+                <tr>
+                    <td colspan="2" id="erro" style="color: red; font-weight: bold;">Papel não dado: <?= $h($erroDar) ?></td>
+                </tr>
+<?php } elseif ($aviso === 'dado') { ?>
+                <tr>
+                    <td colspan="2" id="ok" style="color: green; font-weight: bold;">Papel dado.</td>
+                </tr>
+<?php } ?>
+                <tr>
+                    <td>Papel</td>
+                    <td><select name="role" id="role" required>
                         <option value="">— escolher —</option>
 <?php foreach ($papeis as $r) { ?>
                         <option value="<?= $h($r->code) ?>" data-types="<?= $h(implode(',', $r->allowedScopeTypeCodes())) ?>"><?= $h($r->name) ?> (<?= $h(implode(', ', $r->allowedScopeTypeCodes())) ?>)</option>
 <?php } ?>
-                    </select><br />
-                    Onde:
-                    <select name="node" id="node" required style="max-width: 100%;">
+                    </select></td>
+                </tr>
+                <tr>
+                    <td>Onde</td>
+                    <td><select name="node" id="node" required style="max-width: 600px;">
                         <option value="">— escolher —</option>
 <?php $grupo = null;
       foreach ($lugares as $l) {
@@ -191,18 +208,21 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
           } ?>
                         <option value="<?= $h($l['node']->type->value . ':' . $l['node']->id) ?>" data-type="<?= $h($l['node']->type->value) ?>"><?= $h($l['label']) ?></option>
 <?php } if ($grupo !== null) echo '</optgroup>'; ?>
-                    </select><br />
-                    Até (opcional): <input type="date" name="valid_until" id="valid_until">
-                    <div class="muted-note">
-                        Sem data, um papel num evento (ou numa prova ou fila dele) termina
+                    </select></td>
+                </tr>
+                <tr>
+                    <td>Até (opcional)</td>
+                    <td><input type="date" name="valid_until" id="valid_until" />
+                        <span style="font-size: 12px; margin-left: 8px;">Sem data, um papel num evento (ou numa prova ou fila dele) termina
                         <?= $h(\Baja\Rbac\Expiry\GrantExpiry::configuredDays()) ?> dias depois do fim do evento,
                         e nunca depois do seu próprio acesso. Um papel num programa ou na
-                        plataforma não tem fim, a não ser que o seu tenha.
-                    </div>
-                </td></tr>
+                        plataforma não tem fim, a não ser que o seu tenha.</span></td>
+                </tr>
                 </tbody>
                 <tfoot>
-                <tr><th style="height: 30px"><input type="submit" value="Dar papel" /></th></tr>
+                <tr>
+                    <th style="height: 30px;" colspan="2"><input type="submit" value="Dar papel" /></th>
+                </tr>
                 </tfoot>
             </table>
         </form>
@@ -213,7 +233,7 @@ echo '<style>.muted-note { color: #666; font-size: 12px; margin-top: 6px; line-h
             <tbody>
             <tr><td style="text-align: left;">
 <?php foreach ($codigosDeEquipe as $c) echo '<div>' . $h($c) . '</div>'; ?>
-                <div class="muted-note">Gerenciado em <a href="admin_fila_acesso.php">Acesso em massa às filas</a>.</div>
+                <div style="font-size: 12px;">Gerenciado em <a href="admin_fila_acesso.php">Acesso em massa às filas</a>.</div>
             </td></tr>
             </tbody>
         </table>
