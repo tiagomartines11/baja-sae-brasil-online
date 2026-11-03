@@ -159,6 +159,25 @@ grant can take it away.
 Every grant and every revoke writes one `role_audit` row in the same
 transaction. A refused attempt writes nothing and logs a warning.
 
+**Granting on several places** (`RoleGranting::grantOnMany`, BAJAAPP-91)
+gives one role on a list of nodes, as the role page sends them. Each node
+goes through the five rules, the expiry cap and gets its own grant and
+audit row, exactly as with `grant`. But it is **all or nothing**: every
+node is checked first, and if any is refused nothing is written and
+`BatchRefused` lists each refused node with its reason. Otherwise all the
+grants are written in one transaction. Also:
+
+- a node with another asked-for node above it (an event and one of its
+  provas) is left out, since the grant above already reaches it; the result
+  (`GrantBatch::$covered`) says which, and under which node. No starting
+  role may be given on two levels, so with them this only happens with a
+  custom role;
+- a node where the user already holds the role gets another grant, as
+  `grant` does: grants are never merged;
+- at most `RoleGranting::MAX_PLACES_AT_ONCE` (200) nodes per call
+  (`TOO_MANY_PLACES`), and at least one (`NO_PLACES`). The same node twice
+  counts once.
+
 **Granting by authority** (`RoleGranting::grantByAuthority` and
 `revokeByAuthority`) is a second, narrower door. A page uses it when it hands
 out one fixed role as part of its own work. The only user today is the lap
@@ -435,13 +454,19 @@ role.grant somewhere, it shows:
 - the user's active grants: role, place, end ("sem fim" when none), who gave
   it ("migração" for the migration), and "Remover" where the viewer may take
   it away;
-- a form to give a role: the role, the place (only places the viewer covers,
-  filtered to where the role may be given), and an optional end date. Left
-  empty, the RBAC core decides (7 days after the event, never after the
-  viewer's own right to grant there);
+- a form to give a role: the role, the places, and an optional end date.
+  The places are checkboxes (only places the viewer covers, filtered to
+  where the role may be given) grouped as Geral, Programas and one group
+  per event; each event group is closed until opened, has "marcar todos",
+  and a filter on top narrows the list. Without JavaScript every group is
+  open and there is no filter. The form goes to `grantOnMany`: if a place is
+  refused nothing is given, the page lists each refused place with its
+  reason and keeps what was ticked. The end date, left empty, is for the
+  RBAC core to decide (7 days after each event, never after the viewer's own
+  right to grant there);
 - a team's queue codes, read only, with a link to `admin_fila_acesso.php`.
 
-Every change goes through `RoleGranting::grant` / `revoke`, with the form's
+Every change goes through `RoleGranting::grantOnMany` / `revoke`, with the form's
 CSRF token. The delegation rules, the expiry cap and the audit trail apply,
 and a refusal is shown in Portuguese (`Juiz\Papeis`). `admin_users.php` and
 `user.php` (the per-event pages) became read only and link to it.
@@ -489,7 +514,7 @@ src/Baja/Rbac/
   Role/                  Role, RoleRepository
   Grant/                 Grant, GrantRepository
   Authorization/         Authorizer
-  Delegation/            RoleGranting, RoleEditor, GrantRefused
+  Delegation/            RoleGranting, RoleEditor, GrantRefused, GrantBatch, BatchRefused
   Expiry/                GrantExpiry
   Audit/                 AuditLog, DatabaseAuditLog
   Legacy/                LegacyCode (code -> grant), LegacyGrantPlan (the migration's data step)

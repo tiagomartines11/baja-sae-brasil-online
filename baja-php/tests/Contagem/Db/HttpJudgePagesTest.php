@@ -234,7 +234,7 @@ final class HttpJudgePagesTest extends DbTestCase
         $this->assertStringContainsString('value="prova:00NE/ZZN"', $form['body'], 'the admin may give roles on the prova');
         $this->assertStringNotContainsString('name="j[]"', $form['body'], 'no more raw permission checkboxes');
 
-        $fields = ['role' => 'judge', 'node' => 'prova:00NE/ZZN', 'valid_until' => ''];
+        $fields = ['role' => 'judge', 'nodes' => ['prova:00NE/ZZN'], 'valid_until' => ''];
         $forged = $this->post("$page&act=grant", $admin, $fields);
         $this->assertNotSame(302, $forged['status'], 'refused without the token');
         $this->assertSame(0, (int) $this->fetchValue("SELECT COUNT(*) FROM user_role WHERE user_id = ? AND scope_id = '00NE/ZZN'", [$nobodyId]));
@@ -297,7 +297,9 @@ final class HttpJudgePagesTest extends DbTestCase
         // The role form's three fields, each label in the left cell and its
         // control in the right one.
         $this->assertSame(
-            ['Papel' => 'select', 'Onde' => 'select', 'Até (opcional)' => 'input'],
+            // "Onde" is a list of checkboxes since BAJAAPP-91; its first
+            // control is the filter above them.
+            ['Papel' => 'select', 'Onde' => 'input', 'Até (opcional)' => 'input'],
             $papel['fields']
         );
 
@@ -321,14 +323,157 @@ final class HttpJudgePagesTest extends DbTestCase
         $page = '/admin_usuario.php?id=' . $nobodyId;
         $token = $this->tokenIn($this->get($page, $admin)['body']);
 
-        $refused = $this->post("$page&act=grant", $admin, ['role' => 'judge', 'node' => 'prova:00NE/ZZN', 'valid_until' => 'not-a-date', '_csrf' => $token]);
+        $refused = $this->post("$page&act=grant", $admin, ['role' => 'judge', 'nodes' => ['prova:00NE/ZZN'], 'valid_until' => 'not-a-date', '_csrf' => $token]);
 
         $layout = $this->layoutOf($refused['body'], 'act=grant');
         $this->assertSame(['Papel não dado: Data de término inválida.'], $layout['messages']);
         $this->assertSame([], $layout['otherRows']);
     }
 
+    /**
+     * Several places in one submission (BAJAAPP-91), the page's side.
+     * RoleGranting::grantOnMany() itself is tested in tests/Rbac/Db/
+     * GrantOnManyTest.php; this checks that the page sends it what was
+     * ticked and shows what came back.
+     *
+     * The list of places as the server sends it, which is what someone
+     * with JavaScript off uses: one checkbox per place, every group open,
+     * the filter and the "marcar todos" buttons hidden (the page's script
+     * shows them, and closes the event groups). And the note on events.
+     */
+    public function testTheRolePageListsEveryPlaceAsACheckboxInOpenGroups(): void
+    {
+        $this->grant(self::CONTROLLER, 'admin');
+        $page = $this->get('/admin_usuario.php?id=' . $this->nobodyId(), $this->loginAndGetCookies(self::CONTROLLER))['body'];
+        $xpath = $this->xpathOf($page);
+
+        foreach (['platform:', 'evento:00NE', 'prova:00NE/ZZN', 'prova:00NE/ZZL', 'fila:00NE/1'] as $place) {
+            $this->assertSame(1, $xpath->query("//input[@type='checkbox'][@name='nodes[]'][@value='$place']")->length, "a checkbox for $place");
+        }
+        $this->assertSame(0, $xpath->query("//select[@name='node']")->length, 'no single select any more');
+
+        $groups = $xpath->query("//td[@id='lugares']/details");
+        $this->assertGreaterThan(2, $groups->length, 'Geral, Programas, and one group per event');
+        foreach ($groups as $group) {
+            $this->assertTrue($group->hasAttribute('open'), 'every group is sent open: ' . $group->getAttribute('data-grupo'));
+        }
+        $event = $xpath->query("//details[@data-grupo='Evento 00NE']")->item(0);
+        $this->assertNotNull($event);
+        $this->assertTrue($event->hasAttribute('data-evento'), 'the script closes the event groups');
+        $this->assertSame(1, $xpath->query(".//button[@data-marcar-todos][@hidden]", $event)->length, 'a "marcar todos" for the group, hidden until the script runs');
+        $this->assertSame(1, $xpath->query("//input[@id='filtro'][@hidden]")->length, 'the filter, hidden until the script runs');
+        $this->assertStringContainsString('Um evento inclui todas as suas provas e filas, inclusive as criadas depois. Marque o evento em vez de cada prova quando for esse o caso.', $page);
+    }
+
+    /** Two provas ticked: two grants, and the message says so. */
+    public function testTheRolePageGivesARoleOnEveryTickedPlace(): void
+    {
+        $this->grant(self::CONTROLLER, 'admin');
+        $admin = $this->loginAndGetCookies(self::CONTROLLER);
+        $page = '/admin_usuario.php?id=' . $this->nobodyId();
+        $token = $this->tokenIn($this->get($page, $admin)['body']);
+
+        $given = $this->post("$page&act=grant", $admin, ['role' => 'judge', 'nodes' => ['prova:00NE/ZZN', 'prova:00NE/ZZL'], 'valid_until' => '', '_csrf' => $token]);
+
+        $this->assertSame(302, $given['status']);
+        $this->assertSame(['prova:00NE/ZZL', 'prova:00NE/ZZN'], $this->activePlacesOfNobody());
+        $shown = $this->get($this->pathOf($given['location']), $admin)['body'];
+        $this->assertStringContainsString('Papel dado em 2 lugares.', $shown);
+    }
+
+    /**
+     * One refused place among three: the judge role cannot be given on a
+     * queue. Nothing is given; the page names the refused place and why,
+     * and sends the form back as it was (the role chosen, the three places
+     * still ticked), so the fix is one click.
+     */
+    public function testOneRefusedPlaceIsListedAndTheSelectionKept(): void
+    {
+        $this->grant(self::CONTROLLER, 'admin');
+        $admin = $this->loginAndGetCookies(self::CONTROLLER);
+        $page = '/admin_usuario.php?id=' . $this->nobodyId();
+        $token = $this->tokenIn($this->get($page, $admin)['body']);
+        $ticked = ['prova:00NE/ZZN', 'prova:00NE/ZZL', 'fila:00NE/1'];
+
+        $refused = $this->post("$page&act=grant", $admin, ['role' => 'judge', 'nodes' => $ticked, 'valid_until' => '', '_csrf' => $token]);
+
+        $this->assertSame(200, $refused['status']);
+        $this->assertSame([], $this->activePlacesOfNobody(), 'nothing given');
+        $xpath = $this->xpathOf($refused['body']);
+        $listed = array_map(fn($li) => trim($li->textContent), iterator_to_array($xpath->query("//ul[@id='recusados']/li")));
+        $this->assertSame(['00NE · fila 1 — Fila de teste ZZ: Esse papel não pode ser dado nesse tipo de lugar.'], $listed);
+        foreach ($ticked as $place) {
+            $this->assertSame(1, $xpath->query("//input[@name='nodes[]'][@value='$place'][@checked]")->length, "$place still ticked");
+        }
+        $this->assertSame(0, $xpath->query("//input[@name='nodes[]'][@value='evento:00NE'][@checked]")->length, 'and nothing else');
+        $this->assertSame(1, $xpath->query("//select[@name='role']/option[@value='judge'][@selected]")->length, 'the role still chosen');
+    }
+
+    /**
+     * An event and one of its provas ticked: only the event is granted,
+     * and the message names the prova as included in it. No real role may
+     * be given both on an event and on a prova, so the test makes one for
+     * itself (zz_http_scorer) and removes it afterwards.
+     */
+    public function testAnEventAndItsProvaGrantTheEventAndSaySo(): void
+    {
+        $con = Propel::getWriteConnection('resultados');
+        $con->exec("INSERT INTO role (code, name, is_system, allowed_scope_types) VALUES ('zz_http_scorer', 'Apontador de teste', 0, 'evento,prova')");
+        $roleId = (int) $con->lastInsertId();
+        $con->exec("INSERT INTO role_permission (role_id, permission) VALUES ($roleId, 'prova.enter_scores')");
+        try {
+            $this->grant(self::CONTROLLER, 'admin');
+            $admin = $this->loginAndGetCookies(self::CONTROLLER);
+            $page = '/admin_usuario.php?id=' . $this->nobodyId();
+            $token = $this->tokenIn($this->get($page, $admin)['body']);
+
+            $given = $this->post("$page&act=grant", $admin, ['role' => 'zz_http_scorer', 'nodes' => ['prova:00NE/ZZN', 'evento:00NE'], 'valid_until' => '', '_csrf' => $token]);
+
+            $this->assertSame(302, $given['status']);
+            $this->assertSame(['evento:00NE'], $this->activePlacesOfNobody());
+            $shown = $this->get($this->pathOf($given['location']), $admin)['body'];
+            $covered = array_map(fn($li) => trim($li->textContent), iterator_to_array($this->xpathOf($shown)->query("//ul[@id='cobertos']/li")));
+            $this->assertCount(1, $covered);
+            $this->assertStringStartsWith('00NE · prova ZZN', $covered[0]);
+            $this->assertStringContainsString('(incluído em Evento 00NE', $covered[0]);
+        } finally {
+            // Test rows only: the application never deletes grants or roles.
+            $con->exec("DELETE FROM user_role WHERE role_id = $roleId");
+            $con->exec("DELETE FROM role_permission WHERE role_id = $roleId");
+            $con->exec("DELETE FROM role WHERE role_id = $roleId");
+        }
+    }
+
     // ------------------------------------------------------------------
+
+    /** A redirect's target as a path for get(): the pages send "admin_usuario.php?...", relative to the site's root. */
+    private function pathOf(string $location): string
+    {
+        return '/' . ltrim((string) preg_replace('#^https?://[^/]+#', '', $location), '/');
+    }
+
+    private function nobodyId(): int
+    {
+        return (int) $this->fetchValue('SELECT user_id FROM user WHERE username = ?', [self::NOBODY]);
+    }
+
+    /** @return string[] "type:id" of equipe1's active grants in the test event, sorted */
+    private function activePlacesOfNobody(): array
+    {
+        $statement = Propel::getWriteConnection('resultados')->prepare(
+            "SELECT CONCAT(scope_type, ':', scope_id) FROM user_role WHERE user_id = ? AND revoked_at IS NULL AND (scope_id = '00NE' OR scope_id LIKE '00NE/%') ORDER BY 1"
+        );
+        $statement->execute([$this->nobodyId()]);
+        return $statement->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    private function xpathOf(string $html): \DOMXPath
+    {
+        $doc = new \DOMDocument();
+        // HTML5 tags like <details> make this parser warn; the warnings mean nothing here.
+        @$doc->loadHTML('<?xml encoding="UTF-8">' . $html);
+        return new \DOMXPath($doc);
+    }
 
     /**
      * Describes the table of the form whose action contains $action:
@@ -387,7 +532,7 @@ final class HttpJudgePagesTest extends DbTestCase
         return $layout;
     }
 
-    /** @param array<string, string> $fields */
+    /** @param array<string, string|string[]> $fields */
     private function post(string $path, array $cookies, array $fields): array
     {
         return $this->request('POST', $path, $cookies, http_build_query($fields), self::JUIZ_SITE, ['Content-Type: application/x-www-form-urlencoded']);

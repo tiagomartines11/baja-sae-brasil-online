@@ -8,6 +8,7 @@ use Baja\Fila\Fila;
 use Baja\Model\ProvaQuery;
 use Baja\Model\UserQuery;
 use Baja\Rbac\Authorization;
+use Baja\Rbac\Delegation\BatchRefused;
 use Baja\Rbac\Delegation\GrantRefused;
 use Baja\Rbac\GrantableNodes;
 use Baja\Rbac\Grant\GrantRepository;
@@ -24,7 +25,8 @@ use DateTimeImmutable;
 //
 // For anyone who may give roles somewhere (role.grant): a platform admin
 // everywhere, a head judge on their prova. The form offers only the places
-// they cover, and RoleGranting checks again.
+// they cover, and RoleGranting checks again. Several places may be ticked
+// at once (BAJAAPP-91): RoleGranting::grantOnMany gives them all or none.
 //
 // The legacy permission list (user.permissions) is not edited here any
 // more: it is frozen for one release, for rollback. Teams' own queue codes,
@@ -52,35 +54,87 @@ $erroDar = null;
 $erroRemover = null;
 $aviso = $_GET['ok'] ?? null;
 
+// The places the viewer may give roles on, with their labels: the form's
+// checkboxes, and the names of the places in its messages.
+$lugares = GrantableNodes::forUser($granter);
+$rotulos = [];
+foreach ($lugares as $l) $rotulos[$l['node']->key()] = $l['label'];
+$rotuloDe = fn(ScopeNode $node): string => $rotulos[$node->key()] ?? GrantableNodes::describe($node);
+
+// What the form showed when it was sent, to show it again after a refusal:
+// the role, the ticked places ("type:id" => true) and the end date.
+$papelMarcado = '';
+$marcados = [];
+$fimDigitado = '';
+// The places refused in the last batch, each with its reason (BAJAAPP-91).
+$recusados = [];
+
 if (@$_REQUEST['act'] == 'grant') {
-    // The node arrives as "type:id", as the select below writes it.
-    $nodeValue = is_string($_POST['node'] ?? null) ? $_POST['node'] : '';
-    $parts = explode(':', $nodeValue, 2);
-    $node = count($parts) === 2 ? ScopeNode::fromStored($parts[0], $parts[1]) : null;
-    $roleCode = is_string($_POST['role'] ?? null) ? $_POST['role'] : '';
+    $papelMarcado = $roleCode = is_string($_POST['role'] ?? null) ? $_POST['role'] : '';
+
+    // Each ticked place arrives as "type:id", as the checkboxes below write it.
+    $nodes = [];
+    $valoresInvalidos = false;
+    foreach (is_array($_POST['nodes'] ?? null) ? $_POST['nodes'] : [] as $valor) {
+        $parts = is_string($valor) ? explode(':', $valor, 2) : [];
+        $node = count($parts) === 2 ? ScopeNode::fromStored($parts[0], $parts[1]) : null;
+        if ($node === null) {
+            $valoresInvalidos = true;
+            continue;
+        }
+        $nodes[] = $node;
+        $marcados[$node->key()] = true;
+    }
 
     // Empty end date: the RBAC core decides (7 days after the event, never
     // after the granter's own right to grant there). A date: until 23:59:59
-    // that day.
-    $fim = trim((string) ($_POST['valid_until'] ?? ''));
+    // that day, on every place ticked.
+    $fimDigitado = $fim = trim(is_string($_POST['valid_until'] ?? null) ? $_POST['valid_until'] : '');
     $validUntil = null;
     if ($fim !== '') {
         $dia = DateTimeImmutable::createFromFormat('!Y-m-d', $fim);
         $validUntil = $dia === false ? false : $dia->setTime(23, 59, 59);
     }
 
-    if ($node === null || $roleCode === '') {
-        $erroDar = 'Escolha o papel e o lugar.';
+    if ($roleCode === '' || ($nodes === [] && !$valoresInvalidos)) {
+        $erroDar = 'Escolha o papel e pelo menos um lugar.';
+    } elseif ($valoresInvalidos) {
+        $erroDar = 'Um dos lugares marcados não existe.';
     } elseif ($validUntil === false) {
         $erroDar = 'Data de término inválida.';
     } else {
+        // All or nothing (RoleGranting::grantOnMany): one refused place and
+        // no place is given; the page then lists each refused one.
         try {
-            $rbac->granting->grant((int) $granter->getUserId(), (int) $user->getUserId(), $roleCode, $node, $validUntil);
-            header("Location: admin_usuario.php?id=" . $user->getUserId() . "&ok=dado"); exit();
+            $batch = $rbac->granting->grantOnMany((int) $granter->getUserId(), (int) $user->getUserId(), $roleCode, $nodes, $validUntil);
+            $cobertos = [];
+            foreach ($batch->covered as $c) $cobertos[$c['node']->key()] = $c['by']->key();
+            header('Location: admin_usuario.php?' . http_build_query(['id' => $user->getUserId(), 'ok' => 'dado', 'n' => count($batch->granted), 'cobertos' => $cobertos]));
+            exit();
+        } catch (BatchRefused $batchRefused) {
+            foreach ($batchRefused->refusals as $r) {
+                $recusados[] = [$rotuloDe($r['node']), Papeis::recusa($r['refused'])];
+            }
+            $erroDar = count($recusados) === 1
+                ? 'um lugar foi recusado, e por isso nenhum foi dado. Desmarque-o ou corrija e envie de novo.'
+                : count($recusados) . ' lugares foram recusados, e por isso nenhum foi dado. Desmarque-os ou corrija e envie de novo.';
         } catch (GrantRefused $refused) {
             $erroDar = Papeis::recusa($refused);
         }
     }
+}
+
+// After a batch: how many places got the role, and which ticked places
+// were left out because a ticked place above them already reaches them.
+// Read back from the redirect's query string; only labels are shown.
+$dadosEm = (int) ($_GET['n'] ?? 0);
+$cobertosAviso = [];
+foreach (is_array($_GET['cobertos'] ?? null) ? $_GET['cobertos'] : [] as $de => $por) {
+    $partsDe = explode(':', (string) $de, 2);
+    $partsPor = explode(':', (string) $por, 2);
+    $nodeDe = count($partsDe) === 2 ? ScopeNode::fromStored(...$partsDe) : null;
+    $nodePor = count($partsPor) === 2 ? ScopeNode::fromStored(...$partsPor) : null;
+    if ($nodeDe !== null && $nodePor !== null) $cobertosAviso[] = [$rotuloDe($nodeDe), $rotuloDe($nodePor)];
 }
 
 if (@$_REQUEST['act'] == 'revoke') {
@@ -103,7 +157,6 @@ $papeis = array_filter($rbac->roles->all(), fn($r) => !$r->isSystem
     || Authorization::can($granter, Permission::ROLE_MANAGE, ScopeNode::platform()));
 usort($papeis, fn($a, $b) => strcmp($a->name, $b->name));
 
-$lugares = GrantableNodes::forUser($granter);
 $codigosDeEquipe = Fila::codigosDeEquipe($user);
 
 Template::printHeader("Papéis de Usuário", false, false);
@@ -179,11 +232,28 @@ Template::printHeader("Papéis de Usuário", false, false);
                 <tbody>
 <?php if ($erroDar !== null) { ?>
                 <tr>
-                    <td colspan="2" id="erro" style="color: red; font-weight: bold;">Papel não dado: <?= $h($erroDar) ?></td>
+                    <td colspan="2" id="erro" style="color: red; font-weight: bold;">Papel não dado: <?= $h($erroDar) ?>
+<?php if ($recusados) { ?>
+                        <ul id="recusados">
+<?php foreach ($recusados as [$rotulo, $motivo]) { ?>
+                            <li><?= $h($rotulo) ?>: <?= $h($motivo) ?></li>
+<?php } ?>
+                        </ul>
+<?php } ?>
+                    </td>
                 </tr>
 <?php } elseif ($aviso === 'dado') { ?>
                 <tr>
-                    <td colspan="2" id="ok" style="color: green; font-weight: bold;">Papel dado.</td>
+                    <td colspan="2" id="ok" style="color: green; font-weight: bold;"><?= $dadosEm > 1 ? 'Papel dado em ' . $dadosEm . ' lugares.' : 'Papel dado.' ?>
+<?php if ($cobertosAviso) { ?>
+                        Não foi dado à parte em, porque o lugar marcado acima deles já os inclui:
+                        <ul id="cobertos">
+<?php foreach ($cobertosAviso as [$de, $por]) { ?>
+                            <li><?= $h($de) ?> (incluído em <?= $h($por) ?>)</li>
+<?php } ?>
+                        </ul>
+<?php } ?>
+                    </td>
                 </tr>
 <?php } ?>
                 <tr>
@@ -191,28 +261,35 @@ Template::printHeader("Papéis de Usuário", false, false);
                     <td><select name="role" id="role" required>
                         <option value="">— escolher —</option>
 <?php foreach ($papeis as $r) { ?>
-                        <option value="<?= $h($r->code) ?>" data-types="<?= $h(implode(',', $r->allowedScopeTypeCodes())) ?>"><?= $h($r->name) ?> (<?= $h(implode(', ', $r->allowedScopeTypeCodes())) ?>)</option>
+                        <option value="<?= $h($r->code) ?>" data-types="<?= $h(implode(',', $r->allowedScopeTypeCodes())) ?>"<?= $r->code === $papelMarcado ? ' selected' : '' ?>><?= $h($r->name) ?> (<?= $h(implode(', ', $r->allowedScopeTypeCodes())) ?>)</option>
 <?php } ?>
                     </select></td>
                 </tr>
                 <tr>
                     <td>Onde</td>
-                    <td><select name="node" id="node" required style="max-width: 600px;">
-                        <option value="">— escolher —</option>
-<?php $grupo = null;
-      foreach ($lugares as $l) {
-          if ($l['group'] !== $grupo) {
-              if ($grupo !== null) echo '</optgroup>';
-              $grupo = $l['group'];
-              echo '<optgroup label="' . $h($grupo) . '">';
-          } ?>
-                        <option value="<?= $h($l['node']->type->value . ':' . $l['node']->id) ?>" data-type="<?= $h($l['node']->type->value) ?>"><?= $h($l['label']) ?></option>
-<?php } if ($grupo !== null) echo '</optgroup>'; ?>
-                    </select></td>
+                    <td id="lugares">
+                        <?php // Shown by the script below: without JavaScript there is no filter, and every group is open. ?>
+                        <input type="search" id="filtro" placeholder="Filtrar lugares" hidden />
+<?php // One group per heading of GrantableNodes (Geral, Programas, one per event), open as sent; the script closes the events'.
+      $grupos = [];
+      foreach ($lugares as $l) $grupos[$l['group']][] = $l;
+      foreach ($grupos as $grupo => $doGrupo) {
+          $ehEvento = $grupo !== 'Geral' && $grupo !== 'Programas'; ?>
+                        <details open data-grupo="<?= $h($grupo) ?>"<?= $ehEvento ? ' data-evento' : '' ?>>
+                            <summary><?= $h($grupo) ?></summary>
+                            <button type="button" data-marcar-todos hidden>marcar todos</button><br />
+<?php     foreach ($doGrupo as $l) {
+              $valor = $l['node']->key(); ?>
+                            <label data-type="<?= $h($l['node']->type->value) ?>"><input type="checkbox" name="nodes[]" value="<?= $h($valor) ?>"<?= isset($marcados[$valor]) ? ' checked' : '' ?> /> <?= $h($l['label']) ?></label><br />
+<?php     } ?>
+                        </details>
+<?php } ?>
+                        <span style="font-size: 12px;">Um evento inclui todas as suas provas e filas, inclusive as criadas depois. Marque o evento em vez de cada prova quando for esse o caso.</span>
+                    </td>
                 </tr>
                 <tr>
                     <td>Até (opcional)</td>
-                    <td><input type="date" name="valid_until" id="valid_until" />
+                    <td><input type="date" name="valid_until" id="valid_until" value="<?= $h($fimDigitado) ?>" />
                         <span style="font-size: 12px; margin-left: 8px;">Sem data, um papel num evento (ou numa prova ou fila dele) termina
                         <?= $h(\Baja\Rbac\Expiry\GrantExpiry::configuredDays()) ?> dias depois do fim do evento,
                         e nunca depois do seu próprio acesso. Um papel num programa ou na
@@ -241,14 +318,58 @@ Template::printHeader("Papéis de Usuário", false, false);
     </div>
 
 <script type="text/javascript">
-    // Only the places where the chosen role may be given. The server checks again.
-    $('#role').on('change', function () {
-        var types = ($(this).find(':selected').data('types') || '').split(',');
-        $('#node option[data-type]').each(function () {
-            var ok = types.indexOf($(this).data('type')) !== -1;
-            $(this).prop('disabled', !ok).toggle(ok);
+    // The list of places (BAJAAPP-91). Without this script every group stays
+    // open and there is no filter; the form works the same.
+    $(function () {
+        var $lugares = $('#lugares');
+
+        // Only the places where the chosen role may be given (data-types).
+        // The server checks again, place by place.
+        function permitidos() {
+            var types = ($('#role').find(':selected').data('types') || '').split(',');
+            $lugares.find('label[data-type]').each(function () {
+                var ok = $('#role').val() === '' || types.indexOf($(this).data('type')) !== -1;
+                this.dataset.foraDoPapel = ok ? '' : '1';
+                if (!ok) $(this).find('input').prop('checked', false);
+            });
+        }
+
+        // The text filter narrows the list by label, ignoring case and accents.
+        function semAcento(texto) {
+            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        }
+
+        function mostrar() {
+            var busca = semAcento($('#filtro').val() || '');
+            $lugares.find('details').each(function () {
+                var algum = false;
+                $(this).find('label[data-type]').each(function () {
+                    var visivel = this.dataset.foraDoPapel !== '1' && (busca === '' || semAcento($(this).text()).indexOf(busca) !== -1);
+                    $(this).toggle(visivel).next('br').toggle(visivel);
+                    algum = algum || visivel;
+                });
+                $(this).toggle(algum);
+                if (busca !== '' && algum) this.open = true;
+            });
+        }
+
+        // "marcar todos": every place of the group still shown.
+        $lugares.on('click', '[data-marcar-todos]', function () {
+            $(this).closest('details').find('label[data-type]:visible input').prop('checked', true);
         });
-        if ($('#node option:selected').prop('disabled')) $('#node').val('');
+
+        $('#role').on('change', function () { permitidos(); mostrar(); });
+        $('#filtro').on('input', mostrar);
+
+        // Events start closed, unless something in them is ticked (the
+        // form came back after a refusal).
+        $lugares.find('details[data-evento]').each(function () {
+            if ($(this).find('input:checked').length === 0) this.open = false;
+        });
+        $('#filtro').prop('hidden', false);
+        $lugares.find('[data-marcar-todos]').prop('hidden', false);
+        permitidos();
+        mostrar();
     });
 </script>
 

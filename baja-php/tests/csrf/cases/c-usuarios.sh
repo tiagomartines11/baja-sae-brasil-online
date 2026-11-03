@@ -55,7 +55,7 @@ ALVO_ID=$(php_in_app 'echo UserQuery::create()->findOneByUsername("ZZCsrfAlvo")-
 form_case "admin_usuario.php: Dar papel" "$SID_ADM" \
     "/$EVT/admin_usuario.php?id=$ALVO_ID" "/$EVT/admin_usuario.php?id=$ALVO_ID&act=grant" \
     "$(roles_of ZZCsrfAlvo)" \
-    "role=judge" "node=prova:$EVT/ZZA" "valid_until="
+    "role=judge" "nodes[]=prova:$EVT/ZZA" "valid_until="
 
 # --- admin_usuario.php: "Remover" ---------------------------------------------
 # Takes that grant away again.

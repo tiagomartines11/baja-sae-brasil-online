@@ -45,6 +45,12 @@ final class GrantRefused extends RuntimeException
     /** The asked-for end is after the granter's own right to grant there ends. */
     public const VALID_UNTIL_AFTER_GRANTER = 'valid_until_after_granter';
 
+    /** grantOnMany() was given no place at all. */
+    public const NO_PLACES = 'no_places';
+
+    /** grantOnMany() was given more places than RoleGranting::MAX_PLACES_AT_ONCE. */
+    public const TOO_MANY_PLACES = 'too_many_places';
+
     public function __construct(public readonly string $reason, string $message)
     {
         parent::__construct($message);
