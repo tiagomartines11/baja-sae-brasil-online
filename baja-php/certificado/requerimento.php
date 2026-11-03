@@ -40,6 +40,7 @@ use Baja\Certificado\Certificado;
 use Baja\Certificado\Config;
 use Baja\Certificado\Http;
 use Baja\Certificado\Insercao\Texto;
+use Baja\Certificado\Requerimento\Acompanhamento;
 use Baja\Certificado\Requerimento\Caso;
 use Baja\Certificado\Requerimento\Formulario;
 use Baja\Certificado\Requerimento\Recepcao;
@@ -132,6 +133,18 @@ Template::printHeader('Abrir um requerimento - Certificados SAE BRASIL');
                 Guarde o número de protocolo:
                 <strong><?= $e($protocolo) ?></strong>
             </p>
+            <?php /*
+             * The status page (BAJAAPP-88), on every page that shows a
+             * protocol: the new report, and the "already open" one, whose
+             * reader is the most likely of all to be wondering what happened
+             * to the first submission. Both protocols are the reader's own —
+             * see Registro::protocolo() — so the link is too.
+             */ ?>
+            <p>
+                Acompanhe a situação do requerimento em
+                <a href="<?= $e(Acompanhamento::caminho($protocolo)) ?>">Acompanhar requerimento</a>.
+                Guarde este link: é por ele que você vê a resposta.
+            </p>
             <?php if ($jaAberto): ?>
                 <?php /*
                  * The button pressed again, or the form sent again from the
@@ -145,8 +158,9 @@ Template::printHeader('Abrir um requerimento - Certificados SAE BRASIL');
                 </p>
             <?php elseif ($reciboEnviado): ?>
                 <p>
-                    Enviamos uma confirmação para o e-mail informado. A equipe responsável
-                    pelos certificados vai analisar o pedido e responder por lá.
+                    Enviamos uma confirmação com este link para o e-mail informado. A
+                    equipe responsável pelos certificados vai analisar o pedido, e quando
+                    ele for encerrado a resposta chega por e-mail.
                 </p>
             <?php else: ?>
                 <?php /*

@@ -329,9 +329,10 @@
     <column name="status" phpName="Status" type="ENUM" valueSet="aberto,em_analise,resolvido,recusado" required="true" default="aberto"/>
     <column name="resolvido_por" phpName="ResolvidoPor" type="INTEGER"/>
     <column name="resolvido_em" phpName="ResolvidoEm" type="TIMESTAMP" sqlType="DATETIME"/>
-    <!-- What was decided and why. Required by the interface when a report
-         leaves `aberto`, nullable in the schema because an open one has no
-         answer yet. -->
+    <!-- Staff's internal note: what was decided and why, for whoever reads
+         this row later. Optional, and never sent to the participant or shown
+         on the public status page; `resposta` below is what they get.
+         Reports closed before BAJAAPP-88 hold their only note here. -->
     <column name="resolucao" phpName="Resolucao" type="VARCHAR" size="1000"/>
     <!-- The open report this one repeats, when it came from a different
          email address (BAJAAPP-89). A repeat from the SAME address is never
@@ -339,8 +340,9 @@
          address may be the one that works, but it does not alert staff again.
          See Baja\Certificado\Requerimento\Duplicata for what "repeats" means.
 
-         Last, after `resolucao`, so the ALTER in PropelMigration_1793669096
-         and a fresh `sql:build` produce the same column order.
+         After `resolucao`, so the ALTER in PropelMigration_1793669096 and a
+         fresh `sql:build` produce the same column order. The two columns
+         below come after it for the same reason (PropelMigration_1793747906).
 
          SET NULL, not CASCADE: the retention script deletes closed reports,
          and an original that is purged must not take a still-open duplicate
@@ -351,6 +353,18 @@
         <parameter name="Collate" value="ascii_bin"/>
       </vendor>
     </column>
+    <!-- The reply to the participant (BAJAAPP-88). Required by the staff
+         page when a report is closed, emailed to the address in the report
+         and shown on the public status page (/acompanhar). Null for reports
+         closed before this column existed, whose status page shows the
+         status with no reply. Free text written by staff, deleted with the
+         row by the retention script like every other column here. -->
+    <column name="resposta" phpName="Resposta" type="VARCHAR" size="1000"/>
+    <!-- When the relay accepted the email carrying `resposta`. Null on a
+         closed report with a reply means that email is still owed, and the
+         staff page offers to send it again. Cleared whenever a new reply is
+         owed: on closing, and on reopening. -->
+    <column name="respondido_em" phpName="RespondidoEm" type="TIMESTAMP" sqlType="DATETIME"/>
     <!-- SET NULL for the same reason as participantes.criado_por:
          admin_usuario.php deletes the user row when somebody is left with no
          meaningful permissions, and losing the attribution is better than

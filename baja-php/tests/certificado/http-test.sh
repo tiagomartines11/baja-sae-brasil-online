@@ -474,6 +474,90 @@ else
     app_php 'Baja\Model\CertificadoRequerimentoQuery::create()->filterByDocumento($argv[1])->delete();' "$req_doc" >/dev/null
 fi
 
+# --- /acompanhar, the report status page ------------------------------------------
+#
+# BAJAAPP-88. A participant follows their report at /acompanhar?p={protocolo}.
+# The protocol is the only key to the page, so: nginx must route it, the page
+# must never be kept by a cache or indexed, a wrong protocol must look exactly
+# like a malformed one, and the protocol must not be written to the access
+# log in the clear, where it would be a working link to somebody's report.
+
+unknown_protocol="$(od -An -N16 -tx1 < /dev/urandom | tr -d ' \n' | cut -c1-22)"
+acomp_unknown=$(body_of "$BASE/acompanhar?p=$unknown_protocol")
+acomp_short=$(body_of "$BASE/acompanhar?p=abc")
+
+ok "/acompanhar with an unknown protocol returns 404" \
+   "$([[ $(status_of "$BASE/acompanhar?p=$unknown_protocol") == 404 ]] && echo 1 || echo 0)"
+ok "/acompanhar with a malformed protocol returns 404" \
+   "$([[ $(status_of "$BASE/acompanhar?p=abc") == 404 ]] && echo 1 || echo 0)"
+ok "unknown and malformed protocols return byte-identical bodies" \
+   "$([[ "$acomp_unknown" == "$acomp_short" ]] && echo 1 || echo 0)"
+ok "the not-found page says Protocolo não encontrado" \
+   "$(grep -q 'Protocolo não encontrado' <<<"$acomp_unknown" && echo 1 || echo 0)"
+
+acomp_headers=$(header_of "$BASE/acompanhar?p=$unknown_protocol")
+ok "/acompanhar sends Cache-Control: private, no-store" \
+   "$(grep -qi '^Cache-Control: private, no-store' <<<"$acomp_headers" && echo 1 || echo 0)" \
+   "$(grep -i '^Cache-Control' <<<"$acomp_headers")"
+ok "/acompanhar sends Referrer-Policy: no-referrer" \
+   "$(grep -qi '^Referrer-Policy: no-referrer' <<<"$acomp_headers" && echo 1 || echo 0)"
+ok "/acompanhar sends X-Robots-Tag: noindex" \
+   "$(grep -qi '^X-Robots-Tag: noindex' <<<"$acomp_headers" && echo 1 || echo 0)"
+ok "/acompanhar sets no cookie" \
+   "$(grep -qi '^Set-Cookie' <<<"$acomp_headers" && echo 0 || echo 1)"
+
+# The access log. nginx writes it to the container's stdout, so it is read
+# with `docker logs`; set NGINX_CONTAINER if yours is not called baja-nginx.
+# The random protocol requested above must not be in it, and the line for
+# that request must say [redacted] where the query string was.
+NGINX="${NGINX_CONTAINER:-baja-nginx}"
+if ! docker logs --since 2m "$NGINX" >/dev/null 2>&1; then
+    skip "the protocol is redacted in the access log" "no $NGINX container; set NGINX_CONTAINER"
+else
+    acomp_log=$(docker logs --since 2m "$NGINX" 2>/dev/null)
+    ok "the protocol is not written to the access log" \
+       "$(grep -qF -- "$unknown_protocol" <<<"$acomp_log" && echo 0 || echo 1)"
+    ok "the status page's log line shows p= as [redacted]" \
+       "$(grep -qE '"GET /acompanhar(\.php)?\?\[redacted\] ' <<<"$acomp_log" && echo 1 || echo 0)"
+fi
+
+# A real report, closed with a reply, read through nginx the way the link in
+# the email is followed. Needs the database, so it goes through the app
+# container like the check above; skipped without one.
+if ! docker exec "$APP" true 2>/dev/null; then
+    skip "a closed report through /acompanhar" "no $APP container; set APP_CONTAINER"
+else
+    acomp_mark="$(od -An -N4 -tx1 < /dev/urandom | tr -d ' \n')"
+    acomp_id=$(app_php '
+        $r = new Baja\Model\CertificadoRequerimento();
+        $r->setRequerimentoId(Baja\Certificado\Token::generate());
+        $r->setCaso("ausente");
+        $r->setEventoTexto("Evento de teste http, 2009");
+        $r->setDocumento("00000000191");
+        $r->setNome("ZZFixtureHttp Nome Privado " . $argv[1]);
+        $r->setEmail("zz-fixture-http-acomp-" . $argv[1] . "@example.org");
+        $r->setDescricao("Descricao privada " . $argv[1]);
+        $r->setResolucao("Nota interna " . $argv[1]);
+        $r->setResposta("Resposta publica " . $argv[1]);
+        $r->setStatus("resolvido");
+        $r->setCriadoEm(new DateTime());
+        $r->setResolvidoEm(new DateTime());
+        $r->save();
+        echo $r->getRequerimentoId();' "$acomp_mark")
+
+    acomp_body=$(body_of "$BASE/acompanhar?p=$acomp_id")
+    ok "a closed report's status page returns 200" \
+       "$([[ $(status_of "$BASE/acompanhar?p=$acomp_id") == 200 ]] && echo 1 || echo 0)"
+    ok "and shows Resolvido with the reply" \
+       "$(grep -q 'Resolvido' <<<"$acomp_body" && grep -q "Resposta publica $acomp_mark" <<<"$acomp_body" && echo 1 || echo 0)"
+    ok "and not the name, the email, the description or the internal note" \
+       "$(grep -qE "Nome Privado $acomp_mark|zz-fixture-http-acomp-$acomp_mark|Descricao privada $acomp_mark|Nota interna $acomp_mark" <<<"$acomp_body" && echo 0 || echo 1)"
+    ok "and not the document" \
+       "$(grep -q '00000000191' <<<"$acomp_body" && echo 0 || echo 1)"
+
+    app_php 'Baja\Model\CertificadoRequerimentoQuery::create()->filterByRequerimentoId($argv[1])->delete();' "$acomp_id" >/dev/null
+fi
+
 # --- POST /buscar is rate limited, reads are not -----------------------------
 #
 # nginx cannot select a location by method, and the internal rewrite to

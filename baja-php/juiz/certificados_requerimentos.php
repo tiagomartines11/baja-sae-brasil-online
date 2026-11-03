@@ -8,10 +8,12 @@ use Baja\Certificado\Insercao\Acesso;
 use Baja\Certificado\Insercao\Csrf;
 use Baja\Certificado\Insercao\Template;
 use Baja\Certificado\Insercao\Texto;
+use Baja\Certificado\Requerimento\Acompanhamento;
+use Baja\Certificado\Requerimento\Aviso;
 use Baja\Certificado\Requerimento\Caso;
-use Baja\Model\CertificadoRequerimento;
+use Baja\Certificado\Requerimento\Fechamento;
+use Baja\Certificado\Requerimento\Situacao;
 use Baja\Model\CertificadoRequerimentoQuery;
-use Baja\Model\EventoQuery;
 use Baja\Model\UserQuery;
 use Baja\Url;
 use Propel\Runtime\ActiveQuery\Criteria;
@@ -23,6 +25,12 @@ use Propel\Runtime\ActiveQuery\Criteria;
  * here and carries none of its contents, which is the whole reason the report
  * is stored rather than mailed: this page is behind the `certificados`
  * permission, the mailbox of everyone who holds it is not.
+ *
+ * Closing a report emails the participant the reply written here, and
+ * shows it on their status page (/acompanhar, BAJAAPP-88). What a save does
+ * — who is emailed, which duplicates close with it — is decided in
+ * Baja\Certificado\Requerimento\Fechamento; this page only collects the form
+ * and prints the outcome.
  *
  * Nothing on this page changes a certificate. It records a decision about a
  * report — looked at, acted on, refused — and the acting itself happens on
@@ -39,37 +47,31 @@ $usuario = Acesso::exigir();
 
 const FORMULARIO = 'certificado-requerimento';
 
-/** The status values, in the order a requerimento moves through them. */
-const STATUS = ['aberto', 'em_analise', 'resolvido', 'recusado'];
-
-/**
- * The two that end it, and so the two that owe an explanation.
- *
- * "Em análise" is not one of them: it says somebody picked this up, not that
- * anything was decided.
- */
-const FECHADOS = ['resolvido', 'recusado'];
-
-const STATUS_ROTULOS = [
-    'aberto'     => 'Aberto',
-    'em_analise' => 'Em análise',
-    'resolvido'  => 'Resolvido',
-    'recusado'   => 'Recusado',
-];
-
-/** How long a resolution note may be. Matches the column. */
-const RESOLUCAO_MAX = 1000;
-
 $id      = Texto::escalar($_GET['id'] ?? '');
 $filtro  = Texto::escalar($_GET['status'] ?? 'aberto');
 $erro    = '';
-$salvo   = false;
 
-if ($filtro !== 'todos' && !in_array($filtro, STATUS, true)) {
+/** What the last POST did, when it did something. */
+$salvamento = null;
+/** Whether that POST was "Reenviar" rather than the form's "Salvar". */
+$reenvio = false;
+
+if ($filtro !== 'todos' && !Situacao::valida($filtro)) {
     $filtro = 'aberto';
 }
 
 $requerimento = $id !== '' ? CertificadoRequerimentoQuery::create()->findPk($id) : null;
+
+/*
+ * What the form shows. The row's own values, except after a refused save,
+ * when it is what was typed: a reply somebody spent five minutes on must not
+ * vanish because they forgot to pick a status.
+ */
+$valores = $requerimento === null ? null : [
+    'status'    => (string) $requerimento->getStatus(),
+    'resposta'  => (string) $requerimento->getResposta(),
+    'resolucao' => (string) $requerimento->getResolucao(),
+];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!Csrf::postValido(FORMULARIO)) {
@@ -77,88 +79,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erro = 'Sessão expirada. Recarregue a página e tente de novo.';
     } elseif ($requerimento === null) {
         $erro = 'Requerimento não encontrado.';
+    } elseif (Texto::escalar($_POST['acao'] ?? '') === 'reenviar') {
+        $reenvio    = true;
+        $salvamento = Fechamento::padrao()->reenviar($requerimento);
     } else {
-        $novoStatus = Texto::escalar($_POST['status'] ?? '');
-        $resolucao  = Texto::limpar(Texto::escalar($_POST['resolucao'] ?? ''));
+        $postados = [
+            'status'    => Texto::escalar($_POST['status'] ?? ''),
+            'resposta'  => Texto::limpar(Texto::escalar($_POST['resposta'] ?? '')),
+            'resolucao' => Texto::limpar(Texto::escalar($_POST['resolucao'] ?? '')),
+        ];
 
-        if (!in_array($novoStatus, STATUS, true)) {
-            $erro = 'Escolha uma situação.';
-        } elseif (in_array($novoStatus, FECHADOS, true) && $resolucao === '') {
-            /*
-             * Only the two that end the requerimento have to say why. Six
-             * months later the question is never "was it closed" but "what was
-             * decided", and a closed row with no sentence answers the wrong
-             * one.
-             *
-             * "Em análise" is exempt, and asking there was a mistake: it means
-             * "I have picked this up", which somebody ticks in passing, before
-             * they have looked into anything and so before there is anything
-             * to write. A note demanded at that moment is a note nobody means,
-             * and the cost of it is that people skip the status instead —
-             * which loses the one signal that stops two people working the
-             * same requerimento.
-             */
-            $erro = 'Escreva o que foi decidido antes de encerrar o requerimento.';
-        } elseif (mb_strlen($resolucao, 'UTF-8') > RESOLUCAO_MAX) {
-            $erro = 'A anotação passa de ' . RESOLUCAO_MAX . ' caracteres.';
-        } else {
-            $requerimento->setStatus($novoStatus);
-            $requerimento->setResolucao($resolucao !== '' ? $resolucao : null);
+        $salvamento = Fechamento::padrao()->salvar(
+            $requerimento,
+            (int) $usuario->getUserId(),
+            $postados['status'],
+            $postados['resposta'],
+            $postados['resolucao'],
+            Texto::escalar($_POST['fechar_duplicados'] ?? '') === '1'
+        );
 
-            if (in_array($novoStatus, FECHADOS, true)) {
-                $requerimento->setResolvidoPor((int) $usuario->getUserId());
-                $requerimento->setResolvidoEm(new \DateTime());
-            } else {
-                /*
-                 * Reopening, or moving to "em análise", clears the attribution
-                 * rather than leaving the last person to close it named
-                 * against a requerimento that is open again.
-                 *
-                 * The column is `resolvido_por` and it means what it says.
-                 * Reusing it for "who picked this up" would put a name and a
-                 * timestamp on the page under "Fechado por", about a
-                 * requerimento nobody has closed.
-                 */
-                $requerimento->setResolvidoPor(null);
-                $requerimento->setResolvidoEm(null);
-            }
-
-            $requerimento->save();
-            $salvo = true;
+        if (!$salvamento->salvou()) {
+            $valores = $postados;
         }
+    }
+
+    if ($salvamento !== null && !$salvamento->salvou()) {
+        $erro = $salvamento->erro;
     }
 }
 
 $e = fn (string $v): string => Template::e($v);
 
-/** The event in words, from whichever column holds it. */
-$descreverEvento = static function (CertificadoRequerimento $r): string {
-    $codigo = $r->getEventoId();
-
-    if ($codigo !== null && $codigo !== '') {
-        $evento = EventoQuery::create()->findPk($codigo);
-
-        if ($evento !== null) {
-            return html_entity_decode(
-                (string) ($evento->getTitulo() ?: $evento->getNome()),
-                ENT_QUOTES | ENT_HTML5,
-                'UTF-8'
-            );
-        }
-
-        return $codigo;
-    }
-
-    $texto = (string) $r->getEventoTexto();
-
-    return $texto !== '' ? $texto . ' (informado pelo participante)' : 'não informado';
-};
+/** "1 e-mail" or "3 e-mails". */
+$emails = static fn (int $n): string => $n === 1 ? '1 e-mail' : $n . ' e-mails';
 
 Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 'Requerimentos de participantes', $usuario);
 ?>
 
-<?php if ($salvo): ?>
-    <div class="alerta ok"><strong>Situação atualizada.</strong></div>
+<?php if ($salvamento !== null && $salvamento->salvou()): ?>
+    <div class="alerta ok">
+        <strong><?= $reenvio ? 'Reenvio tentado.' : 'Situação atualizada.' ?></strong>
+        <?php if ($salvamento->fechadosJunto > 0): ?>
+            <?= $salvamento->fechadosJunto === 1
+                ? '1 duplicado foi encerrado junto.'
+                : $salvamento->fechadosJunto . ' duplicados foram encerrados junto.' ?>
+        <?php endif; ?>
+        <?php if ($salvamento->enviados() > 0): ?>
+            <?= $e($emails($salvamento->enviados()) . ' com a resposta '
+                . ($salvamento->enviados() === 1 ? 'foi enviado' : 'foram enviados') . '.') ?>
+        <?php endif; ?>
+    </div>
+    <?php if ($salvamento->naoEnviados !== []): ?>
+        <?php /*
+         * By protocol, with a link, because a failure on a duplicate closed
+         * together with this one is only visible on that duplicate's own
+         * page, and nobody would go and look.
+         */ ?>
+        <div class="alerta aviso">
+            <strong>O e-mail ao participante não foi enviado</strong> para
+            <?= count($salvamento->naoEnviados) === 1 ? 'este requerimento:' : 'estes requerimentos:' ?>
+            <?php foreach ($salvamento->naoEnviados as $i => $protocolo): ?>
+                <?= $i > 0 ? ', ' : '' ?><a href="certificados_requerimentos.php?id=<?= urlencode($protocolo) ?>"><code><?= $e($protocolo) ?></code></a>
+            <?php endforeach; ?>.
+            O encerramento foi salvo. Use "Reenviar" na página de cada um.
+        </div>
+    <?php endif; ?>
 <?php endif; ?>
 
 <?php if ($erro !== ''): ?>
@@ -188,13 +173,15 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
         ->filterByDuplicadoDe($requerimento->getRequerimentoId())
         ->orderByCriadoEm(Criteria::ASC)
         ->find();
+    $duplicadosAbertos = count(Fechamento::duplicadosAbertos($requerimento));
+    $jaFechado         = Situacao::fechada((string) $requerimento->getStatus());
     ?>
     <div class="card">
         <h1><?= $e(Caso::resumo((string) $requerimento->getCaso())) ?></h1>
         <p class="muted">
             Protocolo <code><?= $e((string) $requerimento->getRequerimentoId()) ?></code> ·
             recebido em <?= $e((string) $requerimento->getCriadoEm('d/m/Y H:i')) ?> ·
-            <?= $e(STATUS_ROTULOS[(string) $requerimento->getStatus()] ?? (string) $requerimento->getStatus()) ?>
+            <?= $e(Situacao::rotulo((string) $requerimento->getStatus())) ?>
         </p>
         <p><?= $e(Caso::rotulo((string) $requerimento->getCaso())) ?></p>
 
@@ -225,7 +212,7 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
                     <li>
                         <a href="certificados_requerimentos.php?id=<?= urlencode((string) $duplicado->getRequerimentoId()) ?>"><code><?= $e((string) $duplicado->getRequerimentoId()) ?></code></a>
                         · recebido em <?= $e((string) $duplicado->getCriadoEm('d/m/Y H:i')) ?>
-                        · <?= $e(STATUS_ROTULOS[(string) $duplicado->getStatus()] ?? (string) $duplicado->getStatus()) ?>
+                        · <?= $e(Situacao::rotulo((string) $duplicado->getStatus())) ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -257,7 +244,7 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
                 <dd><?= $e((string) $requerimento->getTelefone()) ?></dd>
             <?php endif; ?>
             <dt>Evento</dt>
-            <dd><?= $e($descreverEvento($requerimento)) ?></dd>
+            <dd><?= $e(Aviso::descreverEvento($requerimento)) ?></dd>
         </dl>
         <p class="muted" style="margin-top:16px">
             Estes dados foram digitados pelo participante e não estão conferidos. É o que
@@ -329,28 +316,99 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
             </p>
         <?php endif; ?>
 
+        <?php if (Fechamento::respostaPendente($requerimento)): ?>
+            <?php /*
+             * The closing is saved; only the email is missing. Its own form,
+             * with its own CSRF token, so that resending can never also save
+             * whatever happens to be in the fields below.
+             */ ?>
+            <div class="alerta aviso">
+                <p style="margin:0 0 8px">
+                    <strong>O e-mail ao participante não foi enviado.</strong>
+                    O requerimento está encerrado e a resposta aparece na página de
+                    acompanhamento, mas o e-mail com ela não saiu.
+                </p>
+                <form method="post" style="margin:0"
+                      action="certificados_requerimentos.php?id=<?= urlencode((string) $requerimento->getRequerimentoId()) ?>">
+                    <?= Csrf::campo(FORMULARIO) ?>
+                    <input type="hidden" name="acao" value="reenviar" />
+                    <button type="submit">Reenviar</button>
+                </form>
+            </div>
+        <?php elseif ($jaFechado && $requerimento->getRespondidoEm() !== null): ?>
+            <p class="muted">
+                Resposta enviada ao participante em
+                <?= $e((string) $requerimento->getRespondidoEm('d/m/Y H:i')) ?>.
+            </p>
+        <?php endif; ?>
+
         <form method="post" action="certificados_requerimentos.php?id=<?= urlencode((string) $requerimento->getRequerimentoId()) ?>">
             <?= Csrf::campo(FORMULARIO) ?>
             <div class="field">
                 <label for="status">Situação</label>
                 <select id="status" name="status">
-                    <?php foreach (STATUS as $valor): ?>
+                    <?php foreach (Situacao::TODOS as $valor): ?>
                         <option value="<?= $e($valor) ?>"
-                                <?= (string) $requerimento->getStatus() === $valor ? 'selected' : '' ?>>
-                            <?= $e(STATUS_ROTULOS[$valor]) ?>
+                                <?= $valores['status'] === $valor ? 'selected' : '' ?>>
+                            <?= $e(Situacao::rotulo($valor)) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="field">
-                <label for="resolucao">O que foi decidido</label>
-                <textarea id="resolucao" name="resolucao" rows="4"
-                          maxlength="<?= RESOLUCAO_MAX ?>"><?= $e((string) $requerimento->getResolucao()) ?></textarea>
+                <label for="resposta">Resposta ao participante</label>
+                <?php /*
+                 * Said plainly, above the box, because this is the field that
+                 * leaves the building. The old single field here was labelled
+                 * internal; anybody used to it would otherwise write an
+                 * internal note into the one box that is now emailed.
+                 */ ?>
+                <p class="muted" style="margin:0 0 6px">
+                    <strong>É enviada por e-mail</strong> ao endereço informado no
+                    requerimento (<?= $e((string) $requerimento->getEmail()) ?>) quando ele é
+                    encerrado, e aparece na
+                    <a href="<?= $e(Acompanhamento::url($requerimento)) ?>" target="_blank" rel="noreferrer">página de acompanhamento</a>.
+                    Obrigatória para Resolvido ou Recusado. Não escreva aqui nada que
+                    o participante não deva ler.
+                </p>
+                <textarea id="resposta" name="resposta" rows="4"
+                          maxlength="<?= Fechamento::TEXTO_MAX ?>"><?= $e($valores['resposta']) ?></textarea>
+            </div>
+            <div class="field">
+                <label for="resolucao">Anotação interna <span class="muted">(opcional)</span></label>
+                <textarea id="resolucao" name="resolucao" rows="3"
+                          maxlength="<?= Fechamento::TEXTO_MAX ?>"><?= $e($valores['resolucao']) ?></textarea>
                 <p class="muted" style="margin-top:6px">
-                    Fica no registro do requerimento, não é enviado ao participante.
-                    A resposta a ele continua sendo um e-mail seu.
+                    Fica só no registro do requerimento. Nunca é enviada ao participante
+                    nem aparece na página de acompanhamento.
                 </p>
             </div>
+            <?php if ($duplicadosAbertos > 0): ?>
+                <?php /*
+                 * Ticked by default on an open report, which is the case the
+                 * option exists for: one problem reported from several
+                 * addresses, answered once. Unticked on one already closed,
+                 * where saving is usually an edit to the note, and closing
+                 * other people's reports should not ride along with it.
+                 */ ?>
+                <div class="field">
+                    <label>
+                        <input type="checkbox" name="fechar_duplicados" value="1"
+                               <?= $jaFechado ? '' : 'checked' ?> />
+                        <span>
+                            Fechar também
+                            <?= $duplicadosAbertos === 1 ? 'o 1 duplicado aberto' : 'os ' . $duplicadosAbertos . ' duplicados abertos' ?>
+                            com a mesma resposta.
+                        </span>
+                    </label>
+                    <p class="alerta aviso" style="margin-top:6px">
+                        Se marcado, ao encerrar, a resposta vai por e-mail para
+                        <?= $duplicadosAbertos + 1 ?> endereços diferentes: o deste
+                        requerimento e o de cada duplicado. Os duplicados vieram de outros
+                        e-mails, e podem não ser da mesma pessoa.
+                    </p>
+                </div>
+            <?php endif; ?>
             <button type="submit">Salvar</button>
             <a class="btn btn-secondary" href="certificados_requerimentos.php">Voltar para a fila</a>
         </form>
@@ -380,9 +438,9 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
         <p class="voltar" style="margin:16px 0 0">
             <?php foreach (['aberto', 'em_analise', 'resolvido', 'recusado', 'todos'] as $opcao): ?>
                 <?php if ($opcao === $filtro): ?>
-                    <strong><?= $e($opcao === 'todos' ? 'Todos' : STATUS_ROTULOS[$opcao]) ?></strong>
+                    <strong><?= $e($opcao === 'todos' ? 'Todos' : Situacao::rotulo($opcao)) ?></strong>
                 <?php else: ?>
-                    <a href="certificados_requerimentos.php?status=<?= $e($opcao) ?>"><?= $e($opcao === 'todos' ? 'Todos' : STATUS_ROTULOS[$opcao]) ?></a>
+                    <a href="certificados_requerimentos.php?status=<?= $e($opcao) ?>"><?= $e($opcao === 'todos' ? 'Todos' : Situacao::rotulo($opcao)) ?></a>
                 <?php endif; ?>
                 <?= $opcao === 'todos' ? '' : '&emsp;&middot;&emsp;' ?>
             <?php endforeach; ?>
@@ -425,8 +483,8 @@ Template::printHeader($requerimento !== null ? 'Requerimento de participante' : 
                                     <br><span class="muted">Possível duplicado de <code><?= $e((string) $linha->getDuplicadoDe()) ?></code></span>
                                 <?php endif; ?>
                             </td>
-                            <td data-rotulo="Evento"><?= $e($descreverEvento($linha)) ?></td>
-                            <td data-rotulo="Situação"><?= $e(STATUS_ROTULOS[(string) $linha->getStatus()] ?? (string) $linha->getStatus()) ?></td>
+                            <td data-rotulo="Evento"><?= $e(Aviso::descreverEvento($linha)) ?></td>
+                            <td data-rotulo="Situação"><?= $e(Situacao::rotulo((string) $linha->getStatus())) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
