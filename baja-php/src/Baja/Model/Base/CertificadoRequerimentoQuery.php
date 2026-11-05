@@ -36,6 +36,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimentoQuery orderByResolvidoEm($order = Criteria::ASC) Order by the resolvido_em column
  * @method     ChildCertificadoRequerimentoQuery orderByResolucao($order = Criteria::ASC) Order by the resolucao column
  * @method     ChildCertificadoRequerimentoQuery orderByDuplicadoDe($order = Criteria::ASC) Order by the duplicado_de column
+ * @method     ChildCertificadoRequerimentoQuery orderByResposta($order = Criteria::ASC) Order by the resposta column
+ * @method     ChildCertificadoRequerimentoQuery orderByRespondidoEm($order = Criteria::ASC) Order by the respondido_em column
  *
  * @method     ChildCertificadoRequerimentoQuery groupByRequerimentoId() Group by the requerimento_id column
  * @method     ChildCertificadoRequerimentoQuery groupByCaso() Group by the caso column
@@ -54,6 +56,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimentoQuery groupByResolvidoEm() Group by the resolvido_em column
  * @method     ChildCertificadoRequerimentoQuery groupByResolucao() Group by the resolucao column
  * @method     ChildCertificadoRequerimentoQuery groupByDuplicadoDe() Group by the duplicado_de column
+ * @method     ChildCertificadoRequerimentoQuery groupByResposta() Group by the resposta column
+ * @method     ChildCertificadoRequerimentoQuery groupByRespondidoEm() Group by the respondido_em column
  *
  * @method     ChildCertificadoRequerimentoQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method     ChildCertificadoRequerimentoQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
@@ -115,6 +119,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimento|null findOneByResolvidoEm(string $resolvido_em) Return the first ChildCertificadoRequerimento filtered by the resolvido_em column
  * @method     ChildCertificadoRequerimento|null findOneByResolucao(string $resolucao) Return the first ChildCertificadoRequerimento filtered by the resolucao column
  * @method     ChildCertificadoRequerimento|null findOneByDuplicadoDe(string $duplicado_de) Return the first ChildCertificadoRequerimento filtered by the duplicado_de column
+ * @method     ChildCertificadoRequerimento|null findOneByResposta(string $resposta) Return the first ChildCertificadoRequerimento filtered by the resposta column
+ * @method     ChildCertificadoRequerimento|null findOneByRespondidoEm(string $respondido_em) Return the first ChildCertificadoRequerimento filtered by the respondido_em column
  *
  * @method     ChildCertificadoRequerimento requirePk($key, ?ConnectionInterface $con = null) Return the ChildCertificadoRequerimento by primary key and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildCertificadoRequerimento requireOne(?ConnectionInterface $con = null) Return the first ChildCertificadoRequerimento matching the query and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
@@ -136,6 +142,8 @@ use Propel\Runtime\Exception\PropelException;
  * @method     ChildCertificadoRequerimento requireOneByResolvidoEm(string $resolvido_em) Return the first ChildCertificadoRequerimento filtered by the resolvido_em column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildCertificadoRequerimento requireOneByResolucao(string $resolucao) Return the first ChildCertificadoRequerimento filtered by the resolucao column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  * @method     ChildCertificadoRequerimento requireOneByDuplicadoDe(string $duplicado_de) Return the first ChildCertificadoRequerimento filtered by the duplicado_de column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildCertificadoRequerimento requireOneByResposta(string $resposta) Return the first ChildCertificadoRequerimento filtered by the resposta column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
+ * @method     ChildCertificadoRequerimento requireOneByRespondidoEm(string $respondido_em) Return the first ChildCertificadoRequerimento filtered by the respondido_em column and throws \Propel\Runtime\Exception\EntityNotFoundException when not found
  *
  * @method     ChildCertificadoRequerimento[]|Collection find(?ConnectionInterface $con = null) Return ChildCertificadoRequerimento objects based on current ModelCriteria
  * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> find(?ConnectionInterface $con = null) Return ChildCertificadoRequerimento objects based on current ModelCriteria
@@ -174,6 +182,10 @@ use Propel\Runtime\Exception\PropelException;
  * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> findByResolucao(string|array<string> $resolucao) Return ChildCertificadoRequerimento objects filtered by the resolucao column
  * @method     ChildCertificadoRequerimento[]|Collection findByDuplicadoDe(string|array<string> $duplicado_de) Return ChildCertificadoRequerimento objects filtered by the duplicado_de column
  * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> findByDuplicadoDe(string|array<string> $duplicado_de) Return ChildCertificadoRequerimento objects filtered by the duplicado_de column
+ * @method     ChildCertificadoRequerimento[]|Collection findByResposta(string|array<string> $resposta) Return ChildCertificadoRequerimento objects filtered by the resposta column
+ * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> findByResposta(string|array<string> $resposta) Return ChildCertificadoRequerimento objects filtered by the resposta column
+ * @method     ChildCertificadoRequerimento[]|Collection findByRespondidoEm(string|array<string> $respondido_em) Return ChildCertificadoRequerimento objects filtered by the respondido_em column
+ * @psalm-method Collection&\Traversable<ChildCertificadoRequerimento> findByRespondidoEm(string|array<string> $respondido_em) Return ChildCertificadoRequerimento objects filtered by the respondido_em column
  *
  * @method     ChildCertificadoRequerimento[]|\Propel\Runtime\Util\PropelModelPager paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
  * @psalm-method \Propel\Runtime\Util\PropelModelPager&\Traversable<ChildCertificadoRequerimento> paginate($page = 1, $maxPerPage = 10, ?ConnectionInterface $con = null) Issue a SELECT query based on the current ModelCriteria and uses a page and a maximum number of results per page to compute an offset and a limit
@@ -273,7 +285,7 @@ abstract class CertificadoRequerimentoQuery extends ModelCriteria
      */
     protected function findPkSimple($key, ConnectionInterface $con)
     {
-        $sql = 'SELECT requerimento_id, caso, token, evento, evento_texto, documento, nome, email, telefone, descricao, criado_em, avisado_em, status, resolvido_por, resolvido_em, resolucao, duplicado_de FROM certificado_requerimento WHERE requerimento_id = :p0';
+        $sql = 'SELECT requerimento_id, caso, token, evento, evento_texto, documento, nome, email, telefone, descricao, criado_em, avisado_em, status, resolvido_por, resolvido_em, resolucao, duplicado_de, resposta, respondido_em FROM certificado_requerimento WHERE requerimento_id = :p0';
         try {
             $stmt = $con->prepare($sql);
             $stmt->bindValue(':p0', $key, PDO::PARAM_STR);
@@ -921,6 +933,79 @@ abstract class CertificadoRequerimentoQuery extends ModelCriteria
         }
 
         $this->addUsingAlias(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE, $duplicadoDe, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the resposta column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByResposta('fooValue');   // WHERE resposta = 'fooValue'
+     * $query->filterByResposta('%fooValue%', Criteria::LIKE); // WHERE resposta LIKE '%fooValue%'
+     * $query->filterByResposta(['foo', 'bar']); // WHERE resposta IN ('foo', 'bar')
+     * </code>
+     *
+     * @param string|string[] $resposta The value to use as filter.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByResposta($resposta = null, ?string $comparison = null)
+    {
+        if (null === $comparison) {
+            if (is_array($resposta)) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(CertificadoRequerimentoTableMap::COL_RESPOSTA, $resposta, $comparison);
+
+        return $this;
+    }
+
+    /**
+     * Filter the query on the respondido_em column
+     *
+     * Example usage:
+     * <code>
+     * $query->filterByRespondidoEm('2011-03-14'); // WHERE respondido_em = '2011-03-14'
+     * $query->filterByRespondidoEm('now'); // WHERE respondido_em = '2011-03-14'
+     * $query->filterByRespondidoEm(array('max' => 'yesterday')); // WHERE respondido_em > '2011-03-13'
+     * </code>
+     *
+     * @param mixed $respondidoEm The value to use as filter.
+     *              Values can be integers (unix timestamps), DateTime objects, or strings.
+     *              Empty strings are treated as NULL.
+     *              Use scalar values for equality.
+     *              Use array values for in_array() equivalent.
+     *              Use associative array('min' => $minValue, 'max' => $maxValue) for intervals.
+     * @param string|null $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return $this The current query, for fluid interface
+     */
+    public function filterByRespondidoEm($respondidoEm = null, ?string $comparison = null)
+    {
+        if (is_array($respondidoEm)) {
+            $useMinMax = false;
+            if (isset($respondidoEm['min'])) {
+                $this->addUsingAlias(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM, $respondidoEm['min'], Criteria::GREATER_EQUAL);
+                $useMinMax = true;
+            }
+            if (isset($respondidoEm['max'])) {
+                $this->addUsingAlias(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM, $respondidoEm['max'], Criteria::LESS_EQUAL);
+                $useMinMax = true;
+            }
+            if ($useMinMax) {
+                return $this;
+            }
+            if (null === $comparison) {
+                $comparison = Criteria::IN;
+            }
+        }
+
+        $this->addUsingAlias(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM, $respondidoEm, $comparison);
 
         return $this;
     }

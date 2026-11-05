@@ -63,7 +63,7 @@ class CertificadoRequerimentoTableMap extends TableMap
     /**
      * The total number of columns
      */
-    public const NUM_COLUMNS = 17;
+    public const NUM_COLUMNS = 19;
 
     /**
      * The number of lazy-loaded columns
@@ -73,7 +73,7 @@ class CertificadoRequerimentoTableMap extends TableMap
     /**
      * The number of columns to hydrate (NUM_COLUMNS - NUM_LAZY_LOAD_COLUMNS)
      */
-    public const NUM_HYDRATE_COLUMNS = 17;
+    public const NUM_HYDRATE_COLUMNS = 19;
 
     /**
      * the column name for the requerimento_id field
@@ -161,6 +161,16 @@ class CertificadoRequerimentoTableMap extends TableMap
     public const COL_DUPLICADO_DE = 'certificado_requerimento.duplicado_de';
 
     /**
+     * the column name for the resposta field
+     */
+    public const COL_RESPOSTA = 'certificado_requerimento.resposta';
+
+    /**
+     * the column name for the respondido_em field
+     */
+    public const COL_RESPONDIDO_EM = 'certificado_requerimento.respondido_em';
+
+    /**
      * The default string format for model objects of the related table
      */
     public const DEFAULT_STRING_FORMAT = 'YAML';
@@ -185,11 +195,11 @@ class CertificadoRequerimentoTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldNames = [
-        self::TYPE_PHPNAME       => ['RequerimentoId', 'Caso', 'Token', 'EventoId', 'EventoTexto', 'Documento', 'Nome', 'Email', 'Telefone', 'Descricao', 'CriadoEm', 'AvisadoEm', 'Status', 'ResolvidoPor', 'ResolvidoEm', 'Resolucao', 'DuplicadoDe', ],
-        self::TYPE_CAMELNAME     => ['requerimentoId', 'caso', 'token', 'eventoId', 'eventoTexto', 'documento', 'nome', 'email', 'telefone', 'descricao', 'criadoEm', 'avisadoEm', 'status', 'resolvidoPor', 'resolvidoEm', 'resolucao', 'duplicadoDe', ],
-        self::TYPE_COLNAME       => [CertificadoRequerimentoTableMap::COL_REQUERIMENTO_ID, CertificadoRequerimentoTableMap::COL_CASO, CertificadoRequerimentoTableMap::COL_TOKEN, CertificadoRequerimentoTableMap::COL_EVENTO, CertificadoRequerimentoTableMap::COL_EVENTO_TEXTO, CertificadoRequerimentoTableMap::COL_DOCUMENTO, CertificadoRequerimentoTableMap::COL_NOME, CertificadoRequerimentoTableMap::COL_EMAIL, CertificadoRequerimentoTableMap::COL_TELEFONE, CertificadoRequerimentoTableMap::COL_DESCRICAO, CertificadoRequerimentoTableMap::COL_CRIADO_EM, CertificadoRequerimentoTableMap::COL_AVISADO_EM, CertificadoRequerimentoTableMap::COL_STATUS, CertificadoRequerimentoTableMap::COL_RESOLVIDO_POR, CertificadoRequerimentoTableMap::COL_RESOLVIDO_EM, CertificadoRequerimentoTableMap::COL_RESOLUCAO, CertificadoRequerimentoTableMap::COL_DUPLICADO_DE, ],
-        self::TYPE_FIELDNAME     => ['requerimento_id', 'caso', 'token', 'evento', 'evento_texto', 'documento', 'nome', 'email', 'telefone', 'descricao', 'criado_em', 'avisado_em', 'status', 'resolvido_por', 'resolvido_em', 'resolucao', 'duplicado_de', ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ]
+        self::TYPE_PHPNAME       => ['RequerimentoId', 'Caso', 'Token', 'EventoId', 'EventoTexto', 'Documento', 'Nome', 'Email', 'Telefone', 'Descricao', 'CriadoEm', 'AvisadoEm', 'Status', 'ResolvidoPor', 'ResolvidoEm', 'Resolucao', 'DuplicadoDe', 'Resposta', 'RespondidoEm', ],
+        self::TYPE_CAMELNAME     => ['requerimentoId', 'caso', 'token', 'eventoId', 'eventoTexto', 'documento', 'nome', 'email', 'telefone', 'descricao', 'criadoEm', 'avisadoEm', 'status', 'resolvidoPor', 'resolvidoEm', 'resolucao', 'duplicadoDe', 'resposta', 'respondidoEm', ],
+        self::TYPE_COLNAME       => [CertificadoRequerimentoTableMap::COL_REQUERIMENTO_ID, CertificadoRequerimentoTableMap::COL_CASO, CertificadoRequerimentoTableMap::COL_TOKEN, CertificadoRequerimentoTableMap::COL_EVENTO, CertificadoRequerimentoTableMap::COL_EVENTO_TEXTO, CertificadoRequerimentoTableMap::COL_DOCUMENTO, CertificadoRequerimentoTableMap::COL_NOME, CertificadoRequerimentoTableMap::COL_EMAIL, CertificadoRequerimentoTableMap::COL_TELEFONE, CertificadoRequerimentoTableMap::COL_DESCRICAO, CertificadoRequerimentoTableMap::COL_CRIADO_EM, CertificadoRequerimentoTableMap::COL_AVISADO_EM, CertificadoRequerimentoTableMap::COL_STATUS, CertificadoRequerimentoTableMap::COL_RESOLVIDO_POR, CertificadoRequerimentoTableMap::COL_RESOLVIDO_EM, CertificadoRequerimentoTableMap::COL_RESOLUCAO, CertificadoRequerimentoTableMap::COL_DUPLICADO_DE, CertificadoRequerimentoTableMap::COL_RESPOSTA, CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM, ],
+        self::TYPE_FIELDNAME     => ['requerimento_id', 'caso', 'token', 'evento', 'evento_texto', 'documento', 'nome', 'email', 'telefone', 'descricao', 'criado_em', 'avisado_em', 'status', 'resolvido_por', 'resolvido_em', 'resolucao', 'duplicado_de', 'resposta', 'respondido_em', ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, ]
     ];
 
     /**
@@ -201,11 +211,11 @@ class CertificadoRequerimentoTableMap extends TableMap
      * @var array<string, mixed>
      */
     protected static $fieldKeys = [
-        self::TYPE_PHPNAME       => ['RequerimentoId' => 0, 'Caso' => 1, 'Token' => 2, 'EventoId' => 3, 'EventoTexto' => 4, 'Documento' => 5, 'Nome' => 6, 'Email' => 7, 'Telefone' => 8, 'Descricao' => 9, 'CriadoEm' => 10, 'AvisadoEm' => 11, 'Status' => 12, 'ResolvidoPor' => 13, 'ResolvidoEm' => 14, 'Resolucao' => 15, 'DuplicadoDe' => 16, ],
-        self::TYPE_CAMELNAME     => ['requerimentoId' => 0, 'caso' => 1, 'token' => 2, 'eventoId' => 3, 'eventoTexto' => 4, 'documento' => 5, 'nome' => 6, 'email' => 7, 'telefone' => 8, 'descricao' => 9, 'criadoEm' => 10, 'avisadoEm' => 11, 'status' => 12, 'resolvidoPor' => 13, 'resolvidoEm' => 14, 'resolucao' => 15, 'duplicadoDe' => 16, ],
-        self::TYPE_COLNAME       => [CertificadoRequerimentoTableMap::COL_REQUERIMENTO_ID => 0, CertificadoRequerimentoTableMap::COL_CASO => 1, CertificadoRequerimentoTableMap::COL_TOKEN => 2, CertificadoRequerimentoTableMap::COL_EVENTO => 3, CertificadoRequerimentoTableMap::COL_EVENTO_TEXTO => 4, CertificadoRequerimentoTableMap::COL_DOCUMENTO => 5, CertificadoRequerimentoTableMap::COL_NOME => 6, CertificadoRequerimentoTableMap::COL_EMAIL => 7, CertificadoRequerimentoTableMap::COL_TELEFONE => 8, CertificadoRequerimentoTableMap::COL_DESCRICAO => 9, CertificadoRequerimentoTableMap::COL_CRIADO_EM => 10, CertificadoRequerimentoTableMap::COL_AVISADO_EM => 11, CertificadoRequerimentoTableMap::COL_STATUS => 12, CertificadoRequerimentoTableMap::COL_RESOLVIDO_POR => 13, CertificadoRequerimentoTableMap::COL_RESOLVIDO_EM => 14, CertificadoRequerimentoTableMap::COL_RESOLUCAO => 15, CertificadoRequerimentoTableMap::COL_DUPLICADO_DE => 16, ],
-        self::TYPE_FIELDNAME     => ['requerimento_id' => 0, 'caso' => 1, 'token' => 2, 'evento' => 3, 'evento_texto' => 4, 'documento' => 5, 'nome' => 6, 'email' => 7, 'telefone' => 8, 'descricao' => 9, 'criado_em' => 10, 'avisado_em' => 11, 'status' => 12, 'resolvido_por' => 13, 'resolvido_em' => 14, 'resolucao' => 15, 'duplicado_de' => 16, ],
-        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ]
+        self::TYPE_PHPNAME       => ['RequerimentoId' => 0, 'Caso' => 1, 'Token' => 2, 'EventoId' => 3, 'EventoTexto' => 4, 'Documento' => 5, 'Nome' => 6, 'Email' => 7, 'Telefone' => 8, 'Descricao' => 9, 'CriadoEm' => 10, 'AvisadoEm' => 11, 'Status' => 12, 'ResolvidoPor' => 13, 'ResolvidoEm' => 14, 'Resolucao' => 15, 'DuplicadoDe' => 16, 'Resposta' => 17, 'RespondidoEm' => 18, ],
+        self::TYPE_CAMELNAME     => ['requerimentoId' => 0, 'caso' => 1, 'token' => 2, 'eventoId' => 3, 'eventoTexto' => 4, 'documento' => 5, 'nome' => 6, 'email' => 7, 'telefone' => 8, 'descricao' => 9, 'criadoEm' => 10, 'avisadoEm' => 11, 'status' => 12, 'resolvidoPor' => 13, 'resolvidoEm' => 14, 'resolucao' => 15, 'duplicadoDe' => 16, 'resposta' => 17, 'respondidoEm' => 18, ],
+        self::TYPE_COLNAME       => [CertificadoRequerimentoTableMap::COL_REQUERIMENTO_ID => 0, CertificadoRequerimentoTableMap::COL_CASO => 1, CertificadoRequerimentoTableMap::COL_TOKEN => 2, CertificadoRequerimentoTableMap::COL_EVENTO => 3, CertificadoRequerimentoTableMap::COL_EVENTO_TEXTO => 4, CertificadoRequerimentoTableMap::COL_DOCUMENTO => 5, CertificadoRequerimentoTableMap::COL_NOME => 6, CertificadoRequerimentoTableMap::COL_EMAIL => 7, CertificadoRequerimentoTableMap::COL_TELEFONE => 8, CertificadoRequerimentoTableMap::COL_DESCRICAO => 9, CertificadoRequerimentoTableMap::COL_CRIADO_EM => 10, CertificadoRequerimentoTableMap::COL_AVISADO_EM => 11, CertificadoRequerimentoTableMap::COL_STATUS => 12, CertificadoRequerimentoTableMap::COL_RESOLVIDO_POR => 13, CertificadoRequerimentoTableMap::COL_RESOLVIDO_EM => 14, CertificadoRequerimentoTableMap::COL_RESOLUCAO => 15, CertificadoRequerimentoTableMap::COL_DUPLICADO_DE => 16, CertificadoRequerimentoTableMap::COL_RESPOSTA => 17, CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM => 18, ],
+        self::TYPE_FIELDNAME     => ['requerimento_id' => 0, 'caso' => 1, 'token' => 2, 'evento' => 3, 'evento_texto' => 4, 'documento' => 5, 'nome' => 6, 'email' => 7, 'telefone' => 8, 'descricao' => 9, 'criado_em' => 10, 'avisado_em' => 11, 'status' => 12, 'resolvido_por' => 13, 'resolvido_em' => 14, 'resolucao' => 15, 'duplicado_de' => 16, 'resposta' => 17, 'respondido_em' => 18, ],
+        self::TYPE_NUM           => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, ]
     ];
 
     /**
@@ -341,6 +351,21 @@ class CertificadoRequerimentoTableMap extends TableMap
         'COL_DUPLICADO_DE' => 'DUPLICADO_DE',
         'duplicado_de' => 'DUPLICADO_DE',
         'certificado_requerimento.duplicado_de' => 'DUPLICADO_DE',
+        'Resposta' => 'RESPOSTA',
+        'CertificadoRequerimento.Resposta' => 'RESPOSTA',
+        'resposta' => 'RESPOSTA',
+        'certificadoRequerimento.resposta' => 'RESPOSTA',
+        'CertificadoRequerimentoTableMap::COL_RESPOSTA' => 'RESPOSTA',
+        'COL_RESPOSTA' => 'RESPOSTA',
+        'certificado_requerimento.resposta' => 'RESPOSTA',
+        'RespondidoEm' => 'RESPONDIDO_EM',
+        'CertificadoRequerimento.RespondidoEm' => 'RESPONDIDO_EM',
+        'respondidoEm' => 'RESPONDIDO_EM',
+        'certificadoRequerimento.respondidoEm' => 'RESPONDIDO_EM',
+        'CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM' => 'RESPONDIDO_EM',
+        'COL_RESPONDIDO_EM' => 'RESPONDIDO_EM',
+        'respondido_em' => 'RESPONDIDO_EM',
+        'certificado_requerimento.respondido_em' => 'RESPONDIDO_EM',
     ];
 
     /**
@@ -428,6 +453,8 @@ class CertificadoRequerimentoTableMap extends TableMap
         $this->addColumn('resolvido_em', 'ResolvidoEm', 'TIMESTAMP', false, null, null);
         $this->addColumn('resolucao', 'Resolucao', 'VARCHAR', false, 1000, null);
         $this->addForeignKey('duplicado_de', 'DuplicadoDe', 'CHAR', 'certificado_requerimento', 'requerimento_id', false, 22, null);
+        $this->addColumn('resposta', 'Resposta', 'VARCHAR', false, 1000, null);
+        $this->addColumn('respondido_em', 'RespondidoEm', 'TIMESTAMP', false, null, null);
     }
 
     /**
@@ -629,6 +656,8 @@ class CertificadoRequerimentoTableMap extends TableMap
             $criteria->addSelectColumn(CertificadoRequerimentoTableMap::COL_RESOLVIDO_EM);
             $criteria->addSelectColumn(CertificadoRequerimentoTableMap::COL_RESOLUCAO);
             $criteria->addSelectColumn(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE);
+            $criteria->addSelectColumn(CertificadoRequerimentoTableMap::COL_RESPOSTA);
+            $criteria->addSelectColumn(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM);
         } else {
             $criteria->addSelectColumn($alias . '.requerimento_id');
             $criteria->addSelectColumn($alias . '.caso');
@@ -647,6 +676,8 @@ class CertificadoRequerimentoTableMap extends TableMap
             $criteria->addSelectColumn($alias . '.resolvido_em');
             $criteria->addSelectColumn($alias . '.resolucao');
             $criteria->addSelectColumn($alias . '.duplicado_de');
+            $criteria->addSelectColumn($alias . '.resposta');
+            $criteria->addSelectColumn($alias . '.respondido_em');
         }
     }
 
@@ -682,6 +713,8 @@ class CertificadoRequerimentoTableMap extends TableMap
             $criteria->removeSelectColumn(CertificadoRequerimentoTableMap::COL_RESOLVIDO_EM);
             $criteria->removeSelectColumn(CertificadoRequerimentoTableMap::COL_RESOLUCAO);
             $criteria->removeSelectColumn(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE);
+            $criteria->removeSelectColumn(CertificadoRequerimentoTableMap::COL_RESPOSTA);
+            $criteria->removeSelectColumn(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM);
         } else {
             $criteria->removeSelectColumn($alias . '.requerimento_id');
             $criteria->removeSelectColumn($alias . '.caso');
@@ -700,6 +733,8 @@ class CertificadoRequerimentoTableMap extends TableMap
             $criteria->removeSelectColumn($alias . '.resolvido_em');
             $criteria->removeSelectColumn($alias . '.resolucao');
             $criteria->removeSelectColumn($alias . '.duplicado_de');
+            $criteria->removeSelectColumn($alias . '.resposta');
+            $criteria->removeSelectColumn($alias . '.respondido_em');
         }
     }
 

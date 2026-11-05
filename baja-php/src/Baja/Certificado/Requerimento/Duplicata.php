@@ -38,7 +38,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 final class Duplicata
 {
     /** The statuses that still count as somebody's open request. */
-    public const ABERTOS = ['aberto', 'em_analise'];
+    public const ABERTOS = Situacao::ABERTOS;
 
     /**
      * How long an open report about a certificate keeps quiet the staff alert

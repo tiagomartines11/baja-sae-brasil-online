@@ -11,9 +11,11 @@ use Baja\Util\Mailer;
 use Baja\Util\Turnstile;
 
 /**
- * The two messages a report sends.
+ * The three messages a report sends: the staff alert and the participant's
+ * receipt when it arrives, and the participant's reply when it is closed
+ * (BAJAAPP-88).
  *
- * Neither carries the report. That is the point of storing it: the row lives
+ * None carries the report. That is the point of storing it: the row lives
  * in `certificado_requerimento` behind the `certificados` permission, where it has
  * a retention policy, an access decision, and a record of who acted on it.
  * An email has none of those — it is copied to every mailbox it reaches, kept
@@ -31,6 +33,11 @@ use Baja\Util\Turnstile;
  * because the address in the form is unverified, and a form that emails
  * attacker-supplied text to an arbitrary address is a spam relay with SAE
  * BRASIL on the return path.
+ *
+ * The reply on closing follows the same rule. The only free text in it is
+ * `resposta`, which staff wrote knowing it would be sent; the description,
+ * the name, the document and the internal note (`resolucao`) stay out,
+ * because the address is still the unverified one from the form.
  */
 final class Aviso
 {
@@ -140,7 +147,12 @@ final class Aviso
             'Recebido:  ' . $requerimento->getCriadoEm('d/m/Y H:i'),
             '',
             'O que acontece agora: a equipe responsável pelos certificados vai analisar',
-            'o pedido e responder por este e-mail. Guarde o número de protocolo acima.',
+            'o pedido. Você pode acompanhar a situação dele neste link:',
+            '',
+            Acompanhamento::url($requerimento),
+            '',
+            'Quando o requerimento for encerrado, a resposta chega por e-mail, neste',
+            'mesmo endereço. Guarde o número de protocolo acima.',
             '',
             'Enquanto isso, nada muda: certificados já emitidos continuam válidos e',
             'verificáveis.',
@@ -168,13 +180,74 @@ final class Aviso
     }
 
     /**
+     * The participant's reply, sent when staff close the report.
+     *
+     * To the one address in this row and nobody else: a report closed
+     * together with its duplicates sends one of these per row, each to its
+     * own address, so no participant ever sees another's address.
+     *
+     * @return bool whether the relay accepted it. Fechamento records a yes in
+     *              `respondido_em`; a no leaves it null and the staff page
+     *              offers "Reenviar".
+     */
+    public static function responderAoParticipante(CertificadoRequerimento $requerimento): bool
+    {
+        return Mailer::enviar(
+            [(string) $requerimento->getEmail()],
+            'Resposta ao seu requerimento sobre certificados, protocolo ' . $requerimento->getRequerimentoId(),
+            self::textoDaResposta($requerimento)
+        );
+    }
+
+    /**
+     * The reply's body, as the participant will read it.
+     *
+     * Apart from the send for the reason textoDoRecibo() is: so a test can
+     * read what it says and, more to the point, what it leaves out.
+     */
+    public static function textoDaResposta(CertificadoRequerimento $requerimento): string
+    {
+        $linhas = [
+            'O seu requerimento sobre certificados SAE BRASIL foi encerrado.',
+            '',
+            'Protocolo: ' . $requerimento->getRequerimentoId(),
+            'Tipo:      ' . Caso::resumo((string) $requerimento->getCaso()),
+            'Evento:    ' . self::descreverEvento($requerimento),
+            'Situação:  ' . Situacao::rotulo((string) $requerimento->getStatus()),
+            '',
+            'Resposta da equipe:',
+            '',
+            (string) $requerimento->getResposta(),
+            '',
+            'A situação do requerimento continua disponível neste link:',
+            '',
+            Acompanhamento::url($requerimento),
+            '',
+            '--',
+            'Para pedir acesso, correção ou exclusão dos seus dados de contato, responda a',
+            'este e-mail citando o protocolo.',
+        ];
+
+        $privacyNoticeUrl = Config::privacyNoticeUrl();
+
+        if ($privacyNoticeUrl !== '') {
+            $linhas[] = '';
+            $linhas[] = 'Aviso de Privacidade: ' . $privacyNoticeUrl;
+        }
+
+        return implode("\n", $linhas) . "\n";
+    }
+
+    /**
      * The event in words, whichever of the two columns holds it.
      *
      * "não informado" is a real answer here: a report that a certificate is
      * missing may name an event this system has never heard of, which is
      * exactly the case the free-text field exists for.
+     *
+     * Public because the status page says it in the same words the emails do.
      */
-    private static function descreverEvento(CertificadoRequerimento $requerimento): string
+    public static function descreverEvento(CertificadoRequerimento $requerimento): string
     {
         $codigo = $requerimento->getEventoId();
 

@@ -188,6 +188,20 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     protected $duplicado_de;
 
     /**
+     * The value for the resposta field.
+     *
+     * @var        string|null
+     */
+    protected $resposta;
+
+    /**
+     * The value for the respondido_em field.
+     *
+     * @var        DateTime|null
+     */
+    protected $respondido_em;
+
+    /**
      * @var        ChildUser
      */
     protected $aUser;
@@ -683,6 +697,38 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     }
 
     /**
+     * Get the [resposta] column value.
+     *
+     * @return string|null
+     */
+    public function getResposta()
+    {
+        return $this->resposta;
+    }
+
+    /**
+     * Get the [optionally formatted] temporal [respondido_em] column value.
+     *
+     *
+     * @param string|null $format The date/time format string (either date()-style or strftime()-style).
+     *   If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime|null Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL, and 0 if column value is 0000-00-00 00:00:00.
+     *
+     * @throws \Propel\Runtime\Exception\PropelException - if unable to parse/validate the date/time value.
+     *
+     * @psalm-return ($format is null ? DateTime|null : string|null)
+     */
+    public function getRespondidoEm($format = null)
+    {
+        if ($format === null) {
+            return $this->respondido_em;
+        } else {
+            return $this->respondido_em instanceof \DateTimeInterface ? $this->respondido_em->format($format) : null;
+        }
+    }
+
+    /**
      * Set the value of [requerimento_id] column.
      *
      * @param string $v New value
@@ -1041,6 +1087,46 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [resposta] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setResposta($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->resposta !== $v) {
+            $this->resposta = $v;
+            $this->modifiedColumns[CertificadoRequerimentoTableMap::COL_RESPOSTA] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Sets the value of [respondido_em] column to a normalized version of the date/time value specified.
+     *
+     * @param string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this The current object (for fluent API support)
+     */
+    public function setRespondidoEm($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->respondido_em !== null || $dt !== null) {
+            if ($this->respondido_em === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->respondido_em->format("Y-m-d H:i:s.u")) {
+                $this->respondido_em = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -1140,6 +1226,15 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 16 + $startcol : CertificadoRequerimentoTableMap::translateFieldName('DuplicadoDe', TableMap::TYPE_PHPNAME, $indexType)];
             $this->duplicado_de = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 17 + $startcol : CertificadoRequerimentoTableMap::translateFieldName('Resposta', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->resposta = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 18 + $startcol : CertificadoRequerimentoTableMap::translateFieldName('RespondidoEm', TableMap::TYPE_PHPNAME, $indexType)];
+            if ($col === '0000-00-00 00:00:00') {
+                $col = null;
+            }
+            $this->respondido_em = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -1147,7 +1242,7 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 17; // 17 = CertificadoRequerimentoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 19; // 19 = CertificadoRequerimentoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\CertificadoRequerimento'), 0, $e);
@@ -1443,6 +1538,12 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE)) {
             $modifiedColumns[':p' . $index++]  = 'duplicado_de';
         }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESPOSTA)) {
+            $modifiedColumns[':p' . $index++]  = 'resposta';
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM)) {
+            $modifiedColumns[':p' . $index++]  = 'respondido_em';
+        }
 
         $sql = sprintf(
             'INSERT INTO certificado_requerimento (%s) VALUES (%s)',
@@ -1520,6 +1621,14 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
                         break;
                     case 'duplicado_de':
                         $stmt->bindValue($identifier, $this->duplicado_de, PDO::PARAM_STR);
+
+                        break;
+                    case 'resposta':
+                        $stmt->bindValue($identifier, $this->resposta, PDO::PARAM_STR);
+
+                        break;
+                    case 'respondido_em':
+                        $stmt->bindValue($identifier, $this->respondido_em ? $this->respondido_em->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
 
                         break;
                 }
@@ -1628,6 +1737,12 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
             case 16:
                 return $this->getDuplicadoDe();
 
+            case 17:
+                return $this->getResposta();
+
+            case 18:
+                return $this->getRespondidoEm();
+
             default:
                 return null;
         } // switch()
@@ -1673,6 +1788,8 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
             $keys[14] => $this->getResolvidoEm(),
             $keys[15] => $this->getResolucao(),
             $keys[16] => $this->getDuplicadoDe(),
+            $keys[17] => $this->getResposta(),
+            $keys[18] => $this->getRespondidoEm(),
         ];
         if ($result[$keys[10]] instanceof \DateTimeInterface) {
             $result[$keys[10]] = $result[$keys[10]]->format('Y-m-d H:i:s.u');
@@ -1684,6 +1801,10 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
 
         if ($result[$keys[14]] instanceof \DateTimeInterface) {
             $result[$keys[14]] = $result[$keys[14]]->format('Y-m-d H:i:s.u');
+        }
+
+        if ($result[$keys[18]] instanceof \DateTimeInterface) {
+            $result[$keys[18]] = $result[$keys[18]]->format('Y-m-d H:i:s.u');
         }
 
         $virtualColumns = $this->virtualColumns;
@@ -1832,6 +1953,12 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
             case 16:
                 $this->setDuplicadoDe($value);
                 break;
+            case 17:
+                $this->setResposta($value);
+                break;
+            case 18:
+                $this->setRespondidoEm($value);
+                break;
         } // switch()
 
         return $this;
@@ -1908,6 +2035,12 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         }
         if (array_key_exists($keys[16], $arr)) {
             $this->setDuplicadoDe($arr[$keys[16]]);
+        }
+        if (array_key_exists($keys[17], $arr)) {
+            $this->setResposta($arr[$keys[17]]);
+        }
+        if (array_key_exists($keys[18], $arr)) {
+            $this->setRespondidoEm($arr[$keys[18]]);
         }
 
         return $this;
@@ -2002,6 +2135,12 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE)) {
             $criteria->add(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE, $this->duplicado_de);
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESPOSTA)) {
+            $criteria->add(CertificadoRequerimentoTableMap::COL_RESPOSTA, $this->resposta);
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM)) {
+            $criteria->add(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM, $this->respondido_em);
         }
 
         return $criteria;
@@ -2108,6 +2247,8 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         $copyObj->setResolvidoEm($this->getResolvidoEm());
         $copyObj->setResolucao($this->getResolucao());
         $copyObj->setDuplicadoDe($this->getDuplicadoDe());
+        $copyObj->setResposta($this->getResposta());
+        $copyObj->setRespondidoEm($this->getRespondidoEm());
 
         if ($deepCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -2565,6 +2706,8 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         $this->resolvido_em = null;
         $this->resolucao = null;
         $this->duplicado_de = null;
+        $this->resposta = null;
+        $this->respondido_em = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();

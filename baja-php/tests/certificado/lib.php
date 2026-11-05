@@ -149,3 +149,56 @@ function test_user_id(): int
 
     return $id = (int) $user->getUserId();
 }
+
+/**
+ * Render one public certificate page the way the web server would, and give
+ * back what a browser would receive: the HTTP status and the HTML.
+ *
+ * The page runs in a fresh `php` process, as it would under php-fpm, with
+ * the request built by pagina_prelude.php from $get, $post and $server.
+ * SKIP_AUTH is set because the certificate vhost sets it: these pages have
+ * no forum session. Needs the database, like the pages do.
+ *
+ * @param string               $script  path under baja-php/, e.g. 'certificado/acompanhar.php'
+ * @param array<string, mixed> $get     the query string, as $_GET
+ * @param array<string, mixed> $post    the form, as $_POST; non-empty means a POST
+ * @param array<string, mixed> $server  extra $_SERVER values, e.g. REMOTE_ADDR
+ *
+ * @return array{status: int, html: string}
+ */
+function render_page(string $script, array $get = [], array $post = [], array $server = []): array
+{
+    $raiz = dirname(__DIR__, 2);
+
+    $ambiente = getenv();
+    $ambiente['SKIP_AUTH'] = '1';
+    $ambiente['BAJA_TEST_PEDIDO'] = json_encode([
+        'get'    => $get,
+        'post'   => $post,
+        'server' => ['REQUEST_METHOD' => $post === [] ? 'GET' : 'POST'] + $server,
+    ]);
+
+    $processo = proc_open(
+        [PHP_BINARY, '-d', 'auto_prepend_file=' . __DIR__ . '/pagina_prelude.php', $raiz . '/' . $script],
+        [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+        $pipes,
+        $raiz,
+        $ambiente
+    );
+
+    if (!is_resource($processo)) {
+        throw new RuntimeException("could not start a php process for {$script}");
+    }
+
+    $html  = (string) stream_get_contents($pipes[1]);
+    $erros = (string) stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $saida = proc_close($processo);
+
+    if ($saida !== 0 || preg_match('/^BAJA_TEST_STATUS=(\d+)$/m', $erros, $m) !== 1) {
+        throw new RuntimeException("{$script} exited with status {$saida}: {$erros}");
+    }
+
+    return ['status' => (int) $m[1], 'html' => $html];
+}

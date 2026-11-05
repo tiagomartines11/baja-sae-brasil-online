@@ -17,7 +17,8 @@
 #   - on staging, nginx publishes NO host port, is on baja-edge as well as
 #     baja, and has exactly base's mounts (the certificates are not mounted);
 #   - the merged compose config for dev and production is byte for byte what
-#     it was at BASELINE_REF (develop before staging moved behind Caddy), so
+#     it was at BASELINE_REF (first set before staging moved behind Caddy,
+#     moved since for intended changes listed in the PRs that moved it), so
 #     adding the staging file changed nothing anywhere else;
 #   - nginx accepts the rendered configuration in every mode (`nginx -t`);
 #   - in dev and production, the rendered nginx configuration has exactly the
@@ -41,7 +42,7 @@
 
 set -euo pipefail
 
-BASELINE_REF="${BASELINE_REF:-9b2832a5e17d7d5d768f12721b27b8c2b1127bc3}"
+BASELINE_REF="${BASELINE_REF:-ca1accb06fdb72e5d5f87d270bf63a97409c9ee3}"
 NGINX_IMAGE="nginx:1.27-alpine"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
