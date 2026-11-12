@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Baja\Tests\Unit;
 
 use Baja\Url;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -46,7 +47,7 @@ final class UrlTest extends TestCase
         ];
     }
 
-    /** @dataProvider modes */
+    #[DataProvider('modes')]
     public function testTheSchemeFollowsTheListenMode(?string $mode, string $scheme): void
     {
         putenv($mode === null ? 'LISTEN_MODE' : 'LISTEN_MODE=' . $mode);

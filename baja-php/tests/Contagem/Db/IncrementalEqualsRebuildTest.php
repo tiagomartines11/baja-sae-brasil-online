@@ -8,6 +8,7 @@ use Baja\Contagem\Engine\Data\Source;
 use Baja\Contagem\Review\SourceAdmin;
 use Baja\Contagem\Service\Clock;
 use Baja\Model\ContagemFonte;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * The quick count and the full recount must always agree.
@@ -72,9 +73,8 @@ final class IncrementalEqualsRebuildTest extends DbTestCase
      * EXPECTED: at three checkpoints, and at the end, what the incremental
      * path has published (laps and time of last pass per car) and written
      * to the laps table is exactly what a rebuild from scratch produces.
-     *
-     * @dataProvider seeds
      */
+    #[DataProvider('seeds')]
     public function testAfterAMessyRaceARebuildFromScratchChangesNothing(int $seed): void
     {
         mt_srand($seed);
@@ -117,9 +117,8 @@ final class IncrementalEqualsRebuildTest extends DbTestCase
      * EXPECTED: as above: the incremental path, which recounts only the
      * cars an upload touched and the cars around a "??" near it, publishes
      * exactly what a rebuild from scratch gives.
-     *
-     * @dataProvider seeds
      */
+    #[DataProvider('seeds')]
     public function testWithUnreadPassesARebuildFromScratchChangesNothing(int $seed): void
     {
         mt_srand($seed);
@@ -170,9 +169,8 @@ final class IncrementalEqualsRebuildTest extends DbTestCase
      * EXPECTED: at every checkpoint, the quick path has published exactly
      * what a rebuild from scratch gives: laps, LAST and the lap rows' times,
      * many of which are the sensor's marks.
-     *
-     * @dataProvider seeds
      */
+    #[DataProvider('seeds')]
     public function testWithATimingSensorARebuildFromScratchChangesNothing(int $seed): void
     {
         mt_srand($seed);
