@@ -297,6 +297,22 @@ jobs:
           mysql -h127.0.0.1 -uroot -proot < mysql/init/04-seed-phpbb-formula.sql
           tests/backup/dump-with-backup-user.sh
 
+  # The 11/11 scenario for real (BAJAAPP-98): the real phpbb-baja image,
+  # built from this checkout, starts while MySQL is down; MySQL comes back
+  # 90 s later; the forum must carry on by itself with RestartCount 0. Its
+  # own job: it builds the image and uses compose's MySQL, which publishes
+  # 3306, so it cannot share the infra job's MySQL service.
+  phpbb-wait-stack:
+    name: phpBB waits for a late MySQL (baja-infra)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Forum started before MySQL, MySQL 90 s late
+        run: baja-infra/tests/phpbb-wait/stack-test.sh
+
   infra:
     name: Infrastructure (baja-infra)
     runs-on: ubuntu-latest
@@ -328,9 +344,11 @@ jobs:
           # variable whitelist and removing them would break the config
           # templating. Worth silencing there one day, but not from a
           # backups change.
-          find baja-infra/scripts baja-infra/mysql/init baja-infra/tests -name '*.sh' -print0 \
+          find baja-infra/scripts baja-infra/mysql/init baja-infra/tests baja-infra/docker/phpbb -name '*.sh' -print0 \
             | xargs -0 shellcheck -x
           shellcheck baja-infra/tests/backup/fake-bin/rclone
+          shellcheck baja-infra/tests/phpbb-wait/fake-bin/php \
+            baja-infra/tests/phpbb-wait/fake-bin/date baja-infra/tests/phpbb-wait/fake-bin/sleep
 
       - name: Validate docker-compose syntax
         working-directory: baja-infra
@@ -362,6 +380,37 @@ jobs:
             -f docker-compose.yml -f docker-compose.prod.yml --profile tools config --quiet
           docker compose --env-file "$RUNNER_TEMP/old.env" \
             -f docker-compose.verify.yml config --quiet
+
+      # nginx must look its backends up per request, not once at start
+      # (BAJAAPP-98, the 11/11 forum swap). In throwaway containers: every
+      # listen mode's config loads with no DNS at all, no fastcgi_pass or
+      # proxy_pass names a container directly, and the incident replayed
+      # (two fake forums swap IPs under a running nginx) leaves each forum
+      # hostname on its own forum. The same replay on the config from
+      # before the fix (OLD_REF, fetched here) must come out crossed.
+      - name: nginx backends looked up per request
+        run: |
+          git fetch --no-tags --depth=1 origin a79769c31c74ca2a2433793873e2452721a82874
+          OLD_REF=a79769c31c74ca2a2433793873e2452721a82874 baja-infra/tests/nginx-backends/run-tests.sh
+
+      # The phpBB entrypoints' wait for MySQL (BAJAAPP-98): by time, quiet,
+      # and giving up only after the whole budget. Mostly with a fake MySQL
+      # and a pretend clock; the last tests run the real PHP probe against
+      # the MySQL service above, so PHP needs mysqli. TEST_MYSQL_REQUIRED=1
+      # makes a skipped one a failure.
+      - name: Setup PHP (for the phpBB wait tests)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli
+          coverage: none
+
+      - name: phpBB wait for MySQL
+        env:
+          TEST_MYSQL_HOST: 127.0.0.1
+          TEST_MYSQL_ROOT_PASSWORD: root
+          TEST_MYSQL_REQUIRED: '1'
+        run: baja-infra/tests/phpbb-wait/run-tests.sh
 
       - name: Retention pruner tests
         # Apps Script cannot run in CI, so the pruner's logic is exercised
