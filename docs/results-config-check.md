@@ -53,9 +53,37 @@ For every resultado of every event (or of `--events`):
      formula: $ACE_PTS + $Ace_pts
      $Ace_pts is given by nothing here, so it is empty for every team (there is $ACE_PTS; names care about case)
    ```
+5. **`max()`/`min()` of a list that can be empty** (BAJAAPP-56): a `max()` or
+   `min()` with one argument, when that list can be empty for some team.
+   PHP 7 gave `false` for an empty list (0 in a sum); PHP 8 throws, and the
+   value is empty. The configs build these lists from a team's runs, leaving
+   out the ones that did not count, so the formula works for the teams that
+   ran and fails for a team with nothing to count (absent, DNF, every run
+   penalised to null). Read without running, by the formula engine's parser
+   (`ResultsCheck\EmptyMinMax`), so it is reported whatever today's teams are:
+
+   ```
+   pontos.SUS1PTS
+     formula: MAX(0,ROUND(max(array_diff([$CORR1_1, $CORR1_2], [null]))*$PESO_1,2))
+     max() of a list that is empty for a team whose $CORR1_1 and $CORR1_2 are all null; then PHP 8 throws a ValueError and the value is empty (PHP 7 gave false, which counts as 0)
+   ```
+
+   Reported: `[]`; `array_diff([...], ...)` when every item can be taken out
+   (a value written in the list that nothing takes out, like the `0` of
+   `array_diff([0, $A], [null])`, keeps it from being empty); one-argument
+   `array_filter()`; either answer of `? :` and `??`. Not reported: two or
+   more arguments (`max($A, $B)`), a list written out without `array_diff`
+   (`max([null, null])` is null, not an error), and a call that a `? :` only
+   reaches when `count()` of the same list is above 0. There is no `fix:`:
+   what the value should be for a team with nothing to count is a rule of the
+   prova. If you change such a formula, use only what the formula engine
+   allows ([`formula-engine.md`](formula-engine.md)): `array_merge()` is not
+   on its list, so `max(array_merge([0], ...))` would be empty for every team
+   once the engine is switched on.
 
 It also runs every **prova**'s formulas (`params`: `vars`, `min_max`,
-`pontos`) for every team, and reports their errors and unknown variables. A
+`pontos`) for every team, and reports their errors, unknown variables and
+lists that can be empty. A
 `vars` formula sees only the input fields (and, in a rolling prova, the
 entry's `ts`); `min_max` also the vars; `pontos` also the totals (`$Xmax`,
 `$Xmin`, `$Xcom`, `$Xcount`, `$Xsum`, `$Xavg`) and the `pontos` before it in
@@ -293,6 +321,13 @@ a made-up event, `99FX` (`tests/ResultsCheck/Db/fatal-formulas.sql`), with
 the APR formula in a resultado and in a prova, checks that the run gets to the
 end and reports both, and deletes the event again. It writes, so it runs only
 with `BAJA_TEST_DB=1`; never set that against production.
+
+`StoredPointsDifferTest` (same suite) pins the seed's provas whose stored vars
+or pontos differ from what their formulas give today, every event, finished or
+not (BAJAAPP-56): the next save of one of them changes published results, so a
+change to that list must be seen. It reads only, and checks that no table
+changed. `tests/Unit/Formula/StoredPointsTest.php` pins what those formulas
+give today, with both formula engines.
 
 ### Run time
 

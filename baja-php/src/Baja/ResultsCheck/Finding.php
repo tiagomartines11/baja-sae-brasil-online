@@ -26,6 +26,8 @@ final class Finding
     public const EMPTY_COLUMN = 'Column empty for every team';
     /** A variable the formula reads that nothing gives it there (UnknownVariables). */
     public const UNKNOWN_VARIABLE = 'Unknown variables';
+    /** max() or min() of a list that can be empty for some team (EmptyMinMax). */
+    public const EMPTY_MIN_MAX = 'max()/min() of a list that can be empty';
 
     public function __construct(
         public readonly string $problem,

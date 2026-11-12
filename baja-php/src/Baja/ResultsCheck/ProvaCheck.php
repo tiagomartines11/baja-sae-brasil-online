@@ -59,6 +59,7 @@ final class ProvaCheck
             }
         }
         array_push($findings, ...UnknownVariables::ofProva($prova, $inputs));
+        array_push($findings, ...EmptyMinMax::of(FormulaSlot::ofProva($prova->getParams())));
         return ['teams' => $teams, 'findings' => $findings];
     }
 }

@@ -58,7 +58,11 @@ final class ProvaCheckTest extends TestCase
 
         $this->assertSame(2, $result['teams']);
         $this->assertSame(
-            ['vars.T | ValueError: min(): Argument #1 ($value) must contain at least one element | 1 of 2'],
+            [
+                'vars.T | ValueError: min(): Argument #1 ($value) must contain at least one element | 1 of 2',
+                // What can happen to any team, said whatever today's teams are (EmptyMinMax).
+                'vars.T | min() of a list that is empty for a team whose $T_1 and $T_2 are all null; then PHP 8 throws a ValueError and the value is empty (PHP 7 gave false, which counts as 0)',
+            ],
             self::lines($result['findings']),
         );
     }
@@ -125,6 +129,7 @@ final class ProvaCheckTest extends TestCase
      */
     private static function lines(array $findings): array
     {
-        return array_map(fn(Finding $finding) => $finding->where . ' | ' . $finding->detail . ' | ' . $finding->teams . ' of ' . $finding->ofTeams, $findings);
+        return array_map(fn(Finding $finding) => $finding->where . ' | ' . $finding->detail
+            . ($finding->teams === null ? '' : ' | ' . $finding->teams . ' of ' . $finding->ofTeams), $findings);
     }
 }
