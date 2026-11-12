@@ -7,6 +7,7 @@ use Baja\Certificado\Insercao\Validador;
 use Baja\Model\EventoQuery;
 use Baja\Model\ParticipanteQuery;
 use Propel\Runtime\ActiveQuery\Criteria;
+use Propel\Runtime\Propel;
 
 T::group('lotes');
 
@@ -75,18 +76,24 @@ $ids = array_column((new Lotes())->pagina(1), 'id');
 T::ok('both batches are listed', in_array($loteGrande, $ids, true) && in_array($lotePequeno, $ids, true));
 
 // The order has to be total, not merely newest-first. criado_em is a DATETIME,
-// so two batches created in the same second — which these two were — sort
-// equally, and without a tiebreaker MySQL may return them either way round
-// between one page request and the next. That is how a batch gets shown twice
-// or skipped entirely while somebody pages through.
+// so two batches created in the same second sort equally, and without a
+// tiebreaker MySQL may return them either way round between one page request
+// and the next. That is how a batch gets shown twice or skipped entirely
+// while somebody pages through.
 $repetido = array_column((new Lotes())->pagina(1), 'id');
 T::same($ids, $repetido, 'the same query twice gives the same order');
 
-// And within a second, the tiebreaker decides.
-$mesmoSegundo = array_values(array_filter($ids, static fn (string $id): bool => in_array($id, [$loteGrande, $lotePequeno], true)));
-$esperado     = [$loteGrande, $lotePequeno];
-rsort($esperado);
-T::same($esperado, $mesmoSegundo, 'batches sharing a timestamp fall back to their id');
+// What the tiebreaker does when two batches DO share a second is checked at
+// the end of this file, with batch ids this test picks itself.
+//
+// It used to be checked here, on the two batches above, and that check failed
+// now and then (BAJAAPP-93). It assumed those two batches were created in the
+// same second. Usually they are: the two saves are milliseconds apart. But
+// each save reads the clock once, and if the clock ticks over to the next
+// second between them, the first batch is one second older. Newest-first then
+// decides the order on its own, and the ids never come into it. The check
+// predicted the order from the ids alone, and random ids agree with
+// newest-first only half the time.
 
 // --- filtering by event picks batches, never trims their counts -----------------------
 //
@@ -192,5 +199,106 @@ T::same(
         ->filterByLoteId(null, Criteria::ISNULL)->count(),
     'nothing created through these pages lands without one'
 );
+
+// --- batches sharing a timestamp: the id decides, compared byte by byte -----------------
+//
+// Last in the file on purpose. It creates four more batches, and the checks
+// above count every batch this test's user has made, so they must run first.
+//
+// Some background, for anyone new to this.
+//
+// The listing shows the newest batch first. When two batches have the same
+// creation time (criado_em only stores whole seconds), it needs a second rule
+// to decide which comes first. Otherwise the database may pick either order,
+// and might pick differently next time. The second rule is "larger batch id
+// first" (ORDER BY lote_id DESC in Lotes::pagina).
+//
+// "Larger" depends on the column's COLLATION. A collation is the database's
+// rule for comparing text. Some collations ignore case, so "a" and "A" count
+// as the same letter. lote_id uses ascii_bin, which compares the raw byte of
+// each character. Every capital letter has a smaller byte than every
+// lowercase one ("A" is 65, "Z" is 90, "a" is 97), and "a" and "A" are two
+// different letters.
+//
+// That is not a matter of taste. Batch ids are random base64url, which is
+// case-sensitive, so "…aB…" and "…Ab…" are two different batches. Under a
+// collation that ignored case, the database would treat them as ONE batch:
+// it would merge them in this listing and delete both when asked to delete
+// one.
+
+// First, the column really is ascii_bin. If someone ever changes it, this
+// says so plainly, instead of the ordering checks below failing for no
+// obvious reason.
+$colacao = Propel::getConnection()->query(
+    "SELECT COLLATION_NAME FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'participantes' AND COLUMN_NAME = 'lote_id'"
+)->fetchColumn();
+T::same('ascii_bin', $colacao, 'lote_id compares byte by byte (ascii_bin), so case matters');
+
+// Four batches with ids chosen by hand. gravar() accepts an id from the
+// caller, so nothing here is random and every run checks the same thing.
+// Each id is 22 characters, the length of a real one. The first 12
+// characters are a label we can search for, so only these batches are
+// looked at.
+//
+//   Pair 1 differs ONLY in case. Compared byte by byte they are two ids, and
+//   lowercase "a" (97) is larger than capital "A" (65), so the lowercase one
+//   comes first. If case were ignored they would be one id, and the listing
+//   would show a single batch.
+$caixaBaixa = 'ZZLotesCaixaaaaaaaaaaa';
+$caixaAlta  = 'ZZLotesCaixaAAAAAAAAAA';
+//   Pair 2 is where the two ways of comparing give OPPOSITE answers. Byte by
+//   byte, "a" (97) is larger than "B" (66), so the "a" id comes first.
+//   Ignoring case, "B" comes after "a" in the alphabet, so the "B" id would
+//   come first.
+$ordemA = 'ZZLotesOrdemaaaaaaaaaa';
+$ordemB = 'ZZLotesOrdemBBBBBBBBBB';
+
+// One row per batch. Each person has a different document so the duplicate
+// check does not pause any of them for review. Names start with $prefix so
+// $cleanup() removes them along with everything else.
+$criarCom = static function (string $id, string $nome, string $cpf) use ($validador, $gravador, $evA): void {
+    $linhas = [['evento' => $evA, 'nome' => $nome, 'funcao' => 'juiz', 'documento' => synthetic_cpf($cpf)]];
+    $gravador->gravar((new Revisao($validador->validar($linhas)))->prontas(), $id);
+};
+$criarCom($caixaBaixa, $prefix . ' Elisa Fonseca Testeson', '282828282');
+$criarCom($caixaAlta, $prefix . ' Fabio Gomes Testeson', '292929292');
+$criarCom($ordemA, $prefix . ' Gisele Harada Testeson', '313131313');
+$criarCom($ordemB, $prefix . ' Heitor Ilha Testeson', '323232323');
+
+// Give all four the SAME creation time. Saving them takes a few
+// milliseconds, and the clock could tick over to the next second partway
+// through. That would hand the decision back to newest-first, which is
+// exactly how the old check came to fail now and then. With one shared time,
+// the tiebreaker is the only thing left to decide the order.
+ParticipanteQuery::create()
+    ->filterByLoteId([$caixaBaixa, $caixaAlta, $ordemA, $ordemB], Criteria::IN)
+    ->update(['CriadoEm' => '2026-01-01 12:00:00']);
+
+// Searching by the shared label lists only that pair.
+$listar = static fn (string $rotulo): array => array_column((new Lotes([], 0, $rotulo))->pagina(1), 'id');
+
+T::same(
+    [$caixaBaixa, $caixaAlta],
+    $listar('ZZLotesCaixa'),
+    'ids differing only in case are two batches, lowercase first'
+);
+T::same(
+    [$ordemA, $ordemB],
+    $listar('ZZLotesOrdem'),
+    'batches sharing a timestamp fall back to their id, compared byte by byte'
+);
+
+// The same rule in PHP. rsort with SORT_STRING compares byte by byte, as
+// ascii_bin does. Plain rsort, as the old check used, can also compare two
+// strings as numbers when both look like numbers. Batch ids almost never do,
+// but SORT_STRING says exactly what is meant.
+//
+// Largest first: the two "Ordem" ids beat the two "Caixa" ids at their eighth
+// character ("O" is 79, "C" is 67). Within each pair, the rules above apply.
+$esperado = [$ordemB, $caixaAlta, $ordemA, $caixaBaixa];
+rsort($esperado, SORT_STRING);
+T::same([$ordemA, $ordemB, $caixaBaixa, $caixaAlta], $esperado, 'PHP byte order agrees with the database');
+T::same($esperado, $listar('ZZLotes'), 'and all four together come back in that order');
 
 $cleanup();
