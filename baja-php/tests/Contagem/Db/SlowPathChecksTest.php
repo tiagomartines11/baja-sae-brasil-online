@@ -29,25 +29,39 @@ use Baja\Contagem\Service\Clock;
 final class SlowPathChecksTest extends DbTestCase
 {
     private string $errorLogPath;
-    private string $previousErrorLog;
 
     protected function setUp(): void
     {
         parent::setUp();
         Clock::freezeAt($this->at(600));
         $this->startRace($this->at(0));
-
-        // What the application writes to the PHP error log goes to a file
-        // for the duration of a test, so a test can read it.
         $this->errorLogPath = (string) tempnam(sys_get_temp_dir(), 'contagem-test-log');
-        $this->previousErrorLog = (string) ini_set('error_log', $this->errorLogPath);
     }
 
     protected function tearDown(): void
     {
-        ini_set('error_log', $this->previousErrorLog);
         @unlink($this->errorLogPath);
         parent::tearDown();
+    }
+
+    /**
+     * From here to the end of the test, what the application writes to the
+     * PHP error log goes to $this->errorLogPath, so the test can read it.
+     *
+     * Call it at the start of the test itself, not in setUp(). PHPUnit (since
+     * version 11) points the error log at a capture file of its own just
+     * before it runs each test method, after setUp(), and prints whatever
+     * lands there. Redirected in setUp(), the application's log line goes to
+     * PHPUnit instead of our file: a check that a line was logged fails, and,
+     * worse, a check that nothing was logged passes without checking
+     * anything.
+     *
+     * Nothing has to undo this: when the test method ends, PHPUnit puts the
+     * error log back where it was before the method started.
+     */
+    private function sendTheErrorLogToAFile(): void
+    {
+        ini_set('error_log', $this->errorLogPath);
     }
 
     /** A reviewer's poll at the given second of the race; recalculates when the snapshot is stale. */
@@ -98,6 +112,7 @@ final class SlowPathChecksTest extends DbTestCase
      */
     public function testARecalculationCorrectsAPublishedCountThatWentWrong(): void
     {
+        $this->sendTheErrorLogToAFile();
         $this->oneMorePass(self::CAR_A, 60);
         $this->oneMorePass(self::CAR_A, 240);
         $this->oneMorePass(self::CAR_A, 410);
@@ -169,6 +184,7 @@ final class SlowPathChecksTest extends DbTestCase
      */
     public function testACarWithoutAPublishedCountAndWithoutLapsIsNotADivergence(): void
     {
+        $this->sendTheErrorLogToAFile();
         $this->setManualField(self::CAR_B, 'APTO', 'SIM');
         $this->oneMorePass(self::CAR_A, 60);
 
@@ -248,6 +264,7 @@ final class SlowPathChecksTest extends DbTestCase
      */
     public function testARecalculationThatFinishesLateDoesNotPutAnOlderCountBack(): void
     {
+        $this->sendTheErrorLogToAFile();
         $this->oneMorePass(self::CAR_A, 60);
         $changesWhenItStarted = $this->changesNow();
         $this->newRequest();
