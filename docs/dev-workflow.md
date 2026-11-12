@@ -333,8 +333,10 @@ container: one hostname 502'd, or, as in production on 2026-11-11, the two
 forums swapped and each hostname served the other board. Static files
 still looked right (nginx serves them from each forum's volume), so the
 logo and CSS were correct while the PHP behind them was the wrong forum.
-`docker compose restart <phpbb service>` does **not** keep the IP: on 11/11
-a restart alone changed it.
+`docker compose restart <phpbb service>` does **not** keep the IP, and
+neither does a restart by the restart policy: on 11/11 the forums gave up
+waiting for a slow MySQL, exited, were restarted by Docker, and that alone
+moved them.
 
 How it works now: every `fastcgi_pass` and `proxy_pass` in
 `baja-infra/nginx/templates/` names a variable (`$backend_phpbb_baja`,
@@ -365,6 +367,16 @@ order after a reboot is whatever dockerd picks, and containers may restart
 again while the others come up. Nothing may rely on that order. nginx, for
 one, may start before the forums and must find them whenever they appear,
 which the per-request lookup above takes care of.
+
+After a crash or a hard reset, MySQL can take **minutes** to become ready:
+it recovers its data first (about 4 minutes on 2026-11-11, on the
+production disk). The phpBB containers wait for it in their entrypoint
+(`baja-infra/docker/phpbb/wait-for-mysql.sh`) for up to
+`MYSQL_WAIT_TIMEOUT_SECONDS`, 900 s by default (see `.env.example`), with a
+progress line every 30 s in `docker compose logs phpbb-baja`. They used to
+give up after about a minute, and each exit and restart could move them to
+a new IP. A forum that does exit after the full budget means MySQL is
+really down, not slow: look at `docker compose logs mysql`.
 
 **Q: I changed a value in `.env` but it's not taking effect.**
 A: Compose reads `.env` at `up` time, not for already-running containers.
