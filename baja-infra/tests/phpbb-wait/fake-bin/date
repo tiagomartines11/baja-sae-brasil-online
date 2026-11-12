@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# A stand-in for `date`, for baja-infra/tests/phpbb-wait/run-tests.sh.
+#
+# The pretend clock: `date +%s` (the only form wait-for-mysql.sh uses)
+# prints the number of seconds stored in $FAKE_CLOCK. Only fake-bin/sleep
+# and fake-bin/php move it forward, so a test that "waits 15 minutes"
+# finishes at once, and every time is exact.
+set -euo pipefail
+if [[ "$*" != "+%s" ]]; then
+    echo "fake date: only 'date +%s' is supported, got: date $*" >&2
+    exit 2
+fi
+cat "${FAKE_CLOCK:?FAKE_CLOCK must name the pretend clock file}"

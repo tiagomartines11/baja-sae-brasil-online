@@ -32,7 +32,7 @@ server {
 
     location ~ \.php(/|$) {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
-        fastcgi_pass phpbb-formula:9000;
+        fastcgi_pass $backend_phpbb_formula;
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME /var/www/html$fastcgi_script_name;
