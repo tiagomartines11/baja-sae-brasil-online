@@ -35,6 +35,11 @@ updates:
       # Propel 2.0.0-beta4 -> 2.0.1 is an ORM upgrade, done by hand (BAJAAPP-60).
       # Left in the routine group it blocked dompdf, monolog and symfony/yaml.
       - dependency-name: propel/propel
+      # PHPUnit stays on 12.x (BAJAAPP-46): 13 needs PHP 8.4, and we stay on
+      # 8.3 (see the php image ignore above). Composer refuses to install it,
+      # in CI and in baja-app. Drop this together with the move to PHP 8.4.
+      - dependency-name: phpunit/phpunit
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /baja-js
