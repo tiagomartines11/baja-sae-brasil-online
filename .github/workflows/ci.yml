@@ -363,6 +363,18 @@ jobs:
           docker compose --env-file "$RUNNER_TEMP/old.env" \
             -f docker-compose.verify.yml config --quiet
 
+      # nginx must look its backends up per request, not once at start
+      # (BAJAAPP-98, the 11/11 forum swap). In throwaway containers: every
+      # listen mode's config loads with no DNS at all, no fastcgi_pass or
+      # proxy_pass names a container directly, and the incident replayed
+      # (two fake forums swap IPs under a running nginx) leaves each forum
+      # hostname on its own forum. The same replay on the config from
+      # before the fix (OLD_REF, fetched here) must come out crossed.
+      - name: nginx backends looked up per request
+        run: |
+          git fetch --no-tags --depth=1 origin a79769c31c74ca2a2433793873e2452721a82874
+          OLD_REF=a79769c31c74ca2a2433793873e2452721a82874 baja-infra/tests/nginx-backends/run-tests.sh
+
       - name: Retention pruner tests
         # Apps Script cannot run in CI, so the pruner's logic is exercised
         # against a fake Drive. It is the only code in the backup system

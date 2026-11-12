@@ -16,7 +16,16 @@ server {
     # The /css /js /img location blocks above must remain BEFORE this one —
     # Next.js does not have those legacy paths and would 404 them.
     location / {
-        proxy_pass http://baja-js:3000;
+        # $backend_baja_js is baja-js:3000, looked up per request (see
+        # 00-backends.conf). No URI after it, so the request URI goes to
+        # Next.js unchanged, as before.
+        #
+        # A variable here turns off nginx's implicit `proxy_redirect default`,
+        # which would rewrite a Location header starting with
+        # http://baja-js:3000/. Nothing needs it: Host is passed through
+        # below, so Next.js builds absolute URLs from the visitor's hostname,
+        # never from baja-js:3000, and baja-js has no redirects of its own.
+        proxy_pass http://$backend_baja_js;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

@@ -234,8 +234,9 @@ extra steps (migrations, new `.env` values, rebuilds).
 
 To roll back: `git checkout <previous tag>`, then recreate the containers
 the release changed (`docker compose up -d --force-recreate <service>...`
-from `baja-infra/`). If a phpBB container was among them, also
-`docker compose restart nginx`; see the FAQ below. Go back to `master`
+from `baja-infra/`). When rolling back to a tag from before BAJAAPP-98
+and a phpBB container was among them, also `docker compose restart nginx`;
+see the forum 502 entry in the FAQ below. Go back to `master`
 once the fix is released.
 
 ### Hotfixes
@@ -306,7 +307,6 @@ A: Drop an SVG at `baja-infra/phpbb-baja/branding/site_logo.svg` (or
 cd baja-infra
 docker compose build phpbb-baja
 docker compose up -d phpbb-baja
-docker compose restart nginx
 ```
 No `down -v` here, unlike extensions above — branding is copied into the
 volume by the entrypoint on every boot precisely so logo changes don't cost
@@ -315,36 +315,56 @@ change is needed. Note that nginx serves `.svg` with `expires 30d` and the
 filename doesn't change, so hard-refresh before concluding it didn't work.
 See [`baja-infra/phpbb-baja/branding/README.md`](../baja-infra/phpbb-baja/branding/README.md).
 
-**That last `restart nginx` is not optional** — see the next entry.
+nginx needs no restart: it serves the logo straight from the volume, and
+it finds the new phpbb-baja container by itself (next entry).
 
 **Q: After `docker compose up -d`, one forum 502s and the other serves the
 wrong board. What happened?**
-A: nginx resolves `fastcgi_pass phpbb-baja:9000` **once, at config load**,
-and caches the IP. Any `up -d` that *recreates* a phpBB container gives it a
-new IP on the `baja` bridge, and nginx keeps pointing at the old one. The
-failure is nastier than a plain outage, because the freed IP usually gets
-reused by the *other* phpBB container:
+A: Since BAJAAPP-98 this should fix itself within about 10 seconds. If it
+lasts longer, the nginx running is older than that change, or someone put
+a container name straight into a `fastcgi_pass`/`proxy_pass`.
 
-- `forum.baja.local` → dead IP → **502**
-- `forum.formula.local` → the IP now held by phpbb-baja → **serves the Baja
-  board under the Formula hostname**
+What used to happen: nginx looked `fastcgi_pass phpbb-baja:9000` up **once,
+when it loaded its config**, and kept that IP. A phpBB container that came
+back with a new IP on the `baja` network, whether recreated by `up -d` or
+just restarted, left nginx pointing at the old one. That was worse than a
+plain outage, because the freed IP was usually taken by the *other* phpBB
+container: one hostname 502'd, or, as in production on 2026-11-11, the two
+forums swapped and each hostname served the other board. Static files
+still looked right (nginx serves them from each forum's volume), so the
+logo and CSS were correct while the PHP behind them was the wrong forum.
+`docker compose restart <phpbb service>` does **not** keep the IP: on 11/11
+a restart alone changed it.
 
-Static files still look right (nginx serves those from the volume itself),
-so the logo/CSS can be perfectly correct while the PHP behind it is the
-wrong forum entirely. Don't debug the app — check the IPs:
+How it works now: every `fastcgi_pass` and `proxy_pass` in
+`baja-infra/nginx/templates/` names a variable (`$backend_phpbb_baja`,
+`$backend_baja_app`...) instead of a container. nginx then looks the name up
+at request time, through Docker's DNS (`127.0.0.11`), and trusts the answer
+for 10 seconds (`valid=10s`). The resolver and every backend address are in
+[`00-backends.conf.template`](../baja-infra/nginx/templates/00-backends.conf.template);
+a new vhost uses those variables, or adds one there.
+`baja-infra/tests/nginx-backends/run-tests.sh` (in CI) replays the 11/11
+swap and fails on a container name in any `*_pass`.
+
+If it does happen (an older deployment, or the 10 seconds have long
+passed), don't debug the app. Check the IPs:
 ```
 docker inspect -f '{{.Name}} {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
   baja-nginx baja-phpbb-baja baja-phpbb-formula
-docker logs baja-nginx | grep 'connect() failed'   # shows the stale upstream IP
+docker logs baja-nginx | grep 'connect() failed'   # shows the upstream IP nginx used
 ```
-`docker compose restart nginx` fixes it by forcing re-resolution. `docker
-compose restart <phpbb service>` does *not* trigger this — restart keeps the
-IP; only recreation changes it.
+On an older deployment, `docker compose restart nginx` fixes it by making
+nginx look everything up again.
 
-The real fix is to make nginx re-resolve per request (Docker's embedded DNS
-at `127.0.0.11` plus a variable `fastcgi_pass`) rather than relying on
-everyone remembering the restart. That's a change across every file in
-`nginx/conf.d/` and `nginx/conf.d-prod/` and hasn't been done yet.
+**Q: What happens after the host reboots?**
+A: Not `docker compose up`. dockerd starts every container with
+`restart: unless-stopped` (or `always`) by itself, from the config it
+stored when the container was created, so with both compose files already
+merged in on production. It does **not** follow `depends_on`: the startup
+order after a reboot is whatever dockerd picks, and containers may restart
+again while the others come up. Nothing may rely on that order. nginx, for
+one, may start before the forums and must find them whenever they appear,
+which the per-request lookup above takes care of.
 
 **Q: I changed a value in `.env` but it's not taking effect.**
 A: Compose reads `.env` at `up` time, not for already-running containers.
@@ -390,6 +410,8 @@ Don't normalize across the boundary.
 **Q: I want to add a new container/service.**
 A: Edit `baja-infra/docker-compose.yml`. If it needs a custom
 image, add a `baja-infra/<service>/Dockerfile`. If it needs to be
-proxied through nginx, add a config in
-`baja-infra/nginx/conf.d/`. The phpbb-baja and baja-js services
-are good templates for either pattern.
+proxied through nginx, add a template in
+`baja-infra/nginx/templates/`, and give its address a `$backend_*`
+variable in `00-backends.conf.template` rather than naming the container
+in `fastcgi_pass`/`proxy_pass` (see the forum 502 entry above). The
+phpbb-baja and baja-js services are good templates for either pattern.

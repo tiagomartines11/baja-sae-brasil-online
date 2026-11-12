@@ -69,7 +69,7 @@ server {
     # in order. The index is reached as /index.php through try_files above.
     location ~ ^/(index|prova|torneio|mapa|clock|notificacoes|overlay|overlaydata|enduro_dump)\.php$ {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
-        fastcgi_pass baja-app:9000;
+        fastcgi_pass $backend_baja_app;
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME /var/www/html/resultados$fastcgi_script_name;
@@ -83,7 +83,7 @@ server {
     # session is involved, so SKIP_AUTH keeps the session code, and the forum
     # database behind it, out of the way of the audience.
     location = /contagem_feed.php {
-        fastcgi_pass baja-app:9000;
+        fastcgi_pass $backend_baja_app;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME /var/www/html/resultados/contagem_feed.php;
         fastcgi_param PHP_VALUE "auto_prepend_file=/var/www/html/src/bootstrap.php";
@@ -93,7 +93,7 @@ server {
 
     location ~ \.php$ {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
-        fastcgi_pass baja-app:9000;
+        fastcgi_pass $backend_baja_app;
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME /var/www/html/resultados$fastcgi_script_name;
