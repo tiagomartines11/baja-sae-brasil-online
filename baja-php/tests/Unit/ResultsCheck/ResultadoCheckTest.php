@@ -103,6 +103,8 @@ final class ResultadoCheckTest extends TestCase
             'Formula raises an error | column "Voltas" highlight | DivisionByZeroError: Division by zero | 1 of 1 teams',
             'Formula raises an error | column "Total" val_spoilers | TypeError: Unsupported operand types: string + int | 1 of 1 teams',
             'Formula raises an error | tiebreak | ValueError: max(): Argument #1 ($value) must contain at least one element | 1 of 1 teams',
+            // The same max([]) is also said to be empty whatever the teams (EmptyMinMax).
+            'max()/min() of a list that can be empty | tiebreak | max() of a list that is always empty; then PHP 8 throws a ValueError and the value is empty (PHP 7 gave false, which counts as 0)',
         ], $problems);
     }
 

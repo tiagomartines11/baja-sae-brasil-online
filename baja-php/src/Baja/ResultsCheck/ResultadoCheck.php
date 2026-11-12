@@ -27,6 +27,8 @@ use Baja\Results\ViewerContext;
  *   3. Formula columns that are empty for every team, although no formula
  *      raised an error: likely broken too.
  *   4. Variables a formula reads that nothing gives it (UnknownVariables).
+ *   5. max() and min() of a list that can be empty for some team
+ *      (EmptyMinMax), whatever today's teams are.
  *
  * The builder is run one team at a time, so that each error can be put
  * down to the team it came from. A team's row depends only on that team's
@@ -73,6 +75,7 @@ final class ResultadoCheck
         }
         array_push($findings, ...self::ranking($config, $rows));
         array_push($findings, ...UnknownVariables::ofResultado($colunas, $inputs, $declared));
+        array_push($findings, ...EmptyMinMax::of($slots));
         return ['teams' => $teams, 'findings' => $findings];
     }
 

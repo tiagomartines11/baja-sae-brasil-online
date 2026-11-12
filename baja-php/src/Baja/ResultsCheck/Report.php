@@ -20,7 +20,7 @@ namespace Baja\ResultsCheck;
 final class Report
 {
     /** The kinds of problem, in the order they are shown: the worst first. */
-    private const KINDS = [Finding::FATAL, Finding::FORMULA_ERROR, Finding::RANKING, Finding::EMPTY_COLUMN, Finding::UNKNOWN_VARIABLE];
+    private const KINDS = [Finding::FATAL, Finding::FORMULA_ERROR, Finding::RANKING, Finding::EMPTY_COLUMN, Finding::UNKNOWN_VARIABLE, Finding::EMPTY_MIN_MAX];
 
     /**
      * @param list<array{event: string, resultados: list<array>, provas: list<array>}> $events
@@ -98,7 +98,7 @@ final class Report
             );
         }
         foreach (self::KINDS as $kind) {
-            $summary[] = sprintf('  %-28s %d in resultados', $kind . ':', $kinds[$kind] ?? 0);
+            $summary[] = sprintf('  %-41s %d in resultados', $kind . ':', $kinds[$kind] ?? 0);
         }
         $summary[] = $sqlFile === null
             ? sprintf('%d resultados have a mechanical fix; --sql <file> writes it.', $count['fixes'])
