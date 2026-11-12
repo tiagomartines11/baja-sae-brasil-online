@@ -22,6 +22,11 @@
     "styled-components": "^6.6.0",
     "styled-media-query": "^2.1.2"
   },
+  "//": [
+    "JSON has no comments; npm ignores this key. Held back on purpose (BAJAAPP-46), each also ignored in .github/dependabot.yml:",
+    "typescript stays on 5.x: typescript-eslint (through eslint-config-next) does not support TypeScript 7 yet and refuses to load ('typescript-eslint does not support TS 7.0', typescript-eslint/typescript-eslint#10940; its peer range is <6.1.0).",
+    "eslint and @eslint/js stay on 9: eslint-plugin-react, eslint-plugin-import and eslint-plugin-jsx-a11y, which eslint-config-next pulls in, declare eslint up to 9 only, so npm ci refuses eslint 10."
+  ],
   "devDependencies": {
     "@chromatic-com/storybook": "^5.6.0",
     "@eslint/js": "^9.39.5",
@@ -29,10 +34,10 @@
     "@storybook/addon-onboarding": "^10.6.3",
     "@storybook/nextjs": "^10.6.3",
     "@testing-library/dom": "^10.4.2",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
-    "@types/jest": "^29.5.14",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -45,8 +50,8 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-storybook": "^10.6.3",
     "globals": "^17.13.0",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2",
     "jest-styled-components": "^7.4.0",
     "plop": "^4.0.5",
     "prettier": "3.9.10",
