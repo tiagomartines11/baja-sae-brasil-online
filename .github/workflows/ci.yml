@@ -408,8 +408,8 @@ jobs:
         run: |
           # docker-compose.staging.yml needs 2.24.4+ (!reset, !override).
           docker compose version
-          git fetch --no-tags --depth=1 origin ca1accb06fdb72e5d5f87d270bf63a97409c9ee3
-          BASELINE_REF=ca1accb06fdb72e5d5f87d270bf63a97409c9ee3 baja-infra/tests/listen-modes/run-tests.sh
+          git fetch --no-tags --depth=1 origin 8ba6045b74fec9db14439fc0f86786884a6804ed
+          BASELINE_REF=8ba6045b74fec9db14439fc0f86786884a6804ed baja-infra/tests/listen-modes/run-tests.sh
 
       # nginx must look its backends up per request, not once at start
       # (BAJAAPP-98, the 11/11 forum swap). In throwaway containers: every
