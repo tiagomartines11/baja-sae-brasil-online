@@ -39,7 +39,7 @@ server {
 
     location ~ \.php$ {
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
-        fastcgi_pass baja-app:9000;
+        fastcgi_pass $backend_baja_app;
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME /var/www/html/fila$fastcgi_script_name;

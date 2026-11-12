@@ -28,17 +28,13 @@ from a path outside the volume avoids it:
 cd baja-infra
 docker compose build phpbb-formula
 docker compose up -d phpbb-formula
-docker compose restart nginx
 ```
 
-The `restart nginx` is required, not tidiness. nginx resolves
-`fastcgi_pass phpbb-formula:9000` once at config load and caches the IP; the
-`up -d` above *recreates* the container, which gives it a new one. Skip the
-restart and `forum.formula.local` can end up serving the *Baja* board,
-because the freed IP gets reused by the other phpBB container. The logo will
-look correct throughout — static files come off the volume — so this is easy
-to misdiagnose as an app bug. See the FAQ in
-[`docs/dev-workflow.md`](../../../docs/dev-workflow.md).
+No nginx restart: the `up -d` above recreates the container, which can
+give it a new IP, and nginx looks the forum up again within 10 seconds
+(BAJAAPP-98). Before that change nginx kept the old IP until restarted,
+and the two forums could end up serving each other's board; see the forum
+502 entry in the FAQ in [`docs/dev-workflow.md`](../../../docs/dev-workflow.md).
 
 If no `site_logo.svg` is present, the entrypoint logs that and leaves
 phpBB's stock logo in place. The build and boot still succeed.
@@ -53,7 +49,7 @@ mechanism deliberately does not ship.
 
 ## Browser caching when you replace it
 
-`nginx/conf.d/phpbb-formula.conf` serves `.svg` with `expires 30d`. Because
+`nginx/templates/phpbb-formula.conf.template` serves `.svg` with `expires 30d`. Because
 the new logo reuses the `site_logo.svg` filename, anyone who already loaded
 the previous one keeps it until their cache expires. Hard-refresh when
 verifying, and don't read a stale logo as a failed deploy.

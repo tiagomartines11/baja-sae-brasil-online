@@ -1,0 +1,72 @@
+# Where nginx sends requests it does not answer itself, and how it finds them.
+#
+# WHY THIS FILE EXISTS (BAJAAPP-98)
+#
+# A literal `fastcgi_pass phpbb-baja:9000;` is looked up ONCE, when nginx
+# loads its configuration, and nginx keeps that IP until it is restarted.
+# Containers get a new IP on the baja network whenever they are recreated,
+# and sometimes when they merely restart. On 2026-11-11 the VPS rebooted,
+# nginx came up and looked the forums up, then both phpBB containers
+# restarted and came back on each other's IP: forum.bajasaebrasil.net served
+# the Fórmula board and fsaebrasil.net the Baja one, for hours, until someone
+# restarted nginx by hand. See "After docker compose up -d, one forum 502s"
+# in docs/dev-workflow.md.
+#
+# The fix: when the address in a *_pass directive contains a variable, nginx
+# looks the name up while handling the request, through the `resolver` below,
+# and caches the answer for `valid=` only. So every *_pass in the vhosts
+# names one of the $backend_* variables defined here, never a hostname.
+#
+# RULES
+#
+# - Each backend address is written here and nowhere else. A new vhost or
+#   location that talks to a container uses one of these variables, or adds
+#   one here. baja-infra/tests/nginx-backends/run-tests.sh fails on a literal
+#   hostname in any fastcgi_pass or proxy_pass.
+# - These names start with "backend_", which NGINX_ENVSUBST_FILTER (in
+#   docker-compose.yml) does not match, so the container's template step
+#   leaves them alone and nginx sees them as its own variables.
+# - The 00- prefix keeps the http-level files together at the top of
+#   conf.d/, like 00-cloudflare-realip.conf.
+
+# 127.0.0.11 is Docker's embedded DNS server, which every container on a
+# user-defined network (here: baja) can ask for the other containers' names.
+# valid=10s overrides the long TTL Docker's answers carry: after a backend
+# changes IP, nginx follows it within 10 seconds. ipv6=off: the baja network
+# has no IPv6, so there is no AAAA answer worth waiting for.
+resolver 127.0.0.11 valid=10s ipv6=off;
+# A lookup that takes longer than this fails the request with a 502 instead
+# of holding it for nginx's default 30 seconds.
+resolver_timeout 2s;
+
+# A map with only a default is the http-level way to give a variable a
+# constant value (`set` only works inside server and location blocks). The
+# map is keyed on $host only because map needs some key; it is ignored.
+
+# The Baja forum (phpBB, PHP-FPM).
+map $host $backend_phpbb_baja {
+    default phpbb-baja:9000;
+}
+
+# The Fórmula forum (phpBB, PHP-FPM).
+map $host $backend_phpbb_formula {
+    default phpbb-formula:9000;
+}
+
+# baja-app's main PHP-FPM pool ("www"): results, certificates, API, fila and
+# the juiz pages.
+map $host $backend_baja_app {
+    default baja-app:9000;
+}
+
+# baja-app's "contagem" PHP-FPM pool: lap counting uploads only
+# (juiz/contagem_sync.php). Its own workers, so counting is never starved by
+# the results site. See baja-infra/baja-app/php-fpm-pools.conf.
+map $host $backend_baja_app_contagem {
+    default baja-app:9001;
+}
+
+# The Next.js site on the apex domain (baja-js).
+map $host $backend_baja_js {
+    default baja-js:3000;
+}
