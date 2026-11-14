@@ -13,12 +13,19 @@ use Baja\Posicoes\EventGraph;
 use Baja\Posicoes\ExternalPositions;
 use Baja\Posicoes\PosicoesRules;
 use Baja\Posicoes\Recalculation;
+use Baja\FormulaCompare\Recorder;
+use Baja\FormulaCompare\Units;
 use Baja\Results\ResultsBuilder;
+use Baja\ResultsCheck\Command;
+use Baja\ResultsCheck\LiveSource;
+use Baja\ResultsSnapshot\Capture\ReadOnlyDatabase;
+use Baja\ResultsSnapshot\Jobs\FormulasJob;
 use Baja\Results\ResultsConfig;
 use Baja\Results\ViewerContext;
 use PDO;
 use PDOException;
 use PHPUnit\Framework\TestCase;
+use Propel\Runtime\Propel;
 
 /**
  * Positions in prova formulas, with a real database (BAJAAPP-102).
@@ -60,10 +67,16 @@ use PHPUnit\Framework\TestCase;
  *
  * (5= means "tied for 5th": both are 5th and nobody is 6th.)
  *
+ * Three more teams: car 9 is disqualified (it has data only in EXT, below),
+ * car 10 is present but has no data anywhere, car 11 is absent.
+ *
  * Provas:  TRA, AVF  points straight from what was typed
- *          CMP       Compliance, as above
+ *          CMP       Compliance, as above. A DERIVED prova: it has no input
+ *                    field, nobody types anything for it, and it makes its
+ *                    own entry for every present team when worked out
  *          LVL       takes a position from the Compliance resultado: a
  *                    second level, to show that changes go all the way
+ *                    (derived too)
  * Resultados:  99PS_TRA (TRA), 99PS_AVF (AVF), 99PS_CMP (CMP), and
  *              99PS_GER (TRA, AVF, CMP), a "Geral", to test cycles.
  *
@@ -173,6 +186,35 @@ final class PosicoesTest extends TestCase
         );
     }
 
+    // --- Derived provas: no input field, no entry typed -------------------------
+
+    /**
+     * SITUATION: Compliance has no input field, so judges never see it and
+     * nobody ever made an entry for it. Here every entry it had is deleted,
+     * then a judge saves one Tração entry (the same value again).
+     *
+     * Compliance makes an entry for every PRESENT team (1 to 10) and stores
+     * their points: 20 or 0. Car 10, present but with no data anywhere, has
+     * no position at all, and gets 0 like anyone outside the top 5. Car 9
+     * is disqualified: it gets an entry but, like in every prova, no points.
+     * Car 11 is absent: no entry.
+     */
+    public function testADerivedProvaMakesItsOwnEntriesAfterOneTracaoSave(): void
+    {
+        self::execute("DELETE FROM input WHERE evento_id = ? AND prova_id IN ('CMP', 'LVL')", [self::EVENT]);
+        InputTableMap::clearInstancePool();
+        $this->assertSame([], self::stored('CMP', 'pontos', 'CMPPTS', everyTeam: true), 'no entry at all to start with');
+
+        self::saveTracaoEntry(4, 50);
+
+        $this->assertSame(
+            [1 => 20, 2 => 20, 3 => 20, 4 => 0, 5 => 20, 6 => 20, 7 => 0, 8 => 0, 9 => null, 10 => 0],
+            self::stored('CMP', 'pontos', 'CMPPTS', everyTeam: true),
+        );
+        $this->assertSame([9 => null, 10 => null], array_slice(self::stored('CMP', 'vars', 'P_TRA', everyTeam: true), 8, null, true), 'no position');
+        $this->assertCount(10, self::stored('LVL', 'pontos', 'LVLPTS', everyTeam: true), 'the second level made its entries too');
+    }
+
     // --- Automatic recalculation -----------------------------------------------
 
     /**
@@ -207,9 +249,10 @@ final class PosicoesTest extends TestCase
 
         self::saveTracaoEntry(4, 85);
 
+        // Car 10 (present, 0 points in Compliance) is tied with the 0s.
         $this->assertSame(
-            [1 => 1, 2 => 1, 3 => 1, 4 => 4, 5 => 4, 6 => 4, 7 => 4, 8 => 4],
-            self::stored('LVL', 'pontos', 'LVLPTS'),
+            [1 => 1, 2 => 1, 3 => 1, 4 => 4, 5 => 4, 6 => 4, 7 => 4, 8 => 4, 9 => null, 10 => 4],
+            self::stored('LVL', 'pontos', 'LVLPTS', everyTeam: true),
         );
     }
 
@@ -248,6 +291,49 @@ final class PosicoesTest extends TestCase
 
         // It finished, and CMP was worked out with the new Tração.
         $this->assertSame(4, self::stored('CMP', 'vars', 'P_TRA')[4]);
+    }
+
+    // --- Computing is read-only --------------------------------------------------
+
+    /**
+     * The results snapshots, the config check and the formula comparison
+     * work every prova out again to see what it gives, and must never
+     * write: they are pointed at copies of production, and CI runs them as
+     * an account that may only read.
+     *
+     * SITUATION: car 4's Tração was changed in the database but not worked
+     * out yet, and car 10's Compliance entry is missing. Saving would
+     * rewrite Tração's points, then Compliance's and LVL's (the dependents),
+     * and make car 10's entry. Here MySQL itself is told to refuse every
+     * write (as the snapshot tool does), and each tool works out every
+     * prova of the event. None of them fails on a refused write, and the
+     * database is exactly as before.
+     */
+    public function testComputingAProvaReadOnlyNeverWrites(): void
+    {
+        self::execute("UPDATE input SET dados = JSON_OBJECT('PTS', 85) WHERE evento_id = ? AND prova_id = 'TRA' AND equipe_id = 4", [self::EVENT]);
+        self::execute("DELETE FROM input WHERE evento_id = ? AND prova_id = 'CMP' AND equipe_id = 10", [self::EVENT]);
+        InputTableMap::clearInstancePool();
+        $before = self::fingerprint();
+
+        ReadOnlyDatabase::enforce();
+        try {
+            $source = new LiveSource();
+            foreach (['TRA', 'AVF', 'CMP', 'LVL', 'EXT', 'USE'] as $prova) {
+                $snapshot = FormulasJob::run(self::EVENT, $prova);
+                $this->assertNull($snapshot['recompute_error'], "snapshot of $prova");
+                Command::checkProva($source, self::EVENT, $prova);
+                Units::prova($source, new Recorder(time(), []), self::EVENT, $prova);
+                ProvaTableMap::clearInstancePool();
+                InputTableMap::clearInstancePool();
+            }
+            // It did work Tração out: car 4's new points differ from those stored.
+            $this->assertSame([4], FormulasJob::run(self::EVENT, 'TRA')['differs_from_stored']['pontos']);
+        } finally {
+            Propel::getWriteConnection('resultados')->exec('SET SESSION transaction_read_only = OFF');
+        }
+
+        $this->assertSame($before, self::fingerprint(), 'nothing was written');
     }
 
     // --- Cycles are refused on save ------------------------------------------------
@@ -321,8 +407,8 @@ final class PosicoesTest extends TestCase
      */
     public function testExternalPositionsFollowEveryRuleOfTheResultsPage(): void
     {
-        $expected = [1 => 2, 2 => 3, 3 => null, 4 => 5, 5 => 4, 6 => null, 7 => 6, 8 => 6, 9 => 1];
-        $this->assertSame($expected, self::stored('USE', 'vars', 'P'));
+        $expected = [1 => 2, 2 => 3, 3 => null, 4 => 5, 5 => 4, 6 => null, 7 => 6, 8 => 6, 9 => 1, 10 => null];
+        $this->assertSame($expected, self::stored('USE', 'vars', 'P', everyTeam: true));
 
         // The same, read off the results page as the builder makes it.
         $resultado = ResultadoQuery::create()->filterByEventoId(self::EVENT)->findOneByResultadoId('99PS_EXT');
@@ -341,6 +427,19 @@ final class PosicoesTest extends TestCase
 
     // --- Helpers ---------------------------------------------------------------
 
+    /** Every row of the event's provas and entries, as text, to tell whether anything changed. */
+    private static function fingerprint(): string
+    {
+        $rows = [];
+        foreach (["SELECT prova_id, params, totals, modificado FROM prova WHERE evento_id = ? ORDER BY prova_id",
+                  "SELECT prova_id, equipe_id, dados, vars, pontos FROM input WHERE evento_id = ? ORDER BY prova_id, equipe_id"] as $sql) {
+            $statement = self::$database->prepare($sql);
+            $statement->execute([self::EVENT]);
+            $rows[] = $statement->fetchAll(PDO::FETCH_NUM);
+        }
+        return json_encode($rows);
+    }
+
     /** What juiz/save_entry.php does: store what the judge typed, then work the prova out. */
     private static function saveTracaoEntry(int $car, int $points): void
     {
@@ -356,18 +455,21 @@ final class PosicoesTest extends TestCase
     }
 
     /**
-     * One stored value of every team in a prova, read back from the database.
+     * One stored value of each team in a prova, read back from the database:
+     * of cars 1 to 8 (the table above), or of every team that has an entry.
      *
      * @param 'vars'|'pontos' $column
      * @return array<int, mixed> car => value
      */
-    private static function stored(string $prova, string $column, string $name): array
+    private static function stored(string $prova, string $column, string $name, bool $everyTeam = false): array
     {
         $statement = self::$database->prepare("SELECT equipe_id, $column FROM input WHERE evento_id = ? AND prova_id = ? ORDER BY equipe_id");
         $statement->execute([self::EVENT, $prova]);
         $values = [];
         foreach ($statement->fetchAll(PDO::FETCH_NUM) as [$car, $json]) {
-            $values[(int)$car] = json_decode((string)$json, true)[$name] ?? null;
+            if ($everyTeam || isset(self::POINTS[(int)$car])) {
+                $values[(int)$car] = json_decode((string)$json, true)[$name] ?? null;
+            }
         }
         return $values;
     }
@@ -384,10 +486,11 @@ final class PosicoesTest extends TestCase
             "INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers) VALUES (?, 'Fixture BAJAAPP-102', 'Evento de teste (posições)', 0, 2099, 0, 0, 0)",
             [self::EVENT]
         );
-        foreach (range(1, 9) as $car) {
+        // Car 9 is disqualified, car 10 present with no data, car 11 absent.
+        foreach (range(1, 11) as $car) {
             self::execute(
-                "INSERT INTO equipe (evento_id, equipe_id, escola, equipe, estado, desclassificado) VALUES (?, ?, ?, ?, 'SP', ?)",
-                [self::EVENT, $car, 'ESCOLA DE TESTE ' . $car, 'EQUIPE TESTE ' . $car, $car === 9 ? 1 : 0]
+                "INSERT INTO equipe (evento_id, equipe_id, escola, equipe, estado, desclassificado, presente) VALUES (?, ?, ?, ?, 'SP', ?, ?)",
+                [self::EVENT, $car, 'ESCOLA DE TESTE ' . $car, 'EQUIPE TESTE ' . $car, $car === 9 ? 1 : 0, $car === 11 ? 0 : 1]
             );
         }
 
@@ -402,10 +505,7 @@ final class PosicoesTest extends TestCase
         foreach (self::POINTS as $car => [$tracao, $aceleracao]) {
             self::insertInput('TRA', $car, ['PTS' => $tracao]);
             self::insertInput('AVF', $car, ['PTS' => $aceleracao]);
-            // A prova only stores points for the teams that have an input
-            // row; a judge's first save makes it. Here they are made at once.
-            self::insertInput('CMP', $car, []);
-            self::insertInput('LVL', $car, []);
+            // Nothing for CMP and LVL: they make their own entries.
         }
 
         self::insertResultado('99PS_TRA', ['TRA'], '$TRAPTS');
@@ -431,7 +531,6 @@ final class PosicoesTest extends TestCase
             // Points are never worked out for a disqualified team: car 9
             // keeps those it had before it was disqualified.
             self::insertInput('EXT', $car, $dados, $car === 9 ? ['EXTPTS' => 90] : []);
-            self::insertInput('USE', $car, []);
         }
         self::insertResultado('99PS_EXT', ['EXT'], '$EXTPTS', ['tiebreak' => '$TB', 'filter' => 'OK']);
     }

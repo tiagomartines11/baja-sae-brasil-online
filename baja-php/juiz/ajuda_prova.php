@@ -360,8 +360,12 @@ JSON, 'Exemplo: Compliance. 20 pontos para os carros no top 5 de Tração E de A
     <div class="aviso">Não tire o <code>!== null</code>: para o PHP, vazio é menor que 5, e uma equipe sem posição ganharia os pontos.</div>
     <p><strong>Recálculo automático:</strong> os pontos ficam guardados. Sempre que os pontos de uma prova são recalculados (lançamento, exclusão de nota,
     &quot;Refresh Pontos&quot;, contagem de voltas...), as provas que usam a posição de um resultado que inclui essa prova são recalculadas também,
-    e depois as que dependem delas. O mesmo acontece quando se salva ou apaga um resultado usado em <code>posicoes</code>.
-    A prova só guarda pontos das equipes que já têm lançamento nela.</p>
+    e depois as que dependem delas. O mesmo acontece quando se salva ou apaga um resultado usado em <code>posicoes</code>.</p>
+    <p><strong>Prova derivada (sem campos):</strong> uma prova como a Compliance, cujos pontos vêm só das posições, <strong>não precisa de <code>inputs</code></strong>.
+    Com <code>posicoes</code> e sem <code>inputs</code>, ela cria sozinha, ao ser recalculada, um lançamento vazio para cada equipe <strong>presente</strong> no evento
+    (as mesmas equipes que o juiz vê numa prova normal) e guarda os pontos de todas. Nenhum juiz lança nada: como toda prova sem <code>inputs</code>, ela não aparece na tela do juiz.
+    Equipe sem posição em lugar nenhum recebe os pontos que a fórmula dá para posição vazia (na Compliance, 0); equipe desclassificada, como em toda prova, fica sem pontos.
+    Basta salvar uma nota de uma prova da qual ela depende, ou clicar em &quot;Refresh Pontos&quot; nela.</p>
     <p><strong>Ciclos não são aceitos:</strong> uma prova não pode usar a posição de um resultado que soma os pontos dela mesma,
     direta ou indiretamente (ex.: Compliance usando a posição na Geral, que soma a Compliance). Ao salvar, a página mostra a cadeia,
     por exemplo <code>CMP → 26SU_GER → CMP</code>, e não salva. O mesmo vale ao salvar um resultado.</p>

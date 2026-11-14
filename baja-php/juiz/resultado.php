@@ -194,7 +194,7 @@ Template::printHeader("Detalhes de Resultado", false);
                 <?php } ?>
                 <?php if ($erroPosicoes !== []) { ?>
                 <tr>
-                    <td colspan="2" style="color: red; font-weight: bold;">Resultado não salvo: provas usam a posição dele em <code>posicoes</code> (veja a <a href="ajuda_prova.php#posicoes" target="_blank">ajuda</a>). Corrija e salve de novo.<ul><?php foreach ($erroPosicoes as $erro) { ?><li><?= Html::e($erro) ?></li><?php } ?></ul></td>
+                    <td colspan="2" style="color: red; font-weight: bold;">Resultado não salvo: provas usam a posição dele em <code>posicoes</code> (veja a <a href="ajuda_prova.php#posicoes" target="_blank">ajuda</a>). Corrija e salve de novo.<?php foreach ($erroPosicoes as $erro) { ?><br /><?= Html::e($erro) ?><?php } ?></td>
                 </tr>
                 <?php } ?>
                 <tr>

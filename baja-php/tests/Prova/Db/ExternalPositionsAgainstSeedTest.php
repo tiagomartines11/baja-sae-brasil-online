@@ -48,6 +48,14 @@ final class ExternalPositionsAgainstSeedTest extends TestCase
         if ($host === false || $host === '') {
             self::markTestSkipped('Needs the dev seed: set the database variables.');
         }
+        // This suite's other tests write, as BAJA_TEST_DB_USER (CI: root; its
+        // usual account may only read). Propel is set up once per process, by
+        // whichever test loads it first: this one runs first, so it must
+        // switch accounts too, or every later write is refused.
+        if (getenv('BAJA_TEST_DB_USER')) {
+            putenv('PHPBB_DB_USER=' . getenv('BAJA_TEST_DB_USER'));
+            putenv('PHPBB_DB_PASS=' . getenv('BAJA_TEST_DB_PASS'));
+        }
         require_once dirname(__DIR__, 3) . '/src/config.php';
     }
 

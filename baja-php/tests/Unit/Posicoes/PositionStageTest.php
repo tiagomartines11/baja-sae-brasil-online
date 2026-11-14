@@ -8,6 +8,7 @@ use Baja\Formula\SafeEngine;
 use Baja\Model\Equipe;
 use Baja\Model\Input;
 use Baja\Model\Prova;
+use Baja\Posicoes\DerivedEntries;
 use Baja\Posicoes\PositionStage;
 use PHPUnit\Framework\TestCase;
 
@@ -207,6 +208,19 @@ final class PositionStageTest extends TestCase
 
         $this->assertEquals($before, $input->getVars());
         $this->assertSame(['X'], array_keys((array)$input->getVars()));
+    }
+
+    /**
+     * A DERIVED prova has "posicoes" and no input field (Compliance): it
+     * makes its own entries when worked out (tests/Prova/Db/PosicoesTest).
+     * A prova with input fields, or without "posicoes", is a normal one.
+     */
+    public function testWhatIsADerivedProva(): void
+    {
+        $this->assertTrue(DerivedEntries::isDerived(self::prova('{"posicoes": {"P": {"resultado": "26SU_TRA"}}, "pontos": {"X": "$P"}}')));
+        $this->assertTrue(DerivedEntries::isDerived(self::prova('{"inputs": [], "posicoes": {"P": {"resultado": "26SU_TRA"}}}')));
+        $this->assertFalse(DerivedEntries::isDerived(self::prova('{"inputs": [{"code": "N"}], "posicoes": {"P": {"valor": "$N"}}}')));
+        $this->assertFalse(DerivedEntries::isDerived(self::prova('{"pontos": {"X": "1"}}')));
     }
 
     // --- Helpers ---------------------------------------------------------------

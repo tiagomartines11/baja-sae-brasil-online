@@ -4,6 +4,7 @@ namespace Baja\Model;
 
 use Baja\Model\Base\Prova as BaseProva;
 use Baja\Model\JSON\Field;
+use Baja\Posicoes\DerivedEntries;
 use Baja\Posicoes\PositionStage;
 use Baja\Posicoes\Recalculation;
 use Baja\Repeat\ExpandedInputs;
@@ -103,6 +104,8 @@ class Prova extends BaseProva
     }
 
     public function refreshVarsAndPontos() {
+        // A prova made only of "posicoes" (Compliance) makes its own entries.
+        DerivedEntries::create($this);
         #$inputs = InputQuery::create()->filterByEventoId($this->getEventoId())->findByProvaId($this->getProvaId());
         #Ajuste para desclassificadas
         $inputs = InputQuery::create()->filterByEventoId($this->getEventoId())->joinEquipe()->findByProvaId($this->getProvaId());
