@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace Baja\Tests\Prova\Db;
 
-use Baja\Tests\Contagem\Db\HttpBrowser;
+use Baja\Tests\Prova\Db\Support\JuizPages;
 use PDO;
 use PDOException;
 use PHPUnit\Framework\TestCase;
 
 /**
- * An organiser saving a config with repeated groups (BAJAAPP-103), through
- * the REAL admin pages: juiz/prova.php and juiz/resultado.php.
+ * An organiser saving a config with repeated groups (BAJAAPP-103), on the
+ * real admin pages: juiz/prova.php and juiz/resultado.php.
  *
  * BACKGROUND, FOR SOMEONE NEW TO THIS
  *
@@ -26,24 +26,33 @@ use PHPUnit\Framework\TestCase;
  * The rules themselves are tested in tests/Unit/Repeat; this checks that
  * the pages apply them.
  *
+ * HOW THE PAGES RUN
+ *
+ * Each request runs the page in a PHP process of its own, as php-fpm does,
+ * with the seeded admin "superadmin" logged in and the form's security
+ * token working, but no web server and no forum (Support/JuizPages). So the
+ * tests run in CI, which has a database but no web server.
+ *
  * WHAT EVERY TEST STARTS WITH
  *
- * A made-up event 03SE with an empty prova TRG; the seeded admin account
- * "superadmin" logs in. Removed afterwards.
+ * A made-up event 03SE with an empty prova TRG. Removed afterwards, with
+ * the resultado 03SE_TRR a test may have created.
  *
  * HOW TO RUN
  *
- * Needs the dev stack running, and writes, so only with BAJA_TEST_DB=1:
+ * It writes, so only with BAJA_TEST_DB=1:
  *
  *     docker compose exec -e BAJA_TEST_DB=1 baja-app vendor/bin/phpunit --testsuite prova-db
+ *
+ * It connects as PHPBB_DB_USER, or as BAJA_TEST_DB_USER / BAJA_TEST_DB_PASS
+ * when set (CI sets them, because its usual account may only read).
  */
 final class RepeatedGroupsConfigSaveTest extends TestCase
 {
-    use HttpBrowser;
+    use JuizPages;
 
     private const EVENT = '03SE';
-    private const PROVA_PAGE = '/03SE/prova.php?id=TRG';
-    private const NEW_RESULTADO_PAGE = '/03SE/resultado.php?novo=true';
+    private const ADMIN = 'superadmin';
     private const RESULTADO = '03SE_TRR';
 
     private const GOOD_INPUTS = '{"inputs": [{"code": "PRESENTE", "name": "Presente", "type": "enum", "options": ["SIM", "NÃO"]},
@@ -54,15 +63,18 @@ final class RepeatedGroupsConfigSaveTest extends TestCase
 
     private static ?string $skipped = null;
 
-    /** @var array<string, string> */
-    private array $cookies = [];
-
     public static function setUpBeforeClass(): void
     {
         $host = getenv('PHPBB_DB_HOST');
         if (getenv('BAJA_TEST_DB') !== '1' || $host === false || $host === '') {
             self::$skipped = 'Writes a test event: set BAJA_TEST_DB=1 and the database variables (see the class comment).';
             return;
+        }
+        // The pages (through Propel) connect as PHPBB_DB_USER. Point them at
+        // the test account too, when one is given; the page processes inherit it.
+        if (getenv('BAJA_TEST_DB_USER')) {
+            putenv('PHPBB_DB_USER=' . getenv('BAJA_TEST_DB_USER'));
+            putenv('PHPBB_DB_PASS=' . getenv('BAJA_TEST_DB_PASS'));
         }
         try {
             self::$database = new PDO(
@@ -75,7 +87,6 @@ final class RepeatedGroupsConfigSaveTest extends TestCase
             self::$skipped = 'No database: ' . $e->getMessage();
             return;
         }
-        require_once dirname(__DIR__, 3) . '/src/config.php';
     }
 
     protected function setUp(): void
@@ -86,7 +97,6 @@ final class RepeatedGroupsConfigSaveTest extends TestCase
         self::removeFixture();
         self::execute("INSERT INTO evento (evento_id, titulo, nome, tipo, ano, ativo, finalizado, spoilers) VALUES (?, 'Fixture BAJAAPP-103', 'Teste', 0, 2003, 0, 0, 0)", [self::EVENT]);
         self::execute("INSERT INTO prova (evento_id, prova_id, nome, status, params, totals) VALUES (?, 'TRG', 'Tração', 1, '{}', '{}')", [self::EVENT]);
-        $this->cookies = $this->loginAndGetCookies('superadmin');
     }
 
     protected function tearDown(): void
@@ -102,6 +112,7 @@ final class RepeatedGroupsConfigSaveTest extends TestCase
         $saved = $this->saveProva(self::GOOD_INPUTS);
 
         $this->assertSame(302, $saved['status'], 'saved, and sent back to the page');
+        $this->assertSame('prova.php?id=TRG', $saved['location']);
         $params = json_decode(self::selectOne("SELECT params FROM prova WHERE evento_id = ? AND prova_id = 'TRG'", [self::EVENT]), true);
         $this->assertSame(6, $params['inputs'][1]['repetir']);
         $this->assertCount(2, $params['inputs']);
@@ -120,6 +131,7 @@ final class RepeatedGroupsConfigSaveTest extends TestCase
         $refused = $this->saveProva($wrong);
 
         $this->assertSame(200, $refused['status']);
+        $this->assertSame('', $refused['location'], 'not sent anywhere: the form is shown again');
         $this->assertStringContainsString('Parâmetros não salvos: há problemas nos grupos repetidos', $refused['body']);
         $this->assertStringContainsString('Grupo &quot;Tentativa&quot;: &quot;repetir&quot; precisa ser um número inteiro de 1 a 20 (recebeu 0).', $refused['body']);
         $this->assertStringContainsString('O código T_2 aparece mais de uma vez', $refused['body']);
@@ -143,30 +155,23 @@ final class RepeatedGroupsConfigSaveTest extends TestCase
 
     // ------------------------------------------------------------------
 
+    /** Opens the prova's page, then presses Atualizar with $params, as the organiser does. */
     private function saveProva(string $params): array
     {
-        $page = $this->get(self::PROVA_PAGE, $this->cookies);
-        $this->assertSame(200, $page['status'], 'superadmin opens the prova page');
-        return $this->postForm(self::PROVA_PAGE, ['_csrf' => $this->tokenIn($page['body']), 'act' => 'Atualizar', 'nome' => 'Tração', 'params' => $params]);
-    }
-
-    private function saveNewResultado(string $colunas): array
-    {
-        $page = $this->get(self::NEW_RESULTADO_PAGE, $this->cookies);
-        return $this->postForm(self::NEW_RESULTADO_PAGE, [
-            '_csrf' => $this->tokenIn($page['body']), 'act' => 'Salvar', 'resultado_id' => self::RESULTADO, 'nome' => 'Tração', 'inputs' => 'TRG', 'colunas' => $colunas,
+        $page = $this->openPage(self::EVENT, 'prova.php', self::ADMIN, ['id' => 'TRG']);
+        $this->assertSame(200, $page['status'], 'the admin opens the prova page');
+        return $this->submitForm(self::EVENT, 'prova.php', self::ADMIN, ['id' => 'TRG'], [
+            '_csrf' => $this->formTokenIn($page['body']), 'act' => 'Atualizar', 'nome' => 'Tração', 'params' => $params,
         ]);
     }
 
-    private function postForm(string $path, array $fields): array
+    /** Opens the new resultado page, then presses Salvar with $colunas. */
+    private function saveNewResultado(string $colunas): array
     {
-        return $this->request('POST', $path, $this->cookies, http_build_query($fields), self::JUIZ_SITE, ['Content-Type: application/x-www-form-urlencoded']);
-    }
-
-    private function tokenIn(string $html): string
-    {
-        $this->assertSame(1, preg_match('/name="_csrf" value="([0-9a-f]+)"/', $html, $found), 'the page has no form token');
-        return $found[1];
+        $page = $this->openPage(self::EVENT, 'resultado.php', self::ADMIN, ['novo' => 'true']);
+        return $this->submitForm(self::EVENT, 'resultado.php', self::ADMIN, ['novo' => 'true'], [
+            '_csrf' => $this->formTokenIn($page['body']), 'act' => 'Salvar', 'resultado_id' => self::RESULTADO, 'nome' => 'Tração', 'inputs' => 'TRG', 'colunas' => $colunas,
+        ]);
     }
 
     private static function removeFixture(): void

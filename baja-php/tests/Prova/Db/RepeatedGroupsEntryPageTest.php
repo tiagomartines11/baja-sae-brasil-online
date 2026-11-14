@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 namespace Baja\Tests\Prova\Db;
 
-use Baja\Tests\Contagem\Db\HttpBrowser;
+use Baja\Tests\Prova\Db\Support\JuizPages;
 use PDO;
 use PDOException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * The judge's entry page for a prova with a repeated group (BAJAAPP-103),
- * through the REAL web server: the page a judge opens, and the save.
+ * run for real: the page a judge opens, and the save.
  *
  * BACKGROUND, FOR SOMEONE NEW TO THIS
  *
@@ -22,44 +22,49 @@ use PHPUnit\Framework\TestCase;
  *
  * The page shows each attempt as a block with its own Salvar, Anterior,
  * Próxima and a row of numbered buttons to jump to any attempt. Attempt
- * n+1 is locked until attempt n is complete. These tests check that the
- * page really comes out that way and that saving behaves, which only a
- * request through the web server shows (permissions, the form's security
- * token, where the browser is sent afterwards). The blocks' logic itself
- * is tested without a server in tests/Unit/Juiz/RepeatedGroupsEntryTest.
+ * n+1 is locked until attempt n is complete. These tests run the real page
+ * files against a real database and check what a browser would get: the
+ * HTML, the status code, and where the browser is sent after a save. The
+ * blocks' logic itself is tested without a database in
+ * tests/Unit/Juiz/RepeatedGroupsEntryTest.
+ *
+ * HOW THE PAGES RUN
+ *
+ * Each request runs the page in a PHP process of its own, as php-fpm does,
+ * with the judge logged in and the form's security token working, but no
+ * web server and no forum (Support/JuizPages and run-juiz-page.php). So
+ * the tests run in CI, which has a database but no web server.
  *
  * WHAT EVERY TEST STARTS WITH
  *
- * A made-up event 03SE (an id the web server routes, /03SE/...; it never
- * existed) with the prova TRG and team 7, whose stored data says it is
- * present and ran attempt 1 in 4.512 s. The seeded judge "juiz1" gets the
- * permission for 03SE_TRG for the length of the test. All of it is removed
- * afterwards.
+ * A made-up event 03SE (it never existed) with the prova TRG, team 7, whose
+ * stored data says it is present and ran attempt 1 in 4.512 s, and a judge
+ * account "zz103_juiz" allowed to score 03SE_TRG. The fields are marked
+ * "sensitive", so a save sends no push notification from a test. All of it
+ * is removed afterwards.
  *
  * HOW TO RUN
  *
- * Needs the dev stack running, and writes, so only with BAJA_TEST_DB=1:
+ * It writes, so only with BAJA_TEST_DB=1:
  *
  *     docker compose exec -e BAJA_TEST_DB=1 baja-app vendor/bin/phpunit --testsuite prova-db
+ *
+ * It connects as PHPBB_DB_USER, or as BAJA_TEST_DB_USER / BAJA_TEST_DB_PASS
+ * when set (CI sets them, because its usual account may only read).
  */
 final class RepeatedGroupsEntryPageTest extends TestCase
 {
-    use HttpBrowser {
-        tearDown as private tearDownHttpBrowser;
-    }
+    use JuizPages;
 
     private const EVENT = '03SE';
     private const PROVA = 'TRG';
     private const TEAM = 7;
-    private const ENTRY = '/03SE/entry.php?p=TRG&t=7';
-    private const SAVE = '/03SE/save_entry.php?p=TRG&t=7';
+    private const JUDGE = 'zz103_juiz';
+    private const ENTRY = ['p' => 'TRG', 't' => '7'];
 
     private static ?PDO $database = null;
 
     private static ?string $skipped = null;
-
-    /** @var array<string, string> the judge's cookies, after logging in */
-    private array $cookies = [];
 
     public static function setUpBeforeClass(): void
     {
@@ -67,6 +72,12 @@ final class RepeatedGroupsEntryPageTest extends TestCase
         if (getenv('BAJA_TEST_DB') !== '1' || $host === false || $host === '') {
             self::$skipped = 'Writes a test event: set BAJA_TEST_DB=1 and the database variables (see the class comment).';
             return;
+        }
+        // The pages (through Propel) connect as PHPBB_DB_USER. Point them at
+        // the test account too, when one is given; the page processes inherit it.
+        if (getenv('BAJA_TEST_DB_USER')) {
+            putenv('PHPBB_DB_USER=' . getenv('BAJA_TEST_DB_USER'));
+            putenv('PHPBB_DB_PASS=' . getenv('BAJA_TEST_DB_PASS'));
         }
         try {
             self::$database = new PDO(
@@ -79,7 +90,6 @@ final class RepeatedGroupsEntryPageTest extends TestCase
             self::$skipped = 'No database: ' . $e->getMessage();
             return;
         }
-        require_once dirname(__DIR__, 3) . '/src/config.php';
     }
 
     protected function setUp(): void
@@ -89,8 +99,6 @@ final class RepeatedGroupsEntryPageTest extends TestCase
         }
         self::removeFixture();  // left over from a run that was interrupted
         self::insertFixture();
-        $this->grant(self::CONTROLLER, self::EVENT . '_' . self::PROVA);
-        $this->cookies = $this->loginAndGetCookies(self::CONTROLLER);
     }
 
     protected function tearDown(): void
@@ -98,8 +106,6 @@ final class RepeatedGroupsEntryPageTest extends TestCase
         if (self::$database !== null && self::$skipped === null) {
             self::removeFixture();
         }
-        // HttpBrowser's own tearDown takes the permission back.
-        $this->tearDownHttpBrowser();
     }
 
     /**
@@ -109,7 +115,7 @@ final class RepeatedGroupsEntryPageTest extends TestCase
      */
     public function testThePageShowsOneBlockPerAttempt(): void
     {
-        $page = $this->get(self::ENTRY, $this->cookies);
+        $page = $this->openEntryPage();
 
         $this->assertSame(200, $page['status']);
         preg_match_all('/<tbody class="repeticao" id="([^"]+)"[^>]*data-estado="([^"]+)"/', $page['body'], $blocks, PREG_SET_ORDER);
@@ -136,8 +142,7 @@ final class RepeatedGroupsEntryPageTest extends TestCase
     /** The navigation of attempt 3: back to 2, on to 4, and a numbered button for each attempt. */
     public function testTheBlockButtonsLeadToTheRightAttempts(): void
     {
-        $body = $this->get(self::ENTRY, $this->cookies)['body'];
-        $third = self::block($body, 'repeticao-1-3');
+        $third = self::block($this->openEntryPage()['body'], 'repeticao-1-3');
 
         $this->assertStringContainsString('<button type="submit" name="submit" value="repeticao-1-3" class="salvar-bloco" disabled>Salvar</button>', $third);
         $this->assertStringContainsString('href="#repeticao-1-2">◀ Anterior</a>', $third);
@@ -156,9 +161,9 @@ final class RepeatedGroupsEntryPageTest extends TestCase
      */
     public function testSalvarOfABlockSavesAndComesBackToThatBlock(): void
     {
-        $token = $this->tokenOfThePage();
+        $token = $this->formTokenIn($this->openEntryPage()['body']);
 
-        $saved = $this->post(['_csrf' => $token, 'submit' => 'repeticao-1-2', 'PRESENTE' => 'SIM', 'T_1' => '4.512', 'D_2' => '12.25']);
+        $saved = $this->save(['_csrf' => $token, 'submit' => 'repeticao-1-2', 'PRESENTE' => 'SIM', 'T_1' => '4.512', 'D_2' => '12.25']);
 
         $this->assertSame(302, $saved['status']);
         $this->assertSame('entry.php?p=TRG&t=7#repeticao-1-2', $saved['location']);
@@ -171,7 +176,7 @@ final class RepeatedGroupsEntryPageTest extends TestCase
         $this->assertNull($dados['T_2']);
 
         // The page now shows attempt 2 filled and attempt 3 open.
-        $body = $this->get(self::ENTRY, $this->cookies)['body'];
+        $body = $this->openEntryPage()['body'];
         $this->assertMatchesRegularExpression('/id="repeticao-1-2"[^>]*data-estado="preenchida"/', $body);
         $this->assertMatchesRegularExpression('/id="repeticao-1-3"[^>]*data-estado="vazia"/', $body);
     }
@@ -179,10 +184,11 @@ final class RepeatedGroupsEntryPageTest extends TestCase
     /** The old buttons still do what they did: plain Salvar goes back to the list of teams. */
     public function testThePlainSalvarStillGoesToTheList(): void
     {
-        $saved = $this->post(['_csrf' => $this->tokenOfThePage(), 'submit' => 'Salvar', 'PRESENTE' => 'SIM', 'T_1' => '4.4']);
+        $saved = $this->save(['_csrf' => $this->formTokenIn($this->openEntryPage()['body']), 'submit' => 'Salvar', 'PRESENTE' => 'SIM', 'T_1' => '4.4']);
 
         $this->assertSame(302, $saved['status']);
         $this->assertSame('dashboard.php?p=TRG', $saved['location']);
+        $this->assertEquals(4.4, $this->storedDados()['T_1']);
     }
 
     /**
@@ -194,7 +200,7 @@ final class RepeatedGroupsEntryPageTest extends TestCase
     {
         $before = $this->storedDados();
 
-        $refused = $this->post(['_csrf' => $this->tokenOfThePage(), 'submit' => 'repeticao-1-4', 'PRESENTE' => 'SIM', 'T_1' => '4.512', 'T_4' => '4.1']);
+        $refused = $this->save(['_csrf' => $this->formTokenIn($this->openEntryPage()['body']), 'submit' => 'repeticao-1-4', 'PRESENTE' => 'SIM', 'T_1' => '4.512', 'T_4' => '4.1']);
 
         $this->assertSame(422, $refused['status']);
         $this->assertStringContainsString('Nada foi salvo', $refused['body']);
@@ -202,18 +208,32 @@ final class RepeatedGroupsEntryPageTest extends TestCase
         $this->assertSame($before, $this->storedDados());
     }
 
-    // ------------------------------------------------------------------
-
-    private function tokenOfThePage(): string
+    /**
+     * Without the form's security token nothing is saved (BAJAAPP-41): this
+     * shows the token the tests send is really checked, not waved through.
+     */
+    public function testASaveWithoutTheFormTokenIsRefused(): void
     {
-        $body = $this->get(self::ENTRY, $this->cookies)['body'];
-        $this->assertSame(1, preg_match('/name="_csrf" value="([0-9a-f]+)"/', $body, $found), 'the page has no form token');
-        return $found[1];
+        $before = $this->storedDados();
+
+        $refused = $this->save(['submit' => 'repeticao-1-2', 'PRESENTE' => 'SIM', 'T_1' => '4.512', 'D_2' => '12.25']);
+
+        $this->assertSame(403, $refused['status']);
+        $this->assertSame($before, $this->storedDados());
     }
 
-    private function post(array $fields): array
+    // ------------------------------------------------------------------
+
+    /** @return array{status: int, location: string, body: string} */
+    private function openEntryPage(): array
     {
-        return $this->request('POST', self::SAVE, $this->cookies, http_build_query($fields), self::JUIZ_SITE, ['Content-Type: application/x-www-form-urlencoded']);
+        return $this->openPage(self::EVENT, 'entry.php', self::JUDGE, self::ENTRY);
+    }
+
+    /** @return array{status: int, location: string, body: string} */
+    private function save(array $fields): array
+    {
+        return $this->submitForm(self::EVENT, 'save_entry.php', self::JUDGE, self::ENTRY, $fields);
     }
 
     /** One block's HTML, from its opening to the next block. */
@@ -224,7 +244,7 @@ final class RepeatedGroupsEntryPageTest extends TestCase
         return substr($body, (int)$start, (int)$end - (int)$start);
     }
 
-    /** @return array<string, mixed> the team's stored dados, in the stored order */
+    /** @return array<string, mixed> the team's stored dados */
     private function storedDados(): array
     {
         $statement = self::$database->prepare('SELECT dados FROM input WHERE evento_id = ? AND prova_id = ? AND equipe_id = ?');
@@ -241,10 +261,10 @@ final class RepeatedGroupsEntryPageTest extends TestCase
         self::execute(
             "INSERT INTO prova (evento_id, prova_id, nome, status, params, totals) VALUES (?, ?, 'Tração', 1, ?, '{}')",
             [self::EVENT, self::PROVA, json_encode(['inputs' => [
-                ['code' => 'PRESENTE', 'name' => 'Presente', 'type' => 'enum', 'options' => ['SIM', 'NÃO']],
+                ['code' => 'PRESENTE', 'name' => 'Presente', 'type' => 'enum', 'options' => ['SIM', 'NÃO'], 'sensitive' => true],
                 ['repetir' => 6, 'nome' => 'Tentativa', 'inputs' => [
-                    ['code' => 'T', 'name' => 'Tempo [s]', 'type' => 'number', 'precision' => 3, 'xor' => 'A'],
-                    ['code' => 'D', 'name' => 'Distância [m]', 'type' => 'number', 'precision' => 2, 'xor' => 'A'],
+                    ['code' => 'T', 'name' => 'Tempo [s]', 'type' => 'number', 'precision' => 3, 'xor' => 'A', 'sensitive' => true],
+                    ['code' => 'D', 'name' => 'Distância [m]', 'type' => 'number', 'precision' => 2, 'xor' => 'A', 'sensitive' => true],
                 ]],
             ], 'min_max' => ['T' => 'MENOR($T_lista)'], 'pontos' => ['TRAPTS' => '$T ? ROUND(50 * $Tmin / $T, 3) : 0']])]
         );
@@ -256,10 +276,13 @@ final class RepeatedGroupsEntryPageTest extends TestCase
             "INSERT INTO input (evento_id, prova_id, equipe_id, dados, vars, pontos) VALUES (?, ?, ?, ?, '{}', '{}')",
             [self::EVENT, self::PROVA, self::TEAM, json_encode(['PRESENTE' => 'SIM', 'T_1' => 4.512])]
         );
+        // As Propel stores a permission list.
+        self::execute("INSERT INTO user (username, permissions) VALUES (?, '| index | 03SE_TRG |')", [self::JUDGE]);
     }
 
     private static function removeFixture(): void
     {
+        self::execute('DELETE FROM user WHERE username = ?', [self::JUDGE]);
         // Every other row of the fixture hangs off the event, ON DELETE CASCADE.
         self::execute('DELETE FROM evento WHERE evento_id = ?', [self::EVENT]);
     }
