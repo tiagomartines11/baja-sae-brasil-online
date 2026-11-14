@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Baja\Results;
 
+use Baja\Repeat\RepeatedColumns;
+
 /**
  * One column of a resultado, as the organiser wrote it in the resultado's
  * "colunas" JSON:
@@ -40,10 +42,13 @@ final class Column
     ) {
     }
 
-    /** Reads one entry of the "colunas" list. */
+    /**
+     * Reads one entry of the "colunas" list. A repeated column ("repetir",
+     * BAJAAPP-103) is read as the list it stands for (Repeat\RepeatedColumns).
+     */
     public static function fromJson(mixed $json): self
     {
-        $json = is_object($json) ? $json : (object)[];
+        $json = is_object($json) ? RepeatedColumns::expandColumn($json) : (object)[];
         return new self(
             $json->header ?? null,
             $json->val ?? null,

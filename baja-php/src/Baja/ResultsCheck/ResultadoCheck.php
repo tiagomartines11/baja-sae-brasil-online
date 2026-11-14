@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\ResultsCheck;
 
+use Baja\Repeat\RepeatedColumns;
 use Baja\Results\Column;
 use Baja\Results\EventStatus;
 use Baja\Results\Ranking\Ranking;
@@ -68,6 +69,9 @@ final class ResultadoCheck
         }
 
         $findings = self::formulaErrors($slots, $errors, $teams);
+        foreach (RepeatedColumns::errors($colunas) as $error) {
+            $findings[] = new Finding(Finding::REPEATED, 'colunas', $error);
+        }
         if ($teams > 0) {
             array_push($findings, ...self::emptyColumns($config, $colunas, $rows, $findings));
         }

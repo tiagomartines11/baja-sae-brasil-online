@@ -7,6 +7,7 @@ use Baja\Contagem\Engine\PublishedValues;
 use Baja\Formula\SafeEngine;
 use Baja\Model\Input;
 use Baja\Model\Prova;
+use Baja\Repeat\InputGroups;
 use Baja\Results\ResultsConfig;
 use Baja\Results\TeamInput;
 use Throwable;
@@ -96,7 +97,7 @@ final class UnknownVariables
         if (!is_object($params)) {
             return [];
         }
-        $names = self::inputFields($params) + self::keys($params->vars ?? null) + self::keys($params->pontos ?? null)
+        $names = self::inputFields($params, false) + self::keys($params->vars ?? null) + self::keys($params->pontos ?? null)
             + self::keys($prova->getTotals()) + self::systemFields($prova->getType());
         foreach (array_keys(self::keys($params->min_max ?? null)) as $variable) {
             $names[$variable] = true;
@@ -117,7 +118,7 @@ final class UnknownVariables
         if (!is_object($params)) {
             return [];
         }
-        $fields = self::inputFields($params) + self::systemFields($prova->getType());
+        $fields = self::inputFields($params, true) + self::systemFields($prova->getType());
         foreach ($inputs as $input) {
             $fields += self::keys($input->getDados());
         }
@@ -217,14 +218,25 @@ final class UnknownVariables
         };
     }
 
-    /** @return array<string, true> the codes of a prova's "inputs" */
-    private static function inputFields(object $params): array
+    /**
+     * The codes of a prova's "inputs", with the repeated groups written out
+     * (T_1 ... T_6), and, with $withLists, the lists of those groups
+     * ($T_lista; see Repeat\InputGroups). The lists are for the prova's own
+     * formulas only: a resultado sees the stored dados, which have no list.
+     *
+     * @return array<string, true>
+     */
+    private static function inputFields(object $params, bool $withLists): array
     {
         $fields = [];
-        foreach ((array)($params->inputs ?? []) as $field) {
+        $expanded = InputGroups::expand($params->inputs ?? []);
+        foreach ($expanded->inputs as $field) {
             if (is_object($field) && isset($field->code) && is_scalar($field->code)) {
                 $fields[(string)$field->code] = true;
             }
+        }
+        foreach ($withLists ? array_keys($expanded->listVariables(null)) : [] as $list) {
+            $fields[$list] = true;
         }
         return $fields;
     }

@@ -2,6 +2,7 @@
 namespace Baja\Juiz;
 
 use Baja\Auth\Csrf;
+use Baja\Repeat\RepeatedColumns;
 use Baja\Model\EventoQuery;
 use Baja\Model\LogQuery;
 use Baja\Model\ResultadoQuery;
@@ -28,6 +29,9 @@ $novo = false;
 // Set when the submitted columns are not valid JSON: nothing is saved and
 // the form is shown again with the text as typed and this message.
 $erroJson = null;
+// The same for valid JSON whose repeated columns are wrong (BAJAAPP-103,
+// Baja\Repeat\RepeatedColumns): one message per problem.
+$errosConfig = [];
 
 if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
     $novo = true;
@@ -42,6 +46,8 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             $colunas = ConfigJson::decodificar($_POST['colunas']);
             if (!$colunas->valido()) {
                 $erroJson = $colunas->erro;
+            } else if ($errosConfig = RepeatedColumns::errors($colunas->valor)) {
+                // Not saved; shown below.
             } else {
                 $resultado = new Resultado();
                 $resultado->setEventoId($currentEventId);
@@ -106,6 +112,8 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
         $colunas = ConfigJson::decodificar($_POST['colunas'] ?? '');
         if (!$colunas->valido()) {
             $erroJson = $colunas->erro;
+        } else if ($errosConfig = RepeatedColumns::errors($colunas->valor)) {
+            // Not saved; shown below.
         } else {
             if ($resultado->getColunas() != $colunas->valor) {
                 $backups['-5'] = $bk4;
@@ -159,6 +167,13 @@ Template::printHeader("Detalhes de Resultado", false);
                     <td colspan="2" style="color: red; font-weight: bold;">Colunas não salvas: o JSON é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto abaixo e salve de novo.</td>
                 </tr>
                 <?php } ?>
+                <?php if ($errosConfig) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Colunas não salvas: há problemas nas colunas repetidas (<a href="ajuda_resultado.php#colunas-repetidas" target="_blank">ajuda</a>). Corrija o texto abaixo e salve de novo.<ul>
+                        <?php foreach ($errosConfig as $erro) { ?><li><?= Html::e($erro) ?></li><?php } ?>
+                    </ul></td>
+                </tr>
+                <?php } ?>
                 <tr>
                     <td>Evento</td>
                     <td><input style="width:700px;" type="text" name="evento_id" disabled value="<?= Html::field($currentEventId) ?>"/></td>
@@ -209,7 +224,7 @@ Template::printHeader("Detalhes de Resultado", false);
                 </tr>
                 <tr>
                 <td><textarea style="width:700px;min-height:600px;" name="colunas" id="colunas" <?= $novo?'':'oninput="resetStyles();"' ?>><?php
-                    if ($erroJson !== null) {
+                    if ($erroJson !== null || $errosConfig) {
                         // Give back exactly what was typed, so the fix is one edit away
                         echo htmlspecialchars($_POST['colunas'] ?? '');
                     } else {

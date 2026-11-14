@@ -54,10 +54,16 @@ For every resultado of every event (or of `--events`):
      $Ace_pts is given by nothing here, so it is empty for every team (there is $ACE_PTS; names care about case)
    ```
 
+5. **Repeated group config** (BAJAAPP-103): a repeated column (`"repetir"`)
+   that `juiz/resultado.php` would refuse to save. Its lines are checked like
+   any list column, but no fix is proposed inside one: the column holds one
+   formula with `{n}`, not the lines the check ran.
+
 It also runs every **prova**'s formulas (`params`: `vars`, `min_max`,
 `pontos`) for every team, and reports their errors and unknown variables. A
 `vars` formula sees only the input fields (and, in a rolling prova, the
-entry's `ts`); `min_max` also the vars; `pontos` also the totals (`$Xmax`,
+entry's `ts`; with a repeated input group, the expanded fields `T_1`...
+and the lists `$T_lista`); `min_max` also the vars; `pontos` also the totals (`$Xmax`,
 `$Xmin`, `$Xcom`, `$Xcount`, `$Xsum`, `$Xavg`) and the `pontos` before it in
 alphabetical order, which is the order they are worked out. Those are report-only:
 saving a prova recomputes every stored point (BAJAAPP-56), so a person decides.

@@ -40,6 +40,11 @@ final class Allowlist
         // Only array_filter($list), which drops the empty values: its second
         // argument names a function to call, which could be any function.
         'array_filter' => 1,
+        // Not PHP's: the list helpers of BAJAAPP-103 (ListFunctions). They
+        // check their own argument count, as eval() runs them.
+        'menor' => null,
+        'maior' => null,
+        'contar' => null,
     ];
 
     public const CONSTANTS = [

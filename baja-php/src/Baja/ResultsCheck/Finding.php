@@ -24,6 +24,12 @@ final class Finding
     public const FORMULA_ERROR = 'Formula raises an error';
     public const RANKING = 'Ranking config';
     public const EMPTY_COLUMN = 'Column empty for every team';
+    /**
+     * A repeated group or column (BAJAAPP-103) that prova.php or
+     * resultado.php would refuse to save: a bad "repetir", an empty or
+     * nested group, a code that collides once expanded.
+     */
+    public const REPEATED = 'Repeated group config';
     /** A variable the formula reads that nothing gives it there (UnknownVariables). */
     public const UNKNOWN_VARIABLE = 'Unknown variables';
 

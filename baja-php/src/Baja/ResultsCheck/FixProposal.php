@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\ResultsCheck;
 
+use Baja\Repeat\RepeatedColumns;
 use Baja\Results\TeamInput;
 
 /**
@@ -45,6 +46,12 @@ final class FixProposal
         foreach ($findings as $finding) {
             $slot = $finding->slot;
             if ($finding->problem !== Finding::FORMULA_ERROR || $slot === null || $slot->path === [] || !is_string($slot->formula)) {
+                continue;
+            }
+            // A repeated column ("repetir", BAJAAPP-103) holds one formula
+            // with {n}, not the lines the check ran: no rewrite of a line can
+            // be written back into it. Reported, not fixed.
+            if ($slot->path[0] === 'colunas' && RepeatedColumns::isRepeated(((array)($colunas->colunas ?? []))[$slot->path[1]] ?? null)) {
                 continue;
             }
             $fixed = FormulaFix::propose($slot->formula);

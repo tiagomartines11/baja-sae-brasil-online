@@ -14,6 +14,9 @@ use DateTime;
 use DateTimeZone;
 use Error;
 
+// MENOR(), MAIOR(), CONTAR(): global functions a formula may call (ListFunctions).
+require_once __DIR__ . '/list-functions.php';
+
 /**
  * Turns a read formula (a tree of Nodes, see Syntax\Parser) into a PHP
  * function that works it out: compile() once, then call the result with a

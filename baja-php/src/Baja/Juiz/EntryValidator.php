@@ -5,6 +5,7 @@ namespace Baja\Juiz;
 
 use Baja\Auth\Csrf;
 use Baja\Model\JSON\Field;
+use Baja\Repeat\Repetition;
 
 /**
  * Checks what a judge's form posted before juiz/save_entry.php or
@@ -31,9 +32,14 @@ use Baja\Model\JSON\Field;
  *               Prova::getParamsInputs() do
  *
  *   xor         of the fields marked "A" (or "B") at most one has a value;
- *               the page locks the others as soon as one is filled
+ *               the page locks the others as soon as one is filled. In a
+ *               repeated group the letter is scoped to its repetition
+ *               ("A_3", see Repeat\InputGroups): T_3 locks D_3 only
  *   pass 2      a field of group 2 may only have a value when group 1 is
  *               complete; the page locks group 2 until then
+ *   repetition  (entry.php only, BAJAAPP-103) a field of repetition n+1 of
+ *               a repeated group may only have a value when repetition n
+ *               is complete; the page locks it until then
  *   Salvar      at least one group is complete: the page only enables the
  *               button when the group being edited has no empty field
  *
@@ -43,22 +49,22 @@ use Baja\Model\JSON\Field;
  *
  * The page scripts look at groups 1 to 10 (entry.php) and only 1 and 2
  * (rolling_entry.php); a field in any other group never decides the button.
+ * On entry.php the passes of repeated groups count too, whatever their
+ * number: a group of 20 repetitions after a pass 1 goes up to pass 21.
  */
 final class EntryValidator
 {
-    /** The xor letters the page scripts handle; any other xor does nothing. */
-    private const XOR_LETTERS = ['A', 'B'];
-
     /** @var array<string, Field> code => field the form shows as an input, in form order */
     private array $fields = [];
 
     /**
-     * @param Field[]  $fields      the fields the form shows as inputs
-     * @param string[] $controlKeys posted names that are buttons or selectors, not fields
-     * @param string[] $groups      the pass values whose fields the page script handles
-     * @param string[] $engineOwned codes the lap counting writes, not shown as inputs
+     * @param Field[]  $fields            the fields the form shows as inputs
+     * @param string[] $controlKeys       posted names that are buttons or selectors, not fields
+     * @param string[] $groups            the pass values whose fields the page script handles
+     * @param string[] $engineOwned       codes the lap counting writes, not shown as inputs
+     * @param bool     $repetitionsLock   whether repetition n+1 waits for repetition n (entry.php)
      */
-    private function __construct(array $fields, private array $controlKeys, private array $groups, private array $engineOwned)
+    private function __construct(array $fields, private array $controlKeys, private array $groups, private array $engineOwned, private bool $repetitionsLock = false)
     {
         foreach ($fields as $field) {
             $code = (string) $field->getCode();
@@ -80,7 +86,26 @@ final class EntryValidator
      */
     public static function forEntry(array $fields, array $engineOwned = []): self
     {
-        return new self($fields, ['submit', 'delete', Csrf::FIELD], array_map('strval', range(1, 10)), $engineOwned);
+        return new self($fields, ['submit', 'delete', Csrf::FIELD], self::entryPasses($fields), $engineOwned, true);
+    }
+
+    /**
+     * The passes whose Salvar rule entry.php's script applies, and this
+     * class checks: 1 to 10, as always, and every pass of a repeated group,
+     * however high (BAJAAPP-103).
+     *
+     * @param Field[] $fields
+     * @return list<string>
+     */
+    public static function entryPasses(array $fields): array
+    {
+        $passes = array_map('strval', range(1, 10));
+        foreach ($fields as $field) {
+            if ($field->getRepetition() !== null) {
+                $passes[] = (string) $field->getRepetition()->pass;
+            }
+        }
+        return array_values(array_unique($passes));
     }
 
     /** The form of juiz/rolling_entry.php, posted to juiz/save_rolling_entry.php. */
@@ -273,9 +298,8 @@ final class EntryValidator
         $filledByLetter = [];
         foreach ($this->fields as $code => $field) {
             $filled[$code] = self::typedValue($post, $code) !== null;
-            $letter = (string) $field->getXor();
-            if ($filled[$code] && in_array($letter, self::XOR_LETTERS, true)) {
-                $filledByLetter[$letter][] = $code;
+            if ($filled[$code] && $field->hasActiveXor()) {
+                $filledByLetter[(string) $field->getXor()][] = $code;
             }
         }
 
@@ -316,6 +340,10 @@ final class EntryValidator
             }
         }
 
+        if ($this->repetitionsLock) {
+            $errors += $this->repetitionErrors($filled, $filledByLetter);
+        }
+
         $groups = array_values(array_filter($this->groups, fn($g) => $members[$g] !== []));
         foreach ($groups as $group) {
             if ($missing[$group] === []) {
@@ -333,6 +361,67 @@ final class EntryValidator
             $errors[$code] ??= self::label($this->fields[$code]) . ': precisa ser preenchido; o botão Salvar só funciona com todos os campos de um grupo preenchidos.';
         }
         return $errors;
+    }
+
+    /**
+     * A repetition of a repeated group with a value in it while the one
+     * before it is not complete: the page keeps it locked, so the value
+     * did not come from the page as it is now. Earlier repetitions stay
+     * editable, so emptying T_2 after T_3 was saved is refused here too
+     * rather than leaving a gap the judge did not see.
+     *
+     * @param array<string, bool>          $filled         code => has a value
+     * @param array<string, list<string>>  $filledByLetter xor letter => filled codes
+     * @return array<string, string>
+     */
+    private function repetitionErrors(array $filled, array $filledByLetter): array
+    {
+        $byPlace = [];
+        foreach ($this->fields as $field) {
+            $repetition = $field->getRepetition();
+            if ($repetition !== null) {
+                $byPlace[$repetition->group][$repetition->number] = $repetition;
+            }
+        }
+
+        $errors = [];
+        foreach ($byPlace as $repetitions) {
+            foreach ($repetitions as $number => $repetition) {
+                $previous = $repetitions[$number - 1] ?? null;
+                if ($previous === null || $this->isComplete($previous, $filled, $filledByLetter)) {
+                    continue;
+                }
+                foreach ($repetition->codes as $code) {
+                    if ($filled[$code] ?? false) {
+                        $errors[$code] = self::label($this->fields[$code]) . ': "' . $repetition->title() . '" está bloqueada até "'
+                            . $previous->title() . '" estar completa. Preencha "' . $previous->title() . '" primeiro.';
+                    }
+                }
+            }
+        }
+        return $errors;
+    }
+
+    /**
+     * Every field of the repetition has a value, or is locked by xor
+     * because another field of its letter has one.
+     *
+     * @param array<string, bool>         $filled
+     * @param array<string, list<string>> $filledByLetter
+     */
+    private function isComplete(Repetition $repetition, array $filled, array $filledByLetter): bool
+    {
+        foreach ($repetition->codes as $code) {
+            $field = $this->fields[$code] ?? null;
+            if ($field === null || ($filled[$code] ?? false)) {
+                continue;
+            }
+            if ($field->hasActiveXor() && isset($filledByLetter[(string) $field->getXor()])) {
+                continue;
+            }
+            return false;
+        }
+        return true;
     }
 
     private static function label(Field $field): string

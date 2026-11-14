@@ -5,6 +5,9 @@
 
 namespace Baja\Formula;
 
+// MENOR(), MAIOR(), CONTAR(): global functions a formula may call (ListFunctions).
+require_once __DIR__ . '/list-functions.php';
+
 /**
  * Runs a formula as PHP code, with eval(): what the site has always done.
  *
