@@ -113,6 +113,39 @@ final class UnknownVariablesTest extends TestCase
         $this->assertSame([], self::prova($params, []));
     }
 
+    /**
+     * "posicoes" (BAJAAPP-102) names are variables: the pontos can read
+     * them ($COL, $P_TRA). The "valor" of a position sees the input fields,
+     * the vars and the min_max, but not the Totais, nor another position.
+     */
+    public function testPositionsAreVariablesForThePontos(): void
+    {
+        $params = [
+            'inputs' => [['code' => 'NOTA', 'name' => 'Nota', 'type' => 'number']],
+            'min_max' => ['M' => '$NOTA'],
+            'posicoes' => [
+                'COL' => ['valor' => '$M', 'desempate' => '$NOTA'],
+                'P_TRA' => ['resultado' => '26SU_TRA'],
+                'BAD' => ['valor' => '$Mmax + $COL'],
+            ],
+            'pontos' => ['PTS' => '$COL == 1 && $P_TRA <= 5 ? $Mmax : 0'],
+        ];
+
+        $this->assertSame([
+            'posicoes.BAD.valor | $Mmax is a Total or a posicoes: a posicoes formula only sees the input fields, the vars and the min_max, so here it is empty',
+            'posicoes.BAD.valor | $COL is a Total or a posicoes: a posicoes formula only sees the input fields, the vars and the min_max, so here it is empty',
+        ], self::prova($params, []));
+    }
+
+    /** A resultado can show a prova's positions: they are stored with its vars. */
+    public function testAPositionIsKnownInTheResultadosOfItsProva(): void
+    {
+        $prova = new Prova();
+        $prova->setParams(json_decode('{"posicoes": {"P_TRA": {"resultado": "26SU_TRA"}}}'));
+
+        $this->assertArrayHasKey('P_TRA', UnknownVariables::declaredBy($prova));
+    }
+
     /** @return list<string> */
     private static function resultado(string $colunas, array $teams, array $declared = []): array
     {

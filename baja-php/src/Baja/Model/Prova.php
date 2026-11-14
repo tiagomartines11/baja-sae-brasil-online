@@ -4,6 +4,8 @@ namespace Baja\Model;
 
 use Baja\Model\Base\Prova as BaseProva;
 use Baja\Model\JSON\Field;
+use Baja\Posicoes\PositionStage;
+use Baja\Posicoes\Recalculation;
 use Baja\Repeat\ExpandedInputs;
 use Baja\Repeat\InputGroups;
 use DateTime;
@@ -110,10 +112,13 @@ class Prova extends BaseProva
         }
         $this->setModificado(new DateTime("now"));
         $this->updateTotals();
+        PositionStage::apply($this, $inputs);
         foreach ($inputs as $i) {
             $i->updatePontos();
             $i->save();
         }
+        // Provas that take a position from a resultado this prova is in.
+        Recalculation::afterProvaRefreshed($this);
     }
 
     public function getType() {

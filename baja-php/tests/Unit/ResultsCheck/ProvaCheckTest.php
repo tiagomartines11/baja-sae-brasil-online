@@ -6,6 +6,7 @@ namespace Baja\Tests\Unit\ResultsCheck;
 use Baja\Model\Equipe;
 use Baja\Model\Input;
 use Baja\Model\Prova;
+use Baja\Posicoes\EventGraph;
 use Baja\ResultsCheck\Finding;
 use Baja\ResultsCheck\ProvaCheck;
 use PHPUnit\Framework\TestCase;
@@ -91,6 +92,35 @@ final class ProvaCheckTest extends TestCase
         $this->assertSame(6, $input->getVars()->V, 'Worked out in memory...');
         $this->assertTrue($input->isNew(), '...and never saved.');
         $this->assertTrue($prova->isNew());
+    }
+
+    /**
+     * The formulas of "posicoes" (BAJAAPP-102) are run too, team by team:
+     * here "valor" divides by $D, which is 0 for team 2 only.
+     */
+    public function testPositionFormulasAreChecked(): void
+    {
+        $prova = self::prova('{"posicoes": {"COL": {"valor": "10 / $D"}}, "pontos": {"PTS": "$COL"}}');
+
+        $result = ProvaCheck::run($prova, [self::input($prova, 1, ['D' => 2]), self::input($prova, 2, ['D' => 0])]);
+
+        $this->assertSame(['posicoes.COL.valor | DivisionByZeroError: Division by zero | 1 of 2'], self::lines($result['findings']));
+    }
+
+    /**
+     * Given the event, the check also reports what the judge page would
+     * refuse to save (here, a resultado the event does not have), for
+     * configs saved before the rule, or straight into the database.
+     */
+    public function testPositionRulesAreReportedGivenTheEvent(): void
+    {
+        $prova = self::prova('{"posicoes": {"P": {"resultado": "99XX_NOP"}}}');
+        $graph = new EventGraph('99XX', ['TST' => $prova->getParams()], []);
+
+        $result = ProvaCheck::run($prova, [], $graph);
+
+        $this->assertSame([Finding::POSITIONS], array_map(fn(Finding $finding) => $finding->problem, $result['findings']));
+        $this->assertSame('posicoes.P: o resultado 99XX_NOP não existe neste evento.', $result['findings'][0]->detail);
     }
 
     private static function prova(string $params): Prova

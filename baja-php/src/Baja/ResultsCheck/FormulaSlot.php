@@ -75,17 +75,27 @@ final class FormulaSlot
     }
 
     /**
-     * Every formula of a prova's params, in the order Input::updateVars()
-     * and Input::updatePontos() run them: vars, min_max, pontos.
+     * Every formula of a prova's params, in the order Prova::refreshVarsAndPontos()
+     * runs them: vars, min_max, posicoes (each position's "valor", then its
+     * "desempate"; Posicoes\PositionStage), pontos.
      *
      * @return list<self>
      */
     public static function ofProva(mixed $params): array
     {
         $slots = [];
-        foreach (['vars', 'min_max', 'pontos'] as $group) {
+        foreach (['vars', 'min_max', 'posicoes', 'pontos'] as $group) {
             foreach ((array)(is_object($params) ? ($params->$group ?? null) : null) as $name => $formula) {
-                $slots[] = new self($group . '.' . $name, [$group, $name], $formula);
+                if ($group !== 'posicoes') {
+                    $slots[] = new self($group . '.' . $name, [$group, $name], $formula);
+                    continue;
+                }
+                foreach (['valor', 'desempate'] as $key) {
+                    $value = is_object($formula) ? ($formula->$key ?? null) : null;
+                    if ($value !== null && $value !== '') {
+                        $slots[] = new self("posicoes.$name.$key", [$group, $name, $key], $value);
+                    }
+                }
             }
         }
         return $slots;

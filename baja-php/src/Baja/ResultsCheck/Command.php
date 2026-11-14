@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\ResultsCheck;
 
+use Baja\Posicoes\EventGraph;
 use RuntimeException;
 use Throwable;
 
@@ -132,7 +133,7 @@ final class Command
         if ($prova === null) {
             throw new RuntimeException('No prova ' . $id . ' in ' . $event);
         }
-        $check = ProvaCheck::run($prova['prova'], $prova['inputs']);
+        $check = ProvaCheck::run($prova['prova'], $prova['inputs'], EventGraph::load($event));
         return [
             'entry' => [
                 'prova' => $prova['prova']->getFullCode(),
