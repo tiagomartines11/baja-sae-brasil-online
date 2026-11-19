@@ -18,6 +18,11 @@ namespace Baja\Repeat;
  * {n} is repeated the same way; one that does not is kept as it is (one
  * value for the whole cell, as usual). Every other key is kept.
  *
+ * One thing differs from the list written by hand: Results\Column marks
+ * the expanded column as repeated, and its cell leaves out the lines with
+ * no value (null or ""), the attempts not run. The help page recommends
+ * ": null" for them, e.g. "$T_{n} !== null ? ROUND($T_{n}, 3) : null".
+ *
  * expandColumn() is the one place this happens: Results\Column::fromJson()
  * calls it, so the results page, the API, the premiações, the formula
  * comparison and the config check all read the same expanded column.

@@ -8,7 +8,9 @@ use Baja\Results\Column;
 
 /**
  * What a column shows while spoilers are hidden: its "val_spoilers"
- * formula, or for a list of formulas one line each (never in bold).
+ * formula, or for a list of formulas one line each (never in bold). In a
+ * column written with "repetir", lines with no value are left out, as in
+ * ColumnEvaluator.
  * Internal to Baja\Results.
  */
 final class SpoilerValue
@@ -21,6 +23,6 @@ final class SpoilerValue
         }
         $lines = array_map(fn($formula) => Input::solveFormula($variables, $formula), $column->valSpoilers);
         $entry->lines[$column->key()] = $lines;
-        return implode('<br /> ', $lines);
+        return implode('<br /> ', $column->shownLines($lines));
     }
 }

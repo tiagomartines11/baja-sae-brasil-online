@@ -21,6 +21,11 @@ use Baja\Repeat\RepeatedColumns;
  *   val_api       the raw value for the API, when stripping the HTML of the
  *                 display is not good enough (see Cell)
  *   size, sort, hidden   only for drawing the table header
+ *
+ * A column written with "repetir" (BAJAAPP-103) is read as the list it
+ * stands for, and remembers it: $repeated. Its cell then leaves out the
+ * lines with no value (null or ""), the passes not run yet; a list written
+ * by hand shows every line, as it always did.
  */
 final class Column
 {
@@ -39,15 +44,19 @@ final class Column
         public readonly mixed $size = null,
         public readonly mixed $sort = null,
         public readonly mixed $hidden = null,
+        public readonly bool $repeated = false,
     ) {
     }
 
     /**
      * Reads one entry of the "colunas" list. A repeated column ("repetir",
-     * BAJAAPP-103) is read as the list it stands for (Repeat\RepeatedColumns).
+     * BAJAAPP-103) is read as the list it stands for (Repeat\RepeatedColumns),
+     * and marked $repeated. A "repetir" that could not be expanded (a wrong
+     * column, which the config check reports) leaves an ordinary column.
      */
     public static function fromJson(mixed $json): self
     {
+        $askedToRepeat = RepeatedColumns::isRepeated($json);
         $json = is_object($json) ? RepeatedColumns::expandColumn($json) : (object)[];
         return new self(
             $json->header ?? null,
@@ -58,6 +67,7 @@ final class Column
             $json->size ?? null,
             $json->sort ?? null,
             $json->hidden ?? null,
+            $askedToRepeat && is_array($json->val ?? null),
         );
     }
 
@@ -88,6 +98,22 @@ final class Column
     public function hasSpoilerValue(): bool
     {
         return (bool)$this->valSpoilers;
+    }
+
+    /**
+     * The lines a cell shows, from the values of its formulas: all of them,
+     * or for a repeated column only those with a value. null and "" are no
+     * value; 0 and "-" are values.
+     *
+     * @param list<mixed> $lines
+     * @return list<mixed>
+     */
+    public function shownLines(array $lines): array
+    {
+        if (!$this->repeated) {
+            return $lines;
+        }
+        return array_values(array_filter($lines, fn($line) => $line !== null && $line !== ''));
     }
 
     /** The highlight formula, or null when it is missing or "" (R6). "0" is a formula. */
