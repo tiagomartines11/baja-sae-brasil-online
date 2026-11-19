@@ -183,7 +183,12 @@ if ($saved) {
     }
 }
 
-if (($_POST['submit'] ?? '') == 'Salvar e Avançar')
+// The Salvar of a repetition's block (BAJAAPP-103) sends that block's
+// anchor: the judge comes back to the same page, at the same block.
+$block = EntryBlocks::savedBlock($_POST);
+if ($block !== null)
+    header('Location: entry.php?p=' . rawurlencode((string)$_page) . '&t=' . rawurlencode((string)$_team) . '#' . $block);
+else if (($_POST['submit'] ?? '') == 'Salvar e Avançar')
     header("Location: entry.php?p=$_page&t=".($_team+1));
 else
     header("Location: dashboard.php?p=$_page");

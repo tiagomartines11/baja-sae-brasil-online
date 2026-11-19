@@ -4,6 +4,8 @@ namespace Baja\Model;
 
 use Baja\Model\Base\Prova as BaseProva;
 use Baja\Model\JSON\Field;
+use Baja\Repeat\ExpandedInputs;
+use Baja\Repeat\InputGroups;
 use DateTime;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Propel;
@@ -64,12 +66,17 @@ class Prova extends BaseProva
     }
 
     /**
+     * The fields the judges fill in, with the repeated groups written out
+     * (BAJAAPP-103, Baja\Repeat\InputGroups).
+     *
      * @return Field[]
      */
     public function getParamsInputs() {
         $ret = [];
-        foreach ((array)($this->getParams()->inputs ?? []) as $i){
+        $expanded = $this->getExpandedInputs();
+        foreach ($expanded->inputs as $i){
             $f = new Field($i->code, $i->name, $i->pass ?? null, $i->xor ?? null, $i->sensitive ?? null);
+            $f->setRepetition($expanded->repetitionOf((string)$i->code));
             if ($i->type == "enum") {
                 $f->setEnum($i->options, $i->multiple ?? null);
             } else if ($i->type == "enum-assoc") {
@@ -82,6 +89,11 @@ class Prova extends BaseProva
             $ret[]= $f;
         }
         return $ret;
+    }
+
+    /** "inputs" with the repeated groups written out; see Baja\Repeat\InputGroups. */
+    public function getExpandedInputs(): ExpandedInputs {
+        return InputGroups::expand($this->getParams()->inputs ?? []);
     }
 
     public function getParamsPontos() {

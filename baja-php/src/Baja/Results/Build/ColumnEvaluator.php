@@ -21,7 +21,9 @@ use Baja\Results\ResultsConfig;
  *   - "EquipeNum" and "Equipe" are the car number and team name; "Pos" is
  *     the position, unknown until the ranking, so later columns see null;
  *   - a list of formulas gives one line each, joined with "<br /> ". With a
- *     "highlight" (R6), lines equal to its value are put in bold;
+ *     "highlight" (R6), lines equal to its value are put in bold. A column
+ *     written with "repetir" leaves out the lines with no value (null or
+ *     ""): passes not run yet take no room in the cell;
  *   - anything else is one formula.
  *
  * The tiebreak formula comes last and so can read every column (R1).
@@ -61,6 +63,9 @@ final class ColumnEvaluator
     /**
      * One line per formula. A line is bold when it equals the highlight's
      * value; a highlight that gives nothing (null) puts nothing in bold.
+     * The raw values (for the API) keep one value per formula, empty ones
+     * included, so a value's place still says which pass it is; only what
+     * the cell shows leaves the empty lines of a repeated column out.
      *
      * @param array<string|int, mixed> $variables
      */
@@ -72,7 +77,7 @@ final class ColumnEvaluator
         $entry->lines[$column->key()] = $lines;
         return implode('<br /> ', array_map(
             fn($line) => ($highlight !== null && $line == $highlight) ? "<b>$line</b>" : $line,
-            $lines,
+            $column->shownLines($lines),
         ));
     }
 }

@@ -58,6 +58,9 @@ final class ProvaCheck
                 }
             }
         }
+        foreach ($prova->getExpandedInputs()->errors as $error) {
+            $findings[] = new Finding(Finding::REPEATED, 'inputs', $error);
+        }
         array_push($findings, ...UnknownVariables::ofProva($prova, $inputs));
         return ['teams' => $teams, 'findings' => $findings];
     }

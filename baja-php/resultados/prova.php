@@ -67,11 +67,14 @@ Template::printHeader($resultado->getNome());
             if (s.length === 0) return "";
             var split = s.split(" ");
             if (split.length === 1) return parseFloat(s);
-            var a = parseFloat(split[0]);
-            var b = parseFloat(split[1]);
-            if (isNaN(a)) a = 0;
-            if (isNaN(b)) b = 0;
-            return a < b ? b : a;
+            // Every line of the cell (a repeated column has up to 20, BAJAAPP-103); empty counts as 0.
+            var best = null;
+            for (var i = 0; i < split.length; i++) {
+                var v = parseFloat(split[i]);
+                if (isNaN(v)) v = 0;
+                if (best === null || v > best) best = v;
+            }
+            return best;
         },
         // set type, either numeric or text
         type: 'numeric'
@@ -85,11 +88,14 @@ Template::printHeader($resultado->getNome());
             if (s.length === 0) return "";
             var split = s.split(" ");
             if (split.length === 1) return parseFloat(s);
-            var a = parseFloat(split[0]);
-            var b = parseFloat(split[1]);
-            if (isNaN(a)) a = 999;
-            if (isNaN(b)) b = 999;
-            return a > b ? b : a;
+            // Every line of the cell (a repeated column has up to 20, BAJAAPP-103); empty counts as 999.
+            var best = null;
+            for (var i = 0; i < split.length; i++) {
+                var v = parseFloat(split[i]);
+                if (isNaN(v)) v = 999;
+                if (best === null || v < best) best = v;
+            }
+            return best;
         },
         // set type, either numeric or text
         type: 'numeric'

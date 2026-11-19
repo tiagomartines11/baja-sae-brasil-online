@@ -12,6 +12,7 @@ Ajuda::printHeader("Parâmetros de Prova", "admin_provas.php", [
     'inputs' => 'inputs',
     'tipos-campo' => 'Tipos de campo',
     'pass-xor' => 'pass e xor',
+    'grupos-repetidos' => 'Grupos repetidos',
     'vars' => 'vars',
     'min_max' => 'min_max',
     'pontos' => 'pontos',
@@ -126,7 +127,7 @@ Ajuda::opcao('negative', 'booleano', 'Somente <code>number</code>: <code>true</c
     Use <code>true</code>/<code>false</code> sem aspas &mdash; o texto <code>"false"</code> é considerado verdadeiro.');
 Ajuda::opcao('options', 'lista', '<code>enum</code>: lista de textos. <code>enum-assoc</code>: lista de pares <code>[rótulo, valor]</code>.');
 Ajuda::opcao('multiple', 'booleano', 'Somente <code>enum</code>: permite selecionar várias opções. O valor é gravado como texto separado por vírgula (ex.: <code>"A,C"</code>).');
-Ajuda::opcao('pass', 'inteiro 1&ndash;10', 'Grupo de preenchimento. Padrão 1. Veja <a href="#pass-xor">pass e xor</a>.');
+Ajuda::opcao('pass', 'inteiro 1&ndash;10', 'Grupo de preenchimento. Padrão 1. Veja <a href="#pass-xor">pass e xor</a>. Dentro de um <a href="#grupos-repetidos">grupo repetido</a> não se usa: cada repetição já é um pass.');
 Ajuda::opcao('xor', '"A" ou "B"', 'Campos mutuamente exclusivos. Veja <a href="#pass-xor">pass e xor</a>.');
 Ajuda::opcao('sensitive', 'booleano', 'Se <code>true</code>, uma alteração neste campo <strong>não</strong> dispara a notificação push &quot;Pontuação Publicada&quot;. Útil para notas que não devem ser anunciadas (ex.: presença em briefings, notas de projeto).');
 ?>
@@ -185,6 +186,65 @@ Ajuda::secao('pass-xor', 'pass e xor — fluxo de preenchimento');
   ]
 }
 JSON, 'Exemplo: Tração (22BR_TRA) — 1ª tentativa no grupo 1 (xor A), 2ª tentativa no grupo 2 (xor B)') ?>
+</td></tr>
+<?php
+Ajuda::fimSecao();
+
+Ajuda::secao('grupos-repetidos', 'Grupos repetidos — o mesmo campo várias vezes', ['Chave', 'Tipo', 'Descrição']);
+Ajuda::opcao('repetir', 'inteiro 1&ndash;20', 'Quantas vezes os campos do grupo se repetem (ex.: <code>6</code> tentativas).');
+Ajuda::opcao('nome', 'texto', 'Nome de cada repetição, usado nos rótulos e na tela do juiz: <code>"Tentativa"</code> vira &quot;Tentativa 1&quot;, &quot;Tentativa 2&quot;&hellip; Opcional.');
+Ajuda::opcao('inputs', 'lista', 'Os campos de <strong>uma</strong> repetição, escritos como qualquer campo de <a href="#inputs">inputs</a> (<code>code</code>, <code>name</code>, <code>type</code>, <code>xor</code>&hellip;), sem <code>pass</code>.');
+?>
+<tr><td colspan="3">
+    <p>Numa prova com várias tentativas, em vez de escrever cada campo seis vezes (<code>T_1</code>&hellip;<code>T_6</code>), escreva-o uma vez dentro de um grupo
+    em <code>inputs</code>. O sistema expande o grupo nos campos que você escreveria à mão; dados, fórmulas e resultados usam esses campos normalmente.</p>
+    <?= Ajuda::exemplo(<<<'JSON'
+{
+  "inputs": [
+    {"code": "PRESENTE", "name": "Presente", "type": "enum", "options": ["SIM", "NÃO"]},
+    {"repetir": 6, "nome": "Tentativa", "inputs": [
+      {"code": "T", "name": "Tempo [s]", "type": "number", "precision": 3, "xor": "A"},
+      {"code": "D", "name": "Distância [m]", "type": "number", "precision": 2, "xor": "A"}
+    ]}
+  ],
+  "min_max": {
+    "T": "MENOR($T_lista)",
+    "D": "CONTAR($T_lista) == 0 ? MAIOR($D_lista) : null"
+  },
+  "pontos": {
+    "TRAPTS": "$T !== null ? 50 * $Tmin / $T : ($D !== null ? 25 * $D / $Dmax : 0)"
+  }
+}
+JSON, 'Exemplo: Tração com 6 tentativas — em cada tentativa, ou o tempo (completou) ou a distância (não completou)') ?>
+    <p><strong>O que o grupo vira</strong> (é exatamente o que se escreveria à mão; dados já lançados com <code>T_1</code>&hellip;<code>T_6</code> continuam valendo):</p>
+    <?= Ajuda::codigo(<<<'TXT'
+code      name                            pass   xor
+PRESENTE  Presente                        1      -
+T_1       Tempo [s] (Tentativa 1)         2      A_1
+D_1       Distância [m] (Tentativa 1)     2      A_1
+T_2       Tempo [s] (Tentativa 2)         3      A_2
+D_2       Distância [m] (Tentativa 2)     3      A_2
+...
+T_6       Tempo [s] (Tentativa 6)         7      A_6
+D_6       Distância [m] (Tentativa 6)     7      A_6
+TXT) ?>
+    <ul>
+        <li><strong>code</strong>: o código, <code>_</code> e o número da repetição. <strong>name</strong>: o nome e, entre parênteses, o <code>nome</code> do grupo e o número.</li>
+        <li><strong>pass</strong>: cada repetição é um pass próprio, numerado depois do maior pass dos campos que vêm antes do grupo (sem <code>pass</code> = 1).
+            Pode passar de 10. Campos depois do grupo mantêm o próprio <code>pass</code>.</li>
+        <li><strong>xor</strong> vale só dentro da repetição: <code>"A"</code> vira <code>"A_3"</code> na 3ª, e preencher <code>T_3</code> bloqueia só <code>D_3</code>.</li>
+        <li>Nas fórmulas da prova também existe <code>$T_lista</code>: os valores preenchidos de <code>T_1</code>&hellip;<code>T_6</code>, em ordem, sem os vazios
+            (quem correu duas vezes tem uma lista de dois). Use com <a href="#formulas"><code>MENOR()</code>, <code>MAIOR()</code> e <code>CONTAR()</code></a>.
+            Por isso nenhum <code>code</code> pode terminar em <code>_lista</code>. As listas existem em <code>vars</code>, <code>min_max</code> e <code>pontos</code>;
+            nos resultados use os campos (<code>$T_1</code>&hellip;) ou uma var da prova.</li>
+    </ul>
+    <p><strong>Na tela do juiz</strong> cada repetição é um bloco, todos na mesma página, cada um com <em>Salvar</em>, <em>◀ Anterior</em>, <em>Próxima ▶</em>
+    e botões numerados para ir direto a qualquer repetição (uma lista, se houver mais de 8). O bloco mostra se está <em>Preenchida</em>, <em>Incompleta</em>, <em>Vazia</em> ou <em>Bloqueada</em>.
+    A repetição seguinte fica bloqueada até a anterior estar completa (num par xor basta um dos lados); as anteriores continuam editáveis.
+    O <em>Salvar</em> de um bloco grava e volta ao mesmo bloco. O servidor também recusa um valor numa repetição bloqueada.</p>
+    <div class="aviso">Não é salvo (a página mostra o motivo): <code>repetir</code> que não seja inteiro de 1 a 20; grupo sem campos; grupo dentro de grupo;
+    <code>pass</code> dentro do grupo; código que, expandido, repete outro (ex.: um campo <code>T_2</code> fora do grupo e <code>T</code> dentro dele); código terminado em <code>_lista</code>.</div>
+    <p>Para mostrar as tentativas nos resultados, veja a opção <a href="ajuda_resultado.php#colunas-repetidas"><code>repetir</code> das colunas</a>.</p>
 </td></tr>
 <?php
 Ajuda::fimSecao();
@@ -299,13 +359,18 @@ Ajuda::secao('formulas', 'Fórmulas');
         <li>Operadores: <code>+ - * /</code>, comparação <code>== != &lt; &gt; ===</code>, lógicos <code>&amp;&amp; ||</code>, ternário <code>cond ? a : b</code>.</li>
         <li>Texto entre aspas simples: <code>'SIM'</code>. Para juntar textos use <strong>ponto</strong>: <code>'&lt;b&gt;'.$X.'&lt;/b&gt;'</code> &mdash; <code>+</code> com texto dá erro.</li>
         <li>Funções do PHP: <code>ROUND($x, 2)</code>, <code>MIN(...)</code>, <code>MAX(...)</code>, <code>ABS()</code>, <code>count()</code>, <code>array_diff()</code>&hellip; (maiúsculas ou minúsculas tanto faz).</li>
+        <li>Funções para listas (do sistema, não do PHP): <code>MENOR(lista)</code> e <code>MAIOR(lista)</code> dão o menor e o maior valor, e
+            <strong>vazio (<code>null</code>) para uma lista vazia</strong>, sem erro; <code>CONTAR(lista)</code> dá quantos valores há. Valores vazios na lista são ignorados.
+            Feitas para <code>$T_lista</code> dos <a href="#grupos-repetidos">grupos repetidos</a>, servem para qualquer lista: <code>MENOR([$T_1, $T_2])</code>.</li>
         <li>Qualquer erro (divisão por zero, sintaxe, <code>min()</code> de lista vazia) faz a fórmula valer <code>null</code>, sem mensagem. Resultados infinitos ou NaN também viram <code>null</code>.</li>
         <li>Aspas duplas dentro da fórmula precisam de escape no JSON (<code>\"</code>); prefira aspas simples.</li>
     </ul>
     <p>Padrões úteis:</p>
     <?= Ajuda::codigo(<<<'TXT'
-min(array_diff([$T_1, $T_2], [null]))          menor valor ignorando tentativas vazias
-max(array_diff([$D_1, $D_2], [null]))          maior valor ignorando tentativas vazias
+MENOR([$T_1, $T_2])                            menor valor ignorando tentativas vazias (vazio se não houver nenhuma)
+MAIOR([$D_1, $D_2])                            maior valor ignorando tentativas vazias
+MENOR($T_lista)                                o mesmo, num grupo repetido
+min(array_diff([$T_1, $T_2], [null]))          forma antiga; dá erro (vazio) se nenhuma tentativa foi lançada
 $X === null ? 0 : $X                           tratar "não lançado"
 $FREIO_1=='OK' ? $ACET_1 : null                anular tentativa inválida
 TXT) ?>

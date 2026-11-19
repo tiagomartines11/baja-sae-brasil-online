@@ -11,6 +11,7 @@ Ajuda::printHeader("Configuração de Resultado", "admin_resultados.php", [
     'variaveis' => 'Variáveis disponíveis',
     'chaves' => 'Chaves principais',
     'colunas' => 'colunas',
+    'colunas-repetidas' => 'Colunas repetidas',
     'classificacao' => 'Classificação',
     'spoilers' => 'Spoilers',
     'filter' => 'filter',
@@ -97,11 +98,12 @@ Ajuda::opcao('val', 'fórmula, lista ou especial', '<ul>
         <li>uma lista de fórmulas &mdash; cada valor em uma linha da mesma célula (ex.: 1ª e 2ª tentativas).</li>
     </ul>');
 Ajuda::opcao('highlight', 'fórmula', 'Somente com <code>val</code> em lista: o valor da lista igual ao resultado desta fórmula aparece em <strong>negrito</strong> (ex.: a tentativa que valeu). Sem <code>highlight</code> (ou com <code>""</code>), nada fica em negrito.');
+Ajuda::opcao('repetir', 'inteiro 1&ndash;20', 'Repete <code>val</code> numa lista, trocando <code>{n}</code> por 1, 2&hellip; Veja <a href="#colunas-repetidas">Colunas repetidas</a>.');
 Ajuda::opcao('val_spoilers', 'fórmula ou lista', 'Mostrado no lugar de <code>val</code> enquanto a proteção de spoiler está ativa. Veja <a href="#spoilers">Spoilers</a>.');
 Ajuda::opcao('sort', 'texto', 'Como o público ordena a coluna ao clicar no cabeçalho:
     <ul>
-        <li><code>"duasmenor"</code> &mdash; para células com dois valores (lista): ordena pelo menor; vazio conta como 999;</li>
-        <li><code>"duasmaior"</code> &mdash; ordena pelo maior dos dois; vazio conta como 0;</li>
+        <li><code>"duasmenor"</code> &mdash; para células com vários valores (lista): ordena pelo menor; vazio conta como 999;</li>
+        <li><code>"duasmaior"</code> &mdash; ordena pelo maior dos valores; vazio conta como 0;</li>
         <li><code>"false"</code> &mdash; desliga a ordenação da coluna;</li>
         <li>outros ordenadores do tablesorter: <code>"text"</code>, <code>"digit"</code>&hellip;</li>
     </ul>');
@@ -126,6 +128,39 @@ Ajuda::opcao('hidden', 'booleano', 'Esconde apenas o <strong>cabeçalho</strong>
   ]
 }
 JSON, 'Exemplo: Aceleração (22BR_ACE, Inputs: AVF) — duas tentativas na mesma célula, a melhor em negrito') ?>
+</td></tr>
+<?php
+Ajuda::fimSecao();
+
+Ajuda::secao('colunas-repetidas', 'Colunas repetidas: repetir');
+?>
+<tr><td>
+    <p>Para mostrar as tentativas de um <a href="ajuda_prova.php#grupos-repetidos">grupo repetido</a> (ou de quaisquer campos numerados), escreva a fórmula uma vez,
+    com <code>{n}</code> no lugar do número, e diga quantas vezes repetir. A coluna vira a <strong>lista de fórmulas</strong> de sempre: um valor por linha na mesma célula.</p>
+    <?= Ajuda::exemplo(<<<'JSON'
+{"header": "Tentativas", "repetir": 6, "val": "$T_{n} !== null ? ROUND($T_{n}, 3) : null", "sort": "duasmenor"}
+JSON, 'Exemplo: as 6 tentativas da Tração numa coluna') ?>
+    <p>é o mesmo que escrever a lista à mão:</p>
+    <?= Ajuda::exemplo(<<<'JSON'
+{"header": "Tentativas", "sort": "duasmenor", "val": [
+  "$T_1 !== null ? ROUND($T_1, 3) : null", "$T_2 !== null ? ROUND($T_2, 3) : null", "$T_3 !== null ? ROUND($T_3, 3) : null",
+  "$T_4 !== null ? ROUND($T_4, 3) : null", "$T_5 !== null ? ROUND($T_5, 3) : null", "$T_6 !== null ? ROUND($T_6, 3) : null"
+]}
+JSON) ?>
+    <p>com uma diferença: <strong>numa coluna com <code>repetir</code>, as tentativas sem resultado não aparecem</strong>.
+    Uma linha cujo valor é <code>null</code> ou <code>''</code> (texto vazio) sai da célula: uma equipe que fez 3 de 6 tentativas mostra 3 linhas,
+    sem linhas em branco; uma equipe sem nenhuma tentativa fica com a célula vazia. <code>0</code> e <code>'-'</code> são valores e aparecem.
+    Uma lista escrita à mão (sem <code>repetir</code>) continua mostrando todas as linhas, como sempre.</p>
+    <ul>
+        <li>Para a tentativa vazia, termine a fórmula com <code>: null</code> (ou <code>: ''</code>), não com <code>: '-'</code>, que mostraria um &ldquo;-&rdquo; por tentativa não feita.</li>
+        <li><code>highlight</code> continua uma fórmula só (a tentativa que valeu fica em <strong>negrito</strong>, entre as que aparecem), ex.: <code>"$T"</code>.</li>
+        <li><code>"duasmenor"</code> e <code>"duasmaior"</code> ordenam pelas tentativas que aparecem; as vazias não contam.</li>
+        <li>Na API, a coluna continua com um valor por tentativa, na ordem, com <code>null</code> nas vazias.</li>
+        <li><code>val_spoilers</code> com <code>{n}</code> também é repetido (e também esconde as linhas vazias); sem <code>{n}</code> vale para a célula toda, como sempre.</li>
+        <li><code>$T_lista</code> não existe nos resultados (só nas fórmulas da prova). Para a melhor tentativa, use uma var ou um min_max da prova, ex.: <code>$T</code>.</li>
+    </ul>
+    <div class="aviso">Não é salvo (a página mostra o motivo): <code>repetir</code> que não seja inteiro de 1 a 20; <code>val</code> que não seja uma fórmula (lista, <code>Pos</code>, <code>Equipe</code>&hellip;);
+    <code>val</code> sem <code>{n}</code>.</div>
 </td></tr>
 <?php
 Ajuda::fimSecao();

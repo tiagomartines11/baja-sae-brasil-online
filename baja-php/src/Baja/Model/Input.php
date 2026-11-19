@@ -72,13 +72,25 @@ class Input extends BaseInput
     }
 
 
+    /**
+     * The dados as the prova's formulas see them: with the lists of the
+     * repeated groups added ($T_lista, BAJAAPP-103, Baja\Repeat\InputGroups).
+     * For a prova without repeated groups, the dados exactly as stored.
+     */
+    public function getFormulaDados() {
+        $dados = $this->getDados();
+        $lists = $this->getProva()->getExpandedInputs()->listVariables($dados);
+        return $lists === [] ? $dados : array_merge((array)$dados, $lists);
+    }
+
     public function updateVars() {
         $vars = [];
+        $dados = $this->getFormulaDados();
         foreach ((array)$this->getProva()->getParamsVars() as $v=>$formula) {
-            $vars[$v] = self::solveFormula($this->getDados(), $formula);
+            $vars[$v] = self::solveFormula($dados, $formula);
         }
         foreach ((array)$this->getProva()->getParamsMinMax() as $v=>$formula) {
-            $vars[$v] = self::solveFormula(array_merge((array)$this->getDados(), $vars), $formula);
+            $vars[$v] = self::solveFormula(array_merge((array)$dados, $vars), $formula);
         }
         $this->setVars($vars);
     }
@@ -105,7 +117,7 @@ class Input extends BaseInput
             if (!$this->getEquipe()->isDesclassificado()) {
             
                 $prova = $this->getProva();
-                $dados = $this->getDados();
+                $dados = $this->getFormulaDados();
                 $vars = $this->getVars();
                 $varsMinMax = $prova->getTotals();
 
