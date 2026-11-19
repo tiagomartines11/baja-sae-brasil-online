@@ -10,7 +10,9 @@ use Baja\Site\Html;
 /**
  * The repetitions of a repeated input group on the judge's entry page
  * (juiz/entry.php, BAJAAPP-103): one block per repetition, all on the same
- * page, each closed by its own buttons.
+ * page, each closed by its own buttons. The page's script shows one block
+ * of each group at a time (the others are hidden, still in the form);
+ * without the script every block is shown and the buttons scroll.
  *
  *   ┌ Tentativa 3 de 6 ─────────── ○ Vazia ┐
  *   │ Tempo [s] (Tentativa 3)       [     ] │
@@ -184,6 +186,8 @@ final class EntryBlocks
     /* The form is 250 px wide on every entry page; with blocks, use the phone's width (up to 400 px). */
     table.tablesorter-blue { width: 100% !important; max-width: 400px; }
     tbody.repeticao { border: solid 2px black; }
+    /* The page's script shows one block per group and hides the others (still in the form, still sent). */
+    tbody.repeticao[hidden] { display: none; }
     tbody.repeticao tr.repeticao-titulo td { background: #e6eef7; font-weight: bold; padding: 6px 4px; text-align: left; }
     tbody.repeticao .repeticao-estado { float: right; font-weight: normal; font-size: 13px; }
     tbody.repeticao[data-estado="preenchida"] tr.repeticao-titulo td { background: #d8f0d8; }

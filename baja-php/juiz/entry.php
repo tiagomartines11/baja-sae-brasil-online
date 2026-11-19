@@ -35,8 +35,13 @@ echo '<style>body { min-width: 0; }</style>';
 // link would run a script in the judge's browser.
 $entryQuery = 'p=' . rawurlencode((string)$_page) . '&t=' . rawurlencode((string)$_team);
 
+// After a refused save the page is drawn again without an anchor in the
+// address: the block whose Salvar was pressed is named here, so the page's
+// script opens that block again (default/js/repeticoes.js).
+$refusedBlock = !empty($entradaRecusada) ? EntryBlocks::savedBlock($_POST) : null;
+
 echo '
-<table class="tablesorter-blue" style="margin: 0 auto; width: 250px; border: solid 2px black; border-collapse: collapse">
+<table class="tablesorter-blue"' . ($refusedBlock !== null ? ' data-repeticao-aberta="' . Html::e($refusedBlock) . '"' : '') . ' style="margin: 0 auto; width: 250px; border: solid 2px black; border-collapse: collapse">
     <thead>
     <tr>
         <th colspan="2" style="border: solid 2px black; padding-bottom: 20px;" class="sorter-false">

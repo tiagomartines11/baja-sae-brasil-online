@@ -18,7 +18,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { aplicar, estadosDosBlocos, xorAtivo } from '../../default/js/repeticoes.js';
+import {
+  aplicar, blocoInicial, blocosPorGrupo, estadosDosBlocos, ligar, mostrarBloco, xorAtivo,
+} from '../../default/js/repeticoes.js';
 
 /** Six attempts of Tração: T_n and D_n, a time-or-distance pair (xor "A_n"). */
 function tracao(tentativas = 6) {
@@ -153,4 +155,232 @@ test('on the page: an attempt unlocked here stays disabled when another lock hol
 
   assert.equal(blocos[1].campos[0].elemento.disabled, false);
   assert.equal(blocos[1].campos[1].elemento.disabled, true);
+});
+
+// --- One block at a time ------------------------------------------------
+//
+// With the script, the page shows only ONE attempt of a group; Anterior,
+// Próxima and the numbered buttons switch which one. The others are only
+// hidden (the HTML "hidden" attribute), never taken out of the form: a
+// hidden field is still sent when the judge presses Salvar, so the server
+// gets exactly the same fields as before.
+
+/** Turns the states into the shape blocoInicial() reads: anchor => {estado}. */
+function estadosComo(lista) {
+  const estados = {};
+  lista.forEach((estado, i) => { estados[`repeticao-1-${i + 1}`] = { estado }; });
+  return estados;
+}
+
+test('first block: the one in the address wins (e.g. the block just saved)', () => {
+  const estados = estadosComo(['preenchida', 'preenchida', 'vazia', 'bloqueada', 'bloqueada', 'bloqueada']);
+  assert.equal(blocoInicial(tracao(), estados, '#repeticao-1-2'), 'repeticao-1-2');
+  // Even a locked block can be opened from the address: it is shown, its fields stay disabled.
+  assert.equal(blocoInicial(tracao(), estados, '#repeticao-1-5'), 'repeticao-1-5');
+});
+
+test('first block: without an address, the first one still to fill (incompleta or vazia)', () => {
+  assert.equal(blocoInicial(tracao(), estadosComo(['preenchida', 'preenchida', 'vazia', 'bloqueada', 'bloqueada', 'bloqueada']), ''), 'repeticao-1-3');
+  assert.equal(blocoInicial(tracao(), estadosComo(['preenchida', 'incompleta', 'vazia', 'bloqueada', 'bloqueada', 'bloqueada']), ''), 'repeticao-1-2');
+  // A new team: attempt 1.
+  assert.equal(blocoInicial(tracao(), estadosComo(['vazia', 'bloqueada', 'bloqueada', 'bloqueada', 'bloqueada', 'bloqueada']), ''), 'repeticao-1-1');
+});
+
+test('first block: a locked block is never chosen on its own, and when all are filled it is the last one', () => {
+  assert.equal(blocoInicial(tracao(), estadosComo(Array(6).fill('preenchida')), ''), 'repeticao-1-6');
+  // Only locked blocks left to fill (cannot really happen, but must not pick one): the last.
+  assert.equal(blocoInicial(tracao(2), estadosComo(['preenchida', 'bloqueada']), ''), 'repeticao-1-2');
+});
+
+test('first block: an address that is not one of this group\'s blocks is ignored', () => {
+  const estados = estadosComo(['preenchida', 'vazia', 'bloqueada', 'bloqueada', 'bloqueada', 'bloqueada']);
+  for (const hash of ['#repeticao-1-9', '#repeticao-2-1', '#outra-coisa', '#', '', undefined]) {
+    assert.equal(blocoInicial(tracao(), estados, hash), 'repeticao-1-2', String(hash));
+  }
+});
+
+test('the blocks are split by group, each in page order', () => {
+  const blocos = [
+    { ancora: 'repeticao-1-1', grupo: 1, numero: 1, campos: [] },
+    { ancora: 'repeticao-1-2', grupo: 1, numero: 2, campos: [] },
+    { ancora: 'repeticao-2-1', grupo: 2, numero: 1, campos: [] },
+  ];
+  const grupos = blocosPorGrupo(blocos);
+  assert.deepEqual([...grupos.keys()], [1, 2]);
+  assert.deepEqual(grupos.get(1).map((b) => b.ancora), ['repeticao-1-1', 'repeticao-1-2']);
+});
+
+/**
+ * A bigger stand-in for the page, enough for ligar(): every block is a
+ * <tbody> with a "hidden" flag, its fields, a select (or not), and the
+ * address (location.hash). It records the listeners the script adds, so a
+ * test can "click" a link or change the select.
+ */
+function paginaCompleta(blocos, valores, hash = '', blocoRecusado = null) {
+  const elementos = {};
+  const ouvintes = {};
+  const historico = [];
+  const janela = {
+    history: { replaceState: (_estado, _titulo, endereco) => { historico.push(endereco); pagina.location.hash = endereco; } },
+    addEventListener: (tipo, funcao) => { (ouvintes[`janela:${tipo}`] ??= []).push(funcao); },
+  };
+  const pagina = {
+    location: { hash },
+    defaultView: janela,
+    getElementById: (id) => elementos[id],
+    // After a refused save, entry.php names the block on the table: data-repeticao-aberta.
+    querySelector: (seletor) => (seletor === '[data-repeticao-aberta]' && blocoRecusado
+      ? { dataset: { repeticaoAberta: blocoRecusado } } : null),
+    addEventListener: (tipo, funcao) => { (ouvintes[tipo] ??= []).push(funcao); },
+    querySelectorAll: (seletor) => {
+      if (seletor === 'tbody.repeticao') return blocos.map((b) => elementos[b.ancora]);
+      if (seletor === '.repeticao-select') return blocos.map((b) => elementos[b.ancora].seletor);
+      return [];
+    },
+  };
+  for (const bloco of blocos) {
+    const seletor = {
+      value: bloco.ancora,
+      addEventListener: (tipo, funcao) => { (ouvintes[`select:${bloco.ancora}:${tipo}`] ??= []).push(funcao); },
+    };
+    const campos = bloco.campos.map((campo) => ({
+      id: campo.codigo, dataset: { xor: campo.xor }, value: valores[campo.codigo] ?? '', disabled: false,
+    }));
+    elementos[bloco.ancora] = {
+      id: bloco.ancora,
+      hidden: false,
+      dataset: { grupo: String(bloco.grupo), numero: String(bloco.numero) },
+      seletor,
+      campos,
+      querySelector: () => ({ textContent: '' }),
+      querySelectorAll: (s) => (s === '[data-group]' ? campos : s === '.repeticao-select' ? [seletor] : []),
+      scrollIntoView: () => {},
+      getBoundingClientRect: () => ({ top: 10 }),
+    };
+  }
+  /** A click on a navigation link whose href is "#alvo". Returns whether the script stopped the browser's own jump. */
+  const clicar = (alvo, classe = 'repeticao-salto') => {
+    let impedido = false;
+    const link = { getAttribute: () => `#${alvo}`, closest: (s) => (s.includes(classe) ? link : null) };
+    for (const funcao of ouvintes.click ?? []) funcao({ target: link, preventDefault: () => { impedido = true; } });
+    return impedido;
+  };
+  const visiveis = () => blocos.filter((b) => !elementos[b.ancora].hidden).map((b) => b.ancora);
+  return { pagina, elementos, ouvintes, historico, clicar, visiveis };
+}
+
+/** Tração with three attempts, as blocosDaPagina() reads it back from the page. */
+const tracaoDaPagina = () => tracao(3);
+
+test('on opening: only one block is shown, the first still to fill', () => {
+  const { pagina, visiveis } = paginaCompleta(tracaoDaPagina(), { T_1: '4.5' });
+  ligar(pagina);
+  assert.deepEqual(visiveis(), ['repeticao-1-2']);
+});
+
+test('on opening after a Salvar: the block in the address (the one saved) is shown', () => {
+  // save_entry.php sends the judge back to entry.php#repeticao-1-1 after
+  // the Salvar of attempt 1, even though attempt 2 is the next to fill.
+  const { pagina, visiveis } = paginaCompleta(tracaoDaPagina(), { T_1: '4.5' }, '#repeticao-1-1');
+  ligar(pagina);
+  assert.deepEqual(visiveis(), ['repeticao-1-1']);
+});
+
+test('after a refused save (no anchor in the address): the block whose Salvar was pressed is shown', () => {
+  // save_entry.php refused the save and drew the page again, at
+  // save_entry.php?..., without "#...". The page names the block instead.
+  const { pagina, visiveis } = paginaCompleta(tracaoDaPagina(), { T_1: '4.5' }, '', 'repeticao-1-3');
+  ligar(pagina);
+  assert.deepEqual(visiveis(), ['repeticao-1-3']);
+});
+
+test('navigation: a numbered button or Próxima switches the block, and the browser does not jump', () => {
+  const { pagina, visiveis, clicar, historico } = paginaCompleta(tracaoDaPagina(), { T_1: '4.5' });
+  ligar(pagina);
+
+  assert.equal(clicar('repeticao-1-1'), true, 'the browser\'s own jump to the anchor is stopped');
+  assert.deepEqual(visiveis(), ['repeticao-1-1']);
+  assert.equal(clicar('repeticao-1-2', 'repeticao-seta'), true);
+  assert.deepEqual(visiveis(), ['repeticao-1-2']);
+  // The address follows, so a reload opens the same block.
+  assert.deepEqual(historico, ['#repeticao-1-1', '#repeticao-1-2']);
+});
+
+test('navigation: a locked block can be looked at, and its fields stay disabled', () => {
+  const blocos = tracaoDaPagina();
+  const { pagina, visiveis, clicar, elementos } = paginaCompleta(blocos, { T_1: '4.5' });
+  ligar(pagina);
+  clicar('repeticao-1-3');
+  assert.deepEqual(visiveis(), ['repeticao-1-3']);
+  // The fields of attempt 3, as the page holds them.
+  const [t3, d3] = elementos['repeticao-1-3'].campos;
+  assert.equal(t3.disabled, true);
+  assert.equal(d3.disabled, true);
+});
+
+test('navigation: a click anywhere else, or on a link to something that is not a block, is left alone', () => {
+  const { pagina, visiveis, clicar } = paginaCompleta(tracaoDaPagina(), { T_1: '4.5' });
+  ligar(pagina);
+  assert.equal(clicar('repeticao-1-9'), false);
+  assert.equal(clicar('repeticao-1-1', 'outro-link'), false);
+  assert.deepEqual(visiveis(), ['repeticao-1-2']);
+});
+
+test('navigation: the select (for many attempts) switches the block too', () => {
+  const { pagina, visiveis, ouvintes, elementos } = paginaCompleta(tracaoDaPagina(), { T_1: '4.5' });
+  ligar(pagina);
+  const seletor = elementos['repeticao-1-2'].seletor;
+  seletor.value = 'repeticao-1-1';
+  for (const funcao of ouvintes['select:repeticao-1-2:change']) funcao();
+  assert.deepEqual(visiveis(), ['repeticao-1-1']);
+  assert.equal(elementos['repeticao-1-1'].seletor.value, 'repeticao-1-1', 'the shown block\'s select names it');
+});
+
+test('navigating never removes a field nor changes what was typed', () => {
+  // What the judge typed in attempt 2, then they look at attempt 1 and 3.
+  const blocos = tracaoDaPagina();
+  const { pagina, clicar, elementos } = paginaCompleta(blocos, { T_1: '4.5' });
+  ligar(pagina);
+  const t2 = elementos['repeticao-1-2'].campos[0];
+  t2.value = '5.25';
+  clicar('repeticao-1-1');
+  clicar('repeticao-1-3');
+
+  // Every field is still there, with its value. Hidden blocks are only
+  // hidden: their fields are sent with the form like any other.
+  assert.deepEqual(blocos.flatMap((b) => elementos[b.ancora].campos.map((c) => c.id)), ['T_1', 'D_1', 'T_2', 'D_2', 'T_3', 'D_3']);
+  assert.equal(elementos['repeticao-1-1'].campos[0].value, '4.5');
+  assert.equal(t2.value, '5.25');
+  assert.equal(t2.disabled, false, 'hiding does not disable (a disabled field would not be sent)');
+});
+
+test('two groups: each shows one of its own blocks, and navigating one leaves the other alone', () => {
+  const blocos = [
+    { ancora: 'repeticao-1-1', grupo: 1, numero: 1, campos: [{ codigo: 'I_1' }] },
+    { ancora: 'repeticao-1-2', grupo: 1, numero: 2, campos: [{ codigo: 'I_2' }] },
+    { ancora: 'repeticao-2-1', grupo: 2, numero: 1, campos: [{ codigo: 'V_1' }] },
+    { ancora: 'repeticao-2-2', grupo: 2, numero: 2, campos: [{ codigo: 'V_2' }] },
+  ];
+  const { pagina, visiveis, clicar } = paginaCompleta(blocos, { I_1: '1' });
+  ligar(pagina);
+  assert.deepEqual(visiveis(), ['repeticao-1-2', 'repeticao-2-1']);
+  clicar('repeticao-2-2');
+  assert.deepEqual(visiveis(), ['repeticao-1-2', 'repeticao-2-2']);
+});
+
+test('a field the browser refuses in a hidden block brings that block up', () => {
+  const blocos = tracaoDaPagina();
+  const { pagina, visiveis, ouvintes, elementos } = paginaCompleta(blocos, { T_1: '4.5' });
+  ligar(pagina);
+  const corpo = elementos['repeticao-1-1'];
+  const campo = { closest: () => corpo };
+  for (const funcao of ouvintes.invalid) funcao({ target: campo });
+  assert.deepEqual(visiveis(), ['repeticao-1-1']);
+});
+
+test('mostrarBloco with an anchor that is not a block changes nothing', () => {
+  const blocos = tracaoDaPagina();
+  const { pagina, visiveis } = paginaCompleta(blocos, {});
+  assert.equal(mostrarBloco(pagina, blocos, 'repeticao-7-7'), false);
+  assert.deepEqual(visiveis(), ['repeticao-1-1', 'repeticao-1-2', 'repeticao-1-3']);
 });

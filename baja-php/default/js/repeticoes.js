@@ -13,6 +13,9 @@
 // emptied afterwards: a disabled field is not sent with the form, and the
 // save would erase it. The server refuses that save and says why.
 //
+// It also shows ONE block of each group at a time, and makes the blocks'
+// navigation switch between them (see "One block at a time" below).
+//
 // The functions on top are pure, for the tests (tests/js/repeticoes.test.js);
 // ligar() at the bottom connects them to the page.
 
@@ -125,7 +128,104 @@ export function aplicar(documento, blocos) {
   return estados;
 }
 
-/** Connects the page: states now, again after every change, and the jump selects. */
+// --- One block at a time ---------------------------------------------
+//
+// With the script, each repeated group shows only one of its blocks; the
+// navigation of the block (Anterior, Próxima, the numbered buttons or the
+// select) switches which one. Without the script every block is shown, as
+// the server drew them, and those links simply scroll.
+//
+// The other blocks are HIDDEN, never removed: they stay in the same form, so
+// their fields are sent with every save exactly as before (a hidden field is
+// sent; only a disabled one is not), and what the judge typed in them stays.
+
+/** States that still need the judge: the first such block opens first. */
+const ESTADOS_A_PREENCHER = ['incompleta', 'vazia'];
+
+/**
+ * Which block of ONE group opens first:
+ *   1. the block named in the address (#repeticao-1-3), e.g. after a Salvar
+ *      in that block, which brings the judge back to it;
+ *   2. otherwise the first block still to fill (incompleta or vazia; a
+ *      bloqueada one cannot be filled yet);
+ *   3. otherwise the last block.
+ *
+ * @param {Array<{ancora: string}>} blocosDoGrupo the group's blocks, in order
+ * @param {Record<string, {estado: string}>} estados anchor => state (estadosDosBlocos)
+ * @param {string} hash the address's "#..." part ("" when none)
+ * @returns {string} the anchor of the block to show
+ */
+export function blocoInicial(blocosDoGrupo, estados, hash) {
+  const pedido = String(hash ?? '').replace(/^#/, '');
+  if (blocosDoGrupo.some((bloco) => bloco.ancora === pedido)) return pedido;
+  const aPreencher = blocosDoGrupo.find((bloco) => ESTADOS_A_PREENCHER.includes(estados[bloco.ancora]?.estado));
+  if (aPreencher) return aPreencher.ancora;
+  return blocosDoGrupo[blocosDoGrupo.length - 1].ancora;
+}
+
+/**
+ * The blocks split by repeated group, each group in page order. A prova
+ * may have more than one group (e.g. one for "Inclinação" and one for
+ * "Velocidade"); each shows one of its own blocks.
+ *
+ * @returns {Map<number, Array>} group number => its blocks
+ */
+export function blocosPorGrupo(blocos) {
+  const grupos = new Map();
+  for (const bloco of blocos) {
+    if (!grupos.has(bloco.grupo)) grupos.set(bloco.grupo, []);
+    grupos.get(bloco.grupo).push(bloco);
+  }
+  return grupos;
+}
+
+/**
+ * Shows the block with this anchor and hides the other blocks of ITS group.
+ * Blocks of other groups are left as they are. Nothing is removed from the
+ * page and no field is touched.
+ *
+ * @returns {boolean} false when no block has this anchor (nothing changes)
+ */
+export function mostrarBloco(documento, blocos, ancora) {
+  const alvo = blocos.find((bloco) => bloco.ancora === ancora);
+  if (!alvo) return false;
+  for (const bloco of blocos) {
+    if (bloco.grupo !== alvo.grupo) continue;
+    documento.getElementById(bloco.ancora).hidden = bloco.ancora !== ancora;
+  }
+  // The jump select of the block now shown points at that block.
+  for (const seletor of documento.getElementById(ancora).querySelectorAll('.repeticao-select')) {
+    seletor.value = ancora;
+  }
+  return true;
+}
+
+/**
+ * The anchor a click leads to, when it is on a block's navigation link
+ * (Anterior, Próxima, a numbered button); null for any other click.
+ */
+function alvoDoClique(evento) {
+  const link = evento.target?.closest?.('a.repeticao-seta, a.repeticao-salto');
+  if (!link) return null;
+  const href = link.getAttribute('href') ?? '';
+  return href.startsWith('#') ? href.slice(1) : null;
+}
+
+/**
+ * Switches to a block the way the navigation does: shows it, writes its
+ * anchor in the address (replacing, so the browser's Back still leaves the
+ * page instead of walking the blocks), and brings its title into view when
+ * it is above the screen.
+ */
+function irPara(documento, blocos, ancora) {
+  if (!mostrarBloco(documento, blocos, ancora)) return;
+  const janela = documento.defaultView;
+  janela?.history?.replaceState(null, '', `#${ancora}`);
+  const corpo = documento.getElementById(ancora);
+  if (corpo.getBoundingClientRect && corpo.getBoundingClientRect().top < 0) corpo.scrollIntoView({ block: 'start' });
+}
+
+/** Connects the page: states now, again after every change, and the navigation. */
 export function ligar(documento) {
   const blocos = blocosDaPagina(documento);
   if (blocos.length === 0) return;
@@ -133,10 +233,42 @@ export function ligar(documento) {
   // After the page's own handlers (they run on the field, this on the document).
   documento.addEventListener('input', atualizar);
   documento.addEventListener('change', atualizar);
-  for (const seletor of documento.querySelectorAll('.repeticao-select')) {
-    seletor.addEventListener('change', () => { documento.location.hash = seletor.value; });
+  const estados = atualizar();
+
+  // One block per group: the one in the address, or the first still to fill.
+  // After a refused save there is no anchor in the address; the page names
+  // the block whose Salvar was pressed instead (juiz/entry.php).
+  const aberta = documento.querySelector?.('[data-repeticao-aberta]')?.dataset.repeticaoAberta;
+  const hash = documento.location?.hash || (aberta ? `#${aberta}` : '');
+  for (const blocosDoGrupo of blocosPorGrupo(blocos).values()) {
+    mostrarBloco(documento, blocos, blocoInicial(blocosDoGrupo, estados, hash));
   }
-  atualizar();
+  // The browser scrolls to an anchor before this runs; with the other blocks
+  // hidden the block moved up, so scroll to it again.
+  const pedido = hash.replace(/^#/, '');
+  if (blocos.some((bloco) => bloco.ancora === pedido)) documento.getElementById(pedido).scrollIntoView?.({ block: 'start' });
+
+  // The navigation switches the block instead of scrolling to it.
+  documento.addEventListener('click', (evento) => {
+    const ancora = alvoDoClique(evento);
+    if (ancora === null || !blocos.some((bloco) => bloco.ancora === ancora)) return;
+    evento.preventDefault();
+    irPara(documento, blocos, ancora);
+  });
+  for (const seletor of documento.querySelectorAll('.repeticao-select')) {
+    seletor.addEventListener('change', () => irPara(documento, blocos, seletor.value));
+  }
+  // An anchor typed or followed some other way (e.g. a link on the page).
+  documento.defaultView?.addEventListener('hashchange', () => {
+    mostrarBloco(documento, blocos, documento.location.hash.replace(/^#/, ''));
+  });
+  // A field the browser refuses (e.g. a negative number where min="0") in a
+  // hidden block: show that block, so the browser can point at the field
+  // instead of silently not sending the form.
+  documento.addEventListener('invalid', (evento) => {
+    const corpo = evento.target?.closest?.('tbody.repeticao');
+    if (corpo && corpo.hidden) mostrarBloco(documento, blocos, corpo.id);
+  }, true);
 }
 
 if (typeof document !== 'undefined') {

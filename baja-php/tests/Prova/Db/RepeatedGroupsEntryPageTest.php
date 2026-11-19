@@ -206,6 +206,19 @@ final class RepeatedGroupsEntryPageTest extends TestCase
         $this->assertStringContainsString('Nada foi salvo', $refused['body']);
         $this->assertStringContainsString('&quot;Tentativa 4&quot; está bloqueada até &quot;Tentativa 3&quot; estar completa', $refused['body']);
         $this->assertSame($before, $this->storedDados());
+        // The page came back without "#repeticao-1-4" in the address (it is
+        // save_entry.php's answer, not a redirect): it names the block whose
+        // Salvar was pressed, so the page's script shows that block again.
+        $this->assertStringContainsString('<table class="tablesorter-blue" data-repeticao-aberta="repeticao-1-4"', $refused['body']);
+    }
+
+    /**
+     * A page opened normally names no block: which one opens is up to the
+     * address (#repeticao-...) and the blocks' states.
+     */
+    public function testANormalPageNamesNoBlockToOpen(): void
+    {
+        $this->assertStringNotContainsString('data-repeticao-aberta', $this->openEntryPage()['body']);
     }
 
     /**
