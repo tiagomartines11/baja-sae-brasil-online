@@ -549,6 +549,50 @@ test_env_copy_is_for_the_escrow_key_only() {
     fi
 }
 
+test_recipient_count_survives_a_large_file() {
+    # Regression test for the weekly verify that failed on 2026-11-17 with
+    # exit 141. Counting recipients reads the start of the file through a
+    # pipe ("head | awk"). awk used to stop reading as soon as it had seen
+    # the header; with a big enough file, head was still writing, got
+    # killed by SIGPIPE, and because this script runs with "pipefail" that
+    # killed the caller too.
+    #
+    # On the server it depended on timing (how full the pipe was), which a
+    # test cannot rely on. So this test makes the bad timing certain: it
+    # replaces "head" for the duration of the test with a version that
+    # sends the first 4 KiB (the whole age header and then some), waits
+    # half a second, and only then sends the rest. If awk stops reading at
+    # the header, it is gone by the time the rest arrives, and the second
+    # half is killed by SIGPIPE — exactly the server's failure. If awk reads
+    # to the end, nothing goes wrong.
+    local base="${TMP}/big-recipients"
+    mkdir -p "$base"
+    LOG_PREFIX='test'
+    # shellcheck source=backup-lib.sh
+    source "${SCRIPTS}/backup-lib.sh"
+
+    # 2 MiB of made-up text: far more than the 64 KiB the function reads.
+    command head -c 2097152 /dev/zero | tr '\0' 'x' > "${base}/big.txt"
+    backup_encrypt "${base}/big.txt" "${base}/big.age" >/dev/null
+
+    # The slow "head". The function calls it as: head -c 65536 <file>.
+    head() {
+        local limit="$2" file="$3"
+        command head -c 4096 "$file"
+        sleep 0.5
+        command head -c "$limit" "$file" | command tail -c +4097
+    }
+
+    # "|| status=$?" keeps a failure from ending this test script, so the
+    # test can report it instead.
+    local count status=0
+    count="$(backup_age_x25519_recipients "${base}/big.age")" || status=$?
+    unset -f head
+
+    same "$status" 0 "exit status of the recipient count (141 would mean SIGPIPE)"
+    same "$count" 2 "recipients of a large ordinary artifact"
+}
+
 test_unchanged_env_is_not_uploaded_again() {
     # Night 1 uploads a copy. Night 2, same .env: nothing new is uploaded,
     # but the manifest still names night 1's copy, and the verifier's
@@ -1254,6 +1298,7 @@ run_test "the manifest is uploaded last, in daily/, monthly/ and yearly/"       
 run_test "the erasure log survives backup and restore with its chain intact"     test_erasure_log_round_trip
 run_test "the stack's .env is read as compose reads it, and never run"         test_env_file_is_read_as_compose_reads_it
 run_test "the .env copy is encrypted to exactly one recipient, the escrow key" test_env_copy_is_for_the_escrow_key_only
+run_test "counting recipients never dies of SIGPIPE on a large file"            test_recipient_count_survives_a_large_file
 run_test "an unchanged .env is not uploaded again, and its copy still checks"  test_unchanged_env_is_not_uploaded_again
 run_test "an event archive records event, time, code version and snapshot count, and restores" test_event_archive_manifest_and_restore
 run_test "an event archive refuses input that is not one event's snapshots"      test_event_archive_refuses_wrong_input

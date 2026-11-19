@@ -645,8 +645,21 @@ backup_check_recipients() {
 # Number of X25519 recipients an age file is encrypted to, read from its
 # header without any key. age may add a random "grease" stanza; only
 # X25519 ones are recipients.
+#
+# awk must read to the end of what head sends, never `exit` early. If awk
+# stopped at the header's last line while head still had bytes to write,
+# head would be killed by SIGPIPE (exit 141), and under `set -o pipefail`
+# that 141 becomes the exit status of the whole command substitution, so
+# the caller's `set -e` ends the script. That is what failed the weekly
+# verify on 2026-11-17: the .env copy had grown large enough that head was
+# still writing when awk quit. Reading at most 64 KiB to the end costs
+# nothing.
 backup_age_x25519_recipients() {
-    head -c 65536 "$1" | LC_ALL=C awk '/^---/ { exit } /^-> X25519 / { n++ } END { print n + 0 }'
+    head -c 65536 "$1" | LC_ALL=C awk '
+        /^---/                    { header_done = 1 }
+        !header_done && /^-> X25519 / { n++ }
+        END                       { print n + 0 }
+    '
 }
 
 # The newest COMPLETE copy under secrets/ (one with its env.json), as
