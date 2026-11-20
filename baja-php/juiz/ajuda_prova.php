@@ -237,7 +237,7 @@ TXT) ?>
         <li><strong>xor</strong> vale só dentro da repetição: <code>"A"</code> vira <code>"A_3"</code> na 3ª, e preencher <code>T_3</code> bloqueia só <code>D_3</code>.</li>
         <li>Nas fórmulas da prova também existe <code>$T_lista</code>: os valores preenchidos de <code>T_1</code>&hellip;<code>T_6</code>, em ordem, sem os vazios
             (quem correu duas vezes tem uma lista de dois). Use com <a href="#formulas"><code>MENOR()</code>, <code>MAIOR()</code> e <code>CONTAR()</code></a>.
-            Por isso nenhum <code>code</code> pode terminar em <code>_lista</code>. As listas existem em <code>vars</code>, <code>min_max</code> e <code>pontos</code>;
+            Por isso nenhum <code>code</code> pode terminar em <code>_lista</code>. As listas existem em <code>vars</code>, <code>min_max</code>, no <code>valor</code> e no <code>desempate</code> de <a href="#posicoes"><code>posicoes</code></a> e em <code>pontos</code>;
             nos resultados use os campos (<code>$T_1</code>&hellip;) ou uma var da prova.</li>
     </ul>
     <p><strong>Na tela do juiz</strong> cada repetição é um bloco, todos na mesma página, cada um com <em>Salvar</em>, <em>◀ Anterior</em>, <em>Próxima ▶</em>
@@ -327,7 +327,8 @@ Ajuda::secao('posicoes', 'posicoes — posição da equipe');
     <p>A posição fica guardada junto das vars, então também pode ser mostrada nas colunas dos resultados. Há dois tipos:</p>
     <p><strong>1. Posição dentro desta prova</strong>: <code>{"valor": fórmula, "ordem": "desc", "desempate": fórmula}</code></p>
     <ul>
-        <li><code>valor</code> &mdash; fórmula calculada para cada equipe; enxerga inputs, <code>vars</code> e <code>min_max</code> (não os Totais).</li>
+        <li><code>valor</code> &mdash; fórmula calculada para cada equipe; enxerga inputs, <code>vars</code> e <code>min_max</code> (não os Totais).
+            Num <a href="#grupos-repetidos">grupo repetido</a> também a lista: <code>"valor": "MENOR($T_lista)", "ordem": "asc"</code> classifica pela melhor tentativa.</li>
         <li><code>ordem</code> &mdash; <code>"desc"</code> (padrão): maior valor é o 1º; <code>"asc"</code>: menor valor é o 1º (ex.: tempo).</li>
         <li><code>desempate</code> &mdash; opcional: fórmula que separa equipes com o mesmo <code>valor</code>, na mesma direção da <code>ordem</code>, como o <code>tiebreak</code> dos resultados.</li>
     </ul>
@@ -362,7 +363,7 @@ JSON, 'Exemplo: Compliance. 20 pontos para os carros no top 5 de Tração E de A
     &quot;Refresh Pontos&quot;, contagem de voltas...), as provas que usam a posição de um resultado que inclui essa prova são recalculadas também,
     e depois as que dependem delas. O mesmo acontece quando se salva ou apaga um resultado usado em <code>posicoes</code>.</p>
     <p><strong>Prova derivada (sem campos):</strong> uma prova como a Compliance, cujos pontos vêm só das posições, <strong>não precisa de <code>inputs</code></strong>.
-    Com <code>posicoes</code> e sem <code>inputs</code>, ela cria sozinha, ao ser recalculada, um lançamento vazio para cada equipe <strong>presente</strong> no evento
+    Com <code>posicoes</code> e sem <code>inputs</code> (um <a href="#grupos-repetidos">grupo repetido</a> conta como campos: uma prova só com um grupo não é derivada), ela cria sozinha, ao ser recalculada, um lançamento vazio para cada equipe <strong>presente</strong> no evento
     (as mesmas equipes que o juiz vê numa prova normal) e guarda os pontos de todas. Nenhum juiz lança nada: como toda prova sem <code>inputs</code>, ela não aparece na tela do juiz.
     Equipe sem posição em lugar nenhum recebe os pontos que a fórmula dá para posição vazia (na Compliance, 0); equipe desclassificada, como em toda prova, fica sem pontos.
     Basta salvar uma nota de uma prova da qual ela depende, ou clicar em &quot;Refresh Pontos&quot; nela.</p>

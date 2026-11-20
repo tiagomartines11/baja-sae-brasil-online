@@ -42,7 +42,10 @@ final class PositionStage
         $teams = [];
         $byTeam = [];
         foreach ($inputs as $input) {
-            $variables = array_merge((array)$input->getDados(), (array)$input->getVars());
+            // The same names the vars and min_max formulas see: the dados with
+            // the lists of the repeated input groups ($T_lista, BAJAAPP-103),
+            // then the vars and min_max values.
+            $variables = array_merge((array)$input->getFormulaDados(), (array)$input->getVars());
             $teams[] = [
                 'teamId' => $input->getEquipeId(),
                 'variables' => $variables,

@@ -7,6 +7,7 @@ use Baja\Model\EquipeQuery;
 use Baja\Model\Input;
 use Baja\Model\InputQuery;
 use Baja\Model\Prova;
+use Baja\Repeat\InputGroups;
 
 /**
  * Entries for a DERIVED prova (BAJAAPP-102): one with "posicoes" and no
@@ -30,11 +31,21 @@ use Baja\Model\Prova;
  */
 final class DerivedEntries
 {
-    /** Whether the prova's points come only from its "posicoes": it has some, and no input field. */
+    /**
+     * Whether the prova's points come only from its "posicoes": it has some,
+     * and no input field. The fields are counted after the repeated input
+     * groups are written out (BAJAAPP-103, Baja\Repeat\InputGroups), so a
+     * prova whose only "inputs" are a {"repetir": 6, ...} group has fields
+     * (T_1 ... T_6) and is a normal prova, not a derived one.
+     */
     public static function isDerived(Prova $prova): bool
     {
         $params = $prova->getParams();
-        return PositionSpec::allOf($params) !== [] && (array)(is_object($params) ? ($params->inputs ?? []) : []) === [];
+        if (PositionSpec::allOf($params) === []) {
+            return false;
+        }
+        $inputs = is_object($params) ? ($params->inputs ?? []) : [];
+        return InputGroups::expand($inputs)->inputs === [];
     }
 
     /** For a derived prova, saves an empty entry for every present team that has none. */

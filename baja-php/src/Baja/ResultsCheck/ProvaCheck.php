@@ -97,7 +97,9 @@ final class ProvaCheck
      */
     private static function positionFormulas(array $specs, Input $input): void
     {
-        $variables = array_merge((array)$input->getDados(), (array)$input->getVars());
+        // As PositionStage::apply() gives them: the dados with the lists of the
+        // repeated input groups ($T_lista), then the vars and min_max values.
+        $variables = array_merge((array)$input->getFormulaDados(), (array)$input->getVars());
         foreach ($specs as $spec) {
             if (!$spec->isExternal()) {
                 Input::solveFormula($variables, $spec->valor);

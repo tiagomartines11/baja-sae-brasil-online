@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Baja\Posicoes;
 
+use Baja\Repeat\InputGroups;
+
 /**
  * What is wrong with a prova's "posicoes", or with a resultado that provas
  * take positions from (BAJAAPP-102). The judge pages refuse to save a config
@@ -140,17 +142,24 @@ final class PosicoesRules
 
     /**
      * The names a prova already gives its teams before this stage: input
-     * codes, vars and min_max.
+     * codes, vars and min_max. The input codes are those after the repeated
+     * groups are written out (T_1 ... T_6), plus their lists ($T_lista;
+     * BAJAAPP-103, Baja\Repeat\InputGroups): a position may not take any
+     * of those names either.
      *
      * @return array<string, true>
      */
     private static function namesOf(object $params): array
     {
         $names = [];
-        foreach ((array)($params->inputs ?? []) as $field) {
+        $expanded = InputGroups::expand($params->inputs ?? []);
+        foreach ($expanded->inputs as $field) {
             if (is_object($field) && isset($field->code) && is_scalar($field->code)) {
                 $names[(string)$field->code] = true;
             }
+        }
+        foreach (array_keys($expanded->listVariables(null)) as $list) {
+            $names[$list] = true;
         }
         foreach (['vars', 'min_max'] as $group) {
             $value = $params->$group ?? null;

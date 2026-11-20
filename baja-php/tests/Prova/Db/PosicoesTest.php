@@ -336,6 +336,41 @@ final class PosicoesTest extends TestCase
         $this->assertSame($before, self::fingerprint(), 'nothing was written');
     }
 
+    // --- With repeated input groups (BAJAAPP-103) ---------------------------------
+
+    /**
+     * SITUATION: prova REP has six attempts written as ONE repeated group
+     * ({"repetir": 6, ...}: the fields T_1 ... T_6), and ranks the cars by
+     * their best time, MENOR($T_lista), lowest first. Only cars 1 to 3 have
+     * entries: judges typed their attempts.
+     *
+     *   car   attempts             best   position   points (4 - position)
+     *    1    12.0, 11.5           11.5   2          2
+     *    2    "", "", 10.9         10.9   1          3
+     *    3    13.0 (6th only)      13.0   3          1
+     *
+     * Working it out stores those positions and points. And, because the
+     * group gives the prova fields, REP is NOT a derived prova: it makes no
+     * entry for the other present cars (4 to 10), which a prova with no
+     * input field at all would do.
+     */
+    public function testARepeatedGroupProvaIsRankedByItsBestAttempt(): void
+    {
+        self::insertProva('REP', [
+            'inputs' => [['repetir' => 6, 'nome' => 'Tentativa', 'inputs' => [['code' => 'T', 'name' => 'Tempo', 'type' => 'number']]]],
+            'posicoes' => ['POS' => ['valor' => 'MENOR($T_lista)', 'ordem' => 'asc']],
+            'pontos' => ['REPPTS' => '$POS !== null ? 4 - $POS : 0'],
+        ]);
+        self::insertInput('REP', 1, ['T_1' => 12.0, 'T_2' => 11.5]);
+        self::insertInput('REP', 2, ['T_1' => '', 'T_2' => '', 'T_3' => 10.9]);
+        self::insertInput('REP', 3, ['T_6' => 13.0]);
+
+        self::prova('REP')->refreshVarsAndPontos();
+
+        $this->assertSame([1 => 2, 2 => 1, 3 => 3], self::stored('REP', 'vars', 'POS', everyTeam: true));
+        $this->assertSame([1 => 2, 2 => 3, 3 => 1], self::stored('REP', 'pontos', 'REPPTS', everyTeam: true), 'and no entry for cars 4 to 10');
+    }
+
     // --- Cycles are refused on save ------------------------------------------------
 
     /**
