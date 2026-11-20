@@ -27,10 +27,12 @@ use Throwable;
  *              $PENPTS is no typo), and the columns to the left (R1); the
  *              tiebreak also sees every column
  *   prova      vars: the input fields (declared, or in some team's dados);
- *              min_max: those and the vars; pontos: those, the min_max
+ *              min_max: those and the vars; posicoes (valor, desempate):
+ *              those and the min_max; pontos: those, the min_max
  *              variables, the prova's totals ($Xmax, $Xmin, $Xcom, $Xcount,
- *              $Xsum, $Xavg) and the pontos before it in alphabetical
- *              order, which is the order they are worked out
+ *              $Xsum, $Xavg), the posicoes names (BAJAAPP-102) and the
+ *              pontos before it in alphabetical order, which is the order
+ *              they are worked out
  *
  * A variable that exists only LATER (a column further right, a pontos that
  * comes after in alphabetical order) is said to be so: it is still empty
@@ -98,7 +100,7 @@ final class UnknownVariables
             return [];
         }
         $names = self::inputFields($params, false) + self::keys($params->vars ?? null) + self::keys($params->pontos ?? null)
-            + self::keys($prova->getTotals()) + self::systemFields($prova->getType());
+            + self::keys($params->posicoes ?? null) + self::keys($prova->getTotals()) + self::systemFields($prova->getType());
         foreach (array_keys(self::keys($params->min_max ?? null)) as $variable) {
             $names[$variable] = true;
             foreach (['max', 'min', 'com', 'count', 'sum', 'avg'] as $total) {
@@ -130,6 +132,7 @@ final class UnknownVariables
                 $totals[$variable . $total] = true;
             }
         }
+        $positions = self::keys($params->posicoes ?? null);
         $pontos = array_keys(self::keys($params->pontos ?? null));
         sort($pontos, SORT_STRING);  // as ksort() in Input::updatePontos()
 
@@ -139,7 +142,8 @@ final class UnknownVariables
             $known = match ($group) {
                 'vars' => $fields,
                 'min_max' => $fields + $vars,
-                default => $fields + $vars + $minMax + $totals,
+                'posicoes' => $fields + $vars + $minMax,
+                default => $fields + $vars + $minMax + $totals + $positions,
             };
             $later = [];
             $why = '';
@@ -156,6 +160,9 @@ final class UnknownVariables
             } elseif ($group === 'vars') {
                 $later = $vars + $minMax;
                 $why = 'is a var or a min_max: a var only sees the input fields, so here it is empty';
+            } elseif ($group === 'posicoes') {
+                $later = $totals + $positions;
+                $why = 'is a Total or a posicoes: a posicoes formula only sees the input fields, the vars and the min_max, so here it is empty';
             } else {
                 $later = $minMax;
                 $why = 'is a min_max: they only see the input fields and the vars, so here it is still empty';

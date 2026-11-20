@@ -6,6 +6,9 @@ use Baja\Model\EventoQuery;
 use Baja\Model\LogQuery;
 use Baja\Model\ProvaQuery;
 use Baja\Model\Prova;
+use Baja\Posicoes\EventGraph;
+use Baja\Posicoes\PosicoesRules;
+use Baja\Posicoes\Recalculation;
 use Baja\Repeat\InputGroups;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
@@ -34,6 +37,11 @@ $erroJson = null;
 // Baja\Repeat\InputGroups): one message per problem.
 $errosConfig = [];
 
+// Set when the parameters are valid JSON but their "posicoes" are not
+// (unknown resultado, a cycle...; Baja\Posicoes\PosicoesRules): nothing is
+// saved either, and the form is shown again the same way.
+$erroPosicoes = [];
+
 if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
     $nova = true;
 
@@ -49,6 +57,8 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
                 $erroJson = $params->erro;
             } else if ($errosConfig = InputGroups::errorsOfParams($params->valor)) {
                 // Not saved; shown below.
+            } else if (($erroPosicoes = PosicoesRules::errorsForProva(EventGraph::load($currentEventId), $_POST['prova_id'], $params->valor)) !== []) {
+                // Not saved: the errors are shown with the form below.
             } else {
                 $prova = new Prova();
                 $prova->setEventoId($currentEventId);
@@ -119,6 +129,8 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
             $erroJson = $params->erro;
         } else if ($errosConfig = InputGroups::errorsOfParams($params->valor)) {
             // Not saved; shown below.
+        } else if (($erroPosicoes = PosicoesRules::errorsForProva(EventGraph::load($currentEventId), $prova->getProvaId(), $params->valor)) !== []) {
+            // Not saved: the errors are shown with the form below.
         } else {
             if ($prova->getParams() != $params->valor) {
                 $backups['-5'] = $bk4;
@@ -142,6 +154,7 @@ if (isset($_REQUEST['nova']) && $_REQUEST['nova']=='true') {
 
     if (@$_REQUEST['act'] == 'Deletar Prova') {
         $prova->delete();
+        Recalculation::afterProvaDeleted($currentEventId, $_page);
         header("Location: admin_provas.php"); exit;
     }
 }
@@ -182,6 +195,11 @@ Template::printHeader("Detalhes de Prova", false);
                     <td colspan="2" style="color: red; font-weight: bold;">Parâmetros não salvos: há problemas nos grupos repetidos (<a href="ajuda_prova.php#grupos-repetidos" target="_blank">ajuda</a>). Corrija o texto abaixo e salve de novo.<ul>
                         <?php foreach ($errosConfig as $erro) { ?><li><?= Html::e($erro) ?></li><?php } ?>
                     </ul></td>
+                </tr>
+                <?php } ?>
+                <?php if ($erroPosicoes !== []) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Parâmetros não salvos: erro em <code>posicoes</code> (veja a <a href="ajuda_prova.php#posicoes" target="_blank">ajuda</a>). Corrija o texto abaixo e salve de novo.<?php foreach ($erroPosicoes as $erro) { ?><br /><?= Html::e($erro) ?><?php } ?></td>
                 </tr>
                 <?php } ?>
                 <tr>
@@ -230,7 +248,7 @@ Template::printHeader("Detalhes de Prova", false);
                 </tr>                
                 <tr>
                     <td><textarea style="width:700px;min-height:600px;" name="params" id="params" <?= $nova?'':'oninput="resetStyles();"' ?>><?php
-                        if ($erroJson !== null || $errosConfig) {
+                        if ($erroJson !== null || $errosConfig || $erroPosicoes !== []) {
                             // Give back exactly what was typed, so the fix is one edit away
                             echo htmlspecialchars($_POST['params'] ?? '');
                         } else {

@@ -6,6 +6,7 @@ namespace Baja\ResultsSnapshot\Jobs;
 use Baja\Model\Input;
 use Baja\Model\InputQuery;
 use Baja\Model\ProvaQuery;
+use Baja\Posicoes\PositionStage;
 use Throwable;
 
 /**
@@ -57,15 +58,21 @@ final class FormulasJob
         $differs = ['vars' => [], 'pontos' => []];
         $error = null;
         try {
-            foreach ($inputs as $input) {
+            $stored = [];
+            foreach ($inputs as $index => $input) {
                 /** @var Input $input */
-                $storedVars = self::plain($input->getVars());
-                $storedPontos = self::plain($input->getPontos());
+                $stored[$index] = [self::plain($input->getVars()), self::plain($input->getPontos())];
+                $input->updateVars();
+            }
+            // The "posicoes" stage needs every team's vars (BAJAAPP-102); it
+            // does nothing for a prova without "posicoes".
+            PositionStage::apply($prova, $inputs);
+            foreach ($inputs as $index => $input) {
+                [$storedVars, $storedPontos] = $stored[$index];
 
                 // Input::getProva() hands back the same Prova object as
                 // above (Propel keeps one object per row), so updatePontos()
                 // reads the stored totals from it.
-                $input->updateVars();
                 $input->updatePontos();
 
                 $equipe = (int)$input->getEquipeId();

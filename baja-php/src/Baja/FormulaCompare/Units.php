@@ -6,6 +6,7 @@ namespace Baja\FormulaCompare;
 use Baja\Model\Input;
 use Baja\Model\InputQuery;
 use Baja\Model\Prova;
+use Baja\Posicoes\PositionStage;
 use Baja\Results\Column;
 use Baja\Results\EventStatus;
 use Baja\Results\ResultsBuilder;
@@ -42,6 +43,10 @@ final class Units
                 /** @var Input $input */
                 $teams++;
                 $input->updateVars();
+            }
+            // Between the vars and the points, as refreshVarsAndPontos() runs it (BAJAAPP-102).
+            PositionStage::apply($prova['prova'], $prova['inputs']);
+            foreach ($prova['inputs'] as $input) {
                 $input->updatePontos();
             }
             self::seeding($prova['prova']);

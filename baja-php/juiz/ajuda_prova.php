@@ -15,6 +15,7 @@ Ajuda::printHeader("Parâmetros de Prova", "admin_provas.php", [
     'grupos-repetidos' => 'Grupos repetidos',
     'vars' => 'vars',
     'min_max' => 'min_max',
+    'posicoes' => 'posicoes',
     'pontos' => 'pontos',
     'formulas' => 'Fórmulas',
     'torneio' => 'Torneio',
@@ -37,7 +38,7 @@ Ajuda::secao('visao-geral', 'Visão geral');
         <li><strong>Totais</strong> &mdash; somente leitura: máximos, mínimos, contagens, somas e médias calculados a partir de <a href="#min_max"><code>min_max</code></a>.</li>
     </ul>
     <p><strong>Ordem de cálculo</strong> (por equipe, a cada lançamento ou &quot;Refresh Pontos&quot;):</p>
-    <?= Ajuda::codigo("lançamento do juiz (inputs)  →  vars  →  min_max  →  Totais (todas as equipes)  →  pontos") ?>
+    <?= Ajuda::codigo("lançamento do juiz (inputs)  →  vars  →  min_max  →  Totais (todas as equipes)  →  posicoes  →  pontos") ?>
     <p>Na tela inicial do juiz, a prova só aparece se tiver pelo menos um item em <code>inputs</code> (ou for um torneio)
     e se o usuário tiver a permissão com o ID da prova. A exceção é a prova <a href="#type"><code>"laps"</code></a>, que aparece mesmo sem <code>inputs</code>
     para quem participa da contagem: o responsável (permissão com o ID da prova), os contadores e o registro de box.</p>
@@ -52,6 +53,7 @@ Ajuda::opcao('type', 'texto', 'Tipo de lançamento: omitido (normal), <code>"rol
 Ajuda::opcao('inputs', 'lista', 'Campos que o juiz preenche. Veja <a href="#inputs">inputs</a>.');
 Ajuda::opcao('vars', 'objeto', 'Variáveis calculadas por equipe a partir dos inputs. Veja <a href="#vars">vars</a>.');
 Ajuda::opcao('min_max', 'objeto', 'Variáveis por equipe cujo máximo, mínimo, contagem, soma e média entre todas as equipes são calculados. Veja <a href="#min_max">min_max</a>.');
+Ajuda::opcao('posicoes', 'objeto', 'Posição (1º, 2º...) da equipe nesta prova ou em outro resultado, para usar em <code>pontos</code>. Veja <a href="#posicoes">posicoes</a>.');
 Ajuda::opcao('pontos', 'objeto', 'Fórmulas de pontuação. Veja <a href="#pontos">pontos</a>.');
 Ajuda::opcao('seeding', 'objeto', 'Somente torneio: quem participa e como é feita a classificação. Veja <a href="#torneio">Torneio</a>.');
 Ajuda::opcao('status', 'objeto', 'Somente torneio: estado da classificação (gerenciado pela tela de chaveamento). Veja <a href="#torneio">Torneio</a>.');
@@ -235,7 +237,7 @@ TXT) ?>
         <li><strong>xor</strong> vale só dentro da repetição: <code>"A"</code> vira <code>"A_3"</code> na 3ª, e preencher <code>T_3</code> bloqueia só <code>D_3</code>.</li>
         <li>Nas fórmulas da prova também existe <code>$T_lista</code>: os valores preenchidos de <code>T_1</code>&hellip;<code>T_6</code>, em ordem, sem os vazios
             (quem correu duas vezes tem uma lista de dois). Use com <a href="#formulas"><code>MENOR()</code>, <code>MAIOR()</code> e <code>CONTAR()</code></a>.
-            Por isso nenhum <code>code</code> pode terminar em <code>_lista</code>. As listas existem em <code>vars</code>, <code>min_max</code> e <code>pontos</code>;
+            Por isso nenhum <code>code</code> pode terminar em <code>_lista</code>. As listas existem em <code>vars</code>, <code>min_max</code>, no <code>valor</code> e no <code>desempate</code> de <a href="#posicoes"><code>posicoes</code></a> e em <code>pontos</code>;
             nos resultados use os campos (<code>$T_1</code>&hellip;) ou uma var da prova.</li>
     </ul>
     <p><strong>Na tela do juiz</strong> cada repetição é um bloco, todos na mesma página, cada um com <em>Salvar</em>, <em>◀ Anterior</em>, <em>Próxima ▶</em>
@@ -316,10 +318,69 @@ TXT) ?>
 <?php
 Ajuda::fimSecao();
 
+Ajuda::secao('posicoes', 'posicoes — posição da equipe');
+?>
+<tr><td>
+    <p>Objeto <code>{"NOME": {...}}</code>. Cada item cria a variável <code>$NOME</code> com a <strong>posição</strong> da equipe (1, 2, 3...),
+    ou vazio (<code>null</code>) quando ela não tem posição. É calculado <strong>depois</strong> de <code>min_max</code> e dos Totais e <strong>antes</strong> de <code>pontos</code>:</p>
+    <?= Ajuda::codigo("inputs  →  vars  →  min_max  →  Totais  →  posicoes  →  pontos") ?>
+    <p>A posição fica guardada junto das vars, então também pode ser mostrada nas colunas dos resultados. Há dois tipos:</p>
+    <p><strong>1. Posição dentro desta prova</strong>: <code>{"valor": fórmula, "ordem": "desc", "desempate": fórmula}</code></p>
+    <ul>
+        <li><code>valor</code> &mdash; fórmula calculada para cada equipe; enxerga inputs, <code>vars</code> e <code>min_max</code> (não os Totais).
+            Num <a href="#grupos-repetidos">grupo repetido</a> também a lista: <code>"valor": "MENOR($T_lista)", "ordem": "asc"</code> classifica pela melhor tentativa.</li>
+        <li><code>ordem</code> &mdash; <code>"desc"</code> (padrão): maior valor é o 1º; <code>"asc"</code>: menor valor é o 1º (ex.: tempo).</li>
+        <li><code>desempate</code> &mdash; opcional: fórmula que separa equipes com o mesmo <code>valor</code>, na mesma direção da <code>ordem</code>, como o <code>tiebreak</code> dos resultados.</li>
+    </ul>
+    <p>As regras são as mesmas da classificação dos resultados: valores iguais dividem a posição e a seguinte é pulada (1º, 1º, 3º);
+    equipe sem valor fica sem posição; equipe <strong>desclassificada</strong> fica sem posição e não conta para as outras.</p>
+    <?= Ajuda::exemplo(<<<'JSON'
+{
+  "inputs": [{"code": "NOTA_CAD", "name": "Nota CAD", "type": "number"}],
+  "posicoes": {"COL_CAD": {"valor": "$NOTA_CAD", "ordem": "desc"}},
+  "pontos": {"CADPTS": "$COL_CAD === null ? 0 : ($COL_CAD == 1 ? 30 : ($COL_CAD == 2 ? 25 : ($COL_CAD == 3 ? 20 : 10)))"}
+}
+JSON, 'Exemplo: colocação no CAD. Os juízes lançam a nota; os pontos saem da colocação (30, 25, 20 e 10 para as demais). Empate na nota: mesma colocação.') ?>
+    <p><strong>2. Posição na classificação de outro resultado</strong>: <code>{"resultado": "ID_DO_RESULTADO"}</code></p>
+    <ul>
+        <li>A posição é exatamente a da coluna Pos da página daquele resultado (e da premiação e da API): valem o <code>pos</code>, <code>pos_order</code>, <code>tiebreak</code> e <code>filter</code> dele.</li>
+        <li>É sempre a classificação <strong>real</strong>, como o juiz vê, mesmo quando os spoilers a escondem do público.</li>
+        <li>O resultado tem que ser deste evento e ter <code>pos</code>. Se não existir, a prova não é salva.</li>
+    </ul>
+    <?= Ajuda::exemplo(<<<'JSON'
+{
+  "posicoes": {
+    "P_TRA": {"resultado": "26SU_TRA"},
+    "P_AV": {"resultado": "26SU_AVF"}
+  },
+  "pontos": {
+    "CMPPTS": "$P_TRA !== null && $P_TRA <= 5 && $P_AV !== null && $P_AV <= 5 ? 20 : 0"
+  }
+}
+JSON, 'Exemplo: Compliance. 20 pontos para os carros no top 5 de Tração E de Aceleração. Empatados em 5º entram os dois.') ?>
+    <div class="aviso">Não tire o <code>!== null</code>: para o PHP, vazio é menor que 5, e uma equipe sem posição ganharia os pontos.</div>
+    <p><strong>Recálculo automático:</strong> os pontos ficam guardados. Sempre que os pontos de uma prova são recalculados (lançamento, exclusão de nota,
+    &quot;Refresh Pontos&quot;, contagem de voltas...), as provas que usam a posição de um resultado que inclui essa prova são recalculadas também,
+    e depois as que dependem delas. O mesmo acontece quando se salva ou apaga um resultado usado em <code>posicoes</code>.</p>
+    <p><strong>Prova derivada (sem campos):</strong> uma prova como a Compliance, cujos pontos vêm só das posições, <strong>não precisa de <code>inputs</code></strong>.
+    Com <code>posicoes</code> e sem <code>inputs</code> (um <a href="#grupos-repetidos">grupo repetido</a> conta como campos: uma prova só com um grupo não é derivada), ela cria sozinha, ao ser recalculada, um lançamento vazio para cada equipe <strong>presente</strong> no evento
+    (as mesmas equipes que o juiz vê numa prova normal) e guarda os pontos de todas. Nenhum juiz lança nada: como toda prova sem <code>inputs</code>, ela não aparece na tela do juiz.
+    Equipe sem posição em lugar nenhum recebe os pontos que a fórmula dá para posição vazia (na Compliance, 0); equipe desclassificada, como em toda prova, fica sem pontos.
+    Basta salvar uma nota de uma prova da qual ela depende, ou clicar em &quot;Refresh Pontos&quot; nela.</p>
+    <p><strong>Ciclos não são aceitos:</strong> uma prova não pode usar a posição de um resultado que soma os pontos dela mesma,
+    direta ou indiretamente (ex.: Compliance usando a posição na Geral, que soma a Compliance). Ao salvar, a página mostra a cadeia,
+    por exemplo <code>CMP → 26SU_GER → CMP</code>, e não salva. O mesmo vale ao salvar um resultado.</p>
+    <p><strong>Spoilers:</strong> se a posição vem de um resultado com spoilers e a prova aparece num resultado sem spoilers, os pontos revelam a classificação escondida.
+    A verificação de configurações (<code>check-results-configs.php</code>) avisa.</p>
+    <p>O nome deve ser um nome de variável e não pode repetir um input, var ou <code>min_max</code> da prova.</p>
+</td></tr>
+<?php
+Ajuda::fimSecao();
+
 Ajuda::secao('pontos', 'pontos — pontuação');
 ?>
 <tr><td>
-    <p>Objeto <code>{"NOME": fórmula}</code>. Enxerga inputs, <code>vars</code>, <code>min_max</code> da equipe e os Totais (<code>$NOMEmax</code>, <code>$NOMEmin</code>, <code>$NOMEcom</code>, <code>$NOMEcount</code>, <code>$NOMEsum</code>, <code>$NOMEavg</code>).</p>
+    <p>Objeto <code>{"NOME": fórmula}</code>. Enxerga inputs, <code>vars</code>, <code>min_max</code> da equipe, os Totais (<code>$NOMEmax</code>, <code>$NOMEmin</code>, <code>$NOMEcom</code>, <code>$NOMEcount</code>, <code>$NOMEsum</code>, <code>$NOMEavg</code>) e as <a href="#posicoes"><code>posicoes</code></a>.</p>
     <ul>
         <li>As fórmulas são calculadas em <strong>ordem alfabética do nome</strong>, e cada resultado fica disponível para as seguintes.
             Ex.: <code>SGE_STATUS</code> pode usar <code>$SGEPTS</code>, mas não o contrário.</li>
@@ -437,7 +498,7 @@ Ajuda::secao('backups', 'Backups e recálculo');
         <li><strong>Código Atual / -1&hellip;-5 / Backups Nomeados</strong> apenas carregam a versão no editor; é preciso clicar em <em>Atualizar</em> para aplicá-la.</li>
         <li><strong>💾 Salvar Backup com Nome</strong> guarda o conteúdo atual do editor com um nome; <strong>❌</strong> apaga o backup nomeado selecionado.</li>
         <li><strong>Refresh Pontos ao salvar</strong> (marcado por padrão) recalcula vars, Totais e pontos de todas as equipes ao atualizar. O botão <strong>Refresh Pontos</strong> faz o mesmo sem salvar.
-            Cada lançamento de juiz também recalcula a prova inteira.</li>
+            Cada lançamento de juiz também recalcula a prova inteira, e as provas que dependem dela por <a href="#posicoes"><code>posicoes</code></a>.</li>
         <li>Renomear um <code>code</code> não renomeia os dados já lançados: as notas antigas ficam com o código antigo.</li>
     </ul>
 </td></tr>
