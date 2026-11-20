@@ -2,10 +2,14 @@
 namespace Baja\Juiz;
 
 use Baja\Auth\Csrf;
+use Baja\Repeat\RepeatedColumns;
 use Baja\Model\EventoQuery;
 use Baja\Model\LogQuery;
 use Baja\Model\ResultadoQuery;
 use Baja\Model\Resultado;
+use Baja\Posicoes\EventGraph;
+use Baja\Posicoes\PosicoesRules;
+use Baja\Posicoes\Recalculation;
 use Baja\Site\OneSignalClient;
 use Baja\Session;
 use Baja\Site\Html;
@@ -28,6 +32,14 @@ $novo = false;
 // Set when the submitted columns are not valid JSON: nothing is saved and
 // the form is shown again with the text as typed and this message.
 $erroJson = null;
+// The same for valid JSON whose repeated columns are wrong (BAJAAPP-103,
+// Baja\Repeat\RepeatedColumns): one message per problem.
+$errosConfig = [];
+
+// Set when saving would break a prova's "posicoes" (a cycle, or a resultado
+// that provas take positions from losing its "pos"; Baja\Posicoes\PosicoesRules):
+// nothing is saved either, and the form is shown again the same way.
+$erroPosicoes = [];
 
 if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
     $novo = true;
@@ -40,16 +52,22 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
             if ($resultado) { header("Location: resultado.php?id=".$_POST['resultado_id']); exit; }
 
             $colunas = ConfigJson::decodificar($_POST['colunas']);
+            $inputs = explode(",",str_replace(" ","",$_POST['inputs'] ?? ''));
             if (!$colunas->valido()) {
                 $erroJson = $colunas->erro;
+            } else if ($errosConfig = RepeatedColumns::errors($colunas->valor)) {
+                // Not saved; shown below.
+            } else if (($erroPosicoes = PosicoesRules::errorsForResultado(EventGraph::load($currentEventId), $_POST['resultado_id'], $inputs, $colunas->valor)) !== []) {
+                // Not saved: the errors are shown with the form below.
             } else {
                 $resultado = new Resultado();
                 $resultado->setEventoId($currentEventId);
                 $resultado->setResultadoId($_POST['resultado_id']);
                 $resultado->setNome($_POST['nome']);
-                $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'] ?? '')));
+                $resultado->setInputs($inputs);
                 $resultado->setColunas($colunas->valor);
                 $resultado->save();
+                Recalculation::afterResultadoChanged($currentEventId, $_POST['resultado_id']);
 
                 header("Location: admin_resultados.php"); exit;
             }
@@ -104,8 +122,13 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
 
     if (@$_REQUEST['act'] == 'Atualizar') {
         $colunas = ConfigJson::decodificar($_POST['colunas'] ?? '');
+        $inputs = explode(",",str_replace(" ","",$_POST['inputs'] ?? ''));
         if (!$colunas->valido()) {
             $erroJson = $colunas->erro;
+        } else if ($errosConfig = RepeatedColumns::errors($colunas->valor)) {
+            // Not saved; shown below.
+        } else if (($erroPosicoes = PosicoesRules::errorsForResultado(EventGraph::load($currentEventId), $resultado->getResultadoId(), $inputs, $colunas->valor)) !== []) {
+            // Not saved: the errors are shown with the form below.
         } else {
             if ($resultado->getColunas() != $colunas->valor) {
                 $backups['-5'] = $bk4;
@@ -116,9 +139,11 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
                 $resultado->setColunasBackup(json_encode($backups));
             }
             $resultado->setNome($_POST['nome']);
-            $resultado->setInputs(explode(",",str_replace(" ","",$_POST['inputs'] ?? '')));
+            $resultado->setInputs($inputs);
             $resultado->setColunas($colunas->valor);
             $resultado->save();
+            // Provas that take a position from it: its ranking may have changed.
+            Recalculation::afterResultadoChanged($currentEventId, $resultado->getResultadoId());
 
             header("Location: resultado.php?id=".$_page); exit;
         }
@@ -126,6 +151,7 @@ if (isset($_REQUEST['novo']) && $_REQUEST['novo']=='true') {
 
     if (@$_REQUEST['act'] == 'Deletar Resultado') {
         $resultado->delete();
+        Recalculation::afterResultadoChanged($currentEventId, $_page);
         header("Location: admin_resultados.php"); exit;
     }
 }
@@ -159,6 +185,18 @@ Template::printHeader("Detalhes de Resultado", false);
                     <td colspan="2" style="color: red; font-weight: bold;">Colunas não salvas: o JSON é inválido (<?= htmlspecialchars($erroJson) ?>). Corrija o texto abaixo e salve de novo.</td>
                 </tr>
                 <?php } ?>
+                <?php if ($errosConfig) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Colunas não salvas: há problemas nas colunas repetidas (<a href="ajuda_resultado.php#colunas-repetidas" target="_blank">ajuda</a>). Corrija o texto abaixo e salve de novo.<ul>
+                        <?php foreach ($errosConfig as $erro) { ?><li><?= Html::e($erro) ?></li><?php } ?>
+                    </ul></td>
+                </tr>
+                <?php } ?>
+                <?php if ($erroPosicoes !== []) { ?>
+                <tr>
+                    <td colspan="2" style="color: red; font-weight: bold;">Resultado não salvo: provas usam a posição dele em <code>posicoes</code> (veja a <a href="ajuda_prova.php#posicoes" target="_blank">ajuda</a>). Corrija e salve de novo.<?php foreach ($erroPosicoes as $erro) { ?><br /><?= Html::e($erro) ?><?php } ?></td>
+                </tr>
+                <?php } ?>
                 <tr>
                     <td>Evento</td>
                     <td><input style="width:700px;" type="text" name="evento_id" disabled value="<?= Html::field($currentEventId) ?>"/></td>
@@ -173,7 +211,7 @@ Template::printHeader("Detalhes de Resultado", false);
                 </tr>
                 <tr>
                     <td>Inputs<br /><a href="ajuda_resultado.php#inputs" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
-                    <td><input style="width:700px;" type="text" name="inputs" value="<?= $novo?'':Html::field(implode(", ",$resultado->getInputs())) ?>" /></td>
+                    <td><input style="width:700px;" type="text" name="inputs" value="<?= $erroPosicoes !== [] ? Html::field($_POST['inputs'] ?? '') : ($novo?'':Html::field(implode(", ",$resultado->getInputs()))) ?>" /></td>
                 </tr>
                 <tr>
                     <td rowspan="2">Colunas<br /><a href="ajuda_resultado.php#colunas" target="_blank" style="font-size: 12px;">❓ Ajuda</a></td>
@@ -209,7 +247,7 @@ Template::printHeader("Detalhes de Resultado", false);
                 </tr>
                 <tr>
                 <td><textarea style="width:700px;min-height:600px;" name="colunas" id="colunas" <?= $novo?'':'oninput="resetStyles();"' ?>><?php
-                    if ($erroJson !== null) {
+                    if ($erroJson !== null || $errosConfig || $erroPosicoes !== []) {
                         // Give back exactly what was typed, so the fix is one edit away
                         echo htmlspecialchars($_POST['colunas'] ?? '');
                     } else {

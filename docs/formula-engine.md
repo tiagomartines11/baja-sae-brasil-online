@@ -83,6 +83,12 @@ Two details make that true:
   `round`, `max`, `min`, `array_diff`, `date`, `ceil`, `floor`, `count`,
   `array_sum`, `abs`, `substr`, `time`, `str_pad`, `implode`, and
   `array_filter` with one argument; names in any case;
+- the site's own list helpers `MENOR(list)`, `MAIOR(list)` and
+  `CONTAR(list)` (BAJAAPP-103, `ListFunctions`): smallest, largest, count,
+  skipping empty values, and null (never an error) for an empty list. They
+  are plain global PHP functions too (`list-functions.php`, loaded by
+  `EvalEngine.php` and `Interpreter.php`), so `eval()` runs them and both
+  engines give the same value and the same error;
 - the constants `STR_PAD_LEFT`/`RIGHT`/`BOTH`, `Pos`, `EquipeNum`, `Equipe`
   (defined in `src/bootstrap.php`), and a few harmless ones (`PHP_EOL`,
   `PHP_INT_MAX`, `M_PI`, `PHP_ROUND_HALF_UP`…; `Allowlist::CONSTANTS`). Any

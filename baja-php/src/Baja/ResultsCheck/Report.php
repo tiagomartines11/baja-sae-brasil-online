@@ -20,7 +20,7 @@ namespace Baja\ResultsCheck;
 final class Report
 {
     /** The kinds of problem, in the order they are shown: the worst first. */
-    private const KINDS = [Finding::FATAL, Finding::FORMULA_ERROR, Finding::RANKING, Finding::EMPTY_COLUMN, Finding::UNKNOWN_VARIABLE];
+    private const KINDS = [Finding::FATAL, Finding::REPEATED, Finding::FORMULA_ERROR, Finding::RANKING, Finding::POSITIONS, Finding::EMPTY_COLUMN, Finding::UNKNOWN_VARIABLE];
 
     /**
      * @param list<array{event: string, resultados: list<array>, provas: list<array>}> $events
@@ -180,7 +180,7 @@ final class Report
     private static function place(array $findings, ?FixProposal $fix): array
     {
         $first = $findings[0];
-        if ($first->problem === Finding::RANKING) {
+        if ($first->problem === Finding::RANKING || $first->problem === Finding::REPEATED || $first->problem === Finding::POSITIONS) {
             return array_map(fn(Finding $finding) => '    ' . $finding->detail, $findings);
         }
         if ($first->problem === Finding::FATAL) {

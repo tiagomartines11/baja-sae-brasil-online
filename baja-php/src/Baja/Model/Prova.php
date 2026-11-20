@@ -4,6 +4,11 @@ namespace Baja\Model;
 
 use Baja\Model\Base\Prova as BaseProva;
 use Baja\Model\JSON\Field;
+use Baja\Posicoes\DerivedEntries;
+use Baja\Posicoes\PositionStage;
+use Baja\Posicoes\Recalculation;
+use Baja\Repeat\ExpandedInputs;
+use Baja\Repeat\InputGroups;
 use DateTime;
 use Propel\Runtime\Exception\PropelException;
 use Propel\Runtime\Propel;
@@ -64,12 +69,17 @@ class Prova extends BaseProva
     }
 
     /**
+     * The fields the judges fill in, with the repeated groups written out
+     * (BAJAAPP-103, Baja\Repeat\InputGroups).
+     *
      * @return Field[]
      */
     public function getParamsInputs() {
         $ret = [];
-        foreach ((array)($this->getParams()->inputs ?? []) as $i){
+        $expanded = $this->getExpandedInputs();
+        foreach ($expanded->inputs as $i){
             $f = new Field($i->code, $i->name, $i->pass ?? null, $i->xor ?? null, $i->sensitive ?? null);
+            $f->setRepetition($expanded->repetitionOf((string)$i->code));
             if ($i->type == "enum") {
                 $f->setEnum($i->options, $i->multiple ?? null);
             } else if ($i->type == "enum-assoc") {
@@ -84,11 +94,18 @@ class Prova extends BaseProva
         return $ret;
     }
 
+    /** "inputs" with the repeated groups written out; see Baja\Repeat\InputGroups. */
+    public function getExpandedInputs(): ExpandedInputs {
+        return InputGroups::expand($this->getParams()->inputs ?? []);
+    }
+
     public function getParamsPontos() {
         return $this->getParams()->pontos ?? null;
     }
 
     public function refreshVarsAndPontos() {
+        // A prova made only of "posicoes" (Compliance) makes its own entries.
+        DerivedEntries::create($this);
         #$inputs = InputQuery::create()->filterByEventoId($this->getEventoId())->findByProvaId($this->getProvaId());
         #Ajuste para desclassificadas
         $inputs = InputQuery::create()->filterByEventoId($this->getEventoId())->joinEquipe()->findByProvaId($this->getProvaId());
@@ -98,10 +115,13 @@ class Prova extends BaseProva
         }
         $this->setModificado(new DateTime("now"));
         $this->updateTotals();
+        PositionStage::apply($this, $inputs);
         foreach ($inputs as $i) {
             $i->updatePontos();
             $i->save();
         }
+        // Provas that take a position from a resultado this prova is in.
+        Recalculation::afterProvaRefreshed($this);
     }
 
     public function getType() {

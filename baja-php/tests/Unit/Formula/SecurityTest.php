@@ -177,7 +177,7 @@ final class SecurityTest extends TestCase
     public function testTheMessagesSayWhatIsNotAllowed(): void
     {
         $messages = [
-            "system('ls')" => 'function system() is not allowed in a formula: only round, max, min, array_diff, date, ceil, floor, count, array_sum, abs, substr, time, str_pad, implode, array_filter are, at character 1',
+            "system('ls')" => 'function system() is not allowed in a formula: only round, max, min, array_diff, date, ceil, floor, count, array_sum, abs, substr, time, str_pad, implode, array_filter, menor, maior, contar are, at character 1',
             '`ls`' => 'backticks (`...`) run a shell command and are not allowed in a formula, at character 1',
             '$$X' => 'variable variables ($$NAME) are not allowed in a formula, at character 1',
             '$X = 1' => 'assignments ("=") are not allowed in a formula: to compare, write "==", at character 4',

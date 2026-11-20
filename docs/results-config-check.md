@@ -54,13 +54,31 @@ For every resultado of every event (or of `--events`):
      $Ace_pts is given by nothing here, so it is empty for every team (there is $ACE_PTS; names care about case)
    ```
 
+5. **Repeated group config** (BAJAAPP-103): a repeated column (`"repetir"`)
+   that `juiz/resultado.php` would refuse to save. Its lines are checked like
+   any list column, but no fix is proposed inside one: the column holds one
+   formula with `{n}`, not the lines the check ran.
+
 It also runs every **prova**'s formulas (`params`: `vars`, `min_max`,
-`pontos`) for every team, and reports their errors and unknown variables. A
+`posicoes`, `pontos`) for every team, and reports their errors and unknown variables. A
 `vars` formula sees only the input fields (and, in a rolling prova, the
-entry's `ts`); `min_max` also the vars; `pontos` also the totals (`$Xmax`,
-`$Xmin`, `$Xcom`, `$Xcount`, `$Xsum`, `$Xavg`) and the `pontos` before it in
+entry's `ts`; with a repeated input group, the expanded fields `T_1`...
+and the lists `$T_lista`); `min_max` also the vars; a `posicoes` `valor` or
+`desempate` the same as `min_max` plus the `min_max` values; `pontos` also the
+totals (`$Xmax`, `$Xmin`, `$Xcom`, `$Xcount`, `$Xsum`, `$Xavg`), the `posicoes`
+names, and the `pontos` before it in
 alphabetical order, which is the order they are worked out. Those are report-only:
 saving a prova recomputes every stored point (BAJAAPP-56), so a person decides.
+
+A prova's **`posicoes`** (BAJAAPP-102, see the prova help page) get a
+`Positions config` finding for what `juiz/prova.php` refuses to save (a
+resultado the event does not have, or with no `pos`; a cycle such as
+`CMP → 26SU_GER → CMP`; a name that is already an input, var or `min_max`),
+for configs saved before the rule or straight into the database, and a
+warning when a prova takes a position from a resultado that hides its ranking
+behind spoilers while a resultado showing the prova hides nothing: the points
+would give the hidden ranking away. The messages that the save pages show are
+in Portuguese, as there.
 Tournament resultados (`"type": "tournament"`) have no columns and are skipped.
 
 Exit code 0 whenever the report was made, whatever it found, fatal errors

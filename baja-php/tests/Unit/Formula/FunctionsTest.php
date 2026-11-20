@@ -38,11 +38,15 @@ final class FunctionsTest extends TestCase
 {
     use ComparesEngines;
 
-    /** Every function on the list has a test below. */
+    /**
+     * Every function on the list has a test below, but the last three:
+     * MENOR, MAIOR and CONTAR are the site's own (BAJAAPP-103), tested in
+     * ListFunctionsTest.
+     */
     public function testTheListIsTheOneThisFileTests(): void
     {
         $this->assertSame(
-            ['round', 'max', 'min', 'array_diff', 'date', 'ceil', 'floor', 'count', 'array_sum', 'abs', 'substr', 'time', 'str_pad', 'implode', 'array_filter'],
+            ['round', 'max', 'min', 'array_diff', 'date', 'ceil', 'floor', 'count', 'array_sum', 'abs', 'substr', 'time', 'str_pad', 'implode', 'array_filter', 'menor', 'maior', 'contar'],
             array_keys(Allowlist::FUNCTIONS),
         );
     }

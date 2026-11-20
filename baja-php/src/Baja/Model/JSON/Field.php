@@ -2,6 +2,7 @@
 
 namespace Baja\Model\JSON;
 
+use Baja\Repeat\Repetition;
 use Baja\Site\Html;
 
 class Field
@@ -26,6 +27,31 @@ class Field
     private $options;
     /** @var  bool */
     private $sensitive;
+    /** @var  Repetition|null the repetition of a repeated group the field belongs to (BAJAAPP-103) */
+    private $repetition = null;
+
+    /**
+     * @return Repetition|null null for a field outside any repeated group
+     */
+    public function getRepetition()
+    {
+        return $this->repetition;
+    }
+
+    public function setRepetition(?Repetition $repetition)
+    {
+        $this->repetition = $repetition;
+    }
+
+    /**
+     * Whether the field's "xor" locks anything. The judge screen handles
+     * "A" and "B", and, inside a repeated group, the same letters scoped
+     * to one repetition ("A_3"). Any other value does nothing, as always.
+     */
+    public function hasActiveXor()
+    {
+        return preg_match('/^[AB](_[1-9][0-9]*)?$/D', (string)$this->xor) === 1;
+    }
 
     /**
      * @return string
