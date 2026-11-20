@@ -88,21 +88,19 @@ cd /var/www/html
 # Without this loop, the first HTTP request to phpBB fails with a
 # "Connection refused" error until the timing happens to line up.
 #
-# Probe via PHP's mysqli (already in this image — phpBB uses it) so
-# we don't need to pull in mariadb-client (which on alpine lacks the
-# caching_sha2_password plugin MySQL 8.x defaults to). The query
-# succeeds only after both seed load AND user creation are done.
-echo "phpbb-formula: waiting for mysql to be query-ready..."
-RETRIES=60
-until php -r 'exit(@(new mysqli("mysql", "phpbb_formula", getenv("MYSQL_PHPBB_FORMULA_PASSWORD"), "phpbb_formula"))->query("SELECT 1 FROM phpbb_config LIMIT 1") ? 0 : 1);' 2>/dev/null; do
-    RETRIES=$((RETRIES - 1))
-    if [ $RETRIES -le 0 ]; then
-        echo "phpbb-formula: mysql did not become query-ready in 60s, giving up"
-        exit 1
-    fi
-    sleep 1
-done
-echo "phpbb-formula: mysql is query-ready"
+# 2026-11-11 (BAJAAPP-98): this loop used to give up after 60 tries, about
+# a minute, and exit. After a hard reset of the production VM, MySQL took
+# about 4 minutes to recover, and the forums exited and were restarted by
+# the restart policy, which can give a container a new IP each time. Both
+# forums came back on each other's IPs, and nginx served each one under the
+# other's domain for hours. An attempt count is not a time budget.
+#
+# The wait now lives in one script shared by both phpBB images
+# (baja-infra/docker/phpbb/wait-for-mysql.sh, where the full story is): it
+# waits by the clock for MYSQL_WAIT_TIMEOUT_SECONDS (default 900), probes
+# quietly every 2 s with the same query as before, logs progress every
+# 30 s, and exits only when the whole budget is spent.
+/usr/local/bin/wait-for-mysql.sh phpbb-formula phpbb_formula phpbb_formula MYSQL_PHPBB_FORMULA_PASSWORD
 
 # ----- 5. Enable extension and refresh its config -----
 # `|| true` — the CLI returns nonzero when the extension is already

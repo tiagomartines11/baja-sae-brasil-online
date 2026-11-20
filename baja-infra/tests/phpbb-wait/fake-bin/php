@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# A stand-in for `php`, for baja-infra/tests/phpbb-wait/run-tests.sh.
+#
+# wait-for-mysql.sh asks `php` to try one connection to MySQL (the
+# "probe"). The tests have no MySQL, so they put this file first on PATH
+# instead, and it plays a MySQL that becomes ready at a moment the test
+# chooses, on the pretend clock (see fake-bin/date):
+#
+#   FAKE_READY_AT       the pretend time (seconds) from which the probe
+#                       succeeds; "never" for a MySQL that never comes up
+#   FAKE_PROBE_SECONDS  how long one probe takes on the pretend clock
+#                       (default 0); a hanging connection takes longer
+#   FAKE_FAILURE        what a failed probe prints:
+#                         clean  only the probe's own one-line message
+#                         noisy  that line AND a full PHP stack trace, on
+#                                stdout and stderr, as PHP prints them
+#                         junk   a stack trace and no message line at all
+#
+# Every call adds one line to $FAKE_LOG: "probe <time> <ok|fail>", and,
+# the first time, what the probe was asked (see "asked" below).
+set -euo pipefail
+
+clock_file="${FAKE_CLOCK:?FAKE_CLOCK must name the pretend clock file}"
+now="$(cat "$clock_file")"
+
+# What the probe was asked, for the test that checks it: the database, the
+# user, the NAME of the password variable, and whether the PHP code still
+# runs the same readiness query.
+if ! grep -q '^asked ' "$FAKE_LOG" 2>/dev/null; then
+    code="${*: -1}"
+    query=no
+    [[ "$code" == *'SELECT 1 FROM phpbb_config LIMIT 1'* ]] && query=yes
+    echo "asked db=${WAIT_MYSQL_DB:-} user=${WAIT_MYSQL_USER:-} password_var=${WAIT_MYSQL_PASSWORD_VAR:-} host=${WAIT_MYSQL_HOST:-} query=${query}" >> "$FAKE_LOG"
+fi
+
+# The probe takes some time.
+echo $(( now + ${FAKE_PROBE_SECONDS:-0} )) > "$clock_file"
+
+if [[ "${FAKE_READY_AT:-0}" != never ]] && (( now >= FAKE_READY_AT )); then
+    echo "probe ${now} ok" >> "$FAKE_LOG"
+    exit 0
+fi
+echo "probe ${now} fail" >> "$FAKE_LOG"
+
+trace='PHP Fatal error:  Uncaught mysqli_sql_exception: Connection refused in Command line code:1
+Stack trace:
+#0 Command line code(1): mysqli->__construct()
+#1 {main}
+  thrown in Command line code on line 1'
+case "${FAKE_FAILURE:-clean}" in
+    clean)
+        echo "probe-error: Connection refused" ;;
+    noisy)
+        echo "$trace"
+        echo "$trace" >&2
+        echo "probe-error: Connection refused"
+        echo "$trace" ;;
+    junk)
+        echo "$trace"
+        echo "$trace" >&2 ;;
+esac
+exit 1

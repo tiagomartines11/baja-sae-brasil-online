@@ -126,6 +126,12 @@ COPY baja-infra/phpbb-formula/php-uploads.ini /usr/local/etc/php/conf.d/zz-uploa
 COPY baja-infra/phpbb-formula/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# The entrypoint's wait for MySQL (step 4). One script for both phpBB
+# images, so the two waits cannot drift apart; see its header for why it
+# waits by time and what happened on 2026-11-11 (BAJAAPP-98).
+COPY baja-infra/docker/phpbb/wait-for-mysql.sh /usr/local/bin/wait-for-mysql.sh
+RUN chmod +x /usr/local/bin/wait-for-mysql.sh
+
 # Cron loop used by the cron sidecar service (see docker-compose.prod.yml).
 COPY baja-infra/phpbb-formula/cron-loop.sh /usr/local/bin/cron-loop.sh
 RUN chmod +x /usr/local/bin/cron-loop.sh

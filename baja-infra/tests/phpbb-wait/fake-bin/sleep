@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# A stand-in for `sleep`, for baja-infra/tests/phpbb-wait/run-tests.sh.
+#
+# Does not really sleep: it moves the pretend clock ($FAKE_CLOCK, see
+# fake-bin/date) forward by the number of seconds asked, and writes
+# "sleep <seconds>" to $FAKE_LOG so a test can see every pause.
+set -euo pipefail
+clock_file="${FAKE_CLOCK:?FAKE_CLOCK must name the pretend clock file}"
+case "${1:-}" in
+    ''|*[!0-9]*) echo "fake sleep: whole seconds only, got: sleep $*" >&2; exit 2 ;;
+esac
+echo $(( $(cat "$clock_file") + $1 )) > "$clock_file"
+echo "sleep $1" >> "$FAKE_LOG"

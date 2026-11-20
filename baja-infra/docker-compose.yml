@@ -93,8 +93,11 @@ services:
       # refreshes those rows from these env vars on every boot.
       BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX: ${BAJA_AUTH_ALLOWED_DOMAIN_SUFFIX}
       BAJA_AUTH_DEFAULT_REDIRECT: ${BAJA_AUTH_DEFAULT_REDIRECT}
-      # Used by baja-init.sh's wait-for-mysql loop (see entrypoint.sh).
+      # Used by config.php and by the entrypoint's wait for MySQL.
       MYSQL_PHPBB_BAJA_PASSWORD: ${MYSQL_PHPBB_BAJA_PASSWORD}
+      # How long the entrypoint waits for MySQL before giving up. See
+      # .env.example and docker/phpbb/wait-for-mysql.sh.
+      MYSQL_WAIT_TIMEOUT_SECONDS: ${MYSQL_WAIT_TIMEOUT_SECONDS:-900}
     volumes:
       - phpbb_baja_html:/var/www/html
     depends_on:
@@ -113,6 +116,8 @@ services:
     environment:
       TZ: America/Sao_Paulo
       MYSQL_PHPBB_FORMULA_PASSWORD: ${MYSQL_PHPBB_FORMULA_PASSWORD}
+      # As for phpbb-baja above.
+      MYSQL_WAIT_TIMEOUT_SECONDS: ${MYSQL_WAIT_TIMEOUT_SECONDS:-900}
     volumes:
       - phpbb_formula_html:/var/www/html
     depends_on:
