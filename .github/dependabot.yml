@@ -52,6 +52,22 @@ updates:
       # and the Frontend CI job), not the newest Node; move them together.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # TypeScript stays on 5.x (BAJAAPP-46): typescript-eslint, which
+      # eslint-config-next uses to lint our .ts files, does not support
+      # TypeScript 7 and refuses to load with it (typescript-eslint#10940).
+      # Next 16's build and jest (Babel) were fine with 7. Drop this when
+      # typescript-eslint supports 7; the note in baja-js/package.json goes
+      # with it.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # eslint and @eslint/js stay on 9 (BAJAAPP-46): eslint-plugin-react,
+      # eslint-plugin-import and eslint-plugin-jsx-a11y, all pulled in by
+      # eslint-config-next, declare eslint up to 9 only, so `npm ci` refuses
+      # eslint 10. Drop this when they (or a new eslint-config-next) accept 10.
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
