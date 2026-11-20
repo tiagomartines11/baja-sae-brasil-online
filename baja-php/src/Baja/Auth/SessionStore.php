@@ -44,7 +44,12 @@ class SessionStore
     }
 
     /**
-     * @return array{user_id:int, username:string}|null
+     * session_time is the row's last-activity time, as phpBB last wrote it
+     * (or as it was when the row was cached, up to SESSION_CACHE_TTL_SECONDS
+     * earlier). PhpbbSessionShim uses it to decide when to ask the forum to
+     * refresh it. Null when a cached entry does not carry it; see cacheGet().
+     *
+     * @return array{user_id:int, username:string, session_time:?int}|null
      */
     public function lookupBySessionId(string $sid): ?array
     {
@@ -59,7 +64,7 @@ class SessionStore
 
         try {
             $stmt = $this->pdo()->prepare(
-                'SELECT s.session_user_id, u.username
+                'SELECT s.session_user_id, s.session_time, u.username
                  FROM phpbb_sessions s
                  JOIN phpbb_users u ON u.user_id = s.session_user_id
                  WHERE s.session_id = :sid
@@ -84,7 +89,11 @@ class SessionStore
             return null;
         }
 
-        $result = ['user_id' => $userId, 'username' => (string)$row['username']];
+        $result = [
+            'user_id'      => $userId,
+            'username'     => (string)$row['username'],
+            'session_time' => (int)$row['session_time'],
+        ];
         $this->cacheSet($sid, $result);
         return $result;
     }
@@ -199,7 +208,7 @@ class SessionStore
     }
 
     /**
-     * @return array{user_id:int, username:string}|null
+     * @return array{user_id:int, username:string, session_time:?int}|null
      */
     private function cacheGet(string $sid): ?array
     {
@@ -220,7 +229,15 @@ class SessionStore
         if (!is_array($decoded) || !isset($decoded['user_id'], $decoded['username'])) {
             return null;
         }
-        return ['user_id' => (int)$decoded['user_id'], 'username' => (string)$decoded['username']];
+        // Without session_time: an entry cached before the field existed, or
+        // one the HTTP test scripts seed for a session that has no row at all
+        // (tests/csrf/http-test.sh). Still a valid session; only the
+        // keep-alive has nothing to go on, and skips it.
+        return [
+            'user_id'      => (int)$decoded['user_id'],
+            'username'     => (string)$decoded['username'],
+            'session_time' => isset($decoded['session_time']) ? (int)$decoded['session_time'] : null,
+        ];
     }
 
     private function cacheSet(string $sid, array $data): void

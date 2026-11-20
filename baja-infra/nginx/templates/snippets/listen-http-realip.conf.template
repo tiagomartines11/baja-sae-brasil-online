@@ -1,0 +1,5 @@
+# Real client IP for dev. The same as listen-tls: trust Cloudflare's ranges.
+# Nothing in dev comes from them, so this does nothing there, and keeping it
+# identical to production means dev never runs a configuration nobody ships.
+include /etc/nginx/conf.d/snippets/cloudflare-realip.conf;
+real_ip_header CF-Connecting-IP;

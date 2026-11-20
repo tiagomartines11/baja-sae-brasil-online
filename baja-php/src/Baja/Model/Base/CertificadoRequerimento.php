@@ -5,6 +5,7 @@ namespace Baja\Model\Base;
 use \DateTime;
 use \Exception;
 use \PDO;
+use Baja\Model\CertificadoRequerimento as ChildCertificadoRequerimento;
 use Baja\Model\CertificadoRequerimentoQuery as ChildCertificadoRequerimentoQuery;
 use Baja\Model\User as ChildUser;
 use Baja\Model\UserQuery as ChildUserQuery;
@@ -14,6 +15,7 @@ use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\ModelCriteria;
 use Propel\Runtime\ActiveRecord\ActiveRecordInterface;
 use Propel\Runtime\Collection\Collection;
+use Propel\Runtime\Collection\ObjectCollection;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Exception\BadMethodCallException;
 use Propel\Runtime\Exception\LogicException;
@@ -179,9 +181,42 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     protected $resolucao;
 
     /**
+     * The value for the duplicado_de field.
+     *
+     * @var        string|null
+     */
+    protected $duplicado_de;
+
+    /**
+     * The value for the resposta field.
+     *
+     * @var        string|null
+     */
+    protected $resposta;
+
+    /**
+     * The value for the respondido_em field.
+     *
+     * @var        DateTime|null
+     */
+    protected $respondido_em;
+
+    /**
      * @var        ChildUser
      */
     protected $aUser;
+
+    /**
+     * @var        ChildCertificadoRequerimento
+     */
+    protected $aOriginal;
+
+    /**
+     * @var        ObjectCollection|ChildCertificadoRequerimento[] Collection to store aggregation of ChildCertificadoRequerimento objects.
+     * @phpstan-var ObjectCollection&\Traversable<ChildCertificadoRequerimento> Collection to store aggregation of ChildCertificadoRequerimento objects.
+     */
+    protected $collDuplicados;
+    protected $collDuplicadosPartial;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -190,6 +225,13 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
      * @var bool
      */
     protected $alreadyInSave = false;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var ObjectCollection|ChildCertificadoRequerimento[]
+     * @phpstan-var ObjectCollection&\Traversable<ChildCertificadoRequerimento>
+     */
+    protected $duplicadosScheduledForDeletion = null;
 
     /**
      * Applies default values to this object.
@@ -645,6 +687,48 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     }
 
     /**
+     * Get the [duplicado_de] column value.
+     *
+     * @return string|null
+     */
+    public function getDuplicadoDe()
+    {
+        return $this->duplicado_de;
+    }
+
+    /**
+     * Get the [resposta] column value.
+     *
+     * @return string|null
+     */
+    public function getResposta()
+    {
+        return $this->resposta;
+    }
+
+    /**
+     * Get the [optionally formatted] temporal [respondido_em] column value.
+     *
+     *
+     * @param string|null $format The date/time format string (either date()-style or strftime()-style).
+     *   If format is NULL, then the raw DateTime object will be returned.
+     *
+     * @return string|DateTime|null Formatted date/time value as string or DateTime object (if format is NULL), NULL if column is NULL, and 0 if column value is 0000-00-00 00:00:00.
+     *
+     * @throws \Propel\Runtime\Exception\PropelException - if unable to parse/validate the date/time value.
+     *
+     * @psalm-return ($format is null ? DateTime|null : string|null)
+     */
+    public function getRespondidoEm($format = null)
+    {
+        if ($format === null) {
+            return $this->respondido_em;
+        } else {
+            return $this->respondido_em instanceof \DateTimeInterface ? $this->respondido_em->format($format) : null;
+        }
+    }
+
+    /**
      * Set the value of [requerimento_id] column.
      *
      * @param string $v New value
@@ -979,6 +1063,70 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     }
 
     /**
+     * Set the value of [duplicado_de] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setDuplicadoDe($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->duplicado_de !== $v) {
+            $this->duplicado_de = $v;
+            $this->modifiedColumns[CertificadoRequerimentoTableMap::COL_DUPLICADO_DE] = true;
+        }
+
+        if ($this->aOriginal !== null && $this->aOriginal->getRequerimentoId() !== $v) {
+            $this->aOriginal = null;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the value of [resposta] column.
+     *
+     * @param string|null $v New value
+     * @return $this The current object (for fluent API support)
+     */
+    public function setResposta($v)
+    {
+        if ($v !== null) {
+            $v = (string) $v;
+        }
+
+        if ($this->resposta !== $v) {
+            $this->resposta = $v;
+            $this->modifiedColumns[CertificadoRequerimentoTableMap::COL_RESPOSTA] = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Sets the value of [respondido_em] column to a normalized version of the date/time value specified.
+     *
+     * @param string|integer|\DateTimeInterface|null $v string, integer (timestamp), or \DateTimeInterface value.
+     *               Empty strings are treated as NULL.
+     * @return $this The current object (for fluent API support)
+     */
+    public function setRespondidoEm($v)
+    {
+        $dt = PropelDateTime::newInstance($v, null, 'DateTime');
+        if ($this->respondido_em !== null || $dt !== null) {
+            if ($this->respondido_em === null || $dt === null || $dt->format("Y-m-d H:i:s.u") !== $this->respondido_em->format("Y-m-d H:i:s.u")) {
+                $this->respondido_em = $dt === null ? null : clone $dt;
+                $this->modifiedColumns[CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM] = true;
+            }
+        } // if either are not null
+
+        return $this;
+    }
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -1075,6 +1223,18 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
             $col = $row[TableMap::TYPE_NUM == $indexType ? 15 + $startcol : CertificadoRequerimentoTableMap::translateFieldName('Resolucao', TableMap::TYPE_PHPNAME, $indexType)];
             $this->resolucao = (null !== $col) ? (string) $col : null;
 
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 16 + $startcol : CertificadoRequerimentoTableMap::translateFieldName('DuplicadoDe', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->duplicado_de = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 17 + $startcol : CertificadoRequerimentoTableMap::translateFieldName('Resposta', TableMap::TYPE_PHPNAME, $indexType)];
+            $this->resposta = (null !== $col) ? (string) $col : null;
+
+            $col = $row[TableMap::TYPE_NUM == $indexType ? 18 + $startcol : CertificadoRequerimentoTableMap::translateFieldName('RespondidoEm', TableMap::TYPE_PHPNAME, $indexType)];
+            if ($col === '0000-00-00 00:00:00') {
+                $col = null;
+            }
+            $this->respondido_em = (null !== $col) ? PropelDateTime::newInstance($col, null, 'DateTime') : null;
+
             $this->resetModified();
             $this->setNew(false);
 
@@ -1082,7 +1242,7 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
                 $this->ensureConsistency();
             }
 
-            return $startcol + 16; // 16 = CertificadoRequerimentoTableMap::NUM_HYDRATE_COLUMNS.
+            return $startcol + 19; // 19 = CertificadoRequerimentoTableMap::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException(sprintf('Error populating %s object', '\\Baja\\Model\\CertificadoRequerimento'), 0, $e);
@@ -1107,6 +1267,9 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     {
         if ($this->aUser !== null && $this->resolvido_por !== $this->aUser->getUserId()) {
             $this->aUser = null;
+        }
+        if ($this->aOriginal !== null && $this->duplicado_de !== $this->aOriginal->getRequerimentoId()) {
+            $this->aOriginal = null;
         }
     }
 
@@ -1148,6 +1311,9 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         if ($deep) {  // also de-associate any related objects?
 
             $this->aUser = null;
+            $this->aOriginal = null;
+            $this->collDuplicados = null;
+
         } // if (deep)
     }
 
@@ -1263,6 +1429,13 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
                 $this->setUser($this->aUser);
             }
 
+            if ($this->aOriginal !== null) {
+                if ($this->aOriginal->isModified() || $this->aOriginal->isNew()) {
+                    $affectedRows += $this->aOriginal->save($con);
+                }
+                $this->setOriginal($this->aOriginal);
+            }
+
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -1272,6 +1445,24 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
                     $affectedRows += $this->doUpdate($con);
                 }
                 $this->resetModified();
+            }
+
+            if ($this->duplicadosScheduledForDeletion !== null) {
+                if (!$this->duplicadosScheduledForDeletion->isEmpty()) {
+                    foreach ($this->duplicadosScheduledForDeletion as $duplicado) {
+                        // need to save related object because we set the relation to null
+                        $duplicado->save($con);
+                    }
+                    $this->duplicadosScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collDuplicados !== null) {
+                foreach ($this->collDuplicados as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -1343,6 +1534,15 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESOLUCAO)) {
             $modifiedColumns[':p' . $index++]  = 'resolucao';
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE)) {
+            $modifiedColumns[':p' . $index++]  = 'duplicado_de';
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESPOSTA)) {
+            $modifiedColumns[':p' . $index++]  = 'resposta';
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM)) {
+            $modifiedColumns[':p' . $index++]  = 'respondido_em';
         }
 
         $sql = sprintf(
@@ -1417,6 +1617,18 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
                         break;
                     case 'resolucao':
                         $stmt->bindValue($identifier, $this->resolucao, PDO::PARAM_STR);
+
+                        break;
+                    case 'duplicado_de':
+                        $stmt->bindValue($identifier, $this->duplicado_de, PDO::PARAM_STR);
+
+                        break;
+                    case 'resposta':
+                        $stmt->bindValue($identifier, $this->resposta, PDO::PARAM_STR);
+
+                        break;
+                    case 'respondido_em':
+                        $stmt->bindValue($identifier, $this->respondido_em ? $this->respondido_em->format("Y-m-d H:i:s.u") : null, PDO::PARAM_STR);
 
                         break;
                 }
@@ -1522,6 +1734,15 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
             case 15:
                 return $this->getResolucao();
 
+            case 16:
+                return $this->getDuplicadoDe();
+
+            case 17:
+                return $this->getResposta();
+
+            case 18:
+                return $this->getRespondidoEm();
+
             default:
                 return null;
         } // switch()
@@ -1566,6 +1787,9 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
             $keys[13] => $this->getResolvidoPor(),
             $keys[14] => $this->getResolvidoEm(),
             $keys[15] => $this->getResolucao(),
+            $keys[16] => $this->getDuplicadoDe(),
+            $keys[17] => $this->getResposta(),
+            $keys[18] => $this->getRespondidoEm(),
         ];
         if ($result[$keys[10]] instanceof \DateTimeInterface) {
             $result[$keys[10]] = $result[$keys[10]]->format('Y-m-d H:i:s.u');
@@ -1577,6 +1801,10 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
 
         if ($result[$keys[14]] instanceof \DateTimeInterface) {
             $result[$keys[14]] = $result[$keys[14]]->format('Y-m-d H:i:s.u');
+        }
+
+        if ($result[$keys[18]] instanceof \DateTimeInterface) {
+            $result[$keys[18]] = $result[$keys[18]]->format('Y-m-d H:i:s.u');
         }
 
         $virtualColumns = $this->virtualColumns;
@@ -1599,6 +1827,36 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
                 }
 
                 $result[$key] = $this->aUser->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->aOriginal) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'certificadoRequerimento';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'certificado_requerimento';
+                        break;
+                    default:
+                        $key = 'Original';
+                }
+
+                $result[$key] = $this->aOriginal->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
+            if (null !== $this->collDuplicados) {
+
+                switch ($keyType) {
+                    case TableMap::TYPE_CAMELNAME:
+                        $key = 'certificadoRequerimentos';
+                        break;
+                    case TableMap::TYPE_FIELDNAME:
+                        $key = 'certificado_requerimentos';
+                        break;
+                    default:
+                        $key = 'Duplicados';
+                }
+
+                $result[$key] = $this->collDuplicados->toArray(null, false, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
         }
 
@@ -1692,6 +1950,15 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
             case 15:
                 $this->setResolucao($value);
                 break;
+            case 16:
+                $this->setDuplicadoDe($value);
+                break;
+            case 17:
+                $this->setResposta($value);
+                break;
+            case 18:
+                $this->setRespondidoEm($value);
+                break;
         } // switch()
 
         return $this;
@@ -1765,6 +2032,15 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         }
         if (array_key_exists($keys[15], $arr)) {
             $this->setResolucao($arr[$keys[15]]);
+        }
+        if (array_key_exists($keys[16], $arr)) {
+            $this->setDuplicadoDe($arr[$keys[16]]);
+        }
+        if (array_key_exists($keys[17], $arr)) {
+            $this->setResposta($arr[$keys[17]]);
+        }
+        if (array_key_exists($keys[18], $arr)) {
+            $this->setRespondidoEm($arr[$keys[18]]);
         }
 
         return $this;
@@ -1856,6 +2132,15 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         }
         if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESOLUCAO)) {
             $criteria->add(CertificadoRequerimentoTableMap::COL_RESOLUCAO, $this->resolucao);
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE)) {
+            $criteria->add(CertificadoRequerimentoTableMap::COL_DUPLICADO_DE, $this->duplicado_de);
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESPOSTA)) {
+            $criteria->add(CertificadoRequerimentoTableMap::COL_RESPOSTA, $this->resposta);
+        }
+        if ($this->isColumnModified(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM)) {
+            $criteria->add(CertificadoRequerimentoTableMap::COL_RESPONDIDO_EM, $this->respondido_em);
         }
 
         return $criteria;
@@ -1961,6 +2246,23 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         $copyObj->setResolvidoPor($this->getResolvidoPor());
         $copyObj->setResolvidoEm($this->getResolvidoEm());
         $copyObj->setResolucao($this->getResolucao());
+        $copyObj->setDuplicadoDe($this->getDuplicadoDe());
+        $copyObj->setResposta($this->getResposta());
+        $copyObj->setRespondidoEm($this->getRespondidoEm());
+
+        if ($deepCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+
+            foreach ($this->getDuplicados() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addDuplicado($relObj->copy($deepCopy));
+                }
+            }
+
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
         }
@@ -2040,6 +2342,339 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     }
 
     /**
+     * Declares an association between this object and a ChildCertificadoRequerimento object.
+     *
+     * @param ChildCertificadoRequerimento|null $v
+     * @return $this The current object (for fluent API support)
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function setOriginal(ChildCertificadoRequerimento $v = null)
+    {
+        if ($v === null) {
+            $this->setDuplicadoDe(NULL);
+        } else {
+            $this->setDuplicadoDe($v->getRequerimentoId());
+        }
+
+        $this->aOriginal = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the ChildCertificadoRequerimento object, it will not be re-added.
+        if ($v !== null) {
+            $v->addDuplicado($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated ChildCertificadoRequerimento object
+     *
+     * @param ConnectionInterface $con Optional Connection object.
+     * @return ChildCertificadoRequerimento|null The associated ChildCertificadoRequerimento object.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getOriginal(?ConnectionInterface $con = null)
+    {
+        if ($this->aOriginal === null && (($this->duplicado_de !== "" && $this->duplicado_de !== null))) {
+            $this->aOriginal = ChildCertificadoRequerimentoQuery::create()->findPk($this->duplicado_de, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aOriginal->addDuplicados($this);
+             */
+        }
+
+        return $this->aOriginal;
+    }
+
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName): void
+    {
+        if ('Duplicado' === $relationName) {
+            $this->initDuplicados();
+            return;
+        }
+    }
+
+    /**
+     * Clears out the collDuplicados collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return $this
+     * @see addDuplicados()
+     */
+    public function clearDuplicados()
+    {
+        $this->collDuplicados = null; // important to set this to NULL since that means it is uninitialized
+
+        return $this;
+    }
+
+    /**
+     * Reset is the collDuplicados collection loaded partially.
+     *
+     * @return void
+     */
+    public function resetPartialDuplicados($v = true): void
+    {
+        $this->collDuplicadosPartial = $v;
+    }
+
+    /**
+     * Initializes the collDuplicados collection.
+     *
+     * By default this just sets the collDuplicados collection to an empty array (like clearcollDuplicados());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param bool $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initDuplicados(bool $overrideExisting = true): void
+    {
+        if (null !== $this->collDuplicados && !$overrideExisting) {
+            return;
+        }
+
+        $collectionClassName = CertificadoRequerimentoTableMap::getTableMap()->getCollectionClassName();
+
+        $this->collDuplicados = new $collectionClassName;
+        $this->collDuplicados->setModel('\Baja\Model\CertificadoRequerimento');
+    }
+
+    /**
+     * Gets an array of ChildCertificadoRequerimento objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this ChildCertificadoRequerimento is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @return ObjectCollection|ChildCertificadoRequerimento[] List of ChildCertificadoRequerimento objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildCertificadoRequerimento> List of ChildCertificadoRequerimento objects
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function getDuplicados(?Criteria $criteria = null, ?ConnectionInterface $con = null)
+    {
+        $partial = $this->collDuplicadosPartial && !$this->isNew();
+        if (null === $this->collDuplicados || null !== $criteria || $partial) {
+            if ($this->isNew()) {
+                // return empty collection
+                if (null === $this->collDuplicados) {
+                    $this->initDuplicados();
+                } else {
+                    $collectionClassName = CertificadoRequerimentoTableMap::getTableMap()->getCollectionClassName();
+
+                    $collDuplicados = new $collectionClassName;
+                    $collDuplicados->setModel('\Baja\Model\CertificadoRequerimento');
+
+                    return $collDuplicados;
+                }
+            } else {
+                $collDuplicados = ChildCertificadoRequerimentoQuery::create(null, $criteria)
+                    ->filterByOriginal($this)
+                    ->find($con);
+
+                if (null !== $criteria) {
+                    if (false !== $this->collDuplicadosPartial && count($collDuplicados)) {
+                        $this->initDuplicados(false);
+
+                        foreach ($collDuplicados as $obj) {
+                            if (false == $this->collDuplicados->contains($obj)) {
+                                $this->collDuplicados->append($obj);
+                            }
+                        }
+
+                        $this->collDuplicadosPartial = true;
+                    }
+
+                    return $collDuplicados;
+                }
+
+                if ($partial && $this->collDuplicados) {
+                    foreach ($this->collDuplicados as $obj) {
+                        if ($obj->isNew()) {
+                            $collDuplicados[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collDuplicados = $collDuplicados;
+                $this->collDuplicadosPartial = false;
+            }
+        }
+
+        return $this->collDuplicados;
+    }
+
+    /**
+     * Sets a collection of ChildCertificadoRequerimento objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param Collection $duplicados A Propel collection.
+     * @param ConnectionInterface $con Optional connection object
+     * @return $this The current object (for fluent API support)
+     */
+    public function setDuplicados(Collection $duplicados, ?ConnectionInterface $con = null)
+    {
+        /** @var ChildCertificadoRequerimento[] $duplicadosToDelete */
+        $duplicadosToDelete = $this->getDuplicados(new Criteria(), $con)->diff($duplicados);
+
+
+        $this->duplicadosScheduledForDeletion = $duplicadosToDelete;
+
+        foreach ($duplicadosToDelete as $duplicadoRemoved) {
+            $duplicadoRemoved->setOriginal(null);
+        }
+
+        $this->collDuplicados = null;
+        foreach ($duplicados as $duplicado) {
+            $this->addDuplicado($duplicado);
+        }
+
+        $this->collDuplicados = $duplicados;
+        $this->collDuplicadosPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related CertificadoRequerimento objects.
+     *
+     * @param Criteria $criteria
+     * @param bool $distinct
+     * @param ConnectionInterface $con
+     * @return int Count of related CertificadoRequerimento objects.
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
+    public function countDuplicados(?Criteria $criteria = null, bool $distinct = false, ?ConnectionInterface $con = null): int
+    {
+        $partial = $this->collDuplicadosPartial && !$this->isNew();
+        if (null === $this->collDuplicados || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collDuplicados) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getDuplicados());
+            }
+
+            $query = ChildCertificadoRequerimentoQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByOriginal($this)
+                ->count($con);
+        }
+
+        return count($this->collDuplicados);
+    }
+
+    /**
+     * Method called to associate a ChildCertificadoRequerimento object to this object
+     * through the ChildCertificadoRequerimento foreign key attribute.
+     *
+     * @param ChildCertificadoRequerimento $l ChildCertificadoRequerimento
+     * @return $this The current object (for fluent API support)
+     */
+    public function addDuplicado(ChildCertificadoRequerimento $l)
+    {
+        if ($this->collDuplicados === null) {
+            $this->initDuplicados();
+            $this->collDuplicadosPartial = true;
+        }
+
+        if (!$this->collDuplicados->contains($l)) {
+            $this->doAddDuplicado($l);
+
+            if ($this->duplicadosScheduledForDeletion and $this->duplicadosScheduledForDeletion->contains($l)) {
+                $this->duplicadosScheduledForDeletion->remove($this->duplicadosScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param ChildCertificadoRequerimento $duplicado The ChildCertificadoRequerimento object to add.
+     */
+    protected function doAddDuplicado(ChildCertificadoRequerimento $duplicado): void
+    {
+        $this->collDuplicados[]= $duplicado;
+        $duplicado->setOriginal($this);
+    }
+
+    /**
+     * @param ChildCertificadoRequerimento $duplicado The ChildCertificadoRequerimento object to remove.
+     * @return $this The current object (for fluent API support)
+     */
+    public function removeDuplicado(ChildCertificadoRequerimento $duplicado)
+    {
+        if ($this->getDuplicados()->contains($duplicado)) {
+            $pos = $this->collDuplicados->search($duplicado);
+            $this->collDuplicados->remove($pos);
+            if (null === $this->duplicadosScheduledForDeletion) {
+                $this->duplicadosScheduledForDeletion = clone $this->collDuplicados;
+                $this->duplicadosScheduledForDeletion->clear();
+            }
+            $this->duplicadosScheduledForDeletion[]= $duplicado;
+            $duplicado->setOriginal(null);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * If this collection has already been initialized with
+     * an identical criteria, it returns the collection.
+     * Otherwise if this CertificadoRequerimento is new, it will return
+     * an empty collection; or if this CertificadoRequerimento has previously
+     * been saved, it will retrieve related Duplicados from storage.
+     *
+     * This method is protected by default in order to keep the public
+     * api reasonable.  You can provide public methods for those you
+     * actually need in CertificadoRequerimento.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param ConnectionInterface $con optional connection object
+     * @param string $joinBehavior optional join type to use (defaults to Criteria::LEFT_JOIN)
+     * @return ObjectCollection|ChildCertificadoRequerimento[] List of ChildCertificadoRequerimento objects
+     * @phpstan-return ObjectCollection&\Traversable<ChildCertificadoRequerimento}> List of ChildCertificadoRequerimento objects
+     */
+    public function getDuplicadosJoinUser(?Criteria $criteria = null, ?ConnectionInterface $con = null, $joinBehavior = Criteria::LEFT_JOIN)
+    {
+        $query = ChildCertificadoRequerimentoQuery::create(null, $criteria);
+        $query->joinWith('User', $joinBehavior);
+
+        return $this->getDuplicados($query, $con);
+    }
+
+    /**
      * Clears the current object, sets all attributes to their default values and removes
      * outgoing references as well as back-references (from other objects to this one. Results probably in a database
      * change of those foreign objects when you call `save` there).
@@ -2050,6 +2685,9 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     {
         if (null !== $this->aUser) {
             $this->aUser->removeCertificadoRequerimento($this);
+        }
+        if (null !== $this->aOriginal) {
+            $this->aOriginal->removeDuplicado($this);
         }
         $this->requerimento_id = null;
         $this->caso = null;
@@ -2067,6 +2705,9 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
         $this->resolvido_por = null;
         $this->resolvido_em = null;
         $this->resolucao = null;
+        $this->duplicado_de = null;
+        $this->resposta = null;
+        $this->respondido_em = null;
         $this->alreadyInSave = false;
         $this->clearAllReferences();
         $this->applyDefaultValues();
@@ -2089,9 +2730,16 @@ abstract class CertificadoRequerimento implements ActiveRecordInterface
     public function clearAllReferences(bool $deep = false)
     {
         if ($deep) {
+            if ($this->collDuplicados) {
+                foreach ($this->collDuplicados as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
         } // if ($deep)
 
+        $this->collDuplicados = null;
         $this->aUser = null;
+        $this->aOriginal = null;
         return $this;
     }
 

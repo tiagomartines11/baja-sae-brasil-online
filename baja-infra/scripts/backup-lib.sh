@@ -120,6 +120,22 @@ warn() { printf '[%s] WARNING: %s\n' "${LOG_PREFIX:-backup}" "$*" >&2; }
 err()  { printf '[%s] ERROR: %s\n' "${LOG_PREFIX:-backup}" "$*" >&2; }
 die()  { err "$*"; exit 1; }
 
+# ----- Event codes -----
+#
+# An event code (evento_id) is two digits for the year and two capitals or
+# digits for the competition: 26BR, 25AR, 24H2. It becomes a folder name
+# on the Shared Drive (events/<EVT>/), so it is checked before use. The
+# letters are not listed: they once were (BR, SE, SU, NE), and every event
+# with others was refused (BAJAAPP-74).
+#
+# The PHP side has the same rule in baja-php/src/Baja/Evento/EventCode.php.
+# Change both together. LC_ALL=C so that A-Z means A to Z and nothing else,
+# whatever the caller's locale.
+backup_is_event_code() {
+    local LC_ALL=C
+    [[ "$1" =~ ^[0-9]{2}[A-Z0-9]{2}$ ]]
+}
+
 # ----- The stack's .env -----
 #
 # load_env_file FILE: reads FILE as docker compose reads it and exports

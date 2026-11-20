@@ -1,0 +1,23 @@
+# Real client IP for staging behind the VPS's shared Caddy.
+#
+# The path is Cloudflare -> Caddy -> nginx. nginx's TCP peer is therefore
+# always Caddy, on the baja-edge Docker network (10.201.0.0/24, created by the
+# Caddy stack), and never Cloudflare. So:
+#
+#   - The ONLY trusted proxy is baja-edge. Cloudflare's ranges are left out on
+#     purpose, not forgotten: no request reaches nginx from them, and listing
+#     them would only add addresses to trust for no reason.
+#   - The header is still CF-Connecting-IP. Caddy passes it through unchanged,
+#     so it holds what Cloudflare saw: the visitor's address.
+#
+# THIS IS SAFE ONLY BECAUSE CADDY ADMITS THE STAGING HOSTNAMES SOLELY FROM
+# CLOUDFLARE'S IP RANGES (and answers 403 to anyone else). Trusting baja-edge
+# means believing whatever CF-Connecting-IP Caddy hands over. If Caddy ever
+# accepted these hostnames from any address, anybody could connect to the VPS
+# directly, send their own CF-Connecting-IP, and choose the IP nginx, PHP's
+# rate limiter and phpBB see. If that Caddy rule changes, change this file in
+# the same breath.
+#
+# Not real_ip_recursive: CF-Connecting-IP holds one address, not a chain.
+set_real_ip_from 10.201.0.0/24;
+real_ip_header CF-Connecting-IP;

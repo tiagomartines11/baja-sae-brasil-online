@@ -38,6 +38,7 @@ elseif (!$timer && isset($_REQUEST['id'])) $erro = $usuario ? 'Timer não encont
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="google" content="notranslate">
+    <?= \Baja\Auth\ForumResume::keepAliveTag() ?>
     <meta name="theme-color" content="#10151c">
     <?php // Opened by id, timer_action.php wants the session's token with every action (Baja\Auth\Csrf); by key, the key is enough. ?>
     <?php if (!$porChave) { ?><meta name="csrf-token" content="<?= $h(Csrf::token()) ?>"><?php } ?>

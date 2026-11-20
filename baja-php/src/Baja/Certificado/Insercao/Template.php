@@ -40,6 +40,7 @@ final class Template
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="Content-Language" content="pt-br">
     <meta name="robots" content="noindex, nofollow">
+    <?= \Baja\Auth\ForumResume::keepAliveTag() ?>
     <meta name="referrer" content="no-referrer">
     <title><?= self::e($titulo) ?> — Emissão de certificados</title>
     <style>

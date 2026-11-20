@@ -1,6 +1,6 @@
 # Weekly restore-verification stack.
 #
-# Runs Tuesdays 04:00 America/Sao_Paulo, driven by scripts/verify-run.sh
+# Runs Tuesdays 05:30 America/Sao_Paulo, driven by scripts/verify-run.sh
 # from host cron. Deliberately a SEPARATE COMPOSE PROJECT with its own
 # network and its own volume:
 #

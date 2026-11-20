@@ -55,6 +55,73 @@ class main
         );
     }
 
+    /**
+     * Brings an expired session back from the "remember me" key, then
+     * bounces to `redirect` (validated like every other target here).
+     *
+     * There is nothing to do in this method for the resuming itself: app.php
+     * has already run $user->session_begin() before any controller, and that
+     * is where phpBB turns a valid {prefix}_k cookie into a new session (and
+     * a new key), or, for a missing, revoked or expired key, into an
+     * anonymous one with _u=1. Either way the cookies the judge area reads
+     * are set on this response. See the "Resuming an expired session"
+     * section of baja-php/docs/baja-auth-extension.md.
+     *
+     * No CSRF token: the request asks for no change the user did not already
+     * ask for when they ticked "remember me". A forged one resumes the
+     * victim's own session in the victim's own browser, which the next forum
+     * page would have done anyway.
+     */
+    public function resume(): Response
+    {
+        // raw_variable, not variable(): variable() HTML-escapes what it reads,
+        // so "page.php?a=1&b=2" would come back as "?a=1&amp;b=2" and the
+        // judge would land on a page with a parameter named "amp;b". The
+        // target here is the judge's own page, query string and all, and must
+        // arrive as it was sent. validateRedirect() then checks that exact
+        // string, which is also the one the browser will follow.
+        $redirect = $this->request->raw_variable('redirect', '');
+        $target   = $this->validateRedirect(is_string($redirect) ? $redirect : '');
+        $this->touchSession();
+
+        $response = new RedirectResponse($target);
+        $response->headers->set('Cache-Control', 'no-store');
+        return $response;
+    }
+
+    /**
+     * Counts activity in the judge area as activity on the forum. Juiz pages
+     * request this, without following it anywhere, when the session row they
+     * read is more than a few minutes old (Baja\Auth\PhpbbSessionShim::
+     * KEEPALIVE_AFTER_SECONDS). The baja app's MySQL user may only SELECT
+     * from the forum's tables, so phpBB does the write, here.
+     */
+    public function keepAlive(): Response
+    {
+        $this->touchSession();
+
+        $response = new Response('', Response::HTTP_NO_CONTENT);
+        $response->headers->set('Cache-Control', 'no-store');
+        return $response;
+    }
+
+    /**
+     * Writes the current time into the session row, as a forum page would.
+     *
+     * phpBB does that in page_header(), which a controller that only
+     * redirects never reaches, so without this a session kept "alive" through
+     * these routes would still expire. update_session_page off: the row's
+     * session_page (what "Who is online" shows) stays the last forum page the
+     * user really opened, and only session_time moves. phpBB itself skips the
+     * write when the row was updated less than a minute ago, and for a session
+     * session_begin() just created.
+     */
+    private function touchSession(): void
+    {
+        $this->user->update_session_page = false;
+        $this->user->update_session_infos();
+    }
+
     public function login(): Response
     {
         // `redirect` lives in the query string of the form action rather than

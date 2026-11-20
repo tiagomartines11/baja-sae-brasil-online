@@ -11,6 +11,7 @@ use Baja\Model\TournamentQuery;
 use Baja\Site\CachePolicy;
 use Baja\Site\CleanUrl;
 use Baja\Site\Html;
+use Baja\Torneio\Confronto;
 
 // A public page, cached by Cloudflare (docs/results-caching.md). It reads
 // id and overlay; any other parameter is dropped by a redirect.
@@ -98,7 +99,7 @@ $teams = EquipeQuery::create()->filterByEventoId($evt);
               </tr>
             </thead>  
             <tbody class="tournament-bracket__content">
-              <tr class="tournament-bracket__team <?= ($m->getWinner() == $m->getEquipe1Id() && ctype_digit($m->getEquipe1Id()))?'tournament-bracket__team--winner':'' ?>">
+              <tr class="tournament-bracket__team <?= Confronto::venceu($m->getWinner(), $m->getEquipe1Id())?'tournament-bracket__team--winner':'' ?>">
                 <td class="tournament-bracket__score">
                   <span class="tournament-bracket__number"><abbr class="tournament-bracket__code"><?= Html::e((!ctype_digit($m->getEquipe1Id()))?($m->getEquipe1Id()=='WO'?'WO':'?'):($m->getEquipe1Id().' - '.EquipeQuery::create()->filterByEventoId($evt)->findOneByEquipeId($m->getEquipe1Id())->getEquipeCurto())) ?></abbr></span>
                 </td>
@@ -111,7 +112,7 @@ $teams = EquipeQuery::create()->filterByEventoId($evt);
                 <?php } ?>   
 
               </tr>
-              <tr class="tournament-bracket__team <?= ($m->getWinner() == $m->getEquipe2Id() && ctype_digit($m->getEquipe1Id()))?'tournament-bracket__team--winner':'' ?>">
+              <tr class="tournament-bracket__team <?= Confronto::venceu($m->getWinner(), $m->getEquipe2Id())?'tournament-bracket__team--winner':'' ?>">
                 <td class="tournament-bracket__score">
                 <span class="tournament-bracket__number"><abbr class="tournament-bracket__code"><?= Html::e((!ctype_digit($m->getEquipe2Id()))?($m->getEquipe2Id()=='WO'?'WO':'?'):($m->getEquipe2Id().' - '.EquipeQuery::create()->filterByEventoId($evt)->findOneByEquipeId($m->getEquipe2Id())->getEquipeCurto())) ?></abbr></span>
                 </td>

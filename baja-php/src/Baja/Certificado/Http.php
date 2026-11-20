@@ -30,4 +30,20 @@ final class Http
         header('Referrer-Policy: no-referrer');
         header('X-Content-Type-Options: nosniff');
     }
+
+    /**
+     * Applied to /acompanhar, the report status page (BAJAAPP-88).
+     *
+     * Everything above, with `private` stated outright. The page is one
+     * person's report, reached by a link that is its own credential, so no
+     * shared cache anywhere — Cloudflare, a corporate proxy, a school's
+     * filter — may keep a copy of it for the next person. `no-store` already
+     * says that to a cache that follows the rules; `private` says it to one
+     * that only half does.
+     */
+    public static function sendStatusPageHeaders(): void
+    {
+        self::sendPrivateHeaders();
+        header('Cache-Control: private, no-store');
+    }
 }

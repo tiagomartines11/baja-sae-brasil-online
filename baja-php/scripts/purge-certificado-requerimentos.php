@@ -19,6 +19,16 @@
  * Keeping a closed report forever is not neutral. It is a growing store of
  * identity documents whose only remaining function is to be breached.
  *
+ * Whole rows are deleted, never single columns, so every free-text field goes
+ * with the rest: the description, the internal note (`resolucao`) and the
+ * reply to the participant (`resposta`, BAJAAPP-88), which can name the
+ * person or quote what they wrote. The cutoff is counted from `resolvido_em`,
+ * which is when that reply was decided, so a report reopened and closed
+ * again starts its retention period over.
+ *
+ * Deleting a row also ends its status page: /acompanhar answers "Protocolo
+ * não encontrado" for it, which is what that page already says can happen.
+ *
  * What is NOT deleted:
  *   - Open reports, at any age. An old one that nobody answered is a problem
  *     to fix, not a row to quietly drop.

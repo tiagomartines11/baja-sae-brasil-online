@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\ResultsSnapshot;
 
+use Baja\Model\EventoQuery;
 use Baja\ResultsSnapshot\Capture\ErrorText;
 use Baja\ResultsSnapshot\Capture\ProcessPool;
 use Baja\ResultsSnapshot\Tasks\Catalogue;
@@ -71,5 +72,14 @@ final class LiveSnapshotSource implements SnapshotSource
 
         ksort($documents, SORT_STRING);
         return new Build($documents, $warnings);
+    }
+
+    public function missingEvents(array $events): array
+    {
+        $found = [];
+        foreach (EventoQuery::create()->filterByEventoId($events)->find() as $evento) {
+            $found[] = (string)$evento->getEventoId();
+        }
+        return array_values(array_diff($events, $found));
     }
 }

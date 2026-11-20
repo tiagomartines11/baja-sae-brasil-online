@@ -64,6 +64,11 @@ cp .clasp.json.example .clasp.json     # then fill in scriptId
 clasp push
 ```
 
+`.claspignore` limits the push to `Code.js` and `appsscript.json`.
+Without it `clasp push` also uploads `test/prune.test.js`, and Apps Script
+loads every file of a project on every run: its `require` fails there, and
+so does every run of the pruner.
+
 Script properties (Apps Script editor → Project Settings → Script
 Properties):
 
@@ -121,4 +126,4 @@ pulling the Shared Drive with the read-only `baja-backup-reader` account
 copy should keep its own snapshots or versions — those are the real
 retention floor — and be watched by a check that does not run on the same
 machine. The artifacts are encrypted, so the copy needs no key. See
-"Secondary copies" in [`docs/backup-restore.md`](../../docs/backup-restore.md).
+"Secondary copies" in [`docs/backup-restore.md`](../../../docs/backup-restore.md#secondary-copies).

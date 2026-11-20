@@ -42,3 +42,22 @@ baja_auth_return:
     defaults:
         _controller: baja.auth.controller.main:returnTo
     methods: [GET]
+
+# The judge area sends a browser here when its forum session has expired but
+# the "remember me" cookie is still there. phpBB resumes the session while
+# starting up, before the controller runs; the controller only bounces back.
+# See main::resume and docs/baja-auth-extension.md, "Resuming an expired
+# session".
+baja_auth_resume:
+    path: /baja/resume
+    defaults:
+        _controller: baja.auth.controller.main:resume
+    methods: [GET]
+
+# Judge pages request this so that their activity keeps the forum session
+# alive; answers 204. See main::keepAlive.
+baja_auth_keepalive:
+    path: /baja/keepalive
+    defaults:
+        _controller: baja.auth.controller.main:keepAlive
+    methods: [GET]

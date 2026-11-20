@@ -4,19 +4,22 @@
 baked into the `baja-phpbb-baja` image, enabled automatically on container
 boot.
 
-Provides three endpoints under `forum.baja.local/app.php/baja/...` so the
+Provides five endpoints under `forum.baja.local/app.php/baja/...` so the
 baja-app (juiz, fila, etc.) can drive cross-subdomain login and logout
-through phpBB's own auth pipeline:
+through phpBB's own auth pipeline, and keep the judge area's session in step
+with the forum's:
 
 | Route | Method | Purpose |
 |---|---|---|
 | `/baja/login` | POST | Authenticate via `$auth->login()`. On success, phpBB sets session cookies on `.baja.local`; the baja-app shim picks them up on the next request. |
 | `/baja/logout` | GET, POST | `$user->session_kill()` followed by `session_begin()` (anonymous re-init), then redirect. Requires the CSRF token. |
 | `/baja/return` | GET | Validated no-op redirect. A return hop out of phpBB's own login form, which discards off-board redirect targets. |
+| `/baja/resume` | GET | Lets phpBB resume an expired session from the "remember me" cookie, refreshes `session_time`, and redirects. See [Resuming an expired session](#resuming-an-expired-session). |
+| `/baja/keepalive` | GET | Refreshes `session_time` and answers `204`. See [Keep-alive](#keep-alive). |
 
-Both accept an optional `redirect` parameter validated against a
-configured allowed-domain suffix; off-domain targets are replaced with a
-configured default URL.
+All but `/baja/keepalive` accept an optional `redirect` parameter validated
+against a configured allowed-domain suffix; off-domain targets are replaced
+with a configured default URL.
 
 ## Why an extension lives in the forum container
 
@@ -35,9 +38,10 @@ controllers keeps a single source of truth for session lifecycle.
 |---|---|
 | [composer.json](../phpbb-extensions/baja-auth/composer.json) | Standard phpBB extension manifest. |
 | [ext.php](../phpbb-extensions/baja-auth/ext.php) | Empty extension class — default lifecycle hooks are sufficient. |
-| [config/routing.yml](../phpbb-extensions/baja-auth/config/routing.yml) | Symfony route definitions for `/baja/login`, `/baja/logout` and `/baja/return`. |
+| [config/routing.yml](../phpbb-extensions/baja-auth/config/routing.yml) | Symfony route definitions for the five routes. |
 | [config/services.yml](../phpbb-extensions/baja-auth/config/services.yml) | DI wiring for the controller (`@auth`, `@user`, `@config`, `@request`). |
-| [controller/main.php](../phpbb-extensions/baja-auth/controller/main.php) | All three endpoints + `validateRedirect()` + `mapLoginError()`. |
+| [controller/main.php](../phpbb-extensions/baja-auth/controller/main.php) | All five endpoints + `validateRedirect()` + `mapLoginError()`. |
+| [../src/Baja/Auth/ForumResume.php](../src/Baja/Auth/ForumResume.php) | baja-app side of `/baja/resume` and `/baja/keepalive`: the bounce, its loop guard, the keep-alive script. The decisions themselves are in `PhpbbSessionShim::decideResume()` / `keepAliveDue()`. |
 | [../src/Baja/Auth/LoginCsrf.php](../src/Baja/Auth/LoginCsrf.php) | baja-app side of the CSRF pair: plants the `baja_csrf` cookie before output and renders the matching hidden field. |
 | [migrations/v100/install_baja_auth_config.php](../phpbb-extensions/baja-auth/migrations/v100/install_baja_auth_config.php) | Declares the two `phpbb_config` rows the controller reads (cleaned up on extension purge). Initial values come from env vars at install time. |
 | [language/en/common.php](../phpbb-extensions/baja-auth/language/en/common.php) | Required-but-empty stub. The controller never renders translatable strings. |
@@ -92,6 +96,126 @@ juiz.baja.local/index.php
         v
 authenticated request
 ```
+
+## Resuming an expired session
+
+phpBB keeps a login in three cookies on the parent domain: `{prefix}_sid`
+(the session, a `phpbb_sessions` row), `{prefix}_u` (the user id; `1` is
+anonymous) and `{prefix}_k` (the "remember me" key, a `phpbb_sessions_keys`
+row, only when the box was ticked). The session row expires after
+`session_length` without activity and is deleted by phpBB's garbage
+collection; the forum's next page then turns a valid `_k` into a new
+session, so the forum keeps the user logged in.
+
+The baja-app shim cannot do that: its MySQL user may only `SELECT` from
+`phpbb_baja` (and must stay that way). Until BAJAAPP-86 it read only `_sid`,
+so a judge with "remember me" saw the judge area's login form while the
+forum, in the next tab, showed them logged in. Now:
+
+```
+juiz.baja.local/<page>              no valid session, but _k is set and _u is not 1
+        |  Set-Cookie baja_resume=1 (host-only, 120 s): the loop guard
+        |  302
+        v
+forum.baja.local/app.php/baja/resume?redirect=<page>
+        |  app.php's session_begin() resumes from _k: new session row,
+        |  new key, Set-Cookie _sid/_u/_k on .baja.local
+        |  (revoked/expired/unknown key: an anonymous session, _u=1)
+        |  302 to validateRedirect(<page>)
+        v
+juiz.baja.local/<page>              session found: the page; baja_resume cleared
+                                    still none: the login form, as before
+```
+
+Who is bounced: only pages that need a login and found none, through
+`Session::initSession()` (juiz, fila, the certificate insertion pages, and
+`login.php` itself), and only for a GET navigation. A POST would reach the
+page again as a bodyless GET, and a script's `fetch`/XHR cannot follow a
+redirect to another origin without CORS; both get the login redirect they
+always got. Pages that work without a login (`getCurrentUserOrNull()`, e.g.
+the results pages for staff, `timer.php`) are not bounced.
+
+**The loop guard.** A bounce that comes back without a session normally
+cannot loop anyway: for a key it does not know, phpBB answers with `_u=1`,
+which is never bounced. The guard is for the cases where phpBB cannot
+answer or its cookies do not stick (the forum down, a Cloudflare challenge
+not passed, cookies blocked, a `cookie_domain` that does not cover the
+host). It is a cookie, `baja_resume`, set on the way out and cleared by the
+first page that has a session again (`ForumResume::settle()`, from
+`src/phpbb_login.php`). Coming back with it and no session shows the login
+form instead of bouncing again. A cookie rather than a query parameter, so
+the URL the judge lands on, and may bookmark, is the one they asked for.
+It is host-only and lives 120 seconds: enough for the round trip and a
+challenge, short enough that a judge who gives up gets the bounce again on
+their next visit.
+
+**`redirect` is read raw.** `$request->variable()` HTML-escapes what it
+reads, so `page.php?a=1&b=2` would come back as `?a=1&amp;b=2`. `resume()`
+reads `raw_variable()` and passes that exact string to `validateRedirect()`
+(the same validator as the other routes), which is also the string the
+browser will follow. `/baja/return` still uses `variable()`; its targets
+have had no `&` so far.
+
+**No CSRF token.** The request asks for nothing the user did not already
+ask for by ticking "remember me": a forged one resumes the victim's own
+session in the victim's own browser, which the next forum page would have
+done anyway.
+
+**Logout.** `session_kill()`, on either side, deletes the key row and expires
+the `_k` cookie, then sets `_u=1`, so nothing is left to resume; the HTTP
+tests prove it for both logout links, including for a browser that kept a
+copy of the old cookies. `Session::endSession()` also drops the judge area's
+cached copy of the session at once. A logout on the forum cannot reach that
+cache, so a copy of the old cookies still works in the judge area for up to
+`SESSION_CACHE_TTL_SECONDS` (10 minutes); the browser that logged out is
+anonymous at once because of `_u=1`. This window predates BAJAAPP-86.
+
+**"Remember me" from the judge area.** The judge area's and fila's login
+forms have no "remember me" box, so a judge only has a `_k` after logging
+in on the forum itself with the box ticked. `/baja/login` already accepts
+`autologin=1`; adding the box is a separate decision.
+
+## Keep-alive
+
+phpBB writes `session_time` in `page_header()`, i.e. only when a forum page
+is rendered. A judge who works in the judge area all day never opens one,
+so the forum session used to expire under them after `session_length`.
+
+Juiz pages whose session row is at least
+`PhpbbSessionShim::KEEPALIVE_AFTER_SECONDS` (**300 s**) old now carry a
+small script, from `ForumResume::keepAliveTag()`, that requests
+`/baja/keepalive` with the forum's cookies (`fetch`, `no-cors`,
+`credentials: "include"`). The controller calls `$user->update_session_infos()`,
+so phpBB does the write. It leaves `session_page` alone
+(`update_session_page = false`), so "Who is online" keeps showing the last
+forum page. The judge area then drops its cached copy of the session, so
+its next page reads the new time instead of asking again.
+
+Why 300 s: phpBB itself writes `session_time` at most once a minute, so a
+shorter interval would only cost requests; 5 minutes keeps a
+`session_length` of an hour at least 55 minutes from expiring for an active
+judge, at one forum request per judge per 5 minutes of activity. The shim's
+cached copy can carry a `session_time` up to `SESSION_CACHE_TTL_SECONDS` old,
+which only makes the request come sooner.
+
+Pages that carry it: those rendered by `Baja\Juiz\Template::printHeader()`,
+plus `juiz/contagem_revisao.php`, `juiz/timer.php` (when a session exists)
+and the certificate insertion pages. Not the offline counting shell
+(`Contagem\Shell\OfflineShell`), which a service worker caches.
+
+In production the forum sits behind a Cloudflare challenge. A challenged
+keep-alive fails silently (the page cannot see the answer), so the session
+is then only refreshed by forum pages, as before; the bounce, being a
+top-level navigation, can show and pass the challenge.
+
+### Dev seed values
+
+| `phpbb_config` | Dev seed | Effect |
+|---|---|---|
+| `session_length` | `3600` | A session row expires after an hour without activity. |
+| `session_gc` | `3600` | Expired rows are deleted at most hourly, on forum traffic. |
+| `allow_autologin` | `1` | "Remember me" is allowed. |
+| `max_autologin_time` | `0` | Keys never expire by age; only logout or revocation removes them. |
 
 ## Cloudflare, and a wrong turn worth recording
 
@@ -207,7 +331,11 @@ user now has a way back in rather than a dead end. Closing that would need
 - **Re-enabling** is idempotent — the entrypoint runs `extension:enable`
   on every boot and tolerates the nonzero exit code that comes back when
   it's already enabled.
-- **Smoke tests** #9-#16 in
+- **HTTP tests** for resume, logout and the keep-alive are in
+  [tests/Auth/Http/](../tests/Auth/Http/) (`--testsuite auth-http`; the
+  command is in `ForumSessionTestCase`). They need the dev stack and a MySQL
+  account that may write to `phpbb_baja`, so CI does not run them.
+- **Smoke tests** #9-#16 and #31-#33 in
   [baja-php/tests/smoke-test.sh](https://github.com/baja-sae-brasil/baja-sae-brasil-online/blob/main/baja-php/tests/smoke-test.sh)
   exercise the endpoints end-to-end (login, dashboard access with the
   resulting cookies, logout, open-redirect rejection).

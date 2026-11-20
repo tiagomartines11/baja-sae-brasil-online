@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Baja\FormulaCompare;
 
+use Baja\Evento\EventCode;
 use Baja\ResultsCheck\FormulaSlot;
 use Baja\ResultsCheck\LiveSource;
 use Baja\ResultsSnapshot\Capture\ChildProcess;
@@ -314,7 +315,7 @@ final class Command
         if ($values['events'] !== null) {
             $events = array_values(array_filter(array_map('trim', explode(',', strtoupper($values['events']))), 'strlen'));
             foreach ($events as $event) {
-                if (preg_match('/^[0-9A-Z]{4}$/', $event) !== 1) {
+                if (!EventCode::isValid($event)) {
                     return 'Not an event code: ' . $event;
                 }
             }

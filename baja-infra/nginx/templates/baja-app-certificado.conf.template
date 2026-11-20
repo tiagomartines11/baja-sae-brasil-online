@@ -50,17 +50,30 @@ map $uri $cert_uri_redacted {
 # certificado.php took the same values as query parameters, and still answers
 # there (with a redirect). Anything carrying a cpf parameter is redacted whole
 # rather than picked apart.
+#
+# The report status page, /acompanhar?p={protocolo} (BAJAAPP-88), is here for
+# a different reason. The protocol identifies nobody, but it is the page's
+# only credential: whoever has it reads where that person's report stands
+# and what staff replied. A log line holding it is a working link. So it is
+# redacted the same way, whole.
 map $args $cert_args_redacted {
     default      $args;
     ""           "";
     "~(^|&)cpf=" "[redacted]";
+    "~(^|&)p="   "[redacted]";
 }
 
 # A Referer is just as much a copy: a browser following the link off a legacy
 # certificate page sends the whole URL, CPF included.
+#
+# The status page sends Referrer-Policy: no-referrer, so a browser should
+# send no Referer from it at all, not even for its own stylesheet. The
+# second rule is for one that does anyway: it keeps everything up to the
+# path and drops the query string, which is where the protocol is.
 map $http_referer $cert_referer_redacted {
     default                           $http_referer;
     "~^(?<cert_ref_prefix>.*)/c/[a-zA-Z0-9]+/[a-zA-Z0-9]+" "$cert_ref_prefix/c/[redacted]";
+    "~^(?<cert_ref_acomp>[^?]*/acompanhar(\.php)?)\?"      "$cert_ref_acomp?[redacted]";
 }
 
 # Re-attach the "?" only when there is a query string, so ordinary requests do
@@ -119,6 +132,24 @@ server {
     # path. Neither is redacted below because neither identifies a person.
     location = /requerimento {
         rewrite ^ /requerimento.php last;
+    }
+
+    # /acompanhar?p={protocolo} — where a report stands, and staff's reply once
+    # it is closed (BAJAAPP-88). GET only, and not rate limited: it changes
+    # nothing and sends nothing, and the protocol is 128 random bits, which no
+    # rate of guessing reaches.
+    #
+    # The p= argument is the page's credential, so it is redacted in the
+    # access log above, and the page itself sends Cache-Control: private,
+    # no-store, Referrer-Policy: no-referrer and X-Robots-Tag: noindex from
+    # PHP (Baja\Certificado\Http::sendStatusPageHeaders).
+    #
+    # Cloudflare: none of the zone's cache rules match this hostname (they are
+    # scoped to resultados., see docs/results-caching.md), Cloudflare does not
+    # cache HTML by default, and no-store would stop it if it did. Whoever adds
+    # a rule for this vhost must keep /acompanhar out of it.
+    location = /acompanhar {
+        rewrite ^ /acompanhar.php last;
     }
 
     # /verificar/{token}      -> confirmation page

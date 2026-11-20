@@ -367,6 +367,197 @@ ok "/requerimento does not echo a document handed to it in the query string" \
 ok "/buscar offers the missing-certificate route" \
    "$(grep -q '/requerimento?caso=ausente' <<<"$(body_of "$BASE/buscar")" && echo 1 || echo 0)"
 
+# --- pressing "Enviar" several times at once makes one report --------------------
+#
+# BAJAAPP-89. The answer to POST /requerimento takes seconds (it sends two
+# emails first), a student pressed the button six times while waiting, and
+# six identical reports were saved. Here several identical POSTs are sent at
+# the same moment, the way those presses arrived, and the database must end up
+# with exactly one row for them.
+#
+# Counting rows needs the database, so this reaches into the app container
+# with `docker exec`, like insercao-http-test.sh does; set APP_CONTAINER if
+# yours is not called baja-app. It is skipped when there is no container to
+# reach, and when Turnstile is configured (these POSTs carry no captcha).
+#
+# Sits before the rate-limit checks below on purpose: it uses up some of the
+# POST budget they measure, and they only need it to run out.
+
+APP="${APP_CONTAINER:-baja-app}"
+
+# Run a bit of PHP inside the app container with the database configured.
+# The PHP code is $1; anything after it arrives in $argv.
+app_php() {
+    local code="$1"
+    shift
+    docker exec "$APP" php -r 'require "vendor/autoload.php"; require "src/config.php"; '"$code" "$@"
+}
+
+if ! docker exec "$APP" true 2>/dev/null; then
+    skip "simultaneous /requerimento submissions" "no $APP container; set APP_CONTAINER"
+elif grep -q 'cf-turnstile' <<<"$requerimento_body"; then
+    skip "simultaneous /requerimento submissions" "Turnstile is configured, so a scripted POST is refused"
+else
+    # The per-address limit (5 an hour) would refuse this check when the suite
+    # runs twice within an hour from the same machine. Those counters only
+    # slow down abuse; on a local stack, clearing them costs nothing.
+    app_php '$r = new Redis(); $r->connect(getenv("REDIS_HOST") ?: "redis", (int) (getenv("REDIS_PORT") ?: 6379)); foreach ($r->keys("cert_requerimento:*") as $k) { $r->del($k); }' >/dev/null 2>&1
+
+    req_doc=$(random_document)
+    req_email="zz-fixture-http-$req_doc@example.org"
+
+    post_requerimento() {
+        curl -s "${CURL_ARGS[@]}" -X POST -w '\n%{http_code}' \
+            --data-urlencode 'caso=ausente' \
+            --data-urlencode 'evento=outro' \
+            --data-urlencode 'evento_texto=Evento de teste http, 2009' \
+            --data-urlencode 'nome=ZZFixtureHttp Fulana Testeson' \
+            --data-urlencode "documento=$req_doc" \
+            --data-urlencode "email=$1" \
+            --data-urlencode 'descricao=Participei do evento e o certificado nao aparece na busca.' \
+            --data-urlencode 'ciente=1' \
+            "$BASE/requerimento"
+    }
+
+    # Five at once: each `&` starts a request in the background without
+    # waiting for the previous one, and `wait` waits for all of them. Five
+    # because nginx lets a burst of that size through to PHP.
+    req_dir=$(mktemp -d)
+    for n in 1 2 3 4 5; do
+        post_requerimento "$req_email" >"$req_dir/$n" &
+    done
+    wait
+
+    req_reached=0
+    for n in 1 2 3 4 5; do
+        [[ "$(tail -n1 "$req_dir/$n")" == 200 ]] && req_reached=$((req_reached + 1))
+    done
+
+    req_rows=$(app_php 'echo Baja\Model\CertificadoRequerimentoQuery::create()->filterByDocumento($argv[1])->count();' "$req_doc")
+
+    ok "simultaneous identical submissions reach PHP" "$([[ "$req_reached" -ge 2 ]] && echo 1 || echo 0)" \
+       "$req_reached of 5 answered 200; the rest were rate limited by nginx"
+    ok "simultaneous identical submissions save one report" "$([[ "$req_rows" == 1 ]] && echo 1 || echo 0)" \
+       "$req_rows rows for one report"
+
+    # The same report from another email: saved as a second row, and the page
+    # shows that person their own protocol — never the first report's protocol
+    # or its email, since whoever typed this may not be the person who sent
+    # the first one.
+    req_first=$(app_php 'echo Baja\Model\CertificadoRequerimentoQuery::create()->filterByDocumento($argv[1])->findOne()->getRequerimentoId();' "$req_doc")
+    req_other=$(post_requerimento "zz-fixture-http-outro-$req_doc@example.org")
+    req_other_code="${req_other##*$'\n'}"
+
+    # The burst above has usually spent nginx's POST allowance, so a 429 here
+    # is the limiter working. Wait the window out once, as post_buscar does.
+    if [[ "$req_other_code" == 429 ]]; then
+        grey "      (rate limited, waiting for the window)"
+        sleep 62
+        req_other=$(post_requerimento "zz-fixture-http-outro-$req_doc@example.org")
+        req_other_code="${req_other##*$'\n'}"
+    fi
+
+    if [[ "$req_other_code" == 429 ]]; then
+        skip "a duplicate from another email" "rate limited by nginx; rerun after a minute"
+    else
+        ok "a duplicate from another email is accepted" \
+           "$(grep -q 'Requerimento recebido' <<<"$req_other" && echo 1 || echo 0)" "HTTP $req_other_code"
+        ok "its page does not show the first report's protocol" \
+           "$([[ -n "$req_first" ]] && ! grep -qF -- "$req_first" <<<"$req_other" && echo 1 || echo 0)"
+        ok "or the first report's email" \
+           "$(grep -qF -- "$req_email" <<<"$req_other" && echo 0 || echo 1)"
+        req_linked=$(app_php 'echo Baja\Model\CertificadoRequerimentoQuery::create()->filterByDocumento($argv[1])->filterByDuplicadoDe($argv[2])->count();' "$req_doc" "$req_first")
+        ok "and it is saved pointing at the first report" "$([[ "$req_linked" == 1 ]] && echo 1 || echo 0)" "$req_linked linked rows"
+    fi
+
+    rm -rf "$req_dir"
+    app_php 'Baja\Model\CertificadoRequerimentoQuery::create()->filterByDocumento($argv[1])->delete();' "$req_doc" >/dev/null
+fi
+
+# --- /acompanhar, the report status page ------------------------------------------
+#
+# BAJAAPP-88. A participant follows their report at /acompanhar?p={protocolo}.
+# The protocol is the only key to the page, so: nginx must route it, the page
+# must never be kept by a cache or indexed, a wrong protocol must look exactly
+# like a malformed one, and the protocol must not be written to the access
+# log in the clear, where it would be a working link to somebody's report.
+
+unknown_protocol="$(od -An -N16 -tx1 < /dev/urandom | tr -d ' \n' | cut -c1-22)"
+acomp_unknown=$(body_of "$BASE/acompanhar?p=$unknown_protocol")
+acomp_short=$(body_of "$BASE/acompanhar?p=abc")
+
+ok "/acompanhar with an unknown protocol returns 404" \
+   "$([[ $(status_of "$BASE/acompanhar?p=$unknown_protocol") == 404 ]] && echo 1 || echo 0)"
+ok "/acompanhar with a malformed protocol returns 404" \
+   "$([[ $(status_of "$BASE/acompanhar?p=abc") == 404 ]] && echo 1 || echo 0)"
+ok "unknown and malformed protocols return byte-identical bodies" \
+   "$([[ "$acomp_unknown" == "$acomp_short" ]] && echo 1 || echo 0)"
+ok "the not-found page says Protocolo não encontrado" \
+   "$(grep -q 'Protocolo não encontrado' <<<"$acomp_unknown" && echo 1 || echo 0)"
+
+acomp_headers=$(header_of "$BASE/acompanhar?p=$unknown_protocol")
+ok "/acompanhar sends Cache-Control: private, no-store" \
+   "$(grep -qi '^Cache-Control: private, no-store' <<<"$acomp_headers" && echo 1 || echo 0)" \
+   "$(grep -i '^Cache-Control' <<<"$acomp_headers")"
+ok "/acompanhar sends Referrer-Policy: no-referrer" \
+   "$(grep -qi '^Referrer-Policy: no-referrer' <<<"$acomp_headers" && echo 1 || echo 0)"
+ok "/acompanhar sends X-Robots-Tag: noindex" \
+   "$(grep -qi '^X-Robots-Tag: noindex' <<<"$acomp_headers" && echo 1 || echo 0)"
+ok "/acompanhar sets no cookie" \
+   "$(grep -qi '^Set-Cookie' <<<"$acomp_headers" && echo 0 || echo 1)"
+
+# The access log. nginx writes it to the container's stdout, so it is read
+# with `docker logs`; set NGINX_CONTAINER if yours is not called baja-nginx.
+# The random protocol requested above must not be in it, and the line for
+# that request must say [redacted] where the query string was.
+NGINX="${NGINX_CONTAINER:-baja-nginx}"
+if ! docker logs --since 2m "$NGINX" >/dev/null 2>&1; then
+    skip "the protocol is redacted in the access log" "no $NGINX container; set NGINX_CONTAINER"
+else
+    acomp_log=$(docker logs --since 2m "$NGINX" 2>/dev/null)
+    ok "the protocol is not written to the access log" \
+       "$(grep -qF -- "$unknown_protocol" <<<"$acomp_log" && echo 0 || echo 1)"
+    ok "the status page's log line shows p= as [redacted]" \
+       "$(grep -qE '"GET /acompanhar(\.php)?\?\[redacted\] ' <<<"$acomp_log" && echo 1 || echo 0)"
+fi
+
+# A real report, closed with a reply, read through nginx the way the link in
+# the email is followed. Needs the database, so it goes through the app
+# container like the check above; skipped without one.
+if ! docker exec "$APP" true 2>/dev/null; then
+    skip "a closed report through /acompanhar" "no $APP container; set APP_CONTAINER"
+else
+    acomp_mark="$(od -An -N4 -tx1 < /dev/urandom | tr -d ' \n')"
+    acomp_id=$(app_php '
+        $r = new Baja\Model\CertificadoRequerimento();
+        $r->setRequerimentoId(Baja\Certificado\Token::generate());
+        $r->setCaso("ausente");
+        $r->setEventoTexto("Evento de teste http, 2009");
+        $r->setDocumento("00000000191");
+        $r->setNome("ZZFixtureHttp Nome Privado " . $argv[1]);
+        $r->setEmail("zz-fixture-http-acomp-" . $argv[1] . "@example.org");
+        $r->setDescricao("Descricao privada " . $argv[1]);
+        $r->setResolucao("Nota interna " . $argv[1]);
+        $r->setResposta("Resposta publica " . $argv[1]);
+        $r->setStatus("resolvido");
+        $r->setCriadoEm(new DateTime());
+        $r->setResolvidoEm(new DateTime());
+        $r->save();
+        echo $r->getRequerimentoId();' "$acomp_mark")
+
+    acomp_body=$(body_of "$BASE/acompanhar?p=$acomp_id")
+    ok "a closed report's status page returns 200" \
+       "$([[ $(status_of "$BASE/acompanhar?p=$acomp_id") == 200 ]] && echo 1 || echo 0)"
+    ok "and shows Resolvido with the reply" \
+       "$(grep -q 'Resolvido' <<<"$acomp_body" && grep -q "Resposta publica $acomp_mark" <<<"$acomp_body" && echo 1 || echo 0)"
+    ok "and not the name, the email, the description or the internal note" \
+       "$(grep -qE "Nome Privado $acomp_mark|zz-fixture-http-acomp-$acomp_mark|Descricao privada $acomp_mark|Nota interna $acomp_mark" <<<"$acomp_body" && echo 0 || echo 1)"
+    ok "and not the document" \
+       "$(grep -q '00000000191' <<<"$acomp_body" && echo 0 || echo 1)"
+
+    app_php 'Baja\Model\CertificadoRequerimentoQuery::create()->filterByRequerimentoId($argv[1])->delete();' "$acomp_id" >/dev/null
+fi
+
 # --- POST /buscar is rate limited, reads are not -----------------------------
 #
 # nginx cannot select a location by method, and the internal rewrite to

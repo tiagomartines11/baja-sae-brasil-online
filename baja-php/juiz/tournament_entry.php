@@ -9,6 +9,7 @@ use Baja\Model\ProvaQuery;
 use Baja\Model\TournamentQuery;
 use Baja\Session;
 use Baja\Site\Html;
+use Baja\Torneio\Confronto;
 
 if (!isset($_REQUEST['p'])) { header("Location: index.php"); exit; }
 
@@ -87,29 +88,12 @@ if (isset($_REQUEST['setwinner']) && isset($_REQUEST['match'])) {
     $winner = null;
     $loser = null;
 
-    if (isset($match_dados->bestof)){
-        if ($_REQUEST['setwinner']==$match->getEquipe1Id()) {
-            $match_dados->win1++;   
-        } elseif ($_REQUEST['setwinner']==$match->getEquipe2Id()) {
-            $match_dados->win2++;   
-        }
-
-        if ((float)$match_dados->win1 > (float)($match_dados->bestof/2)) {
-            $winner = $match->getEquipe1Id();
-            $loser = $match->getEquipe2Id();
-            $victory = true;
-        } elseif ((float)$match_dados->win2 > (float)($match_dados->bestof/2)) {
-            $winner = $match->getEquipe2Id();
-            $loser = $match->getEquipe1Id();
-            $victory = true;
-        }
-
-    } else {
-        if ($_REQUEST['setwinner'] == $match->getEquipe1Id() || $_REQUEST['setwinner'] == $match->getEquipe2Id()){
-            $winner = $_REQUEST['setwinner'];
-            $loser = ($match->getEquipe1Id()==$_REQUEST['setwinner']?$match->getEquipe1Id():$match->getEquipe2Id());
-            $victory = true;
-        }
+    // Counts a race of a "best of N" in $match_dados. The loser goes to the
+    // "los<match>" slots (the match for third place).
+    $decidido = Confronto::registrarVitoria((string)$match->getEquipe1Id(), (string)$match->getEquipe2Id(), is_object($match_dados) ? $match_dados : null, (string)$_REQUEST['setwinner']);
+    if ($decidido !== null) {
+        [$winner, $loser] = $decidido;
+        $victory = true;
     }
 
     if ($victory) {
@@ -125,6 +109,10 @@ if (isset($_REQUEST['setwinner']) && isset($_REQUEST['match'])) {
         function updateDependents($dependent_matches, $winner, $loser) {
             foreach($dependent_matches as $dm) {
                 $dados = json_decode($dm->getDados() ?? '');
+                // A single race's dados is NULL. PHP 7 made an object of it
+                // on the first write below; PHP 8 throws, and the result was
+                // lost (BAJAAPP-37).
+                if (!is_object($dados)) $dados = new \stdClass();
 
                 if ($dm->getEquipe1Id()=='win'.$_REQUEST['match']) {
                     $dados->old1=$dm->getEquipe1Id();

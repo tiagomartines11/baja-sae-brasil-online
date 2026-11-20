@@ -55,7 +55,7 @@
  * data past its purpose is an Art. 15/16 liability rather than mere
  * waste.
  *
- * See baja-infra/docs/backup-restore.md and this directory's README.md.
+ * See docs/backup-restore.md and this directory's README.md.
  */
 
 // ---------------------------------------------------------------------

@@ -774,7 +774,7 @@ verify_event_archives() {
     fi
     local event stamp folder dest manifest result
     for event in $events; do
-        [[ "$event" =~ ^[0-9]{2}(BR|SE|SU|NE)$ ]] || { note_soft "events/${event}: not an event code, skipped"; continue; }
+        backup_is_event_code "$event" || { note_soft "events/${event}: not an event code, skipped"; continue; }
         for stamp in $(rclone lsf --dirs-only "${VERIFY_REMOTE}events/${event}/" 2>/dev/null | sed 's:/*$::' | sort); do
             folder="events/${event}/${stamp}"
             dest="${WORK_DIR}/${folder}"

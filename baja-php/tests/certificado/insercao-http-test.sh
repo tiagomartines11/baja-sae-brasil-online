@@ -78,6 +78,9 @@ cleanup() {
         \Baja\Model\ParticipanteQuery::create()
             ->filterByNome("ZZHttp%", \Propel\Runtime\ActiveQuery\Criteria::LIKE)
             ->delete();
+        \Baja\Model\CertificadoRequerimentoQuery::create()
+            ->filterByNome("ZZHttpReq%", \Propel\Runtime\ActiveQuery\Criteria::LIKE)
+            ->delete();
         \Baja\Model\UserQuery::create()
             ->filterByUsername(["ZZHttpComPermissao", "ZZHttpSemPermissao"])
             ->delete();
@@ -426,6 +429,89 @@ else
     contains "but is listed when they ask for voided ones" "$alvoToken" "$visivel"
     contains "with the reason on show" "anulado pelo teste automatizado" "$visivel"
 fi
+
+echo
+echo "--- closing a participant's report (BAJAAPP-88) ---"
+# certificados_requerimentos.php now emails the participant when a report is
+# closed, so its two buttons — "Salvar" and "Reenviar" — are state-changing
+# POSTs like any other here, and must do nothing without the form's token.
+#
+# Each report below is made straight in the database. "Reenviar" needs one
+# that is closed with a reply whose email never went out; the dev stack's
+# relay (mailpit) accepts everything, so that state is set up by hand rather
+# than produced by a failing relay.
+
+novo_requerimento() { # status resposta
+    docker exec "$APP" php -r '
+        require "/var/www/html/vendor/autoload.php"; require "/var/www/html/src/config.php";
+        $r = new \Baja\Model\CertificadoRequerimento();
+        $r->setRequerimentoId(\Baja\Certificado\Token::generate());
+        $r->setCaso("ausente");
+        $r->setEventoTexto("Evento de teste http, 2009");
+        $r->setDocumento("52998224725");
+        $r->setNome("ZZHttpReq Fulana Testeson");
+        $r->setEmail("zz-fixture-http-req-" . bin2hex(random_bytes(4)) . "@example.org");
+        $r->setDescricao("Participei do evento e o certificado nao aparece na busca.");
+        $r->setCriadoEm(new DateTime());
+        $r->setAvisadoEm(new DateTime());
+        $r->setStatus($argv[1]);
+        if ($argv[2] !== "") { $r->setResposta($argv[2]); $r->setResolvidoEm(new DateTime()); }
+        $r->save();
+        echo $r->getRequerimentoId();
+    ' "$1" "$2"
+}
+
+estado_requerimento() { # id
+    docker exec "$APP" php -r '
+        require "/var/www/html/vendor/autoload.php"; require "/var/www/html/src/config.php";
+        $r = \Baja\Model\CertificadoRequerimentoQuery::create()->findPk($argv[1]);
+        echo $r->getStatus(), "|", $r->getRespondidoEm() === null ? "sem envio" : "enviado";
+    ' "$1"
+}
+
+req_post() { # id csrf field=value...
+    local id="$1" csrf="$2"
+    shift 2
+    local campos=()
+    for campo in "$@"; do campos+=(--data-urlencode "$campo"); done
+    curl -s "${CURL_ARGS[@]}" -b "phpbb3_baja_sid=$PREFIX_COM; phpbb3_baja_u=2" -X POST \
+        --data-urlencode "_csrf=$csrf" "${campos[@]}" \
+        "$BASE/certificados_requerimentos.php?id=$id"
+}
+
+req_csrf=$(docker exec "$APP" php -r 'echo hash_hmac("sha256", "certificado-requerimento", "'"$PREFIX_COM"'");')
+
+aberto_id=$(novo_requerimento aberto "")
+pagina_req=$(body "$PREFIX_COM" "/certificados_requerimentos.php?id=$aberto_id")
+contains "the form asks for the reply to the participant" 'name="resposta"' "$pagina_req"
+contains "and says plainly that it is emailed" "É enviada por e-mail" "$pagina_req"
+contains "and keeps the internal note as its own field" "Anotação interna" "$pagina_req"
+
+recusado=$(req_post "$aberto_id" "$(printf 'a%.0s' {1..64})" "status=resolvido" "resposta=Resposta do teste http.")
+contains "closing with a wrong token is refused" "Sessão expirada" "$recusado"
+same "and the report stays open" "aberto|sem envio" "$(estado_requerimento "$aberto_id")"
+
+sem_resposta=$(req_post "$aberto_id" "$req_csrf" "status=resolvido" "resposta=")
+contains "closing with no reply is refused" "Escreva a resposta ao participante" "$sem_resposta"
+same "and the report stays open" "aberto|sem envio" "$(estado_requerimento "$aberto_id")"
+
+fechado=$(req_post "$aberto_id" "$req_csrf" "status=resolvido" "resposta=Resposta do teste http.")
+contains "closing with the token and a reply is saved" "Situação atualizada" "$fechado"
+same "and the email to the participant went out" "resolvido|enviado" "$(estado_requerimento "$aberto_id")"
+
+pendente_id=$(novo_requerimento resolvido "Resposta cujo e-mail nao saiu.")
+pagina_pendente=$(body "$PREFIX_COM" "/certificados_requerimentos.php?id=$pendente_id")
+contains "a closed report whose email did not go out says so" "O e-mail ao participante não foi enviado" "$pagina_pendente"
+contains "and offers Reenviar" 'value="reenviar"' "$pagina_pendente"
+
+reenvio_forjado=$(req_post "$pendente_id" "$(printf 'a%.0s' {1..64})" "acao=reenviar")
+contains "Reenviar with a wrong token is refused" "Sessão expirada" "$reenvio_forjado"
+same "and sends nothing" "resolvido|sem envio" "$(estado_requerimento "$pendente_id")"
+
+reenvio=$(req_post "$pendente_id" "$req_csrf" "acao=reenviar")
+contains "Reenviar with the token sends it" "1 e-mail com a resposta foi enviado" "$reenvio"
+same "and records it" "resolvido|enviado" "$(estado_requerimento "$pendente_id")"
+lacks "after which the page no longer offers it" 'value="reenviar"' "$(body "$PREFIX_COM" "/certificados_requerimentos.php?id=$pendente_id")"
 
 echo
 echo "$PASS passed, $FAIL failed, $SKIP skipped"

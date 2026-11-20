@@ -2,6 +2,7 @@
 namespace Baja\Juiz;
 
 use Baja\Auth\Csrf;
+use Baja\Auth\ForumResume;
 use Baja\Model\EventoQuery;
 use Baja\Site\Html;
 
@@ -18,6 +19,8 @@ class Template
             <meta name="google" content="notranslate">
             <?php // For scripts that post to the judge area: sent as the X-CSRF-Token header (Baja\Auth\Csrf). ?>
             <meta name="csrf-token" content="<?= Html::e(Csrf::token()) ?>">
+            <?php // Keeps the forum session alive while the judge works here (Baja\Auth\ForumResume). ?>
+            <?= ForumResume::keepAliveTag() ?>
             <script src="js/jquery-latest.min.js"></script>
             <script src="js/jquery.tablesorter.js"></script>
             <script src="js/jquery.tablesorter.widgets.js"></script>

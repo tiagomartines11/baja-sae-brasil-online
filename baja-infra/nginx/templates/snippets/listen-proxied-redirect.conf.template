@@ -1,0 +1,17 @@
+# Behind Caddy there is deliberately no HTTP-to-HTTPS redirect server here.
+# Caddy redirects plain-HTTP visitors itself, before nginx is involved, and
+# every request that reaches nginx is plain HTTP by design — a redirect on 80
+# would send each one back to https, which Caddy would forward to 80 again,
+# forever.
+#
+# What this file does instead is about the redirects nginx makes by itself
+# (the /26BR -> /26BR/ rewrites, a directory asked for without its trailing
+# slash). nginx builds their Location from its own scheme, which here is
+# http://, so a visitor on https would be sent to http. absolute_redirect off
+# makes it send just the path ("Location: /26BR/"), and the browser resolves
+# that against the https URL it is already on.
+#
+# Set here, at http level (00-redirect.conf includes this file outside any
+# server block), so that every server inherits it. A server block may still
+# say the same thing itself: baja-app-certificado does, in every mode.
+absolute_redirect off;
