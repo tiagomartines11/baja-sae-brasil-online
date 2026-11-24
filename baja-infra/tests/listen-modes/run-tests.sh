@@ -42,7 +42,7 @@
 
 set -euo pipefail
 
-BASELINE_REF="${BASELINE_REF:-8ba6045b74fec9db14439fc0f86786884a6804ed}"
+BASELINE_REF="${BASELINE_REF:-ff7850a53773700ec14f671f99d163f944d358d2}"
 NGINX_IMAGE="nginx:1.27-alpine"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
