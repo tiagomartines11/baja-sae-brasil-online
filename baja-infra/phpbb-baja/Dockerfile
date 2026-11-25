@@ -9,7 +9,7 @@
 #
 # An exact patch tag, because the deploy builds without --pull: a floating
 # tag such as 8.3-fpm-alpine would reuse whatever base image the host cached.
-FROM php:8.3.36-fpm-alpine
+FROM php:8.3.37-fpm-alpine
 
 # phpBB version - matched to production
 ARG PHPBB_VERSION=3.3.15
